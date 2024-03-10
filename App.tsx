@@ -1,18 +1,18 @@
 import { StatusBar } from "expo-status-bar";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { Button } from "@rneui/themed";
 import { MaterialIcons } from "@expo/vector-icons";
+import { ThemeProvider, Button, createTheme } from "@rneui/themed";
+import AuthTabNavigator from "./src/navigation/AuthTabNavigator";
+
+const theme = createTheme({});
 
 export default function App() {
   return (
     <SafeAreaProvider>
-      <View style={styles.container}>
-        <Text>Open up App.tsx to start working on your app!</Text>
-        <Button title="Hello World" />
-        <MaterialIcons name="home" size={24} color="black" />
-        <StatusBar style="auto" />
-      </View>
+      <ThemeProvider theme={theme}>
+        <AuthTabNavigator></AuthTabNavigator>
+      </ThemeProvider>
     </SafeAreaProvider>
   );
 }
