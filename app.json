@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "lithuaningo",
+    "name": "Lithuaningo",
     "slug": "lithuaningo",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,16 +15,42 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true
+      "googleServicesFile": "./GoogleService-Info.plist",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.adilsezer.lithuaningo"
     },
     "android": {
+      "userInterfaceStyle": "automatic",
+      "googleServicesFile": "./google-services.json",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "package": "com.adilsezer.lithuaningo"
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "@react-native-firebase/app",
+      "@react-native-firebase/crashlytics",
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "useFrameworks": "static"
+          }
+        }
+      ]
+    ],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "ab8561f9-f525-48d3-bf59-b89e076fdb2f"
+      }
     }
   }
 }
