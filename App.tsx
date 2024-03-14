@@ -1,9 +1,10 @@
-import { StatusBar } from "expo-status-bar";
-import { StyleSheet, Text, View } from "react-native";
+import { Button, StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { MaterialIcons } from "@expo/vector-icons";
-import { ThemeProvider, Button, createTheme } from "@rneui/themed";
-import AuthTabNavigator from "./src/navigation/AuthTabNavigator";
+import { ThemeProvider, createTheme } from "@rneui/themed";
+import { Provider } from "react-redux";
+import { store } from "./src/store/store";
+import RootNavigator from "./src/navigation/RootNavigator";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const theme = createTheme({});
 
@@ -11,7 +12,10 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <ThemeProvider theme={theme}>
-        <AuthTabNavigator></AuthTabNavigator>
+        <Provider store={store}>
+          <RootNavigator></RootNavigator>
+          <Button title="Crash Test" onPress={() => crashlytics().crash()} />
+        </Provider>
       </ThemeProvider>
     </SafeAreaProvider>
   );

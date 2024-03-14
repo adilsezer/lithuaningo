@@ -1,18 +1,19 @@
 import React from "react";
 import { createStackNavigator } from "@react-navigation/stack";
 import { NavigationContainer } from "@react-navigation/native";
-import DashboardScreen from "../screens/DashboardScreen";
-import LoginScreen from "../screens/LoginScreen";
+import DashboardScreen from "../features/auth/screens/DashboardScreen";
+import AuthTabNavigator from "./AuthTabNavigator";
+import { useAppSelector } from "../store/hooks";
 
 type RootStackParamList = {
   Dashboard: undefined;
-  Login: undefined;
+  LoginSignup: undefined;
 };
 
 const Stack = createStackNavigator<RootStackParamList>();
 
-const AppNavigator: React.FC = () => {
-  const userIsAuthenticated = false; // Placeholder for authentication logic
+const RootNavigator: React.FC = () => {
+  const userIsAuthenticated = useAppSelector((state) => state.user.isLoggedIn);
 
   return (
     <NavigationContainer>
@@ -20,11 +21,11 @@ const AppNavigator: React.FC = () => {
         {userIsAuthenticated ? (
           <Stack.Screen name="Dashboard" component={DashboardScreen} />
         ) : (
-          <Stack.Screen name="Login" component={LoginScreen} />
+          <Stack.Screen name="LoginSignup" component={AuthTabNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>
   );
 };
 
-export default AppNavigator;
+export default RootNavigator;

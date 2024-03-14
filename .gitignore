@@ -1,6 +1,4 @@
-# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
-
-# dependencies
+# Dependencies
 node_modules/
 
 # Expo
@@ -8,28 +6,77 @@ node_modules/
 dist/
 web-build/
 
-# Native
+# Native builds
+ios/
+android/
 *.orig.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
+**/*.keystore
 
-# Metro
+# Metro bundler
+.metro/
 .metro-health-check*
 
-# debug
+# Debug logs
 npm-debug.*
 yarn-debug.*
 yarn-error.*
+*.log*
 
-# macOS
+# macOS system files
 .DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows system files and image file caches
+Thumbs.db
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msm
+*.msp
+*.lnk
+
+# JetBrains IDE
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Certificates
 *.pem
+*.cer
+*.der
 
-# local env files
-.env*.local
+# Environment variables
+.env*
+!.env.example
 
-# typescript
+# TypeScript build files
 *.tsbuildinfo
+
+# Log files
+logs
+
+# Firebase configuration files
+GoogleService-Info.plist
+google-services.json

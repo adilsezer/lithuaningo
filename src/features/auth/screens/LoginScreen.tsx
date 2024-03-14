@@ -1,13 +1,20 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { useAppDispatch } from "../../../store/hooks"; // Adjust the path as necessary
+import { signInWithEmail } from "../services/FirebaseAuthService"; // Adjust the path as necessary
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const dispatch = useAppDispatch();
 
-  const handleLogin = () => {
-    console.log(email, password);
-    // Implement your login logic here
+  const handleLogin = async () => {
+    try {
+      await signInWithEmail(email, password, dispatch);
+      console.log("Login successful");
+    } catch (error) {
+      console.error("Login failed:", error);
+    }
   };
 
   return (
@@ -29,6 +36,7 @@ const LoginScreen: React.FC = () => {
         secureTextEntry
       />
       <Button title="Log In" onPress={handleLogin} />
+      {/* Using Button directly */}
     </View>
   );
 };
