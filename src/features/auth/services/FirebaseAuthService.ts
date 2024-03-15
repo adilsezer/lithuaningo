@@ -1,7 +1,7 @@
 // src/services/FirebaseAuthService.ts
 import auth from "@react-native-firebase/auth";
 import { AppDispatch } from "../../../store/store"; // Adjust the import path as necessary
-import { logIn, logOut } from "../../../features/auth/slices/userSlice"; // Adjust the import path as necessary
+import { logIn, logOut } from "../redux/userSlice"; // Adjust the import path as necessary
 
 export const signInWithEmail = async (
   email: string,

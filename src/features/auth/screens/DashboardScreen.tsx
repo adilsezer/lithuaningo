@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Text, StyleSheet, Button } from "react-native";
 import { useAppDispatch } from "../../../store/hooks";
-import { logOut } from "../slices/userSlice";
+import { logOut } from "../redux/userSlice";
 import { Link } from "expo-router";
 
 const DashboardScreen: React.FC = () => {
