@@ -3,17 +3,10 @@
     "strict": true,
     "baseUrl": "./",
     "paths": {
-      "assets/*": [
-        "assets/*"
-      ],
-      "@components/*": [
-        "src/features/auth/components/*"
-      ]
+      "assets/*": ["assets/*"],
+      "@components/*": ["src/features/auth/components/*"]
     }
   },
   "extends": "expo/tsconfig.base",
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ]
+  "include": ["**/*.ts", "**/*.tsx"]
 }

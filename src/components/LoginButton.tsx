@@ -1,7 +1,7 @@
 import React from "react";
 import { View, Button } from "react-native";
-import { useAppDispatch } from "../../store/hooks";
-import { logIn } from "../../features/auth/redux/userSlice";
+import { useAppDispatch } from "../store/hooks";
+import { logIn } from "../features/auth/redux/userSlice";
 
 const LoginButton: React.FC = () => {
   const dispatch = useAppDispatch();

@@ -1,3 +1,5 @@
+// app/auth/login.tsx
+
 import React, { useState } from "react";
 import {
   View,
@@ -7,12 +9,13 @@ import {
   ActivityIndicator,
   StyleSheet,
 } from "react-native";
-import { useAppDispatch } from "../../../store/hooks";
-import { signInWithEmail } from "../services/FirebaseAuthService";
-import { signInWithGoogle } from "../services/GoogleAuthService";
-import GoogleSignInButton from "@components/GoogleSignInButton";
-import ErrorMessage from "@components/ErrorMessage";
-import { AuthErrorMessages } from "../utilities/AuthErrorMessages";
+import { useAppDispatch } from "../../store/hooks";
+import { signInWithEmail } from "../../features/auth/services/FirebaseAuthService";
+import { signInWithGoogle } from "../../features/auth/services/GoogleAuthService";
+import GoogleSignInButton from "src/features/auth/components/GoogleSignInButton";
+import ErrorMessage from "src/features/auth/components/ErrorMessage";
+import { AuthErrorMessages } from "../../features/auth/utilities/AuthErrorMessages";
+import { router } from "expo-router";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -26,6 +29,7 @@ const LoginScreen: React.FC = () => {
     setError(""); // Clear any existing errors
     try {
       await signInWithEmail(email, password, dispatch);
+      router.replace("/");
     } catch (error: any) {
       console.error("Error signing in: ", error.code, error.message);
       const errorMessage = AuthErrorMessages.getErrorMessage(error.code);
@@ -40,6 +44,7 @@ const LoginScreen: React.FC = () => {
     setError(""); // Clear any existing errors
     try {
       await signInWithGoogle(dispatch);
+      router.replace("/");
     } catch (error: any) {
       // Similar handling for Google sign-in errors
       const errorMessage =
