@@ -1,129 +1,63 @@
-// app/auth/login.tsx
-
+// LoginScreen.tsx
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  Button,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
-import { useAppDispatch } from "../../store/hooks";
-import { signInWithEmail } from "../../features/auth/services/FirebaseAuthService";
-import { signInWithGoogle } from "../../features/auth/services/GoogleAuthService";
-import GoogleSignInButton from "src/features/auth/components/GoogleSignInButton";
+import { View, Text, TextInput, ActivityIndicator } from "react-native";
 import ErrorMessage from "src/features/auth/components/ErrorMessage";
-import { AuthErrorMessages } from "../../features/auth/utilities/AuthErrorMessages";
-import { router } from "expo-router";
+import { useThemeStyles } from "@src/hooks/useThemeStyles"; // Adjust the import path as necessary
+import CustomButton from "@features/auth/components/CustomButton";
+import OrSeperator from "@components/OrSeperator";
+import { useSignInMethods } from "@src/hooks/useSignInMethods";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
-  const [loading, setLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string>("");
-  const dispatch = useAppDispatch();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
-  const handleLoginWithEmail = async () => {
-    setLoading(true);
-    setError(""); // Clear any existing errors
-    try {
-      await signInWithEmail(email, password, dispatch);
-      router.replace("/");
-    } catch (error: any) {
-      console.error("Error signing in: ", error.code, error.message);
-      const errorMessage = AuthErrorMessages.getErrorMessage(error.code);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLoginWithGoogle = async () => {
-    setLoading(true);
-    setError(""); // Clear any existing errors
-    try {
-      await signInWithGoogle(dispatch);
-      router.replace("/");
-    } catch (error: any) {
-      // Similar handling for Google sign-in errors
-      const errorMessage =
-        error?.message || "An unexpected error occurred. Please try again.";
-      setError(`Failed to log in with Google: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { handleLoginWithEmail, handleLoginWithGoogle, loading, error } =
+    useSignInMethods();
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Login</Text>
+    <View style={globalStyles.viewContainer}>
+      <Text style={globalStyles.title}>Login</Text>
       <TextInput
-        style={styles.input}
+        style={globalStyles.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
+        placeholderTextColor={globalColors.placeholder}
       />
       <TextInput
-        style={styles.input}
+        style={globalStyles.input}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry={true}
+        placeholderTextColor={globalColors.placeholder}
       />
       {loading ? (
-        <ActivityIndicator size="small" color="#0000ff" />
+        <ActivityIndicator size="small" color={globalColors.loading} />
       ) : (
         <>
-          <Button title="Log In with Email" onPress={handleLoginWithEmail} />
-          <View style={styles.separator}>
-            <View style={styles.line} />
-            <Text style={styles.orText}>Or</Text>
-            <View style={styles.line} />
-          </View>
-          <GoogleSignInButton onPress={handleLoginWithGoogle} />
+          <CustomButton
+            onPress={() => handleLoginWithEmail(email, password)}
+            title={"Log In with Email"}
+          ></CustomButton>
+          <OrSeperator />
+          <CustomButton
+            onPress={handleLoginWithGoogle}
+            title={"Log in with Google"}
+            icon={require("assets/google-logo.png")}
+            style={{
+              backgroundColor: "#f2f2f2",
+            }}
+            textStyle={{ color: "#1d1d1d" }}
+          ></CustomButton>
         </>
       )}
       {error && <ErrorMessage message={error} />}
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  input: {
-    width: "100%",
-    margin: 10,
-    borderWidth: 1,
-    borderColor: "#ddd",
-    padding: 10,
-  },
-  separator: {
-    flexDirection: "row",
-    alignItems: "center",
-    width: "100%",
-    marginVertical: 20,
-  },
-  line: {
-    flex: 1,
-    height: 1,
-    backgroundColor: "#ddd",
-  },
-  orText: {
-    width: 50,
-    textAlign: "center",
-  },
-});
 
 export default LoginScreen;

@@ -4,7 +4,11 @@
     "baseUrl": "./",
     "paths": {
       "assets/*": ["assets/*"],
-      "@components/*": ["src/features/auth/components/*"]
+      "@components/*": ["src/components/*"],
+      "@features/*": ["src/features/*"],
+      "@app/*": ["src/app/*"],
+      "@utils/*": ["src/utils/*"],
+      "@src/*": ["src/*"]
     }
   },
   "extends": "expo/tsconfig.base",

@@ -1,10 +1,16 @@
+// SignupScreen.tsx
+import OrSeperator from "@components/OrSeperator";
+import CustomButton from "@features/auth/components/CustomButton";
+import { useSignInMethods } from "@src/hooks/useSignInMethods";
 import React, { useState } from "react";
-import { View, Text, TextInput, Button, StyleSheet } from "react-native";
+import { View, Text, TextInput, Button } from "react-native";
+import { useThemeStyles } from "src/hooks/useThemeStyles";
 
 const SignupScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   const handleSignup = () => {
     // Implement your signup logic here
@@ -12,55 +18,49 @@ const SignupScreen: React.FC = () => {
     console.log(email, password, confirmPassword);
   };
 
+  const { handleLoginWithGoogle, loading, error } = useSignInMethods();
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Sign Up</Text>
+    <View style={globalStyles.viewContainer}>
+      <Text style={globalStyles.title}>Sign Up</Text>
       <TextInput
-        style={styles.input}
+        style={globalStyles.input}
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
         autoCapitalize="none"
+        placeholderTextColor={globalColors.placeholder}
       />
       <TextInput
-        style={styles.input}
+        style={globalStyles.input}
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        placeholderTextColor={globalColors.placeholder}
       />
       <TextInput
-        style={styles.input}
+        style={globalStyles.input}
         placeholder="Confirm Password"
         value={confirmPassword}
         onChangeText={setConfirmPassword}
         secureTextEntry
+        placeholderTextColor={globalColors.placeholder}
       />
-      <Button title="Sign Up" onPress={handleSignup} />
+      <CustomButton onPress={handleSignup} title={"Sign Up"}></CustomButton>
+      <OrSeperator />
+      <CustomButton
+        onPress={handleLoginWithGoogle}
+        title={"Sign up with Google"}
+        icon={require("assets/google-logo.png")}
+        style={{
+          backgroundColor: "#f2f2f2",
+        }}
+        textStyle={{ color: "#1d1d1d" }}
+      ></CustomButton>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
-  },
-  input: {
-    width: "100%",
-    borderWidth: 1,
-    borderColor: "gray",
-    padding: 10,
-    marginBottom: 20,
-    borderRadius: 5,
-  },
-});
 
 export default SignupScreen;

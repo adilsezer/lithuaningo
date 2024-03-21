@@ -9,7 +9,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     version: "1.0.0",
     orientation: "portrait",
     icon: "./assets/icon.png",
-    userInterfaceStyle: "light",
+    userInterfaceStyle: "automatic",
     splash: {
       image: "./assets/splash.png",
       resizeMode: "contain",
@@ -22,7 +22,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: "com.adilsezer.lithuaningo",
     },
     android: {
-      userInterfaceStyle: "automatic",
       googleServicesFile: "./google-services.json",
       adaptiveIcon: {
         foregroundImage: "./assets/adaptive-icon.png",
