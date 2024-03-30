@@ -8,10 +8,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     slug: "lithuaningo",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/icon.png",
+    icon: "./assets/images/icon.png",
     userInterfaceStyle: "automatic",
     splash: {
-      image: "./assets/splash.png",
+      image: "./assets/images/splash.png",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },
@@ -24,13 +24,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     android: {
       googleServicesFile: "./google-services.json",
       adaptiveIcon: {
-        foregroundImage: "./assets/adaptive-icon.png",
+        foregroundImage: "./assets/images/adaptive-icon.png",
         backgroundColor: "#ffffff",
       },
       package: "com.adilsezer.lithuaningo",
     },
     web: {
-      favicon: "./assets/favicon.png",
+      favicon: "./assets/images/favicon.png",
     },
     plugins: [
       "expo-router",
@@ -44,6 +44,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           },
         },
       ],
+      "expo-font",
     ],
     extra: {
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,

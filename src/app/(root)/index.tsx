@@ -1,33 +1,74 @@
-// /app/(root)/index.tsx
-
 import React from "react";
-import { View, Text, Button } from "react-native";
-import { useAppDispatch, useAppSelector } from "../../store/hooks"; // Import useAppSelector
-import { logOut, selectUserData } from "../../features/auth/redux/userSlice"; // Import selectUserData
+import { View, Text, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
+import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
-const HomeScreen: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const userData = useAppSelector(selectUserData); // Use selectUserData to get the user's data
+const WelcomeScreen = () => {
+  const handlePress = (tab: "login" | "signup") => {
+    router.push(`/auth/${tab}`);
+  };
   const { styles: globalStyles } = useThemeStyles();
 
-  const handleLogout = () => {
-    dispatch(logOut());
-    router.replace("auth/login");
-  };
-
   return (
-    <View style={globalStyles.viewContainer}>
-      <Text style={globalStyles.text}>Dashboard</Text>
-      {/* Display the user's name if userData is not null */}
-      {userData && (
-        <Text style={globalStyles.text}>Welcome, {userData.name}!</Text>
-      )}
-      <Button title="Logout" onPress={handleLogout} />
-      {/* Placeholder for actual dashboard content */}
+    <View style={styles.container}>
+      <View style={styles.imageContainer}>
+        <Image
+          source={require("assets/images/welcome-image.png")}
+          style={styles.image}
+        />
+      </View>
+      <View style={styles.textAndButtonContainer}>
+        <View style={styles.textContainer}>
+          <Text style={globalStyles.title}>Welcome to Lithuaningo</Text>
+          <Text style={globalStyles.subtitle}>
+            Your gateway to mastering Lithuanian! Dive into learning with ease
+            and fun.
+          </Text>
+        </View>
+        <View style={styles.buttonContainer}>
+          <CustomButton
+            onPress={() => handlePress("login")}
+            title={"Log In"}
+            style={{ width: 250 }}
+          />
+          <CustomButton
+            onPress={() => handlePress("signup")}
+            title={"Create Account"}
+            style={{ width: 250 }}
+          />
+        </View>
+      </View>
     </View>
   );
 };
 
-export default HomeScreen;
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    alignItems: "center",
+  },
+  imageContainer: {
+    flex: 1, // Keeps taking up half of the screen
+    width: "100%", // Full width
+  },
+  image: {
+    flex: 1,
+    width: null,
+    height: null,
+    resizeMode: "cover",
+  },
+  textAndButtonContainer: {
+    flex: 1, // The remaining half of the screen
+  },
+  textContainer: {
+    flex: 0.5, // Now takes up 25% of the overall screen space
+  },
+  buttonContainer: {
+    flex: 0.5, // Another 25% of the overall screen for buttons
+    justifyContent: "center",
+    alignItems: "center",
+  },
+});
+
+export default WelcomeScreen;

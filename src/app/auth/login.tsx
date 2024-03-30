@@ -1,11 +1,13 @@
-// LoginScreen.tsx
 import React, { useState } from "react";
-import { View, Text, TextInput, ActivityIndicator } from "react-native";
-import ErrorMessage from "src/features/auth/components/ErrorMessage";
-import { useThemeStyles } from "@src/hooks/useThemeStyles"; // Adjust the import path as necessary
-import CustomButton from "@features/auth/components/CustomButton";
+import { View, Text, TextInput, ActivityIndicator, Image } from "react-native";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
-import { useSignInMethods } from "@src/hooks/useSignInMethods";
+import { useAuthMethods } from "@src/hooks/useAuthMethods";
+import BackButton from "@components/BackButton";
+import RememberMe from "@features/auth/components/RememberMe";
+import NavigationLink from "@components/NavigationLink";
+import ResponseMessage from "@components/ResponseMessage";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -13,11 +15,12 @@ const LoginScreen: React.FC = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   const { handleLoginWithEmail, handleLoginWithGoogle, loading, error } =
-    useSignInMethods();
+    useAuthMethods();
 
   return (
     <View style={globalStyles.viewContainer}>
-      <Text style={globalStyles.title}>Login</Text>
+      <BackButton />
+      <Text style={globalStyles.title}>Welcome Back</Text>
       <TextInput
         style={globalStyles.input}
         placeholder="Email"
@@ -39,23 +42,32 @@ const LoginScreen: React.FC = () => {
         <ActivityIndicator size="small" color={globalColors.loading} />
       ) : (
         <>
+          <RememberMe />
+          <NavigationLink
+            text={"Forgot Password?"}
+            path={"/auth/forgot-password"}
+          ></NavigationLink>
           <CustomButton
             onPress={() => handleLoginWithEmail(email, password)}
             title={"Log In with Email"}
-          ></CustomButton>
+          />
           <OrSeperator />
           <CustomButton
             onPress={handleLoginWithGoogle}
             title={"Log in with Google"}
-            icon={require("assets/google-logo.png")}
+            icon={require("assets/images/google-logo.png")}
             style={{
               backgroundColor: "#f2f2f2",
             }}
             textStyle={{ color: "#1d1d1d" }}
-          ></CustomButton>
+          />
+          <NavigationLink
+            text={"Don't have an account? Sign Up"}
+            path={"/auth/signup"}
+          ></NavigationLink>
         </>
       )}
-      {error && <ErrorMessage message={error} />}
+      {error && <ResponseMessage message={error} type="error" />}
     </View>
   );
 };

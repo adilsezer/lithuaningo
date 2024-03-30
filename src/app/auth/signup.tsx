@@ -1,9 +1,10 @@
-// SignupScreen.tsx
-import OrSeperator from "@components/OrSeperator";
-import CustomButton from "@features/auth/components/CustomButton";
-import { useSignInMethods } from "@src/hooks/useSignInMethods";
 import React, { useState } from "react";
-import { View, Text, TextInput, Button } from "react-native";
+import { View, Text, TextInput, ActivityIndicator } from "react-native";
+import OrSeperator from "@components/OrSeperator";
+import BackButton from "@components/BackButton";
+import CustomButton from "@components/CustomButton";
+import ResponseMessage from "@components/ResponseMessage";
+import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import { useThemeStyles } from "src/hooks/useThemeStyles";
 
 const SignupScreen: React.FC = () => {
@@ -12,17 +13,13 @@ const SignupScreen: React.FC = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
-  const handleSignup = () => {
-    // Implement your signup logic here
-    // Make sure to validate the input (e.g., check if the passwords match)
-    console.log(email, password, confirmPassword);
-  };
-
-  const { handleLoginWithGoogle, loading, error } = useSignInMethods();
+  const { handleSignUpWithEmail, handleLoginWithGoogle, loading, error } =
+    useAuthMethods();
 
   return (
     <View style={globalStyles.viewContainer}>
-      <Text style={globalStyles.title}>Sign Up</Text>
+      <BackButton />
+      <Text style={globalStyles.title}>Create Account</Text>
       <TextInput
         style={globalStyles.input}
         placeholder="Email"
@@ -48,17 +45,27 @@ const SignupScreen: React.FC = () => {
         secureTextEntry
         placeholderTextColor={globalColors.placeholder}
       />
-      <CustomButton onPress={handleSignup} title={"Sign Up"}></CustomButton>
-      <OrSeperator />
-      <CustomButton
-        onPress={handleLoginWithGoogle}
-        title={"Sign up with Google"}
-        icon={require("assets/google-logo.png")}
-        style={{
-          backgroundColor: "#f2f2f2",
-        }}
-        textStyle={{ color: "#1d1d1d" }}
-      ></CustomButton>
+      {loading ? (
+        <ActivityIndicator size="large" color={globalColors.primary} />
+      ) : (
+        <>
+          <CustomButton
+            onPress={() => handleSignUpWithEmail(email, password)}
+            title={"Sign Up"}
+          />
+          <OrSeperator />
+          <CustomButton
+            onPress={handleLoginWithGoogle}
+            title={"Sign up with Google"}
+            icon={require("assets/images/google-logo.png")}
+            style={{
+              backgroundColor: "#f2f2f2",
+            }}
+            textStyle={{ color: "#1d1d1d" }}
+          />
+        </>
+      )}
+      {error && <ResponseMessage message={error} type="error" />}
     </View>
   );
 };

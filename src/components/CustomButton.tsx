@@ -7,6 +7,7 @@ import {
   ViewStyle,
   TextStyle,
   ImageSourcePropType,
+  View,
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
@@ -28,10 +29,12 @@ const CustomButton: React.FC<ButtonProps> = ({
   const { styles: globalStyles } = useThemeStyles();
 
   return (
-    <TouchableOpacity style={[globalStyles.button, style]} onPress={onPress}>
-      {icon && <Image style={[globalStyles.icon]} source={icon} />}
-      <Text style={[globalStyles.buttonText, textStyle]}>{title}</Text>
-    </TouchableOpacity>
+    <View style={globalStyles.centerContainer}>
+      <TouchableOpacity style={[globalStyles.button, style]} onPress={onPress}>
+        {icon && <Image style={[globalStyles.icon]} source={icon} />}
+        <Text style={[globalStyles.buttonText, textStyle]}>{title}</Text>
+      </TouchableOpacity>
+    </View>
   );
 };
 

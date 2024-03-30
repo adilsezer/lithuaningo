@@ -7,11 +7,23 @@ export const createLayoutStyles = (colors: ThemeColors) =>
     pageStyle: {
       flex: 1,
       backgroundColor: colors.background,
+      padding: 20,
+    },
+    layoutContainer: {
+      flex: 1, // This will make sure the container expands
+      width: "100%",
     },
     viewContainer: {
       width: "100%",
+    },
+    centerContainer: {
       alignItems: "center",
-      padding: 20,
+    },
+    leftContainer: {
+      alignItems: "flex-start",
+    },
+    rightContainer: {
+      alignItems: "flex-end",
     },
     separator: {
       flexDirection: "row",

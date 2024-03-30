@@ -12,6 +12,7 @@ export const createComponentStyles = (colors: ThemeColors) =>
       padding: 20,
       borderRadius: 10,
       color: colors.text,
+      fontFamily: "Roboto",
     },
     button: {
       flexDirection: "row",
@@ -23,12 +24,12 @@ export const createComponentStyles = (colors: ThemeColors) =>
       paddingHorizontal: 20,
       borderRadius: 25,
       marginVertical: 10,
-      minWidth: 150,
+      width: 200,
       justifyContent: "center",
     },
     icon: {
       width: 24,
       height: 24,
-      marginRight: 12,
+      marginRight: 10,
     },
   });

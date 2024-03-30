@@ -53,3 +53,13 @@ export const signOutUser = async (dispatch: AppDispatch): Promise<void> => {
     throw error;
   }
 };
+
+export const sendPasswordResetEmail = async (email: string): Promise<void> => {
+  try {
+    await auth().sendPasswordResetEmail(email);
+    console.log("Password reset email sent successfully");
+  } catch (error) {
+    console.error("Error sending password reset email: ", error);
+    throw error;
+  }
+};

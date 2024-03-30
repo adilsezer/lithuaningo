@@ -1,12 +1,13 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { Redirect, Slot } from "expo-router";
 import { useAuth } from "../../context/AuthContext"; // Adjust the import path as needed
-import { ActivityIndicator, View, StyleSheet } from "react-native";
 
 const AppLayout: React.FC = () => {
-  const { isLoading, session } = useAuth();
+  const { isLoading: isAuthLoading, session } = useAuth();
 
-  if (isLoading) {
+  // Render the ActivityIndicator while checking auth or onboarding status
+  if (isAuthLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
@@ -14,14 +15,14 @@ const AppLayout: React.FC = () => {
     );
   }
 
-  if (!session) {
-    return <Redirect href="auth/login" />;
+  // Redirect logic based on session
+  if (session) {
+    return <Redirect href="dashboard" />;
   }
 
   return <Slot />;
 };
 
-// Styles to center the ActivityIndicator
 const styles = StyleSheet.create({
   centered: {
     flex: 1,
