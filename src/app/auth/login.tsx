@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  ActivityIndicator,
-  StyleSheet,
-} from "react-native";
+import { View, Text, TextInput, Modal } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
@@ -13,6 +7,7 @@ import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import BackButton from "@components/BackButton";
 import NavigationLink from "@components/NavigationLink";
 import ResponseMessage from "@components/ResponseMessage";
+import LoadingIndicator from "@components/LoadingIndicator"; // Ensure the path is correct based on your project structure
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -24,6 +19,7 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={globalStyles.viewContainer}>
+      {loading && <LoadingIndicator />}
       <BackButton />
       <Text style={globalStyles.title}>Welcome Back</Text>
       <TextInput
@@ -43,37 +39,31 @@ const LoginScreen: React.FC = () => {
         secureTextEntry={true}
         placeholderTextColor={globalColors.placeholder}
       />
+      {error && <ResponseMessage message={error} type="error" />}
       <NavigationLink
         text={"Forgot Password?"}
         path={"/auth/forgot-password"}
-        style={{ textAlign: "right", marginLeft: "auto" }} // Ensures that the link aligns to the right
+        style={{ textAlign: "right", marginLeft: "auto" }}
       />
-      {loading ? (
-        <ActivityIndicator size="small" color={globalColors.loading} />
-      ) : (
-        <>
-          <CustomButton
-            onPress={() => handleLoginWithEmail(email, password)}
-            title={"Log In with Email"}
-          />
-          <OrSeperator />
-          <CustomButton
-            onPress={handleLoginWithGoogle}
-            title={"Log in with Google"}
-            icon={require("assets/images/google-logo.png")}
-            style={{
-              backgroundColor: "#f2f2f2",
-            }}
-            textStyle={{ color: "#1d1d1d" }}
-          />
-          <NavigationLink
-            text={"Don't have an account? Sign Up"}
-            path={"/auth/signup"}
-            style={{ textAlign: "center" }}
-          />
-        </>
-      )}
-      {error && <ResponseMessage message={error} type="error" />}
+      <CustomButton
+        onPress={() => handleLoginWithEmail(email, password)}
+        title={"Log In with Email"}
+      />
+      <OrSeperator />
+      <CustomButton
+        onPress={handleLoginWithGoogle}
+        title={"Log in with Google"}
+        icon={require("assets/images/google-logo.png")}
+        style={{
+          backgroundColor: "#f2f2f2",
+        }}
+        textStyle={{ color: "#1d1d1d" }}
+      />
+      <NavigationLink
+        text={"Don't have an account? Sign Up"}
+        path={"/auth/signup"}
+        style={{ textAlign: "center" }}
+      />
     </View>
   );
 };

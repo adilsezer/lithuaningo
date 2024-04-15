@@ -20,7 +20,9 @@ const DashboardScreen: React.FC = () => {
       <Text style={globalStyles.text}>Dashboard</Text>
       {/* Display the user's name if userData is not null */}
       {userData && (
-        <Text style={globalStyles.text}>Welcome, {userData.name}!</Text>
+        <Text style={globalStyles.text}>
+          Welcome, {userData.name || userData.email}!
+        </Text>
       )}
       <Button title="Logout" onPress={handleSignOut} />
       {/* Placeholder for actual dashboard content */}

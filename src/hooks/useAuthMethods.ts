@@ -40,12 +40,8 @@ export const useAuthMethods = () => {
           router.replace(successPath);
         }
       } catch (error: any) {
-        console.error(error);
-        setError(
-          AuthErrorMessages.getErrorMessage(error.code) ||
-            error.message ||
-            "An unexpected error occurred."
-        );
+        const formattedMessage = AuthErrorMessages.getErrorMessage(error.code);
+        setError(formattedMessage);
       } finally {
         setLoading(false);
       }
@@ -55,11 +51,10 @@ export const useAuthMethods = () => {
 
   return {
     handleSignUpWithEmail: (email: string, password: string) =>
-      handleAction(
-        () => signUpWithEmail(email, password, dispatch),
-        "Signed up successfully.",
-        "/dashboard"
-      ),
+      handleAction(async () => {
+        await signUpWithEmail(email, password, dispatch); // Sign up and get the user
+        await sendEmailVerification(); // Assuming this uses the current user internally
+      }, "Registration successful! Please verify your email to continue."),
     handleLoginWithEmail: (email: string, password: string) =>
       handleAction(
         () => signInWithEmail(email, password, dispatch),

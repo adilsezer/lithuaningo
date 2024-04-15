@@ -1,0 +1,3 @@
+- Users shouldn't be able to login without verifying their email
+- Create verify email component to better show the message
+- 

@@ -5,6 +5,7 @@ import CustomButton from "@components/CustomButton";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import BackButton from "@components/BackButton";
 import ResponseMessage from "@components/ResponseMessage";
+import LoadingIndicator from "@components/LoadingIndicator";
 
 const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -15,6 +16,7 @@ const ForgotPasswordScreen: React.FC = () => {
 
   return (
     <View style={globalStyles.layoutContainer}>
+      {loading && <LoadingIndicator />}
       <BackButton />
       <Text style={globalStyles.title}>Forgot Password?</Text>
       <Text style={globalStyles.text}>
@@ -29,17 +31,11 @@ const ForgotPasswordScreen: React.FC = () => {
         keyboardType="email-address"
         placeholderTextColor={globalColors.placeholder}
       />
-      {loading ? (
-        <ActivityIndicator size="small" color={globalColors.loading} />
-      ) : (
-        <>
-          <CustomButton
-            onPress={() => handlePasswordReset(email)}
-            title={"Continue"}
-          />
-        </>
-      )}
       {error && <ResponseMessage message={error} type="error" />}
+      <CustomButton
+        onPress={() => handlePasswordReset(email)}
+        title={"Continue"}
+      />
       {successMessage && (
         <ResponseMessage message={successMessage} type="success" />
       )}
