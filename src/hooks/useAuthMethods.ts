@@ -1,111 +1,115 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAppDispatch } from "../store/hooks";
 import { AuthErrorMessages } from "../features/auth/utilities/AuthErrorMessages";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import {
-  sendPasswordResetEmail,
   signInWithEmail,
-  signOutUser,
   signUpWithEmail,
+  signOutUser,
+  sendPasswordResetEmail,
+  updateUserProfile,
+  sendEmailVerification,
+  updateUserPassword,
+  deleteUser,
+  reauthenticateUser,
 } from "@features/auth/services/FirebaseAuthService";
 import { signInWithGoogle } from "@features/auth/services/GoogleAuthService";
+import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 export const useAuthMethods = () => {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
-  const handleSignUpWithEmail = async (email: string, password: string) => {
-    setLoading(true);
-    setError(""); // Clear any existing errors
-    try {
-      await signUpWithEmail(email, password, dispatch);
-      router.replace("/dashboard"); // Adjust as needed for your routing logic
-    } catch (error: any) {
-      console.error("Error signing up with email: ", error.code, error.message);
-      const errorMessage = AuthErrorMessages.getErrorMessage(error.code);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLoginWithEmail = async (email: string, password: string) => {
-    setLoading(true);
-    setError(""); // Clear any existing errors
-    try {
-      await signInWithEmail(email, password, dispatch);
-      router.replace("/dashboard");
-    } catch (error: any) {
-      console.error("Error signing in with email: ", error.code, error.message);
-      const errorMessage = AuthErrorMessages.getErrorMessage(error.code);
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleLoginWithGoogle = async () => {
-    setLoading(true);
-    setError(""); // Clear any existing errors
-    try {
-      await signInWithGoogle(dispatch);
-      router.replace("/dashboard");
-    } catch (error: any) {
-      console.error("Error signing in with Google: ", error.message);
-      const errorMessage =
-        error?.message || "An unexpected error occurred. Please try again.";
-      setError(`Failed to log in with Google: ${errorMessage}`);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleSignOut = async () => {
-    setLoading(true);
-    setError(""); // Clear any existing errors
-    try {
-      await signOutUser(dispatch);
-      router.replace("/");
-    } catch (error: any) {
-      console.error("Error signing out: ", error.message);
-      setError("An error occurred while trying to sign out. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handlePasswordReset = async (email: string) => {
-    setLoading(true);
-    setError(""); // Clear any existing errors
-    setSuccessMessage(""); // Clear any existing success messages
-    try {
-      await sendPasswordResetEmail(email);
-      setSuccessMessage("Please check your email to reset your password.");
-    } catch (error: any) {
-      console.error(
-        "Error sending password reset email: ",
-        error.code,
-        error.message
-      );
-      const errorMessage =
-        AuthErrorMessages.getErrorMessage(error.code) ||
-        "Failed to send password reset email. Please try again.";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const handleAction = useCallback(
+    async (
+      action: () => Promise<void>,
+      successMsg: string,
+      successPath?: string
+    ) => {
+      setLoading(true);
+      setError("");
+      setSuccessMessage("");
+      try {
+        await action();
+        setSuccessMessage(successMsg);
+        if (successPath) {
+          // Navigate on successful action
+          router.replace(successPath);
+        }
+      } catch (error: any) {
+        console.error(error);
+        setError(
+          AuthErrorMessages.getErrorMessage(error.code) ||
+            error.message ||
+            "An unexpected error occurred."
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [router] // Depend on router to ensure it's captured in the hook's closure
+  );
 
   return {
-    handleSignUpWithEmail,
-    handleLoginWithEmail,
-    handleLoginWithGoogle,
-    handleSignOut,
-    handlePasswordReset,
+    handleSignUpWithEmail: (email: string, password: string) =>
+      handleAction(
+        () => signUpWithEmail(email, password, dispatch),
+        "Signed up successfully.",
+        "/dashboard"
+      ),
+    handleLoginWithEmail: (email: string, password: string) =>
+      handleAction(
+        () => signInWithEmail(email, password, dispatch),
+        "Logged in successfully.",
+        "/dashboard"
+      ),
+    handleLoginWithGoogle: () =>
+      handleAction(
+        () => signInWithGoogle(dispatch),
+        "Logged in with Google successfully.",
+        "/dashboard"
+      ),
+    handleSignOut: () =>
+      handleAction(
+        () => signOutUser(dispatch),
+        "Signed out successfully.",
+        "/"
+      ),
+    handlePasswordReset: (email: string) =>
+      handleAction(
+        () => sendPasswordResetEmail(email),
+        "Password reset email sent. Please check your inbox."
+      ),
+    handleUpdateUserProfile: (updates: {
+      displayName?: string;
+      photoURL?: string;
+    }) =>
+      handleAction(
+        () => updateUserProfile(updates, dispatch),
+        "Profile updated successfully."
+      ),
+    handleSendEmailVerification: () =>
+      handleAction(
+        () => sendEmailVerification(),
+        "Verification email sent. Please check your inbox."
+      ),
+    handleUpdateUserPassword: (newPassword: string) =>
+      handleAction(
+        () => updateUserPassword(newPassword, dispatch),
+        "Password updated successfully."
+      ),
+    handleDeleteUserAccount: () =>
+      handleAction(() => deleteUser(dispatch), "Account deleted successfully."),
+    handleReauthenticateUser: (credential: FirebaseAuthTypes.AuthCredential) =>
+      handleAction(
+        () => reauthenticateUser(credential, dispatch),
+        "User re-authenticated successfully."
+      ),
     loading,
     error,
-    successMessage, // Expose the successMessage state for use in components
+    successMessage,
   };
 };

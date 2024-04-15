@@ -1,34 +1,77 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../../../store/store";
 
-interface UserState {
-  isLoggedIn: boolean;
-  data: null | { name: string; email: string };
+// Improved TypeScript definitions for clarity and nullability
+interface UserProfile {
+  name: string | null;
+  email: string; // Now always expected to be a string, not null
+  photoURL: string | null;
+  emailVerified: boolean;
 }
 
+// Defining initial state type based on the interface directly
+interface UserState {
+  isLoggedIn: boolean;
+  data: UserProfile | null;
+  needsReauthentication: boolean;
+}
+
+// Explicit initial state matching the UserState interface
 const initialState: UserState = {
   isLoggedIn: false,
   data: null,
+  needsReauthentication: false,
 };
 
 export const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    logIn: (state, action: PayloadAction<{ name: string; email: string }>) => {
+    logIn: (state, action: PayloadAction<UserProfile>) => {
       state.isLoggedIn = true;
       state.data = action.payload;
+      state.needsReauthentication = false;
     },
     logOut: (state) => {
       state.isLoggedIn = false;
       state.data = null;
+      state.needsReauthentication = false;
+    },
+    updateUserProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
+      if (state.isLoggedIn && state.data) {
+        state.data = { ...state.data, ...action.payload };
+      }
+    },
+    requireReauthentication: (state) => {
+      state.needsReauthentication = true;
+    },
+    clearReauthenticationRequirement: (state) => {
+      state.needsReauthentication = false;
+    },
+    deleteUserAccount: (state) => {
+      state.isLoggedIn = false;
+      state.data = null;
+      state.needsReauthentication = false;
     },
   },
 });
 
-export const { logIn, logOut } = userSlice.actions;
+// Actions export
+export const {
+  logIn,
+  logOut,
+  updateUserProfile,
+  requireReauthentication,
+  clearReauthenticationRequirement,
+  deleteUserAccount,
+} = userSlice.actions;
 
-export const selectIsLoggedIn = (state: RootState) => state.user.isLoggedIn;
-export const selectUserData = (state: RootState) => state.user.data;
+// Selectors for accessing state in a type-safe manner
+export const selectIsLoggedIn = (state: RootState): boolean =>
+  state.user.isLoggedIn;
+export const selectUserData = (state: RootState): UserState["data"] =>
+  state.user.data;
+export const selectNeedsReauthentication = (state: RootState): boolean =>
+  state.user.needsReauthentication;
 
 export default userSlice.reducer;

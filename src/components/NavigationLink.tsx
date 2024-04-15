@@ -34,7 +34,7 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
 
 const styles = StyleSheet.create({
   link: {
-    marginTop: 10, // Default top margin
+    marginVertical: 10, // Default top margin
   },
 });
 

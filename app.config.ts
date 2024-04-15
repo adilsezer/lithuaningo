@@ -11,7 +11,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     icon: "./assets/images/icon.png",
     userInterfaceStyle: "automatic",
     splash: {
-      image: "./assets/images/splash.png",
+      image: "./assets/images/splash.jpeg",
       resizeMode: "contain",
       backgroundColor: "#ffffff",
     },

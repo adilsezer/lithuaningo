@@ -1,11 +1,16 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, ActivityIndicator, Image } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  ActivityIndicator,
+  StyleSheet,
+} from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import BackButton from "@components/BackButton";
-import RememberMe from "@features/auth/components/RememberMe";
 import NavigationLink from "@components/NavigationLink";
 import ResponseMessage from "@components/ResponseMessage";
 
@@ -38,15 +43,15 @@ const LoginScreen: React.FC = () => {
         secureTextEntry={true}
         placeholderTextColor={globalColors.placeholder}
       />
+      <NavigationLink
+        text={"Forgot Password?"}
+        path={"/auth/forgot-password"}
+        style={{ textAlign: "right", marginLeft: "auto" }} // Ensures that the link aligns to the right
+      />
       {loading ? (
         <ActivityIndicator size="small" color={globalColors.loading} />
       ) : (
         <>
-          <RememberMe />
-          <NavigationLink
-            text={"Forgot Password?"}
-            path={"/auth/forgot-password"}
-          ></NavigationLink>
           <CustomButton
             onPress={() => handleLoginWithEmail(email, password)}
             title={"Log In with Email"}
@@ -64,7 +69,8 @@ const LoginScreen: React.FC = () => {
           <NavigationLink
             text={"Don't have an account? Sign Up"}
             path={"/auth/signup"}
-          ></NavigationLink>
+            style={{ textAlign: "center" }}
+          />
         </>
       )}
       {error && <ResponseMessage message={error} type="error" />}
