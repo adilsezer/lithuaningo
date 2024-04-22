@@ -2,9 +2,8 @@
 
 import React from "react";
 import { Text, Button } from "react-native";
-import { useAppDispatch, useAppSelector } from "../../store/hooks"; // Import useAppSelector
-import { logOut, selectUserData } from "../../features/auth/redux/userSlice"; // Import selectUserData
-import { router } from "expo-router";
+import { useAppSelector } from "../../store/hooks"; // Import useAppSelector
+import { selectUserData } from "../../features/auth/redux/userSlice"; // Import selectUserData
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";

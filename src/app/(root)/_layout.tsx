@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
+import React from "react";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
 import { Redirect, Slot } from "expo-router";
-import { useAuth } from "../../context/AuthContext"; // Adjust the import path as needed
+import { useAppSelector } from "../../store/hooks"; // Adjust the import path as needed
 
 const AppLayout: React.FC = () => {
-  const { isLoading: isAuthLoading, session } = useAuth();
+  // Use Redux hooks to get auth state
+  const isLoggedIn = useAppSelector((state) => state.user.isLoggedIn);
+  const isLoading = useAppSelector((state) => state.user.isLoading); // Assuming isLoading is part of your Redux state
 
   // Render the ActivityIndicator while checking auth or onboarding status
-  if (isAuthLoading) {
+  if (isLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
@@ -16,8 +18,8 @@ const AppLayout: React.FC = () => {
   }
 
   // Redirect logic based on session
-  if (session) {
-    return <Redirect href="dashboard" />;
+  if (isLoggedIn) {
+    return <Redirect href="/dashboard" />; // Ensure paths are correctly prefixed with '/'
   }
 
   return <Slot />;

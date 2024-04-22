@@ -1,11 +1,5 @@
 import React, { useState } from "react";
-import {
-  View,
-  ActivityIndicator,
-  Modal,
-  StyleSheet,
-  Button,
-} from "react-native";
+import { View, ActivityIndicator, Modal, StyleSheet } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles"; // Ensure the path is correct based on your project structure
 
 const LoadingIndicator = () => {

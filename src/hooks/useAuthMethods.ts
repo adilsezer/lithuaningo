@@ -1,5 +1,6 @@
-import { useState, useCallback } from "react";
-import { useAppDispatch } from "../store/hooks";
+import { useCallback, useState } from "react";
+import { useAppDispatch, useAppSelector } from "../store/hooks";
+import { setLoading } from "../features/auth/redux/userSlice"; // Ensure this is the correct import path
 import { AuthErrorMessages } from "../features/auth/utilities/AuthErrorMessages";
 import { useRouter } from "expo-router";
 import {
@@ -17,9 +18,9 @@ import { signInWithGoogle } from "@features/auth/services/GoogleAuthService";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 export const useAuthMethods = () => {
-  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string>("");
   const [successMessage, setSuccessMessage] = useState<string>("");
+  const loading = useAppSelector((state) => state.user.isLoading);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -29,31 +30,30 @@ export const useAuthMethods = () => {
       successMsg: string,
       successPath?: string
     ) => {
-      setLoading(true);
+      dispatch(setLoading(true));
       setError("");
       setSuccessMessage("");
       try {
         await action();
         setSuccessMessage(successMsg);
         if (successPath) {
-          // Navigate on successful action
           router.replace(successPath);
         }
       } catch (error: any) {
         const formattedMessage = AuthErrorMessages.getErrorMessage(error.code);
         setError(formattedMessage);
       } finally {
-        setLoading(false);
+        dispatch(setLoading(false));
       }
     },
-    [router] // Depend on router to ensure it's captured in the hook's closure
+    [router, dispatch] // Include dispatch in the dependencies array
   );
 
   return {
     handleSignUpWithEmail: (email: string, password: string) =>
       handleAction(async () => {
-        await signUpWithEmail(email, password, dispatch); // Sign up and get the user
-        await sendEmailVerification(); // Assuming this uses the current user internally
+        await signUpWithEmail(email, password, dispatch);
+        await sendEmailVerification();
       }, "Registration successful! Please verify your email to continue."),
     handleLoginWithEmail: (email: string, password: string) =>
       handleAction(

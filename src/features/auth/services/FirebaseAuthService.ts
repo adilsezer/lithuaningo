@@ -40,6 +40,9 @@ export const signInWithEmail = async (
 ): Promise<void> => {
   try {
     const { user } = await auth().signInWithEmailAndPassword(email, password);
+    if (!user.emailVerified) {
+      throw new Error("Please verify your email before logging in."); // Throw an error if email not verified
+    }
     updateUserState(user, dispatch);
   } catch (error) {
     const firebaseError = error as FirebaseError;

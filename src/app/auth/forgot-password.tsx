@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, ActivityIndicator } from "react-native";
+import { View, Text, TextInput } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";

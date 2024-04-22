@@ -2,9 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "../store/store";
-import { SessionProvider } from "../context/AuthContext";
 import { Slot } from "expo-router";
-import { View } from "react-native";
 import LoadingIndicator from "@components/LoadingIndicator";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import * as Font from "expo-font";
@@ -38,11 +36,9 @@ const RootLayout: React.FC = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={<LoadingIndicator />} persistor={persistor}>
-        <SessionProvider>
-          <SafeAreaView style={globalStyles.pageStyle}>
-            <Slot />
-          </SafeAreaView>
-        </SessionProvider>
+        <SafeAreaView style={globalStyles.pageStyle}>
+          <Slot />
+        </SafeAreaView>
       </PersistGate>
     </Provider>
   );

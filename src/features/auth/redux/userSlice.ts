@@ -3,9 +3,9 @@ import type { RootState } from "../../../store/store";
 
 // Improved TypeScript definitions for clarity and nullability
 interface UserProfile {
-  name: string | null;
-  email: string; // Now always expected to be a string, not null
-  photoURL: string | null;
+  name: string | null; // Consider if you really want this nullable.
+  email: string;
+  photoURL?: string | null; // Make it explicitly optional and nullable.
   emailVerified: boolean;
 }
 
@@ -14,6 +14,7 @@ interface UserState {
   isLoggedIn: boolean;
   data: UserProfile | null;
   needsReauthentication: boolean;
+  isLoading: boolean; // Add this line to track loading state
 }
 
 // Explicit initial state matching the UserState interface
@@ -21,6 +22,7 @@ const initialState: UserState = {
   isLoggedIn: false,
   data: null,
   needsReauthentication: false,
+  isLoading: false,
 };
 
 export const userSlice = createSlice({
@@ -53,6 +55,9 @@ export const userSlice = createSlice({
       state.data = null;
       state.needsReauthentication = false;
     },
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.isLoading = action.payload;
+    },
   },
 });
 
@@ -64,6 +69,7 @@ export const {
   requireReauthentication,
   clearReauthenticationRequirement,
   deleteUserAccount,
+  setLoading,
 } = userSlice.actions;
 
 // Selectors for accessing state in a type-safe manner
@@ -75,3 +81,5 @@ export const selectNeedsReauthentication = (state: RootState): boolean =>
   state.user.needsReauthentication;
 
 export default userSlice.reducer;
+
+export type { UserProfile }; // Make sure to export the UserProfile type
