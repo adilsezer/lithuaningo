@@ -25,6 +25,11 @@ export const createLayoutStyles = (colors: ThemeColors) =>
     rightContainer: {
       alignItems: "flex-end",
     },
+    fullScreenCenter: {
+      flex: 1,
+      justifyContent: "center",
+      alignItems: "center",
+    },
     separator: {
       flexDirection: "row",
       alignItems: "center",

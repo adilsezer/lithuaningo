@@ -14,7 +14,6 @@ interface UserState {
   isLoggedIn: boolean;
   data: UserProfile | null;
   needsReauthentication: boolean;
-  isLoading: boolean; // Add this line to track loading state
 }
 
 // Explicit initial state matching the UserState interface
@@ -22,7 +21,6 @@ const initialState: UserState = {
   isLoggedIn: false,
   data: null,
   needsReauthentication: false,
-  isLoading: false,
 };
 
 export const userSlice = createSlice({
@@ -55,9 +53,6 @@ export const userSlice = createSlice({
       state.data = null;
       state.needsReauthentication = false;
     },
-    setLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload;
-    },
   },
 });
 
@@ -69,7 +64,6 @@ export const {
   requireReauthentication,
   clearReauthenticationRequirement,
   deleteUserAccount,
-  setLoading,
 } = userSlice.actions;
 
 // Selectors for accessing state in a type-safe manner

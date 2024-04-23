@@ -1,43 +1,35 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert } from "react-native";
+import { View, Text, TextInput } from "react-native";
+import { useDispatch } from "react-redux";
 import OrSeperator from "@components/OrSeperator";
 import BackButton from "@components/BackButton";
 import CustomButton from "@components/CustomButton";
-import ResponseMessage from "@components/ResponseMessage";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
-import { useThemeStyles } from "src/hooks/useThemeStyles"; // Ensure path correctness
-import LoadingIndicator from "@components/LoadingIndicator";
+import { useThemeStyles } from "src/hooks/useThemeStyles";
+import { setMessage, clearMessage } from "@features/ui/redux/uiSlice";
 
 const SignupScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const [localError, setLocalError] = useState<string>(""); // Local state to manage password mismatch error
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const dispatch = useDispatch();
 
-  const {
-    handleSignUpWithEmail,
-    handleLoginWithGoogle,
-    loading,
-    error,
-    successMessage,
-  } = useAuthMethods();
+  const { handleSignUpWithEmail, handleLoginWithGoogle } = useAuthMethods();
 
   const handleSignUp = () => {
-    if (password !== confirmPassword) {
-      setLocalError("Passwords do not match.");
-      return; // Stop the signup process if passwords do not match
+    if (confirmPassword !== password) {
+      dispatch(
+        setMessage({ message: "Passwords do not match.", type: "error" })
+      );
+      return; // Prevent signup if password mismatch
     }
-    setLocalError(""); // Clear any existing errors
+    dispatch(clearMessage());
     handleSignUpWithEmail(email, password);
   };
 
-  const displayedError = localError || error;
-
   return (
     <View style={globalStyles.viewContainer}>
-      {loading && <LoadingIndicator />}
-      <BackButton />
       <Text style={globalStyles.title}>Create Account</Text>
       <TextInput
         style={globalStyles.input}
@@ -64,12 +56,6 @@ const SignupScreen: React.FC = () => {
         secureTextEntry
         placeholderTextColor={globalColors.placeholder}
       />
-      {displayedError && (
-        <ResponseMessage message={displayedError} type="error" />
-      )}
-      {successMessage && (
-        <ResponseMessage message={successMessage} type="success" />
-      )}
       <CustomButton onPress={handleSignUp} title={"Sign Up"} />
       <OrSeperator />
       <CustomButton

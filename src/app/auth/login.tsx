@@ -6,21 +6,16 @@ import OrSeperator from "@components/OrSeperator";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import BackButton from "@components/BackButton";
 import NavigationLink from "@components/NavigationLink";
-import ResponseMessage from "@components/ResponseMessage";
-import LoadingIndicator from "@components/LoadingIndicator"; // Ensure the path is correct based on your project structure
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
-  const { handleLoginWithEmail, handleLoginWithGoogle, loading, error } =
-    useAuthMethods();
+  const { handleLoginWithEmail, handleLoginWithGoogle } = useAuthMethods();
 
   return (
     <View style={globalStyles.viewContainer}>
-      {loading && <LoadingIndicator />}
-      <BackButton />
       <Text style={globalStyles.title}>Welcome Back</Text>
       <TextInput
         style={globalStyles.input}
@@ -39,7 +34,6 @@ const LoginScreen: React.FC = () => {
         secureTextEntry={true}
         placeholderTextColor={globalColors.placeholder}
       />
-      {error && <ResponseMessage message={error} type="error" />}
       <NavigationLink
         text={"Forgot Password?"}
         path={"/auth/forgot-password"}

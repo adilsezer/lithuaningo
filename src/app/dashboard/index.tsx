@@ -12,7 +12,7 @@ const DashboardScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData); // Use selectUserData to get the user's data
   const { styles: globalStyles } = useThemeStyles();
 
-  const { handleSignOut, loading, error } = useAuthMethods();
+  const { handleSignOut } = useAuthMethods();
 
   return (
     <SafeAreaView style={globalStyles.viewContainer}>

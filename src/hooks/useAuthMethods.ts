@@ -1,6 +1,5 @@
-import { useCallback, useState } from "react";
-import { useAppDispatch, useAppSelector } from "../store/hooks";
-import { setLoading } from "../features/auth/redux/userSlice"; // Ensure this is the correct import path
+import { useCallback } from "react";
+import { useAppDispatch } from "../store/hooks";
 import { AuthErrorMessages } from "../features/auth/utilities/AuthErrorMessages";
 import { useRouter } from "expo-router";
 import {
@@ -16,11 +15,9 @@ import {
 } from "@features/auth/services/FirebaseAuthService";
 import { signInWithGoogle } from "@features/auth/services/GoogleAuthService";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { setLoading, setMessage } from "@features/ui/redux/uiSlice";
 
 export const useAuthMethods = () => {
-  const [error, setError] = useState<string>("");
-  const [successMessage, setSuccessMessage] = useState<string>("");
-  const loading = useAppSelector((state) => state.user.isLoading);
   const dispatch = useAppDispatch();
   const router = useRouter();
 
@@ -31,17 +28,15 @@ export const useAuthMethods = () => {
       successPath?: string
     ) => {
       dispatch(setLoading(true));
-      setError("");
-      setSuccessMessage("");
       try {
         await action();
-        setSuccessMessage(successMsg);
+        dispatch(setMessage({ message: successMsg, type: "success" }));
         if (successPath) {
           router.replace(successPath);
         }
       } catch (error: any) {
         const formattedMessage = AuthErrorMessages.getErrorMessage(error.code);
-        setError(formattedMessage);
+        dispatch(setMessage({ message: formattedMessage, type: "error" }));
       } finally {
         dispatch(setLoading(false));
       }
@@ -103,8 +98,5 @@ export const useAuthMethods = () => {
         () => reauthenticateUser(credential, dispatch),
         "User re-authenticated successfully."
       ),
-    loading,
-    error,
-    successMessage,
   };
 };

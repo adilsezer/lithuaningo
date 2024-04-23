@@ -1,5 +1,5 @@
 import React from "react";
-import { Text, Image, View } from "react-native";
+import { View } from "react-native";
 import { Slot } from "expo-router";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 export default function AuthLayout() {

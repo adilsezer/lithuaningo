@@ -14,6 +14,16 @@ const BackButton: React.FC<BackButtonProps> = ({
   size = 24,
   style = {},
 }) => {
+  const handleBackPress = () => {
+    try {
+      if (router.canGoBack()) {
+        router.back();
+      }
+    } catch (error) {
+      console.error("Failed to navigate back:", error);
+    }
+  };
+
   // Check if there's a route to go back to
   const canGoBack = router.canGoBack();
 
@@ -24,7 +34,7 @@ const BackButton: React.FC<BackButtonProps> = ({
 
   return (
     <TouchableOpacity
-      onPress={() => router.back()}
+      onPress={() => handleBackPress}
       style={{ alignSelf: "flex-start", margin: 10, ...style }}
     >
       <Ionicons name="arrow-back" size={size} color={color} />
