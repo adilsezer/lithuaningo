@@ -14,11 +14,9 @@ import {
 } from "redux-persist";
 
 import userReducer from "../features/auth/redux/userSlice";
-import uiReducer from "../features/ui/redux/uiSlice"; // Import the ui reducer
 
 const rootReducer = combineReducers({
   user: userReducer,
-  ui: uiReducer, // Add the ui reducer here
   // Here you can add more reducers as needed
 });
 

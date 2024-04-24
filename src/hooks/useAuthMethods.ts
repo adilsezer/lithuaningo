@@ -15,7 +15,7 @@ import {
 } from "@features/auth/services/FirebaseAuthService";
 import { signInWithGoogle } from "@features/auth/services/GoogleAuthService";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { setLoading, setMessage } from "@features/ui/redux/uiSlice";
+import { Alert } from "react-native";
 
 export const useAuthMethods = () => {
   const dispatch = useAppDispatch();
@@ -27,18 +27,16 @@ export const useAuthMethods = () => {
       successMsg: string,
       successPath?: string
     ) => {
-      dispatch(setLoading(true));
       try {
         await action();
-        dispatch(setMessage({ message: successMsg, type: "success" }));
+        Alert.alert("Success", successMsg);
         if (successPath) {
           router.replace(successPath);
         }
       } catch (error: any) {
         const formattedMessage = AuthErrorMessages.getErrorMessage(error.code);
-        dispatch(setMessage({ message: formattedMessage, type: "error" }));
+        Alert.alert("Error", formattedMessage);
       } finally {
-        dispatch(setLoading(false));
       }
     },
     [router, dispatch] // Include dispatch in the dependencies array

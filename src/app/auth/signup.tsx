@@ -1,35 +1,30 @@
 import React, { useState } from "react";
-import { View, Text, TextInput } from "react-native";
-import { useDispatch } from "react-redux";
+import { View, Text, TextInput, Alert } from "react-native";
 import OrSeperator from "@components/OrSeperator";
-import BackButton from "@components/BackButton";
 import CustomButton from "@components/CustomButton";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import { useThemeStyles } from "src/hooks/useThemeStyles";
-import { setMessage, clearMessage } from "@features/ui/redux/uiSlice";
+import BackButton from "@components/BackButton";
 
 const SignupScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const dispatch = useDispatch();
 
   const { handleSignUpWithEmail, handleLoginWithGoogle } = useAuthMethods();
 
   const handleSignUp = () => {
     if (confirmPassword !== password) {
-      dispatch(
-        setMessage({ message: "Passwords do not match.", type: "error" })
-      );
+      Alert.alert("Error", "Passwords doesn't match");
       return; // Prevent signup if password mismatch
     }
-    dispatch(clearMessage());
     handleSignUpWithEmail(email, password);
   };
 
   return (
     <View style={globalStyles.viewContainer}>
+      <BackButton />
       <Text style={globalStyles.title}>Create Account</Text>
       <TextInput
         style={globalStyles.input}

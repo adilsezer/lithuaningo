@@ -3,7 +3,6 @@ import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "../store/store";
 import { Slot } from "expo-router";
-import GlobalUIHandler from "@components/GlobalUIHandler";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
@@ -42,8 +41,6 @@ const RootLayout: React.FC = () => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaView style={globalStyles.pageStyle}>
-          <BackButton />
-          <GlobalUIHandler />
           <Slot />
         </SafeAreaView>
       </PersistGate>

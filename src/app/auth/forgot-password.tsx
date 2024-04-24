@@ -13,6 +13,7 @@ const ForgotPasswordScreen: React.FC = () => {
 
   return (
     <View style={globalStyles.layoutContainer}>
+      <BackButton />
       <Text style={globalStyles.title}>Forgot Password?</Text>
       <Text style={globalStyles.text}>
         Enter your email and we'll send you a link to reset your password.

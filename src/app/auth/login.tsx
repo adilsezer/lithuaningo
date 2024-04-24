@@ -4,8 +4,8 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
-import BackButton from "@components/BackButton";
 import NavigationLink from "@components/NavigationLink";
+import BackButton from "@components/BackButton";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -16,6 +16,7 @@ const LoginScreen: React.FC = () => {
 
   return (
     <View style={globalStyles.viewContainer}>
+      <BackButton />
       <Text style={globalStyles.title}>Welcome Back</Text>
       <TextInput
         style={globalStyles.input}
