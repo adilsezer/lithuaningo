@@ -10,7 +10,7 @@ export const createLayoutStyles = (colors: ThemeColors) =>
       padding: 20,
     },
     layoutContainer: {
-      flex: 1, // This will make sure the container expands
+      flex: 1,
       width: "100%",
     },
     viewContainer: {
@@ -29,16 +29,5 @@ export const createLayoutStyles = (colors: ThemeColors) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
-    },
-    separator: {
-      flexDirection: "row",
-      alignItems: "center",
-      width: "100%",
-      marginVertical: 10,
-    },
-    line: {
-      flex: 1,
-      height: 1,
-      backgroundColor: colors.border,
     },
   });

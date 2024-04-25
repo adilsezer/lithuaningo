@@ -15,86 +15,103 @@ import {
 } from "@src/services/FirebaseAuthService";
 import { signInWithGoogle } from "@src/services/GoogleAuthService";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { Alert } from "react-native";
 
 export const useAuthMethods = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
   const handleAction = useCallback(
-    async (
-      action: () => Promise<void>,
-      successMsg: string,
-      successPath?: string
-    ) => {
+    async (action: () => Promise<void>, successPath?: string) => {
       try {
         await action();
-        Alert.alert("Success", successMsg);
         if (successPath) {
           router.replace(successPath);
         }
+        return { success: true };
       } catch (error: any) {
-        const formattedMessage = getErrorMessage(error.code);
-        Alert.alert("Error", formattedMessage);
-      } finally {
+        return { success: false, message: getErrorMessage(error.code) };
       }
     },
-    [router, dispatch] // Include dispatch in the dependencies array
+    [router, dispatch]
   );
 
   return {
-    handleSignUpWithEmail: (email: string, password: string) =>
-      handleAction(async () => {
+    handleSignUpWithEmail: async (email: string, password: string) => {
+      const action = async () => {
         await signUpWithEmail(email, password, dispatch);
         await sendEmailVerification();
-      }, "Registration successful! Please verify your email to continue."),
-    handleLoginWithEmail: (email: string, password: string) =>
-      handleAction(
+      };
+      const result = await handleAction(action);
+      if (result.success) {
+        result.message =
+          "Registration successful! Please verify your email to continue.";
+      }
+      return result;
+    },
+    handleLoginWithEmail: async (email: string, password: string) => {
+      return await handleAction(
         () => signInWithEmail(email, password, dispatch),
-        "Logged in successfully.",
         "/dashboard"
-      ),
-    handleLoginWithGoogle: () =>
-      handleAction(
-        () => signInWithGoogle(dispatch),
-        "Logged in with Google successfully.",
-        "/dashboard"
-      ),
-    handleSignOut: () =>
-      handleAction(
-        () => signOutUser(dispatch),
-        "Signed out successfully.",
-        "/"
-      ),
-    handlePasswordReset: (email: string) =>
-      handleAction(
-        () => sendPasswordResetEmail(email),
-        "Password reset email sent. Please check your inbox."
-      ),
-    handleUpdateUserProfile: (updates: {
+      );
+    },
+    handleLoginWithGoogle: async () => {
+      return await handleAction(() => signInWithGoogle(dispatch), "/dashboard");
+    },
+    handleSignOut: async () => {
+      return await handleAction(() => signOutUser(dispatch), "/");
+    },
+    handlePasswordReset: async (email: string) => {
+      const result = await handleAction(() => sendPasswordResetEmail(email));
+      if (result.success) {
+        result.message = "Password reset email sent. Please check your inbox.";
+      }
+      return result;
+    },
+    handleUpdateUserProfile: async (updates: {
       displayName?: string;
       photoURL?: string;
-    }) =>
-      handleAction(
-        () => updateUserProfile(updates, dispatch),
-        "Profile updated successfully."
-      ),
-    handleSendEmailVerification: () =>
-      handleAction(
-        () => sendEmailVerification(),
-        "Verification email sent. Please check your inbox."
-      ),
-    handleUpdateUserPassword: (newPassword: string) =>
-      handleAction(
-        () => updateUserPassword(newPassword, dispatch),
-        "Password updated successfully."
-      ),
-    handleDeleteUserAccount: () =>
-      handleAction(() => deleteUser(dispatch), "Account deleted successfully."),
-    handleReauthenticateUser: (credential: FirebaseAuthTypes.AuthCredential) =>
-      handleAction(
-        () => reauthenticateUser(credential, dispatch),
-        "User re-authenticated successfully."
-      ),
+    }) => {
+      const result = await handleAction(() =>
+        updateUserProfile(updates, dispatch)
+      );
+      if (result.success) {
+        result.message = "Profile updated successfully.";
+      }
+      return result;
+    },
+    handleSendEmailVerification: async () => {
+      const result = await handleAction(sendEmailVerification);
+      if (result.success) {
+        result.message = "Verification email sent. Please check your inbox.";
+      }
+      return result;
+    },
+    handleUpdateUserPassword: async (newPassword: string) => {
+      const result = await handleAction(() =>
+        updateUserPassword(newPassword, dispatch)
+      );
+      if (result.success) {
+        result.message = "Password updated successfully.";
+      }
+      return result;
+    },
+    handleDeleteUserAccount: async () => {
+      const result = await handleAction(() => deleteUser(dispatch));
+      if (result.success) {
+        result.message = "Account deleted successfully.";
+      }
+      return result;
+    },
+    handleReauthenticateUser: async (
+      credential: FirebaseAuthTypes.AuthCredential
+    ) => {
+      const result = await handleAction(() =>
+        reauthenticateUser(credential, dispatch)
+      );
+      if (result.success) {
+        result.message = "User re-authenticated successfully.";
+      }
+      return result;
+    },
   };
 };

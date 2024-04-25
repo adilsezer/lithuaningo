@@ -7,8 +7,8 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ActivityIndicator, View } from "react-native";
-import BackButton from "@components/BackButton";
 import { SafeAreaView } from "react-native-safe-area-context";
+import LoadingIndicator from "@components/LoadingIndicator";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,6 +41,7 @@ const RootLayout: React.FC = () => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaView style={globalStyles.pageStyle}>
+          <LoadingIndicator />
           <Slot />
         </SafeAreaView>
       </PersistGate>

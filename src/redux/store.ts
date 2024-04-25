@@ -14,10 +14,11 @@ import {
 } from "redux-persist";
 
 import userReducer from "./slices/userSlice";
+import uiReducer from "./slices/uiSlice"; // Import the uiReducer
 
 const rootReducer = combineReducers({
   user: userReducer,
-  // Here you can add more reducers as needed
+  ui: uiReducer,
 });
 
 const persistConfig = {

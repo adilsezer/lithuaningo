@@ -6,7 +6,7 @@ import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import { useThemeStyles } from "src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 
-const SignupScreen: React.FC = () => {
+const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
@@ -17,13 +17,13 @@ const SignupScreen: React.FC = () => {
   const handleSignUp = () => {
     if (confirmPassword !== password) {
       Alert.alert("Error", "Passwords doesn't match");
-      return; // Prevent signup if password mismatch
+      return;
     }
     handleSignUpWithEmail(email, password);
   };
 
   return (
-    <View style={globalStyles.viewContainer}>
+    <View>
       <BackButton />
       <Text style={globalStyles.title}>Create Account</Text>
       <TextInput
@@ -66,4 +66,4 @@ const SignupScreen: React.FC = () => {
   );
 };
 
-export default SignupScreen;
+export default SignUpScreen;

@@ -15,7 +15,7 @@ const LoginScreen: React.FC = () => {
   const { handleLoginWithEmail, handleLoginWithGoogle } = useAuthMethods();
 
   return (
-    <View style={globalStyles.viewContainer}>
+    <View>
       <BackButton />
       <Text style={globalStyles.title}>Welcome Back</Text>
       <TextInput

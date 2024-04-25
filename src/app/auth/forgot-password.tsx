@@ -1,18 +1,44 @@
 import React, { useState } from "react";
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, Alert } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import CustomButton from "@components/CustomButton";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
+import CustomButton from "@components/CustomButton";
 import BackButton from "@components/BackButton";
+import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
+import { selectIsLoading, setLoading } from "@src/redux/slices/uiSlice";
 
 const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
+  const dispatch = useAppDispatch();
+  const loading = useAppSelector(selectIsLoading);
+
   const { handlePasswordReset } = useAuthMethods();
 
+  const onResetPassword = async () => {
+    if (!email) {
+      Alert.alert("Input Required", "Please enter your email address.");
+      return;
+    }
+    dispatch(setLoading(true)); // Dispatch action to set loading true
+    const result = await handlePasswordReset(email);
+    dispatch(setLoading(false)); // Dispatch action to set loading false
+    if (result.success) {
+      Alert.alert(
+        "Success",
+        result.message || "Check your email to reset your password."
+      );
+    } else {
+      Alert.alert(
+        "Error",
+        result.message || "Failed to send password reset email."
+      );
+    }
+  };
+
   return (
-    <View style={globalStyles.layoutContainer}>
+    <View>
       <BackButton />
       <Text style={globalStyles.title}>Forgot Password?</Text>
       <Text style={globalStyles.text}>
@@ -28,8 +54,9 @@ const ForgotPasswordScreen: React.FC = () => {
         placeholderTextColor={globalColors.placeholder}
       />
       <CustomButton
-        onPress={() => handlePasswordReset(email)}
-        title={"Continue"}
+        onPress={onResetPassword}
+        title={loading ? "Sending..." : "Continue"}
+        disabled={loading}
       />
     </View>
   );

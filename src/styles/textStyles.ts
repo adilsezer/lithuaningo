@@ -44,10 +44,4 @@ export const createTextStyles = (colors: ThemeColors) =>
       color: colors.text,
       fontFamily: "Roboto-Bold",
     },
-    orText: {
-      width: 50,
-      textAlign: "center",
-      color: colors.text,
-      fontFamily: "Roboto",
-    },
   });
