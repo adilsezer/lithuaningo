@@ -1,4 +1,4 @@
-const errorMessages: Record<string, string> = {
+const ERROR_MESSAGES: Record<string, string> = {
   "auth/admin-restricted-operation":
     "This operation is restricted to administrators only.",
   "auth/argument-error":
@@ -183,8 +183,6 @@ const errorMessages: Record<string, string> = {
   default: "An unexpected error occurred. Please try again.",
 };
 
-export class AuthErrorMessages {
-  static getErrorMessage(errorCode: string): string {
-    return errorMessages[errorCode] || errorMessages["default"];
-  }
+export function getErrorMessage(errorCode: string): string {
+  return ERROR_MESSAGES[errorCode] || ERROR_MESSAGES["default"];
 }

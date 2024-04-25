@@ -2,8 +2,8 @@
 
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth from "@react-native-firebase/auth";
-import { AppDispatch } from "../../../store/store"; // Adjust the import path as necessary
-import { logIn, logOut } from "../redux/userSlice"; // Adjust the import path as necessary
+import { AppDispatch } from "../redux/store"; // Adjust the import path as necessary
+import { logIn, logOut } from "../redux/slices/userSlice"; // Adjust the import path as necessary
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,

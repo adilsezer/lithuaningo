@@ -1,12 +1,12 @@
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { AppDispatch } from "../../../store/store";
+import { AppDispatch } from "../redux/store";
 import {
   logIn,
   logOut,
   requireReauthentication,
   clearReauthenticationRequirement,
   deleteUserAccount,
-} from "../redux/userSlice";
+} from "../redux/slices/userSlice";
 
 // Type definition for Firebase errors
 type FirebaseError = {

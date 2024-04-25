@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { useAppDispatch } from "../store/hooks";
-import { AuthErrorMessages } from "../features/auth/utilities/AuthErrorMessages";
+import { useAppDispatch } from "../redux/hooks";
+import { getErrorMessage } from "../utils/errorMessages";
 import { useRouter } from "expo-router";
 import {
   signInWithEmail,
@@ -12,8 +12,8 @@ import {
   updateUserPassword,
   deleteUser,
   reauthenticateUser,
-} from "@features/auth/services/FirebaseAuthService";
-import { signInWithGoogle } from "@features/auth/services/GoogleAuthService";
+} from "@src/services/FirebaseAuthService";
+import { signInWithGoogle } from "@src/services/GoogleAuthService";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { Alert } from "react-native";
 
@@ -34,7 +34,7 @@ export const useAuthMethods = () => {
           router.replace(successPath);
         }
       } catch (error: any) {
-        const formattedMessage = AuthErrorMessages.getErrorMessage(error.code);
+        const formattedMessage = getErrorMessage(error.code);
         Alert.alert("Error", formattedMessage);
       } finally {
       }

@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet } from "react-native";
 import { Redirect, Slot } from "expo-router";
-import { useAppSelector } from "../../store/hooks"; // Adjust the import path as needed
+import { useAppSelector } from "../../redux/hooks"; // Adjust the import path as needed
 
 const AppLayout: React.FC = () => {
   // Use Redux hooks to get auth state

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { store, persistor } from "../store/store";
+import { store, persistor } from "../redux/store";
 import { Slot } from "expo-router";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import * as Font from "expo-font";

@@ -13,7 +13,7 @@ import {
   REGISTER,
 } from "redux-persist";
 
-import userReducer from "../features/auth/redux/userSlice";
+import userReducer from "./slices/userSlice";
 
 const rootReducer = combineReducers({
   user: userReducer,
