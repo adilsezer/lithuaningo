@@ -1,18 +1,34 @@
 import React, { useState } from "react";
-import { View, Text, TextInput } from "react-native";
+import { View, Text, TextInput, Alert } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
 import NavigationLink from "@components/NavigationLink";
 import BackButton from "@components/BackButton";
+import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
+import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
+  const loading = useAppSelector(selectIsLoading);
+  const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   const { handleLoginWithEmail, handleLoginWithGoogle } = useAuthMethods();
+
+  const performLogin = async (
+    loginAction: () => Promise<{ success: boolean; message?: string }>,
+    failureMessage: string
+  ) => {
+    dispatch(setLoading(true));
+    const result = await loginAction();
+    dispatch(setLoading(false));
+    if (!result.success) {
+      Alert.alert("Login Failed", result.message || failureMessage);
+    }
+  };
 
   return (
     <View>
@@ -41,18 +57,27 @@ const LoginScreen: React.FC = () => {
         style={{ textAlign: "right", marginLeft: "auto" }}
       />
       <CustomButton
-        onPress={() => handleLoginWithEmail(email, password)}
+        onPress={() =>
+          performLogin(
+            () => handleLoginWithEmail(email, password),
+            "Please check your credentials and try again."
+          )
+        }
         title={"Log In with Email"}
+        disabled={loading}
       />
       <OrSeperator />
       <CustomButton
-        onPress={handleLoginWithGoogle}
+        onPress={() =>
+          performLogin(handleLoginWithGoogle, "Unable to login with Google.")
+        }
         title={"Log in with Google"}
         icon={require("assets/images/google-logo.png")}
         style={{
           backgroundColor: "#f2f2f2",
         }}
         textStyle={{ color: "#1d1d1d" }}
+        disabled={loading}
       />
       <NavigationLink
         text={"Don't have an account? Sign Up"}

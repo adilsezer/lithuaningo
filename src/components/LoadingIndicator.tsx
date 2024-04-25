@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, ActivityIndicator, StyleSheet, Modal } from "react-native";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectIsLoading } from "@src/redux/slices/uiSlice";
@@ -7,30 +7,48 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 const LoadingIndicator = () => {
   const { colors: globalColors } = useThemeStyles();
   const isLoading = useAppSelector(selectIsLoading);
+  const [showLoading, setShowLoading] = useState(false);
 
-  const dynamicActivityIndicatorStyle = {
-    backgroundColor: globalColors.background,
-    color: globalColors.active,
-  };
+  useEffect(() => {
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    if (isLoading) {
+      timer = setTimeout(() => {
+        setShowLoading(true);
+      }, 500);
+    } else {
+      setShowLoading(false);
+      if (timer) {
+        clearTimeout(timer);
+        timer = null;
+      }
+    }
+
+    return () => {
+      if (timer) {
+        clearTimeout(timer);
+      }
+    };
+  }, [isLoading]);
 
   return (
     <Modal
       transparent={true}
       animationType="none"
-      visible={isLoading}
+      visible={showLoading}
       onRequestClose={() => {}}
     >
       <View style={styles.modalBackground}>
         <View
           style={[
             styles.activityIndicatorWrapper,
-            dynamicActivityIndicatorStyle,
+            { backgroundColor: globalColors.background },
           ]}
         >
           <ActivityIndicator
             size="large"
             color={globalColors.active}
-            animating={isLoading}
+            animating={showLoading}
             accessibilityLabel="Loading content"
           />
         </View>
@@ -38,8 +56,6 @@ const LoadingIndicator = () => {
     </Modal>
   );
 };
-
-export default LoadingIndicator;
 
 const styles = StyleSheet.create({
   modalBackground: {
@@ -56,3 +72,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
+
+export default LoadingIndicator;

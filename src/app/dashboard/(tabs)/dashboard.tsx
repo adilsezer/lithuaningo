@@ -2,17 +2,25 @@
 
 import React from "react";
 import { Text, Button } from "react-native";
-import { useAppSelector } from "../../redux/hooks";
-import { selectUserData } from "../../redux/slices/userSlice";
+import { useAppDispatch, useAppSelector } from "../../../redux/hooks";
+import { selectUserData } from "../../../redux/slices/userSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
+import { setLoading } from "@src/redux/slices/uiSlice";
 
 const DashboardScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const { styles: globalStyles } = useThemeStyles();
+  const dispatch = useAppDispatch();
 
   const { handleSignOut } = useAuthMethods();
+
+  const logout = async () => {
+    dispatch(setLoading(true));
+    await handleSignOut();
+    dispatch(setLoading(false));
+  };
 
   return (
     <SafeAreaView style={globalStyles.viewContainer}>
@@ -22,7 +30,7 @@ const DashboardScreen: React.FC = () => {
           Welcome, {userData.name || userData.email}!
         </Text>
       )}
-      <Button title="Logout" onPress={handleSignOut} />
+      <Button title="Logout" onPress={logout} />
     </SafeAreaView>
   );
 };

@@ -3,23 +3,41 @@ import { View, Text, TextInput, Alert } from "react-native";
 import OrSeperator from "@components/OrSeperator";
 import CustomButton from "@components/CustomButton";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
-import { useThemeStyles } from "src/hooks/useThemeStyles";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
+import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
+import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 
 const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const loading = useAppSelector(selectIsLoading);
+  const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   const { handleSignUpWithEmail, handleLoginWithGoogle } = useAuthMethods();
 
+  const performSignUp = async (
+    action: () => Promise<{ success: boolean; message?: string }>
+  ) => {
+    dispatch(setLoading(true));
+    const result = await action();
+    dispatch(setLoading(false));
+    if (!result.success) {
+      Alert.alert(
+        "Sign Up Failed",
+        result.message || "An error occurred during sign up."
+      );
+    }
+  };
+
   const handleSignUp = () => {
     if (confirmPassword !== password) {
-      Alert.alert("Error", "Passwords doesn't match");
+      Alert.alert("Error", "Passwords don't match");
       return;
     }
-    handleSignUpWithEmail(email, password);
+    performSignUp(() => handleSignUpWithEmail(email, password));
   };
 
   return (
@@ -51,16 +69,21 @@ const SignUpScreen: React.FC = () => {
         secureTextEntry
         placeholderTextColor={globalColors.placeholder}
       />
-      <CustomButton onPress={handleSignUp} title={"Sign Up"} />
+      <CustomButton
+        onPress={handleSignUp}
+        title={"Sign Up"}
+        disabled={loading}
+      />
       <OrSeperator />
       <CustomButton
-        onPress={handleLoginWithGoogle}
+        onPress={() => performSignUp(handleLoginWithGoogle)}
         title={"Sign up with Google"}
         icon={require("assets/images/google-logo.png")}
         style={{
           backgroundColor: "#f2f2f2",
         }}
         textStyle={{ color: "#1d1d1d" }}
+        disabled={loading}
       />
     </View>
   );
