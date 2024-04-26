@@ -1,11 +1,12 @@
 import React from "react";
-import { Redirect, Slot, Stack } from "expo-router";
+import { Redirect, Slot } from "expo-router";
 import { useAppSelector } from "../../redux/hooks";
+import { selectIsAuthenticated } from "@src/redux/slices/userSlice";
 
 const AppLayout: React.FC = () => {
-  const isLoggedIn = useAppSelector((state) => state.user.isLoggedIn);
+  const isAuthenticated = useAppSelector(selectIsAuthenticated);
 
-  if (isLoggedIn) {
+  if (isAuthenticated) {
     return <Redirect href="/dashboard/(tabs)" />;
   }
 

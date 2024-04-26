@@ -22,15 +22,18 @@ const updateUserState = (
     console.error("User email is unexpectedly null or undefined.");
     throw new Error("User email is unexpectedly null or undefined.");
   }
-
-  dispatch(
-    logIn({
-      name: user.displayName || null, // Fallback to null if not provided
-      email: user.email, // Now assured to be non-null
-      photoURL: user.photoURL || null, // Fallback to null if not provided
-      emailVerified: user.emailVerified,
-    })
-  );
+  if (user.emailVerified) {
+    dispatch(
+      logIn({
+        name: user.displayName || null, // Fallback to null if not provided
+        email: user.email, // Now assured to be non-null
+        photoURL: user.photoURL || null, // Fallback to null if not provided
+        emailVerified: user.emailVerified,
+      })
+    );
+  } else {
+    console.warn("User email is not verified.");
+  }
 };
 
 export const signInWithEmail = async (
@@ -42,7 +45,8 @@ export const signInWithEmail = async (
     const { user } = await auth().signInWithEmailAndPassword(email, password);
 
     if (!user.emailVerified) {
-      throw new Error("Please verify your email before logging in."); // Throw an error if email not verified
+      await sendEmailVerification();
+      throw new Error("Please verify your email before logging in.");
     }
     updateUserState(user, dispatch);
   } catch (error) {

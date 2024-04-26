@@ -24,7 +24,9 @@ const SignUpScreen: React.FC = () => {
     dispatch(setLoading(true));
     const result = await action();
     dispatch(setLoading(false));
-    if (!result.success) {
+    if (result.success) {
+      Alert.alert("Sign Up Successful", result.message);
+    } else {
       Alert.alert(
         "Sign Up Failed",
         result.message || "An error occurred during sign up."

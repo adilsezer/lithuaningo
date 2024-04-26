@@ -25,10 +25,7 @@ const ForgotPasswordScreen: React.FC = () => {
     const result = await handlePasswordReset(email);
     dispatch(setLoading(false)); // Dispatch action to set loading false
     if (result.success) {
-      Alert.alert(
-        "Success",
-        result.message || "Check your email to reset your password."
-      );
+      Alert.alert("Success", result.message);
     } else {
       Alert.alert(
         "Error",

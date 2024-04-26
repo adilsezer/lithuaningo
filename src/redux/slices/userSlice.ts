@@ -74,6 +74,9 @@ export const selectUserData = (state: RootState): UserState["data"] =>
 export const selectNeedsReauthentication = (state: RootState): boolean =>
   state.user.needsReauthentication;
 
+export const selectIsAuthenticated = (state: RootState): boolean =>
+  state.user.isLoggedIn && (state.user.data?.emailVerified || false);
+
 export default userSlice.reducer;
 
 export type { UserProfile }; // Make sure to export the UserProfile type

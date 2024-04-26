@@ -29,7 +29,10 @@ export const useAuthMethods = () => {
         }
         return { success: true };
       } catch (error: any) {
-        return { success: false, message: getErrorMessage(error.code) };
+        return {
+          success: false,
+          message: error.code ? getErrorMessage(error.code) : error.message,
+        };
       }
     },
     [router, dispatch]
@@ -41,7 +44,7 @@ export const useAuthMethods = () => {
         await signUpWithEmail(email, password, dispatch);
         await sendEmailVerification();
       };
-      const result = await handleAction(action);
+      const result = await handleAction(action, "/auth/login");
       if (result.success) {
         result.message =
           "Registration successful! Please verify your email to continue.";
@@ -61,7 +64,10 @@ export const useAuthMethods = () => {
       return await handleAction(() => signOutUser(dispatch), "/");
     },
     handlePasswordReset: async (email: string) => {
-      const result = await handleAction(() => sendPasswordResetEmail(email));
+      const result = await handleAction(
+        () => sendPasswordResetEmail(email),
+        "/auth/login"
+      );
       if (result.success) {
         result.message = "Password reset email sent. Please check your inbox.";
       }
