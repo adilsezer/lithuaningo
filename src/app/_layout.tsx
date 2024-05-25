@@ -42,7 +42,6 @@ const RootLayout: React.FC = () => {
       <PersistGate loading={null} persistor={persistor}>
         <SafeAreaView style={globalStyles.pageStyle}>
           <LoadingIndicator />
-
           <Slot />
         </SafeAreaView>
       </PersistGate>
