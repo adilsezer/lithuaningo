@@ -1,4 +1,5 @@
-import firestore from "@react-native-firebase/firestore";
+import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+import { getStartOfToday, getStartOfYesterday, getStartOfWeek } from "@src/utils/dateUtils";
 
 export interface Stats {
   currentStreak: number;
@@ -11,7 +12,8 @@ export interface Stats {
   minutesSpentThisWeek: number;
   minutesSpentTotal: number;
   todayTotalCards: number;
-  correctAnswers: number; // Added this field to track correct answers
+  correctAnswers: number;
+  lastStudiedDate: FirebaseFirestoreTypes.Timestamp; // Use Firestore Timestamp
 }
 
 export interface LearningCard {
@@ -40,7 +42,7 @@ export const fetchStats = (
       },
       (error) => {
         console.error("Error fetching stats:", error);
-        onStatsChange(null); // Ensure we handle errors by passing null
+        onStatsChange(null);
       }
     );
 };
@@ -97,6 +99,46 @@ export const fetchLeaderboard = (
     );
 };
 
+const updateStreak = (
+  lastStudiedDate: FirebaseFirestoreTypes.Timestamp,
+  currentStreak: number
+): number => {
+  const lastStudied = lastStudiedDate.toDate();
+  const startOfToday = getStartOfToday();
+  const startOfYesterday = getStartOfYesterday();
+
+  if (lastStudied >= startOfToday) {
+    return currentStreak; // Already studied today, no change
+  } else if (lastStudied >= startOfYesterday) {
+    return currentStreak + 1; // Continued the streak from yesterday
+  } else {
+    return 1; // Streak broken, reset to 1
+  }
+};
+
+const updateWeeklyStats = (
+  lastStudiedDate: FirebaseFirestoreTypes.Timestamp,
+  weeklyStudiedCards: number,
+  minutesSpentThisWeek: number,
+  newTodayStudiedCards: number,
+  newMinutesSpentToday: number
+) => {
+  const lastStudied = lastStudiedDate.toDate();
+  const startOfWeek = getStartOfWeek();
+
+  if (lastStudied >= startOfWeek) {
+    return {
+      newWeeklyStudiedCards: weeklyStudiedCards + newTodayStudiedCards,
+      newMinutesSpentThisWeek: minutesSpentThisWeek + newMinutesSpentToday,
+    };
+  } else {
+    return {
+      newWeeklyStudiedCards: newTodayStudiedCards,
+      newMinutesSpentThisWeek: newMinutesSpentToday,
+    };
+  }
+};
+
 export const updateUserStats = async (
   userId: string,
   isCorrect: boolean,
@@ -122,26 +164,30 @@ export const updateUserStats = async (
         minutesSpentTotal: 0,
         todayTotalCards: 0,
         correctAnswers: 0,
+        lastStudiedDate: firestore.Timestamp.fromDate(new Date(0)), // Initialize to epoch
       };
     }
 
+    const newCurrentStreak = updateStreak(userStats.lastStudiedDate, userStats.currentStreak);
+    const newLongestStreak = Math.max(userStats.longestStreak, newCurrentStreak);
+
     const newTotalStudiedCards = userStats.totalStudiedCards + 1;
     const newTodayStudiedCards = userStats.todayStudiedCards + 1;
-    const newWeeklyStudiedCards = userStats.weeklyStudiedCards + 1;
     const newTodayTotalCards = userStats.todayTotalCards + 1;
 
     const newMinutesSpentToday = userStats.minutesSpentToday + timeSpent;
-    const newMinutesSpentThisWeek = userStats.minutesSpentThisWeek + timeSpent;
     const newMinutesSpentTotal = userStats.minutesSpentTotal + timeSpent;
+
+    const { newWeeklyStudiedCards, newMinutesSpentThisWeek } = updateWeeklyStats(
+      userStats.lastStudiedDate,
+      userStats.weeklyStudiedCards,
+      userStats.minutesSpentThisWeek,
+      newTodayStudiedCards,
+      newMinutesSpentToday
+    );
 
     const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
     const newDailyAverage = newTotalStudiedCards / daysActive;
-
-    const newCurrentStreak = userStats.currentStreak + 1;
-    const newLongestStreak = Math.max(
-      userStats.longestStreak,
-      newCurrentStreak
-    );
 
     await userStatsRef.set({
       totalStudiedCards: newTotalStudiedCards,
@@ -157,6 +203,7 @@ export const updateUserStats = async (
       correctAnswers: isCorrect
         ? userStats.correctAnswers + 1
         : userStats.correctAnswers,
+      lastStudiedDate: firestore.Timestamp.now(), // Update to current time
     });
   } catch (error) {
     console.error("Error updating stats:", error);

@@ -6,7 +6,7 @@ import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import useFetchData from "@src/hooks/useFetchData";
 import StatCard from "@components/StatCard";
-import { formatTime } from "@src/utils/formatTime";
+import { formatTime } from "@src/utils/dateUtils";
 import ProgressBar from "@components/ProgressBar";
 import StatusLabel from "@components/StatusLabel";
 import { determineUserLevel } from "@utils/userLevel";
