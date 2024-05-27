@@ -22,7 +22,7 @@ export const createComponentStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       paddingVertical: 20,
       paddingHorizontal: 20,
-      borderRadius: 25,
+      borderRadius: 10,
       marginVertical: 10,
       width: 200,
       justifyContent: "center",

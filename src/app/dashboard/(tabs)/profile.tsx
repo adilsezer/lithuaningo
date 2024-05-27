@@ -1,22 +1,17 @@
+// ProfileScreen.tsx
+import React, { useEffect } from "react";
 import { useAuthMethods } from "@src/hooks/useAuthMethods";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { useAppDispatch } from "@src/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
+import { selectUserData, selectIsLoggedIn } from "@src/redux/slices/userSlice";
+import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
+import CustomButton from "@components/CustomButton";
+import { useRouter } from "expo-router";
 import { setLoading } from "@src/redux/slices/uiSlice";
-import {
-  View,
-  Text,
-  ScrollView,
-  TouchableOpacity,
-  StyleSheet,
-} from "react-native";
-
-const dummyProfilePic = "https://via.placeholder.com/150";
 
 export default function ProfileScreen() {
-  const { styles: globalStyles } = useThemeStyles();
   const dispatch = useAppDispatch();
-
   const { handleSignOut } = useAuthMethods();
+  const router = useRouter();
 
   const logout = async () => {
     dispatch(setLoading(true));
@@ -24,36 +19,57 @@ export default function ProfileScreen() {
     dispatch(setLoading(false));
   };
 
-  const profileData = {
-    name: "John Doe",
-    email: "johndoe@example.com",
+  const navigateTo = (path: string) => {
+    router.push(path);
   };
+
+  const userData = useAppSelector(selectUserData);
+  const isLoggedIn = useAppSelector(selectIsLoggedIn);
+
+  if (!isLoggedIn || !userData) {
+    return (
+      <View style={styles.container}>
+        <Text style={styles.name}>No user data available</Text>
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileSection}>
-        <Text style={styles.name}>{profileData.name}</Text>
-        <Text style={styles.email}>{profileData.email}</Text>
+        <Text style={styles.name}>{userData.name || "User"}</Text>
+        <Text style={styles.email}>{userData.email}</Text>
+        {userData.photoURL ? (
+          <Image
+            source={{ uri: userData.photoURL }}
+            style={styles.profilePic}
+          />
+        ) : (
+          <Text>No profile picture</Text>
+        )}
       </View>
 
       <View style={styles.actionsSection}>
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
-          <Text style={styles.buttonText}>Settings</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
-          <Text style={styles.buttonText}>Change Email</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} onPress={() => {}}>
-          <Text style={styles.buttonText}>Change Password</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.button} onPress={logout}>
-          <Text style={styles.buttonText}>Logout</Text>
-        </TouchableOpacity>
-
-        {/* Add more buttons or components here as needed */}
+        <CustomButton
+          title="Edit Profile"
+          onPress={() => navigateTo("/profile/edit-profile")}
+          style={{ width: "90%" }}
+        />
+        <CustomButton
+          title="Change Password"
+          onPress={() => navigateTo("/profile/change-password")}
+          style={{ width: "90%" }}
+        />
+        <CustomButton
+          title="About the App"
+          onPress={() => navigateTo("/about")}
+          style={{ width: "90%" }}
+        />
+        <CustomButton
+          title="Logout"
+          onPress={logout}
+          style={{ width: "90%" }}
+        />
       </View>
     </ScrollView>
   );
@@ -67,13 +83,6 @@ const styles = StyleSheet.create({
   },
   profileSection: {
     alignItems: "center",
-    marginVertical: 20,
-  },
-  profilePic: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    marginBottom: 20,
   },
   name: {
     fontSize: 24,
@@ -97,5 +106,11 @@ const styles = StyleSheet.create({
     textAlign: "center",
     fontWeight: "600",
     color: "#333",
+  },
+  profilePic: {
+    width: 100,
+    height: 100,
+    borderRadius: 75,
+    marginVertical: 10,
   },
 });

@@ -25,6 +25,8 @@ export const signInWithGoogle = async (
       logIn({
         name: userCredential.user.displayName || "No Name",
         email: userCredential.user.email!,
+        id: userCredential.user.uid,
+        emailVerified: true,
       })
     );
     console.log("Google Sign-In successful");

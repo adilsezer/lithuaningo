@@ -3,6 +3,7 @@ import type { RootState } from "../store";
 
 // Improved TypeScript definitions for clarity and nullability
 interface UserProfile {
+  id: string; // Add the user ID here
   name: string | null; // Consider if you really want this nullable.
   email: string;
   photoURL?: string | null; // Make it explicitly optional and nullable.
@@ -12,14 +13,14 @@ interface UserProfile {
 // Defining initial state type based on the interface directly
 interface UserState {
   isLoggedIn: boolean;
-  data: UserProfile | null;
+  data: UserProfile | null; // This can be null only when not logged in
   needsReauthentication: boolean;
 }
 
 // Explicit initial state matching the UserState interface
 const initialState: UserState = {
   isLoggedIn: false,
-  data: null,
+  data: null, // User data is null when not logged in
   needsReauthentication: false,
 };
 
@@ -69,7 +70,7 @@ export const {
 // Selectors for accessing state in a type-safe manner
 export const selectIsLoggedIn = (state: RootState): boolean =>
   state.user.isLoggedIn;
-export const selectUserData = (state: RootState): UserState["data"] =>
+export const selectUserData = (state: RootState): UserProfile | null =>
   state.user.data;
 export const selectNeedsReauthentication = (state: RootState): boolean =>
   state.user.needsReauthentication;

@@ -1,41 +1,40 @@
+// screens/DashboardScreen.tsx
 import React from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
-import ProgressBar from "@components/ProgressBar";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
-import CustomButton from "@components/CustomButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-
-interface Stats {
-  currentStreak: number;
-  longestStreak: number;
-  totalStudiedCards: number;
-  todayStudiedCards: number;
-  weeklyStudiedCards: number;
-  dailyAverage: number;
-  timeSpentToday: string;
-  timeSpentThisWeek: string;
-  timeSpentTotal: string;
-  todayTotalCards: number;
-}
+import useFetchData from "@src/hooks/useFetchData";
+import StatCard from "@components/StatCard";
+import { formatTime } from "@src/utils/formatTime";
+import ProgressBar from "@components/ProgressBar";
+import StatusLabel from "@components/StatusLabel";
+import { determineUserLevel } from "@utils/userLevel";
 
 const DashboardScreen: React.FC = () => {
-  const userData = useAppSelector(selectUserData);
-
-  const stats: Stats = {
-    currentStreak: 10,
-    longestStreak: 32,
-    totalStudiedCards: 2500,
-    todayStudiedCards: 30,
-    todayTotalCards: 30,
-    weeklyStudiedCards: 30,
-    dailyAverage: 20,
-    timeSpentToday: "30 mins",
-    timeSpentThisWeek: "3 hrs",
-    timeSpentTotal: "50 hrs",
-  };
-
+  const { stats, loading } = useFetchData();
   const { styles: globalStyles } = useThemeStyles();
+  const userData = useAppSelector(selectUserData);
+  const userLevel = determineUserLevel(stats);
+
+  if (loading) {
+    return (
+      <View style={globalStyles.layoutContainer}>
+        <Text style={globalStyles.subtitle}>Loading stats...</Text>
+      </View>
+    );
+  }
+
+  const {
+    currentStreak = 0,
+    longestStreak = 0,
+    totalStudiedCards = 0,
+    todayStudiedCards = 0,
+    weeklyStudiedCards = 0,
+    minutesSpentToday = 0,
+    minutesSpentThisWeek = 0,
+    minutesSpentTotal = 0,
+  } = stats || {};
 
   return (
     <ScrollView style={styles.container}>
@@ -50,41 +49,39 @@ const DashboardScreen: React.FC = () => {
       <View style={styles.section}>
         <Text style={styles.cardTitle}>Today's Learning</Text>
         <Text style={styles.cardValue}>
-          Cards Studied Today: {stats.todayStudiedCards}
+          Cards Studied Today: {todayStudiedCards}
         </Text>
-        <ProgressBar progress={stats.todayStudiedCards / 100} />
-        <CustomButton
-          title="Continue Learning"
-          onPress={() => {}}
-          style={globalStyles.button}
-        />
-        <Text style={globalStyles.text}>
-          The next challenge starts in 3 minutes...
+        <Text style={styles.cardValue}>
+          Time Spent Today: {formatTime(minutesSpentToday)}
         </Text>
+        <ProgressBar progress={todayStudiedCards / 100} />
       </View>
       <Text style={globalStyles.title}>Your Level Now</Text>
-      <Text style={globalStyles.text}>Beginner</Text>
-
-      <Text style={globalStyles.title}>Your Progress</Text>
+      <StatusLabel label={userLevel} />
+      <Text style={[globalStyles.title]}>Your Progress</Text>
       <View style={styles.row}>
-        {renderStatCard("Current Streak", `${stats.currentStreak} days`)}
-        {renderStatCard("Longest Streak", `${stats.longestStreak} days`)}
+        <StatCard title="Current Streak" value={`${currentStreak} days`} />
+        <StatCard title="Longest Streak" value={`${longestStreak} days`} />
       </View>
       <View style={styles.row}>
-        {renderStatCard("Weekly Cards Studied", `${stats.weeklyStudiedCards}`)}
-        {renderStatCard("Total Cards Studied", `${stats.totalStudiedCards}`)}
+        <StatCard
+          title="Weekly Cards Studied"
+          value={`${weeklyStudiedCards}`}
+        />
+        <StatCard title="Total Cards Studied" value={`${totalStudiedCards}`} />
+      </View>
+      <View style={styles.row}>
+        <StatCard
+          title="Time Spent This Week"
+          value={formatTime(minutesSpentThisWeek)}
+        />
+        <StatCard
+          title="Time Spent Total"
+          value={formatTime(minutesSpentTotal)}
+        />
       </View>
     </ScrollView>
   );
-
-  function renderStatCard(title: string, value: string) {
-    return (
-      <View style={styles.statCard}>
-        <Text style={styles.cardTitle}>{title}</Text>
-        <Text style={styles.cardValue}>{value}</Text>
-      </View>
-    );
-  }
 };
 
 const styles = StyleSheet.create({
@@ -96,44 +93,24 @@ const styles = StyleSheet.create({
     backgroundColor: "#ECEFF1",
     borderRadius: 8,
     padding: 16,
+    marginTop: 8,
     marginBottom: 20,
     elevation: 4,
-  },
-  sectionHeader: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#333",
-    marginBottom: 10,
   },
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
     marginBottom: 10,
   },
-  statCard: {
-    flex: 1,
-    backgroundColor: "#ECEFF1",
-    borderRadius: 8,
-    padding: 16,
-    elevation: 4,
-    marginHorizontal: 5, // This adds margin to the left and right of each card
-  },
-  stat: {
-    fontSize: 16,
-    color: "#757575",
-    marginBottom: 5,
-  },
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#333",
     marginBottom: 10,
-    textAlign: "center",
   },
   cardValue: {
     fontSize: 16,
     color: "#757575",
-    textAlign: "center",
     marginBottom: 10,
   },
 });

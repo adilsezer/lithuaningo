@@ -1,49 +1,28 @@
-import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Alert } from "react-native";
-import {
-  fetchLearningCards,
-  LearningCard,
-} from "../../services/FirebaseDataService";
+// screens/LearningSessionScreen.tsx
+import React, { useState } from "react";
+import { View, Text, StyleSheet } from "react-native";
 import BackButton from "@components/BackButton";
-import { useAppDispatch } from "@src/redux/hooks";
-import { setLoading } from "@src/redux/slices/uiSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import MultipleChoiceCard from "@components/MultipleChoiceCard";
 import FillInTheBlankCard from "@components/FillInTheBlankCard";
 import TrueFalseCard from "@components/TrueFalseCard";
 import CustomButton from "@components/CustomButton";
+import useFetchData from "@src/hooks/useFetchData";
+import { LearningCard } from "@src/services/FirebaseDataService";
+import { useAppSelector } from "@src/redux/hooks";
+import { selectUserData } from "@src/redux/slices/userSlice";
 
 const LearningSessionScreen: React.FC = () => {
-  const [cards, setCards] = useState<LearningCard[]>([]);
+  const { cards } = useFetchData();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [sessionCompleted, setSessionCompleted] = useState(false);
-  const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-
-  useEffect(() => {
-    const loadCards = async () => {
-      try {
-        dispatch(setLoading(true));
-        const fetchedCards = await fetchLearningCards();
-        setCards(fetchedCards);
-      } catch (err) {
-        if (err instanceof Error) {
-          Alert.alert("Error", err.message);
-        } else {
-          Alert.alert("Error", "An unknown error occurred");
-        }
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    loadCards();
-  }, [dispatch]);
+  const userData = useAppSelector(selectUserData);
 
   const renderCard = (card: LearningCard) => {
     switch (card.type) {
       case "multiple_choice":
-        return <MultipleChoiceCard card={card} />;
+        return <MultipleChoiceCard card={card} userId={userData?.id || ""} />;
       case "fill_in_the_blank":
         return <FillInTheBlankCard card={card} />;
       case "true_false":

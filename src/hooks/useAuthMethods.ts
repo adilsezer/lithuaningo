@@ -39,9 +39,19 @@ export const useAuthMethods = () => {
   );
 
   return {
-    handleSignUpWithEmail: async (email: string, password: string) => {
+    handleSignUpWithEmail: async (
+      email: string,
+      password: string,
+      name: string
+    ) => {
       const action = async () => {
         await signUpWithEmail(email, password, dispatch);
+        await updateUserProfile(
+          {
+            displayName: name,
+          },
+          dispatch
+        );
         await sendEmailVerification();
       };
       const result = await handleAction(action, "/auth/login");

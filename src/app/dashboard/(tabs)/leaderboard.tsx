@@ -1,33 +1,26 @@
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+// Leaderboard.tsx
 import React from "react";
-import { StyleSheet, View, Text, ScrollView } from "react-native";
-
-const leaders = [
-  { id: 1, name: "Alice", score: 200 },
-  { id: 2, name: "Bob", score: 180 },
-  { id: 3, name: "Charlie", score: 150 },
-  { id: 4, name: "Dave", score: 145 },
-  { id: 5, name: "Eve", score: 140 },
-  { id: 6, name: "Fiona", score: 135 },
-  { id: 7, name: "George", score: 130 },
-  { id: 8, name: "Hannah", score: 125 },
-  { id: 9, name: "Ian", score: 120 },
-  { id: 10, name: "Jane", score: 115 },
-  { id: 11, name: "Jane", score: 115 },
-  { id: 12, name: "Jane", score: 115 },
-  { id: 13, name: "Jane", score: 115 },
-  { id: 14, name: "Jane", score: 115 },
-  { id: 15, name: "Jane", score: 115 },
-  { id: 16, name: "Jane", score: 115 },
-  { id: 17, name: "Jane", score: 115 },
-  { id: 18, name: "Jane", score: 115 },
-  { id: 19, name: "Jane", score: 115 },
-  { id: 20, name: "Jane", score: 115 },
-  // Add more leaders as needed
-];
+import {
+  StyleSheet,
+  View,
+  Text,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import useFetchData from "@src/hooks/useFetchData";
 
 const Leaderboard = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { leaders, loading } = useFetchData();
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={globalColors.primary} />
+      </View>
+    );
+  }
 
   return (
     <ScrollView style={styles.container}>
@@ -83,6 +76,11 @@ const Leaderboard = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   header: {
     flexDirection: "row",

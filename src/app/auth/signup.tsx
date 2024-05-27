@@ -10,6 +10,7 @@ import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 
 const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
+  const [displayName, setDisplayName] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const loading = useAppSelector(selectIsLoading);
@@ -38,14 +39,25 @@ const SignUpScreen: React.FC = () => {
     if (confirmPassword !== password) {
       Alert.alert("Error", "Passwords don't match");
       return;
+    } else if (!displayName) {
+      Alert.alert("Error", "Please enter a name");
+      return;
     }
-    performSignUp(() => handleSignUpWithEmail(email, password));
+    performSignUp(() => handleSignUpWithEmail(email, password, displayName));
   };
 
   return (
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Create Account</Text>
+      <TextInput
+        style={globalStyles.input}
+        placeholder="Name"
+        value={displayName}
+        onChangeText={setDisplayName}
+        autoCapitalize="none"
+        placeholderTextColor={globalColors.placeholder}
+      />
       <TextInput
         style={globalStyles.input}
         placeholder="Email"

@@ -6,6 +6,7 @@ import {
   requireReauthentication,
   clearReauthenticationRequirement,
   deleteUserAccount,
+  updateUserProfile as updateUserProfileAction,
 } from "../redux/slices/userSlice";
 
 // Type definition for Firebase errors
@@ -25,9 +26,10 @@ const updateUserState = (
   if (user.emailVerified) {
     dispatch(
       logIn({
-        name: user.displayName || null, // Fallback to null if not provided
-        email: user.email, // Now assured to be non-null
-        photoURL: user.photoURL || null, // Fallback to null if not provided
+        id: user.uid,
+        name: user.displayName || null,
+        email: user.email,
+        photoURL: user.photoURL || null,
         emailVerified: user.emailVerified,
       })
     );
