@@ -1,18 +1,17 @@
-// services/GoogleAuthService.ts
-
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import auth from "@react-native-firebase/auth";
-import { AppDispatch } from "../redux/store"; // Adjust the import path as necessary
-import { logIn, logOut } from "../redux/slices/userSlice"; // Adjust the import path as necessary
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import firestore from "@react-native-firebase/firestore";
+import { AppDispatch } from "../redux/store";
+import { logIn, logOut } from "../redux/slices/userSlice";
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-  offlineAccess: true, // If you want to access Google API on behalf of the user from your server
+  offlineAccess: true,
 });
 
 export const signInWithGoogle = async (
   dispatch: AppDispatch
-): Promise<void> => {
+): Promise<FirebaseAuthTypes.UserCredential> => {
   try {
     await GoogleSignin.hasPlayServices();
     const userInfo = await GoogleSignin.signIn();
@@ -30,6 +29,7 @@ export const signInWithGoogle = async (
       })
     );
     console.log("Google Sign-In successful");
+    return userCredential;
   } catch (error) {
     console.error("Google Sign-In failed:", error);
     throw error;

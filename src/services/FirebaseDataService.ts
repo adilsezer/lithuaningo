@@ -1,4 +1,3 @@
-// services/FirebaseDataService.ts
 import firestore from "@react-native-firebase/firestore";
 
 export interface Stats {
@@ -23,7 +22,6 @@ export interface LearningCard {
   correctAnswer?: string;
 }
 
-// Fetch stats and set up a real-time listener
 export const fetchStats = (
   userId: string,
   onStatsChange: (stats: Stats | null) => void
@@ -47,7 +45,6 @@ export const fetchStats = (
     );
 };
 
-// Fetch learning cards and set up a real-time listener
 export const fetchLearningCards = (
   onCardsChange: (cards: LearningCard[]) => void
 ) => {
@@ -100,7 +97,6 @@ export const fetchLeaderboard = (
     );
 };
 
-// Update user stats
 export const updateUserStats = async (
   userId: string,
   isCorrect: boolean,
@@ -114,7 +110,6 @@ export const updateUserStats = async (
     if (userStatsSnapshot.exists) {
       userStats = userStatsSnapshot.data() as Stats;
     } else {
-      // Initialize default stats if not exist
       userStats = {
         currentStreak: 0,
         longestStreak: 0,
@@ -135,17 +130,14 @@ export const updateUserStats = async (
     const newWeeklyStudiedCards = userStats.weeklyStudiedCards + 1;
     const newTodayTotalCards = userStats.todayTotalCards + 1;
 
-    // Update time spent
     const newMinutesSpentToday = userStats.minutesSpentToday + timeSpent;
     const newMinutesSpentThisWeek = userStats.minutesSpentThisWeek + timeSpent;
     const newMinutesSpentTotal = userStats.minutesSpentTotal + timeSpent;
 
-    // Calculate daily average
-    const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60)); // Assuming 24 hours in a day
+    const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
     const newDailyAverage = newTotalStudiedCards / daysActive;
 
-    // Update streaks
-    const newCurrentStreak = userStats.currentStreak + 1; // Simplified, would need logic to reset if not consecutive days
+    const newCurrentStreak = userStats.currentStreak + 1;
     const newLongestStreak = Math.max(
       userStats.longestStreak,
       newCurrentStreak

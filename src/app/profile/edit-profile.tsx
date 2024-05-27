@@ -1,4 +1,3 @@
-// EditProfileScreen.tsx
 import React, { useState } from "react";
 import { View, Text, TextInput, Alert, Image, StyleSheet } from "react-native";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
@@ -7,19 +6,21 @@ import {
   selectUserData,
   updateUserProfile as updateUserProfileAction,
 } from "@src/redux/slices/userSlice";
-import { updateUserProfile } from "@src/services/FirebaseAuthService";
+import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import * as ImagePicker from "expo-image-picker";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 
 const EditProfileScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const userData = useAppSelector(selectUserData);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { handleUpdateUserProfile } = useAuthMethods(); // Corrected hook usage inside the component
+  const router = useRouter();
 
-  const [name, setName] = useState<string>("");
+  const [name, setName] = useState<string>(userData?.name || "");
   const [photoURL, setPhotoURL] = useState<string>(userData?.photoURL || "");
 
   const handleUpdateProfile = async () => {
@@ -31,18 +32,17 @@ const EditProfileScreen: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      await updateUserProfile(
-        {
-          displayName: name,
-          photoURL: photoURL,
-        },
-        dispatch
-      );
-      dispatch(updateUserProfileAction({ name, photoURL }));
-      Alert.alert("Success", "Profile updated successfully.");
-      router.push("/dashboard/profile");
-    } catch (error) {
-      Alert.alert("Error", "Failed to update profile.");
+      const result = await handleUpdateUserProfile({
+        displayName: name,
+        photoURL,
+      });
+      if (result.success) {
+        dispatch(updateUserProfileAction({ name, photoURL }));
+        Alert.alert("Success", "Profile updated successfully.");
+        router.push("/dashboard/profile");
+      } else {
+        Alert.alert("Error", result.message || "Failed to update profile.");
+      }
     } finally {
       dispatch(setLoading(false));
     }

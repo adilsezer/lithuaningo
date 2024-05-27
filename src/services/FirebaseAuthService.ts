@@ -9,7 +9,6 @@ import {
   updateUserProfile as updateUserProfileAction,
 } from "../redux/slices/userSlice";
 
-// Type definition for Firebase errors
 type FirebaseError = {
   code: string;
   message: string;
@@ -42,15 +41,19 @@ export const signInWithEmail = async (
   email: string,
   password: string,
   dispatch: AppDispatch
-): Promise<void> => {
+): Promise<FirebaseAuthTypes.UserCredential> => {
   try {
-    const { user } = await auth().signInWithEmailAndPassword(email, password);
+    const userCredential = await auth().signInWithEmailAndPassword(
+      email,
+      password
+    );
 
-    if (!user.emailVerified) {
+    if (!userCredential.user.emailVerified) {
       await sendEmailVerification();
       throw new Error("Please verify your email before logging in.");
     }
-    updateUserState(user, dispatch);
+    updateUserState(userCredential.user, dispatch);
+    return userCredential;
   } catch (error) {
     const firebaseError = error as FirebaseError;
     console.error("SignIn with email failed:", firebaseError.message);
@@ -62,13 +65,14 @@ export const signUpWithEmail = async (
   email: string,
   password: string,
   dispatch: AppDispatch
-): Promise<void> => {
+): Promise<FirebaseAuthTypes.UserCredential> => {
   try {
-    const { user } = await auth().createUserWithEmailAndPassword(
+    const userCredential = await auth().createUserWithEmailAndPassword(
       email,
       password
     );
-    updateUserState(user, dispatch);
+    updateUserState(userCredential.user, dispatch);
+    return userCredential;
   } catch (error) {
     const firebaseError = error as FirebaseError;
     console.error("SignUp with email failed:", firebaseError.message);

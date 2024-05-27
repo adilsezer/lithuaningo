@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert, StyleSheet } from "react-native";
+import { View, Text, TextInput, Alert } from "react-native";
 import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
-import { updateUserPassword } from "@src/services/FirebaseAuthService";
+import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
@@ -11,6 +11,7 @@ import { useRouter } from "expo-router";
 const ChangePasswordScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { handleUpdateUserPassword } = useAuthMethods(); // Corrected hook usage inside the component
   const router = useRouter();
 
   const [newPassword, setNewPassword] = useState<string>("");
@@ -25,11 +26,13 @@ const ChangePasswordScreen: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      await updateUserPassword(newPassword, dispatch);
-      Alert.alert("Success", "Password updated successfully.");
-      router.push("/dashboard/profile");
-    } catch (error) {
-      Alert.alert("Error", "Failed to update password.");
+      const result = await handleUpdateUserPassword(newPassword);
+      if (result.success) {
+        Alert.alert("Success", "Password updated successfully.");
+        router.push("/dashboard/profile");
+      } else {
+        Alert.alert("Error", result.message || "Failed to update password.");
+      }
     } finally {
       dispatch(setLoading(false));
     }

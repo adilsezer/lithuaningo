@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, Alert } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { useAuthMethods } from "@src/hooks/useAuthMethods";
+import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import CustomButton from "@components/CustomButton";
 import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
@@ -29,7 +29,7 @@ const ForgotPasswordScreen: React.FC = () => {
     } else {
       Alert.alert(
         "Error",
-        result.message || "Failed to send password reset email."
+        result.message || "Failed to send password reset email.",
       );
     }
   };
@@ -39,7 +39,7 @@ const ForgotPasswordScreen: React.FC = () => {
       <BackButton />
       <Text style={globalStyles.title}>Forgot Password?</Text>
       <Text style={globalStyles.text}>
-        Enter your email and we'll send you a link to reset your password.
+        Enter your email and we will send you a link to reset your password.
       </Text>
       <TextInput
         style={globalStyles.input}

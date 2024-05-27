@@ -1,30 +1,27 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store";
 
-// Improved TypeScript definitions for clarity and nullability
 interface UserProfile {
-  id: string; // Add the user ID here
-  name: string | null; // Consider if you really want this nullable.
+  id: string;
+  name: string | null;
   email: string;
-  photoURL?: string | null; // Make it explicitly optional and nullable.
+  photoURL?: string | null;
   emailVerified: boolean;
 }
 
-// Defining initial state type based on the interface directly
 interface UserState {
   isLoggedIn: boolean;
-  data: UserProfile | null; // This can be null only when not logged in
+  data: UserProfile | null;
   needsReauthentication: boolean;
 }
 
-// Explicit initial state matching the UserState interface
 const initialState: UserState = {
   isLoggedIn: false,
-  data: null, // User data is null when not logged in
+  data: null,
   needsReauthentication: false,
 };
 
-export const userSlice = createSlice({
+const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
@@ -57,7 +54,6 @@ export const userSlice = createSlice({
   },
 });
 
-// Actions export
 export const {
   logIn,
   logOut,
@@ -67,17 +63,15 @@ export const {
   deleteUserAccount,
 } = userSlice.actions;
 
-// Selectors for accessing state in a type-safe manner
 export const selectIsLoggedIn = (state: RootState): boolean =>
   state.user.isLoggedIn;
 export const selectUserData = (state: RootState): UserProfile | null =>
   state.user.data;
 export const selectNeedsReauthentication = (state: RootState): boolean =>
   state.user.needsReauthentication;
-
 export const selectIsAuthenticated = (state: RootState): boolean =>
   state.user.isLoggedIn && (state.user.data?.emailVerified || false);
 
 export default userSlice.reducer;
 
-export type { UserProfile }; // Make sure to export the UserProfile type
+export type { UserProfile };

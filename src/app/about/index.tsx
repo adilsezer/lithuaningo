@@ -1,11 +1,5 @@
 import React from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-} from "react-native";
+import { Text, StyleSheet, ScrollView } from "react-native";
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
 import BackButton from "@components/BackButton";
@@ -14,7 +8,7 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 export default function AboutScreen() {
   const handleLinkPress = (url: string) => {
     Linking.openURL(url).catch((err) =>
-      console.error("Failed to open URL:", err)
+      console.error("Failed to open URL:", err),
     );
   };
 
@@ -25,9 +19,7 @@ export default function AboutScreen() {
     <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>About Lithuaningo</Text>
-      <Text
-        style={[globalStyles.text, styles.customText, { textAlign: "justify" }]}
-      >
+      <Text style={[globalStyles.text, styles.customText]}>
         Lithuaningo is your gateway to mastering Lithuanian! Dive into learning
         with ease and fun. Our app provides a comprehensive learning experience
         with various features and tools to help you become proficient in
@@ -38,7 +30,7 @@ export default function AboutScreen() {
       <Text style={[globalStyles.text, styles.customText]}>
         Email:{" "}
         <Text
-          style={styles.link}
+          style={globalStyles.text}
           onPress={() => handleLinkPress("mailto:lithuaningo@gmail.com")}
         >
           lithuaningo@gmail.com
@@ -60,10 +52,6 @@ const styles = StyleSheet.create({
   customText: {
     fontSize: 16,
     margin: 10,
-  },
-  link: {
-    fontSize: 16,
-    color: "#1E90FF",
-    textDecorationLine: "underline",
+    textAlign: "justify",
   },
 });

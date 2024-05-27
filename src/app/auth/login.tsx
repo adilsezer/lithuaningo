@@ -3,7 +3,7 @@ import { View, Text, TextInput, Alert } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
-import { useAuthMethods } from "@src/hooks/useAuthMethods";
+import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import NavigationLink from "@components/NavigationLink";
 import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";

@@ -30,12 +30,12 @@ const WelcomeScreen = () => {
           <CustomButton
             onPress={() => handlePress("login")}
             title={"Log In"}
-            style={{ width: 250 }}
+            style={styles.button}
           />
           <CustomButton
             onPress={() => handlePress("signup")}
             title={"Create Account"}
-            style={{ width: 250 }}
+            style={styles.button}
           />
         </View>
       </View>
@@ -44,30 +44,33 @@ const WelcomeScreen = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: "center",
+  button: {
+    width: 250,
   },
-  imageContainer: {
-    flex: 1, // Keeps taking up half of the screen
-    width: "100%", // Full width
+  buttonContainer: {
+    alignItems: "center",
+    flex: 0.5,
+    justifyContent: "center",
+  },
+  container: {
+    alignItems: "center",
+    flex: 1,
   },
   image: {
     flex: 1,
-    width: null,
     height: null,
     resizeMode: "cover",
+    width: null,
+  },
+  imageContainer: {
+    flex: 1,
+    width: "100%",
   },
   textAndButtonContainer: {
-    flex: 1, // The remaining half of the screen
+    flex: 1,
   },
   textContainer: {
-    flex: 0.5, // Now takes up 25% of the overall screen space
-  },
-  buttonContainer: {
-    flex: 0.5, // Another 25% of the overall screen for buttons
-    justifyContent: "center",
-    alignItems: "center",
+    flex: 0.5,
   },
 });
 

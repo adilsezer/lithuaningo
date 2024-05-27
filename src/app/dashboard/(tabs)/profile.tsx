@@ -1,14 +1,15 @@
-// ProfileScreen.tsx
-import React, { useEffect } from "react";
-import { useAuthMethods } from "@src/hooks/useAuthMethods";
+import React from "react";
+import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
+import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { selectUserData, selectIsLoggedIn } from "@src/redux/slices/userSlice";
-import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
 import CustomButton from "@components/CustomButton";
 import { useRouter } from "expo-router";
 import { setLoading } from "@src/redux/slices/uiSlice";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 export default function ProfileScreen() {
+  const { styles: globalStyles } = useThemeStyles();
   const dispatch = useAppDispatch();
   const { handleSignOut } = useAuthMethods();
   const router = useRouter();
@@ -29,7 +30,7 @@ export default function ProfileScreen() {
   if (!isLoggedIn || !userData) {
     return (
       <View style={styles.container}>
-        <Text style={styles.name}>No user data available</Text>
+        <Text style={globalStyles.title}>No user data available</Text>
       </View>
     );
   }
@@ -37,15 +38,17 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.profileSection}>
-        <Text style={styles.name}>{userData.name || "User"}</Text>
-        <Text style={styles.email}>{userData.email}</Text>
+        <Text style={globalStyles.title}>{userData.name || "User"}</Text>
+        <Text style={[globalStyles.subtitle, { color: "#666" }]}>
+          {userData.email}
+        </Text>
         {userData.photoURL ? (
           <Image
             source={{ uri: userData.photoURL }}
             style={styles.profilePic}
           />
         ) : (
-          <Text>No profile picture</Text>
+          <Text style={globalStyles.text}>No profile picture</Text>
         )}
       </View>
 
@@ -83,15 +86,6 @@ const styles = StyleSheet.create({
   },
   profileSection: {
     alignItems: "center",
-  },
-  name: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#333",
-  },
-  email: {
-    fontSize: 18,
-    color: "#666",
   },
   actionsSection: {
     marginTop: 30,

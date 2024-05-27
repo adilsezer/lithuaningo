@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert } from "react-native";
+import { View, Text, TextInput, Alert, StyleSheet } from "react-native";
 import OrSeperator from "@components/OrSeperator";
 import CustomButton from "@components/CustomButton";
-import { useAuthMethods } from "@src/hooks/useAuthMethods";
+import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
@@ -93,14 +93,21 @@ const SignUpScreen: React.FC = () => {
         onPress={() => performSignUp(handleLoginWithGoogle)}
         title={"Sign up with Google"}
         icon={require("assets/images/google-logo.png")}
-        style={{
-          backgroundColor: "#f2f2f2",
-        }}
-        textStyle={{ color: "#1d1d1d" }}
+        style={styles.googleButton}
+        textStyle={styles.googleButtonText}
         disabled={loading}
       />
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  googleButton: {
+    backgroundColor: "#f2f2f2",
+  },
+  googleButtonText: {
+    color: "#1d1d1d",
+  },
+});
 
 export default SignUpScreen;
