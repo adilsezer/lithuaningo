@@ -8,6 +8,7 @@ export type ThemeColors = {
   link: string;
   placeholder: string;
   border: string;
+  error: string;
 };
 
 export const lightThemeColors: ThemeColors = {
@@ -20,6 +21,7 @@ export const lightThemeColors: ThemeColors = {
   link: "#1E88E5", // Crisp, deep sky blue (same as light theme)
   placeholder: "#B0BEC5", // Matches inactive color
   border: "#B0BEC5", // Soft grey (same as inactive)
+  error: "#d5304f", // Soft grey (same as inactive)
 };
 
 export const darkThemeColors: ThemeColors = {
@@ -32,4 +34,5 @@ export const darkThemeColors: ThemeColors = {
   link: "#1E88E5", // Crisp, deep sky blue (same as light theme)
   placeholder: "#CFD8DC", // Lighter blue-grey for placeholders, adjusted for dark theme
   border: "#37474F", // Darker shade for borders, adjusted for dark theme
+  error: "#d5304f", // Soft grey (same as inactive)
 };

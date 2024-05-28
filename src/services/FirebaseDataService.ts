@@ -13,7 +13,7 @@ export interface Stats {
   minutesSpentTotal: number;
   todayTotalCards: number;
   correctAnswers: number;
-  lastStudiedDate: FirebaseFirestoreTypes.Timestamp; // Use Firestore Timestamp
+  lastStudiedDate: FirebaseFirestoreTypes.Timestamp;
 }
 
 export interface LearningCard {
@@ -21,8 +21,47 @@ export interface LearningCard {
   question: string;
   image?: string;
   options?: string[];
-  correctAnswer?: string;
+  correctAnswer: string;
 }
+
+export const updateCompletionDate = async (userId: string): Promise<void> => {
+  try {
+    await firestore().collection("users").doc(userId).update({
+      lastCompleted: firestore.FieldValue.serverTimestamp(),
+    });
+  } catch (error) {
+    console.error("Error updating completion date: ", error);
+    throw new Error("Failed to update completion date.");
+  }
+};
+
+export const isAdmin = async (userId: string): Promise<boolean> =>  {
+  const userDoc = await firestore().collection('users').doc(userId).get();
+  if (!userDoc.exists) {
+    return false;
+  }
+  const data = userDoc.data();
+  return Boolean(data?.isAdmin); // Convert the isAdmin field to a boolean
+};
+
+export const checkIfCompletedToday = async (userId: string): Promise<boolean> => {
+  try {
+    const userDoc = await firestore().collection("users").doc(userId).get();
+    const userData = userDoc.data();
+
+    if (userData?.lastCompleted) {
+      const lastCompleted = new Date(userData.lastCompleted.seconds * 1000);
+      const startOfToday = getStartOfToday();
+
+      if (lastCompleted >= startOfToday) {
+        return true;
+      }
+    }
+  } catch (error) {
+    console.error("Error checking completion status: ", error);
+  }
+  return false;
+};
 
 export const fetchStats = (
   userId: string,
@@ -208,5 +247,37 @@ export const updateUserStats = async (
   } catch (error) {
     console.error("Error updating stats:", error);
     throw new Error("Failed to update user stats.");
+  }
+};
+
+export type Card = {
+  id?: string;
+  question: string;
+  answer: string;
+  type: string; // e.g., 'multiple_choice', 'true_false', etc.
+  options?: string[]; // for multiple choice questions
+};
+
+
+
+export const addCard = async (card: Card) => {
+  try {
+    const newCard = await firestore().collection('cards').add(card);
+    console.log('Card added with ID:', newCard.id);
+    return { success: true, id: newCard.id };
+  } catch (error) {
+    console.error('Error adding card:', error);
+    return { success: false, error };
+  }
+};
+
+export const updateCard = async (cardId: string, updatedCard: Partial<Card>) => {
+  try {
+    await firestore().collection('cards').doc(cardId).update(updatedCard);
+    console.log('Card updated with ID:', cardId);
+    return { success: true };
+  } catch (error) {
+    console.error('Error updating card:', error);
+    return { success: false, error };
   }
 };

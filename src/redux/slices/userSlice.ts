@@ -1,3 +1,4 @@
+import { isAdmin } from './../../services/FirebaseDataService';
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "../store";
 
@@ -7,6 +8,7 @@ interface UserProfile {
   email: string;
   photoURL?: string | null;
   emailVerified: boolean;
+  isAdmin: boolean
 }
 
 interface UserState {

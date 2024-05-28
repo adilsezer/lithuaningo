@@ -1,3 +1,4 @@
+import firestore from "@react-native-firebase/firestore";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { AppDispatch } from "../redux/store";
 import {
@@ -8,13 +9,14 @@ import {
   deleteUserAccount,
   updateUserProfile as updateUserProfileAction,
 } from "../redux/slices/userSlice";
+import { isAdmin } from "./FirebaseDataService";
 
 type FirebaseError = {
   code: string;
   message: string;
 };
 
-const updateUserState = (
+const updateUserState = async (
   user: FirebaseAuthTypes.User,
   dispatch: AppDispatch
 ) => {
@@ -22,6 +24,9 @@ const updateUserState = (
     console.error("User email is unexpectedly null or undefined.");
     throw new Error("User email is unexpectedly null or undefined.");
   }
+
+  const adminStatus = await isAdmin(user.uid); // Use the helper function
+
   if (user.emailVerified) {
     dispatch(
       logIn({
@@ -30,6 +35,7 @@ const updateUserState = (
         email: user.email,
         photoURL: user.photoURL || null,
         emailVerified: user.emailVerified,
+        isAdmin: adminStatus, // Use the boolean value from the helper function
       })
     );
   } else {

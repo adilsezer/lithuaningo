@@ -4,7 +4,7 @@ import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
-import useFetchData from "@src/hooks/useFetchData";
+import useStats from "@src/hooks/useStats";
 import StatCard from "@components/StatCard";
 import { formatTime } from "@src/utils/dateUtils";
 import ProgressBar from "@components/ProgressBar";
@@ -12,7 +12,7 @@ import StatusLabel from "@components/StatusLabel";
 import { determineUserLevel } from "@utils/userLevel";
 
 const DashboardScreen: React.FC = () => {
-  const { stats, loading } = useFetchData();
+  const { stats, loading } = useStats();
   const { styles: globalStyles } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const userLevel = determineUserLevel(stats);

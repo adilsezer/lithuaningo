@@ -24,7 +24,7 @@ export const createComponentStyles = (colors: ThemeColors) =>
       paddingHorizontal: 20,
       borderRadius: 10,
       marginVertical: 10,
-      width: 200,
+      width: "75%",
       justifyContent: "center",
     },
     icon: {

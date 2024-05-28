@@ -17,7 +17,6 @@ export default function Tab() {
       <CustomButton
         title="Start Learning"
         onPress={handleStartLearning}
-        style={globalStyles.button}
       />
     </View>
   );
@@ -27,23 +26,11 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    alignItems: "center",
     backgroundColor: "#fff",
   },
   label: {
     fontSize: 24,
     fontWeight: "bold",
     marginBottom: 20,
-  },
-  button: {
-    backgroundColor: "#58CC02",
-    paddingVertical: 15,
-    paddingHorizontal: 30,
-    borderRadius: 25,
-  },
-  buttonText: {
-    fontSize: 18,
-    color: "#fff",
-    fontWeight: "bold",
   },
 });

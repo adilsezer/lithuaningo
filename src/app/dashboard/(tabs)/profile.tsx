@@ -56,23 +56,25 @@ export default function ProfileScreen() {
         <CustomButton
           title="Edit Profile"
           onPress={() => navigateTo("/profile/edit-profile")}
-          style={{ width: "90%" }}
         />
         <CustomButton
           title="Change Password"
           onPress={() => navigateTo("/profile/change-password")}
-          style={{ width: "90%" }}
         />
         <CustomButton
           title="About the App"
           onPress={() => navigateTo("/about")}
-          style={{ width: "90%" }}
         />
         <CustomButton
           title="Logout"
           onPress={logout}
-          style={{ width: "90%" }}
         />
+        {userData.isAdmin && (
+          <CustomButton
+            title="Admin Panel"
+            onPress={() => navigateTo("/admin")}
+          />
+        )}
       </View>
     </ScrollView>
   );
