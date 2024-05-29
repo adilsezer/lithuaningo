@@ -15,15 +15,15 @@ Welcome to **Lithuaningo**! A mobile application designed to help you master the
 
 ### Welcome Screen
 
-![Welcome Screen](assets/images/welcome_screen.png)
+<img src="assets/images/welcome_screen.png" alt="Welcome Screen" width="300" />
 
 ### Dashboard
 
-![Dashboard](assets/images/dashboard.png)
+<img src="assets/images/dashboard.png" alt="Dashboard" width="300" />
 
-### Learning Card
+### Flashcard
 
-![Learning Card](assets/images/study_card.png)
+<img src="assets/images/flashcard.png" alt="Flashcard" width="300" />
 
 ## Installation
 
