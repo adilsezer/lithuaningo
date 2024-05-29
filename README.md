@@ -15,8 +15,20 @@ Welcome to **Lithuaningo**! A mobile application designed to help you master the
 
 <p align="center">
   <img src="assets/images/welcome_screen.png" alt="Welcome Screen" width="200" />
+  <br>
+  <em>Welcome Screen: Start your language learning journey here with an easy login.</em>
+</p>
+
+<p align="center">
   <img src="assets/images/dashboard.png" alt="Dashboard" width="200" />
+  <br>
+  <em>Dashboard: Track your progress and see your learning statistics.</em>
+</p>
+
+<p align="center">
   <img src="assets/images/study_card.png" alt="Study Card" width="200" />
+  <br>
+  <em>Study Card: Engage with interactive learning modules to enhance your vocabulary.</em>
 </p>
 
 ## Installation
