@@ -145,7 +145,7 @@ const ERROR_MESSAGES: Record<string, string> = {
   "auth/user-token-expired":
     "The user's credential is no longer valid. The user must sign in again.",
   "auth/too-many-requests":
-    "We have blocked all requests from this device due to unusual activity. Try again later.",
+    "Request blocked. Try again later and ensure your email address is verified.",
   "auth/unauthorized-continue-uri":
     "The domain of the continue URI is not whitelisted. Whitelist the domain in the Firebase console.",
   "auth/unsupported-first-factor":

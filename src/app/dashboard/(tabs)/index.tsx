@@ -54,7 +54,7 @@ const DashboardScreen: React.FC = () => {
         <Text style={styles.cardValue}>
           Time Spent Today: {formatTime(minutesSpentToday)}
         </Text>
-        <ProgressBar progress={todayStudiedCards / 100} />
+        <ProgressBar progress={todayStudiedCards / 15} />
       </View>
       <Text style={globalStyles.title}>Your Level Now</Text>
       <StatusLabel label={userLevel} />
