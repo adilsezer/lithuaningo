@@ -1,4 +1,3 @@
-import firestore from "@react-native-firebase/firestore";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { AppDispatch } from "../redux/store";
 import {
@@ -25,9 +24,8 @@ const updateUserState = async (
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  const adminStatus = await isAdmin(user.uid); // Use the helper function
-
   if (user.emailVerified) {
+    const adminStatus = await isAdmin(user.uid); // Use the helper function
     dispatch(
       logIn({
         id: user.uid,

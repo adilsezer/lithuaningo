@@ -6,7 +6,7 @@ export const useCardLogic = (correctAnswer: string) => {
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
   useEffect(() => {
-    // Reset state when correctAnswer changes
+    // Reset state when answer changes
     setSelectedOption(null);
     setIsCorrect(null);
   }, [correctAnswer]);
@@ -16,14 +16,16 @@ export const useCardLogic = (correctAnswer: string) => {
       return false; // Prevent further selection once an option is chosen
     }
     setSelectedOption(option);
-    const correct = option.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+    const correct =
+      option.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
     setIsCorrect(correct);
     return correct;
   };
 
-  const handleSubmit = (answer: string): boolean => {
-    const correct = answer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
-    setSelectedOption(answer);
+  const handleSubmit = (userAnswer: string): boolean => {
+    const correct =
+      userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+    setSelectedOption(userAnswer);
     setIsCorrect(correct);
     return correct;
   };

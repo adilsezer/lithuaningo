@@ -14,7 +14,7 @@ interface MultipleChoiceCardProps {
 const MultipleChoiceCard: React.FC<MultipleChoiceCardProps> = ({ card }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { handleAnswer } = useStats();
-  const { selectedOption, isCorrect, handlePress } = useCardLogic(card.correctAnswer);
+  const { selectedOption, isCorrect, handlePress } = useCardLogic(card.answer);
 
   if (!card.options) {
     return null;
@@ -33,9 +33,9 @@ const MultipleChoiceCard: React.FC<MultipleChoiceCardProps> = ({ card }) => {
       return globalColors.inactive;
     }
     if (selectedOption === option) {
-      return option === card.correctAnswer ? globalColors.active : globalColors.error;
+      return option === card.answer ? globalColors.active : globalColors.error;
     }
-    if (option === card.correctAnswer) {
+    if (option === card.answer) {
       return globalColors.active;
     }
     return globalColors.inactive;
@@ -48,10 +48,10 @@ const MultipleChoiceCard: React.FC<MultipleChoiceCardProps> = ({ card }) => {
         <Text
           style={[
             styles.feedbackText,
-            { color: isCorrect ? globalColors.active : globalColors.error }
+            { color: isCorrect ? globalColors.active : globalColors.error },
           ]}
         >
-          {isCorrect ? "Correct" : `Correct Answer: ${card.correctAnswer}`}
+          {isCorrect ? "Correct" : `Correct Answer: ${card.answer}`}
         </Text>
       )}
       {card.image && (
@@ -83,6 +83,7 @@ const styles = StyleSheet.create({
     height: 200,
     marginBottom: 10,
     alignSelf: "center",
+    borderRadius: 10,
   },
   optionContainer: {
     marginVertical: 5,
@@ -91,6 +92,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 16,
     alignSelf: "center",
+    fontWeight: "bold",
   },
 });
 

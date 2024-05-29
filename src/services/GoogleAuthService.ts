@@ -1,6 +1,5 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import firestore from "@react-native-firebase/firestore";
 import { AppDispatch } from "../redux/store";
 import { logIn, logOut } from "../redux/slices/userSlice";
 import { isAdmin } from "./FirebaseDataService";
@@ -28,7 +27,7 @@ export const signInWithGoogle = async (
         email: userCredential.user.email!,
         id: userCredential.user.uid,
         emailVerified: true,
-        isAdmin: adminStatus
+        isAdmin: adminStatus,
       })
     );
     console.log("Google Sign-In successful");

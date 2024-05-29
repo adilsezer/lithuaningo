@@ -1,5 +1,11 @@
-import firestore, { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
-import { getStartOfToday, getStartOfYesterday, getStartOfWeek } from "@src/utils/dateUtils";
+import firestore, {
+  FirebaseFirestoreTypes,
+} from "@react-native-firebase/firestore";
+import {
+  getStartOfToday,
+  getStartOfYesterday,
+  getStartOfWeek,
+} from "@src/utils/dateUtils";
 
 export interface Stats {
   currentStreak: number;
@@ -17,11 +23,12 @@ export interface Stats {
 }
 
 export interface LearningCard {
-  type: "multiple_choice" | "fill_in_the_blank" | "true_false";
+  id: string;
+  type: "multiple_choice" | "fill_in_the_blank";
   question: string;
   image?: string;
   options?: string[];
-  correctAnswer: string;
+  answer: string;
 }
 
 export const updateCompletionDate = async (userId: string): Promise<void> => {
@@ -35,16 +42,23 @@ export const updateCompletionDate = async (userId: string): Promise<void> => {
   }
 };
 
-export const isAdmin = async (userId: string): Promise<boolean> =>  {
-  const userDoc = await firestore().collection('users').doc(userId).get();
-  if (!userDoc.exists) {
+export const isAdmin = async (userId: string): Promise<boolean> => {
+  try {
+    const userDoc = await firestore().collection("users").doc(userId).get();
+    if (!userDoc.exists) {
+      return false;
+    }
+    const data = userDoc.data();
+    return Boolean(data?.isAdmin);
+  } catch (error) {
+    console.error("Error checking admin status:", error);
     return false;
   }
-  const data = userDoc.data();
-  return Boolean(data?.isAdmin); // Convert the isAdmin field to a boolean
 };
 
-export const checkIfCompletedToday = async (userId: string): Promise<boolean> => {
+export const checkIfCompletedToday = async (
+  userId: string
+): Promise<boolean> => {
   try {
     const userDoc = await firestore().collection("users").doc(userId).get();
     const userData = userDoc.data();
@@ -93,7 +107,13 @@ export const fetchLearningCards = (
     .collection("learningCards")
     .onSnapshot(
       (snapshot) => {
-        const cards = snapshot.docs.map((doc) => doc.data() as LearningCard);
+        const cards = snapshot.docs.map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as LearningCard)
+        );
         onCardsChange(cards);
       },
       (error) => {
@@ -207,8 +227,14 @@ export const updateUserStats = async (
       };
     }
 
-    const newCurrentStreak = updateStreak(userStats.lastStudiedDate, userStats.currentStreak);
-    const newLongestStreak = Math.max(userStats.longestStreak, newCurrentStreak);
+    const newCurrentStreak = updateStreak(
+      userStats.lastStudiedDate,
+      userStats.currentStreak
+    );
+    const newLongestStreak = Math.max(
+      userStats.longestStreak,
+      newCurrentStreak
+    );
 
     const newTotalStudiedCards = userStats.totalStudiedCards + 1;
     const newTodayStudiedCards = userStats.todayStudiedCards + 1;
@@ -217,13 +243,14 @@ export const updateUserStats = async (
     const newMinutesSpentToday = userStats.minutesSpentToday + timeSpent;
     const newMinutesSpentTotal = userStats.minutesSpentTotal + timeSpent;
 
-    const { newWeeklyStudiedCards, newMinutesSpentThisWeek } = updateWeeklyStats(
-      userStats.lastStudiedDate,
-      userStats.weeklyStudiedCards,
-      userStats.minutesSpentThisWeek,
-      newTodayStudiedCards,
-      newMinutesSpentToday
-    );
+    const { newWeeklyStudiedCards, newMinutesSpentThisWeek } =
+      updateWeeklyStats(
+        userStats.lastStudiedDate,
+        userStats.weeklyStudiedCards,
+        userStats.minutesSpentThisWeek,
+        newTodayStudiedCards,
+        newMinutesSpentToday
+      );
 
     const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
     const newDailyAverage = newTotalStudiedCards / daysActive;
@@ -254,30 +281,46 @@ export type Card = {
   id?: string;
   question: string;
   answer: string;
-  type: string; // e.g., 'multiple_choice', 'true_false', etc.
+  type: string; // e.g., 'multiple_choice', 'fill_in_the_blank', etc.
   options?: string[]; // for multiple choice questions
+  image?: string;
 };
-
-
 
 export const addCard = async (card: Card) => {
   try {
-    const newCard = await firestore().collection('cards').add(card);
-    console.log('Card added with ID:', newCard.id);
+    const newCard = await firestore().collection("learningCards").add(card);
+    console.log("Card added with ID:", newCard.id);
     return { success: true, id: newCard.id };
   } catch (error) {
-    console.error('Error adding card:', error);
+    console.error("Error adding card:", error);
     return { success: false, error };
   }
 };
 
-export const updateCard = async (cardId: string, updatedCard: Partial<Card>) => {
+export const updateCard = async (
+  cardId: string,
+  updatedCard: Partial<Card>
+) => {
   try {
-    await firestore().collection('cards').doc(cardId).update(updatedCard);
-    console.log('Card updated with ID:', cardId);
+    await firestore()
+      .collection("learningCards")
+      .doc(cardId)
+      .update(updatedCard);
+    console.log("Card updated with ID:", cardId);
     return { success: true };
   } catch (error) {
-    console.error('Error updating card:', error);
+    console.error("Error updating card:", error);
+    return { success: false, error };
+  }
+};
+
+export const deleteCard = async (cardId: string) => {
+  try {
+    await firestore().collection("learningCards").doc(cardId).delete();
+    console.log("Card deleted with ID:", cardId);
+    return { success: true };
+  } catch (error) {
+    console.error("Error deleting card:", error);
     return { success: false, error };
   }
 };

@@ -78,8 +78,8 @@ const EditProfileScreen: React.FC = () => {
         ) : (
           <Text style={styles.noImageText}>No photo selected</Text>
         )}
-        <CustomButton title="Choose Photo" onPress={pickImage} />
       </View>
+      <CustomButton title="Choose Photo" onPress={pickImage} />
       <CustomButton title="Save Changes" onPress={handleUpdateProfile} />
     </View>
   );

@@ -6,10 +6,13 @@ import BackButton from "@components/BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import MultipleChoiceCard from "@components/MultipleChoiceCard";
 import FillInTheBlankCard from "@components/FillInTheBlankCard";
-import TrueFalseCard from "@components/TrueFalseCard";
 import CustomButton from "@components/CustomButton";
 import useStats from "@src/hooks/useStats";
-import { LearningCard, checkIfCompletedToday, updateCompletionDate } from "@src/services/FirebaseDataService";
+import {
+  LearningCard,
+  checkIfCompletedToday,
+  updateCompletionDate,
+} from "@src/services/FirebaseDataService";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 
@@ -90,8 +93,6 @@ const LearningSessionScreen: React.FC = () => {
         return <MultipleChoiceCard card={card} />;
       case "fill_in_the_blank":
         return <FillInTheBlankCard card={card} />;
-      case "true_false":
-        return <TrueFalseCard card={card} />;
       default:
         return null;
     }
@@ -108,13 +109,13 @@ const LearningSessionScreen: React.FC = () => {
       <View style={styles.middleSection}>
         {renderCard(cards[currentCardIndex])}
       </View>
-        <CustomButton
-          title="Continue"
-          onPress={handleNextCard}
-          style={{
-            backgroundColor: globalColors.secondary,
-          }}
-        />
+      <CustomButton
+        title="Continue"
+        onPress={handleNextCard}
+        style={{
+          backgroundColor: globalColors.secondary,
+        }}
+      />
     </View>
   );
 };

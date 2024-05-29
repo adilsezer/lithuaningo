@@ -52,10 +52,6 @@ const useAuthMethods = () => {
     const action = async () => {
       const { user } = await signUpWithEmail(email, password, dispatch);
       await user.updateProfile({ displayName: name });
-      await firestore().collection("users").doc(user.uid).set({
-        name,
-        email,
-      });
       await sendEmailVerification();
     };
     const result = await handleAction(action, "/auth/login");
@@ -67,10 +63,30 @@ const useAuthMethods = () => {
   };
 
   const handleLoginWithEmail = async (email: string, password: string) => {
-    return await handleAction(
-      () => signInWithEmail(email, password, dispatch),
-      "/dashboard"
-    );
+    const action = async () => {
+      const userCredential = await signInWithEmail(email, password, dispatch);
+      const user = userCredential.user;
+
+      if (user) {
+        const userDoc = await firestore()
+          .collection("users")
+          .doc(user.uid)
+          .get();
+        if (!userDoc.exists) {
+          await firestore()
+            .collection("users")
+            .doc(user.uid)
+            .set({
+              name: user.displayName || "No Name",
+              email: user.email,
+            });
+        }
+      } else {
+        throw new Error("User does not exist.");
+      }
+    };
+
+    return await handleAction(action, "/dashboard");
   };
 
   const handleLoginWithGoogle = async () => {
