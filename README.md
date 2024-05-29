@@ -16,15 +16,15 @@ Welcome to **Lithuaningo**! A mobile application designed to help you master the
 <div style="display: flex; justify-content: space-around;">
   <div>
     <h3>Welcome Screen</h3>
-    <img src="assets/images/welcome_screen.png" alt="Welcome Screen" width="300" />
+    <img src="assets/images/welcome_screen.png" alt="Welcome Screen" width="200" />
   </div>
   <div>
     <h3>Dashboard</h3>
-    <img src="assets/images/dashboard.png" alt="Dashboard" width="300" />
+    <img src="assets/images/dashboard.png" alt="Dashboard" width="200" />
   </div>
   <div>
-    <h3>Flashcard</h3>
-    <img src="assets/images/flashcard.png" alt="Flashcard" width="300" />
+    <h3>Study Card</h3>
+    <img src="assets/images/study-card.png" alt="Flashcard" width="200" />
   </div>
 </div>
 
