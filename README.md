@@ -13,17 +13,20 @@ Welcome to **Lithuaningo**! A mobile application designed to help you master the
 
 ## Screenshots
 
-### Welcome Screen
-
-<img src="assets/images/welcome_screen.png" alt="Welcome Screen" width="300" />
-
-### Dashboard
-
-<img src="assets/images/dashboard.png" alt="Dashboard" width="300" />
-
-### Flashcard
-
-<img src="assets/images/flashcard.png" alt="Flashcard" width="300" />
+<div style="display: flex; justify-content: space-around;">
+  <div>
+    <h3>Welcome Screen</h3>
+    <img src="assets/images/welcome_screen.png" alt="Welcome Screen" width="300" />
+  </div>
+  <div>
+    <h3>Dashboard</h3>
+    <img src="assets/images/dashboard.png" alt="Dashboard" width="300" />
+  </div>
+  <div>
+    <h3>Flashcard</h3>
+    <img src="assets/images/flashcard.png" alt="Flashcard" width="300" />
+  </div>
+</div>
 
 ## Installation
 
