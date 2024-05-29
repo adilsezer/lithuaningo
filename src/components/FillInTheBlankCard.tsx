@@ -65,8 +65,8 @@ const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({ card }) => {
 
 const styles = StyleSheet.create({
   image: {
-    width: 200,
-    height: 200,
+    width: 300,
+    height: 300,
     marginBottom: 10,
     alignSelf: "center",
     borderRadius: 10,
