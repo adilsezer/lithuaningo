@@ -177,23 +177,23 @@ const updateStreak = (
 
 const updateWeeklyStats = (
   lastStudiedDate: FirebaseFirestoreTypes.Timestamp,
-  weeklyStudiedCards: number,
-  minutesSpentThisWeek: number,
-  newTodayStudiedCards: number,
-  newMinutesSpentToday: number
+  currentWeeklyStudiedCards: number,
+  currentMinutesSpentThisWeek: number,
+  additionalMinutesSpent: number
 ) => {
   const lastStudied = lastStudiedDate.toDate();
   const startOfWeek = getStartOfWeek();
 
   if (lastStudied >= startOfWeek) {
     return {
-      newWeeklyStudiedCards: weeklyStudiedCards + newTodayStudiedCards,
-      newMinutesSpentThisWeek: minutesSpentThisWeek + newMinutesSpentToday,
+      newWeeklyStudiedCards: currentWeeklyStudiedCards + 1,
+      newMinutesSpentThisWeek:
+        currentMinutesSpentThisWeek + additionalMinutesSpent,
     };
   } else {
     return {
-      newWeeklyStudiedCards: newTodayStudiedCards,
-      newMinutesSpentThisWeek: newMinutesSpentToday,
+      newWeeklyStudiedCards: 1,
+      newMinutesSpentThisWeek: additionalMinutesSpent,
     };
   }
 };
@@ -227,6 +227,18 @@ export const updateUserStats = async (
       };
     }
 
+    const startOfToday = getStartOfToday();
+    let newTodayStudiedCards = userStats.todayStudiedCards;
+    let newMinutesSpentToday = userStats.minutesSpentToday;
+    let newTodayTotalCards = userStats.todayTotalCards;
+
+    if (userStats.lastStudiedDate.toDate() < startOfToday) {
+      // Reset today's stats if the last studied date is before today
+      newTodayStudiedCards = 0;
+      newMinutesSpentToday = 0;
+      newTodayTotalCards = 0;
+    }
+
     const newCurrentStreak = updateStreak(
       userStats.lastStudiedDate,
       userStats.currentStreak
@@ -237,10 +249,10 @@ export const updateUserStats = async (
     );
 
     const newTotalStudiedCards = userStats.totalStudiedCards + 1;
-    const newTodayStudiedCards = userStats.todayStudiedCards + 1;
-    const newTodayTotalCards = userStats.todayTotalCards + 1;
+    newTodayStudiedCards += 1;
+    newTodayTotalCards += 1;
 
-    const newMinutesSpentToday = userStats.minutesSpentToday + timeSpent;
+    newMinutesSpentToday += timeSpent;
     const newMinutesSpentTotal = userStats.minutesSpentTotal + timeSpent;
 
     const { newWeeklyStudiedCards, newMinutesSpentThisWeek } =
@@ -248,8 +260,7 @@ export const updateUserStats = async (
         userStats.lastStudiedDate,
         userStats.weeklyStudiedCards,
         userStats.minutesSpentThisWeek,
-        newTodayStudiedCards,
-        newMinutesSpentToday
+        timeSpent
       );
 
     const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));

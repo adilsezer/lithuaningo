@@ -23,7 +23,7 @@ const MultipleChoiceCard: React.FC<MultipleChoiceCardProps> = ({ card }) => {
   const handleOptionPress = (option: string) => {
     const correct = handlePress(option);
     if (correct !== null) {
-      const timeSpent = 1; // Example value for time spent on the question
+      const timeSpent = 0.5; // Example value for time spent on the question
       handleAnswer(correct, timeSpent);
     }
   };

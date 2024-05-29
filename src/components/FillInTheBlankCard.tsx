@@ -18,7 +18,7 @@ const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({ card }) => {
 
   const handleFormSubmit = () => {
     const correct = handleSubmit(inputText);
-    const timeSpent = 1; // Example value for time spent on the question
+    const timeSpent = 0.5; // Example value for time spent on the question
     handleAnswer(correct, timeSpent);
   };
 
