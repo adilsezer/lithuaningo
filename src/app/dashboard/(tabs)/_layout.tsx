@@ -2,19 +2,21 @@ import React from "react";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { View, StyleSheet } from "react-native";
 
 export default function TabLayout() {
   const { colors: globalColors } = useThemeStyles();
+
   return (
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: globalColors.active,
-        tabBarStyle: { paddingBottom: 0 },
+        tabBarStyle: styles.tabBarStyle,
         headerShown: false,
       }}
       sceneContainerStyle={{
         backgroundColor: "transparent",
-        // No need for width and height 100% when using flex: 1
+        flex: 1,
       }}
     >
       <Tabs.Screen
@@ -56,3 +58,12 @@ export default function TabLayout() {
     </Tabs>
   );
 }
+
+const styles = StyleSheet.create({
+  tabBarStyle: {
+    height: 70,
+    paddingTop: 10,
+    paddingBottom: 0,
+    elevation: 0, // Remove shadow on Android
+  },
+});

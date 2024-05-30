@@ -8,7 +8,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     slug: "lithuaningo",
     version: "1.0.0",
     orientation: "portrait",
-    icon: "./assets/images/icon.png",
+    icon: "./assets/icons/ios/icon.png",
     userInterfaceStyle: "automatic",
     splash: {
       image: "./assets/images/splash.jpeg",
@@ -23,9 +23,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     android: {
       googleServicesFile: "./google-services.json",
+      icon: "./assets/icons/android/xxxhdpi/icon.png",
       adaptiveIcon: {
-        foregroundImage: "./assets/images/adaptive-icon.png",
-        backgroundColor: "#ffffff",
+        foregroundImage: "./assets/icons/android/foreground.png",
+        backgroundImage: "./assets/icons/android/background.png",
       },
       package: "com.adilsezer.lithuaningo",
     },

@@ -1,7 +1,12 @@
-// src/app/learning-session/index.tsx
-
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from "react-native";
 import BackButton from "@components/BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import MultipleChoiceCard from "@components/MultipleChoiceCard";
@@ -99,30 +104,39 @@ const LearningSessionScreen: React.FC = () => {
   };
 
   return (
-    <View style={[globalStyles.layoutContainer, styles.container]}>
-      <BackButton />
-      <View style={styles.topSection}>
-        <Text style={globalStyles.subtitle}>
-          Completed {currentCardIndex + 1}/{cards.length} Cards
-        </Text>
-      </View>
-      <View style={styles.middleSection}>
-        {renderCard(cards[currentCardIndex])}
-      </View>
-      <CustomButton
-        title="Continue"
-        onPress={handleNextCard}
-        style={{
-          backgroundColor: globalColors.secondary,
-        }}
-      />
-    </View>
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <BackButton />
+        <View style={styles.topSection}>
+          <Text style={globalStyles.subtitle}>
+            Completed {currentCardIndex + 1}/{cards.length} Cards
+          </Text>
+        </View>
+        <View style={styles.middleSection}>
+          {renderCard(cards[currentCardIndex])}
+        </View>
+        <CustomButton
+          title="Continue"
+          onPress={handleNextCard}
+          style={{
+            backgroundColor: globalColors.secondary,
+          }}
+        />
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  scrollViewContent: {
+    flexGrow: 1,
+    justifyContent: "space-between",
   },
   topSection: {
     flex: 1,
