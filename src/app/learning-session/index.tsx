@@ -84,7 +84,11 @@ const LearningSessionScreen: React.FC = () => {
     return (
       <View style={globalStyles.layoutContainer}>
         <BackButton />
-        <Text style={styles.congratulationsText}>Congratulations!</Text>
+        <Text
+          style={[styles.congratulationsText, { color: globalColors.success }]}
+        >
+          Congratulations!
+        </Text>
         <Text style={globalStyles.subtitle}>
           You have completed all the cards.
         </Text>
@@ -148,7 +152,6 @@ const styles = StyleSheet.create({
   congratulationsText: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#4CAF50",
     textAlign: "center",
     marginVertical: 20,
   },

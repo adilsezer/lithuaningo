@@ -236,26 +236,6 @@ const AdminCardForm: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  inputIOS: {
-    fontSize: 14,
-    paddingVertical: 10,
-    paddingHorizontal: 12,
-    borderWidth: 1,
-    borderColor: "green",
-    borderRadius: 8,
-    color: "black",
-    paddingRight: 30,
-  },
-  inputAndroid: {
-    fontSize: 14,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 1,
-    borderColor: "blue",
-    borderRadius: 8,
-    color: "black",
-    paddingRight: 30,
-  },
   image: {
     width: 200,
     height: 200,

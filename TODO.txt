@@ -1,0 +1,2 @@
+Add all cards to firestore using Anki Data
+Create a logic for learning session - 15 Cards a day?

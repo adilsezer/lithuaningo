@@ -1,4 +1,3 @@
-// screens/DashboardScreen.tsx
 import React from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -13,7 +12,7 @@ import { determineUserLevel } from "@utils/userLevel";
 
 const DashboardScreen: React.FC = () => {
   const { stats, loading } = useStats();
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const userLevel = determineUserLevel(stats);
 
@@ -30,14 +29,14 @@ const DashboardScreen: React.FC = () => {
     longestStreak = 0,
     totalStudiedCards = 0,
     todayStudiedCards = 0,
-    weeklyStudiedCards = 0,
     minutesSpentToday = 0,
-    minutesSpentThisWeek = 0,
     minutesSpentTotal = 0,
   } = stats || {};
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
       {userData && (
         <Text style={globalStyles.title}>
           Labas, {userData.name || userData.email}!
@@ -46,17 +45,19 @@ const DashboardScreen: React.FC = () => {
       <Text style={globalStyles.text}>
         Let's continue learning Lithuanian together!
       </Text>
-      <View style={styles.section}>
-        <Text style={styles.cardTitle}>Today's Learning</Text>
-        <Text style={styles.cardValue}>
+      <View style={[styles.section, { backgroundColor: colors.card }]}>
+        <Text style={[styles.cardTitle, { color: colors.cardText }]}>
+          Today's Learning
+        </Text>
+        <Text style={[styles.cardValue, { color: colors.cardText }]}>
           Cards Studied Today: {todayStudiedCards}
         </Text>
-        <Text style={styles.cardValue}>
+        <Text style={[styles.cardValue, { color: colors.cardText }]}>
           Time Spent Today: {formatTime(minutesSpentToday)}
         </Text>
         <ProgressBar progress={todayStudiedCards / 15} />
       </View>
-      <Text style={globalStyles.title}>Your Level Now</Text>
+      <Text style={globalStyles.title}>Your Level</Text>
       <StatusLabel label={userLevel} />
       <Text style={[globalStyles.title]}>Your Progress</Text>
       <View style={styles.row}>
@@ -64,17 +65,7 @@ const DashboardScreen: React.FC = () => {
         <StatCard title="Longest Streak" value={`${longestStreak} days`} />
       </View>
       <View style={styles.row}>
-        <StatCard
-          title="Weekly Cards Studied"
-          value={`${weeklyStudiedCards}`}
-        />
         <StatCard title="Total Cards Studied" value={`${totalStudiedCards}`} />
-      </View>
-      <View style={styles.row}>
-        <StatCard
-          title="Time Spent This Week"
-          value={formatTime(minutesSpentThisWeek)}
-        />
         <StatCard
           title="Time Spent Total"
           value={formatTime(minutesSpentTotal)}
@@ -90,7 +81,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   section: {
-    backgroundColor: "#ECEFF1",
     borderRadius: 8,
     padding: 16,
     marginTop: 8,
@@ -105,12 +95,10 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 10,
   },
   cardValue: {
     fontSize: 16,
-    color: "#757575",
     marginBottom: 10,
   },
 });

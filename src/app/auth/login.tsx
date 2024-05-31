@@ -74,9 +74,9 @@ const LoginScreen: React.FC = () => {
         title={"Log in with Google"}
         icon={require("assets/images/google-logo.png")}
         style={{
-          backgroundColor: "#f2f2f2",
+          backgroundColor: globalColors.card,
         }}
-        textStyle={{ color: "#1d1d1d" }}
+        textStyle={{ color: globalColors.cardText }}
         disabled={loading}
       />
       <NavigationLink

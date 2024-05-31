@@ -29,7 +29,13 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, height = 8 }) => {
   });
 
   return (
-    <View style={[styles.progressBarContainer, { height }]}>
+    <View
+      style={[
+        styles.progressBarContainer,
+        { backgroundColor: globalColors.border },
+        { height },
+      ]}
+    >
       <Animated.View
         style={[
           styles.progressBar,
@@ -43,7 +49,6 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, height = 8 }) => {
 const styles = StyleSheet.create({
   progressBarContainer: {
     width: "100%",
-    backgroundColor: "#e0e0e0",
     borderRadius: 4,
     overflow: "hidden",
     marginVertical: 10,

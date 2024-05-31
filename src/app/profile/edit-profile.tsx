@@ -76,7 +76,7 @@ const EditProfileScreen: React.FC = () => {
         {photoURL ? (
           <Image source={{ uri: photoURL }} style={styles.image} />
         ) : (
-          <Text style={styles.noImageText}>No photo selected</Text>
+          <Text style={{ color: globalColors.text }}>No photo selected</Text>
         )}
       </View>
       <CustomButton title="Choose Photo" onPress={pickImage} />
@@ -94,11 +94,6 @@ const styles = StyleSheet.create({
     width: 200,
     height: 200,
     borderRadius: 100,
-    marginVertical: 10,
-  },
-  noImageText: {
-    fontSize: 16,
-    color: "#666",
     marginVertical: 10,
   },
 });

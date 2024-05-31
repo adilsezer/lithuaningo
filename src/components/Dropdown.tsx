@@ -25,7 +25,16 @@ const Dropdown: React.FC<DropdownProps> = ({
     }
   };
 
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+
+  const pickerStyle = {
+    inputIOS: {
+      color: globalColors.text,
+    },
+    inputAndroid: {
+      color: globalColors.text,
+    },
+  };
 
   return (
     <View style={globalStyles.input}>
@@ -35,6 +44,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         items={options}
         onValueChange={handleValueChange}
         value={value}
+        style={pickerStyle}
       />
     </View>
   );

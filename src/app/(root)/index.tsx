@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
     height: null,
     resizeMode: "cover",
     width: null,
+    borderRadius: 10,
   },
   imageContainer: {
     flex: 1,

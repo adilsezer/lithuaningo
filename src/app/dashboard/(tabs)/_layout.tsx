@@ -65,5 +65,6 @@ const styles = StyleSheet.create({
     paddingTop: 10,
     paddingBottom: 0,
     elevation: 0, // Remove shadow on Android
+    backgroundColor: "transparent",
   },
 });

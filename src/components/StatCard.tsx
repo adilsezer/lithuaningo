@@ -1,4 +1,5 @@
 // components/StatCard.tsx
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 
@@ -8,10 +9,15 @@ interface StatCardProps {
 }
 
 const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
+  const { colors: globalColors } = useThemeStyles();
   return (
-    <View style={styles.statCard}>
-      <Text style={styles.cardTitle}>{title}</Text>
-      <Text style={styles.cardValue}>{value}</Text>
+    <View style={[styles.statCard, { backgroundColor: globalColors.card }]}>
+      <Text style={[styles.cardTitle, { color: globalColors.cardText }]}>
+        {title}
+      </Text>
+      <Text style={[styles.cardValue, { color: globalColors.cardText }]}>
+        {value}
+      </Text>
     </View>
   );
 };
@@ -19,7 +25,6 @@ const StatCard: React.FC<StatCardProps> = ({ title, value }) => {
 const styles = StyleSheet.create({
   statCard: {
     flex: 1,
-    backgroundColor: "#ECEFF1",
     borderRadius: 8,
     padding: 16,
     elevation: 4,
@@ -28,13 +33,11 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: "bold",
-    color: "#333",
     marginBottom: 10,
     textAlign: "center",
   },
   cardValue: {
     fontSize: 16,
-    color: "#757575",
     textAlign: "center",
     marginBottom: 10,
   },

@@ -39,9 +39,7 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       <View style={styles.profileSection}>
         <Text style={globalStyles.title}>{userData.name || "User"}</Text>
-        <Text style={[globalStyles.subtitle, { color: "#666" }]}>
-          {userData.email}
-        </Text>
+        <Text style={globalStyles.subtitle}>{userData.email}</Text>
         {userData.photoURL ? (
           <Image
             source={{ uri: userData.photoURL }}
@@ -65,10 +63,7 @@ export default function ProfileScreen() {
           title="About the App"
           onPress={() => navigateTo("/about")}
         />
-        <CustomButton
-          title="Logout"
-          onPress={logout}
-        />
+        <CustomButton title="Logout" onPress={logout} />
         {userData.isAdmin && (
           <CustomButton
             title="Admin Panel"
@@ -84,7 +79,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: "#fff",
   },
   profileSection: {
     alignItems: "center",
@@ -93,7 +87,6 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
   button: {
-    backgroundColor: "#ECEFF1",
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
@@ -101,7 +94,6 @@ const styles = StyleSheet.create({
   buttonText: {
     textAlign: "center",
     fontWeight: "600",
-    color: "#333",
   },
   profilePic: {
     width: 100,

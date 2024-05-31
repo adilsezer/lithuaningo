@@ -1,21 +1,15 @@
 import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
-import {
-  getStartOfToday,
-  getStartOfYesterday,
-  getStartOfWeek,
-} from "@src/utils/dateUtils";
+import { getStartOfToday, getStartOfYesterday } from "@src/utils/dateUtils";
 
 export interface Stats {
   currentStreak: number;
   longestStreak: number;
   totalStudiedCards: number;
   todayStudiedCards: number;
-  weeklyStudiedCards: number;
   dailyAverage: number;
   minutesSpentToday: number;
-  minutesSpentThisWeek: number;
   minutesSpentTotal: number;
   todayTotalCards: number;
   correctAnswers: number;
@@ -175,29 +169,6 @@ const updateStreak = (
   }
 };
 
-const updateWeeklyStats = (
-  lastStudiedDate: FirebaseFirestoreTypes.Timestamp,
-  currentWeeklyStudiedCards: number,
-  currentMinutesSpentThisWeek: number,
-  additionalMinutesSpent: number
-) => {
-  const lastStudied = lastStudiedDate.toDate();
-  const startOfWeek = getStartOfWeek();
-
-  if (lastStudied >= startOfWeek) {
-    return {
-      newWeeklyStudiedCards: currentWeeklyStudiedCards + 1,
-      newMinutesSpentThisWeek:
-        currentMinutesSpentThisWeek + additionalMinutesSpent,
-    };
-  } else {
-    return {
-      newWeeklyStudiedCards: 1,
-      newMinutesSpentThisWeek: additionalMinutesSpent,
-    };
-  }
-};
-
 export const updateUserStats = async (
   userId: string,
   isCorrect: boolean,
@@ -216,10 +187,8 @@ export const updateUserStats = async (
         longestStreak: 0,
         totalStudiedCards: 0,
         todayStudiedCards: 0,
-        weeklyStudiedCards: 0,
         dailyAverage: 0,
         minutesSpentToday: 0,
-        minutesSpentThisWeek: 0,
         minutesSpentTotal: 0,
         todayTotalCards: 0,
         correctAnswers: 0,
@@ -228,12 +197,14 @@ export const updateUserStats = async (
     }
 
     const startOfToday = getStartOfToday();
+    const lastStudiedDate = userStats.lastStudiedDate.toDate();
+
+    // Reset today's stats if the last studied date is before today
     let newTodayStudiedCards = userStats.todayStudiedCards;
     let newMinutesSpentToday = userStats.minutesSpentToday;
     let newTodayTotalCards = userStats.todayTotalCards;
 
-    if (userStats.lastStudiedDate.toDate() < startOfToday) {
-      // Reset today's stats if the last studied date is before today
+    if (lastStudiedDate < startOfToday) {
       newTodayStudiedCards = 0;
       newMinutesSpentToday = 0;
       newTodayTotalCards = 0;
@@ -255,24 +226,14 @@ export const updateUserStats = async (
     newMinutesSpentToday += timeSpent;
     const newMinutesSpentTotal = userStats.minutesSpentTotal + timeSpent;
 
-    const { newWeeklyStudiedCards, newMinutesSpentThisWeek } =
-      updateWeeklyStats(
-        userStats.lastStudiedDate,
-        userStats.weeklyStudiedCards,
-        userStats.minutesSpentThisWeek,
-        timeSpent
-      );
-
     const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
     const newDailyAverage = newTotalStudiedCards / daysActive;
 
     await userStatsRef.set({
       totalStudiedCards: newTotalStudiedCards,
       todayStudiedCards: newTodayStudiedCards,
-      weeklyStudiedCards: newWeeklyStudiedCards,
       todayTotalCards: newTodayTotalCards,
       minutesSpentToday: newMinutesSpentToday,
-      minutesSpentThisWeek: newMinutesSpentThisWeek,
       minutesSpentTotal: newMinutesSpentTotal,
       dailyAverage: newDailyAverage,
       currentStreak: newCurrentStreak,

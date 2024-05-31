@@ -9,6 +9,9 @@ export type ThemeColors = {
   placeholder: string;
   border: string;
   error: string;
+  success: string;
+  card: string;
+  cardText: string;
 };
 
 export const lightThemeColors: ThemeColors = {
@@ -22,6 +25,9 @@ export const lightThemeColors: ThemeColors = {
   placeholder: "#B0BEC5", // Matches inactive color
   border: "#B0BEC5", // Soft grey (same as inactive)
   error: "#d5304f", // Soft grey (same as inactive)
+  card: "#ECEFF1",
+  cardText: "#2E3B44",
+  success: "#66BB6A", // Modern vibrant green
 };
 
 export const darkThemeColors: ThemeColors = {
@@ -31,8 +37,11 @@ export const darkThemeColors: ThemeColors = {
   active: "#66BB6A", // Lively modern green (same as primary)
   inactive: "#455A64", // Cooler, muted blue-grey
   text: "#FAFAFA", // Very light grey (almost white)
-  link: "#1E88E5", // Crisp, deep sky blue (same as light theme)
+  link: "#42A5F5", // Crisp, deep sky blue (same as light theme)
   placeholder: "#CFD8DC", // Lighter blue-grey for placeholders, adjusted for dark theme
   border: "#37474F", // Darker shade for borders, adjusted for dark theme
   error: "#d5304f", // Soft grey (same as inactive)
+  card: "#FAFAFA",
+  cardText: "#263238",
+  success: "#66BB6A", // Modern vibrant green
 };
