@@ -1,2 +1,5 @@
-Add all cards to firestore using Anki Data
+Remove user profile image logic to save space
+Add translation and other necessary fields into learning session
+Add complete the sentence for fill the blank type questions
+
 Create a logic for learning session - 15 Cards a day?
