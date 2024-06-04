@@ -25,6 +25,7 @@ export interface LearningCard {
   answer: string;
   translation: string;
   baseForm: string;
+  baseFormTranslation: string;
   displayOrder: number;
   audio?: string;
   extraInfo?: string;
