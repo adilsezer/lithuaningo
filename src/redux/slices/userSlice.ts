@@ -5,7 +5,6 @@ interface UserProfile {
   id: string;
   name: string | null;
   email: string;
-  photoURL?: string | null;
   emailVerified: boolean;
   isAdmin: boolean;
 }

@@ -31,7 +31,6 @@ const updateUserState = async (
         id: user.uid,
         name: user.displayName || null,
         email: user.email,
-        photoURL: user.photoURL || null,
         emailVerified: user.emailVerified,
         isAdmin: adminStatus, // Use the boolean value from the helper function
       })

@@ -40,14 +40,6 @@ export default function ProfileScreen() {
       <View style={styles.profileSection}>
         <Text style={globalStyles.title}>{userData.name || "User"}</Text>
         <Text style={globalStyles.subtitle}>{userData.email}</Text>
-        {userData.photoURL ? (
-          <Image
-            source={{ uri: userData.photoURL }}
-            style={styles.profilePic}
-          />
-        ) : (
-          <Text style={globalStyles.text}>No profile picture</Text>
-        )}
       </View>
 
       <View style={styles.actionsSection}>

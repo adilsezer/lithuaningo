@@ -11,7 +11,7 @@ import {
   addCard,
   updateCard,
   deleteCard,
-  Card,
+  LearningCard,
   fetchLearningCards,
 } from "@src/services/FirebaseDataService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -21,7 +21,7 @@ import * as ImagePicker from "expo-image-picker";
 import storage from "@react-native-firebase/storage";
 
 const AdminCardForm: React.FC = () => {
-  const [cards, setCards] = useState<Card[]>([]);
+  const [cards, setCards] = useState<LearningCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   const [question, setQuestion] = useState("");
   const [answer, setAnswer] = useState("");
@@ -33,13 +33,16 @@ const AdminCardForm: React.FC = () => {
 
   useEffect(() => {
     const unsubscribe = fetchLearningCards((learningCards) => {
-      const cardList: Card[] = learningCards.map((card) => ({
+      const cardList: LearningCard[] = learningCards.map((card) => ({
         id: card.id,
         question: card.question,
         answer: card.answer,
         type: card.type,
         options: card.options,
         image: card.image,
+        baseForm: card.baseForm,
+        displayOrder: card.displayOrder,
+        translation: card.translation,
       }));
       setCards(cardList);
     });
@@ -70,12 +73,15 @@ const AdminCardForm: React.FC = () => {
   }, [selectedCardId, cards]);
 
   const handleSubmit = async () => {
-    const card: Card = {
+    const card: LearningCard = {
       question,
       answer,
       type,
       options: options.split(",").map((option) => option.trim()),
       image,
+      baseForm,
+      displayOrder,
+      translation,
     };
 
     try {

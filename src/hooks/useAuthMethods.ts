@@ -123,10 +123,7 @@ const useAuthMethods = () => {
     return result;
   };
 
-  const handleUpdateUserProfile = async (updates: {
-    displayName?: string;
-    photoURL?: string;
-  }) => {
+  const handleUpdateUserProfile = async (updates: { displayName?: string }) => {
     const result = await handleAction(() =>
       updateUserProfile(updates, dispatch)
     );

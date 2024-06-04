@@ -20,8 +20,7 @@ const EditProfileScreen: React.FC = () => {
   const { handleUpdateUserProfile } = useAuthMethods(); // Corrected hook usage inside the component
   const router = useRouter();
 
-  const [name, setName] = useState<string>(userData?.name || "");
-  const [photoURL, setPhotoURL] = useState<string>(userData?.photoURL || "");
+  const [name, setName] = useState<string>("");
 
   const handleUpdateProfile = async () => {
     if (!name) {
@@ -34,10 +33,9 @@ const EditProfileScreen: React.FC = () => {
     try {
       const result = await handleUpdateUserProfile({
         displayName: name,
-        photoURL,
       });
       if (result.success) {
-        dispatch(updateUserProfileAction({ name, photoURL }));
+        dispatch(updateUserProfileAction({ name }));
         Alert.alert("Success", "Profile updated successfully.");
         router.push("/dashboard/profile");
       } else {
@@ -48,38 +46,17 @@ const EditProfileScreen: React.FC = () => {
     }
   };
 
-  const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets) {
-      setPhotoURL(result.assets[0].uri);
-    }
-  };
-
   return (
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Edit Profile</Text>
       <TextInput
         style={globalStyles.input}
-        placeholder="Name"
+        placeholder="User Name"
         value={name}
         onChangeText={setName}
         placeholderTextColor={globalColors.placeholder}
       />
-      <View style={styles.imagePickerContainer}>
-        {photoURL ? (
-          <Image source={{ uri: photoURL }} style={styles.image} />
-        ) : (
-          <Text style={{ color: globalColors.text }}>No photo selected</Text>
-        )}
-      </View>
-      <CustomButton title="Choose Photo" onPress={pickImage} />
       <CustomButton title="Save Changes" onPress={handleUpdateProfile} />
     </View>
   );

@@ -1,5 +1,22 @@
-Remove user profile image logic to save space
-Add translation and other necessary fields into learning session
-Add complete the sentence for fill the blank type questions
-
 Create a logic for learning session - 15 Cards a day?
+For A1 user, start with the A1 cards
+
+Users mark each card as "Mastered" or "Review Again" after viewing the answer.
+After all daily cards are marked "Mastered," a quiz tests the user's knowledge of that day’s vocabulary.
+
+Leaderboard displays todays quiz result
+We should pull 5 new cards and 5 from any history randomly to show
+Add one more card to make total cards 100 - that will take 20 days for a user to complete all the cards
+
+Fix today's stats
+
+
+*********************
+
+I want to implement this into my LearningSession.
+
+We should pull 5 new cards and 5 from any history randomly to show.
+First we will show the user:
+A flashcard that has front and back. Front is the baseForm field pulled from firestore database learningCards collection. 
+Users mark each card as "Mastered" or "Review Again" after viewing the answer.
+After all daily cards are marked "Mastered," a quiz tests the user's knowledge of that day’s vocabulary.

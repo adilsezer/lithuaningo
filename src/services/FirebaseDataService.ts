@@ -23,6 +23,13 @@ export interface LearningCard {
   image?: string;
   options?: string[];
   answer: string;
+  translation: string;
+  baseForm: string;
+  displayOrder: number;
+  audio?: string;
+  extraInfo?: string;
+  level?: string;
+  tags?: string;
 }
 
 export const updateCompletionDate = async (userId: string): Promise<void> => {
@@ -249,16 +256,7 @@ export const updateUserStats = async (
   }
 };
 
-export type Card = {
-  id?: string;
-  question: string;
-  answer: string;
-  type: string; // e.g., 'multiple_choice', 'fill_in_the_blank', etc.
-  options?: string[]; // for multiple choice questions
-  image?: string;
-};
-
-export const addCard = async (card: Card) => {
+export const addCard = async (card: LearningCard) => {
   try {
     const newCard = await firestore().collection("learningCards").add(card);
     console.log("Card added with ID:", newCard.id);
@@ -271,7 +269,7 @@ export const addCard = async (card: Card) => {
 
 export const updateCard = async (
   cardId: string,
-  updatedCard: Partial<Card>
+  updatedCard: Partial<LearningCard>
 ) => {
   try {
     await firestore()

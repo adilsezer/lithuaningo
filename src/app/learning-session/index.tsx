@@ -27,6 +27,7 @@ const LearningSessionScreen: React.FC = () => {
   const [sessionCompleted, setSessionCompleted] = useState(false);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const [canCompleteToday, setCanCompleteToday] = useState(true);
+  const [isSubmitPressed, setIsSubmitPressed] = useState(false);
   const userData = useAppSelector(selectUserData);
 
   useEffect(() => {
@@ -42,6 +43,7 @@ const LearningSessionScreen: React.FC = () => {
   const handleNextCard = async () => {
     if (currentCardIndex < cards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
+      setIsSubmitPressed(false); // Reset submit state for next card
     } else {
       setSessionCompleted(true);
       if (userData?.id) {
@@ -99,9 +101,20 @@ const LearningSessionScreen: React.FC = () => {
   const renderCard = (card: LearningCard) => {
     switch (card.type) {
       case "multiple_choice":
-        return <MultipleChoiceCard card={card} />;
+        return (
+          <MultipleChoiceCard
+            card={card}
+            onOptionSelect={() => setIsSubmitPressed(true)}
+          />
+        );
       case "fill_in_the_blank":
-        return <FillInTheBlankCard card={card} />;
+        return (
+          <FillInTheBlankCard
+            card={card}
+            onSubmit={() => setIsSubmitPressed(true)}
+            isSubmitPressed={isSubmitPressed}
+          />
+        );
       default:
         return null;
     }
@@ -115,20 +128,22 @@ const LearningSessionScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.scrollViewContent}>
         <BackButton />
         <View style={styles.topSection}>
-          <Text style={globalStyles.subtitle}>
+          <Text style={globalStyles.text}>
             Completed {currentCardIndex + 1}/{cards.length} Cards
           </Text>
         </View>
+        {isSubmitPressed && (
+          <CustomButton
+            title="Continue"
+            onPress={handleNextCard}
+            style={{
+              backgroundColor: globalColors.secondary,
+            }}
+          />
+        )}
         <View style={styles.middleSection}>
           {renderCard(cards[currentCardIndex])}
         </View>
-        <CustomButton
-          title="Continue"
-          onPress={handleNextCard}
-          style={{
-            backgroundColor: globalColors.secondary,
-          }}
-        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
