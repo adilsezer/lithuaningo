@@ -60,9 +60,6 @@ const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
     const batchSize = 10;
     let lastVisible = null;
 
-    console.log(`Fetching learning cards for user: ${userId}`);
-    console.log(`Learned card IDs: ${learnedCardIdsAsStrings}`);
-
     // Fetch cards in batches, excluding already learned cards
     while (allNewCards.length < batchSize) {
       let query = firestore()
@@ -91,8 +88,6 @@ const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
         )
         .filter((card) => !learnedCardIdsAsStrings.includes(card.id));
 
-      console.log("New cards fetched in this batch:", newCards);
-
       allNewCards.push(...newCards);
 
       if (newCardsSnapshot.docs.length < batchSize) {
@@ -102,8 +97,6 @@ const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
 
       lastVisible = newCardsSnapshot.docs[newCardsSnapshot.docs.length - 1];
     }
-
-    console.log("Total new cards fetched:", allNewCards.length);
 
     return allNewCards.slice(0, batchSize);
   } catch (error) {

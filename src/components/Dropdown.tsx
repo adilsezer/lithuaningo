@@ -19,7 +19,6 @@ const Dropdown: React.FC<DropdownProps> = ({
   value,
 }) => {
   const handleValueChange = (value: string) => {
-    console.log("Dropdown value changed to:", value);
     if (onValueChange) {
       onValueChange(value);
     }

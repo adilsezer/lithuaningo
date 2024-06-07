@@ -32,7 +32,6 @@ export const signInWithGoogle = async (
         isAdmin: adminStatus,
       })
     );
-    console.log("Google Sign-In successful");
     return userCredential;
   } catch (error) {
     console.error("Google Sign-In failed:", error);
@@ -46,7 +45,6 @@ export const signOut = async (dispatch: AppDispatch): Promise<void> => {
     await GoogleSignin.signOut();
     await auth().signOut();
     dispatch(logOut());
-    console.log("Sign-out successful");
   } catch (error) {
     console.error("Sign-out failed:", error);
     throw error;

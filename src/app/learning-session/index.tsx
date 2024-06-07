@@ -61,7 +61,6 @@ const LearningSessionScreen: React.FC = () => {
           storedData.date === today &&
           storedData.cards.length > 0
         ) {
-          console.log("Loaded stored cards:", storedData.cards);
           setLearningCards(storedData.cards);
           setFlashcardsCompleted(storedData.flashcardsCompleted);
           setCurrentCardIndex(storedData.currentCardIndex);
@@ -71,7 +70,6 @@ const LearningSessionScreen: React.FC = () => {
             await clearData(`dailyCards_${userId}`);
           }
           const cards = await FirebaseDataService.fetchLearningCards(userId);
-          console.log("Fetched new cards:", cards);
           if (cards.length > 0) {
             const dailyCards = cards.slice(0, cardsPerDay);
             setLearningCards(dailyCards);
@@ -95,13 +93,11 @@ const LearningSessionScreen: React.FC = () => {
   }, [userId]);
 
   const handleMastered = async (cardId: string) => {
-    console.log(`Card ${cardId} marked as mastered`);
     setLearnedCards((prev) => [...prev, cardId]);
     await goToNextCard();
   };
 
   const handleReviewAgain = async (cardId: string) => {
-    console.log(`Card ${cardId} marked for review again`);
     await putCardAtEnd(cardId);
   };
 
@@ -137,7 +133,6 @@ const LearningSessionScreen: React.FC = () => {
   const saveLearnedCards = async () => {
     try {
       await FirebaseDataService.updateUserLearnedCards(userId, learnedCards);
-      console.log("Learned cards updated successfully");
     } catch (error) {
       console.error("Error updating learned cards:", error);
     }
@@ -168,8 +163,6 @@ const LearningSessionScreen: React.FC = () => {
       console.log("Card is undefined");
       return <Text>No card to display</Text>;
     }
-
-    console.log("Rendering card:", card);
 
     switch (card.type) {
       case "multiple_choice":
