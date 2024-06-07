@@ -33,9 +33,109 @@ export interface LearningCard {
   tags?: string;
 }
 
-export const updateCompletionDate = async (userId: string): Promise<void> => {
+export interface LearnedCard {
+  id: string;
+}
+
+const fetchUserProfile = async (userId: string) => {
+  const userDoc = await firestore()
+    .collection("userProfiles")
+    .doc(userId)
+    .get();
+  if (!userDoc.exists) {
+    throw new Error("User profile not found");
+  }
+  return userDoc.data();
+};
+
+const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
   try {
-    await firestore().collection("users").doc(userId).update({
+    const userProfile = await fetchUserProfile(userId);
+    const learnedCardIds = userProfile?.learnedCards || [];
+    const learnedCardIdsAsStrings = learnedCardIds.map((card: any) =>
+      typeof card === "string" ? card : card.id
+    );
+
+    const allNewCards: LearningCard[] = [];
+    const batchSize = 10;
+    let lastVisible = null;
+
+    console.log(`Fetching learning cards for user: ${userId}`);
+    console.log(`Learned card IDs: ${learnedCardIdsAsStrings}`);
+
+    // Fetch cards in batches, excluding already learned cards
+    while (allNewCards.length < batchSize) {
+      let query = firestore()
+        .collection("learningCards")
+        .orderBy("displayOrder")
+        .limit(batchSize);
+
+      if (lastVisible) {
+        query = query.startAfter(lastVisible);
+      }
+
+      const newCardsSnapshot = await query.get();
+
+      if (newCardsSnapshot.empty) {
+        console.log("No more cards to fetch, snapshot is empty");
+        break;
+      }
+
+      const newCards = newCardsSnapshot.docs
+        .map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as LearningCard)
+        )
+        .filter((card) => !learnedCardIdsAsStrings.includes(card.id));
+
+      console.log("New cards fetched in this batch:", newCards);
+
+      allNewCards.push(...newCards);
+
+      if (newCardsSnapshot.docs.length < batchSize) {
+        console.log("Fetched less than batch size, breaking out of loop");
+        break;
+      }
+
+      lastVisible = newCardsSnapshot.docs[newCardsSnapshot.docs.length - 1];
+    }
+
+    console.log("Total new cards fetched:", allNewCards.length);
+
+    return allNewCards.slice(0, batchSize);
+  } catch (error) {
+    console.error("Error fetching learning cards:", error);
+    return [];
+  }
+};
+
+const updateUserLearnedCards = async (
+  userId: string,
+  newLearnedCards: string[]
+): Promise<void> => {
+  try {
+    const userProfile = await fetchUserProfile(userId);
+    const existingLearnedCards = userProfile?.learnedCards || [];
+
+    const updatedLearnedCards = [
+      ...new Set([...existingLearnedCards, ...newLearnedCards]),
+    ];
+
+    await firestore().collection("userProfiles").doc(userId).update({
+      learnedCards: updatedLearnedCards,
+    });
+  } catch (error) {
+    console.error("Error updating learned cards:", error);
+    throw new Error("Failed to update learned cards.");
+  }
+};
+
+const updateCompletionDate = async (userId: string): Promise<void> => {
+  try {
+    await firestore().collection("userProfiles").doc(userId).update({
       lastCompleted: firestore.FieldValue.serverTimestamp(),
     });
   } catch (error) {
@@ -44,9 +144,12 @@ export const updateCompletionDate = async (userId: string): Promise<void> => {
   }
 };
 
-export const isAdmin = async (userId: string): Promise<boolean> => {
+const isAdmin = async (userId: string): Promise<boolean> => {
   try {
-    const userDoc = await firestore().collection("users").doc(userId).get();
+    const userDoc = await firestore()
+      .collection("userProfiles")
+      .doc(userId)
+      .get();
     if (!userDoc.exists) {
       return false;
     }
@@ -58,11 +161,12 @@ export const isAdmin = async (userId: string): Promise<boolean> => {
   }
 };
 
-export const checkIfCompletedToday = async (
-  userId: string
-): Promise<boolean> => {
+const checkIfCompletedToday = async (userId: string): Promise<boolean> => {
   try {
-    const userDoc = await firestore().collection("users").doc(userId).get();
+    const userDoc = await firestore()
+      .collection("userProfiles")
+      .doc(userId)
+      .get();
     const userData = userDoc.data();
 
     if (userData?.lastCompleted) {
@@ -79,12 +183,12 @@ export const checkIfCompletedToday = async (
   return false;
 };
 
-export const fetchStats = (
+const fetchStats = (
   userId: string,
   onStatsChange: (stats: Stats | null) => void
 ) => {
   return firestore()
-    .collection("stats")
+    .collection("userProfiles")
     .doc(userId)
     .onSnapshot(
       (doc) => {
@@ -102,36 +206,13 @@ export const fetchStats = (
     );
 };
 
-export const fetchLearningCards = (
-  onCardsChange: (cards: LearningCard[]) => void
-) => {
-  return firestore()
-    .collection("learningCards")
-    .onSnapshot(
-      (snapshot) => {
-        const cards = snapshot.docs.map(
-          (doc) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as LearningCard)
-        );
-        onCardsChange(cards);
-      },
-      (error) => {
-        console.error("Error fetching learning cards:", error);
-        onCardsChange([]); // Ensure we handle errors by passing an empty array
-      }
-    );
-};
-
-export const fetchLeaderboard = (
+const fetchLeaderboard = (
   onLeadersChange: (
     leaders: { id: string; name: string; score: number }[]
   ) => void
 ) => {
   return firestore()
-    .collection("stats")
+    .collection("userProfiles")
     .orderBy("totalStudiedCards", "desc")
     .limit(20)
     .onSnapshot(
@@ -139,14 +220,9 @@ export const fetchLeaderboard = (
         const leaders = await Promise.all(
           snapshot.docs.map(async (doc) => {
             const data = doc.data();
-            const userDoc = await firestore()
-              .collection("users")
-              .doc(doc.id)
-              .get();
-            const userName = userDoc.exists ? userDoc.data()?.name : "Unknown";
             return {
               id: doc.id,
-              name: userName,
+              name: data.name,
               score: data.totalStudiedCards,
             };
           })
@@ -169,21 +245,21 @@ const updateStreak = (
   const startOfYesterday = getStartOfYesterday();
 
   if (lastStudied >= startOfToday) {
-    return currentStreak; // Already studied today, no change
+    return currentStreak;
   } else if (lastStudied >= startOfYesterday) {
-    return currentStreak + 1; // Continued the streak from yesterday
+    return currentStreak + 1;
   } else {
-    return 1; // Streak broken, reset to 1
+    return 1;
   }
 };
 
-export const updateUserStats = async (
+const updateUserStats = async (
   userId: string,
   isCorrect: boolean,
   timeSpent: number
 ): Promise<void> => {
   try {
-    const userStatsRef = firestore().collection("stats").doc(userId);
+    const userStatsRef = firestore().collection("userProfiles").doc(userId);
     const userStatsSnapshot = await userStatsRef.get();
 
     let userStats: Stats;
@@ -200,17 +276,16 @@ export const updateUserStats = async (
         minutesSpentTotal: 0,
         todayTotalCards: 0,
         correctAnswers: 0,
-        lastStudiedDate: firestore.Timestamp.fromDate(new Date(0)), // Initialize to epoch
+        lastStudiedDate: firestore.Timestamp.fromDate(new Date(0)),
       };
     }
 
     const startOfToday = getStartOfToday();
-    const lastStudiedDate = userStats.lastStudiedDate.toDate();
+    const lastStudiedDate = userStats.lastStudiedDate?.toDate() || new Date(0);
 
-    // Reset today's stats if the last studied date is before today
-    let newTodayStudiedCards = userStats.todayStudiedCards;
-    let newMinutesSpentToday = userStats.minutesSpentToday;
-    let newTodayTotalCards = userStats.todayTotalCards;
+    let newTodayStudiedCards = userStats.todayStudiedCards ?? 0;
+    let newMinutesSpentToday = userStats.minutesSpentToday ?? 0;
+    let newTodayTotalCards = userStats.todayTotalCards ?? 0;
 
     if (lastStudiedDate < startOfToday) {
       newTodayStudiedCards = 0;
@@ -219,25 +294,25 @@ export const updateUserStats = async (
     }
 
     const newCurrentStreak = updateStreak(
-      userStats.lastStudiedDate,
-      userStats.currentStreak
+      userStats.lastStudiedDate || firestore.Timestamp.fromDate(new Date(0)),
+      userStats.currentStreak ?? 0
     );
     const newLongestStreak = Math.max(
-      userStats.longestStreak,
+      userStats.longestStreak ?? 0,
       newCurrentStreak
     );
 
-    const newTotalStudiedCards = userStats.totalStudiedCards + 1;
+    const newTotalStudiedCards = (userStats.totalStudiedCards ?? 0) + 1;
     newTodayStudiedCards += 1;
     newTodayTotalCards += 1;
 
     newMinutesSpentToday += timeSpent;
-    const newMinutesSpentTotal = userStats.minutesSpentTotal + timeSpent;
+    const newMinutesSpentTotal = (userStats.minutesSpentTotal ?? 0) + timeSpent;
 
     const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
     const newDailyAverage = newTotalStudiedCards / daysActive;
 
-    await userStatsRef.set({
+    await userStatsRef.update({
       totalStudiedCards: newTotalStudiedCards,
       todayStudiedCards: newTodayStudiedCards,
       todayTotalCards: newTodayTotalCards,
@@ -247,9 +322,9 @@ export const updateUserStats = async (
       currentStreak: newCurrentStreak,
       longestStreak: newLongestStreak,
       correctAnswers: isCorrect
-        ? userStats.correctAnswers + 1
-        : userStats.correctAnswers,
-      lastStudiedDate: firestore.Timestamp.now(), // Update to current time
+        ? (userStats.correctAnswers ?? 0) + 1
+        : userStats.correctAnswers ?? 0,
+      lastStudiedDate: firestore.Timestamp.now(),
     });
   } catch (error) {
     console.error("Error updating stats:", error);
@@ -257,10 +332,9 @@ export const updateUserStats = async (
   }
 };
 
-export const addCard = async (card: LearningCard) => {
+const addCard = async (card: LearningCard) => {
   try {
     const newCard = await firestore().collection("learningCards").add(card);
-    console.log("Card added with ID:", newCard.id);
     return { success: true, id: newCard.id };
   } catch (error) {
     console.error("Error adding card:", error);
@@ -268,7 +342,7 @@ export const addCard = async (card: LearningCard) => {
   }
 };
 
-export const updateCard = async (
+const updateCard = async (
   cardId: string,
   updatedCard: Partial<LearningCard>
 ) => {
@@ -277,7 +351,6 @@ export const updateCard = async (
       .collection("learningCards")
       .doc(cardId)
       .update(updatedCard);
-    console.log("Card updated with ID:", cardId);
     return { success: true };
   } catch (error) {
     console.error("Error updating card:", error);
@@ -285,13 +358,26 @@ export const updateCard = async (
   }
 };
 
-export const deleteCard = async (cardId: string) => {
+const deleteCard = async (cardId: string) => {
   try {
     await firestore().collection("learningCards").doc(cardId).delete();
-    console.log("Card deleted with ID:", cardId);
     return { success: true };
   } catch (error) {
     console.error("Error deleting card:", error);
     return { success: false, error };
   }
+};
+
+export const FirebaseDataService = {
+  fetchLearningCards,
+  updateUserLearnedCards,
+  updateCompletionDate,
+  isAdmin,
+  checkIfCompletedToday,
+  fetchStats,
+  fetchLeaderboard,
+  updateUserStats,
+  addCard,
+  updateCard,
+  deleteCard,
 };

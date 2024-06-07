@@ -8,19 +8,19 @@ import {
   Text,
 } from "react-native";
 import {
-  addCard,
-  updateCard,
-  deleteCard,
+  FirebaseDataService,
   LearningCard,
-  fetchLearningCards,
-} from "@src/services/FirebaseDataService";
+} from "../services/FirebaseDataService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import Dropdown from "./Dropdown";
 import * as ImagePicker from "expo-image-picker";
 import storage from "@react-native-firebase/storage";
+import { useAppSelector } from "../redux/hooks";
+import { selectUserData } from "../redux/slices/userSlice";
 
 const AdminCardForm: React.FC = () => {
+  const userData = useAppSelector(selectUserData);
   const [cards, setCards] = useState<LearningCard[]>([]);
   const [selectedCardId, setSelectedCardId] = useState<string>("");
   const [question, setQuestion] = useState("");
@@ -38,29 +38,21 @@ const AdminCardForm: React.FC = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   useEffect(() => {
-    const unsubscribe = fetchLearningCards((learningCards) => {
-      const cardList: LearningCard[] = learningCards.map((card) => ({
-        id: card.id,
-        question: card.question,
-        answer: card.answer,
-        type: card.type,
-        options: card.options,
-        image: card.image,
-        baseForm: card.baseForm,
-        baseFormTranslation: card.baseFormTranslation,
-        displayOrder: card.displayOrder,
-        translation: card.translation,
-      }));
-      setCards(cardList);
-    });
-    return () => unsubscribe();
-  }, []);
+    if (userData && userData.id) {
+      const loadCards = async () => {
+        const learningCards = await FirebaseDataService.fetchLearningCards(
+          userData.id
+        );
+        setCards(learningCards);
+      };
+      loadCards();
+    }
+  }, [userData]);
 
   useEffect(() => {
     if (selectedCardId && selectedCardId !== "") {
       const card = cards.find((c) => c.id === selectedCardId);
       if (card) {
-        console.log("Setting form fields with selected card details", card);
         setQuestion(card.question);
         setAnswer(card.answer);
         setType(card.type as "multiple_choice" | "fill_in_the_blank");
@@ -73,7 +65,6 @@ const AdminCardForm: React.FC = () => {
         setTranslation(card.translation);
       }
     } else {
-      console.log("Resetting form fields for new card");
       setQuestion("");
       setAnswer("");
       setType("multiple_choice");
@@ -102,16 +93,17 @@ const AdminCardForm: React.FC = () => {
 
     try {
       if (selectedCardId && selectedCardId !== "") {
-        // Update card
-        const result = await updateCard(selectedCardId, card as LearningCard);
+        const result = await FirebaseDataService.updateCard(
+          selectedCardId,
+          card as LearningCard
+        );
         if (result.success) {
           Alert.alert("Success", "Card updated successfully!");
         } else {
           throw new Error("Error when updating the card.");
         }
       } else {
-        // Add new card
-        const result = await addCard(card as LearningCard);
+        const result = await FirebaseDataService.addCard(card as LearningCard);
         if (result.success) {
           Alert.alert("Success", "Card added successfully!");
         } else {
@@ -127,10 +119,10 @@ const AdminCardForm: React.FC = () => {
     if (!selectedCardId) return;
 
     try {
-      const result = await deleteCard(selectedCardId);
+      const result = await FirebaseDataService.deleteCard(selectedCardId);
       if (result.success) {
         Alert.alert("Success", "Card deleted successfully!");
-        setSelectedCardId(""); // Reset the form
+        setSelectedCardId("");
       } else {
         throw new Error("Error when deleting the card.");
       }
@@ -167,7 +159,7 @@ const AdminCardForm: React.FC = () => {
 
   const uploadImageAsync = async (uri: string) => {
     try {
-      const filename = uri.split("/").pop(); // Extract the file name from the uri
+      const filename = uri.split("/").pop();
       const reference = storage().ref(filename);
       const task = reference.putFile(uri);
 
@@ -182,8 +174,6 @@ const AdminCardForm: React.FC = () => {
       await task;
 
       const downloadUrl = await reference.getDownloadURL();
-      console.log("Image uploaded to the bucket!", downloadUrl);
-
       return downloadUrl;
     } catch (error) {
       console.error("Error uploading image:", error);
@@ -196,26 +186,20 @@ const AdminCardForm: React.FC = () => {
       <Text style={globalStyles.subtitle}>Card List</Text>
 
       <Dropdown
-        onValueChange={(value) => {
-          console.log("Selected Card ID:", value);
-          setSelectedCardId(value);
-        }}
+        onValueChange={(value) => setSelectedCardId(value)}
         placeholder={{ label: "Add New Card", value: "" }}
-        options={[
-          ...cards.map((card) => ({
-            label: card.question,
-            value: card.id || "",
-          })),
-        ]}
+        options={cards.map((card) => ({
+          label: card.question,
+          value: card.id || "",
+        }))}
         value={selectedCardId}
       />
       <Text style={globalStyles.subtitle}>Type</Text>
 
       <Dropdown
-        onValueChange={(value) => {
-          console.log("Selected Card Type:", value);
-          setType(value as "multiple_choice" | "fill_in_the_blank");
-        }}
+        onValueChange={(value) =>
+          setType(value as "multiple_choice" | "fill_in_the_blank")
+        }
         placeholder={{ label: "Select the card type", value: "" }}
         options={[
           { label: "Multiple Choice", value: "multiple_choice" },

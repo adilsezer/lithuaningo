@@ -1,17 +1,13 @@
-// hooks/useStats.ts
-import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+import { useEffect, useState } from "react";
+import { Alert } from "react-native";
 import {
-  fetchStats,
-  fetchLearningCards,
-  fetchLeaderboard,
-  updateUserStats,
+  FirebaseDataService,
   Stats,
   LearningCard,
-} from '../services/FirebaseDataService';
-import { useAppSelector, useAppDispatch } from '../redux/hooks';
-import { selectUserData } from '../redux/slices/userSlice';
-import { setLoading } from '../redux/slices/uiSlice';
+} from "../services/FirebaseDataService";
+import { useAppSelector, useAppDispatch } from "../redux/hooks";
+import { selectUserData } from "../redux/slices/userSlice";
+import { setLoading } from "../redux/slices/uiSlice";
 
 interface Leader {
   id: string;
@@ -40,27 +36,36 @@ const useStats = (): UseStatsReturn => {
       dispatch(setLoading(true));
       setLoadingState(true);
 
-      const unsubscribeStats = fetchStats(userData.id, (newStats) => {
-        setStats(newStats);
-        setLoadingState(false);
-        dispatch(setLoading(false));
-      });
+      const unsubscribeStats = FirebaseDataService.fetchStats(
+        userData.id,
+        (newStats) => {
+          setStats(newStats);
+          setLoadingState(false);
+          dispatch(setLoading(false));
+        }
+      );
 
-      const unsubscribeCards = fetchLearningCards((newCards) => {
+      const loadCards = async () => {
+        const newCards = await FirebaseDataService.fetchLearningCards(
+          userData.id
+        );
         setCards(newCards);
         setLoadingState(false);
         dispatch(setLoading(false));
-      });
+      };
 
-      const unsubscribeLeaders = fetchLeaderboard((newLeaders) => {
-        setLeaders(newLeaders);
-        setLoadingState(false);
-        dispatch(setLoading(false));
-      });
+      loadCards();
+
+      const unsubscribeLeaders = FirebaseDataService.fetchLeaderboard(
+        (newLeaders) => {
+          setLeaders(newLeaders);
+          setLoadingState(false);
+          dispatch(setLoading(false));
+        }
+      );
 
       return () => {
         unsubscribeStats();
-        unsubscribeCards();
         unsubscribeLeaders();
       };
     } else {
@@ -74,8 +79,13 @@ const useStats = (): UseStatsReturn => {
 
     setLoadingState(true);
     try {
-      await updateUserStats(userData.id, isCorrect, timeSpent);
+      await FirebaseDataService.updateUserStats(
+        userData.id,
+        isCorrect,
+        timeSpent
+      );
     } catch (error) {
+      console.error("Error updating user stats:", error);
     } finally {
       setLoadingState(false);
     }

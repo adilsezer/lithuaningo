@@ -69,12 +69,12 @@ const useAuthMethods = () => {
 
       if (user) {
         const userDoc = await firestore()
-          .collection("users")
+          .collection("userProfiles")
           .doc(user.uid)
           .get();
         if (!userDoc.exists) {
           await firestore()
-            .collection("users")
+            .collection("userProfiles")
             .doc(user.uid)
             .set({
               name: user.displayName || "No Name",
@@ -94,10 +94,13 @@ const useAuthMethods = () => {
       const userCredential = await signInWithGoogle(dispatch);
       const user = userCredential.user;
 
-      const userDoc = await firestore().collection("users").doc(user.uid).get();
+      const userDoc = await firestore()
+        .collection("userProfiles")
+        .doc(user.uid)
+        .get();
       if (!userDoc.exists) {
         await firestore()
-          .collection("users")
+          .collection("userProfiles")
           .doc(user.uid)
           .set({
             name: user.displayName || "No Name",
