@@ -43,9 +43,11 @@ const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({
 
   return (
     <View>
-      <Text style={globalStyles.subtitle}>
-        Fill in the blank with the correct answer
-      </Text>
+      {!isSubmitPressed && (
+        <Text style={globalStyles.subtitle}>
+          Fill in the blank with the correct answer
+        </Text>
+      )}
       <Text style={globalStyles.title}>{getQuestionText()}</Text>
       {isSubmitPressed && (
         <Text
@@ -72,20 +74,23 @@ const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({
           {isCorrect ? "Correct" : `Incorrect. Correct Answer: ${card.answer}`}
         </Text>
       )}
-      <TextInput
-        style={globalStyles.input}
-        placeholder="Type your answer here"
-        placeholderTextColor={globalColors.placeholder}
-        value={inputText}
-        onChangeText={(text) => setInputText(text)}
-        editable={isCorrect === null} // Disable input after submission
-      />
       {!isSubmitPressed && (
-        <CustomButton
-          title="Submit"
-          onPress={handleFormSubmit}
-          disabled={isCorrect !== null}
-        />
+        <View>
+          <TextInput
+            style={globalStyles.input}
+            placeholder="Type your answer here"
+            placeholderTextColor={globalColors.placeholder}
+            value={inputText}
+            onChangeText={(text) => setInputText(text)}
+            editable={isCorrect === null} // Disable input after submission
+          />
+
+          <CustomButton
+            title="Submit"
+            onPress={handleFormSubmit}
+            disabled={isCorrect !== null}
+          />
+        </View>
       )}
     </View>
   );

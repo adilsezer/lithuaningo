@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, Button } from "react-native";
+import { View, Text, Image, StyleSheet } from "react-native";
 import { LearningCard } from "@src/services/FirebaseDataService";
-import BackButton from "./BackButton";
+import CustomButton from "./CustomButton";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 interface FlashcardProps {
   card: LearningCard;
@@ -14,28 +15,63 @@ const Flashcard: React.FC<FlashcardProps> = ({
   onMastered,
   onReviewAgain,
 }) => {
-  const [showBack, setShowBack] = useState(false);
+  const [answerShown, setAnswerShown] = useState(false);
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   if (!card) {
     return (
       <View>
-        <BackButton />
         <Text>No card available</Text>
       </View>
     );
   }
 
+  const handleShowAnswer = () => {
+    setAnswerShown(true);
+  };
+
   return (
     <View>
-      <Text>{showBack ? card.baseFormTranslation : card.baseForm}</Text>
-      <Button
-        title={showBack ? "Show Front" : "Show Back"}
-        onPress={() => setShowBack(!showBack)}
-      />
-      <Button title="Mastered" onPress={() => onMastered(card.id)} />
-      <Button title="Review Again" onPress={() => onReviewAgain(card.id)} />
+      <Image source={{ uri: card.image }} style={styles.image} />
+      <Text style={globalStyles.title}>
+        {answerShown ? (
+          <>
+            {card.baseForm}
+            {"\n"}
+            <Text style={{ color: globalColors.primary }}>
+              {card.baseFormTranslation}
+            </Text>
+          </>
+        ) : (
+          card.baseForm
+        )}
+      </Text>
+
+      {!answerShown && (
+        <CustomButton title="Show Answer" onPress={handleShowAnswer} />
+      )}
+      {answerShown && (
+        <View>
+          <CustomButton title="Mastered" onPress={() => onMastered(card.id)} />
+          <CustomButton
+            title="Review Again"
+            onPress={() => onReviewAgain(card.id)}
+          />
+        </View>
+      )}
     </View>
   );
 };
+
+const styles = StyleSheet.create({
+  image: {
+    width: 300,
+    height: 300,
+    marginTop: 20,
+    marginBottom: 10,
+    alignSelf: "center",
+    borderRadius: 10,
+  },
+});
 
 export default Flashcard;

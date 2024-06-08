@@ -13,7 +13,7 @@ export interface Stats {
   minutesSpentTotal: number;
   todayTotalCards: number;
   correctAnswers: number;
-  lastStudiedDate: FirebaseFirestoreTypes.Timestamp;
+  lastCompleted: FirebaseFirestoreTypes.Timestamp;
 }
 
 export interface LearningCard {
@@ -230,16 +230,16 @@ const fetchLeaderboard = (
 };
 
 const updateStreak = (
-  lastStudiedDate: FirebaseFirestoreTypes.Timestamp,
+  lastCompleted: FirebaseFirestoreTypes.Timestamp,
   currentStreak: number
 ): number => {
-  const lastStudied = lastStudiedDate.toDate();
+  const lastCompletedDate = lastCompleted.toDate();
   const startOfToday = getStartOfToday();
   const startOfYesterday = getStartOfYesterday();
 
-  if (lastStudied >= startOfToday) {
+  if (lastCompletedDate >= startOfToday) {
     return currentStreak;
-  } else if (lastStudied >= startOfYesterday) {
+  } else if (lastCompletedDate >= startOfYesterday) {
     return currentStreak + 1;
   } else {
     return 1;
@@ -269,25 +269,25 @@ const updateUserStats = async (
         minutesSpentTotal: 0,
         todayTotalCards: 0,
         correctAnswers: 0,
-        lastStudiedDate: firestore.Timestamp.fromDate(new Date(0)),
+        lastCompleted: firestore.Timestamp.fromDate(new Date(0)),
       };
     }
 
     const startOfToday = getStartOfToday();
-    const lastStudiedDate = userStats.lastStudiedDate?.toDate() || new Date(0);
+    const lastCompleted = userStats.lastCompleted?.toDate() || new Date(0);
 
     let newTodayStudiedCards = userStats.todayStudiedCards ?? 0;
     let newMinutesSpentToday = userStats.minutesSpentToday ?? 0;
     let newTodayTotalCards = userStats.todayTotalCards ?? 0;
 
-    if (lastStudiedDate < startOfToday) {
+    if (lastCompleted < startOfToday) {
       newTodayStudiedCards = 0;
       newMinutesSpentToday = 0;
       newTodayTotalCards = 0;
     }
 
     const newCurrentStreak = updateStreak(
-      userStats.lastStudiedDate || firestore.Timestamp.fromDate(new Date(0)),
+      userStats.lastCompleted || firestore.Timestamp.fromDate(new Date(0)),
       userStats.currentStreak ?? 0
     );
     const newLongestStreak = Math.max(
@@ -317,7 +317,6 @@ const updateUserStats = async (
       correctAnswers: isCorrect
         ? (userStats.correctAnswers ?? 0) + 1
         : userStats.correctAnswers ?? 0,
-      lastStudiedDate: firestore.Timestamp.now(),
     });
   } catch (error) {
     console.error("Error updating stats:", error);

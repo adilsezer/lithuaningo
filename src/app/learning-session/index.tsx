@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   KeyboardAvoidingView,
   ScrollView,
   Platform,
@@ -20,41 +19,46 @@ import {
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import { storeData, retrieveData, clearData } from "@src/utils/storageUtil";
+import { router } from "expo-router";
 
 const LearningSessionScreen: React.FC = () => {
   const [learningCards, setLearningCards] = useState<LearningCard[]>([]);
   const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
   const [learnedCards, setLearnedCards] = useState<string[]>([]);
+  const [flashcardsCompleted, setFlashcardsCompleted] = useState(false);
+  const [completedToday, setCompletedToday] = useState(false);
+  const [showContinueButton, setShowContinueButton] = useState(false);
+  const [showQuizCards, setShowQuizCards] = useState(false);
   const userData = useAppSelector(selectUserData);
   const userId = userData?.id || "";
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const [isSubmitPressed, setIsSubmitPressed] = useState(false);
-  const [flashcardsCompleted, setFlashcardsCompleted] = useState(false);
   const cardsPerDay = 10;
-  const COMPLETED_SESSION_INDEX = -1; // Special value to indicate completion
 
   const updateStorage = async (
     flashcardsCompleted: boolean,
-    currentCardIndex: number
+    currentCardIndex: number,
+    completedToday: boolean
   ) => {
-    const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+    const today = new Date().toISOString().split("T")[0];
     await storeData(`dailyCards_${userId}`, {
       date: today,
       cards: learningCards,
       flashcardsCompleted,
       currentCardIndex,
+      completedToday,
     });
   };
 
   useEffect(() => {
     const fetchDailyCards = async () => {
       try {
-        const today = new Date().toISOString().split("T")[0]; // Get current date in YYYY-MM-DD format
+        const today = new Date().toISOString().split("T")[0];
         const storedData = await retrieveData<{
           date: string;
           cards: LearningCard[];
           flashcardsCompleted: boolean;
           currentCardIndex: number;
+          completedToday: boolean;
         }>(`dailyCards_${userId}`);
         if (
           storedData &&
@@ -64,25 +68,19 @@ const LearningSessionScreen: React.FC = () => {
           setLearningCards(storedData.cards);
           setFlashcardsCompleted(storedData.flashcardsCompleted);
           setCurrentCardIndex(storedData.currentCardIndex);
+          setCompletedToday(storedData.completedToday);
         } else {
           if (storedData) {
-            // Clear previous day's data if it exists
             await clearData(`dailyCards_${userId}`);
           }
           const cards = await FirebaseDataService.fetchLearningCards(userId);
           if (cards.length > 0) {
             const dailyCards = cards.slice(0, cardsPerDay);
             setLearningCards(dailyCards);
-            await updateStorage(false, 0); // Initially, flashcards are not completed and start at the first card
+            await updateStorage(false, 0, false);
           } else {
             console.log("No cards fetched");
           }
-        }
-
-        const completionStatus =
-          await FirebaseDataService.checkIfCompletedToday(userId);
-        if (completionStatus) {
-          setFlashcardsCompleted(true); // If already completed, set flashcards as completed
         }
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -94,7 +92,7 @@ const LearningSessionScreen: React.FC = () => {
 
   const handleMastered = async (cardId: string) => {
     setLearnedCards((prev) => [...prev, cardId]);
-    await goToNextCard();
+    await handleNextFlashCard();
   };
 
   const handleReviewAgain = async (cardId: string) => {
@@ -113,21 +111,38 @@ const LearningSessionScreen: React.FC = () => {
       }
       return prev;
     });
-    await updateStorage(flashcardsCompleted, currentCardIndex);
+    await updateStorage(flashcardsCompleted, currentCardIndex, completedToday);
   };
 
-  const goToNextCard = async () => {
+  const handleNextFlashCard = async () => {
     setCurrentCardIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
       if (nextIndex >= learningCards.length) {
         setFlashcardsCompleted(true);
-        setCurrentCardIndex(COMPLETED_SESSION_INDEX); // Set to special value indicating completion
-        updateStorage(true, COMPLETED_SESSION_INDEX); // Update the storage to indicate flashcards are completed
+        setCurrentCardIndex(0);
       } else {
-        updateStorage(false, nextIndex); // Update the storage with the progress and next card index
+        updateStorage(false, nextIndex, completedToday);
       }
       return nextIndex;
     });
+  };
+
+  const handleNextQuizCard = async () => {
+    if (currentCardIndex < learningCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+      setShowContinueButton(false);
+      await updateStorage(
+        flashcardsCompleted,
+        currentCardIndex + 1,
+        completedToday
+      );
+    } else {
+      if (userData?.id) {
+        await FirebaseDataService.updateCompletionDate(userData.id);
+        setCompletedToday(true);
+        await updateStorage(flashcardsCompleted, currentCardIndex, true);
+      }
+    }
   };
 
   const saveLearnedCards = async () => {
@@ -139,24 +154,10 @@ const LearningSessionScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    if (flashcardsCompleted) {
+    if (completedToday) {
       saveLearnedCards();
     }
-  }, [flashcardsCompleted]);
-
-  const handleNextCard = async () => {
-    if (currentCardIndex < learningCards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
-      setIsSubmitPressed(false);
-      await updateStorage(flashcardsCompleted, currentCardIndex + 1); // Update storage with progress and next card index
-    } else {
-      setCurrentCardIndex(COMPLETED_SESSION_INDEX); // All cards completed
-      if (userData?.id) {
-        await FirebaseDataService.updateCompletionDate(userData.id);
-      }
-      await updateStorage(flashcardsCompleted, COMPLETED_SESSION_INDEX); // Update storage to indicate session completion
-    }
-  };
+  }, [completedToday]);
 
   const renderCard = (card: LearningCard | undefined) => {
     if (!card) {
@@ -169,15 +170,15 @@ const LearningSessionScreen: React.FC = () => {
         return (
           <MultipleChoiceCard
             card={card}
-            onOptionSelect={() => setIsSubmitPressed(true)}
+            onOptionSelect={() => setShowContinueButton(true)}
           />
         );
       case "fill_in_the_blank":
         return (
           <FillInTheBlankCard
             card={card}
-            onSubmit={() => setIsSubmitPressed(true)}
-            isSubmitPressed={isSubmitPressed}
+            onSubmit={() => setShowContinueButton(true)}
+            isSubmitPressed={showContinueButton}
           />
         );
       default:
@@ -185,11 +186,20 @@ const LearningSessionScreen: React.FC = () => {
     }
   };
 
-  if (currentCardIndex === COMPLETED_SESSION_INDEX) {
+  if (completedToday) {
     return (
       <ScrollView>
         <BackButton />
-        <Text>You have completed today's session!</Text>
+        <Text style={globalStyles.title}>
+          You have completed today's session!
+        </Text>
+        <CustomButton
+          title="Go to Leaderboard"
+          onPress={() => router.push("/dashboard/leaderboard")}
+          style={{
+            backgroundColor: globalColors.secondary,
+          }}
+        />
       </ScrollView>
     );
   }
@@ -198,10 +208,17 @@ const LearningSessionScreen: React.FC = () => {
     return (
       <ScrollView>
         <BackButton />
-        <Text>
+        <Text style={globalStyles.title}>
           No new cards available. You have mastered all the available cards.
           Please come back tomorrow for more learning!
         </Text>
+        <CustomButton
+          title="Go to Dashboard"
+          onPress={() => router.push("/dashboard")}
+          style={{
+            backgroundColor: globalColors.secondary,
+          }}
+        />
       </ScrollView>
     );
   }
@@ -209,28 +226,38 @@ const LearningSessionScreen: React.FC = () => {
   if (flashcardsCompleted) {
     return (
       <KeyboardAvoidingView
-        style={styles.container}
         behavior={Platform.OS === "ios" ? "padding" : "height"}
       >
-        <ScrollView contentContainerStyle={styles.scrollViewContent}>
+        <ScrollView>
           <BackButton />
-          <View style={styles.topSection}>
-            <Text style={globalStyles.text}>
-              Completed all flashcards. Now continue with additional cards.
-            </Text>
-          </View>
-          {isSubmitPressed && (
-            <CustomButton
-              title="Continue"
-              onPress={handleNextCard}
-              style={{
-                backgroundColor: globalColors.secondary,
-              }}
-            />
+          {!showQuizCards ? (
+            <View>
+              <Text style={globalStyles.title}>
+                Completed all flashcards. Now continue with additional cards.
+              </Text>
+
+              <CustomButton
+                title="Continue"
+                onPress={() => setShowQuizCards(true)}
+                style={{
+                  backgroundColor: globalColors.secondary,
+                }}
+              />
+            </View>
+          ) : (
+            <View>
+              {renderCard(learningCards[currentCardIndex])}
+              {showContinueButton && (
+                <CustomButton
+                  title="Continue"
+                  onPress={handleNextQuizCard}
+                  style={{
+                    backgroundColor: globalColors.secondary,
+                  }}
+                />
+              )}
+            </View>
           )}
-          <View style={styles.middleSection}>
-            {renderCard(learningCards[currentCardIndex])}
-          </View>
         </ScrollView>
       </KeyboardAvoidingView>
     );
@@ -238,55 +265,21 @@ const LearningSessionScreen: React.FC = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView contentContainerStyle={styles.scrollViewContent}>
+      <ScrollView>
         <BackButton />
-        {currentCardIndex < learningCards.length ? (
+        {currentCardIndex < learningCards.length && (
           <Flashcard
             key={learningCards[currentCardIndex]?.id}
             card={learningCards[currentCardIndex]}
             onMastered={handleMastered}
             onReviewAgain={handleReviewAgain}
           />
-        ) : (
-          <View>
-            <Text style={globalStyles.text}>
-              Completed {currentCardIndex + 1}/{learningCards.length} Cards
-            </Text>
-            {isSubmitPressed && (
-              <CustomButton
-                title="Continue"
-                onPress={handleNextCard}
-                style={{
-                  backgroundColor: globalColors.secondary,
-                }}
-              />
-            )}
-            {renderCard(learningCards[currentCardIndex])}
-          </View>
         )}
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    justifyContent: "space-between",
-  },
-  topSection: {
-    flex: 1,
-    justifyContent: "flex-start",
-  },
-  middleSection: {
-    flex: 14,
-  },
-});
 
 export default LearningSessionScreen;

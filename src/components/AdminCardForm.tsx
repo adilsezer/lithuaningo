@@ -18,6 +18,7 @@ import * as ImagePicker from "expo-image-picker";
 import storage from "@react-native-firebase/storage";
 import { useAppSelector } from "../redux/hooks";
 import { selectUserData } from "../redux/slices/userSlice";
+import { clearData } from "@src/utils/storageUtil";
 
 const AdminCardForm: React.FC = () => {
   const userData = useAppSelector(selectUserData);
@@ -128,6 +129,18 @@ const AdminCardForm: React.FC = () => {
       }
     } catch (error) {
       Alert.alert("Error", (error as Error).message);
+    }
+  };
+
+  const handleDeleteStorage = async () => {
+    try {
+      if (userData && userData.id) {
+        await clearData(`dailyCards_${userData.id}`);
+        console.log("Cleared the storage data");
+      }
+      // You can add more logic here if needed
+    } catch (error) {
+      console.error("Error clearing data:", error);
     }
   };
 
@@ -275,6 +288,7 @@ const AdminCardForm: React.FC = () => {
           style={{ backgroundColor: globalColors.error }}
         />
       )}
+      <CustomButton title="Delete Storage" onPress={handleDeleteStorage} />
     </ScrollView>
   );
 };
