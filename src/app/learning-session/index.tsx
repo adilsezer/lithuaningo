@@ -81,6 +81,9 @@ const LearningSessionScreen: React.FC = () => {
           } else {
             console.log("No cards fetched");
           }
+          cards.forEach((element) => {
+            console.log(element.displayOrder);
+          });
         }
       } catch (error) {
         console.error("Error fetching initial data:", error);

@@ -4,16 +4,15 @@ import firestore, {
 import { getStartOfToday, getStartOfYesterday } from "@src/utils/dateUtils";
 
 export interface Stats {
+  correctAnswers: number;
   currentStreak: number;
+  lastCompleted: FirebaseFirestoreTypes.Timestamp;
   longestStreak: number;
-  totalStudiedCards: number;
-  todayStudiedCards: number;
-  dailyAverage: number;
   minutesSpentToday: number;
   minutesSpentTotal: number;
-  todayTotalCards: number;
-  correctAnswers: number;
-  lastCompleted: FirebaseFirestoreTypes.Timestamp;
+  todayStudiedCards: number;
+  totalStudiedCards: number;
+  weeklyCorrectAnswers: number;
 }
 
 export interface LearningCard {
@@ -154,28 +153,6 @@ const isAdmin = async (userId: string): Promise<boolean> => {
   }
 };
 
-const checkIfCompletedToday = async (userId: string): Promise<boolean> => {
-  try {
-    const userDoc = await firestore()
-      .collection("userProfiles")
-      .doc(userId)
-      .get();
-    const userData = userDoc.data();
-
-    if (userData?.lastCompleted) {
-      const lastCompleted = new Date(userData.lastCompleted.seconds * 1000);
-      const startOfToday = getStartOfToday();
-
-      if (lastCompleted >= startOfToday) {
-        return true;
-      }
-    }
-  } catch (error) {
-    console.error("Error checking completion status: ", error);
-  }
-  return false;
-};
-
 const fetchStats = (
   userId: string,
   onStatsChange: (stats: Stats | null) => void
@@ -206,7 +183,7 @@ const fetchLeaderboard = (
 ) => {
   return firestore()
     .collection("userProfiles")
-    .orderBy("totalStudiedCards", "desc")
+    .orderBy("weeklyCorrectAnswers", "desc")
     .limit(20)
     .onSnapshot(
       async (snapshot) => {
@@ -216,7 +193,7 @@ const fetchLeaderboard = (
             return {
               id: doc.id,
               name: data.name,
-              score: data.totalStudiedCards,
+              score: data.weeklyCorrectAnswers, // Use weekly correct answers
             };
           })
         );
@@ -264,12 +241,11 @@ const updateUserStats = async (
         longestStreak: 0,
         totalStudiedCards: 0,
         todayStudiedCards: 0,
-        dailyAverage: 0,
         minutesSpentToday: 0,
         minutesSpentTotal: 0,
-        todayTotalCards: 0,
         correctAnswers: 0,
         lastCompleted: firestore.Timestamp.fromDate(new Date(0)),
+        weeklyCorrectAnswers: 0, // Initialize new property
       };
     }
 
@@ -278,12 +254,10 @@ const updateUserStats = async (
 
     let newTodayStudiedCards = userStats.todayStudiedCards ?? 0;
     let newMinutesSpentToday = userStats.minutesSpentToday ?? 0;
-    let newTodayTotalCards = userStats.todayTotalCards ?? 0;
 
     if (lastCompleted < startOfToday) {
       newTodayStudiedCards = 0;
       newMinutesSpentToday = 0;
-      newTodayTotalCards = 0;
     }
 
     const newCurrentStreak = updateStreak(
@@ -297,26 +271,27 @@ const updateUserStats = async (
 
     const newTotalStudiedCards = (userStats.totalStudiedCards ?? 0) + 1;
     newTodayStudiedCards += 1;
-    newTodayTotalCards += 1;
 
     newMinutesSpentToday += timeSpent;
     const newMinutesSpentTotal = (userStats.minutesSpentTotal ?? 0) + timeSpent;
 
     const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
-    const newDailyAverage = newTotalStudiedCards / daysActive;
+
+    const newWeeklyCorrectAnswers = isCorrect
+      ? (userStats.weeklyCorrectAnswers ?? 0) + 1
+      : userStats.weeklyCorrectAnswers ?? 0;
 
     await userStatsRef.update({
       totalStudiedCards: newTotalStudiedCards,
       todayStudiedCards: newTodayStudiedCards,
-      todayTotalCards: newTodayTotalCards,
       minutesSpentToday: newMinutesSpentToday,
       minutesSpentTotal: newMinutesSpentTotal,
-      dailyAverage: newDailyAverage,
       currentStreak: newCurrentStreak,
       longestStreak: newLongestStreak,
       correctAnswers: isCorrect
         ? (userStats.correctAnswers ?? 0) + 1
         : userStats.correctAnswers ?? 0,
+      weeklyCorrectAnswers: newWeeklyCorrectAnswers, // Update new property
     });
   } catch (error) {
     console.error("Error updating stats:", error);
@@ -365,7 +340,6 @@ export const FirebaseDataService = {
   updateUserLearnedCards,
   updateCompletionDate,
   isAdmin,
-  checkIfCompletedToday,
   fetchStats,
   fetchLeaderboard,
   updateUserStats,

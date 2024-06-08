@@ -3,3 +3,5 @@ For A1 user, start with the A1 cards
 Leaderboard displays todays quiz result
 
 Fix today's stats
+
+Fix progress bar
