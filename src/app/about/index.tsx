@@ -14,7 +14,7 @@ export default function AboutScreen() {
       } else {
         Alert.alert(
           "Error",
-          "Unable to open the email client. Please check if an email app is installed and configured."
+          "Unable to open the link. Please check if the app to handle the URL is installed and configured."
         );
         console.error("Unsupported URL: ", url);
       }
@@ -35,7 +35,14 @@ export default function AboutScreen() {
       <BackButton />
       <View style={styles.container}>
         <Text style={globalStyles.title}>About Lithuaningo</Text>
-        <Text style={[globalStyles.text, styles.customText]}>
+
+        <Text
+          style={[
+            globalStyles.text,
+            styles.customText,
+            { textAlign: "justify" },
+          ]}
+        >
           Lithuaningo is your gateway to mastering Lithuanian! Dive into
           learning with ease and fun. Our app provides a comprehensive learning
           experience with various features and tools to help you become
@@ -60,6 +67,18 @@ export default function AboutScreen() {
 
         <Text style={globalStyles.title}>Version</Text>
         <Text style={[globalStyles.text, styles.customText]}>{appVersion}</Text>
+
+        <Text style={globalStyles.title}>Privacy Policy</Text>
+        <Text
+          style={[globalStyles.text, styles.link]}
+          onPress={() =>
+            handleLinkPress(
+              "https://adilsezer.github.io/lithuaningo/privacy-policy"
+            )
+          }
+        >
+          View our Privacy Policy
+        </Text>
       </View>
     </ScrollView>
   );
@@ -71,10 +90,10 @@ const styles = StyleSheet.create({
   },
   customText: {
     fontSize: 16,
-    marginVertical: 10,
-    textAlign: "justify",
   },
   link: {
+    fontSize: 16,
+
     color: "blue",
     textDecorationLine: "underline",
   },

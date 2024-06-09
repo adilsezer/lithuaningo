@@ -80,3 +80,6 @@ logs
 # Firebase configuration files
 GoogleService-Info.plist
 google-services.json
+
+# Custom files
+TODO.txt

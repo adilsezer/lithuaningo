@@ -56,4 +56,4 @@ We may update our Privacy Policy from time to time. We will notify you of any ch
 If you have any questions about this Privacy Policy, please contact us:
 
 - By email: [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com)
-- By visiting this page on our website: [Privacy Policy URL](https://adilsezer.github.io/lithuaningo/privacy-policy.md)
+- By visiting this page on our website: [Privacy Policy URL](https://adilsezer.github.io/lithuaningo/privacy-policy)

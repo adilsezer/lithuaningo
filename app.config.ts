@@ -49,6 +49,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ],
     extra: {
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      privacyPolicyUrl:
+        "https://adilsezer.github.io/lithuaningo/privacy-policy",
+      keywords:
+        "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language quizzes, Interactive learning",
     },
     scheme: "lithuaningo",
   };
