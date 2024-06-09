@@ -233,10 +233,13 @@ const LearningSessionScreen: React.FC = () => {
       >
         <ScrollView>
           <BackButton />
+          <Text style={globalStyles.subtitle}>
+            Completed {currentCardIndex}/{learningCards.length} Cards
+          </Text>
           {!showQuizCards ? (
             <View>
               <Text style={globalStyles.title}>
-                Completed all flashcards. Now continue with additional cards.
+                Completed all flashcards. Now continue with the quiz.
               </Text>
 
               <CustomButton
@@ -272,6 +275,9 @@ const LearningSessionScreen: React.FC = () => {
     >
       <ScrollView>
         <BackButton />
+        <Text style={globalStyles.subtitle}>
+          Completed {currentCardIndex}/{learningCards.length} Cards
+        </Text>
         {currentCardIndex < learningCards.length && (
           <Flashcard
             key={learningCards[currentCardIndex]?.id}
