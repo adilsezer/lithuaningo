@@ -6,4 +6,6 @@ Increase the number of multiple choice questions
 
 
 ****** In Progress *******
-test scheduler 
+test scheduler
+Upload codes into chatgpt to ask if there is something to do to release in apple
+Waiting for apple membership, also register with play store
