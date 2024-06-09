@@ -2,20 +2,15 @@ import React, { useState } from "react";
 import { View, Text, TextInput, Alert, Image, StyleSheet } from "react-native";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
-import {
-  selectUserData,
-  updateUserProfile as updateUserProfileAction,
-} from "@src/redux/slices/userSlice";
+import { updateUserProfile as updateUserProfileAction } from "@src/redux/slices/userSlice";
 import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
-import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 
 const EditProfileScreen: React.FC = () => {
   const dispatch = useAppDispatch();
-  const userData = useAppSelector(selectUserData);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { handleUpdateUserProfile } = useAuthMethods(); // Corrected hook usage inside the component
   const router = useRouter();

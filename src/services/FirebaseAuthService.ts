@@ -53,7 +53,7 @@ export const signInWithEmail = async (
       await sendEmailVerification();
       throw new Error("Please verify your email before logging in.");
     }
-    updateUserState(userCredential.user, dispatch);
+    await updateUserState(userCredential.user, dispatch);
     return userCredential;
   } catch (error) {
     const firebaseError = error as FirebaseError;
@@ -72,7 +72,7 @@ export const signUpWithEmail = async (
       email,
       password
     );
-    updateUserState(userCredential.user, dispatch);
+    await updateUserState(userCredential.user, dispatch);
     return userCredential;
   } catch (error) {
     const firebaseError = error as FirebaseError;
@@ -100,7 +100,7 @@ export const updateUserProfile = async (
     const user = auth().currentUser;
     if (!user) throw new Error("No user is currently signed in.");
     await user.updateProfile(updates);
-    updateUserState(user, dispatch);
+    await updateUserState(user, dispatch);
   } catch (error) {
     const firebaseError = error as FirebaseError;
     console.error("Update profile failed:", firebaseError.message);
@@ -136,11 +136,25 @@ export const sendPasswordResetEmail = async (email: string): Promise<void> => {
   }
 };
 
+let lastEmailVerificationTime = 0;
+
 export const sendEmailVerification = async (): Promise<void> => {
   try {
     const user = auth().currentUser;
     if (!user) throw new Error("No user is currently signed in.");
+
+    const currentTime = Date.now();
+    const timeSinceLastVerification = currentTime - lastEmailVerificationTime;
+    const verificationCooldown = 300000; // 5 minute cooldown
+
+    if (timeSinceLastVerification < verificationCooldown) {
+      throw new Error(
+        "Email not verified. Verification email sent recently. Please verify or wait a while before requesting again."
+      );
+    }
+
     await user.sendEmailVerification();
+    lastEmailVerificationTime = currentTime;
   } catch (error) {
     const firebaseError = error as FirebaseError;
     console.error("Send email verification failed:", firebaseError.message);
