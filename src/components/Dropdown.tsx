@@ -19,13 +19,21 @@ const Dropdown: React.FC<DropdownProps> = ({
   value,
 }) => {
   const handleValueChange = (value: string) => {
-    console.log("Dropdown value changed to:", value);
     if (onValueChange) {
       onValueChange(value);
     }
   };
 
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+
+  const pickerStyle = {
+    inputIOS: {
+      color: globalColors.text,
+    },
+    inputAndroid: {
+      color: globalColors.text,
+    },
+  };
 
   return (
     <View style={globalStyles.input}>
@@ -35,6 +43,7 @@ const Dropdown: React.FC<DropdownProps> = ({
         items={options}
         onValueChange={handleValueChange}
         value={value}
+        style={pickerStyle}
       />
     </View>
   );

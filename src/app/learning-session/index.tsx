@@ -1,143 +1,288 @@
-// src/app/learning-session/index.tsx
-
-import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  Text,
+  KeyboardAvoidingView,
+  ScrollView,
+  Platform,
+} from "react-native";
 import BackButton from "@components/BackButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import Flashcard from "@components/Flashcard";
 import MultipleChoiceCard from "@components/MultipleChoiceCard";
 import FillInTheBlankCard from "@components/FillInTheBlankCard";
 import CustomButton from "@components/CustomButton";
-import useStats from "@src/hooks/useStats";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import {
+  FirebaseDataService,
   LearningCard,
-  checkIfCompletedToday,
-  updateCompletionDate,
 } from "@src/services/FirebaseDataService";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
+import { storeData, retrieveData, clearData } from "@src/utils/storageUtil";
+import { router } from "expo-router";
 
 const LearningSessionScreen: React.FC = () => {
-  const { cards, loading } = useStats();
-  const [currentCardIndex, setCurrentCardIndex] = useState(0);
-  const [sessionCompleted, setSessionCompleted] = useState(false);
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const [canCompleteToday, setCanCompleteToday] = useState(true);
+  const [learningCards, setLearningCards] = useState<LearningCard[]>([]);
+  const [currentCardIndex, setCurrentCardIndex] = useState<number>(0);
+  const [learnedCards, setLearnedCards] = useState<string[]>([]);
+  const [flashcardsCompleted, setFlashcardsCompleted] = useState(false);
+  const [completedToday, setCompletedToday] = useState(false);
+  const [showContinueButton, setShowContinueButton] = useState(false);
+  const [showQuizCards, setShowQuizCards] = useState(false);
   const userData = useAppSelector(selectUserData);
+  const userId = userData?.id || "";
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const cardsPerDay = 15;
+
+  const updateStorage = async (
+    flashcardsCompleted: boolean,
+    currentCardIndex: number,
+    completedToday: boolean
+  ) => {
+    const today = new Date().toISOString().split("T")[0];
+    await storeData(`dailyCards_${userId}`, {
+      date: today,
+      cards: learningCards,
+      flashcardsCompleted,
+      currentCardIndex,
+      completedToday,
+    });
+  };
 
   useEffect(() => {
-    if (userData?.id) {
-      const checkCompletionStatus = async () => {
-        const completedToday = await checkIfCompletedToday(userData.id);
-        setCanCompleteToday(!completedToday);
-      };
-      checkCompletionStatus();
-    }
-  }, [userData]);
+    const fetchDailyCards = async () => {
+      try {
+        const today = new Date().toISOString().split("T")[0];
+        const storedData = await retrieveData<{
+          date: string;
+          cards: LearningCard[];
+          flashcardsCompleted: boolean;
+          currentCardIndex: number;
+          completedToday: boolean;
+        }>(`dailyCards_${userId}`);
+        if (
+          storedData &&
+          storedData.date === today &&
+          storedData.cards.length > 0
+        ) {
+          setLearningCards(storedData.cards);
+          setFlashcardsCompleted(storedData.flashcardsCompleted);
+          setCurrentCardIndex(storedData.currentCardIndex);
+          setCompletedToday(storedData.completedToday);
+        } else {
+          if (storedData) {
+            await clearData(`dailyCards_${userId}`);
+          }
+          const cards = await FirebaseDataService.fetchLearningCards(userId);
+          if (cards.length > 0) {
+            const dailyCards = cards.slice(0, cardsPerDay);
+            setLearningCards(dailyCards);
+            await updateStorage(false, 0, false);
+          } else {
+            console.log("No cards fetched");
+          }
+          cards.forEach((element) => {
+            console.log(element.displayOrder);
+          });
+        }
+      } catch (error) {
+        console.error("Error fetching initial data:", error);
+      }
+    };
 
-  const handleNextCard = async () => {
-    if (currentCardIndex < cards.length - 1) {
+    fetchDailyCards();
+  }, [userId]);
+
+  const handleMastered = async (cardId: string) => {
+    setLearnedCards((prev) => [...prev, cardId]);
+    await handleNextFlashCard();
+  };
+
+  const handleReviewAgain = async (cardId: string) => {
+    await putCardAtEnd(cardId);
+  };
+
+  const putCardAtEnd = async (cardId: string) => {
+    setLearningCards((prev) => {
+      const cardToMove = prev.find((card) => card.id === cardId);
+      if (cardToMove) {
+        const updatedCards = [
+          ...prev.filter((card) => card.id !== cardId),
+          cardToMove,
+        ];
+        return updatedCards;
+      }
+      return prev;
+    });
+    await updateStorage(flashcardsCompleted, currentCardIndex, completedToday);
+  };
+
+  const handleNextFlashCard = async () => {
+    setCurrentCardIndex((prevIndex) => {
+      const nextIndex = prevIndex + 1;
+      if (nextIndex >= learningCards.length) {
+        setFlashcardsCompleted(true);
+        setCurrentCardIndex(0);
+      } else {
+        updateStorage(false, nextIndex, completedToday);
+      }
+      return nextIndex;
+    });
+  };
+
+  const handleNextQuizCard = async () => {
+    if (currentCardIndex < learningCards.length - 1) {
       setCurrentCardIndex(currentCardIndex + 1);
+      setShowContinueButton(false);
+      await updateStorage(
+        flashcardsCompleted,
+        currentCardIndex + 1,
+        completedToday
+      );
     } else {
-      setSessionCompleted(true);
       if (userData?.id) {
-        await updateCompletionDate(userData.id);
+        await FirebaseDataService.updateCompletionDate(userData.id);
+        setCompletedToday(true);
+        await updateStorage(flashcardsCompleted, currentCardIndex, true);
       }
     }
   };
 
-  if (loading) {
-    return (
-      <View style={globalStyles.layoutContainer}>
-        <Text style={globalStyles.subtitle}>Loading...</Text>
-      </View>
-    );
-  }
-
-  if (!canCompleteToday) {
-    return (
-      <View style={globalStyles.layoutContainer}>
-        <BackButton />
-        <Text style={globalStyles.subtitle}>
-          You have completed all the cards for today. Please come back tomorrow.
-        </Text>
-      </View>
-    );
-  }
-
-  if (cards.length === 0) {
-    return (
-      <View style={globalStyles.layoutContainer}>
-        <BackButton />
-        <Text style={globalStyles.subtitle}>
-          No cards available at the moment. Please come back tomorrow.
-        </Text>
-      </View>
-    );
-  }
-
-  if (sessionCompleted) {
-    return (
-      <View style={globalStyles.layoutContainer}>
-        <BackButton />
-        <Text style={styles.congratulationsText}>Congratulations!</Text>
-        <Text style={globalStyles.subtitle}>
-          You have completed all the cards.
-        </Text>
-      </View>
-    );
-  }
-
-  const renderCard = (card: LearningCard) => {
-    switch (card.type) {
-      case "multiple_choice":
-        return <MultipleChoiceCard card={card} />;
-      case "fill_in_the_blank":
-        return <FillInTheBlankCard card={card} />;
-      default:
-        return null;
+  const saveLearnedCards = async () => {
+    try {
+      await FirebaseDataService.updateUserLearnedCards(userId, learnedCards);
+    } catch (error) {
+      console.error("Error updating learned cards:", error);
     }
   };
 
-  return (
-    <View style={[globalStyles.layoutContainer, styles.container]}>
-      <BackButton />
-      <View style={styles.topSection}>
-        <Text style={globalStyles.subtitle}>
-          Completed {currentCardIndex + 1}/{cards.length} Cards
+  useEffect(() => {
+    if (completedToday) {
+      saveLearnedCards();
+    }
+  }, [completedToday]);
+
+  const renderCard = (card: LearningCard | undefined) => {
+    if (!card) {
+      console.log("Card is undefined");
+      return <Text>No card to display</Text>;
+    }
+
+    switch (card.type) {
+      case "multiple_choice":
+        return (
+          <MultipleChoiceCard
+            card={card}
+            onOptionSelect={() => setShowContinueButton(true)}
+          />
+        );
+      case "fill_in_the_blank":
+        return (
+          <FillInTheBlankCard
+            card={card}
+            onSubmit={() => setShowContinueButton(true)}
+            isSubmitPressed={showContinueButton}
+          />
+        );
+      default:
+        return <Text>Unknown card type</Text>;
+    }
+  };
+
+  if (completedToday) {
+    return (
+      <ScrollView>
+        <BackButton />
+        <Text style={globalStyles.title}>
+          You have completed today's session!
         </Text>
-      </View>
-      <View style={styles.middleSection}>
-        {renderCard(cards[currentCardIndex])}
-      </View>
-      <CustomButton
-        title="Continue"
-        onPress={handleNextCard}
-        style={{
-          backgroundColor: globalColors.secondary,
-        }}
-      />
-    </View>
+        <CustomButton
+          title="Go to Leaderboard"
+          onPress={() => router.push("/dashboard/leaderboard")}
+          style={{
+            backgroundColor: globalColors.secondary,
+          }}
+        />
+      </ScrollView>
+    );
+  }
+
+  if (learningCards.length === 0) {
+    return (
+      <ScrollView>
+        <BackButton />
+        <Text style={globalStyles.title}>
+          No new cards available. You have mastered all the available cards.
+          Please come back tomorrow for more learning!
+        </Text>
+        <CustomButton
+          title="Go to Dashboard"
+          onPress={() => router.push("/dashboard")}
+          style={{
+            backgroundColor: globalColors.secondary,
+          }}
+        />
+      </ScrollView>
+    );
+  }
+
+  if (flashcardsCompleted) {
+    return (
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <ScrollView>
+          <BackButton />
+          {!showQuizCards ? (
+            <View>
+              <Text style={globalStyles.title}>
+                Completed all flashcards. Now continue with additional cards.
+              </Text>
+
+              <CustomButton
+                title="Continue"
+                onPress={() => setShowQuizCards(true)}
+                style={{
+                  backgroundColor: globalColors.secondary,
+                }}
+              />
+            </View>
+          ) : (
+            <View>
+              {renderCard(learningCards[currentCardIndex])}
+              {showContinueButton && (
+                <CustomButton
+                  title="Continue"
+                  onPress={handleNextQuizCard}
+                  style={{
+                    backgroundColor: globalColors.secondary,
+                  }}
+                />
+              )}
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
+    );
+  }
+
+  return (
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
+      <ScrollView>
+        <BackButton />
+        {currentCardIndex < learningCards.length && (
+          <Flashcard
+            key={learningCards[currentCardIndex]?.id}
+            card={learningCards[currentCardIndex]}
+            onMastered={handleMastered}
+            onReviewAgain={handleReviewAgain}
+          />
+        )}
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  topSection: {
-    flex: 1,
-    justifyContent: "flex-start",
-  },
-  middleSection: {
-    flex: 14,
-  },
-  congratulationsText: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#4CAF50",
-    textAlign: "center",
-    marginVertical: 20,
-  },
-});
 
 export default LearningSessionScreen;

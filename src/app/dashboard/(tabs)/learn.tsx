@@ -6,7 +6,6 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 export default function Tab() {
   const handleStartLearning = () => {
-    console.log("Start learning pressed!");
     router.push("/learning-session");
   };
   const { styles: globalStyles } = useThemeStyles();
@@ -14,10 +13,7 @@ export default function Tab() {
   return (
     <View style={styles.container}>
       <Text style={globalStyles.title}>Ready to start learning?</Text>
-      <CustomButton
-        title="Start Learning"
-        onPress={handleStartLearning}
-      />
+      <CustomButton title="Start Learning" onPress={handleStartLearning} />
     </View>
   );
 }
@@ -26,7 +22,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-    backgroundColor: "#fff",
   },
   label: {
     fontSize: 24,

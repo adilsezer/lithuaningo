@@ -1,25 +1,18 @@
 import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
-import {
-  getStartOfToday,
-  getStartOfYesterday,
-  getStartOfWeek,
-} from "@src/utils/dateUtils";
+import { getStartOfToday, getStartOfYesterday } from "@src/utils/dateUtils";
 
 export interface Stats {
-  currentStreak: number;
-  longestStreak: number;
-  totalStudiedCards: number;
-  todayStudiedCards: number;
-  weeklyStudiedCards: number;
-  dailyAverage: number;
-  minutesSpentToday: number;
-  minutesSpentThisWeek: number;
-  minutesSpentTotal: number;
-  todayTotalCards: number;
   correctAnswers: number;
-  lastStudiedDate: FirebaseFirestoreTypes.Timestamp;
+  currentStreak: number;
+  lastCompleted: FirebaseFirestoreTypes.Timestamp;
+  longestStreak: number;
+  minutesSpentToday: number;
+  minutesSpentTotal: number;
+  todayStudiedCards: number;
+  totalStudiedCards: number;
+  weeklyCorrectAnswers: number;
 }
 
 export interface LearningCard {
@@ -29,11 +22,112 @@ export interface LearningCard {
   image?: string;
   options?: string[];
   answer: string;
+  translation: string;
+  baseForm: string;
+  baseFormTranslation: string;
+  displayOrder: number;
+  audio?: string;
+  extraInfo?: string;
+  level?: string;
+  tags?: string;
 }
 
-export const updateCompletionDate = async (userId: string): Promise<void> => {
+export interface LearnedCard {
+  id: string;
+}
+
+const fetchUserProfile = async (userId: string) => {
+  const userDoc = await firestore()
+    .collection("userProfiles")
+    .doc(userId)
+    .get();
+  if (!userDoc.exists) {
+    throw new Error("User profile not found");
+  }
+  return userDoc.data();
+};
+
+const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
   try {
-    await firestore().collection("users").doc(userId).update({
+    const userProfile = await fetchUserProfile(userId);
+    const learnedCardIds = userProfile?.learnedCards || [];
+    const learnedCardIdsAsStrings = learnedCardIds.map((card: any) =>
+      typeof card === "string" ? card : card.id
+    );
+
+    const allNewCards: LearningCard[] = [];
+    const batchSize = 15;
+    let lastVisible = null;
+
+    // Fetch cards in batches, excluding already learned cards
+    while (allNewCards.length < batchSize) {
+      let query = firestore()
+        .collection("learningCards")
+        .orderBy("displayOrder")
+        .limit(batchSize);
+
+      if (lastVisible) {
+        query = query.startAfter(lastVisible);
+      }
+
+      const newCardsSnapshot = await query.get();
+
+      if (newCardsSnapshot.empty) {
+        console.log("No more cards to fetch, snapshot is empty");
+        break;
+      }
+
+      const newCards = newCardsSnapshot.docs
+        .map(
+          (doc) =>
+            ({
+              id: doc.id,
+              ...doc.data(),
+            } as LearningCard)
+        )
+        .filter((card) => !learnedCardIdsAsStrings.includes(card.id));
+
+      allNewCards.push(...newCards);
+
+      if (newCardsSnapshot.docs.length < batchSize) {
+        console.log("Fetched less than batch size, breaking out of loop");
+        break;
+      }
+
+      lastVisible = newCardsSnapshot.docs[newCardsSnapshot.docs.length - 1];
+    }
+
+    return allNewCards.slice(0, batchSize);
+  } catch (error) {
+    console.error("Error fetching learning cards:", error);
+    return [];
+  }
+};
+
+const updateUserLearnedCards = async (
+  userId: string,
+  newLearnedCards: string[]
+): Promise<void> => {
+  try {
+    const userProfile = await fetchUserProfile(userId);
+    const existingLearnedCards = userProfile?.learnedCards || [];
+
+    const updatedLearnedCards = [
+      ...new Set([...existingLearnedCards, ...newLearnedCards]),
+    ];
+
+    await firestore().collection("userProfiles").doc(userId).update({
+      learnedCards: updatedLearnedCards,
+    });
+  } catch (error) {
+    console.error("Error updating learned cards:", error);
+    throw new Error("Failed to update learned cards.");
+  }
+};
+
+const updateCompletionDate = async (userId: string): Promise<void> => {
+  try {
+    await firestore().collection("userProfiles").doc(userId).update({
       lastCompleted: firestore.FieldValue.serverTimestamp(),
     });
   } catch (error) {
@@ -42,9 +136,12 @@ export const updateCompletionDate = async (userId: string): Promise<void> => {
   }
 };
 
-export const isAdmin = async (userId: string): Promise<boolean> => {
+const isAdmin = async (userId: string): Promise<boolean> => {
   try {
-    const userDoc = await firestore().collection("users").doc(userId).get();
+    const userDoc = await firestore()
+      .collection("userProfiles")
+      .doc(userId)
+      .get();
     if (!userDoc.exists) {
       return false;
     }
@@ -56,33 +153,12 @@ export const isAdmin = async (userId: string): Promise<boolean> => {
   }
 };
 
-export const checkIfCompletedToday = async (
-  userId: string
-): Promise<boolean> => {
-  try {
-    const userDoc = await firestore().collection("users").doc(userId).get();
-    const userData = userDoc.data();
-
-    if (userData?.lastCompleted) {
-      const lastCompleted = new Date(userData.lastCompleted.seconds * 1000);
-      const startOfToday = getStartOfToday();
-
-      if (lastCompleted >= startOfToday) {
-        return true;
-      }
-    }
-  } catch (error) {
-    console.error("Error checking completion status: ", error);
-  }
-  return false;
-};
-
-export const fetchStats = (
+const fetchStats = (
   userId: string,
   onStatsChange: (stats: Stats | null) => void
 ) => {
   return firestore()
-    .collection("stats")
+    .collection("userProfiles")
     .doc(userId)
     .onSnapshot(
       (doc) => {
@@ -100,52 +176,24 @@ export const fetchStats = (
     );
 };
 
-export const fetchLearningCards = (
-  onCardsChange: (cards: LearningCard[]) => void
-) => {
-  return firestore()
-    .collection("learningCards")
-    .onSnapshot(
-      (snapshot) => {
-        const cards = snapshot.docs.map(
-          (doc) =>
-            ({
-              id: doc.id,
-              ...doc.data(),
-            } as LearningCard)
-        );
-        onCardsChange(cards);
-      },
-      (error) => {
-        console.error("Error fetching learning cards:", error);
-        onCardsChange([]); // Ensure we handle errors by passing an empty array
-      }
-    );
-};
-
-export const fetchLeaderboard = (
+const fetchLeaderboard = (
   onLeadersChange: (
     leaders: { id: string; name: string; score: number }[]
   ) => void
 ) => {
   return firestore()
-    .collection("stats")
-    .orderBy("totalStudiedCards", "desc")
+    .collection("userProfiles")
+    .orderBy("weeklyCorrectAnswers", "desc")
     .limit(20)
     .onSnapshot(
       async (snapshot) => {
         const leaders = await Promise.all(
           snapshot.docs.map(async (doc) => {
             const data = doc.data();
-            const userDoc = await firestore()
-              .collection("users")
-              .doc(doc.id)
-              .get();
-            const userName = userDoc.exists ? userDoc.data()?.name : "Unknown";
             return {
               id: doc.id,
-              name: userName,
-              score: data.totalStudiedCards,
+              name: data.name,
+              score: data.weeklyCorrectAnswers, // Use weekly correct answers
             };
           })
         );
@@ -159,52 +207,29 @@ export const fetchLeaderboard = (
 };
 
 const updateStreak = (
-  lastStudiedDate: FirebaseFirestoreTypes.Timestamp,
+  lastCompleted: FirebaseFirestoreTypes.Timestamp,
   currentStreak: number
 ): number => {
-  const lastStudied = lastStudiedDate.toDate();
+  const lastCompletedDate = lastCompleted.toDate();
   const startOfToday = getStartOfToday();
   const startOfYesterday = getStartOfYesterday();
 
-  if (lastStudied >= startOfToday) {
-    return currentStreak; // Already studied today, no change
-  } else if (lastStudied >= startOfYesterday) {
-    return currentStreak + 1; // Continued the streak from yesterday
+  if (lastCompletedDate >= startOfToday) {
+    return currentStreak;
+  } else if (lastCompletedDate >= startOfYesterday) {
+    return currentStreak + 1;
   } else {
-    return 1; // Streak broken, reset to 1
+    return 1;
   }
 };
 
-const updateWeeklyStats = (
-  lastStudiedDate: FirebaseFirestoreTypes.Timestamp,
-  currentWeeklyStudiedCards: number,
-  currentMinutesSpentThisWeek: number,
-  additionalMinutesSpent: number
-) => {
-  const lastStudied = lastStudiedDate.toDate();
-  const startOfWeek = getStartOfWeek();
-
-  if (lastStudied >= startOfWeek) {
-    return {
-      newWeeklyStudiedCards: currentWeeklyStudiedCards + 1,
-      newMinutesSpentThisWeek:
-        currentMinutesSpentThisWeek + additionalMinutesSpent,
-    };
-  } else {
-    return {
-      newWeeklyStudiedCards: 1,
-      newMinutesSpentThisWeek: additionalMinutesSpent,
-    };
-  }
-};
-
-export const updateUserStats = async (
+const updateUserStats = async (
   userId: string,
   isCorrect: boolean,
   timeSpent: number
 ): Promise<void> => {
   try {
-    const userStatsRef = firestore().collection("stats").doc(userId);
+    const userStatsRef = firestore().collection("userProfiles").doc(userId);
     const userStatsSnapshot = await userStatsRef.get();
 
     let userStats: Stats;
@@ -216,71 +241,57 @@ export const updateUserStats = async (
         longestStreak: 0,
         totalStudiedCards: 0,
         todayStudiedCards: 0,
-        weeklyStudiedCards: 0,
-        dailyAverage: 0,
         minutesSpentToday: 0,
-        minutesSpentThisWeek: 0,
         minutesSpentTotal: 0,
-        todayTotalCards: 0,
         correctAnswers: 0,
-        lastStudiedDate: firestore.Timestamp.fromDate(new Date(0)), // Initialize to epoch
+        lastCompleted: firestore.Timestamp.fromDate(new Date(0)),
+        weeklyCorrectAnswers: 0, // Initialize new property
       };
     }
 
     const startOfToday = getStartOfToday();
-    let newTodayStudiedCards = userStats.todayStudiedCards;
-    let newMinutesSpentToday = userStats.minutesSpentToday;
-    let newTodayTotalCards = userStats.todayTotalCards;
+    const lastCompleted = userStats.lastCompleted?.toDate() || new Date(0);
 
-    if (userStats.lastStudiedDate.toDate() < startOfToday) {
-      // Reset today's stats if the last studied date is before today
+    let newTodayStudiedCards = userStats.todayStudiedCards ?? 0;
+    let newMinutesSpentToday = userStats.minutesSpentToday ?? 0;
+
+    if (lastCompleted < startOfToday) {
       newTodayStudiedCards = 0;
       newMinutesSpentToday = 0;
-      newTodayTotalCards = 0;
     }
 
     const newCurrentStreak = updateStreak(
-      userStats.lastStudiedDate,
-      userStats.currentStreak
+      userStats.lastCompleted || firestore.Timestamp.fromDate(new Date(0)),
+      userStats.currentStreak ?? 0
     );
     const newLongestStreak = Math.max(
-      userStats.longestStreak,
+      userStats.longestStreak ?? 0,
       newCurrentStreak
     );
 
-    const newTotalStudiedCards = userStats.totalStudiedCards + 1;
+    const newTotalStudiedCards = (userStats.totalStudiedCards ?? 0) + 1;
     newTodayStudiedCards += 1;
-    newTodayTotalCards += 1;
 
     newMinutesSpentToday += timeSpent;
-    const newMinutesSpentTotal = userStats.minutesSpentTotal + timeSpent;
-
-    const { newWeeklyStudiedCards, newMinutesSpentThisWeek } =
-      updateWeeklyStats(
-        userStats.lastStudiedDate,
-        userStats.weeklyStudiedCards,
-        userStats.minutesSpentThisWeek,
-        timeSpent
-      );
+    const newMinutesSpentTotal = (userStats.minutesSpentTotal ?? 0) + timeSpent;
 
     const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
-    const newDailyAverage = newTotalStudiedCards / daysActive;
 
-    await userStatsRef.set({
+    const newWeeklyCorrectAnswers = isCorrect
+      ? (userStats.weeklyCorrectAnswers ?? 0) + 1
+      : userStats.weeklyCorrectAnswers ?? 0;
+
+    await userStatsRef.update({
       totalStudiedCards: newTotalStudiedCards,
       todayStudiedCards: newTodayStudiedCards,
-      weeklyStudiedCards: newWeeklyStudiedCards,
-      todayTotalCards: newTodayTotalCards,
       minutesSpentToday: newMinutesSpentToday,
-      minutesSpentThisWeek: newMinutesSpentThisWeek,
       minutesSpentTotal: newMinutesSpentTotal,
-      dailyAverage: newDailyAverage,
       currentStreak: newCurrentStreak,
       longestStreak: newLongestStreak,
       correctAnswers: isCorrect
-        ? userStats.correctAnswers + 1
-        : userStats.correctAnswers,
-      lastStudiedDate: firestore.Timestamp.now(), // Update to current time
+        ? (userStats.correctAnswers ?? 0) + 1
+        : userStats.correctAnswers ?? 0,
+      weeklyCorrectAnswers: newWeeklyCorrectAnswers, // Update new property
     });
   } catch (error) {
     console.error("Error updating stats:", error);
@@ -288,19 +299,9 @@ export const updateUserStats = async (
   }
 };
 
-export type Card = {
-  id?: string;
-  question: string;
-  answer: string;
-  type: string; // e.g., 'multiple_choice', 'fill_in_the_blank', etc.
-  options?: string[]; // for multiple choice questions
-  image?: string;
-};
-
-export const addCard = async (card: Card) => {
+const addCard = async (card: LearningCard) => {
   try {
     const newCard = await firestore().collection("learningCards").add(card);
-    console.log("Card added with ID:", newCard.id);
     return { success: true, id: newCard.id };
   } catch (error) {
     console.error("Error adding card:", error);
@@ -308,16 +309,15 @@ export const addCard = async (card: Card) => {
   }
 };
 
-export const updateCard = async (
+const updateCard = async (
   cardId: string,
-  updatedCard: Partial<Card>
+  updatedCard: Partial<LearningCard>
 ) => {
   try {
     await firestore()
       .collection("learningCards")
       .doc(cardId)
       .update(updatedCard);
-    console.log("Card updated with ID:", cardId);
     return { success: true };
   } catch (error) {
     console.error("Error updating card:", error);
@@ -325,13 +325,25 @@ export const updateCard = async (
   }
 };
 
-export const deleteCard = async (cardId: string) => {
+const deleteCard = async (cardId: string) => {
   try {
     await firestore().collection("learningCards").doc(cardId).delete();
-    console.log("Card deleted with ID:", cardId);
     return { success: true };
   } catch (error) {
     console.error("Error deleting card:", error);
     return { success: false, error };
   }
+};
+
+export const FirebaseDataService = {
+  fetchLearningCards,
+  updateUserLearnedCards,
+  updateCompletionDate,
+  isAdmin,
+  fetchStats,
+  fetchLeaderboard,
+  updateUserStats,
+  addCard,
+  updateCard,
+  deleteCard,
 };

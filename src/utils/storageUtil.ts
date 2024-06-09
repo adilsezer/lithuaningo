@@ -18,3 +18,11 @@ export const retrieveData = async <T>(key: string): Promise<T | null> => {
     return null; // Default to null in case of error
   }
 };
+
+export const clearData = async (key: string): Promise<void> => {
+  try {
+    await AsyncStorage.removeItem(key);
+  } catch (error) {
+    console.error(`Failed to clear data for key ${key}:`, error);
+  }
+};

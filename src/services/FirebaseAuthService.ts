@@ -8,7 +8,7 @@ import {
   deleteUserAccount,
   updateUserProfile as updateUserProfileAction,
 } from "../redux/slices/userSlice";
-import { isAdmin } from "./FirebaseDataService";
+import { FirebaseDataService } from "./FirebaseDataService";
 
 type FirebaseError = {
   code: string;
@@ -25,13 +25,12 @@ const updateUserState = async (
   }
 
   if (user.emailVerified) {
-    const adminStatus = await isAdmin(user.uid); // Use the helper function
+    const adminStatus = await FirebaseDataService.isAdmin(user.uid); // Use the helper function
     dispatch(
       logIn({
         id: user.uid,
         name: user.displayName || null,
         email: user.email,
-        photoURL: user.photoURL || null,
         emailVerified: user.emailVerified,
         isAdmin: adminStatus, // Use the boolean value from the helper function
       })

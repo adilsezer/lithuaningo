@@ -25,7 +25,7 @@ const Leaderboard = () => {
   return (
     <ScrollView style={styles.container}>
       <Text style={globalStyles.title}>Leaderboard</Text>
-      <Text style={globalStyles.subtitle}>Last 30 Days</Text>
+      <Text style={globalStyles.subtitle}>Last 7 Days</Text>
       <View style={[styles.header, { backgroundColor: globalColors.primary }]}>
         <Text
           style={[styles.headerCell, styles.rank, { color: globalColors.text }]}

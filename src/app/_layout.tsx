@@ -14,7 +14,7 @@ SplashScreen.preventAutoHideAsync();
 
 const RootLayout: React.FC = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   useEffect(() => {
     async function loadFonts() {
@@ -32,7 +32,7 @@ const RootLayout: React.FC = () => {
   if (!fontsLoaded) {
     return (
       <View style={globalStyles.fullScreenCenter}>
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color={globalColors.primary} />
       </View>
     );
   }

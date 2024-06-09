@@ -1,25 +1,40 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, TextInput, StyleSheet, Image } from "react-native";
 import { LearningCard } from "../services/FirebaseDataService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import useStats from "@src/hooks/useStats";
 import CustomButton from "./CustomButton";
 import { useCardLogic } from "@src/hooks/useCardLogic";
+import ExpandableDetails from "./ExpandableDetails";
 
 interface FillInTheBlankCardProps {
   card: LearningCard;
+  onSubmit: () => void;
+  isSubmitPressed: boolean;
 }
 
-const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({ card }) => {
+const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({
+  card,
+  onSubmit,
+  isSubmitPressed,
+}) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { handleAnswer } = useStats();
-  const { selectedOption, isCorrect, handleSubmit } = useCardLogic(card.answer);
+  const { selectedOption, isCorrect, handleSubmit } = useCardLogic(
+    card.answer,
+    card.baseForm
+  );
   const [inputText, setInputText] = useState<string>("");
+
+  useEffect(() => {
+    setInputText("");
+  }, [card]);
 
   const handleFormSubmit = () => {
     const correct = handleSubmit(inputText);
     const timeSpent = 0.5; // Example value for time spent on the question
     handleAnswer(correct, timeSpent);
+    onSubmit(); // Trigger the callback to show the Continue button
   };
 
   const getQuestionText = () => {
@@ -31,7 +46,23 @@ const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({ card }) => {
 
   return (
     <View>
+      {!isSubmitPressed && (
+        <Text style={globalStyles.subtitle}>
+          Fill in the blank with the correct answer
+        </Text>
+      )}
       <Text style={globalStyles.title}>{getQuestionText()}</Text>
+      {isSubmitPressed && (
+        <Text
+          style={[
+            globalStyles.subtitle,
+            { color: globalColors.secondary, marginVertical: 0 },
+          ]}
+        >
+          Base Form: {card.baseForm}
+        </Text>
+      )}
+      <ExpandableDetails translation={card.translation}></ExpandableDetails>
       {card.image && (
         <Image source={{ uri: card.image }} style={styles.image} />
       )}
@@ -46,19 +77,24 @@ const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({ card }) => {
           {isCorrect ? "Correct" : `Incorrect. Correct Answer: ${card.answer}`}
         </Text>
       )}
-      <TextInput
-        style={globalStyles.input}
-        placeholder="Type your answer here"
-        placeholderTextColor={globalColors.placeholder}
-        value={inputText}
-        onChangeText={(text) => setInputText(text)}
-        editable={isCorrect === null} // Disable input after submission
-      />
-      <CustomButton
-        title="Submit"
-        onPress={handleFormSubmit}
-        disabled={isCorrect !== null}
-      />
+      {!isSubmitPressed && (
+        <View>
+          <TextInput
+            style={globalStyles.input}
+            placeholder="Type your answer here"
+            placeholderTextColor={globalColors.placeholder}
+            value={inputText}
+            onChangeText={(text) => setInputText(text)}
+            editable={isCorrect === null} // Disable input after submission
+          />
+
+          <CustomButton
+            title="Submit"
+            onPress={handleFormSubmit}
+            disabled={isCorrect !== null}
+          />
+        </View>
+      )}
     </View>
   );
 };

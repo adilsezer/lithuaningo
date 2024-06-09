@@ -21,7 +21,7 @@ const StatusLabel: React.FC<StatusLabelProps> = ({ label, style }) => {
       <Text
         style={[
           globalStyles.text,
-          { color: "white", fontFamily: "Roboto-Bold" },
+          { color: globalColors.text, fontFamily: "Roboto-Bold" },
         ]}
       >
         {label}

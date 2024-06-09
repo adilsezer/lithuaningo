@@ -1,7 +1,25 @@
-// hooks/useCardLogic.ts
 import { useState, useEffect } from "react";
 
-export const useCardLogic = (correctAnswer: string) => {
+const normalizeAnswer = (answer: string): string => {
+  const lithuanianMap: Record<string, string> = {
+    Ą: "A",
+    Ę: "E",
+    Ė: "E",
+    Į: "I",
+    Ų: "U",
+    Ū: "U",
+    Č: "C",
+    Š: "S",
+    Ž: "Z",
+  };
+
+  return answer
+    .toUpperCase()
+    .replace(/[ĄĘĖĮŲŪČŠŽ]/g, (match) => lithuanianMap[match] || match)
+    .toLowerCase();
+};
+
+export const useCardLogic = (correctAnswer: string, baseForm: string) => {
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
 
@@ -17,14 +35,16 @@ export const useCardLogic = (correctAnswer: string) => {
     }
     setSelectedOption(option);
     const correct =
-      option.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+      normalizeAnswer(option.trim()) === normalizeAnswer(correctAnswer.trim());
     setIsCorrect(correct);
     return correct;
   };
 
   const handleSubmit = (userAnswer: string): boolean => {
+    const normalizedUserAnswer = normalizeAnswer(userAnswer.trim());
     const correct =
-      userAnswer.trim().toLowerCase() === correctAnswer.trim().toLowerCase();
+      normalizedUserAnswer === normalizeAnswer(correctAnswer.trim()) ||
+      normalizedUserAnswer === normalizeAnswer(baseForm.trim());
     setSelectedOption(userAnswer);
     setIsCorrect(correct);
     return correct;

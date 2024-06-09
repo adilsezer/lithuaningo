@@ -93,21 +93,12 @@ const SignUpScreen: React.FC = () => {
         onPress={() => performSignUp(handleLoginWithGoogle)}
         title={"Sign up with Google"}
         icon={require("assets/images/google-logo.png")}
-        style={styles.googleButton}
-        textStyle={styles.googleButtonText}
+        style={{ backgroundColor: globalColors.card }}
+        textStyle={{ color: globalColors.cardText }}
         disabled={loading}
       />
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  googleButton: {
-    backgroundColor: "#f2f2f2",
-  },
-  googleButtonText: {
-    color: "#1d1d1d",
-  },
-});
 
 export default SignUpScreen;
