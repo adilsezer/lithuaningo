@@ -144,14 +144,6 @@ const useAuthMethods = () => {
     return result;
   };
 
-  const handleSendEmailVerification = async () => {
-    const result = await handleAction(sendEmailVerification);
-    if (result.success) {
-      result.message = "Verification email sent. Please check your inbox.";
-    }
-    return result;
-  };
-
   const handleUpdateUserPassword = async (newPassword: string) => {
     const result = await handleAction(() =>
       updateUserPassword(newPassword, dispatch)
@@ -189,7 +181,6 @@ const useAuthMethods = () => {
     handleSignOut,
     handlePasswordReset,
     handleUpdateUserProfile,
-    handleSendEmailVerification,
     handleUpdateUserPassword,
     handleDeleteUserAccount,
     handleReauthenticateUser,
