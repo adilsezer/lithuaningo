@@ -35,8 +35,6 @@ const updateUserState = async (
         isAdmin: adminStatus, // Use the boolean value from the helper function
       })
     );
-  } else {
-    console.warn("User email is not verified.");
   }
 };
 
@@ -131,7 +129,6 @@ export const updateUserPassword = async (
 export const sendPasswordResetEmail = async (email: string): Promise<void> => {
   try {
     await auth().sendPasswordResetEmail(email);
-    console.log("Password reset email sent successfully.");
   } catch (error) {
     const firebaseError = error as FirebaseError;
     console.error("Send password reset email failed:", firebaseError.message);
