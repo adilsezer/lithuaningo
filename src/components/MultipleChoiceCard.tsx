@@ -17,7 +17,10 @@ const MultipleChoiceCard: React.FC<MultipleChoiceCardProps> = ({
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { handleAnswer } = useStats();
-  const { selectedOption, isCorrect, handlePress } = useCardLogic(card.answer);
+  const { selectedOption, isCorrect, handlePress } = useCardLogic(
+    card.answer,
+    card.answer
+  ); // Pass the baseForm as card.answer or an empty string
 
   if (!card.options) {
     return null;

@@ -32,7 +32,7 @@ const LearningSessionScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const userId = userData?.id || "";
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const cardsPerDay = 10;
+  const cardsPerDay = 15;
 
   const updateStorage = async (
     flashcardsCompleted: boolean,

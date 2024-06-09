@@ -20,7 +20,10 @@ const FillInTheBlankCard: React.FC<FillInTheBlankCardProps> = ({
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { handleAnswer } = useStats();
-  const { selectedOption, isCorrect, handleSubmit } = useCardLogic(card.answer);
+  const { selectedOption, isCorrect, handleSubmit } = useCardLogic(
+    card.answer,
+    card.baseForm
+  );
   const [inputText, setInputText] = useState<string>("");
 
   useEffect(() => {

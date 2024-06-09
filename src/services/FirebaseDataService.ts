@@ -56,7 +56,7 @@ const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
     );
 
     const allNewCards: LearningCard[] = [];
-    const batchSize = 10;
+    const batchSize = 15;
     let lastVisible = null;
 
     // Fetch cards in batches, excluding already learned cards
