@@ -78,12 +78,7 @@ const LearningSessionScreen: React.FC = () => {
             const dailyCards = cards.slice(0, cardsPerDay);
             setLearningCards(dailyCards);
             await updateStorage(false, 0, false);
-          } else {
-            console.log("No cards fetched");
           }
-          cards.forEach((element) => {
-            console.log(element.displayOrder);
-          });
         }
       } catch (error) {
         console.error("Error fetching initial data:", error);
@@ -164,7 +159,6 @@ const LearningSessionScreen: React.FC = () => {
 
   const renderCard = (card: LearningCard | undefined) => {
     if (!card) {
-      console.log("Card is undefined");
       return <Text>No card to display</Text>;
     }
 

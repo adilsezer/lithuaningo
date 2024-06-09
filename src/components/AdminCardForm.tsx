@@ -136,7 +136,6 @@ const AdminCardForm: React.FC = () => {
     try {
       if (userData && userData.id) {
         await clearData(`dailyCards_${userData.id}`);
-        console.log("Cleared the storage data");
       }
       // You can add more logic here if needed
     } catch (error) {

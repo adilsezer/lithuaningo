@@ -73,7 +73,6 @@ const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
       const newCardsSnapshot = await query.get();
 
       if (newCardsSnapshot.empty) {
-        console.log("No more cards to fetch, snapshot is empty");
         break;
       }
 
@@ -90,7 +89,6 @@ const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
       allNewCards.push(...newCards);
 
       if (newCardsSnapshot.docs.length < batchSize) {
-        console.log("Fetched less than batch size, breaking out of loop");
         break;
       }
 
