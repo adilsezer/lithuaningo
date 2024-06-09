@@ -2,8 +2,8 @@
 Edit Profile doesn’t change the name
 Getting error after signing in for the first time
 Contact us should open gmail as well
+Increase the number of multiple choice questions
 
 
 ****** In Progress *******
 test scheduler 
-Increase the number of multiple choice questions
