@@ -1,3 +1,4 @@
+import auth from "@react-native-firebase/auth";
 import { useCallback } from "react";
 import { useAppDispatch } from "../redux/hooks";
 import { getErrorMessage } from "../utils/errorMessages";
@@ -127,9 +128,16 @@ const useAuthMethods = () => {
   };
 
   const handleUpdateUserProfile = async (updates: { displayName?: string }) => {
-    const result = await handleAction(() =>
-      updateUserProfile(updates, dispatch)
-    );
+    const result = await handleAction(async () => {
+      await updateUserProfile(updates, dispatch);
+      const user = auth().currentUser;
+      if (user && updates.displayName) {
+        await firestore()
+          .collection("userProfiles")
+          .doc(user.uid)
+          .update({ name: updates.displayName });
+      }
+    });
     if (result.success) {
       result.message = "Profile updated successfully.";
     }
