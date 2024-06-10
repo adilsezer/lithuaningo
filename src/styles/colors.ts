@@ -37,7 +37,7 @@ export const darkThemeColors: ThemeColors = {
   active: "#66BB6A", // Lively modern green (same as primary)
   inactive: "#455A64", // Cooler, muted blue-grey
   text: "#FAFAFA", // Very light grey (almost white)
-  link: "#42A5F5", // Crisp, deep sky blue (same as light theme)
+  link: "#82CAFF", // Crisp, deep sky blue (same as light theme)
   placeholder: "#CFD8DC", // Lighter blue-grey for placeholders, adjusted for dark theme
   border: "#37474F", // Darker shade for borders, adjusted for dark theme
   error: "#d5304f", // Soft grey (same as inactive)

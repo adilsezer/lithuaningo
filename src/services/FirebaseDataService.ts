@@ -59,7 +59,6 @@ const fetchLearningCards = async (userId: string): Promise<LearningCard[]> => {
     const batchSize = 15;
     let lastVisible = null;
 
-    // Fetch cards in batches, excluding already learned cards
     while (allNewCards.length < batchSize) {
       let query = firestore()
         .collection("learningCards")
@@ -123,17 +122,6 @@ const updateUserLearnedCards = async (
   }
 };
 
-const updateCompletionDate = async (userId: string): Promise<void> => {
-  try {
-    await firestore().collection("userProfiles").doc(userId).update({
-      lastCompleted: firestore.FieldValue.serverTimestamp(),
-    });
-  } catch (error) {
-    console.error("Error updating completion date: ", error);
-    throw new Error("Failed to update completion date.");
-  }
-};
-
 const isAdmin = async (userId: string): Promise<boolean> => {
   try {
     const userDoc = await firestore()
@@ -191,7 +179,7 @@ const fetchLeaderboard = (
             return {
               id: doc.id,
               name: data.name,
-              score: data.weeklyCorrectAnswers, // Use weekly correct answers
+              score: data.weeklyCorrectAnswers,
             };
           })
         );
@@ -243,20 +231,12 @@ const updateUserStats = async (
         minutesSpentTotal: 0,
         correctAnswers: 0,
         lastCompleted: firestore.Timestamp.fromDate(new Date(0)),
-        weeklyCorrectAnswers: 0, // Initialize new property
+        weeklyCorrectAnswers: 0,
       };
     }
 
-    const startOfToday = getStartOfToday();
-    const lastCompleted = userStats.lastCompleted?.toDate() || new Date(0);
-
     let newTodayStudiedCards = userStats.todayStudiedCards ?? 0;
     let newMinutesSpentToday = userStats.minutesSpentToday ?? 0;
-
-    if (lastCompleted < startOfToday) {
-      newTodayStudiedCards = 0;
-      newMinutesSpentToday = 0;
-    }
 
     const newCurrentStreak = updateStreak(
       userStats.lastCompleted || firestore.Timestamp.fromDate(new Date(0)),
@@ -273,8 +253,6 @@ const updateUserStats = async (
     newMinutesSpentToday += timeSpent;
     const newMinutesSpentTotal = (userStats.minutesSpentTotal ?? 0) + timeSpent;
 
-    const daysActive = Math.ceil(newMinutesSpentTotal / (24 * 60));
-
     const newWeeklyCorrectAnswers = isCorrect
       ? (userStats.weeklyCorrectAnswers ?? 0) + 1
       : userStats.weeklyCorrectAnswers ?? 0;
@@ -289,7 +267,8 @@ const updateUserStats = async (
       correctAnswers: isCorrect
         ? (userStats.correctAnswers ?? 0) + 1
         : userStats.correctAnswers ?? 0,
-      weeklyCorrectAnswers: newWeeklyCorrectAnswers, // Update new property
+      weeklyCorrectAnswers: newWeeklyCorrectAnswers,
+      lastCompleted: firestore.FieldValue.serverTimestamp(),
     });
   } catch (error) {
     console.error("Error updating stats:", error);
@@ -336,7 +315,6 @@ const deleteCard = async (cardId: string) => {
 export const FirebaseDataService = {
   fetchLearningCards,
   updateUserLearnedCards,
-  updateCompletionDate,
   isAdmin,
   fetchStats,
   fetchLeaderboard,

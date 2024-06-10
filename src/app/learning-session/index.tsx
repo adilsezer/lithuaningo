@@ -116,30 +116,18 @@ const LearningSessionScreen: React.FC = () => {
     setCurrentCardIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
       if (nextIndex >= learningCards.length) {
-        setFlashcardsCompleted(true);
-        setCurrentCardIndex(0);
+        return 0;
       } else {
-        updateStorage(false, nextIndex, completedToday);
+        return nextIndex;
       }
-      return nextIndex;
     });
-  };
 
-  const handleNextQuizCard = async () => {
-    if (currentCardIndex < learningCards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
-      setShowContinueButton(false);
-      await updateStorage(
-        flashcardsCompleted,
-        currentCardIndex + 1,
-        completedToday
-      );
+    const nextIndex = currentCardIndex + 1;
+    if (nextIndex >= learningCards.length) {
+      setFlashcardsCompleted(true);
+      await updateStorage(true, 0, completedToday);
     } else {
-      if (userData?.id) {
-        await FirebaseDataService.updateCompletionDate(userData.id);
-        setCompletedToday(true);
-        await updateStorage(flashcardsCompleted, currentCardIndex, true);
-      }
+      await updateStorage(false, nextIndex, completedToday);
     }
   };
 
@@ -157,6 +145,30 @@ const LearningSessionScreen: React.FC = () => {
     }
   }, [completedToday]);
 
+  const handleNextQuizCard = async () => {
+    if (currentCardIndex < learningCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+      setShowContinueButton(false);
+    } else {
+      if (userData?.id) {
+        setCompletedToday(true);
+      }
+    }
+  };
+
+  const handleQuizSubmit = async () => {
+    setShowContinueButton(true);
+    if (currentCardIndex < learningCards.length - 1) {
+      await updateStorage(
+        flashcardsCompleted,
+        currentCardIndex + 1,
+        completedToday
+      );
+    } else {
+      await updateStorage(flashcardsCompleted, currentCardIndex, true);
+    }
+  };
+
   const renderCard = (card: LearningCard | undefined) => {
     if (!card) {
       return <Text>No card to display</Text>;
@@ -165,16 +177,13 @@ const LearningSessionScreen: React.FC = () => {
     switch (card.type) {
       case "multiple_choice":
         return (
-          <MultipleChoiceCard
-            card={card}
-            onOptionSelect={() => setShowContinueButton(true)}
-          />
+          <MultipleChoiceCard card={card} onOptionSelect={handleQuizSubmit} />
         );
       case "fill_in_the_blank":
         return (
           <FillInTheBlankCard
             card={card}
-            onSubmit={() => setShowContinueButton(true)}
+            onSubmit={handleQuizSubmit}
             isSubmitPressed={showContinueButton}
           />
         );
