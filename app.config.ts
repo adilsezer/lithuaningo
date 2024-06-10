@@ -20,6 +20,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       googleServicesFile: "./GoogleService-Info.plist",
       supportsTablet: true,
       bundleIdentifier: "com.adilsezer.lithuaningo",
+      infoPlist: {
+        ITSAppUsesNonExemptEncryption: false,
+      },
     },
     android: {
       googleServicesFile: "./google-services.json",
