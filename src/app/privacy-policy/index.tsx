@@ -83,7 +83,17 @@ const PrivacyPolicy = () => {
         - To protect the personal safety of users of the App or the public
       </Text>
 
-      <Text style={globalStyles.subtitle}>4. Security of Your Information</Text>
+      <Text style={globalStyles.subtitle}>4. Third-Party Content</Text>
+      <Text style={globalStyles.paragraph}>
+        Our App may contain, show, or access content created by third parties,
+        including AI-generated images provided by external services. We ensure
+        that we have the necessary rights to use this third-party content.
+        However, we are not responsible for the privacy practices or the content
+        of these third-party providers. We strongly advise you to review the
+        privacy policies of any third-party services you use through our App.
+      </Text>
+
+      <Text style={globalStyles.subtitle}>5. Security of Your Information</Text>
       <Text style={globalStyles.paragraph}>
         The security of your personal information is important to us. We strive
         to use commercially acceptable means to protect your personal
@@ -91,7 +101,7 @@ const PrivacyPolicy = () => {
         Internet or method of electronic storage is 100% secure.
       </Text>
 
-      <Text style={globalStyles.subtitle}>5. Links to Other Sites</Text>
+      <Text style={globalStyles.subtitle}>6. Links to Other Sites</Text>
       <Text style={globalStyles.paragraph}>
         Our App may contain links to other sites that are not operated by us. If
         you click on a third-party link, you will be directed to that third
@@ -99,16 +109,16 @@ const PrivacyPolicy = () => {
         every site you visit.
       </Text>
 
-      <Text style={globalStyles.subtitle}>6. Children's Privacy</Text>
+      <Text style={globalStyles.subtitle}>7. Children's Privacy</Text>
       <Text style={globalStyles.paragraph}>
-        Our App does not address anyone under the age of 13 ("Children"). We do
-        not knowingly collect personally identifiable information from children
-        under 13. If you are a parent or guardian and you are aware that your
-        child has provided us with personal information, please contact us.
+        Our App is suitable for ages 4 and up. We do not knowingly collect
+        personally identifiable information from children under 13. If you are a
+        parent or guardian and you are aware that your child has provided us
+        with personal information, please contact us.
       </Text>
 
       <Text style={globalStyles.subtitle}>
-        7. Changes to This Privacy Policy
+        8. Changes to This Privacy Policy
       </Text>
       <Text style={globalStyles.paragraph}>
         We may update our Privacy Policy from time to time. We will notify you
@@ -116,7 +126,7 @@ const PrivacyPolicy = () => {
         advised to review this Privacy Policy periodically for any changes.
       </Text>
 
-      <Text style={globalStyles.subtitle}>8. Contact Us</Text>
+      <Text style={globalStyles.subtitle}>9. Contact Us</Text>
       <Text style={globalStyles.paragraph}>
         If you have any questions about this Privacy Policy, please contact us:
       </Text>
