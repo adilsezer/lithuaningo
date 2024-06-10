@@ -122,17 +122,6 @@ const updateUserLearnedCards = async (
   }
 };
 
-const updateCompletionDate = async (userId: string): Promise<void> => {
-  try {
-    await firestore().collection("userProfiles").doc(userId).update({
-      lastCompleted: firestore.FieldValue.serverTimestamp(),
-    });
-  } catch (error) {
-    console.error("Error updating completion date: ", error);
-    throw new Error("Failed to update completion date.");
-  }
-};
-
 const isAdmin = async (userId: string): Promise<boolean> => {
   try {
     const userDoc = await firestore()
@@ -279,6 +268,7 @@ const updateUserStats = async (
         ? (userStats.correctAnswers ?? 0) + 1
         : userStats.correctAnswers ?? 0,
       weeklyCorrectAnswers: newWeeklyCorrectAnswers,
+      lastCompleted: firestore.FieldValue.serverTimestamp(),
     });
   } catch (error) {
     console.error("Error updating stats:", error);
@@ -325,7 +315,6 @@ const deleteCard = async (cardId: string) => {
 export const FirebaseDataService = {
   fetchLearningCards,
   updateUserLearnedCards,
-  updateCompletionDate,
   isAdmin,
   fetchStats,
   fetchLeaderboard,

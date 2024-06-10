@@ -136,7 +136,6 @@ const LearningSessionScreen: React.FC = () => {
       );
     } else {
       if (userData?.id) {
-        await FirebaseDataService.updateCompletionDate(userData.id);
         setCompletedToday(true);
         await updateStorage(flashcardsCompleted, currentCardIndex, true);
       }
