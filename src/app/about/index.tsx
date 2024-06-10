@@ -4,8 +4,11 @@ import * as Linking from "expo-linking";
 import Constants from "expo-constants";
 import BackButton from "@components/BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { useRouter } from "expo-router";
 
 export default function AboutScreen() {
+  const router = useRouter();
+
   const handleLinkPress = async (url: string) => {
     try {
       const supported = await Linking.canOpenURL(url);
@@ -79,11 +82,7 @@ export default function AboutScreen() {
         <Text style={globalStyles.title}>Privacy Policy</Text>
         <Text
           style={[globalStyles.text, dynamicStyles.link]}
-          onPress={() =>
-            handleLinkPress(
-              "https://adilsezer.github.io/lithuaningo/privacy-policy"
-            )
-          }
+          onPress={() => router.push("/privacy-policy")}
         >
           View our Privacy Policy
         </Text>
