@@ -131,23 +131,6 @@ const LearningSessionScreen: React.FC = () => {
     }
   };
 
-  const handleNextQuizCard = async () => {
-    if (currentCardIndex < learningCards.length - 1) {
-      setCurrentCardIndex(currentCardIndex + 1);
-      setShowContinueButton(false);
-      await updateStorage(
-        flashcardsCompleted,
-        currentCardIndex + 1,
-        completedToday
-      );
-    } else {
-      if (userData?.id) {
-        setCompletedToday(true);
-        await updateStorage(flashcardsCompleted, currentCardIndex, true);
-      }
-    }
-  };
-
   const saveLearnedCards = async () => {
     try {
       await FirebaseDataService.updateUserLearnedCards(userId, learnedCards);
@@ -162,6 +145,30 @@ const LearningSessionScreen: React.FC = () => {
     }
   }, [completedToday]);
 
+  const handleNextQuizCard = async () => {
+    if (currentCardIndex < learningCards.length - 1) {
+      setCurrentCardIndex(currentCardIndex + 1);
+      setShowContinueButton(false);
+    } else {
+      if (userData?.id) {
+        setCompletedToday(true);
+      }
+    }
+  };
+
+  const handleQuizSubmit = async () => {
+    setShowContinueButton(true);
+    if (currentCardIndex < learningCards.length - 1) {
+      await updateStorage(
+        flashcardsCompleted,
+        currentCardIndex + 1,
+        completedToday
+      );
+    } else {
+      await updateStorage(flashcardsCompleted, currentCardIndex, true);
+    }
+  };
+
   const renderCard = (card: LearningCard | undefined) => {
     if (!card) {
       return <Text>No card to display</Text>;
@@ -170,16 +177,13 @@ const LearningSessionScreen: React.FC = () => {
     switch (card.type) {
       case "multiple_choice":
         return (
-          <MultipleChoiceCard
-            card={card}
-            onOptionSelect={() => setShowContinueButton(true)}
-          />
+          <MultipleChoiceCard card={card} onOptionSelect={handleQuizSubmit} />
         );
       case "fill_in_the_blank":
         return (
           <FillInTheBlankCard
             card={card}
-            onSubmit={() => setShowContinueButton(true)}
+            onSubmit={handleQuizSubmit}
             isSubmitPressed={showContinueButton}
           />
         );
