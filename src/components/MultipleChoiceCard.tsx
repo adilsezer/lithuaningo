@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import { LearningCard } from "../services/FirebaseDataService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -22,16 +22,26 @@ const MultipleChoiceCard: React.FC<MultipleChoiceCardProps> = ({
     card.answer
   ); // Pass the baseForm as card.answer or an empty string
 
+  const [optionSelected, setOptionSelected] = useState<boolean>(false);
+
+  // Reset optionSelected when card changes
+  useEffect(() => {
+    setOptionSelected(false);
+  }, [card]);
+
   if (!card.options) {
     return null;
   }
 
   const handleOptionPress = (option: string) => {
-    const correct = handlePress(option);
-    if (correct !== null) {
-      const timeSpent = 0.5; // Example value for time spent on the question
-      handleAnswer(correct, timeSpent);
-      onOptionSelect(); // Trigger the callback to show the Continue button
+    if (!optionSelected) {
+      const correct = handlePress(option);
+      if (correct !== null) {
+        const timeSpent = 0.5; // Example value for time spent on the question
+        handleAnswer(correct, timeSpent);
+        onOptionSelect(); // Trigger the callback to show the Continue button
+        setOptionSelected(true);
+      }
     }
   };
 

@@ -35,23 +35,27 @@ We do not share your personal information with third parties except in the follo
 - To prevent or investigate possible wrongdoing in connection with the App
 - To protect the personal safety of users of the App or the public
 
-## 4. Security of Your Information
+## 4. Third-Party Content
+
+Our App may contain, show, or access content created by third parties, including AI-generated images provided by external services. We ensure that we have the necessary rights to use this third-party content. However, we are not responsible for the privacy practices or the content of these third-party providers. We strongly advise you to review the privacy policies of any third-party services you use through our App.
+
+## 5. Security of Your Information
 
 The security of your personal information is important to us. We strive to use commercially acceptable means to protect your personal information, but remember that no method of transmission over the Internet or method of electronic storage is 100% secure.
 
-## 5. Links to Other Sites
+## 6. Links to Other Sites
 
 Our App may contain links to other sites that are not operated by us. If you click on a third-party link, you will be directed to that third party's site. We strongly advise you to review the Privacy Policy of every site you visit.
 
-## 6. Children's Privacy
+## 7. Children's Privacy
 
-Our App does not address anyone under the age of 13 ("Children"). We do not knowingly collect personally identifiable information from children under 13. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact us.
+Our App is suitable for ages 4 and up. We do not knowingly collect personally identifiable information from children under 13. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact us.
 
-## 7. Changes to This Privacy Policy
+## 8. Changes to This Privacy Policy
 
 We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. You are advised to review this Privacy Policy periodically for any changes.
 
-## 8. Contact Us
+## 9. Contact Us
 
 If you have any questions about this Privacy Policy, please contact us:
 
