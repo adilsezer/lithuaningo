@@ -116,13 +116,19 @@ const LearningSessionScreen: React.FC = () => {
     setCurrentCardIndex((prevIndex) => {
       const nextIndex = prevIndex + 1;
       if (nextIndex >= learningCards.length) {
-        setFlashcardsCompleted(true);
-        setCurrentCardIndex(0);
+        return 0;
       } else {
-        updateStorage(false, nextIndex, completedToday);
+        return nextIndex;
       }
-      return nextIndex;
     });
+
+    const nextIndex = currentCardIndex + 1;
+    if (nextIndex >= learningCards.length) {
+      setFlashcardsCompleted(true);
+      await updateStorage(true, 0, completedToday);
+    } else {
+      await updateStorage(false, nextIndex, completedToday);
+    }
   };
 
   const handleNextQuizCard = async () => {
