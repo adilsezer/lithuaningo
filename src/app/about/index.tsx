@@ -27,8 +27,16 @@ export default function AboutScreen() {
     }
   };
 
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const appVersion = Constants.expoConfig?.version || "Unknown";
+
+  const dynamicStyles = StyleSheet.create({
+    link: {
+      color: globalColors.link,
+      fontSize: 16,
+      textDecorationLine: "underline",
+    },
+  });
 
   return (
     <ScrollView>
@@ -53,7 +61,7 @@ export default function AboutScreen() {
         <Text style={[globalStyles.text, styles.customText]}>
           Email:{" "}
           <Text
-            style={styles.link}
+            style={dynamicStyles.link}
             onPress={() => handleLinkPress("mailto:lithuaningo@gmail.com")}
           >
             lithuaningo@gmail.com
@@ -70,7 +78,7 @@ export default function AboutScreen() {
 
         <Text style={globalStyles.title}>Privacy Policy</Text>
         <Text
-          style={[globalStyles.text, styles.link]}
+          style={[globalStyles.text, dynamicStyles.link]}
           onPress={() =>
             handleLinkPress(
               "https://adilsezer.github.io/lithuaningo/privacy-policy"
@@ -90,11 +98,5 @@ const styles = StyleSheet.create({
   },
   customText: {
     fontSize: 16,
-  },
-  link: {
-    fontSize: 16,
-
-    color: "blue",
-    textDecorationLine: "underline",
   },
 });
