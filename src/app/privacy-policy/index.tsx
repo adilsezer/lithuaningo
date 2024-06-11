@@ -31,10 +31,37 @@ const PrivacyPolicy = () => {
       </Text>
       <Text style={globalStyles.paragraph}>
         - <Text style={globalStyles.text}>Usage Data</Text>: We collect
-        information on how you access and use the App. This may include
-        information such as your device's IP address, browser type, browser
-        version, the pages of our App that you visit, the time and date of your
-        visit, the time spent on those pages, and other diagnostic data.
+        information on how you access and use the App. This includes information
+        such as your device's IP address, browser type, browser version, the
+        pages of our App that you visit, the time and date of your visit, the
+        time spent on those pages, and other diagnostic data.
+      </Text>
+      <Text style={globalStyles.paragraph}>
+        - <Text style={globalStyles.text}>Customer Support Data</Text>: Data
+        generated during a customer support request.
+      </Text>
+      <Text style={globalStyles.paragraph}>
+        - <Text style={globalStyles.text}>Other User Content</Text>:
+        User-generated content such as quiz answers and interactions.
+      </Text>
+      <Text style={globalStyles.paragraph}>
+        - <Text style={globalStyles.text}>Product Interaction Data</Text>:
+        Information about how you interact with our App, including app launches,
+        taps, clicks, scrolling information, quiz interactions, and study
+        sessions.
+      </Text>
+      <Text style={globalStyles.paragraph}>
+        - <Text style={globalStyles.text}>Crash Data</Text>: Logs of crashes,
+        errors, or exceptions that occur within the app.
+      </Text>
+      <Text style={globalStyles.paragraph}>
+        - <Text style={globalStyles.text}>Performance Data</Text>: Information
+        on app launch times, hang rates, energy usage, and other metrics related
+        to the performance of the app.
+      </Text>
+      <Text style={globalStyles.paragraph}>
+        - <Text style={globalStyles.text}>Other Diagnostic Data</Text>:
+        Additional technical diagnostics related to the app.
       </Text>
 
       <Text style={globalStyles.subtitle}>2. How We Use Your Information</Text>
