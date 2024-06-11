@@ -11,7 +11,13 @@ By using the App, you agree to the collection and use of information in accordan
 We collect the following types of information:
 
 - **Personal Information**: When you register for an account, we may collect personal information such as your name, email address, and profile picture.
-- **Usage Data**: We collect information on how you access and use the App. This may include information such as your device's IP address, browser type, browser version, the pages of our App that you visit, the time and date of your visit, the time spent on those pages, and other diagnostic data.
+- **Usage Data**: We collect information on how you access and use the App. This includes information such as your device's IP address, browser type, browser version, the pages of our App that you visit, the time and date of your visit, the time spent on those pages, and other diagnostic data.
+- **Customer Support Data**: Data generated during a customer support request.
+- **Other User Content**: User-generated content such as quiz answers and interactions.
+- **Product Interaction Data**: Information about how you interact with our App, including app launches, taps, clicks, scrolling information, quiz interactions, and study sessions.
+- **Crash Data**: Logs of crashes, errors, or exceptions that occur within the app.
+- **Performance Data**: Information on app launch times, hang rates, energy usage, and other metrics related to the performance of the app.
+- **Other Diagnostic Data**: Additional technical diagnostics related to the app.
 
 ## 2. How We Use Your Information
 
