@@ -1,4 +1,3 @@
-// services/firebase/sentenceService.ts
 import firestore from "@react-native-firebase/firestore";
 
 export interface Sentence {
@@ -15,7 +14,17 @@ const fetchSentences = async (): Promise<Sentence[]> => {
     id: doc.id,
     ...doc.data(),
   })) as Sentence[];
-  return sentencesData;
+
+  // Sort sentences by display_order, handling undefined values
+  const sortedSentences = sentencesData.sort((a, b) => {
+    if (a.display_order === undefined && b.display_order === undefined)
+      return 0;
+    if (a.display_order === undefined) return 1;
+    if (b.display_order === undefined) return -1;
+    return a.display_order - b.display_order;
+  });
+
+  return sortedSentences;
 };
 
 export default {
