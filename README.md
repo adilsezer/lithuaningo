@@ -8,7 +8,6 @@ Welcome to **Lithuaningo**! A mobile application designed to help you master the
 - **Interactive Learning Modules**: Multiple-choice and fill-in-the-blank exercises.
 - **Progress Tracking**: Detailed statistics to monitor your learning journey.
 - **User Profile Management**: Customize and manage your personal details.
-- **Admin Panel**: Tools for managing app content.
 - **Leaderboard**: Track and compare your progress with other users.
 
 ## Screenshots

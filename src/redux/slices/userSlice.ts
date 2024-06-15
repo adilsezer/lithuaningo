@@ -6,7 +6,6 @@ interface UserProfile {
   name: string | null;
   email: string;
   emailVerified: boolean;
-  isAdmin: boolean;
 }
 
 interface UserState {

@@ -8,11 +8,11 @@ import {
   ActivityIndicator,
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import useStats from "@src/hooks/useStats";
+import useData from "@src/hooks/useData";
 
 const Leaderboard = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const { leaders, loading } = useStats();
+  const { leaders, loading } = useData();
 
   if (loading) {
     return (

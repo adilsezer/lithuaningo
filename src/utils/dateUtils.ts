@@ -1,3 +1,5 @@
+import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
+
 // utils/dateUtils.ts
 export const formatTime = (minutes: number): string => {
   if (minutes === 0) {
@@ -23,4 +25,21 @@ export const getStartOfYesterday = (): Date => {
   yesterday.setDate(yesterday.getDate() - 1);
   yesterday.setHours(0, 0, 0, 0);
   return yesterday;
+};
+
+export const calculateStreak = (
+  lastCompleted: FirebaseFirestoreTypes.Timestamp,
+  currentStreak: number
+): number => {
+  const lastCompletedDate = lastCompleted.toDate();
+  const startOfToday = getStartOfToday();
+  const startOfYesterday = getStartOfYesterday();
+
+  if (lastCompletedDate >= startOfToday) {
+    return currentStreak;
+  } else if (lastCompletedDate >= startOfYesterday) {
+    return currentStreak + 1;
+  } else {
+    return 1;
+  }
 };

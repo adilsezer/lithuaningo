@@ -1,6 +1,6 @@
 // src/utils/userLevel.ts
 
-import { Stats } from "../services/FirebaseDataService";
+import { Stats } from "../services/data/FirebaseDataService";
 
 // Define user levels
 export enum UserLevel {

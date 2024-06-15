@@ -56,12 +56,6 @@ export default function ProfileScreen() {
           onPress={() => navigateTo("/about")}
         />
         <CustomButton title="Logout" onPress={logout} />
-        {userData.isAdmin && (
-          <CustomButton
-            title="Admin Panel"
-            onPress={() => navigateTo("/admin")}
-          />
-        )}
       </View>
     </ScrollView>
   );

@@ -1,8 +1,7 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { AppDispatch } from "../redux/store";
-import { logIn, logOut } from "../redux/slices/userSlice";
-import { FirebaseDataService } from "./FirebaseDataService";
+import { logIn, logOut } from "@src/redux/slices/userSlice";
+import { AppDispatch } from "@src/redux/store";
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -19,9 +18,6 @@ export const signInWithGoogle = async (
       userInfo.idToken
     );
     const userCredential = await auth().signInWithCredential(googleCredential);
-    const adminStatus = await FirebaseDataService.isAdmin(
-      userCredential.user.uid
-    ); // Use the helper function
 
     dispatch(
       logIn({
@@ -29,7 +25,6 @@ export const signInWithGoogle = async (
         email: userCredential.user.email!,
         id: userCredential.user.uid,
         emailVerified: true,
-        isAdmin: adminStatus,
       })
     );
     return userCredential;

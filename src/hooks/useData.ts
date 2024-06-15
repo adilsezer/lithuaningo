@@ -1,13 +1,11 @@
 import { useEffect, useState } from "react";
-import { Alert } from "react-native";
-import {
-  FirebaseDataService,
-  Stats,
-  LearningCard,
-} from "../services/FirebaseDataService";
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { selectUserData } from "../redux/slices/userSlice";
 import { setLoading } from "../redux/slices/uiSlice";
+
+import sentenceService, { Sentence } from "../services/data/sentenceService";
+import wordService, { Word } from "../services/data/wordService";
+import userStatsService, { Stats } from "../services/data/userStatsService";
 
 interface Leader {
   id: string;
@@ -15,19 +13,21 @@ interface Leader {
   score: number;
 }
 
-interface UseStatsReturn {
+interface UseDataReturn {
   stats: Stats | null;
-  cards: LearningCard[];
+  sentences: Sentence[];
+  words: Word[];
   leaders: Leader[];
   loading: boolean;
   handleAnswer: (isCorrect: boolean, timeSpent: number) => Promise<void>;
 }
 
-const useStats = (): UseStatsReturn => {
+const useData = (): UseDataReturn => {
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
   const [stats, setStats] = useState<Stats | null>(null);
-  const [cards, setCards] = useState<LearningCard[]>([]);
+  const [sentences, setSentences] = useState<Sentence[]>([]);
+  const [words, setWords] = useState<Word[]>([]);
   const [leaders, setLeaders] = useState<Leader[]>([]);
   const [loading, setLoadingState] = useState<boolean>(true);
 
@@ -36,7 +36,7 @@ const useStats = (): UseStatsReturn => {
       dispatch(setLoading(true));
       setLoadingState(true);
 
-      const unsubscribeStats = FirebaseDataService.fetchStats(
+      const unsubscribeStats = userStatsService.fetchStats(
         userData.id,
         (newStats) => {
           setStats(newStats);
@@ -45,18 +45,25 @@ const useStats = (): UseStatsReturn => {
         }
       );
 
-      const loadCards = async () => {
-        const newCards = await FirebaseDataService.fetchLearningCards(
-          userData.id
-        );
-        setCards(newCards);
-        setLoadingState(false);
-        dispatch(setLoading(false));
+      const loadSentencesAndWords = async () => {
+        try {
+          const [newSentences, newWords] = await Promise.all([
+            sentenceService.fetchSentences(),
+            wordService.fetchWords(),
+          ]);
+          setSentences(newSentences);
+          setWords(newWords);
+        } catch (error) {
+          console.error("Error loading sentences and words:", error);
+        } finally {
+          setLoadingState(false);
+          dispatch(setLoading(false));
+        }
       };
 
-      loadCards();
+      loadSentencesAndWords();
 
-      const unsubscribeLeaders = FirebaseDataService.fetchLeaderboard(
+      const unsubscribeLeaders = userStatsService.fetchLeaderboard(
         (newLeaders) => {
           setLeaders(newLeaders);
           setLoadingState(false);
@@ -79,11 +86,7 @@ const useStats = (): UseStatsReturn => {
 
     setLoadingState(true);
     try {
-      await FirebaseDataService.updateUserStats(
-        userData.id,
-        isCorrect,
-        timeSpent
-      );
+      await userStatsService.updateUserStats(userData.id, isCorrect, timeSpent);
     } catch (error) {
       console.error("Error updating user stats:", error);
     } finally {
@@ -91,7 +94,7 @@ const useStats = (): UseStatsReturn => {
     }
   };
 
-  return { stats, cards, leaders, loading, handleAnswer };
+  return { stats, sentences, words, leaders, loading, handleAnswer };
 };
 
-export default useStats;
+export default useData;
