@@ -1,16 +1,18 @@
 // src/screens/QuizScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
-import wordService, { Word } from "../../services/data/wordService";
+import wordService from "../../services/data/wordService";
 import userProfileService from "../../services/data/userProfileService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { useAppSelector } from "@src/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
+import { selectIsLoading, setLoading } from "@src/redux/slices/uiSlice";
 import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
 import CompletedScreen from "@components/CompletedScreen";
+import BackButton from "@components/BackButton";
 import {
   getSortedSentencesBySimilarity,
   getRandomWord,
@@ -29,10 +31,14 @@ const QuizScreen: React.FC = () => {
   const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
   const { styles: globalStyles } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
+  const loading = useAppSelector(selectIsLoading);
+  const dispatch = useAppDispatch();
 
   const loadQuizData = async () => {
     if (!userData?.id) return; // Ensure userData and userData.id are defined
     try {
+      dispatch(setLoading(true)); // Dispatch action to set loading true
+
       const learnedSentenceId =
         await userProfileService.getMostRecentLearnedSentence(userData.id);
       const fetchedLearnedSentence = await sentenceService.fetchSentenceById(
@@ -47,8 +53,11 @@ const QuizScreen: React.FC = () => {
       );
       setSimilarSentences(sortedSentences);
       loadQuestion(sortedSentences[0]); // Load the first question initially
+
+      dispatch(setLoading(false)); // Dispatch action to set loading false
     } catch (error) {
       console.error("Error loading quiz data:", error);
+      dispatch(setLoading(false)); // Dispatch action to set loading false in case of error
     }
   };
 
@@ -65,7 +74,7 @@ const QuizScreen: React.FC = () => {
 
         if (correctWordDetails) break;
 
-        console.error("No word details found for the random word", randomWord);
+        console.warn("No word details found for the random word", randomWord);
       }
 
       if (!correctWordDetails) {
@@ -108,6 +117,7 @@ const QuizScreen: React.FC = () => {
       questionIndex < similarSentences.length
     ) {
       loadQuestion(similarSentences[questionIndex]);
+      setQuizCompleted(false);
     } else if (questionIndex >= similarSentences.length) {
       setQuizCompleted(true);
     }
@@ -126,12 +136,20 @@ const QuizScreen: React.FC = () => {
     setQuestionIndex((prevIndex) => prevIndex + 1);
   };
 
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <Text>Loading...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
+    <ScrollView>
       {quizCompleted ? (
         <CompletedScreen />
       ) : (
-        <>
+        <View style={styles.container}>
           <Text style={globalStyles.title}>Quiz</Text>
           {quizType === "multipleChoice" ? (
             <MultipleChoiceQuiz
@@ -150,15 +168,20 @@ const QuizScreen: React.FC = () => {
           {showContinueButton && (
             <CustomButton title="Continue" onPress={handleContinue} />
           )}
-        </>
+        </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

@@ -21,15 +21,26 @@ const fetchWords = async (): Promise<Word[]> => {
 const fetchWordByGrammaticalForm = async (
   form: string
 ): Promise<Word | null> => {
-  const snapshot = await firestore()
-    .collection("words")
-    .where("grammatical_forms", "array-contains", form)
-    .get();
+  const normalizedForm = form.toLowerCase();
+
+  // Fetch all words (consider fetching only once and reusing the data if the dataset is large)
+  const snapshot = await firestore().collection("words").get();
+
   if (snapshot.empty) {
     return null;
   }
-  const doc = snapshot.docs[0];
-  return { id: doc.id, ...doc.data() } as Word;
+
+  for (const doc of snapshot.docs) {
+    const wordData = doc.data();
+    const grammaticalForms = wordData.grammatical_forms.map((f: string) =>
+      f.toLowerCase()
+    );
+    if (grammaticalForms.includes(normalizedForm)) {
+      return { id: doc.id, ...wordData } as Word;
+    }
+  }
+
+  return null;
 };
 
 export default {

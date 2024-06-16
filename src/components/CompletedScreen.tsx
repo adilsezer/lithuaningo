@@ -4,7 +4,6 @@ import { ScrollView, Text } from "react-native";
 import CustomButton from "./CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useRouter } from "expo-router";
-import BackButton from "./BackButton";
 
 const CompletedScreen: React.FC = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -12,7 +11,6 @@ const CompletedScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
       <Text style={globalStyles.title}>
         You have completed today's session!
       </Text>

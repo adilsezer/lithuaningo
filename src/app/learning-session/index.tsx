@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import userProfileService from "../../services/data/userProfileService";
-import BackButton from "@components/BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector, useAppDispatch } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
@@ -103,7 +102,6 @@ const LearningScreen: React.FC = () => {
 
   return (
     <View>
-      <BackButton />
       <Text style={globalStyles.title}>
         Today you will learn the following sentences.
       </Text>
