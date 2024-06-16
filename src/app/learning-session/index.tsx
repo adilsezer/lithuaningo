@@ -9,7 +9,7 @@ import { useAppSelector, useAppDispatch } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
-import { selectIsLoading, setLoading } from "@src/redux/slices/uiSlice";
+import { setLoading } from "@src/redux/slices/uiSlice";
 
 const LearningScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);

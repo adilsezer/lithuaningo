@@ -2,14 +2,11 @@
 import React, { useEffect } from "react";
 import FlashcardScreen from "../../components/FlashcardScreen";
 import { useLocalSearchParams } from "expo-router";
-import { useAppDispatch } from "@src/redux/hooks";
-import { setLoading } from "@src/redux/slices/uiSlice";
 import { View, Text, StyleSheet } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 const Flashcard = () => {
   const { wordId } = useLocalSearchParams<{ wordId: string }>();
-  const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   useEffect(() => {
@@ -19,14 +16,12 @@ const Flashcard = () => {
     }
 
     const fetchData = async () => {
-      dispatch(setLoading(true)); // Dispatch loading true
       try {
         // Simulate data fetching
         await new Promise((resolve) => setTimeout(resolve, 1000));
       } catch (error) {
         console.error("Error loading flashcard data:", error);
       } finally {
-        dispatch(setLoading(false)); // Dispatch loading false
       }
     };
 

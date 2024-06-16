@@ -7,8 +7,9 @@ import useData from "@src/hooks/useData";
 import StatCard from "@components/StatCard";
 import { formatTime } from "@src/utils/dateUtils";
 import ProgressBar from "@components/ProgressBar";
-import StatusLabel from "@components/StatusLabel";
 import { determineUserLevel } from "@utils/userLevel";
+import CustomButton from "@components/CustomButton";
+import { router } from "expo-router";
 
 const DashboardScreen: React.FC = () => {
   const { stats, loading } = useData();
@@ -57,9 +58,16 @@ const DashboardScreen: React.FC = () => {
         </Text>
         <ProgressBar progress={todayStudiedCards / 15} />
       </View>
-      <Text style={globalStyles.title}>Your Level</Text>
-      <StatusLabel label={userLevel} />
+      <Text style={globalStyles.title}>Review Today's Words?</Text>
+      <CustomButton
+        title="Start Review"
+        onPress={() => router.push("/learning-session")}
+      />
+
       <Text style={[globalStyles.title]}>Your Progress</Text>
+      <View style={styles.row}>
+        <StatCard title="Your Level" value={`${userLevel}`} />
+      </View>
       <View style={styles.row}>
         <StatCard title="Current Streak" value={`${currentStreak} days`} />
         <StatCard title="Longest Streak" value={`${longestStreak} days`} />
