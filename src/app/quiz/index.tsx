@@ -1,7 +1,6 @@
 // src/screens/QuizScreen.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import wordService, { Word } from "../../services/data/wordService";
 import userProfileService from "../../services/data/userProfileService";
@@ -11,6 +10,7 @@ import { selectUserData } from "@src/redux/slices/userSlice";
 import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
+import CompletedScreen from "@components/CompletedScreen";
 import {
   getSortedSentencesBySimilarity,
   getRandomWord,
@@ -26,7 +26,7 @@ const QuizScreen: React.FC = () => {
   const [quizType, setQuizType] = useState<string>("multipleChoice");
   const [questionIndex, setQuestionIndex] = useState<number>(0);
   const [showContinueButton, setShowContinueButton] = useState<boolean>(false);
-  const router = useRouter();
+  const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
   const { styles: globalStyles } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
 
@@ -108,6 +108,8 @@ const QuizScreen: React.FC = () => {
       questionIndex < similarSentences.length
     ) {
       loadQuestion(similarSentences[questionIndex]);
+    } else if (questionIndex >= similarSentences.length) {
+      setQuizCompleted(true);
     }
   }, [questionIndex, similarSentences]);
 
@@ -126,23 +128,29 @@ const QuizScreen: React.FC = () => {
 
   return (
     <View style={styles.container}>
-      <Text style={globalStyles.title}>Quiz</Text>
-      {quizType === "multipleChoice" ? (
-        <MultipleChoiceQuiz
-          question={question}
-          options={options}
-          correctAnswer={correctAnswer}
-          onAnswer={handleAnswer}
-        />
+      {quizCompleted ? (
+        <CompletedScreen />
       ) : (
-        <FillInTheBlankQuiz
-          question={question}
-          correctAnswer={correctAnswer}
-          onAnswer={handleAnswer}
-        />
-      )}
-      {showContinueButton && (
-        <CustomButton title="Continue" onPress={handleContinue} />
+        <>
+          <Text style={globalStyles.title}>Quiz</Text>
+          {quizType === "multipleChoice" ? (
+            <MultipleChoiceQuiz
+              question={question}
+              options={options}
+              correctAnswer={correctAnswer}
+              onAnswer={handleAnswer}
+            />
+          ) : (
+            <FillInTheBlankQuiz
+              question={question}
+              correctAnswer={correctAnswer}
+              onAnswer={handleAnswer}
+            />
+          )}
+          {showContinueButton && (
+            <CustomButton title="Continue" onPress={handleContinue} />
+          )}
+        </>
       )}
     </View>
   );
