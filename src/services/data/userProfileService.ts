@@ -1,4 +1,3 @@
-// services/firebase/userProfileService.ts
 import firestore from "@react-native-firebase/firestore";
 
 const fetchUserProfile = async (userId: string) => {
@@ -33,7 +32,16 @@ const updateUserLearnedSentences = async (
   }
 };
 
+const getMostRecentLearnedSentence = async (
+  userId: string
+): Promise<string> => {
+  const userProfile = await fetchUserProfile(userId);
+  const learnedSentences = userProfile?.learnedSentences || [];
+  return learnedSentences[learnedSentences.length - 1];
+};
+
 export default {
   fetchUserProfile,
   updateUserLearnedSentences,
+  getMostRecentLearnedSentence,
 };

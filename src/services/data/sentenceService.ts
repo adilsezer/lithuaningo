@@ -27,6 +27,15 @@ const fetchSentences = async (): Promise<Sentence[]> => {
   return sortedSentences;
 };
 
+const fetchSentenceById = async (id: string): Promise<Sentence> => {
+  const doc = await firestore().collection("sentences").doc(id).get();
+  if (!doc.exists) {
+    throw new Error("Sentence not found");
+  }
+  return { id: doc.id, ...doc.data() } as Sentence;
+};
+
 export default {
   fetchSentences,
+  fetchSentenceById,
 };

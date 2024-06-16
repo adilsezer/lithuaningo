@@ -18,6 +18,21 @@ const fetchWords = async (): Promise<Word[]> => {
   return wordsData;
 };
 
+const fetchWordByGrammaticalForm = async (
+  form: string
+): Promise<Word | null> => {
+  const snapshot = await firestore()
+    .collection("words")
+    .where("grammatical_forms", "array-contains", form)
+    .get();
+  if (snapshot.empty) {
+    return null;
+  }
+  const doc = snapshot.docs[0];
+  return { id: doc.id, ...doc.data() } as Word;
+};
+
 export default {
   fetchWords,
+  fetchWordByGrammaticalForm,
 };

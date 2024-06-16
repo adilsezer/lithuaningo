@@ -70,6 +70,21 @@ const LearningScreen: React.FC = () => {
     router.push(`/flashcard/${word}`);
   };
 
+  const handleReadyToTest = async () => {
+    if (!userData?.id) return;
+
+    const sentenceIds = sentences.map((sentence) => sentence.id);
+    try {
+      await userProfileService.updateUserLearnedSentences(
+        userData.id,
+        sentenceIds
+      );
+      router.push("/quiz");
+    } catch (error) {
+      console.error("Error updating learned sentences:", error);
+    }
+  };
+
   if (error) {
     return (
       <Text style={[globalStyles.text, { color: globalColors.error }]}>
@@ -122,7 +137,7 @@ const LearningScreen: React.FC = () => {
           </Text>
           <CustomButton
             title="Ready to take the test?"
-            onPress={() => router.push("/quiz")}
+            onPress={handleReadyToTest} // Updated to use handleReadyToTest
           />
         </View>
       ) : (
