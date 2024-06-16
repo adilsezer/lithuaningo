@@ -1,3 +1,5 @@
+// src/utils/quizUtils.ts
+
 import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
 
@@ -41,10 +43,10 @@ export const normalizeSentence = (
     .map((word: string) => formsMap.get(word) || word);
 };
 
-export const getMostSimilarSentence = async (
+export const getSortedSentencesBySimilarity = async (
   learnedSentence: Sentence,
   allSentences: Sentence[]
-): Promise<Sentence> => {
+): Promise<Sentence[]> => {
   const grammaticalFormsMap = await createGrammaticalFormsMap();
 
   const learnedTokens = new Set(
@@ -54,12 +56,7 @@ export const getMostSimilarSentence = async (
     `Normalized learned sentence to tokens: ${[...learnedTokens].join(", ")}`
   );
 
-  let maxSimilarity = 0;
-  let mostSimilarSentence = allSentences[0];
-
-  for (const sentence of allSentences) {
-    if (sentence.id === learnedSentence.id) continue; // Skip the same sentence
-
+  const sentenceSimilarities = allSentences.map((sentence) => {
     const sentenceTokens = new Set(
       normalizeSentence(sentence.sentence, grammaticalFormsMap)
     );
@@ -68,22 +65,18 @@ export const getMostSimilarSentence = async (
         ...sentenceTokens,
       ].join(", ")}`
     );
-
     const similarity = jaccardSimilarity(learnedTokens, sentenceTokens);
     console.log(
       `Comparing normalized learned sentence with normalized sentence: ${[
         ...sentenceTokens,
       ].join(" ")}\nSimilarity: ${similarity}`
     );
+    return { sentence, similarity };
+  });
 
-    if (similarity > maxSimilarity) {
-      maxSimilarity = similarity;
-      mostSimilarSentence = sentence;
-    }
-  }
-
-  console.log(`Most similar sentence: ${mostSimilarSentence.sentence}`);
-  return mostSimilarSentence;
+  // Sort sentences by similarity in descending order
+  sentenceSimilarities.sort((a, b) => b.similarity - a.similarity);
+  return sentenceSimilarities.map((item) => item.sentence);
 };
 
 export const getRandomWord = (words: string[]): string => {

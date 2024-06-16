@@ -10,82 +10,106 @@ import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
+import CustomButton from "@components/CustomButton";
 import {
-  getMostSimilarSentence,
+  getSortedSentencesBySimilarity,
   getRandomWord,
   getRandomOptions,
 } from "@utils/quizUtils";
 
 const QuizScreen: React.FC = () => {
   const [learnedSentence, setLearnedSentence] = useState<Sentence | null>(null);
-  const [similarSentence, setSimilarSentence] = useState<Sentence | null>(null);
+  const [similarSentences, setSimilarSentences] = useState<Sentence[]>([]);
   const [question, setQuestion] = useState<string>("");
   const [options, setOptions] = useState<string[]>([]);
   const [correctAnswer, setCorrectAnswer] = useState<string>("");
   const [quizType, setQuizType] = useState<string>("multipleChoice");
+  const [questionIndex, setQuestionIndex] = useState<number>(0);
+  const [showContinueButton, setShowContinueButton] = useState<boolean>(false);
   const router = useRouter();
   const { styles: globalStyles } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
 
-  useEffect(() => {
-    const loadQuizData = async () => {
-      if (!userData?.id) return; // Ensure userData and userData.id are defined
-      try {
-        const learnedSentenceId =
-          await userProfileService.getMostRecentLearnedSentence(userData.id);
-        const fetchedLearnedSentence = await sentenceService.fetchSentenceById(
-          learnedSentenceId
-        );
-        setLearnedSentence(fetchedLearnedSentence);
+  const loadQuizData = async () => {
+    if (!userData?.id) return; // Ensure userData and userData.id are defined
+    try {
+      const learnedSentenceId =
+        await userProfileService.getMostRecentLearnedSentence(userData.id);
+      const fetchedLearnedSentence = await sentenceService.fetchSentenceById(
+        learnedSentenceId
+      );
+      setLearnedSentence(fetchedLearnedSentence);
 
-        const fetchedSentences = await sentenceService.fetchSentences();
-        const mostSimilarSentence = await getMostSimilarSentence(
-          fetchedLearnedSentence,
-          fetchedSentences
-        );
-        setSimilarSentence(mostSimilarSentence);
+      const fetchedSentences = await sentenceService.fetchSentences();
+      const sortedSentences = await getSortedSentencesBySimilarity(
+        fetchedLearnedSentence,
+        fetchedSentences
+      );
+      setSimilarSentences(sortedSentences);
+      loadQuestion(sortedSentences[0]); // Load the first question initially
+    } catch (error) {
+      console.error("Error loading quiz data:", error);
+    }
+  };
 
-        const randomWord = getRandomWord(
-          mostSimilarSentence.sentence.split(" ")
-        );
-        const correctWordDetails = await wordService.fetchWordByGrammaticalForm(
+  const loadQuestion = async (similarSentence: Sentence) => {
+    try {
+      const sentenceWords = similarSentence.sentence.split(" ");
+      let randomWord, correctWordDetails;
+
+      for (const word of sentenceWords) {
+        randomWord = word;
+        correctWordDetails = await wordService.fetchWordByGrammaticalForm(
           randomWord
         );
 
-        if (!correctWordDetails) {
-          console.error("No word details found for the random word");
-          setQuestion(
-            "No valid question could be generated. Please try again."
-          );
-          setOptions([]);
-          return;
-        }
+        if (correctWordDetails) break;
 
-        const fetchedWords = await wordService.fetchWords();
-        const otherOptions = getRandomOptions(
-          fetchedWords,
-          correctWordDetails.english_translation
-        );
-
-        setQuestion(
-          `In the sentence '${mostSimilarSentence.sentence}', what does '${randomWord}' mean in English?`
-        );
-        setCorrectAnswer(correctWordDetails.english_translation);
-        setOptions(
-          [...otherOptions, correctWordDetails.english_translation].sort(
-            () => Math.random() - 0.5
-          )
-        );
-
-        // Randomly select quiz type
-        setQuizType(Math.random() > 0.5 ? "multipleChoice" : "fillInTheBlank");
-      } catch (error) {
-        console.error("Error loading quiz data:", error);
+        console.error("No word details found for the random word", randomWord);
       }
-    };
 
+      if (!correctWordDetails) {
+        setQuestion("No valid question could be generated. Please try again.");
+        setOptions([]);
+        return;
+      }
+
+      const fetchedWords = await wordService.fetchWords();
+      const otherOptions = getRandomOptions(
+        fetchedWords,
+        correctWordDetails.english_translation
+      );
+
+      setQuestion(
+        `In the sentence '${similarSentence.sentence}', what is the base form of '${randomWord}' in English?`
+      );
+      setCorrectAnswer(correctWordDetails.english_translation);
+      setOptions(
+        [...otherOptions, correctWordDetails.english_translation].sort(
+          () => Math.random() - 0.5
+        )
+      );
+
+      // Randomly select quiz type
+      setQuizType(Math.random() > 0.5 ? "multipleChoice" : "fillInTheBlank");
+      setShowContinueButton(false);
+    } catch (error) {
+      console.error("Error loading question:", error);
+    }
+  };
+
+  useEffect(() => {
     loadQuizData();
   }, [userData]);
+
+  useEffect(() => {
+    if (
+      similarSentences.length > 0 &&
+      questionIndex < similarSentences.length
+    ) {
+      loadQuestion(similarSentences[questionIndex]);
+    }
+  }, [questionIndex, similarSentences]);
 
   const handleAnswer = (isCorrect: boolean) => {
     if (isCorrect) {
@@ -93,6 +117,11 @@ const QuizScreen: React.FC = () => {
     } else {
       alert(`Wrong! The correct answer is "${correctAnswer}".`);
     }
+    setShowContinueButton(true);
+  };
+
+  const handleContinue = () => {
+    setQuestionIndex((prevIndex) => prevIndex + 1);
   };
 
   return (
@@ -111,6 +140,9 @@ const QuizScreen: React.FC = () => {
           correctAnswer={correctAnswer}
           onAnswer={handleAnswer}
         />
+      )}
+      {showContinueButton && (
+        <CustomButton title="Continue" onPress={handleContinue} />
       )}
     </View>
   );

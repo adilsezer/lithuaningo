@@ -27,7 +27,8 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   }, [question]);
 
   const handleFormSubmit = () => {
-    const correct = inputText.trim() === correctAnswer;
+    const correct =
+      inputText.trim().toLowerCase() === correctAnswer.toLowerCase();
     setIsCorrect(correct);
     onAnswer(correct);
     setIsSubmitPressed(true);
