@@ -19,7 +19,6 @@ export const jaccardSimilarity = (
 export const createGrammaticalFormsMap = async (): Promise<
   Map<string, string>
 > => {
-  console.log("Fetching words for grammatical forms map...");
   const words: Word[] = await wordService.fetchWords();
   const grammaticalFormsMap = new Map<string, string>();
 
@@ -29,7 +28,6 @@ export const createGrammaticalFormsMap = async (): Promise<
     });
   });
 
-  console.log("Grammatical forms map created:", grammaticalFormsMap);
   return grammaticalFormsMap;
 };
 
@@ -49,40 +47,63 @@ export const getSortedSentencesBySimilarity = async (
 ): Promise<Sentence[]> => {
   const grammaticalFormsMap = await createGrammaticalFormsMap();
 
-  const learnedTokens = new Set(
-    normalizeSentence(learnedSentence.sentence, grammaticalFormsMap)
-  );
-  console.log(
-    `Normalized learned sentence to tokens: ${[...learnedTokens].join(", ")}`
+  // Define a set of stopwords to exclude
+  const stopwords = new Set([
+    "yra",
+    "aš",
+    "buvo",
+    "Mano",
+    "ir",
+    "tu",
+    "jis",
+    "ji",
+    "mes",
+    "jie",
+    "jos",
+    "tai",
+  ]);
+
+  // Function to filter out stopwords and numbers
+  const filterTokens = (tokens: Set<string>): Set<string> => {
+    return new Set(
+      [...tokens].filter(
+        (token) => !stopwords.has(token) && !/^\d+$/.test(token)
+      )
+    );
+  };
+
+  const learnedTokens = filterTokens(
+    new Set(normalizeSentence(learnedSentence.sentence, grammaticalFormsMap))
   );
 
   const sentenceSimilarities = allSentences.map((sentence) => {
-    const sentenceTokens = new Set(
-      normalizeSentence(sentence.sentence, grammaticalFormsMap)
+    const sentenceTokens = filterTokens(
+      new Set(normalizeSentence(sentence.sentence, grammaticalFormsMap))
     );
-    console.log(
-      `Normalized sentence '${sentence.sentence}' to tokens: ${[
-        ...sentenceTokens,
-      ].join(", ")}`
-    );
+
     const similarity = jaccardSimilarity(learnedTokens, sentenceTokens);
+
+    // Log the comparison result
     console.log(
-      `Comparing normalized learned sentence with normalized sentence: ${[
-        ...sentenceTokens,
-      ].join(" ")}\nSimilarity: ${similarity}`
+      `Comparing "${learnedSentence.sentence}" with "${sentence.sentence}"`
     );
+    console.log(`Similarity Score: ${similarity}`);
+
     return { sentence, similarity };
   });
 
   // Sort sentences by similarity in descending order
   sentenceSimilarities.sort((a, b) => b.similarity - a.similarity);
+
+  // Log the sorted results
+  console.log("Sorted Similarities:");
+  sentenceSimilarities.forEach(({ sentence, similarity }) => {
+    console.log(`Sentence: "${sentence.sentence}", Similarity: ${similarity}`);
+  });
+
   return sentenceSimilarities.map((item) => item.sentence);
 };
-
-export const getRandomWord = (words: string[]): string => {
-  return words[Math.floor(Math.random() * words.length)];
-};
-
+//
 export const getRandomOptions = (
   words: Word[],
   correctAnswer: string

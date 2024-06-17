@@ -9,22 +9,38 @@ import { selectUserData } from "@src/redux/slices/userSlice";
 import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
+import CompletedScreen from "@components/CompletedScreen";
+import { clearData, retrieveData, storeData } from "@utils/storageUtil";
+import BackButton from "@components/BackButton";
+import { getCurrentDateKey } from "@utils/dateUtils";
 
-const LearningScreen: React.FC = () => {
+const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [allWordsClicked, setAllWordsClicked] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [completed, setCompleted] = useState(false);
   const router = useRouter();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
 
+  const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
+
+  useEffect(() => {
+    const checkCompletionStatus = async () => {
+      const completionStatus = await retrieveData<boolean>(
+        COMPLETION_STATUS_KEY
+      );
+      setCompleted(completionStatus ?? false);
+    };
+    checkCompletionStatus();
+  }, []);
+
   useEffect(() => {
     const loadSentencesAndWords = async () => {
       if (!userData?.id) return;
 
-      dispatch(setLoading(true)); // Dispatch loading true
+      dispatch(setLoading(true));
       try {
         const [fetchedSentences, userProfile] = await Promise.all([
           sentenceService.fetchSentences(),
@@ -47,7 +63,7 @@ const LearningScreen: React.FC = () => {
         console.error("Error loading sentences and words:", error);
         setError("Failed to load sentences. Please try again later.");
       } finally {
-        dispatch(setLoading(false)); // Dispatch loading false
+        dispatch(setLoading(false));
       }
     };
 
@@ -60,13 +76,17 @@ const LearningScreen: React.FC = () => {
         sentence.sentence.split(" ")
       );
       const allClicked = allWords.every((word) => clickedWords.includes(word));
-      setAllWordsClicked(allClicked);
+      if (allClicked) {
+        storeData(COMPLETION_STATUS_KEY, true);
+        handleReadyToTest();
+        setCompleted(true);
+      }
     }
   }, [sentences, clickedWords]);
 
   const handleWordClick = (word: string) => {
     dispatch(addClickedWord(word));
-    router.push(`/flashcard/${word}`);
+    router.push(`/learning/${word}`);
   };
 
   const handleReadyToTest = async () => {
@@ -78,30 +98,68 @@ const LearningScreen: React.FC = () => {
         userData.id,
         sentenceIds
       );
-      router.push("/quiz");
     } catch (error) {
       console.error("Error updating learned sentences:", error);
     }
   };
 
+  const handleClearCompletionStatus = async () => {
+    await clearData(COMPLETION_STATUS_KEY);
+    setCompleted(false);
+  };
+
+  if (completed) {
+    return (
+      <View>
+        <CompletedScreen
+          displayText="Good job reviewing all the cards!"
+          buttonText="Ready to take the test?"
+          navigationRoute="/learning/quiz"
+        />
+        <CustomButton
+          title="Go to Dashboard"
+          onPress={() => {
+            router.push("/dashboard");
+          }}
+        ></CustomButton>
+        <CustomButton
+          title="Clear Completion Status"
+          onPress={handleClearCompletionStatus}
+          style={{
+            backgroundColor: globalColors.error,
+            marginTop: 20,
+            alignSelf: "center",
+          }}
+        />
+      </View>
+    );
+  }
+
   if (error) {
     return (
-      <Text style={[globalStyles.text, { color: globalColors.error }]}>
-        {error}
-      </Text>
+      <View>
+        <BackButton />
+        <Text style={[globalStyles.text, { color: globalColors.error }]}>
+          {error}
+        </Text>
+      </View>
     );
   }
 
   if (sentences.length === 0) {
     return (
-      <Text style={globalStyles.text}>
-        No new sentences to learn. Please check back later.
-      </Text>
+      <View>
+        <BackButton />
+        <Text style={globalStyles.text}>
+          No new sentences to learn. Please check back later.
+        </Text>
+      </View>
     );
   }
 
   return (
     <View>
+      <BackButton />
       <Text style={globalStyles.title}>
         Today you will learn the following sentences.
       </Text>
@@ -128,21 +186,9 @@ const LearningScreen: React.FC = () => {
           ))}
         </View>
       ))}
-      {allWordsClicked ? (
-        <View style={styles.allWordsClickedSection}>
-          <Text style={globalStyles.subtitle}>
-            Good job reviewing the cards!
-          </Text>
-          <CustomButton
-            title="Ready to take the test?"
-            onPress={handleReadyToTest} // Updated to use handleReadyToTest
-          />
-        </View>
-      ) : (
-        <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
-          Click all words to unlock the proceed button.
-        </Text>
-      )}
+      <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
+        Click all words to unlock the proceed button.
+      </Text>
     </View>
   );
 };
@@ -159,16 +205,16 @@ const styles = StyleSheet.create({
   wordContainer: {
     marginHorizontal: 6,
     marginVertical: 6,
-    borderRadius: 8, // Rounded edges for a modern look
+    borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 6,
   },
   wordText: {
-    fontSize: 20, // Slightly larger font for readability
+    fontSize: 20,
   },
   allWordsClickedSection: {
     marginVertical: 40,
   },
 });
 
-export default LearningScreen;
+export default SentencesScreen;

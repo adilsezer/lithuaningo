@@ -61,7 +61,7 @@ const DashboardScreen: React.FC = () => {
       <Text style={globalStyles.title}>Review Today's Words?</Text>
       <CustomButton
         title="Start Review"
-        onPress={() => router.push("/learning-session")}
+        onPress={() => router.push("/dashboard/learn")}
       />
 
       <Text style={[globalStyles.title]}>Your Progress</Text>

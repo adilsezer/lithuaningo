@@ -32,16 +32,16 @@ const updateUserLearnedSentences = async (
   }
 };
 
-const getMostRecentLearnedSentence = async (
+const getMostRecentTwoLearnedSentences = async (
   userId: string
-): Promise<string> => {
+): Promise<string[]> => {
   const userProfile = await fetchUserProfile(userId);
   const learnedSentences = userProfile?.learnedSentences || [];
-  return learnedSentences[learnedSentences.length - 1];
+  return learnedSentences.slice(-2);
 };
 
 export default {
   fetchUserProfile,
   updateUserLearnedSentences,
-  getMostRecentLearnedSentence,
+  getMostRecentTwoLearnedSentences,
 };

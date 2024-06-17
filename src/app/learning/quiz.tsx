@@ -1,6 +1,12 @@
-// src/screens/QuizScreen.tsx
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import wordService from "../../services/data/wordService";
 import userProfileService from "../../services/data/userProfileService";
@@ -12,15 +18,14 @@ import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
 import CompletedScreen from "@components/CompletedScreen";
-import BackButton from "@components/BackButton";
 import {
   getSortedSentencesBySimilarity,
-  getRandomWord,
   getRandomOptions,
-} from "@utils/quizUtils";
+} from "@utils/learningUtils";
+import { storeData, retrieveData, clearData } from "@utils/storageUtil";
+import { getCurrentDateKey } from "@utils/dateUtils";
 
 const QuizScreen: React.FC = () => {
-  const [learnedSentence, setLearnedSentence] = useState<Sentence | null>(null);
   const [similarSentences, setSimilarSentences] = useState<Sentence[]>([]);
   const [question, setQuestion] = useState<string>("");
   const [options, setOptions] = useState<string[]>([]);
@@ -29,30 +34,64 @@ const QuizScreen: React.FC = () => {
   const [questionIndex, setQuestionIndex] = useState<number>(0);
   const [showContinueButton, setShowContinueButton] = useState<boolean>(false);
   const [quizCompleted, setQuizCompleted] = useState<boolean>(false);
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const loading = useAppSelector(selectIsLoading);
   const dispatch = useAppDispatch();
+
+  const QUIZ_PROGRESS_KEY = `quizProgress_${
+    userData?.id
+  }_${getCurrentDateKey()}`;
 
   const loadQuizData = async () => {
     if (!userData?.id) return; // Ensure userData and userData.id are defined
     try {
       dispatch(setLoading(true)); // Dispatch action to set loading true
 
-      const learnedSentenceId =
-        await userProfileService.getMostRecentLearnedSentence(userData.id);
-      const fetchedLearnedSentence = await sentenceService.fetchSentenceById(
-        learnedSentenceId
-      );
-      setLearnedSentence(fetchedLearnedSentence);
+      const recentLearnedSentenceIds =
+        await userProfileService.getMostRecentTwoLearnedSentences(userData.id);
 
-      const fetchedSentences = await sentenceService.fetchSentences();
-      const sortedSentences = await getSortedSentencesBySimilarity(
-        fetchedLearnedSentence,
-        fetchedSentences
+      // Fetch the two most recent learned sentences
+      const fetchedLearnedSentences = await Promise.all(
+        recentLearnedSentenceIds.map((id) =>
+          sentenceService.fetchSentenceById(id)
+        )
       );
-      setSimilarSentences(sortedSentences);
-      loadQuestion(sortedSentences[0]); // Load the first question initially
+
+      // Fetch all sentences
+      const fetchedSentences = await sentenceService.fetchSentences();
+
+      // Get 5 most similar sentences for each learned sentence
+      const sortedSentencesPromises = fetchedLearnedSentences.map(
+        (learnedSentence) =>
+          getSortedSentencesBySimilarity(learnedSentence, fetchedSentences)
+      );
+      const sortedSentencesArrays = await Promise.all(sortedSentencesPromises);
+
+      // Take the top 5 similar sentences from each array
+      const topSimilarSentences = sortedSentencesArrays.flatMap((sentences) =>
+        sentences.slice(0, 5)
+      );
+
+      // Shuffle the combined array to randomize the order of the sentences
+      const shuffledSentences = topSimilarSentences.sort(
+        () => Math.random() - 0.5
+      );
+
+      setSimilarSentences(shuffledSentences);
+
+      // Load stored progress if available
+      const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
+      if (storedProgress !== null) {
+        if (storedProgress >= shuffledSentences.length) {
+          setQuizCompleted(true);
+        } else {
+          setQuestionIndex(storedProgress);
+          loadQuestion(shuffledSentences[storedProgress]);
+        }
+      } else {
+        loadQuestion(shuffledSentences[0]); // Load the first question initially
+      }
 
       dispatch(setLoading(false)); // Dispatch action to set loading false
     } catch (error) {
@@ -61,6 +100,7 @@ const QuizScreen: React.FC = () => {
     }
   };
 
+  //
   const loadQuestion = async (similarSentence: Sentence) => {
     try {
       const sentenceWords = similarSentence.sentence.split(" ");
@@ -133,23 +173,44 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleContinue = () => {
-    setQuestionIndex((prevIndex) => prevIndex + 1);
+    const nextIndex = questionIndex + 1;
+    setQuestionIndex(nextIndex);
+    storeData(QUIZ_PROGRESS_KEY, nextIndex);
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <Text>Loading...</Text>
-      </View>
-    );
-  }
+  const handleClearCompletionStatus = async () => {
+    await clearData(QUIZ_PROGRESS_KEY);
+    setQuizCompleted(false);
+  };
 
   return (
-    <ScrollView>
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       {quizCompleted ? (
-        <CompletedScreen />
+        <View>
+          <CompletedScreen
+            displayText="You have completed today's session!"
+            buttonText="Go to Leaderboard"
+            navigationRoute="/dashboard/leaderboard"
+          />
+          <CustomButton
+            title="Clear Completion Status"
+            onPress={handleClearCompletionStatus}
+            style={{
+              backgroundColor: "red",
+              marginTop: 20,
+              alignSelf: "center",
+            }}
+          />
+        </View>
       ) : (
-        <View style={styles.container}>
+        <View>
+          <Text
+            style={[globalStyles.subtitle, { color: globalColors.primary }]}
+          >
+            {questionIndex + 1} / {similarSentences.length} Questions Complete
+          </Text>
           <Text style={globalStyles.title}>Quiz</Text>
           {quizType === "multipleChoice" ? (
             <MultipleChoiceQuiz
@@ -170,14 +231,11 @@ const QuizScreen: React.FC = () => {
           )}
         </View>
       )}
-    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",

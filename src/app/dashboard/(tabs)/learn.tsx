@@ -10,7 +10,7 @@ export default function Tab() {
   const dispatch = useAppDispatch();
   const handleStartLearning = () => {
     dispatch(resetClickedWords());
-    router.push("/learning-session");
+    router.push("/learning/sentences");
   };
   const { styles: globalStyles } = useThemeStyles();
 

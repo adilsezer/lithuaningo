@@ -43,3 +43,8 @@ export const calculateStreak = (
     return 1;
   }
 };
+
+export const getCurrentDateKey = () => {
+  const today = new Date();
+  return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+};
