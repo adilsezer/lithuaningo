@@ -51,19 +51,18 @@ const DashboardScreen: React.FC = () => {
           Today's Learning
         </Text>
         <Text style={[styles.cardValue, { color: colors.cardText }]}>
-          Cards Studied Today: {todayStudiedCards}
+          Completed Questions: {todayStudiedCards}
         </Text>
         <Text style={[styles.cardValue, { color: colors.cardText }]}>
           Time Spent Today: {formatTime(minutesSpentToday)}
         </Text>
-        <ProgressBar progress={todayStudiedCards / 15} />
+        <ProgressBar progress={todayStudiedCards / 10} />
       </View>
       <Text style={globalStyles.title}>Review Today's Words?</Text>
       <CustomButton
         title="Start Review"
         onPress={() => router.push("/dashboard/learn")}
       />
-
       <Text style={[globalStyles.title]}>Your Progress</Text>
       <View style={styles.row}>
         <StatCard title="Your Level" value={`${userLevel}`} />

@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { selectUserData } from "../redux/slices/userSlice";
 import { setLoading } from "../redux/slices/uiSlice";
-
 import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
 import userStatsService, { Stats } from "../services/data/userStatsService";

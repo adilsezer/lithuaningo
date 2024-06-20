@@ -1,7 +1,156 @@
-// src/utils/quizUtils.ts
-
+// src/utils/learningUtils.ts
 import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
+import userProfileService from "../services/data/userProfileService";
+import { retrieveData } from "@utils/storageUtil";
+import { Dispatch } from "redux";
+import { setLoading } from "@src/redux/slices/uiSlice";
+
+export interface QuizState {
+  similarSentences: Sentence[];
+  question: string;
+  options: string[];
+  correctAnswer: string;
+  quizType: string;
+  questionIndex: number;
+  showContinueButton: boolean;
+  quizCompleted: boolean;
+}
+
+export const initializeQuizState = (): QuizState => ({
+  similarSentences: [],
+  question: "",
+  options: [],
+  correctAnswer: "",
+  quizType: "multipleChoice",
+  questionIndex: 0,
+  showContinueButton: false,
+  quizCompleted: false,
+});
+
+export const loadQuizData = async (
+  userData: any,
+  dispatch: Dispatch<any>,
+  setLoadingAction: typeof setLoading,
+  setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
+  QUIZ_PROGRESS_KEY: string
+) => {
+  if (!userData?.id) return;
+  try {
+    dispatch(setLoadingAction(true));
+
+    const recentLearnedSentenceIds =
+      await userProfileService.getMostRecentTwoLearnedSentences(userData.id);
+
+    const fetchedLearnedSentences = await Promise.all(
+      recentLearnedSentenceIds.map((id) =>
+        sentenceService.fetchSentenceById(id)
+      )
+    );
+
+    const fetchedSentences = await sentenceService.fetchSentences();
+
+    const maxOrder = Math.max(
+      ...fetchedLearnedSentences.map((sentence) => sentence.displayOrder)
+    );
+
+    const filteredSentences = fetchedSentences.filter(
+      (sentence) => sentence.displayOrder <= maxOrder
+    );
+
+    const sortedSentencesPromises = fetchedLearnedSentences.map(
+      (learnedSentence) =>
+        getSortedSentencesBySimilarity(learnedSentence, filteredSentences)
+    );
+
+    const sortedSentencesArrays = await Promise.all(sortedSentencesPromises);
+
+    const topSimilarSentences = sortedSentencesArrays.flatMap((sentences) =>
+      sentences.slice(0, 5)
+    );
+
+    setQuizState((prev) => ({
+      ...prev,
+      similarSentences: topSimilarSentences,
+    }));
+
+    const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
+    if (storedProgress !== null) {
+      if (storedProgress >= topSimilarSentences.length) {
+        setQuizState((prev) => ({ ...prev, quizCompleted: true }));
+      } else {
+        setQuizState((prev) => ({ ...prev, questionIndex: storedProgress }));
+        loadQuestion(topSimilarSentences[storedProgress], setQuizState);
+      }
+    } else {
+      loadQuestion(topSimilarSentences[0], setQuizState);
+    }
+
+    dispatch(setLoadingAction(false));
+  } catch (error) {
+    console.error("Error loading quiz data:", error);
+    dispatch(setLoadingAction(false));
+  }
+};
+
+export const loadQuestion = async (
+  similarSentence: Sentence,
+  setQuizState: React.Dispatch<React.SetStateAction<QuizState>>
+) => {
+  try {
+    const sentenceWords = similarSentence.sentence.split(" ");
+    const skippedWords = getSkippedWords();
+    let randomWord: string | undefined;
+    let correctWordDetails: any;
+
+    const shuffledWords = sentenceWords.sort(() => 0.5 - Math.random());
+
+    for (const word of shuffledWords) {
+      if (skippedWords.includes(word)) {
+        continue;
+      }
+
+      randomWord = word;
+      correctWordDetails = await wordService.fetchWordByGrammaticalForm(
+        randomWord
+      );
+
+      if (correctWordDetails) break;
+
+      console.warn("No word details found for the random word", randomWord);
+    }
+
+    if (!correctWordDetails) {
+      setQuizState((prev) => ({
+        ...prev,
+        question: "No valid question could be generated. Please try again.",
+        options: [],
+      }));
+      return;
+    }
+
+    const fetchedWords = await wordService.fetchWords();
+    const otherOptions = getRandomOptions(
+      fetchedWords,
+      correctWordDetails.englishTranslation
+    );
+
+    setQuizState((prev) => ({
+      ...prev,
+      question: `In the sentence '${similarSentence.sentence}', what is the base form of '${randomWord}' in English?`,
+      correctAnswer: correctWordDetails.englishTranslation,
+      options: [...otherOptions, correctWordDetails.englishTranslation].sort(
+        () => Math.random() - 0.5
+      ),
+      quizType: Math.random() > 0.5 ? "multipleChoice" : "fillInTheBlank",
+      showContinueButton: false,
+    }));
+  } catch (error) {
+    console.error("Error loading question:", error);
+  }
+};
+
+// Utility functions
 
 export const tokenizeSentence = (sentence: string): Set<string> => {
   return new Set(sentence.toLowerCase().split(" "));
@@ -23,7 +172,7 @@ export const createGrammaticalFormsMap = async (): Promise<
   const grammaticalFormsMap = new Map<string, string>();
 
   words.forEach((word: Word) => {
-    word.grammatical_forms.forEach((form: string) => {
+    word.grammaticalForms.forEach((form: string) => {
       grammaticalFormsMap.set(form, word.id);
     });
   });
@@ -48,20 +197,7 @@ export const getSortedSentencesBySimilarity = async (
   const grammaticalFormsMap = await createGrammaticalFormsMap();
 
   // Define a set of stopwords to exclude
-  const stopwords = new Set([
-    "yra",
-    "aš",
-    "buvo",
-    "Mano",
-    "ir",
-    "tu",
-    "jis",
-    "ji",
-    "mes",
-    "jie",
-    "jos",
-    "tai",
-  ]);
+  const stopwords = new Set(getSkippedWords());
 
   // Function to filter out stopwords and numbers
   const filterTokens = (tokens: Set<string>): Set<string> => {
@@ -83,33 +219,38 @@ export const getSortedSentencesBySimilarity = async (
 
     const similarity = jaccardSimilarity(learnedTokens, sentenceTokens);
 
-    // Log the comparison result
-    console.log(
-      `Comparing "${learnedSentence.sentence}" with "${sentence.sentence}"`
-    );
-    console.log(`Similarity Score: ${similarity}`);
-
     return { sentence, similarity };
   });
 
   // Sort sentences by similarity in descending order
   sentenceSimilarities.sort((a, b) => b.similarity - a.similarity);
 
-  // Log the sorted results
-  console.log("Sorted Similarities:");
-  sentenceSimilarities.forEach(({ sentence, similarity }) => {
-    console.log(`Sentence: "${sentence.sentence}", Similarity: ${similarity}`);
-  });
-
   return sentenceSimilarities.map((item) => item.sentence);
 };
-//
+
 export const getRandomOptions = (
   words: Word[],
   correctAnswer: string
 ): string[] => {
   const options = words
-    .map((word: Word) => word.english_translation)
+    .map((word: Word) => word.englishTranslation)
     .filter((option: string) => option !== correctAnswer);
   return options.sort(() => 0.5 - Math.random()).slice(0, 3); // Get 3 random options
+};
+
+export const getSkippedWords = () => {
+  return [
+    "yra",
+    "aš",
+    "buvo",
+    "Mano",
+    "ir",
+    "tu",
+    "jis",
+    "ji",
+    "mes",
+    "jie",
+    "jos",
+    "tai",
+  ];
 };

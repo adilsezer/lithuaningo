@@ -53,7 +53,7 @@ const SentencesScreen: React.FC = () => {
         const filteredSentences = fetchedSentences
           .filter(
             (sentence: Sentence) =>
-              sentence.is_main_sentence &&
+              sentence.isMainSentence &&
               !learnedSentenceIds.includes(sentence.id)
           )
           .slice(0, 2);

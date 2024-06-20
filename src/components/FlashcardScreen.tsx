@@ -22,7 +22,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         const selectedWord = fetchedWords.find(
           (w) =>
             w.id.toLowerCase() === wordId.toLowerCase() ||
-            w.grammatical_forms.some(
+            w.grammaticalForms.some(
               (form) => form.toLowerCase() === wordId.toLowerCase()
             )
         );
@@ -53,13 +53,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   return (
     <View>
       <BackButton />
-      <Image source={{ uri: word.image_url }} style={styles.image} />
+      <Image source={{ uri: word.imageUrl }} style={styles.image} />
       <Text style={globalStyles.title}>Word: {word.id}</Text>
       <Text style={[globalStyles.title, { color: globalColors.primary }]}>
-        Translation: {word.english_translation}
+        Translation: {word.englishTranslation}
       </Text>
-      {word.additional_info && (
-        <Text style={globalStyles.subtitle}>{word.additional_info}</Text>
+      {word.additionalInfo && (
+        <Text style={globalStyles.subtitle}>{word.additionalInfo}</Text>
       )}
     </View>
   );
