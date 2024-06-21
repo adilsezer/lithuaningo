@@ -11,6 +11,7 @@ interface MultipleChoiceQuizProps {
   image: string;
   options: string[];
   correctAnswer: string;
+  questionIndex: number;
   onAnswer: (isCorrect: boolean) => void;
 }
 
@@ -21,6 +22,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   correctAnswer,
   translation,
   image,
+  questionIndex,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -32,7 +34,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     setSelectedOption(null);
     setOptionSelected(false);
     setIsCorrect(null);
-  }, [question]);
+  }, [questionIndex]);
 
   const handleOptionPress = (option: string) => {
     if (!optionSelected) {

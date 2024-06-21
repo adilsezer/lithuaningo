@@ -109,6 +109,7 @@ const QuizScreen: React.FC = () => {
                 correctAnswer={quizState.correctAnswer}
                 translation={quizState.translation}
                 image={quizState.image}
+                questionIndex={quizState.questionIndex}
                 onAnswer={handleAnswer}
               />
             ) : (
@@ -118,6 +119,7 @@ const QuizScreen: React.FC = () => {
                 correctAnswer={quizState.correctAnswer}
                 translation={quizState.translation}
                 image={quizState.image}
+                questionIndex={quizState.questionIndex}
                 onAnswer={handleAnswer}
               />
             )}

@@ -10,6 +10,7 @@ interface FillInTheBlankQuizProps {
   translation: string;
   image: string;
   correctAnswer: string;
+  questionIndex: number;
   onAnswer: (isCorrect: boolean) => void;
 }
 
@@ -19,6 +20,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   correctAnswer,
   translation,
   image,
+  questionIndex,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -30,7 +32,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
     setInputText("");
     setIsSubmitPressed(false);
     setIsCorrect(null);
-  }, [question]);
+  }, [questionIndex]);
 
   const normalizeAnswer = (answer: string): string => {
     const lithuanianMap: Record<string, string> = {
