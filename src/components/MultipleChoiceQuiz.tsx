@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
@@ -79,40 +79,53 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   };
 
   return (
-    <ScrollView>
+    <View>
       <Text style={globalStyles.subtitle}>{renderBoldText(quizText)}</Text>
       <Text style={globalStyles.title}>{question}</Text>
+      <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && <Image source={{ uri: image }} style={styles.image} />}
-      {options.map((option, index) => (
-        <View key={index} style={styles.optionContainer}>
-          <CustomButton
-            title={option}
-            onPress={() => handleOptionPress(option)}
-            style={[
-              globalStyles.button,
-              {
-                paddingVertical: 14,
-                marginVertical: 6,
-                backgroundColor: getOptionBackgroundColor(option),
-              },
-            ]}
-          />
+      {!optionSelected &&
+        options.map((option, index) => (
+          <View key={index} style={styles.optionContainer}>
+            <CustomButton
+              title={option}
+              onPress={() => handleOptionPress(option)}
+              style={[
+                globalStyles.button,
+                {
+                  paddingVertical: 14,
+                  marginVertical: 6,
+                  backgroundColor: getOptionBackgroundColor(option),
+                },
+              ]}
+            />
+          </View>
+        ))}
+      {optionSelected && (
+        <View>
+          <Text style={styles.selectedOptionText}>
+            You answered:{" "}
+            <Text style={{ fontWeight: "bold" }}>{selectedOption}</Text>
+          </Text>
+          <Text style={styles.correctAnswerText}>
+            Correct answer:{" "}
+            <Text style={{ fontWeight: "bold" }}>{correctAnswer}</Text>
+          </Text>
         </View>
-      ))}
+      )}
       {isCorrect !== null && (
         <View>
-          <ExpandableDetails translation={translation}></ExpandableDetails>
           <Text
             style={[
               styles.feedbackText,
               { color: isCorrect ? globalColors.active : globalColors.error },
             ]}
           >
-            {isCorrect ? "Correct" : `Correct Answer: ${correctAnswer}`}
+            {isCorrect ? "Correct" : "Incorrect"}
           </Text>
         </View>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
@@ -126,9 +139,19 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     fontWeight: "bold",
   },
+  selectedOptionText: {
+    marginTop: 10,
+    fontSize: 16,
+    alignSelf: "center",
+  },
+  correctAnswerText: {
+    marginTop: 5,
+    fontSize: 16,
+    alignSelf: "center",
+  },
   image: {
-    width: 300,
-    height: 300,
+    width: 250,
+    height: 250,
     marginBottom: 10,
     alignSelf: "center",
     borderRadius: 10,

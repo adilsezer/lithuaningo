@@ -5,6 +5,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  ScrollView,
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
@@ -23,6 +24,7 @@ import {
   QuizState,
   initializeQuizState,
 } from "@utils/learningUtils";
+import BackButton from "@components/BackButton";
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
@@ -78,49 +80,53 @@ const QuizScreen: React.FC = () => {
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
     >
-      {quizState.quizCompleted ? (
-        <View>
-          <CompletedScreen
-            displayText="You have completed today's session!"
-            buttonText="Go to Leaderboard"
-            navigationRoute="/dashboard/leaderboard"
-          />
-        </View>
-      ) : (
-        <View>
-          <Text
-            style={[globalStyles.subtitle, { color: globalColors.primary }]}
-          >
-            {quizState.questionIndex + 1} / {quizState.similarSentences.length}{" "}
-            Questions Complete
-          </Text>
-          {quizState.quizType === "multipleChoice" ||
-          quizState.quizType === "trueFalse" ? (
-            <MultipleChoiceQuiz
-              question={quizState.question}
-              quizText={quizState.quizText}
-              options={quizState.options}
-              correctAnswer={quizState.correctAnswer}
-              translation={quizState.translation}
-              image={quizState.image}
-              onAnswer={handleAnswer}
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        {quizState.quizCompleted ? (
+          <View>
+            <CompletedScreen
+              displayText="You have completed today's session!"
+              buttonText="Go to Leaderboard"
+              navigationRoute="/dashboard/leaderboard"
             />
-          ) : (
-            <FillInTheBlankQuiz
-              question={quizState.question}
-              quizText={quizState.quizText}
-              correctAnswer={quizState.correctAnswer}
-              translation={quizState.translation}
-              image={quizState.image}
-              onAnswer={handleAnswer}
-            />
-          )}
-          {quizState.showContinueButton && (
-            <CustomButton title="Continue" onPress={handleContinue} />
-          )}
-        </View>
-      )}
+          </View>
+        ) : (
+          <View>
+            <BackButton />
+            <Text
+              style={[globalStyles.subtitle, { color: globalColors.primary }]}
+            >
+              {quizState.questionIndex + 1} /{" "}
+              {quizState.similarSentences.length} Questions Complete
+            </Text>
+            {quizState.quizType === "multipleChoice" ||
+            quizState.quizType === "trueFalse" ? (
+              <MultipleChoiceQuiz
+                question={quizState.question}
+                quizText={quizState.quizText}
+                options={quizState.options}
+                correctAnswer={quizState.correctAnswer}
+                translation={quizState.translation}
+                image={quizState.image}
+                onAnswer={handleAnswer}
+              />
+            ) : (
+              <FillInTheBlankQuiz
+                question={quizState.question}
+                quizText={quizState.quizText}
+                correctAnswer={quizState.correctAnswer}
+                translation={quizState.translation}
+                image={quizState.image}
+                onAnswer={handleAnswer}
+              />
+            )}
+            {quizState.showContinueButton && (
+              <CustomButton title="Continue" onPress={handleContinue} />
+            )}
+          </View>
+        )}
+      </ScrollView>
     </KeyboardAvoidingView>
   );
 };

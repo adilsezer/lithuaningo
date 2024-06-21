@@ -107,7 +107,7 @@ const SentencesScreen: React.FC = () => {
     return (
       <View>
         <CompletedScreen
-          displayText="Good job reviewing all the cards!"
+          displayText="Good job reviewing all the cards today!"
           buttonText="Ready to take the test?"
           navigationRoute="/learning/quiz"
         />
@@ -116,7 +116,7 @@ const SentencesScreen: React.FC = () => {
           onPress={() => {
             router.push("/dashboard");
           }}
-        ></CustomButton>
+        />
       </View>
     );
   }

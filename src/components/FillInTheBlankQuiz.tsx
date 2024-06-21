@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  TextInput,
-  StyleSheet,
-  Image,
-  ScrollView,
-} from "react-native";
+import { View, Text, TextInput, StyleSheet, Image } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
@@ -39,9 +32,29 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
     setIsCorrect(null);
   }, [question]);
 
+  const normalizeAnswer = (answer: string): string => {
+    const lithuanianMap: Record<string, string> = {
+      Ą: "A",
+      Ę: "E",
+      Ė: "E",
+      Į: "I",
+      Ų: "U",
+      Ū: "U",
+      Č: "C",
+      Š: "S",
+      Ž: "Z",
+    };
+
+    return answer
+      .toUpperCase()
+      .replace(/[ĄĘĖĮŲŪČŠŽ]/g, (match) => lithuanianMap[match] || match)
+      .toLowerCase();
+  };
+
   const handleFormSubmit = () => {
     const correct =
-      inputText.trim().toLowerCase() === correctAnswer.toLowerCase();
+      normalizeAnswer(inputText.trim()) ===
+      normalizeAnswer(correctAnswer.trim());
     setIsCorrect(correct);
     onAnswer(correct);
     setIsSubmitPressed(true);
@@ -61,26 +74,36 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   };
 
   return (
-    <ScrollView>
+    <View>
       {!isSubmitPressed && (
         <Text style={globalStyles.subtitle}>{quizText}</Text>
       )}
       <Text style={globalStyles.title}>
         {isSubmitPressed ? getQuestionWithAnswer() : question}
       </Text>
+      <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && <Image source={{ uri: image }} style={styles.image} />}
+      {isSubmitPressed && (
+        <View>
+          <Text style={styles.selectedOptionText}>
+            You answered:{" "}
+            <Text style={{ fontWeight: "bold" }}>{inputText}</Text>
+          </Text>
+          <Text style={styles.correctAnswerText}>
+            Correct answer:{" "}
+            <Text style={{ fontWeight: "bold" }}>{correctAnswer}</Text>
+          </Text>
+        </View>
+      )}
       {isCorrect !== null && (
         <View>
-          <ExpandableDetails translation={translation}></ExpandableDetails>
           <Text
             style={[
               styles.feedbackText,
               { color: isCorrect ? globalColors.active : globalColors.error },
             ]}
           >
-            {isCorrect
-              ? "Correct"
-              : `Incorrect. Correct Answer: ${correctAnswer}`}
+            {isCorrect ? "Correct" : "Incorrect"}
           </Text>
         </View>
       )}
@@ -101,7 +124,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
           />
         </View>
       )}
-    </ScrollView>
+    </View>
   );
 };
 
@@ -112,9 +135,19 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     fontWeight: "bold",
   },
+  selectedOptionText: {
+    marginTop: 10,
+    fontSize: 16,
+    alignSelf: "center",
+  },
+  correctAnswerText: {
+    marginTop: 5,
+    fontSize: 16,
+    alignSelf: "center",
+  },
   image: {
-    width: 300,
-    height: 300,
+    width: 250,
+    height: 250,
     marginBottom: 10,
     alignSelf: "center",
     borderRadius: 10,

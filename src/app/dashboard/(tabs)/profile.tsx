@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, ScrollView, StyleSheet } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
 import useAuthMethods from "@src/hooks/useAuthMethods";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { selectUserData, selectIsLoggedIn } from "@src/redux/slices/userSlice";
@@ -37,6 +37,7 @@ export default function ProfileScreen() {
 
     await clearData(COMPLETION_STATUS_KEY);
     await clearData(QUIZ_PROGRESS_KEY);
+    Alert.alert("Removed Progress Data");
   };
 
   if (!isLoggedIn || !userData) {

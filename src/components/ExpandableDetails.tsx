@@ -25,7 +25,7 @@ const ExpandableDetails: React.FC<ExpandableDetailsProps> = ({
           color={globalColors.secondary}
         />
         <Text style={[globalStyles.text, { marginLeft: 8 }]}>
-          Click to see the translation
+          Click to see the English translation
         </Text>
       </TouchableOpacity>
       {isExpanded && <Text style={globalStyles.text}>{translation}</Text>}
@@ -35,7 +35,7 @@ const ExpandableDetails: React.FC<ExpandableDetailsProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    margin: 15,
+    margin: 10,
     borderWidth: 1,
     padding: 10,
     borderRadius: 5,
