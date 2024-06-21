@@ -19,6 +19,8 @@ export interface QuizState {
   questionIndex: number;
   showContinueButton: boolean;
   quizCompleted: boolean;
+  correctAnswers: number;
+  wrongAnswers: number;
 }
 
 export const initializeQuizState = (): QuizState => ({
@@ -33,6 +35,8 @@ export const initializeQuizState = (): QuizState => ({
   questionIndex: 0,
   showContinueButton: false,
   quizCompleted: false,
+  correctAnswers: 0,
+  wrongAnswers: 0,
 });
 
 export const loadQuizData = async (
