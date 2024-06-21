@@ -10,7 +10,7 @@ import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import CompletedScreen from "@components/CompletedScreen";
-import { clearData, retrieveData, storeData } from "@utils/storageUtil";
+import { retrieveData, storeData } from "@utils/storageUtil";
 import BackButton from "@components/BackButton";
 import { getCurrentDateKey } from "@utils/dateUtils";
 
@@ -103,11 +103,6 @@ const SentencesScreen: React.FC = () => {
     }
   };
 
-  const handleClearCompletionStatus = async () => {
-    await clearData(COMPLETION_STATUS_KEY);
-    setCompleted(false);
-  };
-
   if (completed) {
     return (
       <View>
@@ -122,15 +117,6 @@ const SentencesScreen: React.FC = () => {
             router.push("/dashboard");
           }}
         ></CustomButton>
-        <CustomButton
-          title="Clear Completion Status"
-          onPress={handleClearCompletionStatus}
-          style={{
-            backgroundColor: globalColors.error,
-            marginTop: 20,
-            alignSelf: "center",
-          }}
-        />
       </View>
     );
   }

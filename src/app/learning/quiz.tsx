@@ -14,7 +14,7 @@ import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
 import CompletedScreen from "@components/CompletedScreen";
-import { storeData, clearData } from "@utils/storageUtil";
+import { storeData } from "@utils/storageUtil";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import useData from "../../hooks/useData";
 import {
@@ -75,11 +75,6 @@ const QuizScreen: React.FC = () => {
     storeData(QUIZ_PROGRESS_KEY, nextIndex);
   };
 
-  const handleClearCompletionStatus = async () => {
-    await clearData(QUIZ_PROGRESS_KEY);
-    setQuizState((prev) => ({ ...prev, quizCompleted: false }));
-  };
-
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -90,15 +85,6 @@ const QuizScreen: React.FC = () => {
             displayText="You have completed today's session!"
             buttonText="Go to Leaderboard"
             navigationRoute="/dashboard/leaderboard"
-          />
-          <CustomButton
-            title="Clear Completion Status"
-            onPress={handleClearCompletionStatus}
-            style={{
-              backgroundColor: "red",
-              marginTop: 20,
-              alignSelf: "center",
-            }}
           />
         </View>
       ) : (
