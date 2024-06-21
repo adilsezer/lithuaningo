@@ -1,11 +1,14 @@
-// src/components/MultipleChoiceQuiz.tsx
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image, ScrollView } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
+import ExpandableDetails from "./ExpandableDetails";
 
 interface MultipleChoiceQuizProps {
   question: string;
+  quizText: string;
+  translation: string;
+  image: string;
   options: string[];
   correctAnswer: string;
   onAnswer: (isCorrect: boolean) => void;
@@ -13,8 +16,11 @@ interface MultipleChoiceQuizProps {
 
 const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   question,
+  quizText,
   options,
   correctAnswer,
+  translation,
+  image,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -53,9 +59,30 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     return globalColors.inactive;
   };
 
+  const renderBoldText = (text: string) => {
+    const parts = text.split("**");
+    return parts.map((part, index) => (
+      <Text
+        key={index}
+        style={
+          index % 2 === 1
+            ? {
+                fontFamily: "Roboto-Bold",
+                fontSize: 18,
+              }
+            : {}
+        }
+      >
+        {part}
+      </Text>
+    ));
+  };
+
   return (
-    <View>
+    <ScrollView>
+      <Text style={globalStyles.subtitle}>{renderBoldText(quizText)}</Text>
       <Text style={globalStyles.title}>{question}</Text>
+      {image && <Image source={{ uri: image }} style={styles.image} />}
       {options.map((option, index) => (
         <View key={index} style={styles.optionContainer}>
           <CustomButton
@@ -73,16 +100,19 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         </View>
       ))}
       {isCorrect !== null && (
-        <Text
-          style={[
-            styles.feedbackText,
-            { color: isCorrect ? globalColors.active : globalColors.error },
-          ]}
-        >
-          {isCorrect ? "Correct" : `Correct Answer: ${correctAnswer}`}
-        </Text>
+        <View>
+          <ExpandableDetails translation={translation}></ExpandableDetails>
+          <Text
+            style={[
+              styles.feedbackText,
+              { color: isCorrect ? globalColors.active : globalColors.error },
+            ]}
+          >
+            {isCorrect ? "Correct" : `Correct Answer: ${correctAnswer}`}
+          </Text>
+        </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -95,6 +125,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     alignSelf: "center",
     fontWeight: "bold",
+  },
+  image: {
+    width: 300,
+    height: 300,
+    marginBottom: 10,
+    alignSelf: "center",
+    borderRadius: 10,
   },
 });
 

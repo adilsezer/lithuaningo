@@ -109,18 +109,24 @@ const QuizScreen: React.FC = () => {
             {quizState.questionIndex + 1} / {quizState.similarSentences.length}{" "}
             Questions Complete
           </Text>
-          <Text style={globalStyles.title}>Quiz</Text>
-          {quizState.quizType === "multipleChoice" ? (
+          {quizState.quizType === "multipleChoice" ||
+          quizState.quizType === "trueFalse" ? (
             <MultipleChoiceQuiz
               question={quizState.question}
+              quizText={quizState.quizText}
               options={quizState.options}
               correctAnswer={quizState.correctAnswer}
+              translation={quizState.translation}
+              image={quizState.image}
               onAnswer={handleAnswer}
             />
           ) : (
             <FillInTheBlankQuiz
               question={quizState.question}
+              quizText={quizState.quizText}
               correctAnswer={quizState.correctAnswer}
+              translation={quizState.translation}
+              image={quizState.image}
               onAnswer={handleAnswer}
             />
           )}

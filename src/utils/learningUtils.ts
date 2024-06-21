@@ -5,13 +5,17 @@ import userProfileService from "../services/data/userProfileService";
 import { retrieveData } from "@utils/storageUtil";
 import { Dispatch } from "redux";
 import { setLoading } from "@src/redux/slices/uiSlice";
+import { toTitleCase } from "./stringUtils";
 
 export interface QuizState {
   similarSentences: Sentence[];
+  quizText: string;
   question: string;
+  image: string;
+  translation: string;
   options: string[];
   correctAnswer: string;
-  quizType: string;
+  quizType: "multipleChoice" | "fillInTheBlank" | "trueFalse";
   questionIndex: number;
   showContinueButton: boolean;
   quizCompleted: boolean;
@@ -19,7 +23,10 @@ export interface QuizState {
 
 export const initializeQuizState = (): QuizState => ({
   similarSentences: [],
+  quizText: "",
   question: "",
+  translation: "",
+  image: "",
   options: [],
   correctAnswer: "",
   quizType: "multipleChoice",
@@ -101,7 +108,7 @@ export const loadQuestion = async (
     const sentenceWords = similarSentence.sentence.split(" ");
     const skippedWords = getSkippedWords();
     let randomWord: string | undefined;
-    let correctWordDetails: any;
+    let correctWordDetails: Word | null = null;
 
     const shuffledWords = sentenceWords.sort(() => 0.5 - Math.random());
 
@@ -120,10 +127,13 @@ export const loadQuestion = async (
       console.warn("No word details found for the random word", randomWord);
     }
 
-    if (!correctWordDetails) {
+    if (!correctWordDetails || !randomWord) {
       setQuizState((prev) => ({
         ...prev,
         question: "No valid question could be generated. Please try again.",
+        quizText: "",
+        translation: "",
+        image: "",
         options: [],
       }));
       return;
@@ -135,14 +145,52 @@ export const loadQuestion = async (
       correctWordDetails.englishTranslation
     );
 
+    const questionType = getRandomQuestionType();
+
+    let question = "";
+    let quizText = "";
+    let options: string[] = [];
+    let translation = similarSentence.englishTranslation;
+    let image = correctWordDetails.imageUrl;
+    let correctAnswer = toTitleCase(correctWordDetails.englishTranslation);
+
+    if (questionType === "multipleChoice") {
+      quizText = `What is the base form of **${toTitleCase(
+        randomWord
+      )}** in the sentence below?`;
+      question = similarSentence.sentence;
+      options = [...otherOptions, correctAnswer]
+        .map(toTitleCase)
+        .sort(() => Math.random() - 0.5);
+    } else if (questionType === "fillInTheBlank") {
+      const sentenceWithBlank = similarSentence.sentence.replace(
+        randomWord,
+        "[...]"
+      );
+      quizText = `Complete the sentence:`;
+      question = sentenceWithBlank;
+      correctAnswer = toTitleCase(randomWord); // Use the hidden word itself
+      options = [];
+    } else if (questionType === "trueFalse") {
+      const randomBool = Math.random() > 0.5;
+      const givenTranslation = randomBool ? correctAnswer : otherOptions[0];
+      quizText = `Does **${toTitleCase(randomWord)}** mean **${toTitleCase(
+        givenTranslation
+      )}** in the sentence below?`;
+      question = similarSentence.sentence;
+      correctAnswer = randomBool ? "True" : "False";
+      options = ["True", "False"];
+    }
+
     setQuizState((prev) => ({
       ...prev,
-      question: `In the sentence '${similarSentence.sentence}', what is the base form of '${randomWord}' in English?`,
-      correctAnswer: correctWordDetails.englishTranslation,
-      options: [...otherOptions, correctWordDetails.englishTranslation].sort(
-        () => Math.random() - 0.5
-      ),
-      quizType: Math.random() > 0.5 ? "multipleChoice" : "fillInTheBlank",
+      question,
+      quizText,
+      translation,
+      image,
+      correctAnswer,
+      options,
+      quizType: questionType,
       showContinueButton: false,
     }));
   } catch (error) {
@@ -238,7 +286,7 @@ export const getRandomOptions = (
   return options.sort(() => 0.5 - Math.random()).slice(0, 3); // Get 3 random options
 };
 
-export const getSkippedWords = () => {
+export const getSkippedWords = (): string[] => {
   return [
     "yra",
     "aš",
@@ -253,4 +301,18 @@ export const getSkippedWords = () => {
     "jos",
     "tai",
   ];
+};
+
+export const getRandomQuestionType = ():
+  | "multipleChoice"
+  | "fillInTheBlank"
+  | "trueFalse" => {
+  const randomValue = Math.random();
+  if (randomValue < 0.5) {
+    return "multipleChoice";
+  } else if (randomValue < 0.8) {
+    return "fillInTheBlank";
+  } else {
+    return "trueFalse";
+  }
 };

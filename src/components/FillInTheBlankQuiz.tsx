@@ -1,18 +1,31 @@
-// src/components/FillInTheBlankQuiz.tsx
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Image,
+  ScrollView,
+} from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
+import ExpandableDetails from "./ExpandableDetails";
 
 interface FillInTheBlankQuizProps {
   question: string;
+  quizText: string;
+  translation: string;
+  image: string;
   correctAnswer: string;
   onAnswer: (isCorrect: boolean) => void;
 }
 
 const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   question,
+  quizText,
   correctAnswer,
+  translation,
+  image,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -34,25 +47,42 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
     setIsSubmitPressed(true);
   };
 
+  const getQuestionWithAnswer = () => {
+    const placeholderIndex = question.indexOf("[...]");
+    let adjustedAnswer = correctAnswer;
+
+    // Check if the placeholder is at the beginning of the sentence
+    if (placeholderIndex !== 0) {
+      adjustedAnswer =
+        correctAnswer.charAt(0).toLowerCase() + correctAnswer.slice(1);
+    }
+
+    return question.replace("[...]", adjustedAnswer);
+  };
+
   return (
-    <View>
+    <ScrollView>
       {!isSubmitPressed && (
-        <Text style={globalStyles.subtitle}>
-          Fill in the blank with the correct answer
-        </Text>
+        <Text style={globalStyles.subtitle}>{quizText}</Text>
       )}
-      <Text style={globalStyles.title}>{question}</Text>
+      <Text style={globalStyles.title}>
+        {isSubmitPressed ? getQuestionWithAnswer() : question}
+      </Text>
+      {image && <Image source={{ uri: image }} style={styles.image} />}
       {isCorrect !== null && (
-        <Text
-          style={[
-            styles.feedbackText,
-            { color: isCorrect ? globalColors.active : globalColors.error },
-          ]}
-        >
-          {isCorrect
-            ? "Correct"
-            : `Incorrect. Correct Answer: ${correctAnswer}`}
-        </Text>
+        <View>
+          <ExpandableDetails translation={translation}></ExpandableDetails>
+          <Text
+            style={[
+              styles.feedbackText,
+              { color: isCorrect ? globalColors.active : globalColors.error },
+            ]}
+          >
+            {isCorrect
+              ? "Correct"
+              : `Incorrect. Correct Answer: ${correctAnswer}`}
+          </Text>
+        </View>
       )}
       {!isSubmitPressed && (
         <View>
@@ -71,7 +101,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
           />
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
@@ -81,6 +111,13 @@ const styles = StyleSheet.create({
     fontSize: 16,
     alignSelf: "center",
     fontWeight: "bold",
+  },
+  image: {
+    width: 300,
+    height: 300,
+    marginBottom: 10,
+    alignSelf: "center",
+    borderRadius: 10,
   },
 });
 
