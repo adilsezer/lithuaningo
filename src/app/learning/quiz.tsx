@@ -72,12 +72,14 @@ const QuizScreen: React.FC = () => {
       ...prev,
       showContinueButton: true,
     }));
+    storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex + 1);
   };
 
   const handleContinue = () => {
-    const nextIndex = quizState.questionIndex + 1;
-    setQuizState((prev) => ({ ...prev, questionIndex: nextIndex }));
-    storeData(QUIZ_PROGRESS_KEY, nextIndex);
+    setQuizState((prev) => ({
+      ...prev,
+      questionIndex: quizState.questionIndex + 1,
+    }));
   };
 
   return (
@@ -92,6 +94,7 @@ const QuizScreen: React.FC = () => {
               displayText="You have completed today's session!"
               buttonText="Go to Leaderboard"
               navigationRoute="/dashboard/leaderboard"
+              showStats={true}
             />
           </View>
         ) : (

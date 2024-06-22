@@ -98,10 +98,6 @@ const updateUserStats = async (
     }
 
     let newTodayAnsweredQuestions = userStats.todayAnsweredQuestions ?? 0;
-    let newTodayCorrectAnsweredQuestions =
-      userStats.todayCorrectAnsweredQuestions ?? 0;
-    let newTodayWrongAnsweredQuestions =
-      userStats.todayWrongAnsweredQuestions ?? 0;
     let newMinutesSpentToday = userStats.minutesSpentToday ?? 0;
 
     const newCurrentStreak = calculateStreak(
@@ -116,8 +112,14 @@ const updateUserStats = async (
     const newTotalAnsweredQuestions =
       (userStats.totalAnsweredQuestions ?? 0) + 1;
     newTodayAnsweredQuestions += 1;
-    newTodayCorrectAnsweredQuestions += 1;
-    newTodayWrongAnsweredQuestions += 1;
+
+    const newTodayCorrectAnsweredQuestions = isCorrect
+      ? (userStats.todayCorrectAnsweredQuestions ?? 0) + 1
+      : userStats.todayCorrectAnsweredQuestions ?? 0;
+
+    const newTodayWrongAnsweredQuestions = !isCorrect
+      ? (userStats.todayWrongAnsweredQuestions ?? 0) + 1
+      : userStats.todayWrongAnsweredQuestions ?? 0;
 
     newMinutesSpentToday += timeSpent;
     const newMinutesSpentTotal = (userStats.minutesSpentTotal ?? 0) + timeSpent;

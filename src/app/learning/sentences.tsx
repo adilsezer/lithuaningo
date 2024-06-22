@@ -110,6 +110,7 @@ const SentencesScreen: React.FC = () => {
           displayText="Good job reviewing all the words today!"
           buttonText="Ready to take the test?"
           navigationRoute="/learning/quiz"
+          showStats={false}
         />
         <CustomButton
           title="Go to Dashboard"
