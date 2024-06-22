@@ -10,8 +10,10 @@ export interface Stats {
   longestStreak: number;
   minutesSpentToday: number;
   minutesSpentTotal: number;
-  todayStudiedCards: number;
-  totalStudiedCards: number;
+  todayAnsweredQuestions: number;
+  todayCorrectAnsweredQuestions: number;
+  todayWrongAnsweredQuestions: number;
+  totalAnsweredQuestions: number;
   weeklyCorrectAnswers: number;
 }
 
@@ -84,8 +86,10 @@ const updateUserStats = async (
       userStats = {
         currentStreak: 0,
         longestStreak: 0,
-        totalStudiedCards: 0,
-        todayStudiedCards: 0,
+        totalAnsweredQuestions: 0,
+        todayAnsweredQuestions: 0,
+        todayCorrectAnsweredQuestions: 0,
+        todayWrongAnsweredQuestions: 0,
         minutesSpentToday: 0,
         minutesSpentTotal: 0,
         lastCompleted: firestore.Timestamp.fromDate(new Date(0)),
@@ -93,7 +97,11 @@ const updateUserStats = async (
       };
     }
 
-    let newTodayStudiedCards = userStats.todayStudiedCards ?? 0;
+    let newTodayAnsweredQuestions = userStats.todayAnsweredQuestions ?? 0;
+    let newTodayCorrectAnsweredQuestions =
+      userStats.todayCorrectAnsweredQuestions ?? 0;
+    let newTodayWrongAnsweredQuestions =
+      userStats.todayWrongAnsweredQuestions ?? 0;
     let newMinutesSpentToday = userStats.minutesSpentToday ?? 0;
 
     const newCurrentStreak = calculateStreak(
@@ -105,8 +113,11 @@ const updateUserStats = async (
       newCurrentStreak
     );
 
-    const newTotalStudiedCards = (userStats.totalStudiedCards ?? 0) + 1;
-    newTodayStudiedCards += 1;
+    const newTotalAnsweredQuestions =
+      (userStats.totalAnsweredQuestions ?? 0) + 1;
+    newTodayAnsweredQuestions += 1;
+    newTodayCorrectAnsweredQuestions += 1;
+    newTodayWrongAnsweredQuestions += 1;
 
     newMinutesSpentToday += timeSpent;
     const newMinutesSpentTotal = (userStats.minutesSpentTotal ?? 0) + timeSpent;
@@ -116,8 +127,10 @@ const updateUserStats = async (
       : userStats.weeklyCorrectAnswers ?? 0;
 
     await userStatsRef.update({
-      totalStudiedCards: newTotalStudiedCards,
-      todayStudiedCards: newTodayStudiedCards,
+      totalAnsweredQuestions: newTotalAnsweredQuestions,
+      todayAnsweredQuestions: newTodayAnsweredQuestions,
+      todayCorrectAnsweredQuestions: newTodayCorrectAnsweredQuestions,
+      todayWrongAnsweredQuestions: newTodayWrongAnsweredQuestions,
       minutesSpentToday: newMinutesSpentToday,
       minutesSpentTotal: newMinutesSpentTotal,
       currentStreak: newCurrentStreak,

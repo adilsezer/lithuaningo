@@ -19,8 +19,6 @@ export interface QuizState {
   questionIndex: number;
   showContinueButton: boolean;
   quizCompleted: boolean;
-  correctAnswerNumber: number;
-  wrongAnswerNumber: number;
 }
 
 export const initializeQuizState = (): QuizState => ({
@@ -35,8 +33,6 @@ export const initializeQuizState = (): QuizState => ({
   questionIndex: 0,
   showContinueButton: false,
   quizCompleted: false,
-  correctAnswerNumber: 0,
-  wrongAnswerNumber: 0,
 });
 
 export const loadQuizData = async (
@@ -282,11 +278,11 @@ export const getSortedSentencesBySimilarity = async (
 
 export const getRandomOptions = (
   words: Word[],
-  correctAnswer: string
+  correctAnswerText: string
 ): string[] => {
   const options = words
     .map((word: Word) => word.englishTranslation)
-    .filter((option: string) => option !== correctAnswer);
+    .filter((option: string) => option !== correctAnswerText);
   return options.sort(() => 0.5 - Math.random()).slice(0, 3); // Get 3 random options
 };
 

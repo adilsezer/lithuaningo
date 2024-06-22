@@ -28,8 +28,8 @@ const DashboardScreen: React.FC = () => {
   const {
     currentStreak = 0,
     longestStreak = 0,
-    totalStudiedCards = 0,
-    todayStudiedCards = 0,
+    totalAnsweredQuestions: totalAnsweredQuestions = 0,
+    todayAnsweredQuestions: todayAnsweredQuestions = 0,
     minutesSpentToday = 0,
     minutesSpentTotal = 0,
   } = stats || {};
@@ -51,12 +51,12 @@ const DashboardScreen: React.FC = () => {
           Today's Learning
         </Text>
         <Text style={[styles.cardValue, { color: colors.cardText }]}>
-          Completed Questions: {todayStudiedCards}
+          Completed Questions: {todayAnsweredQuestions}
         </Text>
         <Text style={[styles.cardValue, { color: colors.cardText }]}>
           Time Spent Today: {formatTime(minutesSpentToday)}
         </Text>
-        <ProgressBar progress={todayStudiedCards / 10} />
+        <ProgressBar progress={todayAnsweredQuestions / 10} />
       </View>
       <Text style={globalStyles.title}>Review Today's Words?</Text>
       <CustomButton
@@ -72,7 +72,10 @@ const DashboardScreen: React.FC = () => {
         <StatCard title="Longest Streak" value={`${longestStreak} days`} />
       </View>
       <View style={styles.row}>
-        <StatCard title="Total Cards Studied" value={`${totalStudiedCards}`} />
+        <StatCard
+          title="Total Answered Questions"
+          value={`${totalAnsweredQuestions}`}
+        />
         <StatCard
           title="Time Spent Total"
           value={formatTime(minutesSpentTotal)}

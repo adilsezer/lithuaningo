@@ -107,7 +107,7 @@ const SentencesScreen: React.FC = () => {
     return (
       <View>
         <CompletedScreen
-          displayText="Good job reviewing all the cards today!"
+          displayText="Good job reviewing all the words today!"
           buttonText="Ready to take the test?"
           navigationRoute="/learning/quiz"
         />

@@ -71,12 +71,6 @@ const QuizScreen: React.FC = () => {
     setQuizState((prev) => ({
       ...prev,
       showContinueButton: true,
-      correctAnswerNumber: isCorrect
-        ? prev.correctAnswerNumber + 1
-        : prev.correctAnswerNumber,
-      wrongAnswerNumber: !isCorrect
-        ? prev.wrongAnswerNumber + 1
-        : prev.wrongAnswerNumber,
     }));
   };
 
@@ -98,9 +92,6 @@ const QuizScreen: React.FC = () => {
               displayText="You have completed today's session!"
               buttonText="Go to Leaderboard"
               navigationRoute="/dashboard/leaderboard"
-              totalQuestionNumber={quizState.similarSentences.length}
-              correctAnswerNumber={quizState.correctAnswerNumber}
-              wrongAnswerNumber={quizState.wrongAnswerNumber}
             />
           </View>
         ) : (

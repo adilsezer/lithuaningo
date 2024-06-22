@@ -5,60 +5,62 @@ import CustomButton from "./CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons"; // Ensure you have this package installed
+import useData from "@src/hooks/useData";
 
 interface CompletedScreenProps {
   displayText: string;
   buttonText: string;
   navigationRoute: string;
-  totalQuestionNumber?: number;
-  correctAnswerNumber?: number;
-  wrongAnswerNumber?: number;
+  showStats: boolean;
 }
 
 const CompletedScreen: React.FC<CompletedScreenProps> = ({
   displayText,
   buttonText,
   navigationRoute,
-  totalQuestionNumber,
-  correctAnswerNumber,
-  wrongAnswerNumber,
+  showStats,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const router = useRouter();
+  const { stats } = useData();
 
   return (
     <ScrollView>
       <Text style={[globalStyles.title, { marginTop: 40 }]}>{displayText}</Text>
-      {(totalQuestionNumber !== undefined ||
-        correctAnswerNumber !== undefined ||
-        wrongAnswerNumber !== undefined) && (
+      {showStats && (
         <View style={styles.statsContainer}>
-          {totalQuestionNumber !== undefined && (
+          {stats?.todayAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="help-circle-outline"
                 size={24}
                 color={globalColors.primary}
               />
-              <Text style={styles.statText}>{totalQuestionNumber}</Text>
+              <Text style={styles.statText}>
+                {stats.todayAnsweredQuestions}
+              </Text>
               <Text style={globalStyles.text}>Total Questions</Text>
             </View>
           )}
-          {correctAnswerNumber !== undefined && (
+          {stats?.todayCorrectAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="checkmark-circle-outline"
                 size={24}
                 color="green"
               />
-              <Text style={[styles.statText]}>{correctAnswerNumber}</Text>
+              <Text style={[styles.statText]}>
+                {stats?.todayCorrectAnsweredQuestions}
+              </Text>
               <Text style={globalStyles.text}>Correct Answers</Text>
             </View>
           )}
-          {wrongAnswerNumber !== undefined && (
+          {stats?.todayWrongAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons name="close-circle-outline" size={24} color="red" />
-              <Text style={styles.statText}>{wrongAnswerNumber}</Text>
+              <Text style={styles.statText}>
+                {stats?.todayWrongAnsweredQuestions}
+              </Text>
               <Text style={globalStyles.text}>Wrong Answers</Text>
             </View>
           )}
