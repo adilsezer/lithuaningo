@@ -39,9 +39,14 @@ const QuizScreen: React.FC = () => {
 
   useEffect(() => {
     if (userData) {
-      loadQuizData(userData, dispatch, setQuizState, QUIZ_PROGRESS_KEY);
+      dispatch(setLoading(true));
+      loadQuizData(userData, dispatch, setQuizState, QUIZ_PROGRESS_KEY).finally(
+        () => {
+          dispatch(setLoading(false));
+        }
+      );
     }
-  }, [userData]);
+  }, [userData, dispatch]);
 
   useEffect(() => {
     if (

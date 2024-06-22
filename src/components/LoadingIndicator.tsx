@@ -12,40 +12,30 @@ const LoadingIndicator = () => {
   const minimumDisplayTime = 200; // Minimum display time in milliseconds
 
   useEffect(() => {
-    let showTimer: ReturnType<typeof setTimeout>;
-    let hideTimer: ReturnType<typeof setTimeout>;
+    let timer: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
-      showTimer = setTimeout(() => {
-        setDelayedIsLoading(true);
-      }, 500);
-    } else {
-      if (delayedIsLoading) {
-        hideTimer = setTimeout(() => {
-          setDelayedIsLoading(false);
-        }, minimumDisplayTime);
-      } else {
+      setDelayedIsLoading(true);
+    } else if (delayedIsLoading) {
+      timer = setTimeout(() => {
         setDelayedIsLoading(false);
-      }
+      }, minimumDisplayTime);
     }
 
     return () => {
-      if (showTimer) {
-        clearTimeout(showTimer);
-      }
-      if (hideTimer) {
-        clearTimeout(hideTimer);
+      if (timer) {
+        clearTimeout(timer);
       }
     };
   }, [isLoading, delayedIsLoading]);
 
   useEffect(() => {
-    if (!isLoading && delayedIsLoading) {
-      setTimeout(() => setShowLoading(false), minimumDisplayTime);
-    } else if (delayedIsLoading) {
+    if (delayedIsLoading) {
       setShowLoading(true);
+    } else {
+      setShowLoading(false);
     }
-  }, [delayedIsLoading, isLoading]);
+  }, [delayedIsLoading]);
 
   return (
     <Modal

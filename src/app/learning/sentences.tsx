@@ -68,7 +68,7 @@ const SentencesScreen: React.FC = () => {
     };
 
     loadSentencesAndWords();
-  }, [userData]);
+  }, [userData, dispatch]);
 
   useEffect(() => {
     if (sentences.length > 0) {

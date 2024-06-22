@@ -1,9 +1,10 @@
-// components/FlashcardScreen.tsx
 import React, { useEffect, useState } from "react";
 import { View, Text, Image, StyleSheet } from "react-native";
 import wordService, { Word } from "../services/data/wordService";
 import BackButton from "./BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { useAppDispatch } from "@src/redux/hooks";
+import { setLoading } from "@src/redux/slices/uiSlice";
 
 interface FlashcardScreenProps {
   wordId: string;
@@ -12,6 +13,7 @@ interface FlashcardScreenProps {
 const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const [word, setWord] = useState<Word | null>(null);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
     const loadWord = async () => {
@@ -30,11 +32,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         setWord(selectedWord || null);
       } catch (error) {
         console.error("Error loading word:", error);
+      } finally {
+        dispatch(setLoading(false));
       }
     };
 
     loadWord();
-  }, [wordId]);
+  }, [wordId, dispatch]);
 
   if (!word) {
     return (
