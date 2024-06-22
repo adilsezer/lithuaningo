@@ -5,7 +5,6 @@ import firestore, {
 import { calculateStreak } from "@src/utils/dateUtils";
 
 export interface Stats {
-  correctAnswers: number;
   currentStreak: number;
   lastCompleted: FirebaseFirestoreTypes.Timestamp;
   longestStreak: number;
@@ -89,7 +88,6 @@ const updateUserStats = async (
         todayStudiedCards: 0,
         minutesSpentToday: 0,
         minutesSpentTotal: 0,
-        correctAnswers: 0,
         lastCompleted: firestore.Timestamp.fromDate(new Date(0)),
         weeklyCorrectAnswers: 0,
       };
@@ -124,9 +122,6 @@ const updateUserStats = async (
       minutesSpentTotal: newMinutesSpentTotal,
       currentStreak: newCurrentStreak,
       longestStreak: newLongestStreak,
-      correctAnswers: isCorrect
-        ? (userStats.correctAnswers ?? 0) + 1
-        : userStats.correctAnswers ?? 0,
       weeklyCorrectAnswers: newWeeklyCorrectAnswers,
       lastCompleted: firestore.FieldValue.serverTimestamp(),
     });

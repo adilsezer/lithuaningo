@@ -5,21 +5,21 @@ import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
 
 interface MultipleChoiceQuizProps {
-  question: string;
-  quizText: string;
+  sentenceText: string;
+  questionText: string;
   translation: string;
   image: string;
   options: string[];
-  correctAnswer: string;
+  correctAnswerText: string;
   questionIndex: number;
   onAnswer: (isCorrect: boolean) => void;
 }
 
 const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
-  question,
-  quizText,
+  sentenceText,
+  questionText,
   options,
-  correctAnswer,
+  correctAnswerText,
   translation,
   image,
   questionIndex,
@@ -38,7 +38,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
 
   const handleOptionPress = (option: string) => {
     if (!optionSelected) {
-      const correct = option === correctAnswer;
+      const correct = option === correctAnswerText;
       setSelectedOption(option);
       setIsCorrect(correct);
       onAnswer(correct);
@@ -51,11 +51,11 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       return globalColors.inactive;
     }
     if (selectedOption === option) {
-      return option === correctAnswer
+      return option === correctAnswerText
         ? globalColors.active
         : globalColors.error;
     }
-    if (option === correctAnswer) {
+    if (option === correctAnswerText) {
       return globalColors.active;
     }
     return globalColors.inactive;
@@ -82,8 +82,8 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
 
   return (
     <View>
-      <Text style={globalStyles.subtitle}>{renderBoldText(quizText)}</Text>
-      <Text style={globalStyles.title}>{question}</Text>
+      <Text style={globalStyles.subtitle}>{renderBoldText(questionText)}</Text>
+      <Text style={globalStyles.title}>{sentenceText}</Text>
       <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && <Image source={{ uri: image }} style={styles.image} />}
       {!optionSelected &&
@@ -111,7 +111,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
           </Text>
           <Text style={styles.correctAnswerText}>
             Correct answer:{" "}
-            <Text style={{ fontWeight: "bold" }}>{correctAnswer}</Text>
+            <Text style={{ fontWeight: "bold" }}>{correctAnswerText}</Text>
           </Text>
         </View>
       )}

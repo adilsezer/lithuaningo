@@ -5,19 +5,19 @@ import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
 
 interface FillInTheBlankQuizProps {
-  question: string;
-  quizText: string;
+  sentenceText: string;
+  questionText: string;
   translation: string;
   image: string;
-  correctAnswer: string;
+  correctAnswerText: string;
   questionIndex: number;
   onAnswer: (isCorrect: boolean) => void;
 }
 
 const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
-  question,
-  quizText,
-  correctAnswer,
+  sentenceText,
+  questionText,
+  correctAnswerText,
   translation,
   image,
   questionIndex,
@@ -56,32 +56,32 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   const handleFormSubmit = () => {
     const correct =
       normalizeAnswer(inputText.trim()) ===
-      normalizeAnswer(correctAnswer.trim());
+      normalizeAnswer(correctAnswerText.trim());
     setIsCorrect(correct);
     onAnswer(correct);
     setIsSubmitPressed(true);
   };
 
   const getQuestionWithAnswer = () => {
-    const placeholderIndex = question.indexOf("[...]");
-    let adjustedAnswer = correctAnswer;
+    const placeholderIndex = sentenceText.indexOf("[...]");
+    let adjustedAnswer = correctAnswerText;
 
     // Check if the placeholder is at the beginning of the sentence
     if (placeholderIndex !== 0) {
       adjustedAnswer =
-        correctAnswer.charAt(0).toLowerCase() + correctAnswer.slice(1);
+        correctAnswerText.charAt(0).toLowerCase() + correctAnswerText.slice(1);
     }
 
-    return question.replace("[...]", adjustedAnswer);
+    return sentenceText.replace("[...]", adjustedAnswer);
   };
 
   return (
     <View>
       {!isSubmitPressed && (
-        <Text style={globalStyles.subtitle}>{quizText}</Text>
+        <Text style={globalStyles.subtitle}>{questionText}</Text>
       )}
       <Text style={globalStyles.title}>
-        {isSubmitPressed ? getQuestionWithAnswer() : question}
+        {isSubmitPressed ? getQuestionWithAnswer() : sentenceText}
       </Text>
       <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && <Image source={{ uri: image }} style={styles.image} />}
@@ -93,7 +93,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
           </Text>
           <Text style={styles.correctAnswerText}>
             Correct answer:{" "}
-            <Text style={{ fontWeight: "bold" }}>{correctAnswer}</Text>
+            <Text style={{ fontWeight: "bold" }}>{correctAnswerText}</Text>
           </Text>
         </View>
       )}

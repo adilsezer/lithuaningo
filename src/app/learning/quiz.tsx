@@ -71,8 +71,12 @@ const QuizScreen: React.FC = () => {
     setQuizState((prev) => ({
       ...prev,
       showContinueButton: true,
-      correctAnswers: isCorrect ? prev.correctAnswers + 1 : prev.correctAnswers,
-      wrongAnswers: !isCorrect ? prev.wrongAnswers + 1 : prev.wrongAnswers,
+      correctAnswerNumber: isCorrect
+        ? prev.correctAnswerNumber + 1
+        : prev.correctAnswerNumber,
+      wrongAnswerNumber: !isCorrect
+        ? prev.wrongAnswerNumber + 1
+        : prev.wrongAnswerNumber,
     }));
   };
 
@@ -94,9 +98,9 @@ const QuizScreen: React.FC = () => {
               displayText="You have completed today's session!"
               buttonText="Go to Leaderboard"
               navigationRoute="/dashboard/leaderboard"
-              totalQuestions={quizState.similarSentences.length}
-              correctAnswers={quizState.correctAnswers}
-              wrongAnswers={quizState.wrongAnswers}
+              totalQuestionNumber={quizState.similarSentences.length}
+              correctAnswerNumber={quizState.correctAnswerNumber}
+              wrongAnswerNumber={quizState.wrongAnswerNumber}
             />
           </View>
         ) : (
@@ -108,13 +112,13 @@ const QuizScreen: React.FC = () => {
               {quizState.questionIndex + 1} /{" "}
               {quizState.similarSentences.length} Questions Complete
             </Text>
-            {quizState.quizType === "multipleChoice" ||
-            quizState.quizType === "trueFalse" ? (
+            {quizState.questionType === "multipleChoice" ||
+            quizState.questionType === "trueFalse" ? (
               <MultipleChoiceQuiz
-                question={quizState.question}
-                quizText={quizState.quizText}
+                questionText={quizState.questionText}
+                sentenceText={quizState.sentenceText}
                 options={quizState.options}
-                correctAnswer={quizState.correctAnswer}
+                correctAnswerText={quizState.correctAnswerText}
                 translation={quizState.translation}
                 image={quizState.image}
                 questionIndex={quizState.questionIndex}
@@ -122,9 +126,9 @@ const QuizScreen: React.FC = () => {
               />
             ) : (
               <FillInTheBlankQuiz
-                question={quizState.question}
-                quizText={quizState.quizText}
-                correctAnswer={quizState.correctAnswer}
+                questionText={quizState.questionText}
+                sentenceText={quizState.sentenceText}
+                correctAnswerText={quizState.correctAnswerText}
                 translation={quizState.translation}
                 image={quizState.image}
                 questionIndex={quizState.questionIndex}

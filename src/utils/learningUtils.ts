@@ -9,34 +9,34 @@ import { toTitleCase } from "./stringUtils";
 
 export interface QuizState {
   similarSentences: Sentence[];
-  quizText: string;
-  question: string;
+  sentenceText: string;
+  questionText: string;
   image: string;
   translation: string;
   options: string[];
-  correctAnswer: string;
-  quizType: "multipleChoice" | "fillInTheBlank" | "trueFalse";
+  correctAnswerText: string;
+  questionType: "multipleChoice" | "fillInTheBlank" | "trueFalse";
   questionIndex: number;
   showContinueButton: boolean;
   quizCompleted: boolean;
-  correctAnswers: number;
-  wrongAnswers: number;
+  correctAnswerNumber: number;
+  wrongAnswerNumber: number;
 }
 
 export const initializeQuizState = (): QuizState => ({
   similarSentences: [],
-  quizText: "",
-  question: "",
+  questionText: "",
+  sentenceText: "",
   translation: "",
   image: "",
   options: [],
-  correctAnswer: "",
-  quizType: "multipleChoice",
+  correctAnswerText: "",
+  questionType: "multipleChoice",
   questionIndex: 0,
   showContinueButton: false,
   quizCompleted: false,
-  correctAnswers: 0,
-  wrongAnswers: 0,
+  correctAnswerNumber: 0,
+  wrongAnswerNumber: 0,
 });
 
 export const loadQuizData = async (
@@ -134,8 +134,8 @@ export const loadQuestion = async (
     if (!correctWordDetails || !randomWord) {
       setQuizState((prev) => ({
         ...prev,
-        question: "No valid question could be generated. Please try again.",
-        quizText: "",
+        sentenceText: "No valid question could be generated. Please try again.",
+        questionText: "",
         translation: "",
         image: "",
         options: [],
@@ -149,52 +149,56 @@ export const loadQuestion = async (
       correctWordDetails.englishTranslation
     );
 
-    const questionType = getRandomQuestionType();
+    const generatedQuestionType = getRandomQuestionType();
 
-    let question = "";
-    let quizText = "";
-    let options: string[] = [];
-    let translation = similarSentence.englishTranslation;
-    let image = correctWordDetails.imageUrl;
-    let correctAnswer = toTitleCase(correctWordDetails.englishTranslation);
+    let generatedSentenceText = "";
+    let generatedQuestionText = "";
+    let generatedOptions: string[] = [];
+    let generatedTranslation = similarSentence.englishTranslation;
+    let wordImage = correctWordDetails.imageUrl;
+    let generatedCorrectAnswerText = toTitleCase(
+      correctWordDetails.englishTranslation
+    );
 
-    if (questionType === "multipleChoice") {
-      quizText = `What is the base form of **${toTitleCase(
+    if (generatedQuestionType === "multipleChoice") {
+      generatedQuestionText = `What is the base form of **${toTitleCase(
         randomWord
       )}** in the sentence below?`;
-      question = similarSentence.sentence;
-      options = [...otherOptions, correctAnswer]
+      generatedSentenceText = similarSentence.sentence;
+      generatedOptions = [...otherOptions, generatedCorrectAnswerText]
         .map(toTitleCase)
         .sort(() => Math.random() - 0.5);
-    } else if (questionType === "fillInTheBlank") {
+    } else if (generatedQuestionType === "fillInTheBlank") {
       const sentenceWithBlank = similarSentence.sentence.replace(
         randomWord,
         "[...]"
       );
-      quizText = `Complete the sentence:`;
-      question = sentenceWithBlank;
-      correctAnswer = toTitleCase(randomWord); // Use the hidden word itself
-      options = [];
-    } else if (questionType === "trueFalse") {
+      generatedQuestionText = `Complete the sentence:`;
+      generatedSentenceText = sentenceWithBlank;
+      generatedCorrectAnswerText = toTitleCase(randomWord); // Use the hidden word itself
+      generatedOptions = [];
+    } else if (generatedQuestionType === "trueFalse") {
       const randomBool = Math.random() > 0.5;
-      const givenTranslation = randomBool ? correctAnswer : otherOptions[0];
-      quizText = `Does **${toTitleCase(randomWord)}** mean **${toTitleCase(
-        givenTranslation
-      )}** in the sentence below?`;
-      question = similarSentence.sentence;
-      correctAnswer = randomBool ? "True" : "False";
-      options = ["True", "False"];
+      const givenTranslation = randomBool
+        ? generatedCorrectAnswerText
+        : otherOptions[0];
+      generatedQuestionText = `Does **${toTitleCase(
+        randomWord
+      )}** mean **${toTitleCase(givenTranslation)}** in the sentence below?`;
+      generatedSentenceText = similarSentence.sentence;
+      generatedCorrectAnswerText = randomBool ? "True" : "False";
+      generatedOptions = ["True", "False"];
     }
 
     setQuizState((prev) => ({
       ...prev,
-      question,
-      quizText,
-      translation,
-      image,
-      correctAnswer,
-      options,
-      quizType: questionType,
+      questionText: generatedQuestionText,
+      sentenceText: generatedSentenceText,
+      translation: generatedTranslation,
+      image: wordImage,
+      correctAnswerText: generatedCorrectAnswerText,
+      options: generatedOptions,
+      questionType: generatedQuestionType,
       showContinueButton: false,
     }));
   } catch (error) {
@@ -203,10 +207,6 @@ export const loadQuestion = async (
 };
 
 // Utility functions
-
-export const tokenizeSentence = (sentence: string): Set<string> => {
-  return new Set(sentence.toLowerCase().split(" "));
-};
 
 export const jaccardSimilarity = (
   set1: Set<string>,
