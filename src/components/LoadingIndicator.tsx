@@ -8,28 +8,44 @@ const LoadingIndicator = () => {
   const { colors: globalColors } = useThemeStyles();
   const isLoading = useAppSelector(selectIsLoading);
   const [showLoading, setShowLoading] = useState(false);
+  const [delayedIsLoading, setDelayedIsLoading] = useState(false);
+  const minimumDisplayTime = 200; // Minimum display time in milliseconds
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
+    let showTimer: ReturnType<typeof setTimeout>;
+    let hideTimer: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
-      timer = setTimeout(() => {
-        setShowLoading(true);
+      showTimer = setTimeout(() => {
+        setDelayedIsLoading(true);
       }, 500);
     } else {
-      setShowLoading(false);
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
+      if (delayedIsLoading) {
+        hideTimer = setTimeout(() => {
+          setDelayedIsLoading(false);
+        }, minimumDisplayTime);
+      } else {
+        setDelayedIsLoading(false);
       }
     }
 
     return () => {
-      if (timer) {
-        clearTimeout(timer);
+      if (showTimer) {
+        clearTimeout(showTimer);
+      }
+      if (hideTimer) {
+        clearTimeout(hideTimer);
       }
     };
-  }, [isLoading]);
+  }, [isLoading, delayedIsLoading]);
+
+  useEffect(() => {
+    if (!isLoading && delayedIsLoading) {
+      setTimeout(() => setShowLoading(false), minimumDisplayTime);
+    } else if (delayedIsLoading) {
+      setShowLoading(true);
+    }
+  }, [delayedIsLoading, isLoading]);
 
   return (
     <Modal

@@ -4,7 +4,6 @@ import wordService, { Word } from "../services/data/wordService";
 import userProfileService from "../services/data/userProfileService";
 import { retrieveData } from "@utils/storageUtil";
 import { Dispatch } from "redux";
-import { setLoading } from "@src/redux/slices/uiSlice";
 import { toTitleCase } from "./stringUtils";
 
 export interface QuizState {
@@ -38,14 +37,11 @@ export const initializeQuizState = (): QuizState => ({
 export const loadQuizData = async (
   userData: any,
   dispatch: Dispatch<any>,
-  setLoadingAction: typeof setLoading,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
   QUIZ_PROGRESS_KEY: string
 ) => {
   if (!userData?.id) return;
   try {
-    dispatch(setLoadingAction(true));
-
     const recentLearnedSentenceIds =
       await userProfileService.getMostRecentTwoLearnedSentences(userData.id);
 
@@ -92,11 +88,8 @@ export const loadQuizData = async (
     } else {
       loadQuestion(topSimilarSentences[0], setQuizState);
     }
-
-    dispatch(setLoadingAction(false));
   } catch (error) {
     console.error("Error loading quiz data:", error);
-    dispatch(setLoadingAction(false));
   }
 };
 

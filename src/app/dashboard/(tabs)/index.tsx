@@ -12,18 +12,10 @@ import CustomButton from "@components/CustomButton";
 import { router } from "expo-router";
 
 const DashboardScreen: React.FC = () => {
-  const { stats, loading } = useData();
+  const { stats } = useData();
   const { styles: globalStyles, colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const userLevel = determineUserLevel(stats);
-
-  if (loading) {
-    return (
-      <View style={globalStyles.layoutContainer}>
-        <Text style={globalStyles.subtitle}>Loading stats...</Text>
-      </View>
-    );
-  }
 
   const {
     currentStreak = 0,

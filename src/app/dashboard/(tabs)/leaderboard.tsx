@@ -1,26 +1,12 @@
 // Leaderboard.tsx
 import React from "react";
-import {
-  StyleSheet,
-  View,
-  Text,
-  ScrollView,
-  ActivityIndicator,
-} from "react-native";
+import { StyleSheet, View, Text, ScrollView } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import useData from "@src/hooks/useData";
 
 const Leaderboard = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const { leaders, loading } = useData();
-
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={globalColors.primary} />
-      </View>
-    );
-  }
+  const { leaders } = useData();
 
   return (
     <ScrollView style={styles.container}>

@@ -9,25 +9,6 @@ const Flashcard = () => {
   const { wordId } = useLocalSearchParams<{ wordId: string }>();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
-  useEffect(() => {
-    if (!wordId) {
-      // Handle the case where wordId is undefined (e.g., show an error message or redirect)
-      return;
-    }
-
-    const fetchData = async () => {
-      try {
-        // Simulate data fetching
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      } catch (error) {
-        console.error("Error loading flashcard data:", error);
-      } finally {
-      }
-    };
-
-    fetchData();
-  }, [wordId]);
-
   if (!wordId) {
     return (
       <View style={styles.errorContainer}>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { selectUserData } from "../redux/slices/userSlice";
-import { setLoading } from "../redux/slices/uiSlice";
 import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
 import userStatsService, { Stats } from "../services/data/userStatsService";
@@ -17,7 +16,6 @@ interface UseDataReturn {
   sentences: Sentence[];
   words: Word[];
   leaders: Leader[];
-  loading: boolean;
   handleAnswer: (isCorrect: boolean, timeSpent: number) => Promise<void>;
 }
 
@@ -28,19 +26,13 @@ const useData = (): UseDataReturn => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [words, setWords] = useState<Word[]>([]);
   const [leaders, setLeaders] = useState<Leader[]>([]);
-  const [loading, setLoadingState] = useState<boolean>(true);
 
   useEffect(() => {
     if (userData && userData.id) {
-      dispatch(setLoading(true));
-      setLoadingState(true);
-
       const unsubscribeStats = userStatsService.fetchStats(
         userData.id,
         (newStats) => {
           setStats(newStats);
-          setLoadingState(false);
-          dispatch(setLoading(false));
         }
       );
 
@@ -55,8 +47,6 @@ const useData = (): UseDataReturn => {
         } catch (error) {
           console.error("Error loading sentences and words:", error);
         } finally {
-          setLoadingState(false);
-          dispatch(setLoading(false));
         }
       };
 
@@ -65,8 +55,6 @@ const useData = (): UseDataReturn => {
       const unsubscribeLeaders = userStatsService.fetchLeaderboard(
         (newLeaders) => {
           setLeaders(newLeaders);
-          setLoadingState(false);
-          dispatch(setLoading(false));
         }
       );
 
@@ -75,25 +63,21 @@ const useData = (): UseDataReturn => {
         unsubscribeLeaders();
       };
     } else {
-      setLoadingState(false);
-      dispatch(setLoading(false));
     }
   }, [userData, dispatch]);
 
   const handleAnswer = async (isCorrect: boolean, timeSpent: number) => {
     if (!userData || !userData.id) return;
 
-    setLoadingState(true);
     try {
       await userStatsService.updateUserStats(userData.id, isCorrect, timeSpent);
     } catch (error) {
       console.error("Error updating user stats:", error);
     } finally {
-      setLoadingState(false);
     }
   };
 
-  return { stats, sentences, words, leaders, loading, handleAnswer };
+  return { stats, sentences, words, leaders, handleAnswer };
 };
 
 export default useData;
