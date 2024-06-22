@@ -9,10 +9,8 @@ import { selectUserData } from "@src/redux/slices/userSlice";
 import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
-import CompletedScreen from "@components/CompletedScreen";
-import { retrieveData, storeData } from "@utils/storageUtil";
 import BackButton from "@components/BackButton";
-import { getCurrentDateKey } from "@utils/dateUtils";
+import { setLearnedSentences } from "@src/redux/slices/learnedSentencesSlice";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -23,18 +21,6 @@ const SentencesScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
-
-  const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
-
-  useEffect(() => {
-    const checkCompletionStatus = async () => {
-      const completionStatus = await retrieveData<boolean>(
-        COMPLETION_STATUS_KEY
-      );
-      setCompleted(completionStatus ?? false);
-    };
-    checkCompletionStatus();
-  }, []);
 
   useEffect(() => {
     const loadSentencesAndWords = async () => {
@@ -77,7 +63,6 @@ const SentencesScreen: React.FC = () => {
       );
       const allClicked = allWords.every((word) => clickedWords.includes(word));
       if (allClicked) {
-        storeData(COMPLETION_STATUS_KEY, true);
         handleReadyToTest();
         setCompleted(true);
       }
@@ -89,38 +74,12 @@ const SentencesScreen: React.FC = () => {
     router.push(`/learning/${word}`);
   };
 
-  const handleReadyToTest = async () => {
+  const handleReadyToTest = () => {
     if (!userData?.id) return;
 
     const sentenceIds = sentences.map((sentence) => sentence.id);
-    try {
-      await userProfileService.updateUserLearnedSentences(
-        userData.id,
-        sentenceIds
-      );
-    } catch (error) {
-      console.error("Error updating learned sentences:", error);
-    }
+    dispatch(setLearnedSentences(sentenceIds));
   };
-
-  if (completed) {
-    return (
-      <View>
-        <CompletedScreen
-          displayText="Good job reviewing all the words today!"
-          buttonText="Ready to take the test?"
-          navigationRoute="/learning/quiz"
-          showStats={false}
-        />
-        <CustomButton
-          title="Go to Dashboard"
-          onPress={() => {
-            router.push("/dashboard");
-          }}
-        />
-      </View>
-    );
-  }
 
   if (error) {
     return (
@@ -173,9 +132,20 @@ const SentencesScreen: React.FC = () => {
           ))}
         </View>
       ))}
-      <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
-        Click all words to unlock the proceed button.
-      </Text>
+      {!completed && (
+        <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
+          Click all words to unlock the proceed button.
+        </Text>
+      )}
+      {completed && (
+        <CustomButton
+          title="Proceed to Quiz"
+          onPress={() => {
+            router.push("/learning/quiz");
+          }}
+          style={{ marginVertical: 60 }}
+        />
+      )}
     </View>
   );
 };
@@ -200,7 +170,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   allWordsClickedSection: {
-    marginVertical: 40,
+    marginVertical: 60,
   },
 });
 
