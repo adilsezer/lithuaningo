@@ -174,7 +174,7 @@ const SentencesScreen: React.FC = () => {
                 },
               ]}
             >
-              <Text style={[globalStyles.text, styles.wordText]}>{word} </Text>
+              <Text style={[globalStyles.text, styles.wordText]}>{word}</Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -210,9 +210,12 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingVertical: 4,
     paddingHorizontal: 6,
+    minHeight: 40,
+    minWidth: 50,
   },
   wordText: {
     fontSize: 20,
+    textAlign: "center", // Ensures the text is centered
   },
   allWordsClickedSection: {
     marginVertical: 60,
