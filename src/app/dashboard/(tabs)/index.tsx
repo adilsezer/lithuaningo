@@ -28,7 +28,10 @@ const DashboardScreen: React.FC = () => {
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={[
+        styles.container,
+        { backgroundColor: colors.background },
+      ]}
     >
       {userData && (
         <Text style={globalStyles.title}>
@@ -79,8 +82,8 @@ const DashboardScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
+    flexGrow: 1,
   },
   section: {
     borderRadius: 8,
