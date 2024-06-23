@@ -1,6 +1,6 @@
+import moment from "moment";
 import { FirebaseFirestoreTypes } from "@react-native-firebase/firestore";
 
-// utils/dateUtils.ts
 export const formatTime = (minutes: number): string => {
   if (minutes === 0) {
     return "0 mins";
@@ -45,6 +45,14 @@ export const calculateStreak = (
 };
 
 export const getCurrentDateKey = () => {
-  const today = new Date();
-  return `${today.getFullYear()}-${today.getMonth() + 1}-${today.getDate()}`;
+  const resetHourUTC = 2; // 2 am UTC reset time
+  const now = moment.utc();
+  const todayDateKey = now.format("YYYY-MM-DD");
+
+  // If current time is before reset time, use the previous day's key
+  if (now.hour() < resetHourUTC) {
+    return moment.utc().subtract(1, "day").format("YYYY-MM-DD");
+  }
+
+  return todayDateKey;
 };
