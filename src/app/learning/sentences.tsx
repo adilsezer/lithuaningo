@@ -12,11 +12,13 @@ import { setLoading } from "@src/redux/slices/uiSlice";
 import BackButton from "@components/BackButton";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { retrieveData, storeData } from "@utils/storageUtil";
+import CompletedScreen from "@components/CompletedScreen";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [completed, setCompleted] = useState(false);
+  const [wordsCompleted, setWordsCompleted] = useState(false);
+  const [sentencesCompleted, setSentencesCompleted] = useState(false);
   const router = useRouter();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
@@ -30,7 +32,7 @@ const SentencesScreen: React.FC = () => {
       const completionStatus = await retrieveData<boolean>(
         COMPLETION_STATUS_KEY
       );
-      setCompleted(completionStatus ?? false);
+      setSentencesCompleted(completionStatus ?? false);
     };
     checkCompletionStatus();
   }, []);
@@ -76,8 +78,7 @@ const SentencesScreen: React.FC = () => {
       );
       const allClicked = allWords.every((word) => clickedWords.includes(word));
       if (allClicked) {
-        storeData(COMPLETION_STATUS_KEY, true);
-        setCompleted(true);
+        setWordsCompleted(true);
       }
     }
   }, [sentences, clickedWords]);
@@ -103,6 +104,8 @@ const SentencesScreen: React.FC = () => {
 
   const handleProceedToQuiz = async () => {
     await updateUserLearnedSentences();
+    storeData(COMPLETION_STATUS_KEY, true);
+    setSentencesCompleted(true);
     router.push("/learning/quiz");
   };
 
@@ -113,6 +116,25 @@ const SentencesScreen: React.FC = () => {
         <Text style={[globalStyles.text, { color: globalColors.error }]}>
           {error}
         </Text>
+      </View>
+    );
+  }
+
+  if (sentencesCompleted) {
+    return (
+      <View>
+        <CompletedScreen
+          displayText="Good job reviewing all the words today!"
+          buttonText="Ready to take the test?"
+          navigationRoute="/learning/quiz"
+          showStats={false}
+        />
+        <CustomButton
+          title="Go to Dashboard"
+          onPress={() => {
+            router.push("/dashboard");
+          }}
+        />
       </View>
     );
   }
@@ -157,12 +179,12 @@ const SentencesScreen: React.FC = () => {
           ))}
         </View>
       ))}
-      {!completed && (
+      {!wordsCompleted && (
         <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
           Click all words to unlock the proceed button.
         </Text>
       )}
-      {completed && (
+      {wordsCompleted && (
         <CustomButton
           title="Proceed to Quiz"
           onPress={handleProceedToQuiz}
