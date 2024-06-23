@@ -105,13 +105,15 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         ))}
       {optionSelected && (
         <View>
-          <Text style={styles.selectedOptionText}>
+          <Text style={[globalStyles.text, styles.selectedOptionText]}>
             You answered:{" "}
-            <Text style={{ fontWeight: "bold" }}>{selectedOption}</Text>
+            <Text style={{ fontFamily: "Roboto-Bold" }}>{selectedOption}</Text>
           </Text>
-          <Text style={styles.correctAnswerText}>
+          <Text style={[globalStyles.text, styles.correctAnswerText]}>
             Correct answer:{" "}
-            <Text style={{ fontWeight: "bold" }}>{correctAnswerText}</Text>
+            <Text style={{ fontFamily: "Roboto-Bold" }}>
+              {correctAnswerText}
+            </Text>
           </Text>
         </View>
       )}

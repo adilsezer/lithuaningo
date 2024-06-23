@@ -124,8 +124,9 @@ const SentencesScreen: React.FC = () => {
     return (
       <View>
         <CompletedScreen
-          displayText="Good job reviewing all the words today!"
-          buttonText="Ready to take the test?"
+          title="Fantastic! You've Reviewed All the Words for Today!"
+          subtitle="Ready to test your knowledge?"
+          buttonText="Start Quiz"
           navigationRoute="/learning/quiz"
           showStats={false}
         />

@@ -87,7 +87,8 @@ const QuizScreen: React.FC = () => {
         {quizState.quizCompleted ? (
           <View>
             <CompletedScreen
-              displayText="You have completed today's session!"
+              title="Congratulations! You've Completed Today's Session!"
+              subtitle="Return tomorrow for a new set of challenges!"
               buttonText="Go to Leaderboard"
               navigationRoute="/dashboard/leaderboard"
               showStats={true}

@@ -1,4 +1,3 @@
-// src/utils/learningUtils.ts
 import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
 import userProfileService from "../services/data/userProfileService";
@@ -132,9 +131,9 @@ export const loadQuestion = async (
     }
 
     const fetchedWords = await wordService.fetchWords();
-    const otherOptions = getRandomOptions(
+    const otherOptions = await getRandomOptions(
       fetchedWords,
-      correctWordDetails.englishTranslation
+      correctWordDetails.englishTranslation // Fetch similar words to the correct answer
     );
 
     const generatedQuestionType = getRandomQuestionType();
@@ -196,13 +195,56 @@ export const loadQuestion = async (
 
 // Utility functions
 
-export const jaccardSimilarity = (
-  set1: Set<string>,
-  set2: Set<string>
-): number => {
-  const intersection = new Set([...set1].filter((x) => set2.has(x)));
-  const union = new Set([...set1, ...set2]);
-  return intersection.size / union.size;
+function levenshtein(a: string, b: string): number {
+  const matrix = [];
+
+  // Initialize the matrix
+  for (let i = 0; i <= b.length; i++) {
+    matrix[i] = [i];
+  }
+
+  for (let j = 0; j <= a.length; j++) {
+    matrix[0][j] = j;
+  }
+
+  // Fill the matrix
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      if (b.charAt(i - 1) == a.charAt(j - 1)) {
+        matrix[i][j] = matrix[i - 1][j - 1];
+      } else {
+        matrix[i][j] = Math.min(
+          matrix[i - 1][j - 1] + 1,
+          Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+        );
+      }
+    }
+  }
+
+  return matrix[b.length][a.length];
+}
+
+export const getSimilarityScores = (
+  target: string,
+  candidates: string[]
+): Map<string, number> => {
+  console.log("Starting getSimilarityScores...");
+  console.log("Target:", target);
+  console.log("Candidates:", candidates);
+
+  const similarityScores = new Map<string, number>();
+
+  candidates.forEach((candidate) => {
+    const distance = levenshtein(target, candidate);
+    const similarity = 1 / (1 + distance); // Convert distance to similarity
+    console.log(
+      `Levenshtein distance for "${candidate}": ${distance}, Similarity: ${similarity}`
+    );
+    similarityScores.set(candidate, similarity);
+  });
+
+  console.log("Final Similarity Scores:", similarityScores);
+  return similarityScores;
 };
 
 export const createGrammaticalFormsMap = async (): Promise<
@@ -236,46 +278,53 @@ export const getSortedSentencesBySimilarity = async (
 ): Promise<Sentence[]> => {
   const grammaticalFormsMap = await createGrammaticalFormsMap();
 
-  // Define a set of stopwords to exclude
-  const stopwords = new Set(getSkippedWords());
+  const candidateSentences = allSentences.map((sentence) => sentence.sentence);
 
-  // Function to filter out stopwords and numbers
-  const filterTokens = (tokens: Set<string>): Set<string> => {
-    return new Set(
-      [...tokens].filter(
-        (token) => !stopwords.has(token) && !/^\d+$/.test(token)
-      )
-    );
-  };
-
-  const learnedTokens = filterTokens(
-    new Set(normalizeSentence(learnedSentence.sentence, grammaticalFormsMap))
+  const similarityScores = getSimilarityScores(
+    learnedSentence.sentence,
+    candidateSentences
   );
 
-  const sentenceSimilarities = allSentences.map((sentence) => {
-    const sentenceTokens = filterTokens(
-      new Set(normalizeSentence(sentence.sentence, grammaticalFormsMap))
-    );
-
-    const similarity = jaccardSimilarity(learnedTokens, sentenceTokens);
-
-    return { sentence, similarity };
-  });
-
-  // Sort sentences by similarity in descending order
-  sentenceSimilarities.sort((a, b) => b.similarity - a.similarity);
-
-  return sentenceSimilarities.map((item) => item.sentence);
+  return allSentences
+    .sort(
+      (a, b) =>
+        similarityScores.get(b.sentence)! - similarityScores.get(a.sentence)!
+    )
+    .map((item) => item);
 };
 
-export const getRandomOptions = (
+export const getRandomOptions = async (
   words: Word[],
   correctAnswerText: string
-): string[] => {
-  const options = words
-    .map((word: Word) => word.englishTranslation)
-    .filter((option: string) => option !== correctAnswerText);
-  return options.sort(() => 0.5 - Math.random()).slice(0, 3); // Get 3 random options
+): Promise<string[]> => {
+  console.log("Starting getRandomOptions...");
+  console.log("Correct Answer Text:", correctAnswerText);
+
+  const numberPattern =
+    /^(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)([-\s]?)(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)*$/i;
+
+  const candidateWords = words
+    .map((word) => word.englishTranslation)
+    .filter((word) => !numberPattern.test(word.toLowerCase())); // Exclude number words
+  console.log("Candidate Words:", candidateWords);
+
+  const similarityScores = getSimilarityScores(
+    correctAnswerText,
+    candidateWords
+  );
+  console.log("Similarity Scores:", similarityScores);
+
+  const sortedOptions = Array.from(similarityScores.entries())
+    .filter(([word]) => word !== correctAnswerText)
+    .sort((a, b) => b[1] - a[1])
+    .map(([word]) => word);
+
+  console.log("Sorted Options:", sortedOptions);
+
+  const topOptions = sortedOptions.slice(0, 3);
+  console.log("Top Options:", topOptions);
+
+  return topOptions;
 };
 
 export const getSkippedWords = (): string[] => {

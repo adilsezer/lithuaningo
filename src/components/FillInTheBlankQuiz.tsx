@@ -87,13 +87,15 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       {image && <Image source={{ uri: image }} style={styles.image} />}
       {isSubmitPressed && (
         <View>
-          <Text style={styles.selectedOptionText}>
+          <Text style={[globalStyles.text, styles.selectedOptionText]}>
             You answered:{" "}
-            <Text style={{ fontWeight: "bold" }}>{inputText}</Text>
+            <Text style={{ fontFamily: "Roboto-Bold" }}>{inputText}</Text>
           </Text>
-          <Text style={styles.correctAnswerText}>
+          <Text style={[globalStyles.text, styles.correctAnswerText]}>
             Correct answer:{" "}
-            <Text style={{ fontWeight: "bold" }}>{correctAnswerText}</Text>
+            <Text style={{ fontFamily: "Roboto-Bold" }}>
+              {correctAnswerText}
+            </Text>
           </Text>
         </View>
       )}

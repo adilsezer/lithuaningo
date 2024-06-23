@@ -8,14 +8,16 @@ import { Ionicons } from "@expo/vector-icons"; // Ensure you have this package i
 import useData from "@src/hooks/useData";
 
 interface CompletedScreenProps {
-  displayText: string;
+  title: string;
+  subtitle: string;
   buttonText: string;
   navigationRoute: string;
   showStats: boolean;
 }
 
 const CompletedScreen: React.FC<CompletedScreenProps> = ({
-  displayText,
+  title,
+  subtitle,
   buttonText,
   navigationRoute,
   showStats,
@@ -26,7 +28,8 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
 
   return (
     <ScrollView>
-      <Text style={[globalStyles.title, { marginTop: 40 }]}>{displayText}</Text>
+      <Text style={[globalStyles.title, { marginTop: 40 }]}>{title}</Text>
+      <Text style={[globalStyles.subtitle, { marginTop: 20 }]}>{subtitle}</Text>
       {showStats && (
         <View style={styles.statsContainer}>
           {stats?.todayAnsweredQuestions !== undefined && (
@@ -36,7 +39,7 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
                 size={24}
                 color={globalColors.primary}
               />
-              <Text style={styles.statText}>
+              <Text style={[globalStyles.text, styles.statText]}>
                 {stats.todayAnsweredQuestions}
               </Text>
               <Text style={globalStyles.text}>Total Questions</Text>
@@ -49,7 +52,7 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
                 size={24}
                 color="green"
               />
-              <Text style={[styles.statText]}>
+              <Text style={[globalStyles.text, styles.statText]}>
                 {stats?.todayCorrectAnsweredQuestions}
               </Text>
               <Text style={globalStyles.text}>Correct Answers</Text>
@@ -58,7 +61,7 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
           {stats?.todayWrongAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons name="close-circle-outline" size={24} color="red" />
-              <Text style={styles.statText}>
+              <Text style={[globalStyles.text, styles.statText]}>
                 {stats?.todayWrongAnsweredQuestions}
               </Text>
               <Text style={globalStyles.text}>Wrong Answers</Text>
