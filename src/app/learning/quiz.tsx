@@ -24,7 +24,7 @@ import {
   QuizState,
   initializeQuizState,
 } from "@utils/learningUtils";
-import BackButton from "@components/BackButton";
+import { router } from "expo-router";
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
@@ -71,11 +71,16 @@ const QuizScreen: React.FC = () => {
     storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex + 1);
   };
 
-  const handleContinue = () => {
+  const handleNextQuestion = () => {
     setQuizState((prev) => ({
       ...prev,
       questionIndex: quizState.questionIndex + 1,
     }));
+  };
+
+  const handleSaveAndExit = () => {
+    storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex);
+    router.push("/dashboard"); // Navigate to the desired route, e.g., dashboard
   };
 
   return (
@@ -95,7 +100,6 @@ const QuizScreen: React.FC = () => {
           </View>
         ) : (
           <View>
-            <BackButton />
             <Text
               style={[globalStyles.subtitle, { color: globalColors.primary }]}
             >
@@ -126,7 +130,16 @@ const QuizScreen: React.FC = () => {
               />
             )}
             {quizState.showContinueButton && (
-              <CustomButton title="Continue" onPress={handleContinue} />
+              <View>
+                <CustomButton
+                  title="Next Question"
+                  onPress={handleNextQuestion}
+                />
+                <CustomButton
+                  title="Save and Exit"
+                  onPress={handleSaveAndExit}
+                />
+              </View>
             )}
           </View>
         )}

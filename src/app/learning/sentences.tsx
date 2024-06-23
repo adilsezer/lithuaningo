@@ -10,6 +10,8 @@ import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import BackButton from "@components/BackButton";
+import { getCurrentDateKey } from "@utils/dateUtils";
+import { retrieveData, storeData } from "@utils/storageUtil";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -20,6 +22,18 @@ const SentencesScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
+
+  const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
+
+  useEffect(() => {
+    const checkCompletionStatus = async () => {
+      const completionStatus = await retrieveData<boolean>(
+        COMPLETION_STATUS_KEY
+      );
+      setCompleted(completionStatus ?? false);
+    };
+    checkCompletionStatus();
+  }, []);
 
   useEffect(() => {
     const loadSentencesAndWords = async () => {
@@ -62,6 +76,7 @@ const SentencesScreen: React.FC = () => {
       );
       const allClicked = allWords.every((word) => clickedWords.includes(word));
       if (allClicked) {
+        storeData(COMPLETION_STATUS_KEY, true);
         setCompleted(true);
       }
     }
