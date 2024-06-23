@@ -228,9 +228,7 @@ export const getSimilarityScores = (
   target: string,
   candidates: string[]
 ): Map<string, number> => {
-  console.log("Starting getSimilarityScores...");
   console.log("Target:", target);
-  console.log("Candidates:", candidates);
 
   const similarityScores = new Map<string, number>();
 
@@ -243,7 +241,6 @@ export const getSimilarityScores = (
     similarityScores.set(candidate, similarity);
   });
 
-  console.log("Final Similarity Scores:", similarityScores);
   return similarityScores;
 };
 
@@ -297,34 +294,44 @@ export const getRandomOptions = async (
   words: Word[],
   correctAnswerText: string
 ): Promise<string[]> => {
-  console.log("Starting getRandomOptions...");
-  console.log("Correct Answer Text:", correctAnswerText);
-
   const numberPattern =
     /^(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)([-\s]?)(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)*$/i;
 
   const candidateWords = words
     .map((word) => word.englishTranslation)
     .filter((word) => !numberPattern.test(word.toLowerCase())); // Exclude number words
-  console.log("Candidate Words:", candidateWords);
 
   const similarityScores = getSimilarityScores(
     correctAnswerText,
     candidateWords
   );
-  console.log("Similarity Scores:", similarityScores);
 
   const sortedOptions = Array.from(similarityScores.entries())
     .filter(([word]) => word !== correctAnswerText)
     .sort((a, b) => b[1] - a[1])
     .map(([word]) => word);
 
-  console.log("Sorted Options:", sortedOptions);
+  const topTwoOptions = sortedOptions.slice(0, 2);
 
-  const topOptions = sortedOptions.slice(0, 3);
-  console.log("Top Options:", topOptions);
+  // Get the remaining candidates that are not in the top two options
+  const remainingCandidates = candidateWords.filter(
+    (word) => !topTwoOptions.includes(word) && word !== correctAnswerText
+  );
 
-  return topOptions;
+  // Select a random word from the remaining candidates
+  const randomIndex = Math.floor(Math.random() * remainingCandidates.length);
+  const randomOption = remainingCandidates[randomIndex];
+
+  // Combine the top two options with the random option
+  const finalOptions = [...topTwoOptions, randomOption];
+
+  // Shuffle the final options array to avoid any positional bias
+  for (let i = finalOptions.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [finalOptions[i], finalOptions[j]] = [finalOptions[j], finalOptions[i]];
+  }
+
+  return finalOptions;
 };
 
 export const getSkippedWords = (): string[] => {
