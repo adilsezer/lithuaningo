@@ -36,7 +36,6 @@ export const initializeQuizState = (): QuizState => ({
 
 export const loadQuizData = async (
   userData: any,
-  dispatch: Dispatch<any>,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
   QUIZ_PROGRESS_KEY: string
 ) => {

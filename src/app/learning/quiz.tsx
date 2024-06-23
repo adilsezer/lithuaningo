@@ -40,26 +40,23 @@ const QuizScreen: React.FC = () => {
   useEffect(() => {
     if (userData) {
       dispatch(setLoading(true));
-      loadQuizData(userData, dispatch, setQuizState, QUIZ_PROGRESS_KEY).finally(
-        () => {
-          dispatch(setLoading(false));
-        }
-      );
+      loadQuizData(userData, setQuizState, QUIZ_PROGRESS_KEY).finally(() => {
+        dispatch(setLoading(false));
+      });
     }
   }, [userData, dispatch]);
 
   useEffect(() => {
-    if (
-      quizState.similarSentences.length > 0 &&
-      quizState.questionIndex < quizState.similarSentences.length
-    ) {
-      loadQuestion(
-        quizState.similarSentences[quizState.questionIndex],
-        setQuizState
-      );
-      setQuizState((prev) => ({ ...prev, quizCompleted: false }));
-    } else if (quizState.questionIndex >= quizState.similarSentences.length) {
-      setQuizState((prev) => ({ ...prev, quizCompleted: true }));
+    if (quizState.similarSentences.length > 0) {
+      if (quizState.questionIndex < quizState.similarSentences.length) {
+        loadQuestion(
+          quizState.similarSentences[quizState.questionIndex],
+          setQuizState
+        );
+        setQuizState((prev) => ({ ...prev, quizCompleted: false }));
+      } else {
+        setQuizState((prev) => ({ ...prev, quizCompleted: true }));
+      }
     }
   }, [quizState.questionIndex, quizState.similarSentences]);
 

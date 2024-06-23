@@ -10,7 +10,6 @@ import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import BackButton from "@components/BackButton";
-import { setLearnedSentences } from "@src/redux/slices/learnedSentencesSlice";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -63,7 +62,6 @@ const SentencesScreen: React.FC = () => {
       );
       const allClicked = allWords.every((word) => clickedWords.includes(word));
       if (allClicked) {
-        handleReadyToTest();
         setCompleted(true);
       }
     }
@@ -74,11 +72,23 @@ const SentencesScreen: React.FC = () => {
     router.push(`/learning/${word}`);
   };
 
-  const handleReadyToTest = () => {
+  const updateUserLearnedSentences = async () => {
     if (!userData?.id) return;
 
     const sentenceIds = sentences.map((sentence) => sentence.id);
-    dispatch(setLearnedSentences(sentenceIds));
+    try {
+      await userProfileService.updateUserLearnedSentences(
+        userData.id,
+        sentenceIds
+      );
+    } catch (error) {
+      console.error("Error updating learned sentences:", error);
+    }
+  };
+
+  const handleProceedToQuiz = async () => {
+    await updateUserLearnedSentences();
+    router.push("/learning/quiz");
   };
 
   if (error) {
@@ -140,9 +150,7 @@ const SentencesScreen: React.FC = () => {
       {completed && (
         <CustomButton
           title="Proceed to Quiz"
-          onPress={() => {
-            router.push("/learning/quiz");
-          }}
+          onPress={handleProceedToQuiz}
           style={{ marginVertical: 60 }}
         />
       )}
