@@ -3,39 +3,35 @@ import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
-import useStats from "@src/hooks/useStats";
+import useData from "@src/hooks/useData";
 import StatCard from "@components/StatCard";
 import { formatTime } from "@src/utils/dateUtils";
 import ProgressBar from "@components/ProgressBar";
-import StatusLabel from "@components/StatusLabel";
 import { determineUserLevel } from "@utils/userLevel";
+import CustomButton from "@components/CustomButton";
+import { router } from "expo-router";
 
 const DashboardScreen: React.FC = () => {
-  const { stats, loading } = useStats();
+  const { stats } = useData();
   const { styles: globalStyles, colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const userLevel = determineUserLevel(stats);
 
-  if (loading) {
-    return (
-      <View style={globalStyles.layoutContainer}>
-        <Text style={globalStyles.subtitle}>Loading stats...</Text>
-      </View>
-    );
-  }
-
   const {
     currentStreak = 0,
     longestStreak = 0,
-    totalStudiedCards = 0,
-    todayStudiedCards = 0,
+    totalAnsweredQuestions: totalAnsweredQuestions = 0,
+    todayAnsweredQuestions: todayAnsweredQuestions = 0,
     minutesSpentToday = 0,
     minutesSpentTotal = 0,
   } = stats || {};
 
   return (
     <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
+      contentContainerStyle={[
+        styles.container,
+        { backgroundColor: colors.background },
+      ]}
     >
       {userData && (
         <Text style={globalStyles.title}>
@@ -50,22 +46,31 @@ const DashboardScreen: React.FC = () => {
           Today's Learning
         </Text>
         <Text style={[styles.cardValue, { color: colors.cardText }]}>
-          Cards Studied Today: {todayStudiedCards}
+          Completed Questions: {todayAnsweredQuestions}
         </Text>
         <Text style={[styles.cardValue, { color: colors.cardText }]}>
           Time Spent Today: {formatTime(minutesSpentToday)}
         </Text>
-        <ProgressBar progress={todayStudiedCards / 15} />
+        <ProgressBar progress={todayAnsweredQuestions / 10} />
       </View>
-      <Text style={globalStyles.title}>Your Level</Text>
-      <StatusLabel label={userLevel} />
+      <Text style={globalStyles.title}>Review Today's Words?</Text>
+      <CustomButton
+        title="Start Review"
+        onPress={() => router.push("/dashboard/learn")}
+      />
       <Text style={[globalStyles.title]}>Your Progress</Text>
+      <View style={styles.row}>
+        <StatCard title="Your Level" value={`${userLevel}`} />
+      </View>
       <View style={styles.row}>
         <StatCard title="Current Streak" value={`${currentStreak} days`} />
         <StatCard title="Longest Streak" value={`${longestStreak} days`} />
       </View>
       <View style={styles.row}>
-        <StatCard title="Total Cards Studied" value={`${totalStudiedCards}`} />
+        <StatCard
+          title="Total Answered Questions"
+          value={`${totalAnsweredQuestions}`}
+        />
         <StatCard
           title="Time Spent Total"
           value={formatTime(minutesSpentTotal)}
@@ -77,8 +82,8 @@ const DashboardScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     padding: 20,
+    flexGrow: 1,
   },
   section: {
     borderRadius: 8,

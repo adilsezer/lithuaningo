@@ -13,8 +13,8 @@ import {
   updateUserPassword,
   deleteUser,
   reauthenticateUser,
-} from "@src/services/FirebaseAuthService";
-import { signInWithGoogle } from "@src/services/GoogleAuthService";
+} from "@src/services/auth/firebaseAuthService";
+import { signInWithGoogle } from "@src/services/auth/googleAuthService";
 import firestore from "@react-native-firebase/firestore";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 

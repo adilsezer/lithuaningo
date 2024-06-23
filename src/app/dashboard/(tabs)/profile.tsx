@@ -1,15 +1,17 @@
 import React from "react";
-import { View, Text, ScrollView, StyleSheet, Image } from "react-native";
-import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
+import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
+import useAuthMethods from "@src/hooks/useAuthMethods";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { selectUserData, selectIsLoggedIn } from "@src/redux/slices/userSlice";
 import CustomButton from "@components/CustomButton";
 import { useRouter } from "expo-router";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { clearData } from "@utils/storageUtil";
+import { getCurrentDateKey } from "@utils/dateUtils";
 
 export default function ProfileScreen() {
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const { handleSignOut } = useAuthMethods();
   const router = useRouter();
@@ -26,6 +28,17 @@ export default function ProfileScreen() {
 
   const userData = useAppSelector(selectUserData);
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
+
+  const handleClearCompletionStatus = async () => {
+    const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
+    const QUIZ_PROGRESS_KEY = `quizProgress_${
+      userData?.id
+    }_${getCurrentDateKey()}`;
+
+    await clearData(COMPLETION_STATUS_KEY);
+    await clearData(QUIZ_PROGRESS_KEY);
+    Alert.alert("Removed Progress Data");
+  };
 
   if (!isLoggedIn || !userData) {
     return (
@@ -56,10 +69,16 @@ export default function ProfileScreen() {
           onPress={() => navigateTo("/about")}
         />
         <CustomButton title="Logout" onPress={logout} />
-        {userData.isAdmin && (
+
+        {__DEV__ && (
           <CustomButton
-            title="Admin Panel"
-            onPress={() => navigateTo("/admin")}
+            title="Clear Completion Status"
+            onPress={handleClearCompletionStatus}
+            style={{
+              backgroundColor: globalColors.error,
+              marginTop: 20,
+              alignSelf: "center",
+            }}
           />
         )}
       </View>

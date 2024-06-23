@@ -1,6 +1,6 @@
 // src/utils/userLevel.ts
 
-import { Stats } from "../services/FirebaseDataService";
+import { Stats } from "../services/data/userStatsService";
 
 // Define user levels
 export enum UserLevel {
@@ -17,26 +17,23 @@ export const determineUserLevel = (stats: Stats | null): UserLevel => {
   }
 
   const {
-    totalStudiedCards,
+    totalAnsweredQuestions: totalAnsweredQuestions,
     longestStreak,
     minutesSpentTotal,
-    correctAnswers,
   } = stats;
 
   // Define weights for each metric
   const weights = {
-    totalStudiedCards: 0.4,
-    longestStreak: 0.3,
-    minutesSpentTotal: 0.2,
-    correctAnswers: 0.1,
+    totalAnsweredQuestions: 0.3,
+    longestStreak: 0.2,
+    minutesSpentTotal: 0.1,
   };
 
   // Calculate a composite score
   const compositeScore =
-    totalStudiedCards * weights.totalStudiedCards +
+    totalAnsweredQuestions * weights.totalAnsweredQuestions +
     longestStreak * weights.longestStreak +
-    minutesSpentTotal * weights.minutesSpentTotal +
-    correctAnswers * weights.correctAnswers;
+    minutesSpentTotal * weights.minutesSpentTotal;
 
   // Define thresholds for each level based on composite score
   if (compositeScore >= 8000) {

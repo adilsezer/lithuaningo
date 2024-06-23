@@ -8,20 +8,18 @@ const LoadingIndicator = () => {
   const { colors: globalColors } = useThemeStyles();
   const isLoading = useAppSelector(selectIsLoading);
   const [showLoading, setShowLoading] = useState(false);
+  const [delayedIsLoading, setDelayedIsLoading] = useState(false);
+  const minimumDisplayTime = 200; // Minimum display time in milliseconds
 
   useEffect(() => {
-    let timer: ReturnType<typeof setTimeout> | null = null;
+    let timer: ReturnType<typeof setTimeout>;
 
     if (isLoading) {
+      setDelayedIsLoading(true);
+    } else if (delayedIsLoading) {
       timer = setTimeout(() => {
-        setShowLoading(true);
-      }, 500);
-    } else {
-      setShowLoading(false);
-      if (timer) {
-        clearTimeout(timer);
-        timer = null;
-      }
+        setDelayedIsLoading(false);
+      }, minimumDisplayTime);
     }
 
     return () => {
@@ -29,7 +27,15 @@ const LoadingIndicator = () => {
         clearTimeout(timer);
       }
     };
-  }, [isLoading]);
+  }, [isLoading, delayedIsLoading]);
+
+  useEffect(() => {
+    if (delayedIsLoading) {
+      setShowLoading(true);
+    } else {
+      setShowLoading(false);
+    }
+  }, [delayedIsLoading]);
 
   return (
     <Modal

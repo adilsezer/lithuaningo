@@ -1,14 +1,12 @@
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { AppDispatch } from "../redux/store";
+import { AppDispatch } from "../../redux/store";
 import {
   logIn,
   logOut,
   requireReauthentication,
   clearReauthenticationRequirement,
   deleteUserAccount,
-  updateUserProfile as updateUserProfileAction,
-} from "../redux/slices/userSlice";
-import { FirebaseDataService } from "./FirebaseDataService";
+} from "../../redux/slices/userSlice";
 
 type FirebaseError = {
   code: string;
@@ -25,14 +23,12 @@ const updateUserState = async (
   }
 
   if (user.emailVerified) {
-    const adminStatus = await FirebaseDataService.isAdmin(user.uid); // Use the helper function
     dispatch(
       logIn({
         id: user.uid,
         name: user.displayName || null,
         email: user.email,
         emailVerified: user.emailVerified,
-        isAdmin: adminStatus, // Use the boolean value from the helper function
       })
     );
   }
