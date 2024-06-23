@@ -5,10 +5,11 @@ Welcome to **Lithuaningo**! A mobile application designed to help you master the
 ## Features
 
 - **User Authentication**: Secure login via Email and Google Sign-In.
-- **Interactive Learning Modules**: Multiple-choice and fill-in-the-blank exercises.
+- **Interactive Learning Modules**: Multiple-choice, fill-in-the-blank, and true/false exercises.
 - **Progress Tracking**: Detailed statistics to monitor your learning journey.
 - **User Profile Management**: Customize and manage your personal details.
 - **Leaderboard**: Track and compare your progress with other users.
+- **Crash and Performance Data**: Logs and diagnostics to improve app stability and performance.
 
 ## Screenshots
 
