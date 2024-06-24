@@ -69,18 +69,6 @@ export default function ProfileScreen() {
           onPress={() => navigateTo("/about")}
         />
         <CustomButton title="Logout" onPress={logout} />
-
-        {__DEV__ && (
-          <CustomButton
-            title="Clear Completion Status"
-            onPress={handleClearCompletionStatus}
-            style={{
-              backgroundColor: globalColors.error,
-              marginTop: 20,
-              alignSelf: "center",
-            }}
-          />
-        )}
       </View>
     </ScrollView>
   );

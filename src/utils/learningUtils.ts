@@ -228,16 +228,11 @@ export const getSimilarityScores = (
   target: string,
   candidates: string[]
 ): Map<string, number> => {
-  console.log("Target:", target);
-
   const similarityScores = new Map<string, number>();
 
   candidates.forEach((candidate) => {
     const distance = levenshtein(target, candidate);
     const similarity = 1 / (1 + distance); // Convert distance to similarity
-    console.log(
-      `Levenshtein distance for "${candidate}": ${distance}, Similarity: ${similarity}`
-    );
     similarityScores.set(candidate, similarity);
   });
 
