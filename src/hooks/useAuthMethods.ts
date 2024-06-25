@@ -15,6 +15,7 @@ import {
   reauthenticateUser,
 } from "@src/services/auth/firebaseAuthService";
 import { signInWithGoogle } from "@src/services/auth/googleAuthService";
+import { signInWithApple } from "@src/services/auth/appleAuthService"; // Import Apple Sign-In service
 import firestore from "@react-native-firebase/firestore";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
@@ -112,6 +113,28 @@ const useAuthMethods = () => {
     return await handleAction(action, "/dashboard");
   };
 
+  const handleLoginWithApple = async () => {
+    const action = async () => {
+      const userCredential = await signInWithApple(dispatch);
+      const user = userCredential.user;
+
+      const userDoc = await firestore()
+        .collection("userProfiles")
+        .doc(user.uid)
+        .get();
+      if (!userDoc.exists) {
+        await firestore()
+          .collection("userProfiles")
+          .doc(user.uid)
+          .set({
+            name: user.displayName || "No Name",
+            email: user.email,
+          });
+      }
+    };
+    return await handleAction(action, "/dashboard");
+  };
+
   const handleSignOut = async () => {
     return await handleAction(() => signOutUser(dispatch), "/");
   };
@@ -178,6 +201,7 @@ const useAuthMethods = () => {
     handleSignUpWithEmail,
     handleLoginWithEmail,
     handleLoginWithGoogle,
+    handleLoginWithApple, // Add Apple login handler
     handleSignOut,
     handlePasswordReset,
     handleUpdateUserProfile,

@@ -28,8 +28,8 @@ export const createComponentStyles = (colors: ThemeColors) =>
       justifyContent: "center",
     },
     icon: {
-      width: 24,
-      height: 24,
+      width: 20,
+      height: 20,
       marginRight: 10,
     },
   });

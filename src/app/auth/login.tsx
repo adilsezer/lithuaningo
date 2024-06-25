@@ -3,11 +3,12 @@ import { View, Text, TextInput, Alert } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
-import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
+import useAuthMethods from "@src/hooks/useAuthMethods";
 import NavigationLink from "@components/NavigationLink";
 import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
+import AppleSignInButton from "@components/AppleSignInButton";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -16,7 +17,8 @@ const LoginScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
-  const { handleLoginWithEmail, handleLoginWithGoogle } = useAuthMethods();
+  const { handleLoginWithEmail, handleLoginWithGoogle, handleLoginWithApple } =
+    useAuthMethods();
 
   const performLogin = async (
     loginAction: () => Promise<{ success: boolean; message?: string }>,
@@ -75,8 +77,15 @@ const LoginScreen: React.FC = () => {
         icon={require("assets/images/google-logo.png")}
         style={{
           backgroundColor: globalColors.card,
+          paddingVertical: 18,
         }}
         textStyle={{ color: globalColors.cardText }}
+        disabled={loading}
+      />
+      <AppleSignInButton
+        onPress={() =>
+          performLogin(handleLoginWithApple, "Unable to login with Apple.")
+        }
         disabled={loading}
       />
       <NavigationLink

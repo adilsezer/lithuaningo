@@ -23,6 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
+      usesAppleSignIn: true,
     },
     android: {
       googleServicesFile: "./google-services.json",
@@ -49,6 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       "expo-font",
+      "expo-apple-authentication",
     ],
     extra: {
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
