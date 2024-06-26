@@ -1,15 +1,19 @@
 // styles/componentStyles.ts
-import { StyleSheet } from "react-native";
+import { StyleSheet, Dimensions, Platform } from "react-native";
 import { ThemeColors } from "./colors";
+
+const { width } = Dimensions.get("window");
+
+const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 export const createComponentStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     input: {
       width: "100%",
-      marginVertical: 10,
+      marginVertical: isTablet ? 15 : 10,
       borderWidth: 1,
       borderColor: colors.border,
-      padding: 20,
+      padding: isTablet ? 25 : 20,
       borderRadius: 10,
       color: colors.text,
       fontFamily: "Roboto",
@@ -20,16 +24,16 @@ export const createComponentStyles = (colors: ThemeColors) =>
       backgroundColor: colors.primary,
       borderWidth: 1,
       borderColor: colors.border,
-      paddingVertical: 20,
-      paddingHorizontal: 20,
+      paddingVertical: isTablet ? 25 : 20,
+      paddingHorizontal: isTablet ? 25 : 20,
       borderRadius: 10,
-      marginVertical: 10,
-      width: "75%",
+      marginVertical: isTablet ? 15 : 10,
+      width: isTablet ? "90%" : "75%",
       justifyContent: "center",
     },
     icon: {
-      width: 20,
-      height: 20,
-      marginRight: 10,
+      width: isTablet ? 25 : 20,
+      height: isTablet ? 25 : 20,
+      marginRight: isTablet ? 15 : 10,
     },
   });
