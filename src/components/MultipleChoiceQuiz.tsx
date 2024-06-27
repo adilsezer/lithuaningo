@@ -105,15 +105,13 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         ))}
       {optionSelected && (
         <View>
-          <Text style={[globalStyles.text, styles.selectedOptionText]}>
+          <Text style={[globalStyles.text]}>
             You answered:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>{selectedOption}</Text>
+            <Text style={globalStyles.bold}>{selectedOption}</Text>
           </Text>
-          <Text style={[globalStyles.text, styles.correctAnswerText]}>
+          <Text style={[globalStyles.text]}>
             Correct answer:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>
-              {correctAnswerText}
-            </Text>
+            <Text style={globalStyles.bold}>{correctAnswerText}</Text>
           </Text>
         </View>
       )}
@@ -121,7 +119,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         <View>
           <Text
             style={[
-              styles.feedbackText,
+              globalStyles.title,
               { color: isCorrect ? globalColors.active : globalColors.error },
             ]}
           >
@@ -136,22 +134,6 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
 const styles = StyleSheet.create({
   optionContainer: {
     marginVertical: 5,
-  },
-  feedbackText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
-    fontWeight: "bold",
-  },
-  selectedOptionText: {
-    marginTop: 10,
-    fontSize: 16,
-    alignSelf: "center",
-  },
-  correctAnswerText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
   },
   image: {
     width: 250,

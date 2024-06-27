@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet } from "react-native";
+import { View, Text, Image, StyleSheet, Platform } from "react-native";
 import wordService, { Word } from "../services/data/wordService";
 import BackButton from "./BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -14,6 +14,8 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const [word, setWord] = useState<Word | null>(null);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
+
+  const isIpad = Platform.OS === "ios" && Platform.isPad;
 
   useEffect(() => {
     const loadWord = async () => {
@@ -57,7 +59,10 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   return (
     <View>
       <BackButton />
-      <Image source={{ uri: word.imageUrl }} style={styles.image} />
+      <Image
+        source={{ uri: word.imageUrl }}
+        style={[styles.image, isIpad && styles.imageIpad]}
+      />
       <Text style={globalStyles.title}>Word: {word.id}</Text>
       <Text style={[globalStyles.title, { color: globalColors.primary }]}>
         Translation: {word.englishTranslation}
@@ -77,6 +82,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     alignSelf: "center",
     borderRadius: 10,
+  },
+  imageIpad: {
+    width: 500, // Increased width for iPad
+    height: 500, // Increased height for iPad
   },
 });
 

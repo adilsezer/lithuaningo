@@ -88,15 +88,12 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       {image && <Image source={{ uri: image }} style={styles.image} />}
       {isSubmitPressed && (
         <View>
-          <Text style={[globalStyles.text, styles.selectedOptionText]}>
-            You answered:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>{inputText}</Text>
+          <Text style={globalStyles.text}>
+            You answered: <Text style={globalStyles.bold}>{inputText}</Text>
           </Text>
-          <Text style={[globalStyles.text, styles.correctAnswerText]}>
+          <Text style={globalStyles.text}>
             Correct answer:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>
-              {correctAnswerText}
-            </Text>
+            <Text style={globalStyles.bold}>{correctAnswerText}</Text>
           </Text>
         </View>
       )}
@@ -104,8 +101,10 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
         <View>
           <Text
             style={[
-              styles.feedbackText,
-              { color: isCorrect ? globalColors.active : globalColors.error },
+              globalStyles.title,
+              {
+                color: isCorrect ? globalColors.active : globalColors.error,
+              },
             ]}
           >
             {isCorrect ? "Correct" : "Incorrect"}
@@ -134,22 +133,6 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
 };
 
 const styles = StyleSheet.create({
-  feedbackText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
-    fontWeight: "bold",
-  },
-  selectedOptionText: {
-    marginTop: 10,
-    fontSize: 16,
-    alignSelf: "center",
-  },
-  correctAnswerText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
-  },
   image: {
     width: 250,
     height: 250,
