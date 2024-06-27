@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Image, StyleSheet, Platform } from "react-native";
+import {
+  View,
+  Text,
+  Image,
+  StyleSheet,
+  Platform,
+  Dimensions,
+} from "react-native";
 import wordService, { Word } from "../services/data/wordService";
 import BackButton from "./BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -15,7 +22,8 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
 
-  const isIpad = Platform.OS === "ios" && Platform.isPad;
+  const { width } = Dimensions.get("window");
+  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
   useEffect(() => {
     const loadWord = async () => {
@@ -61,7 +69,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
       <BackButton />
       <Image
         source={{ uri: word.imageUrl }}
-        style={[styles.image, isIpad && styles.imageIpad]}
+        style={[styles.image, isTablet && styles.imageIpad]}
       />
       <Text style={globalStyles.title}>Word: {word.id}</Text>
       <Text style={[globalStyles.title, { color: globalColors.primary }]}>

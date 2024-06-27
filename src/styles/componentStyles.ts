@@ -3,7 +3,6 @@ import { StyleSheet, Dimensions, Platform } from "react-native";
 import { ThemeColors } from "./colors";
 
 const { width } = Dimensions.get("window");
-
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 export const createComponentStyles = (colors: ThemeColors) =>

@@ -5,7 +5,6 @@ import { router } from "expo-router";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 const { width } = Dimensions.get("window");
-
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 const BackButton: React.FC = () => {

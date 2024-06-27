@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
@@ -33,7 +34,8 @@ const SentencesScreen: React.FC = () => {
 
   const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
 
-  const isIpad = Platform.OS === "ios" && Platform.isPad;
+  const { width } = Dimensions.get("window");
+  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
   useEffect(() => {
     const checkCompletionStatus = async () => {
@@ -187,7 +189,7 @@ const SentencesScreen: React.FC = () => {
                 style={[
                   globalStyles.text,
                   styles.wordText,
-                  isIpad && styles.wordTextIpad,
+                  isTablet && styles.wordTextIpad,
                 ]}
               >
                 {word}

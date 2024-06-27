@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   Platform,
+  Dimensions,
 } from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
@@ -19,14 +20,15 @@ const ExpandableDetails: React.FC<ExpandableDetailsProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
-  const isIpad = Platform.OS === "ios" && Platform.isPad;
+  const { width } = Dimensions.get("window");
+  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
   return (
     <View
       style={[
         styles.container,
         { borderColor: globalColors.border },
-        isIpad && styles.containerIpad,
+        isTablet && styles.containerIpad,
       ]}
     >
       <TouchableOpacity
