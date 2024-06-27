@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Image,
+  Dimensions,
+  Platform,
+} from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
 import CustomTextInput from "./CustomTextInput";
+
+const { width } = Dimensions.get("window");
+const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 interface FillInTheBlankQuizProps {
   sentenceText: string;
@@ -85,15 +96,29 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
         {isSubmitPressed ? getQuestionWithAnswer() : sentenceText}
       </Text>
       <ExpandableDetails translation={translation}></ExpandableDetails>
-      {image && <Image source={{ uri: image }} style={styles.image} />}
+      {image && (
+        <Image
+          source={{ uri: image }}
+          style={[styles.image, isTablet && styles.imageTablet]}
+        />
+      )}
       {isSubmitPressed && (
         <View>
-          <Text style={globalStyles.text}>
-            You answered: <Text style={globalStyles.bold}>{inputText}</Text>
+          <Text style={globalStyles.subtitle}>
+            You answered:{" "}
+            <Text
+              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
+            >
+              {inputText}
+            </Text>
           </Text>
-          <Text style={globalStyles.text}>
+          <Text style={globalStyles.subtitle}>
             Correct answer:{" "}
-            <Text style={globalStyles.bold}>{correctAnswerText}</Text>
+            <Text
+              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
+            >
+              {correctAnswerText}
+            </Text>
           </Text>
         </View>
       )}
@@ -139,6 +164,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     alignSelf: "center",
     borderRadius: 10,
+  },
+  imageTablet: {
+    width: 500, // Full width for tablet
+    height: 500,
   },
 });
 

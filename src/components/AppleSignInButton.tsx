@@ -27,7 +27,7 @@ const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
         buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
         buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
         cornerRadius={10} // Match custom button borderRadius
-        style={[globalStyles.button, styles.button, { width: defaultWidth }]}
+        style={[globalStyles.button, { width: defaultWidth, height: 55 }]}
         onPress={disabled ? () => {} : onPress}
       />
     </View>
@@ -38,9 +38,6 @@ const styles = StyleSheet.create({
   container: {
     alignItems: "center",
     justifyContent: "center",
-  },
-  button: {
-    height: 55,
   },
   disabled: {
     opacity: 0.5,

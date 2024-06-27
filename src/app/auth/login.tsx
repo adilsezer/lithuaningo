@@ -50,11 +50,7 @@ const LoginScreen: React.FC = () => {
         onChangeText={setPassword}
         secureTextEntry={true}
       />
-      <NavigationLink
-        text={"Forgot Password?"}
-        path={"/auth/forgot-password"}
-        style={{ textAlign: "right", marginLeft: "auto" }}
-      />
+
       <CustomButton
         onPress={() =>
           performLogin(
@@ -64,6 +60,10 @@ const LoginScreen: React.FC = () => {
         }
         title={"Log In with Email"}
         disabled={loading}
+      />
+      <NavigationLink
+        text={"Forgot Password?"}
+        path={"/auth/forgot-password"}
       />
       <OrSeperator />
       <CustomButton
