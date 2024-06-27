@@ -33,27 +33,13 @@ export default function AboutScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const appVersion = Constants.expoConfig?.version || "Unknown";
 
-  const dynamicStyles = StyleSheet.create({
-    link: {
-      color: globalColors.link,
-      fontSize: 16,
-      textDecorationLine: "underline",
-    },
-  });
-
   return (
     <ScrollView>
       <BackButton />
       <View style={styles.container}>
         <Text style={globalStyles.title}>About Lithuaningo</Text>
 
-        <Text
-          style={[
-            globalStyles.text,
-            styles.customText,
-            { textAlign: "justify" },
-          ]}
-        >
+        <Text style={[globalStyles.text, { textAlign: "justify" }]}>
           Lithuaningo is your gateway to mastering Lithuanian! Dive into
           learning with ease and fun. Our app provides a comprehensive learning
           experience with various features and tools to help you become
@@ -61,10 +47,13 @@ export default function AboutScreen() {
         </Text>
 
         <Text style={globalStyles.title}>Contact Us</Text>
-        <Text style={[globalStyles.text, styles.customText]}>
+        <Text style={[globalStyles.text]}>
           Email:{" "}
           <Text
-            style={dynamicStyles.link}
+            style={[
+              globalStyles.text,
+              { color: globalColors.link, textDecorationLine: "underline" },
+            ]}
             onPress={() => handleLinkPress("mailto:lithuaningo@gmail.com")}
           >
             lithuaningo@gmail.com
@@ -72,16 +61,19 @@ export default function AboutScreen() {
         </Text>
 
         <Text style={globalStyles.title}>License</Text>
-        <Text style={[globalStyles.text, styles.customText]}>
+        <Text style={[globalStyles.text]}>
           This app is licensed under the MIT License.
         </Text>
 
         <Text style={globalStyles.title}>Version</Text>
-        <Text style={[globalStyles.text, styles.customText]}>{appVersion}</Text>
+        <Text style={[globalStyles.text]}>{appVersion}</Text>
 
         <Text style={globalStyles.title}>Privacy Policy</Text>
         <Text
-          style={[globalStyles.text, dynamicStyles.link]}
+          style={[
+            globalStyles.text,
+            { color: globalColors.link, textDecorationLine: "underline" },
+          ]}
           onPress={() => router.push("/privacy-policy")}
         >
           View our Privacy Policy
@@ -90,12 +82,8 @@ export default function AboutScreen() {
     </ScrollView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-  },
-  customText: {
-    fontSize: 16,
   },
 });

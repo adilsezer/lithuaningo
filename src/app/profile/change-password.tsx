@@ -7,6 +7,7 @@ import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useRouter } from "expo-router";
+import CustomTextInput from "@components/CustomTextInput";
 
 const ChangePasswordScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -42,7 +43,7 @@ const ChangePasswordScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Change Password</Text>
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="New Password"
         value={newPassword}
@@ -50,7 +51,7 @@ const ChangePasswordScreen: React.FC = () => {
         onChangeText={setNewPassword}
         placeholderTextColor={globalColors.placeholder}
       />
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="Confirm New Password"
         value={confirmNewPassword}

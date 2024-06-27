@@ -8,6 +8,7 @@ import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useRouter } from "expo-router";
+import CustomTextInput from "@components/CustomTextInput";
 
 const EditProfileScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -45,7 +46,7 @@ const EditProfileScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Edit Profile</Text>
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="User Name"
         value={name}

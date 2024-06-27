@@ -42,13 +42,13 @@ const DashboardScreen: React.FC = () => {
         Let's continue learning Lithuanian together!
       </Text>
       <View style={[styles.section, { backgroundColor: colors.card }]}>
-        <Text style={[styles.cardTitle, { color: colors.cardText }]}>
+        <Text style={[globalStyles.bold, { color: colors.cardText }]}>
           Today's Learning
         </Text>
-        <Text style={[styles.cardValue, { color: colors.cardText }]}>
+        <Text style={[globalStyles.text, { color: colors.cardText }]}>
           Completed Questions: {todayAnsweredQuestions}
         </Text>
-        <Text style={[styles.cardValue, { color: colors.cardText }]}>
+        <Text style={[globalStyles.text, { color: colors.cardText }]}>
           Time Spent Today: {formatTime(minutesSpentToday)}
         </Text>
         <ProgressBar progress={todayAnsweredQuestions / 10} />
@@ -95,15 +95,6 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
-  },
-  cardTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    marginBottom: 10,
-  },
-  cardValue: {
-    fontSize: 16,
     marginBottom: 10,
   },
 });

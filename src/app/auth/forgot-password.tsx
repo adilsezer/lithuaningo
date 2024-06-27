@@ -6,6 +6,7 @@ import CustomButton from "@components/CustomButton";
 import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { selectIsLoading, setLoading } from "@src/redux/slices/uiSlice";
+import CustomTextInput from "@components/CustomTextInput";
 
 const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -29,7 +30,7 @@ const ForgotPasswordScreen: React.FC = () => {
     } else {
       Alert.alert(
         "Error",
-        result.message || "Failed to send password reset email.",
+        result.message || "Failed to send password reset email."
       );
     }
   };
@@ -41,7 +42,7 @@ const ForgotPasswordScreen: React.FC = () => {
       <Text style={globalStyles.text}>
         Enter your email and we will send you a link to reset your password.
       </Text>
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="Email"
         value={email}

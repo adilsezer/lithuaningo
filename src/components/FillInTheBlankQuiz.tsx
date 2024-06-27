@@ -3,6 +3,7 @@ import { View, Text, TextInput, StyleSheet, Image } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
+import CustomTextInput from "./CustomTextInput";
 
 interface FillInTheBlankQuizProps {
   sentenceText: string;
@@ -113,7 +114,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       )}
       {!isSubmitPressed && (
         <View>
-          <TextInput
+          <CustomTextInput
             style={globalStyles.input}
             placeholder="Type your answer here"
             placeholderTextColor={globalColors.placeholder}

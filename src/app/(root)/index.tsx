@@ -4,8 +4,6 @@ import { router } from "expo-router";
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
-const isTablet = Platform.OS === "ios" && Platform.isPad;
-
 const WelcomeScreen = () => {
   const handlePress = (tab: "login" | "signup") => {
     router.push(`/auth/${tab}`);
@@ -41,11 +39,9 @@ const WelcomeScreen = () => {
 const styles = StyleSheet.create({
   buttonContainer: {
     justifyContent: "center",
-    width: isTablet ? "60%" : "80%",
     marginBottom: 20, // Adding margin to create some space at the bottom
   },
   container: {
-    alignItems: "center",
     flex: 1,
     justifyContent: "space-between",
   },
@@ -57,7 +53,7 @@ const styles = StyleSheet.create({
   },
   imageContainer: {
     width: "100%",
-    height: "40%", // Adjust the height as needed
+    height: "50%", // Adjust the height as needed
   },
   textContainer: {
     width: "100%",

@@ -9,6 +9,7 @@ import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 import AppleSignInButton from "@components/AppleSignInButton";
+import CustomTextInput from "@components/CustomTextInput";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -36,22 +37,18 @@ const LoginScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Welcome Back</Text>
-      <TextInput
-        style={globalStyles.input}
+      <CustomTextInput
         placeholder="Email"
         value={email}
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
-        placeholderTextColor={globalColors.placeholder}
       />
-      <TextInput
-        style={globalStyles.input}
+      <CustomTextInput
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry={true}
-        placeholderTextColor={globalColors.placeholder}
       />
       <NavigationLink
         text={"Forgot Password?"}
