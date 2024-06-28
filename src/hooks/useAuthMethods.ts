@@ -177,8 +177,28 @@ const useAuthMethods = () => {
     return result;
   };
 
-  const handleDeleteUserAccount = async () => {
-    const result = await handleAction(() => deleteUser(dispatch));
+  const handleDeleteUserAccount = async (password: string) => {
+    const action = async () => {
+      const user = auth().currentUser;
+      if (!user) {
+        throw new Error("No user is currently signed in.");
+      }
+
+      // Reauthenticate user
+      const credential = auth.EmailAuthProvider.credential(
+        user.email!,
+        password
+      );
+      await reauthenticateUser(credential, dispatch);
+
+      // Delete user document from Firestore
+      await firestore().collection("userProfiles").doc(user.uid).delete();
+
+      // Delete user
+      await deleteUser(dispatch);
+    };
+
+    const result = await handleAction(action, "/");
     if (result.success) {
       result.message = "Account deleted successfully.";
     }
