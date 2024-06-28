@@ -167,10 +167,28 @@ const useAuthMethods = () => {
     return result;
   };
 
-  const handleUpdateUserPassword = async (newPassword: string) => {
-    const result = await handleAction(() =>
-      updateUserPassword(newPassword, dispatch)
-    );
+  const handleUpdateUserPassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
+    const action = async () => {
+      const user = auth().currentUser;
+      if (!user) {
+        throw new Error("No user is currently signed in.");
+      }
+
+      // Reauthenticate user with current password
+      const credential = auth.EmailAuthProvider.credential(
+        user.email!,
+        currentPassword
+      );
+      await reauthenticateUser(credential, dispatch);
+
+      // Update password
+      await updateUserPassword(newPassword, dispatch);
+    };
+
+    const result = await handleAction(action, "/dashboard/profile");
     if (result.success) {
       result.message = "Password updated successfully.";
     }
