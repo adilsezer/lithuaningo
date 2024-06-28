@@ -46,6 +46,26 @@ export const signInWithApple = async (
   }
 };
 
+export const getAppleCredential =
+  async (): Promise<FirebaseAuthTypes.AuthCredential> => {
+    const appleAuthRequestResponse = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+
+    const { identityToken, authorizationCode } = appleAuthRequestResponse;
+
+    if (!identityToken || !authorizationCode) {
+      throw new Error(
+        "Failed to retrieve identity token or authorization code"
+      );
+    }
+
+    return auth.AppleAuthProvider.credential(identityToken, authorizationCode);
+  };
+
 export const signOutApple = async (dispatch: AppDispatch): Promise<void> => {
   try {
     await auth().signOut();

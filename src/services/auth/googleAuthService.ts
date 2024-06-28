@@ -34,7 +34,14 @@ export const signInWithGoogle = async (
   }
 };
 
-export const signOut = async (dispatch: AppDispatch): Promise<void> => {
+export const getGoogleCredential =
+  async (): Promise<FirebaseAuthTypes.AuthCredential> => {
+    await GoogleSignin.hasPlayServices();
+    const userInfo = await GoogleSignin.signIn();
+    return auth.GoogleAuthProvider.credential(userInfo.idToken);
+  };
+
+export const signOutGoogle = async (dispatch: AppDispatch): Promise<void> => {
   try {
     await GoogleSignin.revokeAccess();
     await GoogleSignin.signOut();

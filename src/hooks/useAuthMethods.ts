@@ -1,4 +1,3 @@
-import auth from "@react-native-firebase/auth";
 import { useCallback } from "react";
 import { useAppDispatch } from "../redux/hooks";
 import { getErrorMessage } from "../utils/errorMessages";
@@ -14,12 +13,16 @@ import {
   deleteUser,
   reauthenticateUser,
 } from "@src/services/auth/firebaseAuthService";
-import { signInWithGoogle } from "@src/services/auth/googleAuthService";
-import { signInWithApple } from "@src/services/auth/appleAuthService"; // Import Apple Sign-In service
+import {
+  signInWithGoogle,
+  getGoogleCredential,
+} from "@src/services/auth/googleAuthService";
+import {
+  signInWithApple,
+  getAppleCredential,
+} from "@src/services/auth/appleAuthService";
 import firestore from "@react-native-firebase/firestore";
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import * as AppleAuthentication from "expo-apple-authentication";
-import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 type ActionHandler<T = void> = () => Promise<T>;
 
@@ -222,7 +225,7 @@ const useAuthMethods = () => {
         throw new Error("No user is currently signed in.");
       }
 
-      let credential;
+      let credential: FirebaseAuthTypes.AuthCredential | undefined;
 
       if (
         user.providerData.some((provider) => provider.providerId === "password")
@@ -238,32 +241,20 @@ const useAuthMethods = () => {
         )
       ) {
         // If user signed in with Google
-        const userInfo = await GoogleSignin.signIn();
-        credential = auth.GoogleAuthProvider.credential(userInfo.idToken);
+        credential = await getGoogleCredential();
       } else if (
         user.providerData.some(
           (provider) => provider.providerId === "apple.com"
         )
       ) {
         // If user signed in with Apple
-        const appleAuthRequestResponse = await AppleAuthentication.signInAsync({
-          requestedScopes: [
-            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-            AppleAuthentication.AppleAuthenticationScope.EMAIL,
-          ],
-        });
-        const { identityToken, authorizationCode } = appleAuthRequestResponse;
-        if (!identityToken || !authorizationCode) {
-          throw new Error(
-            "Failed to retrieve identity token or authorization code"
-          );
-        }
-        credential = auth.AppleAuthProvider.credential(
-          identityToken,
-          authorizationCode
-        );
+        credential = await getAppleCredential();
       } else {
         throw new Error("Unsupported authentication provider.");
+      }
+
+      if (!credential) {
+        throw new Error("Failed to retrieve credential for reauthentication.");
       }
 
       // Reauthenticate user
@@ -299,7 +290,7 @@ const useAuthMethods = () => {
     handleSignUpWithEmail,
     handleLoginWithEmail,
     handleLoginWithGoogle,
-    handleLoginWithApple, // Add Apple login handler
+    handleLoginWithApple,
     handleSignOut,
     handlePasswordReset,
     handleUpdateUserProfile,
