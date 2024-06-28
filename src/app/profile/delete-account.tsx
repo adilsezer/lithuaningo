@@ -5,11 +5,17 @@ import CustomTextInput from "@components/CustomTextInput";
 import BackButton from "@components/BackButton";
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import auth from "@react-native-firebase/auth";
 
 const DeleteAccountScreen = () => {
   const [password, setPassword] = useState("");
   const { handleDeleteUserAccount } = useAuthMethods();
   const { styles: globalStyles } = useThemeStyles();
+
+  const user = auth().currentUser;
+  const isPasswordProvider = user?.providerData.some(
+    (provider) => provider.providerId === "password"
+  );
 
   const handleDelete = async () => {
     Alert.alert(
@@ -25,7 +31,9 @@ const DeleteAccountScreen = () => {
           style: "destructive",
           onPress: async () => {
             try {
-              const result = await handleDeleteUserAccount(password);
+              const result = await handleDeleteUserAccount(
+                isPasswordProvider ? password : undefined
+              );
               if (result.success) {
                 Alert.alert("Success", result.message);
               } else {
@@ -54,15 +62,18 @@ const DeleteAccountScreen = () => {
       <BackButton />
       <Text style={globalStyles.text}>
         Deleting your account is a permanent action and cannot be undone. All
-        your data will be lost. To proceed, please enter your password below to
-        confirm your identity and delete your account.
+        your data will be lost.
+        {isPasswordProvider &&
+          " To proceed, please enter your password below to confirm your identity and delete your account."}
       </Text>
-      <CustomTextInput
-        secureTextEntry
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-      />
+      {isPasswordProvider && (
+        <CustomTextInput
+          secureTextEntry
+          placeholder="Password"
+          value={password}
+          onChangeText={setPassword}
+        />
+      )}
       <CustomButton title="Delete Account" onPress={handleDelete} />
     </View>
   );

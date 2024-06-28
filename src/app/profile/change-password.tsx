@@ -8,6 +8,7 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useRouter } from "expo-router";
 import CustomTextInput from "@components/CustomTextInput";
+import auth from "@react-native-firebase/auth";
 
 const ChangePasswordScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -19,6 +20,9 @@ const ChangePasswordScreen: React.FC = () => {
   const [newPassword, setNewPassword] = useState<string>("");
   const [confirmNewPassword, setConfirmNewPassword] = useState<string>("");
 
+  const user = auth().currentUser;
+  const providerId = user?.providerData[0]?.providerId;
+
   const handleChangePassword = async () => {
     if (newPassword !== confirmNewPassword) {
       Alert.alert("Error", "New passwords do not match.");
@@ -28,15 +32,22 @@ const ChangePasswordScreen: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      const result = await handleUpdateUserPassword(
-        currentPassword,
-        newPassword
-      );
-      if (result.success) {
-        Alert.alert("Success", "Password updated successfully.");
-        router.push("/dashboard/profile");
+      if (providerId === "password") {
+        const result = await handleUpdateUserPassword(
+          currentPassword,
+          newPassword
+        );
+        if (result.success) {
+          Alert.alert("Success", "Password updated successfully.");
+          router.push("/dashboard/profile");
+        } else {
+          Alert.alert("Error", result.message || "Failed to update password.");
+        }
       } else {
-        Alert.alert("Error", result.message || "Failed to update password.");
+        Alert.alert(
+          "Error",
+          "Password change is not supported for your login method."
+        );
       }
     } finally {
       dispatch(setLoading(false));
@@ -47,14 +58,16 @@ const ChangePasswordScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Change Password</Text>
-      <CustomTextInput
-        style={globalStyles.input}
-        placeholder="Current Password"
-        value={currentPassword}
-        secureTextEntry
-        onChangeText={setCurrentPassword}
-        placeholderTextColor={globalColors.placeholder}
-      />
+      {providerId === "password" && (
+        <CustomTextInput
+          style={globalStyles.input}
+          placeholder="Current Password"
+          value={currentPassword}
+          secureTextEntry
+          onChangeText={setCurrentPassword}
+          placeholderTextColor={globalColors.placeholder}
+        />
+      )}
       <CustomTextInput
         style={globalStyles.input}
         placeholder="New Password"

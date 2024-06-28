@@ -18,6 +18,8 @@ import { signInWithGoogle } from "@src/services/auth/googleAuthService";
 import { signInWithApple } from "@src/services/auth/appleAuthService"; // Import Apple Sign-In service
 import firestore from "@react-native-firebase/firestore";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
 
 type ActionHandler<T = void> = () => Promise<T>;
 
@@ -213,18 +215,58 @@ const useAuthMethods = () => {
     return result;
   };
 
-  const handleDeleteUserAccount = async (password: string) => {
+  const handleDeleteUserAccount = async (password?: string) => {
     const action = async () => {
       const user = auth().currentUser;
       if (!user) {
         throw new Error("No user is currently signed in.");
       }
 
+      let credential;
+
+      if (
+        user.providerData.some((provider) => provider.providerId === "password")
+      ) {
+        // If user signed in with email and password
+        if (!password) {
+          throw new Error("Password is required for reauthentication.");
+        }
+        credential = auth.EmailAuthProvider.credential(user.email!, password);
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "google.com"
+        )
+      ) {
+        // If user signed in with Google
+        const userInfo = await GoogleSignin.signIn();
+        credential = auth.GoogleAuthProvider.credential(userInfo.idToken);
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "apple.com"
+        )
+      ) {
+        // If user signed in with Apple
+        const appleAuthRequestResponse = await AppleAuthentication.signInAsync({
+          requestedScopes: [
+            AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+            AppleAuthentication.AppleAuthenticationScope.EMAIL,
+          ],
+        });
+        const { identityToken, authorizationCode } = appleAuthRequestResponse;
+        if (!identityToken || !authorizationCode) {
+          throw new Error(
+            "Failed to retrieve identity token or authorization code"
+          );
+        }
+        credential = auth.AppleAuthProvider.credential(
+          identityToken,
+          authorizationCode
+        );
+      } else {
+        throw new Error("Unsupported authentication provider.");
+      }
+
       // Reauthenticate user
-      const credential = auth.EmailAuthProvider.credential(
-        user.email!,
-        password
-      );
       await reauthenticateUser(credential, dispatch);
 
       // Delete user document from Firestore
