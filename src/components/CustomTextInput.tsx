@@ -32,11 +32,12 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
+  // Determine if the device is a tablet
+  const isTablet =
+    (Platform.OS === "ios" && Platform.isPad) || screenWidth >= 768;
+
   // Determine the default width for iPad
-  const defaultWidth =
-    Platform.OS === "ios" && screenWidth >= 768 && screenWidth <= 1024
-      ? "75%"
-      : "100%";
+  const defaultWidth = isTablet ? "75%" : "100%";
 
   return (
     <View

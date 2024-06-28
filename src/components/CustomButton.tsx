@@ -35,11 +35,12 @@ const CustomButton: React.FC<ButtonProps> = ({
   const { styles: globalStyles } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
+  // Determine if the device is a tablet
+  const isTablet =
+    (Platform.OS === "ios" && Platform.isPad) || screenWidth >= 768;
+
   // Determine the default width for iPad
-  const defaultWidth =
-    Platform.OS === "ios" && screenWidth >= 768 && screenWidth <= 1024
-      ? "50%"
-      : undefined;
+  const defaultWidth = isTablet ? "50%" : undefined;
 
   // Conditionally create a width style object if width or defaultWidth is defined
   const widthStyle: ViewStyle | {} =

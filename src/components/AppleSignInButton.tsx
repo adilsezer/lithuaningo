@@ -15,11 +15,12 @@ const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
   const { styles: globalStyles } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
+  // Determine if the device is a tablet
+  const isTablet =
+    (Platform.OS === "ios" && Platform.isPad) || screenWidth >= 768;
+
   // Determine the default width for iPad
-  const defaultWidth =
-    Platform.OS === "ios" && screenWidth >= 768 && screenWidth <= 1024
-      ? "50%"
-      : "75%";
+  const defaultWidth = isTablet ? "50%" : "75%";
 
   return (
     <View style={[styles.container, disabled && styles.disabled]}>
