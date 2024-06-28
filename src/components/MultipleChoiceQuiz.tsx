@@ -1,8 +1,18 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  Dimensions,
+  Platform,
+} from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
+
+const { width } = Dimensions.get("window");
+const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 interface MultipleChoiceQuizProps {
   sentenceText: string;
@@ -66,14 +76,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     return parts.map((part, index) => (
       <Text
         key={index}
-        style={
-          index % 2 === 1
-            ? {
-                fontFamily: "Roboto-Bold",
-                fontSize: 18,
-              }
-            : {}
-        }
+        style={index % 2 === 1 ? { fontFamily: "Roboto-Bold" } : {}}
       >
         {part}
       </Text>
@@ -85,7 +88,12 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       <Text style={globalStyles.subtitle}>{renderBoldText(questionText)}</Text>
       <Text style={globalStyles.title}>{sentenceText}</Text>
       <ExpandableDetails translation={translation}></ExpandableDetails>
-      {image && <Image source={{ uri: image }} style={styles.image} />}
+      {image && (
+        <Image
+          source={{ uri: image }}
+          style={[styles.image, isTablet && styles.imageTablet]}
+        />
+      )}
       {!optionSelected &&
         options.map((option, index) => (
           <View key={index} style={styles.optionContainer}>
@@ -105,13 +113,19 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         ))}
       {optionSelected && (
         <View>
-          <Text style={[globalStyles.text, styles.selectedOptionText]}>
+          <Text style={[globalStyles.subtitle]}>
             You answered:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>{selectedOption}</Text>
+            <Text
+              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
+            >
+              {selectedOption}
+            </Text>
           </Text>
-          <Text style={[globalStyles.text, styles.correctAnswerText]}>
+          <Text style={[globalStyles.subtitle]}>
             Correct answer:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>
+            <Text
+              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
+            >
               {correctAnswerText}
             </Text>
           </Text>
@@ -121,7 +135,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         <View>
           <Text
             style={[
-              styles.feedbackText,
+              globalStyles.title,
               { color: isCorrect ? globalColors.active : globalColors.error },
             ]}
           >
@@ -137,28 +151,16 @@ const styles = StyleSheet.create({
   optionContainer: {
     marginVertical: 5,
   },
-  feedbackText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
-    fontWeight: "bold",
-  },
-  selectedOptionText: {
-    marginTop: 10,
-    fontSize: 16,
-    alignSelf: "center",
-  },
-  correctAnswerText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
-  },
   image: {
     width: 250,
     height: 250,
-    marginBottom: 10,
+    marginBottom: 5,
     alignSelf: "center",
     borderRadius: 10,
+  },
+  imageTablet: {
+    width: 500,
+    height: 500,
   },
 });
 

@@ -65,9 +65,14 @@ export default function ProfileScreen() {
           onPress={() => navigateTo("/profile/change-password")}
         />
         <CustomButton
+          title="Delete Account"
+          onPress={() => navigateTo("/profile/delete-account")}
+        />
+        <CustomButton
           title="About the App"
           onPress={() => navigateTo("/about")}
         />
+
         <CustomButton title="Logout" onPress={logout} />
       </View>
     </ScrollView>

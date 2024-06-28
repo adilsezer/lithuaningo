@@ -1,6 +1,13 @@
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  Dimensions,
+} from "react-native";
 import Icon from "react-native-vector-icons/Ionicons";
 
 interface ExpandableDetailsProps {
@@ -13,8 +20,17 @@ const ExpandableDetails: React.FC<ExpandableDetailsProps> = ({
   const [isExpanded, setIsExpanded] = useState(false);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
+  const { width } = Dimensions.get("window");
+  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
+
   return (
-    <View style={[styles.container, { borderColor: globalColors.border }]}>
+    <View
+      style={[
+        styles.container,
+        { borderColor: globalColors.border },
+        isTablet && styles.containerIpad,
+      ]}
+    >
       <TouchableOpacity
         onPress={() => setIsExpanded(!isExpanded)}
         style={styles.summaryContainer}
@@ -39,10 +55,16 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
     borderRadius: 5,
+    width: "100%",
+    alignSelf: "center",
+  },
+  containerIpad: {
+    width: "75%", // Full width for iPad
   },
   summaryContainer: {
     flexDirection: "row",
     alignItems: "center",
+    alignSelf: "center",
   },
 });
 

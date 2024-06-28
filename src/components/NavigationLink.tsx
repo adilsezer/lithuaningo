@@ -22,7 +22,14 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
 
   return (
     <TouchableOpacity onPress={handlePress}>
-      <Text style={[{ color: globalColors.link }, styles.link, style]}>
+      <Text
+        style={[
+          globalStyles.text,
+          { color: globalColors.link },
+          styles.link,
+          style,
+        ]}
+      >
         {text}
       </Text>
     </TouchableOpacity>

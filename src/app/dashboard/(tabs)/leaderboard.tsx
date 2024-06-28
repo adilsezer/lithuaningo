@@ -13,23 +13,13 @@ const Leaderboard = () => {
       <Text style={globalStyles.title}>Leaderboard</Text>
       <Text style={globalStyles.subtitle}>Last 7 Days</Text>
       <View style={[styles.header, { backgroundColor: globalColors.primary }]}>
-        <Text
-          style={[styles.headerCell, styles.rank, { color: globalColors.text }]}
-        >
+        <Text style={[globalStyles.bold, styles.headerCell, styles.rank]}>
           Rank
         </Text>
-        <Text
-          style={[styles.headerCell, styles.name, { color: globalColors.text }]}
-        >
+        <Text style={[globalStyles.bold, styles.headerCell, styles.name]}>
           Name
         </Text>
-        <Text
-          style={[
-            styles.headerCell,
-            styles.score,
-            { color: globalColors.text },
-          ]}
-        >
+        <Text style={[globalStyles.bold, styles.headerCell, styles.score]}>
           Score
         </Text>
       </View>
@@ -38,19 +28,13 @@ const Leaderboard = () => {
           key={leader.id}
           style={[styles.row, { borderBottomColor: globalColors.primary }]}
         >
-          <Text
-            style={[styles.cell, styles.rank, { color: globalColors.text }]}
-          >
+          <Text style={[globalStyles.text, styles.cell, styles.rank]}>
             {index + 1}
           </Text>
-          <Text
-            style={[styles.cell, styles.name, { color: globalColors.text }]}
-          >
+          <Text style={[globalStyles.text, styles.cell, styles.name]}>
             {leader.name}
           </Text>
-          <Text
-            style={[styles.cell, styles.score, { color: globalColors.text }]}
-          >
+          <Text style={[globalStyles.text, styles.cell, styles.score]}>
             {leader.score}
           </Text>
         </View>
@@ -77,7 +61,6 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
   },
   headerCell: {
-    fontWeight: "bold",
     padding: 10,
   },
   cell: {

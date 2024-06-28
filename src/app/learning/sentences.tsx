@@ -1,5 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+  Platform,
+  Dimensions,
+} from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import userProfileService from "../../services/data/userProfileService";
@@ -26,6 +33,9 @@ const SentencesScreen: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
+
+  const { width } = Dimensions.get("window");
+  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
   useEffect(() => {
     const checkCompletionStatus = async () => {
@@ -175,7 +185,15 @@ const SentencesScreen: React.FC = () => {
                 },
               ]}
             >
-              <Text style={[globalStyles.text, styles.wordText]}>{word}</Text>
+              <Text
+                style={[
+                  globalStyles.text,
+                  styles.wordText,
+                  isTablet && styles.wordTextIpad,
+                ]}
+              >
+                {word}
+              </Text>
             </TouchableOpacity>
           ))}
         </View>
@@ -216,7 +234,10 @@ const styles = StyleSheet.create({
   },
   wordText: {
     fontSize: 20,
-    textAlign: "center", // Ensures the text is centered
+    textAlign: "center",
+  },
+  wordTextIpad: {
+    fontSize: 30, // Larger font size for iPad
   },
   allWordsClickedSection: {
     marginVertical: 60,

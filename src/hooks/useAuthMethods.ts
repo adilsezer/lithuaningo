@@ -1,4 +1,3 @@
-import auth from "@react-native-firebase/auth";
 import { useCallback } from "react";
 import { useAppDispatch } from "../redux/hooks";
 import { getErrorMessage } from "../utils/errorMessages";
@@ -14,9 +13,16 @@ import {
   deleteUser,
   reauthenticateUser,
 } from "@src/services/auth/firebaseAuthService";
-import { signInWithGoogle } from "@src/services/auth/googleAuthService";
+import {
+  signInWithGoogle,
+  getGoogleCredential,
+} from "@src/services/auth/googleAuthService";
+import {
+  signInWithApple,
+  getAppleCredential,
+} from "@src/services/auth/appleAuthService";
 import firestore from "@react-native-firebase/firestore";
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 
 type ActionHandler<T = void> = () => Promise<T>;
 
@@ -112,6 +118,28 @@ const useAuthMethods = () => {
     return await handleAction(action, "/dashboard");
   };
 
+  const handleLoginWithApple = async () => {
+    const action = async () => {
+      const userCredential = await signInWithApple(dispatch);
+      const user = userCredential.user;
+
+      const userDoc = await firestore()
+        .collection("userProfiles")
+        .doc(user.uid)
+        .get();
+      if (!userDoc.exists) {
+        await firestore()
+          .collection("userProfiles")
+          .doc(user.uid)
+          .set({
+            name: user.displayName || "No Name",
+            email: user.email,
+          });
+      }
+    };
+    return await handleAction(action, "/dashboard");
+  };
+
   const handleSignOut = async () => {
     return await handleAction(() => signOutUser(dispatch), "/");
   };
@@ -127,35 +155,142 @@ const useAuthMethods = () => {
     return result;
   };
 
-  const handleUpdateUserProfile = async (updates: { displayName?: string }) => {
-    const result = await handleAction(async () => {
-      await updateUserProfile(updates, dispatch);
+  const handleUpdateUserProfile = async (
+    currentPassword: string,
+    updates: { displayName?: string }
+  ) => {
+    const action = async () => {
       const user = auth().currentUser;
-      if (user && updates.displayName) {
+      if (!user) {
+        throw new Error("No user is currently signed in.");
+      }
+
+      let credential: FirebaseAuthTypes.AuthCredential | undefined;
+
+      if (
+        user.providerData.some((provider) => provider.providerId === "password")
+      ) {
+        if (!currentPassword) {
+          throw new Error("Password is required for reauthentication.");
+        }
+        credential = auth.EmailAuthProvider.credential(
+          user.email!,
+          currentPassword
+        );
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "google.com"
+        )
+      ) {
+        credential = await getGoogleCredential();
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "apple.com"
+        )
+      ) {
+        credential = await getAppleCredential();
+      } else {
+        throw new Error("Unsupported authentication provider.");
+      }
+
+      if (!credential) {
+        throw new Error("Failed to retrieve credential for reauthentication.");
+      }
+
+      await reauthenticateUser(credential, dispatch);
+      await updateUserProfile(updates, dispatch);
+
+      if (updates.displayName) {
         await firestore()
           .collection("userProfiles")
           .doc(user.uid)
           .update({ name: updates.displayName });
       }
-    });
+    };
+
+    const result = await handleAction(action, "/dashboard/profile");
     if (result.success) {
       result.message = "Profile updated successfully.";
     }
     return result;
   };
 
-  const handleUpdateUserPassword = async (newPassword: string) => {
-    const result = await handleAction(() =>
-      updateUserPassword(newPassword, dispatch)
-    );
+  const handleUpdateUserPassword = async (
+    currentPassword: string,
+    newPassword: string
+  ) => {
+    const action = async () => {
+      const user = auth().currentUser;
+      if (!user) {
+        throw new Error("No user is currently signed in.");
+      }
+
+      // Reauthenticate user with current password
+      const credential = auth.EmailAuthProvider.credential(
+        user.email!,
+        currentPassword
+      );
+      await reauthenticateUser(credential, dispatch);
+
+      // Update password
+      await updateUserPassword(newPassword, dispatch);
+    };
+
+    const result = await handleAction(action, "/dashboard/profile");
     if (result.success) {
       result.message = "Password updated successfully.";
     }
     return result;
   };
 
-  const handleDeleteUserAccount = async () => {
-    const result = await handleAction(() => deleteUser(dispatch));
+  const handleDeleteUserAccount = async (password?: string) => {
+    const action = async () => {
+      const user = auth().currentUser;
+      if (!user) {
+        throw new Error("No user is currently signed in.");
+      }
+
+      let credential: FirebaseAuthTypes.AuthCredential | undefined;
+
+      if (
+        user.providerData.some((provider) => provider.providerId === "password")
+      ) {
+        // If user signed in with email and password
+        if (!password) {
+          throw new Error("Password is required for reauthentication.");
+        }
+        credential = auth.EmailAuthProvider.credential(user.email!, password);
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "google.com"
+        )
+      ) {
+        credential = await getGoogleCredential();
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "apple.com"
+        )
+      ) {
+        credential = await getAppleCredential();
+      } else {
+        throw new Error("Unsupported authentication provider.");
+      }
+
+      if (!credential) {
+        throw new Error("Failed to retrieve credential for reauthentication.");
+      }
+
+      // Reauthenticate user
+      await reauthenticateUser(credential, dispatch);
+
+      // Delete user document from Firestore
+      await firestore().collection("userProfiles").doc(user.uid).delete();
+
+      // Delete user
+      await deleteUser(dispatch);
+    };
+
+    const result = await handleAction(action, "/");
     if (result.success) {
       result.message = "Account deleted successfully.";
     }
@@ -178,6 +313,7 @@ const useAuthMethods = () => {
     handleSignUpWithEmail,
     handleLoginWithEmail,
     handleLoginWithGoogle,
+    handleLoginWithApple,
     handleSignOut,
     handlePasswordReset,
     handleUpdateUserProfile,

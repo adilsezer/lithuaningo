@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "Lithuaningo",
     slug: "lithuaningo",
-    version: "1.1.0",
+    version: "1.2.0",
     orientation: "portrait",
     icon: "./assets/icons/ios/icon.png",
     userInterfaceStyle: "automatic",
@@ -23,6 +23,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
       },
+      usesAppleSignIn: true,
     },
     android: {
       googleServicesFile: "./google-services.json",
@@ -49,6 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       "expo-font",
+      "expo-apple-authentication",
     ],
     extra: {
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,

@@ -7,6 +7,8 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
+import AppleSignInButton from "@components/AppleSignInButton";
+import CustomTextInput from "@components/CustomTextInput";
 
 const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -17,7 +19,8 @@ const SignUpScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
-  const { handleSignUpWithEmail, handleLoginWithGoogle } = useAuthMethods();
+  const { handleSignUpWithEmail, handleLoginWithGoogle, handleLoginWithApple } =
+    useAuthMethods();
 
   const performSignUp = async (
     action: () => Promise<{ success: boolean; message?: string }>
@@ -50,7 +53,7 @@ const SignUpScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Create Account</Text>
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="Name"
         value={displayName}
@@ -58,7 +61,7 @@ const SignUpScreen: React.FC = () => {
         autoCapitalize="none"
         placeholderTextColor={globalColors.placeholder}
       />
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="Email"
         value={email}
@@ -67,7 +70,7 @@ const SignUpScreen: React.FC = () => {
         autoCapitalize="none"
         placeholderTextColor={globalColors.placeholder}
       />
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="Password"
         value={password}
@@ -75,7 +78,7 @@ const SignUpScreen: React.FC = () => {
         secureTextEntry
         placeholderTextColor={globalColors.placeholder}
       />
-      <TextInput
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="Confirm Password"
         value={confirmPassword}
@@ -93,8 +96,12 @@ const SignUpScreen: React.FC = () => {
         onPress={() => performSignUp(handleLoginWithGoogle)}
         title={"Sign up with Google"}
         icon={require("assets/images/google-logo.png")}
-        style={{ backgroundColor: globalColors.card }}
+        style={{ backgroundColor: globalColors.card, paddingVertical: 18 }}
         textStyle={{ color: globalColors.cardText }}
+        disabled={loading}
+      />
+      <AppleSignInButton
+        onPress={() => performSignUp(handleLoginWithApple)}
         disabled={loading}
       />
     </View>

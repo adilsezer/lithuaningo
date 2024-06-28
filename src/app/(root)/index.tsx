@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { View, Text, StyleSheet, Image, Platform } from "react-native";
 import { router } from "expo-router";
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -18,60 +18,47 @@ const WelcomeScreen = () => {
           style={styles.image}
         />
       </View>
-      <View style={styles.textAndButtonContainer}>
-        <View style={styles.textContainer}>
-          <Text style={globalStyles.title}>Welcome to Lithuaningo</Text>
-          <Text style={globalStyles.subtitle}>
-            Your gateway to mastering Lithuanian! Dive into learning with ease
-            and fun.
-          </Text>
-        </View>
-        <View style={styles.buttonContainer}>
-          <CustomButton
-            onPress={() => handlePress("login")}
-            title={"Log In"}
-            style={styles.button}
-          />
-          <CustomButton
-            onPress={() => handlePress("signup")}
-            title={"Create Account"}
-            style={styles.button}
-          />
-        </View>
+      <View style={styles.textContainer}>
+        <Text style={globalStyles.title}>Welcome to Lithuaningo</Text>
+        <Text style={globalStyles.subtitle}>
+          Your gateway to mastering Lithuanian! Dive into learning with ease and
+          fun.
+        </Text>
+      </View>
+      <View style={styles.buttonContainer}>
+        <CustomButton onPress={() => handlePress("login")} title={"Log In"} />
+        <CustomButton
+          onPress={() => handlePress("signup")}
+          title={"Create Account"}
+        />
       </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  button: {
-    width: 250,
-  },
   buttonContainer: {
-    alignItems: "center",
-    flex: 0.5,
     justifyContent: "center",
+    marginBottom: 20, // Adding margin to create some space at the bottom
   },
   container: {
-    alignItems: "center",
     flex: 1,
+    justifyContent: "space-between",
   },
   image: {
-    flex: 1,
-    height: null,
+    height: "100%",
     resizeMode: "cover",
-    width: null,
+    width: "100%",
     borderRadius: 10,
   },
   imageContainer: {
-    flex: 1,
     width: "100%",
-  },
-  textAndButtonContainer: {
-    flex: 1,
+    height: "50%", // Adjust the height as needed
   },
   textContainer: {
-    flex: 0.5,
+    width: "100%",
+    paddingHorizontal: 20, // Add padding for better spacing
+    alignItems: "center",
   },
 });
 

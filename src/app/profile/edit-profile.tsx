@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert, Image, StyleSheet } from "react-native";
-import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
+import { View, Text, Alert, StyleSheet } from "react-native";
+import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import { updateUserProfile as updateUserProfileAction } from "@src/redux/slices/userSlice";
 import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
@@ -8,6 +8,8 @@ import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useRouter } from "expo-router";
+import CustomTextInput from "@components/CustomTextInput";
+import auth from "@react-native-firebase/auth";
 
 const EditProfileScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -15,7 +17,13 @@ const EditProfileScreen: React.FC = () => {
   const { handleUpdateUserProfile } = useAuthMethods(); // Corrected hook usage inside the component
   const router = useRouter();
 
+  const [currentPassword, setCurrentPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
+
+  const user = auth().currentUser;
+  const isPasswordProvider = user?.providerData.some(
+    (provider) => provider.providerId === "password"
+  );
 
   const handleUpdateProfile = async () => {
     if (!name) {
@@ -26,9 +34,12 @@ const EditProfileScreen: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      const result = await handleUpdateUserProfile({
-        displayName: name,
-      });
+      const result = await handleUpdateUserProfile(
+        isPasswordProvider ? currentPassword : "",
+        {
+          displayName: name,
+        }
+      );
       if (result.success) {
         dispatch(updateUserProfileAction({ name }));
         Alert.alert("Success", "Profile updated successfully.");
@@ -45,7 +56,17 @@ const EditProfileScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Edit Profile</Text>
-      <TextInput
+      {isPasswordProvider && (
+        <CustomTextInput
+          style={globalStyles.input}
+          placeholder="Current Password"
+          value={currentPassword}
+          secureTextEntry
+          onChangeText={setCurrentPassword}
+          placeholderTextColor={globalColors.placeholder}
+        />
+      )}
+      <CustomTextInput
         style={globalStyles.input}
         placeholder="User Name"
         value={name}

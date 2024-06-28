@@ -1,8 +1,20 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, TextInput, StyleSheet, Image } from "react-native";
+import {
+  View,
+  Text,
+  TextInput,
+  StyleSheet,
+  Image,
+  Dimensions,
+  Platform,
+} from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
+import CustomTextInput from "./CustomTextInput";
+
+const { width } = Dimensions.get("window");
+const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 interface FillInTheBlankQuizProps {
   sentenceText: string;
@@ -84,16 +96,27 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
         {isSubmitPressed ? getQuestionWithAnswer() : sentenceText}
       </Text>
       <ExpandableDetails translation={translation}></ExpandableDetails>
-      {image && <Image source={{ uri: image }} style={styles.image} />}
+      {image && (
+        <Image
+          source={{ uri: image }}
+          style={[styles.image, isTablet && styles.imageTablet]}
+        />
+      )}
       {isSubmitPressed && (
         <View>
-          <Text style={[globalStyles.text, styles.selectedOptionText]}>
+          <Text style={globalStyles.subtitle}>
             You answered:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>{inputText}</Text>
+            <Text
+              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
+            >
+              {inputText}
+            </Text>
           </Text>
-          <Text style={[globalStyles.text, styles.correctAnswerText]}>
+          <Text style={globalStyles.subtitle}>
             Correct answer:{" "}
-            <Text style={{ fontFamily: "Roboto-Bold" }}>
+            <Text
+              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
+            >
               {correctAnswerText}
             </Text>
           </Text>
@@ -103,8 +126,10 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
         <View>
           <Text
             style={[
-              styles.feedbackText,
-              { color: isCorrect ? globalColors.active : globalColors.error },
+              globalStyles.title,
+              {
+                color: isCorrect ? globalColors.active : globalColors.error,
+              },
             ]}
           >
             {isCorrect ? "Correct" : "Incorrect"}
@@ -113,7 +138,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       )}
       {!isSubmitPressed && (
         <View>
-          <TextInput
+          <CustomTextInput
             style={globalStyles.input}
             placeholder="Type your answer here"
             placeholderTextColor={globalColors.placeholder}
@@ -133,28 +158,16 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
 };
 
 const styles = StyleSheet.create({
-  feedbackText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
-    fontWeight: "bold",
-  },
-  selectedOptionText: {
-    marginTop: 10,
-    fontSize: 16,
-    alignSelf: "center",
-  },
-  correctAnswerText: {
-    marginTop: 5,
-    fontSize: 16,
-    alignSelf: "center",
-  },
   image: {
     width: 250,
     height: 250,
     marginBottom: 10,
     alignSelf: "center",
     borderRadius: 10,
+  },
+  imageTablet: {
+    width: 500, // Full width for tablet
+    height: 500,
   },
 });
 

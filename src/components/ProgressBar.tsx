@@ -48,10 +48,11 @@ const ProgressBar: React.FC<ProgressBarProps> = ({ progress, height = 8 }) => {
 
 const styles = StyleSheet.create({
   progressBarContainer: {
-    width: "100%",
+    width: "90%",
     borderRadius: 4,
     overflow: "hidden",
     marginVertical: 10,
+    alignSelf: "center",
   },
   progressBar: {
     height: "100%",
