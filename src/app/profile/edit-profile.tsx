@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert, Image, StyleSheet } from "react-native";
-import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
+import { View, Text, Alert, StyleSheet } from "react-native";
+import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import { updateUserProfile as updateUserProfileAction } from "@src/redux/slices/userSlice";
 import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
@@ -16,6 +16,7 @@ const EditProfileScreen: React.FC = () => {
   const { handleUpdateUserProfile } = useAuthMethods(); // Corrected hook usage inside the component
   const router = useRouter();
 
+  const [currentPassword, setCurrentPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
 
   const handleUpdateProfile = async () => {
@@ -27,7 +28,7 @@ const EditProfileScreen: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      const result = await handleUpdateUserProfile({
+      const result = await handleUpdateUserProfile(currentPassword, {
         displayName: name,
       });
       if (result.success) {
@@ -46,6 +47,14 @@ const EditProfileScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Edit Profile</Text>
+      <CustomTextInput
+        style={globalStyles.input}
+        placeholder="Current Password"
+        value={currentPassword}
+        secureTextEntry
+        onChangeText={setCurrentPassword}
+        placeholderTextColor={globalColors.placeholder}
+      />
       <CustomTextInput
         style={globalStyles.input}
         placeholder="User Name"

@@ -150,17 +150,35 @@ const useAuthMethods = () => {
     return result;
   };
 
-  const handleUpdateUserProfile = async (updates: { displayName?: string }) => {
-    const result = await handleAction(async () => {
-      await updateUserProfile(updates, dispatch);
+  const handleUpdateUserProfile = async (
+    currentPassword: string,
+    updates: { displayName?: string }
+  ) => {
+    const action = async () => {
       const user = auth().currentUser;
-      if (user && updates.displayName) {
+      if (!user) {
+        throw new Error("No user is currently signed in.");
+      }
+
+      // Reauthenticate user with current password
+      const credential = auth.EmailAuthProvider.credential(
+        user.email!,
+        currentPassword
+      );
+      await reauthenticateUser(credential, dispatch);
+
+      // Update user profile
+      await updateUserProfile(updates, dispatch);
+
+      if (updates.displayName) {
         await firestore()
           .collection("userProfiles")
           .doc(user.uid)
           .update({ name: updates.displayName });
       }
-    });
+    };
+
+    const result = await handleAction(action, "/dashboard/profile");
     if (result.success) {
       result.message = "Profile updated successfully.";
     }
