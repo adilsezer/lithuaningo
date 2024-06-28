@@ -9,6 +9,7 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useRouter } from "expo-router";
 import CustomTextInput from "@components/CustomTextInput";
+import auth from "@react-native-firebase/auth";
 
 const EditProfileScreen: React.FC = () => {
   const dispatch = useAppDispatch();
@@ -19,6 +20,11 @@ const EditProfileScreen: React.FC = () => {
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
 
+  const user = auth().currentUser;
+  const isPasswordProvider = user?.providerData.some(
+    (provider) => provider.providerId === "password"
+  );
+
   const handleUpdateProfile = async () => {
     if (!name) {
       Alert.alert("Error", "Name is required.");
@@ -28,9 +34,12 @@ const EditProfileScreen: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      const result = await handleUpdateUserProfile(currentPassword, {
-        displayName: name,
-      });
+      const result = await handleUpdateUserProfile(
+        isPasswordProvider ? currentPassword : "",
+        {
+          displayName: name,
+        }
+      );
       if (result.success) {
         dispatch(updateUserProfileAction({ name }));
         Alert.alert("Success", "Profile updated successfully.");
@@ -47,14 +56,16 @@ const EditProfileScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Edit Profile</Text>
-      <CustomTextInput
-        style={globalStyles.input}
-        placeholder="Current Password"
-        value={currentPassword}
-        secureTextEntry
-        onChangeText={setCurrentPassword}
-        placeholderTextColor={globalColors.placeholder}
-      />
+      {isPasswordProvider && (
+        <CustomTextInput
+          style={globalStyles.input}
+          placeholder="Current Password"
+          value={currentPassword}
+          secureTextEntry
+          onChangeText={setCurrentPassword}
+          placeholderTextColor={globalColors.placeholder}
+        />
+      )}
       <CustomTextInput
         style={globalStyles.input}
         placeholder="User Name"

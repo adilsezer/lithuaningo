@@ -165,14 +165,39 @@ const useAuthMethods = () => {
         throw new Error("No user is currently signed in.");
       }
 
-      // Reauthenticate user with current password
-      const credential = auth.EmailAuthProvider.credential(
-        user.email!,
-        currentPassword
-      );
-      await reauthenticateUser(credential, dispatch);
+      let credential: FirebaseAuthTypes.AuthCredential | undefined;
 
-      // Update user profile
+      if (
+        user.providerData.some((provider) => provider.providerId === "password")
+      ) {
+        if (!currentPassword) {
+          throw new Error("Password is required for reauthentication.");
+        }
+        credential = auth.EmailAuthProvider.credential(
+          user.email!,
+          currentPassword
+        );
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "google.com"
+        )
+      ) {
+        credential = await getGoogleCredential();
+      } else if (
+        user.providerData.some(
+          (provider) => provider.providerId === "apple.com"
+        )
+      ) {
+        credential = await getAppleCredential();
+      } else {
+        throw new Error("Unsupported authentication provider.");
+      }
+
+      if (!credential) {
+        throw new Error("Failed to retrieve credential for reauthentication.");
+      }
+
+      await reauthenticateUser(credential, dispatch);
       await updateUserProfile(updates, dispatch);
 
       if (updates.displayName) {
@@ -240,14 +265,12 @@ const useAuthMethods = () => {
           (provider) => provider.providerId === "google.com"
         )
       ) {
-        // If user signed in with Google
         credential = await getGoogleCredential();
       } else if (
         user.providerData.some(
           (provider) => provider.providerId === "apple.com"
         )
       ) {
-        // If user signed in with Apple
         credential = await getAppleCredential();
       } else {
         throw new Error("Unsupported authentication provider.");

@@ -21,7 +21,9 @@ const ChangePasswordScreen: React.FC = () => {
   const [confirmNewPassword, setConfirmNewPassword] = useState<string>("");
 
   const user = auth().currentUser;
-  const providerId = user?.providerData[0]?.providerId;
+  const isPasswordProvider = user?.providerData.some(
+    (provider) => provider.providerId === "password"
+  );
 
   const handleChangePassword = async () => {
     if (newPassword !== confirmNewPassword) {
@@ -32,7 +34,7 @@ const ChangePasswordScreen: React.FC = () => {
     dispatch(setLoading(true));
 
     try {
-      if (providerId === "password") {
+      if (isPasswordProvider) {
         const result = await handleUpdateUserPassword(
           currentPassword,
           newPassword
@@ -58,7 +60,7 @@ const ChangePasswordScreen: React.FC = () => {
     <View>
       <BackButton />
       <Text style={globalStyles.title}>Change Password</Text>
-      {providerId === "password" && (
+      {isPasswordProvider && (
         <CustomTextInput
           style={globalStyles.input}
           placeholder="Current Password"
