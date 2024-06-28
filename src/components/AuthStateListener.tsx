@@ -2,9 +2,11 @@ import React, { useEffect } from "react";
 import auth from "@react-native-firebase/auth";
 import { logIn, logOut } from "@src/redux/slices/userSlice";
 import { useAppDispatch } from "@src/redux/hooks";
+import { useRouter } from "expo-router"; // Import useRouter
 
 const AuthStateListener: React.FC = () => {
   const dispatch = useAppDispatch();
+  const router = useRouter(); // Initialize useRouter
 
   useEffect(() => {
     const unsubscribe = auth().onAuthStateChanged((user) => {
@@ -19,11 +21,12 @@ const AuthStateListener: React.FC = () => {
         );
       } else {
         dispatch(logOut());
+        router.replace("/");
       }
     });
 
     return () => unsubscribe();
-  }, [dispatch]);
+  }, [dispatch, router]);
 
   return null;
 };
