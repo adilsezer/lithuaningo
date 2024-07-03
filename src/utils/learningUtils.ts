@@ -1,8 +1,8 @@
 import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
-import userProfileService from "../services/data/userProfileService";
-import { retrieveData } from "@utils/storageUtil";
+import { retrieveData, storeData } from "@utils/storageUtil";
 import { toTitleCase } from "./stringUtils";
+import { getCurrentDateKey } from "./dateUtils";
 
 export interface QuizState {
   similarSentences: Sentence[];
@@ -32,6 +32,9 @@ export const initializeQuizState = (): QuizState => ({
   quizCompleted: false,
 });
 
+const SENTENCES_KEY = `sentences-${getCurrentDateKey()}`;
+const LAST_CHOSEN_WORD_KEY = "lastChosenWord";
+
 export const loadQuizData = async (
   userData: any,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
@@ -39,28 +42,20 @@ export const loadQuizData = async (
 ) => {
   if (!userData?.id) return;
   try {
-    const recentLearnedSentenceIds =
-      await userProfileService.getMostRecentTwoLearnedSentences(userData.id);
-
-    const fetchedLearnedSentences = await Promise.all(
-      recentLearnedSentenceIds.map((id) =>
-        sentenceService.fetchSentenceById(id)
-      )
+    const fetchedLearnedSentences = await retrieveData<Sentence[]>(
+      SENTENCES_KEY
     );
+
+    if (!fetchedLearnedSentences) {
+      console.error("No learned sentences found.");
+      return;
+    }
 
     const fetchedSentences = await sentenceService.fetchSentences();
 
-    const maxOrder = Math.max(
-      ...fetchedLearnedSentences.map((sentence) => sentence.displayOrder)
-    );
-
-    const filteredSentences = fetchedSentences.filter(
-      (sentence) => sentence.displayOrder <= maxOrder
-    );
-
     const sortedSentencesPromises = fetchedLearnedSentences.map(
       (learnedSentence) =>
-        getSortedSentencesBySimilarity(learnedSentence, filteredSentences)
+        getSortedSentencesBySimilarity(learnedSentence, fetchedSentences)
     );
 
     const sortedSentencesArrays = await Promise.all(sortedSentencesPromises);
@@ -99,26 +94,65 @@ export const loadQuestion = async (
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>
 ) => {
   try {
+    const fetchedLearnedSentences = await retrieveData<Sentence[]>(
+      SENTENCES_KEY
+    );
+
+    if (!fetchedLearnedSentences) {
+      console.error("No learned sentences found.");
+      return;
+    }
+
+    const learnedWords = new Set(
+      fetchedLearnedSentences.flatMap((sentence) =>
+        sentence.sentence.split(" ").map(cleanWord)
+      )
+    );
+
     const sentenceWords = similarSentence.sentence.split(" ").map(cleanWord);
+
     const skippedWords = getSkippedWords();
+
+    const validWords = sentenceWords.filter(
+      (word) => learnedWords.has(word) && !skippedWords.includes(word)
+    );
+
+    const shuffledWords = validWords.sort(() => 0.5 - Math.random());
+
+    let lastChosenWord =
+      (await retrieveData<string>(LAST_CHOSEN_WORD_KEY)) || "";
     let randomWord: string | undefined;
     let correctWordDetails: Word | null = null;
+    let foundValidWord = false;
 
-    const shuffledWords = sentenceWords.sort(() => 0.5 - Math.random());
+    // Try to find a valid word that is not the last chosen word and not the last candidate
+    for (let i = 0; i < shuffledWords.length; i++) {
+      const word = shuffledWords[i];
 
-    for (const word of shuffledWords) {
-      if (skippedWords.includes(word)) {
-        continue;
+      if (word !== lastChosenWord || i === shuffledWords.length - 1) {
+        randomWord = word;
+        correctWordDetails = await wordService.fetchWordByGrammaticalForm(
+          randomWord
+        );
+
+        if (correctWordDetails) {
+          foundValidWord = true;
+          break;
+        }
+
+        console.warn("No word details found for the random word", randomWord);
       }
+    }
 
-      randomWord = word;
+    // Fallback to a random word in sentenceWords if no valid word was found
+    if (!foundValidWord) {
+      ("Getting words in sentenceWords if no valid word was found");
+      const fallbackWord =
+        sentenceWords[Math.floor(Math.random() * sentenceWords.length)];
+      randomWord = fallbackWord;
       correctWordDetails = await wordService.fetchWordByGrammaticalForm(
         randomWord
       );
-
-      if (correctWordDetails) break;
-
-      console.warn("No word details found for the random word", randomWord);
     }
 
     if (!correctWordDetails || !randomWord) {
@@ -179,6 +213,8 @@ export const loadQuestion = async (
       generatedCorrectAnswerText = randomBool ? "True" : "False";
       generatedOptions = ["True", "False"];
     }
+
+    await storeData(LAST_CHOSEN_WORD_KEY, randomWord);
 
     setQuizState((prev) => ({
       ...prev,
@@ -242,37 +278,10 @@ export const getSimilarityScores = (
   return similarityScores;
 };
 
-export const createGrammaticalFormsMap = async (): Promise<
-  Map<string, string>
-> => {
-  const words: Word[] = await wordService.fetchWords();
-  const grammaticalFormsMap = new Map<string, string>();
-
-  words.forEach((word: Word) => {
-    word.grammaticalForms.forEach((form: string) => {
-      grammaticalFormsMap.set(form, word.id);
-    });
-  });
-
-  return grammaticalFormsMap;
-};
-
-export const normalizeSentence = (
-  sentence: string,
-  formsMap: Map<string, string>
-): string[] => {
-  return sentence
-    .toLowerCase()
-    .split(" ")
-    .map((word: string) => formsMap.get(word) || word);
-};
-
 export const getSortedSentencesBySimilarity = async (
   learnedSentence: Sentence,
   allSentences: Sentence[]
 ): Promise<Sentence[]> => {
-  const grammaticalFormsMap = await createGrammaticalFormsMap();
-
   const candidateSentences = allSentences.map((sentence) => sentence.sentence);
 
   const similarityScores = getSimilarityScores(
@@ -335,6 +344,7 @@ export const getRandomOptions = async (
 export const getSkippedWords = (): string[] => {
   return [
     "yra",
+    "Aš",
     "aš",
     "buvo",
     "Mano",
@@ -353,12 +363,19 @@ export const getRandomQuestionType = ():
   | "multipleChoice"
   | "fillInTheBlank"
   | "trueFalse" => {
+  // Generate a random value between 0 (inclusive) and 1 (exclusive)
   const randomValue = Math.random();
-  if (randomValue < 0.5) {
+
+  // Return "multipleChoice" if randomValue is less than 0.45 (45% chance)
+  if (randomValue < 0.45) {
     return "multipleChoice";
-  } else if (randomValue < 0.8) {
+  }
+  // Return "fillInTheBlank" if randomValue is between 0.45 (inclusive) and 0.85 (exclusive) (40% chance)
+  else if (randomValue < 0.85) {
     return "fillInTheBlank";
-  } else {
+  }
+  // Return "trueFalse" if randomValue is 0.85 or greater (15% chance)
+  else {
     return "trueFalse";
   }
 };

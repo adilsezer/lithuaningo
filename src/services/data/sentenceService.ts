@@ -15,15 +15,13 @@ const fetchSentences = async (): Promise<Sentence[]> => {
     ...doc.data(),
   })) as Sentence[];
 
-  // Sort sentences by displayOrder, handling undefined values
-  const sortedSentences = sentencesData.sort((a, b) => {
-    if (a.displayOrder === undefined && b.displayOrder === undefined) return 0;
-    if (a.displayOrder === undefined) return 1;
-    if (b.displayOrder === undefined) return -1;
-    return a.displayOrder - b.displayOrder;
-  });
+  // Shuffle the sentences
+  for (let i = sentencesData.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [sentencesData[i], sentencesData[j]] = [sentencesData[j], sentencesData[i]];
+  }
 
-  return sortedSentences;
+  return sentencesData;
 };
 
 const fetchSentenceById = async (id: string): Promise<Sentence> => {

@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
-import userProfileService from "../../services/data/userProfileService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector, useAppDispatch } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
@@ -33,6 +32,7 @@ const SentencesScreen: React.FC = () => {
   const dispatch = useAppDispatch();
 
   const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
+  const SENTENCES_KEY = `sentences-${getCurrentDateKey()}`;
 
   const { width } = Dimensions.get("window");
   const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -53,23 +53,20 @@ const SentencesScreen: React.FC = () => {
 
       dispatch(setLoading(true));
       try {
-        const [fetchedSentences, userProfile] = await Promise.all([
-          sentenceService.fetchSentences(),
-          userProfileService.fetchUserProfile(userData.id),
-        ]);
+        // Check if sentences are already stored
+        const storedSentences = await retrieveData<Sentence[]>(SENTENCES_KEY);
 
-        const learnedSentenceIds: string[] =
-          userProfile?.learnedSentences || [];
+        if (storedSentences && storedSentences.length > 0) {
+          setSentences(storedSentences);
+        } else {
+          const fetchedSentences = await sentenceService.fetchSentences();
+          const selectedSentences = fetchedSentences.slice(0, 2);
 
-        const filteredSentences = fetchedSentences
-          .filter(
-            (sentence: Sentence) =>
-              sentence.isMainSentence &&
-              !learnedSentenceIds.includes(sentence.id)
-          )
-          .slice(0, 2);
+          setSentences(selectedSentences);
 
-        setSentences(filteredSentences);
+          // Store the fetched sentences
+          await storeData(SENTENCES_KEY, selectedSentences);
+        }
       } catch (error) {
         console.error("Error loading sentences and words:", error);
         setError("Failed to load sentences. Please try again later.");
@@ -103,22 +100,7 @@ const SentencesScreen: React.FC = () => {
     router.push(`/learning/${cleanedWord}`);
   };
 
-  const updateUserLearnedSentences = async () => {
-    if (!userData?.id) return;
-
-    const sentenceIds = sentences.map((sentence) => sentence.id);
-    try {
-      await userProfileService.updateUserLearnedSentences(
-        userData.id,
-        sentenceIds
-      );
-    } catch (error) {
-      console.error("Error updating learned sentences:", error);
-    }
-  };
-
   const handleProceedToQuiz = async () => {
-    await updateUserLearnedSentences();
     storeData(COMPLETION_STATUS_KEY, true);
     setSentencesCompleted(true);
     router.push("/learning/quiz");
