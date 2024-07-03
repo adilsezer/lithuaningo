@@ -81,10 +81,14 @@ const SentencesScreen: React.FC = () => {
     loadSentencesAndWords();
   }, [userData, dispatch]);
 
+  const cleanWord = (word: string) => {
+    return word.replace(/[.,!?;:()"]/g, "");
+  };
+
   useEffect(() => {
     if (sentences.length > 0) {
       const allWords = sentences.flatMap((sentence) =>
-        sentence.sentence.split(" ")
+        sentence.sentence.split(" ").map(cleanWord)
       );
       const allClicked = allWords.every((word) => clickedWords.includes(word));
       if (allClicked) {
@@ -94,8 +98,9 @@ const SentencesScreen: React.FC = () => {
   }, [sentences, clickedWords]);
 
   const handleWordClick = (word: string) => {
-    dispatch(addClickedWord(word));
-    router.push(`/learning/${word}`);
+    const cleanedWord = cleanWord(word);
+    dispatch(addClickedWord(cleanedWord));
+    router.push(`/learning/${cleanedWord}`);
   };
 
   const updateUserLearnedSentences = async () => {
@@ -179,7 +184,7 @@ const SentencesScreen: React.FC = () => {
               style={[
                 styles.wordContainer,
                 {
-                  backgroundColor: clickedWords.includes(word)
+                  backgroundColor: clickedWords.includes(cleanWord(word))
                     ? globalColors.wordHighlightBackground
                     : globalColors.wordBackground,
                 },

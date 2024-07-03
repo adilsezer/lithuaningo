@@ -1,10 +1,9 @@
-// src/components/CompletedScreen.tsx
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView, Text, View, StyleSheet } from "react-native";
 import CustomButton from "./CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons"; // Ensure you have this package installed
+import { Ionicons } from "@expo/vector-icons";
 import useData from "@src/hooks/useData";
 
 interface CompletedScreenProps {
@@ -25,6 +24,29 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const router = useRouter();
   const { stats } = useData();
+  const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining());
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setTimeRemaining(calculateTimeRemaining());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, []);
+
+  function calculateTimeRemaining() {
+    const now = new Date();
+    const nextReset = new Date();
+    nextReset.setUTCHours(2, 0, 0, 0);
+    if (now >= nextReset) {
+      nextReset.setUTCDate(nextReset.getUTCDate() + 1);
+    }
+    const timeDiff = nextReset.getTime() - now.getTime();
+    const hours = Math.floor(timeDiff / (1000 * 60 * 60));
+    const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
+    return { hours, minutes, seconds };
+  }
 
   return (
     <ScrollView>
@@ -69,6 +91,14 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
           )}
         </View>
       )}
+      {showStats && (
+        <View style={styles.timerContainer}>
+          <Text style={globalStyles.subtitle}>Time until next challenge:</Text>
+          <Text style={globalStyles.title}>
+            {`${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`}
+          </Text>
+        </View>
+      )}
       <CustomButton
         title={buttonText}
         onPress={() => router.push(navigationRoute)}
@@ -94,6 +124,11 @@ const styles = StyleSheet.create({
     fontSize: 24,
     fontWeight: "bold",
     marginVertical: 5,
+  },
+  timerContainer: {
+    alignItems: "center",
+    marginTop: 20,
+    marginBottom: 20,
   },
 });
 
