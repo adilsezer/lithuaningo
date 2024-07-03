@@ -2,7 +2,6 @@ import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
 import userProfileService from "../services/data/userProfileService";
 import { retrieveData } from "@utils/storageUtil";
-import { Dispatch } from "redux";
 import { toTitleCase } from "./stringUtils";
 
 export interface QuizState {
@@ -91,12 +90,16 @@ export const loadQuizData = async (
   }
 };
 
+const cleanWord = (word: string) => {
+  return word.replace(/[.,!?;:()"]/g, "");
+};
+
 export const loadQuestion = async (
   similarSentence: Sentence,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>
 ) => {
   try {
-    const sentenceWords = similarSentence.sentence.split(" ");
+    const sentenceWords = similarSentence.sentence.split(" ").map(cleanWord);
     const skippedWords = getSkippedWords();
     let randomWord: string | undefined;
     let correctWordDetails: Word | null = null;
