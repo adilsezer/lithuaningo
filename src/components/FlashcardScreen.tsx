@@ -67,10 +67,12 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   return (
     <View>
       <BackButton />
-      <Image
-        source={{ uri: word.imageUrl }}
-        style={[styles.image, isTablet && styles.imageIpad]}
-      />
+      {word.imageUrl && (
+        <Image
+          source={{ uri: word.imageUrl }}
+          style={[styles.image, isTablet && styles.imageIpad]}
+        />
+      )}
       <Text style={globalStyles.title}>Word: {word.id}</Text>
       <Text style={[globalStyles.title, { color: globalColors.primary }]}>
         Translation: {word.englishTranslation}
