@@ -1,6 +1,7 @@
 export type ThemeColors = {
   primary: string;
   secondary: string;
+  tertiary: string;
   background: string;
   active: string;
   inactive: string;
@@ -19,6 +20,7 @@ export type ThemeColors = {
 export const lightThemeColors: ThemeColors = {
   primary: "#66BB6A", // Modern vibrant green
   secondary: "#FFC107", // Warm amber
+  tertiary: "#d5304f", // Red
   background: "#FFFFFF", // Pure white
   active: "#66BB6A", // Modern vibrant green (same as primary)
   inactive: "#B0BEC5", // Soft grey
@@ -37,6 +39,7 @@ export const lightThemeColors: ThemeColors = {
 export const darkThemeColors: ThemeColors = {
   primary: "#66BB6A", // Lively modern green
   secondary: "#FFB300", // Richer gold
+  tertiary: "#d5304f", // Red
   background: "#263238", // Dark slate
   active: "#66BB6A", // Lively modern green (same as primary)
   inactive: "#455A64", // Cooler, muted blue-grey

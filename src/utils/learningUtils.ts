@@ -85,13 +85,16 @@ const shuffleArray = <T>(array: T[]): T[] => {
 };
 
 const getRelatedSentences = (allSentences: Sentence[], wordDetail: Word) => {
-  const relatedSentences = allSentences.filter((sentence) =>
-    sentence.sentence
-      .split(" ")
-      .some((word) =>
-        wordDetail.grammaticalForms.includes(cleanWord(word).toLowerCase())
-      )
-  );
+  const relatedSentences = allSentences
+    .filter((sentence) =>
+      sentence.sentence
+        .split(" ")
+        .some((word) =>
+          wordDetail.grammaticalForms.includes(cleanWord(word).toLowerCase())
+        )
+    )
+    .map((sentence) => ({ ...sentence, relatedTo: wordDetail.id }));
+
   console.log("Related Sentences for word:", wordDetail.id);
   relatedSentences.forEach((s, index) => {
     console.log(`${index + 1}. ${s.sentence}`);
@@ -113,7 +116,7 @@ const removeDuplicates = (sentences: Sentence[]): Sentence[] => {
     seenSentences.add(sentence.sentence);
     return true;
   });
-
+  //
   console.log("Unique Sentences:");
   uniqueSentences.forEach((s, index) => {
     console.log(`${index + 1}. ${s.sentence}`);
@@ -137,51 +140,60 @@ export const loadQuizData = async (
       allWords
     );
 
-    const sentencesPerWord = Math.ceil(10 / learnedWordsDetails.length);
-    let shuffledSentences: Sentence[] = [];
+    const sentencesPerWord = Math.ceil(10 / learnedWordsDetails.length) + 2; // Increase to account for potential removals
+    let allSelectedSentences: Sentence[] = [];
 
     learnedWordsDetails.forEach((wordDetail) => {
       const relatedSentences = getRelatedSentences(allSentences, wordDetail);
-      const selectedSentences = shuffleArray(relatedSentences).slice(
-        0,
-        sentencesPerWord
-      );
+
+      let selectedSentences = [];
+      if (relatedSentences.length < sentencesPerWord) {
+        selectedSentences = relatedSentences; // Select all if less than required
+      } else {
+        selectedSentences = shuffleArray(relatedSentences).slice(
+          0,
+          sentencesPerWord
+        );
+      }
 
       console.log(`Selected sentences for word: ${wordDetail.id}`);
       selectedSentences.forEach((sentence) =>
         console.log(`- ${sentence.sentence}`)
       );
 
-      shuffledSentences.push(...selectedSentences);
+      allSelectedSentences.push(...selectedSentences);
     });
 
-    shuffledSentences = removeDuplicates(shuffleArray(shuffledSentences)).slice(
-      0,
-      10
-    );
+    allSelectedSentences = removeDuplicates(shuffleArray(allSelectedSentences));
 
-    console.log("Shuffled Sentences:");
-    shuffledSentences.forEach((s, index) => {
-      console.log(`${index + 1}. ${s.sentence}`);
+    // If less than 10 sentences are available, use them all
+    const finalSentences =
+      allSelectedSentences.length >= 10
+        ? allSelectedSentences.slice(0, 10)
+        : allSelectedSentences;
+
+    console.log("Final Sentences:");
+    finalSentences.forEach((s, index) => {
+      console.log(`${index + 1}. ${s.sentence} (Selected for: ${s.relatedTo})`);
     });
 
     setQuizState((prev) => ({
       ...prev,
-      similarSentences: shuffledSentences,
+      similarSentences: finalSentences,
     }));
 
     const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
     console.log("Stored Progress:", storedProgress);
 
     if (storedProgress !== null) {
-      if (storedProgress >= shuffledSentences.length) {
+      if (storedProgress >= finalSentences.length) {
         setQuizState((prev) => ({ ...prev, quizCompleted: true }));
       } else {
         setQuizState((prev) => ({ ...prev, questionIndex: storedProgress }));
-        await loadQuestion(shuffledSentences[storedProgress], setQuizState);
+        await loadQuestion(finalSentences[storedProgress], setQuizState);
       }
     } else {
-      await loadQuestion(shuffledSentences[0], setQuizState);
+      await loadQuestion(finalSentences[0], setQuizState);
     }
   } catch (error) {
     console.error("Error loading quiz data:", error);

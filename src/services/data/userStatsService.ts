@@ -61,7 +61,10 @@ const fetchLeaderboard = (
             };
           })
         );
-        onLeadersChange(leaders);
+
+        // Filter out users with a score of 0
+        const filteredLeaders = leaders.filter((leader) => leader.score > 0);
+        onLeadersChange(filteredLeaders);
       },
       (error) => {
         console.error("Error fetching leaders:", error);

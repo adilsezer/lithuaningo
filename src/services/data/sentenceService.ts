@@ -6,6 +6,7 @@ export interface Sentence {
   englishTranslation: string; // Translation of the sentence in English
   isMainSentence: boolean; // True if the sentence is for the main learning screen, false if it's for quizzes
   displayOrder: number; // Optional order to display the sentence in the main learning screen
+  relatedTo: string;
 }
 
 const fetchAndShuffleSentences = async (): Promise<Sentence[]> => {

@@ -7,6 +7,8 @@ import CustomButton from "@components/CustomButton";
 import { useRouter } from "expo-router";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { getCurrentDateKey } from "@utils/dateUtils";
+import { clearData } from "@utils/storageUtil";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -26,6 +28,17 @@ export default function ProfileScreen() {
 
   const userData = useAppSelector(selectUserData);
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
+
+  const handleClearCompletionStatus = async () => {
+    const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
+    const QUIZ_PROGRESS_KEY = `quizProgress_${
+      userData?.id
+    }_${getCurrentDateKey()}`;
+
+    await clearData(COMPLETION_STATUS_KEY);
+    await clearData(QUIZ_PROGRESS_KEY);
+    Alert.alert("Removed Progress Data");
+  };
 
   if (!isLoggedIn || !userData) {
     return (
@@ -59,7 +72,12 @@ export default function ProfileScreen() {
           title="About the App"
           onPress={() => navigateTo("/about")}
         />
-
+        {__DEV__ && (
+          <CustomButton
+            title="Clear Completion Status"
+            onPress={handleClearCompletionStatus}
+          />
+        )}
         <CustomButton title="Logout" onPress={logout} />
       </View>
     </ScrollView>

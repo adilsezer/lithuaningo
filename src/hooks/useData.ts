@@ -46,7 +46,6 @@ const useData = (): UseDataReturn => {
           setWords(newWords);
         } catch (error) {
           console.error("Error loading sentences and words:", error);
-        } finally {
         }
       };
 
@@ -62,18 +61,16 @@ const useData = (): UseDataReturn => {
         unsubscribeStats();
         unsubscribeLeaders();
       };
-    } else {
     }
   }, [userData, dispatch]);
 
   const handleAnswer = async (isCorrect: boolean, timeSpent: number) => {
-    if (!userData || !userData.id) return;
+    if (!userData || !userData.id || __DEV__) return;
 
     try {
       await userStatsService.updateUserStats(userData.id, isCorrect, timeSpent);
     } catch (error) {
       console.error("Error updating user stats:", error);
-    } finally {
     }
   };
 
