@@ -60,7 +60,7 @@ const QuizScreen: React.FC = () => {
   }, [quizState.questionIndex, quizState.similarSentences]);
 
   const handleAnswer = async (isCorrect: boolean) => {
-    const timeSpent = 0.5;
+    const timeSpent = 1;
     await updateStats(isCorrect, timeSpent);
 
     setQuizState((prev) => ({

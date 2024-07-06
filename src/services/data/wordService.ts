@@ -18,32 +18,6 @@ const fetchWords = async (): Promise<Word[]> => {
   return wordsData;
 };
 
-const fetchWordByGrammaticalForm = async (
-  form: string
-): Promise<Word | null> => {
-  const normalizedForm = form.toLowerCase();
-
-  // Fetch all words (consider fetching only once and reusing the data if the dataset is large)
-  const snapshot = await firestore().collection("words").get();
-
-  if (snapshot.empty) {
-    return null;
-  }
-
-  for (const doc of snapshot.docs) {
-    const wordData = doc.data();
-    const grammaticalForms = wordData.grammaticalForms.map((f: string) =>
-      f.toLowerCase()
-    );
-    if (grammaticalForms.includes(normalizedForm)) {
-      return { id: doc.id, ...wordData } as Word;
-    }
-  }
-
-  return null;
-};
-
 export default {
   fetchWords,
-  fetchWordByGrammaticalForm,
 };

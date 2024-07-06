@@ -39,7 +39,7 @@ const useData = (): UseDataReturn => {
       const loadSentencesAndWords = async () => {
         try {
           const [newSentences, newWords] = await Promise.all([
-            sentenceService.fetchSentences(),
+            sentenceService.fetchAndShuffleSentences(),
             wordService.fetchWords(),
           ]);
           setSentences(newSentences);

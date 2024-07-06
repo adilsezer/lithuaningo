@@ -59,13 +59,14 @@ const SentencesScreen: React.FC = () => {
         if (storedSentences && storedSentences.length > 0) {
           setSentences(storedSentences);
         } else {
-          const fetchedSentences = await sentenceService.fetchSentences();
-          const selectedSentences = fetchedSentences.slice(0, 2);
+          const fetchedSentences =
+            await sentenceService.fetchAndShuffleSentences();
+          const firstTwoSentences = fetchedSentences.slice(0, 2);
 
-          setSentences(selectedSentences);
+          setSentences(firstTwoSentences);
 
           // Store the fetched sentences
-          await storeData(SENTENCES_KEY, selectedSentences);
+          await storeData(SENTENCES_KEY, firstTwoSentences);
         }
       } catch (error) {
         console.error("Error loading sentences and words:", error);

@@ -8,7 +8,7 @@ export interface Sentence {
   displayOrder: number; // Optional order to display the sentence in the main learning screen
 }
 
-const fetchSentences = async (): Promise<Sentence[]> => {
+const fetchAndShuffleSentences = async (): Promise<Sentence[]> => {
   const snapshot = await firestore().collection("sentences").get();
   const sentencesData = snapshot.docs.map((doc) => ({
     id: doc.id,
@@ -24,15 +24,6 @@ const fetchSentences = async (): Promise<Sentence[]> => {
   return sentencesData;
 };
 
-const fetchSentenceById = async (id: string): Promise<Sentence> => {
-  const doc = await firestore().collection("sentences").doc(id).get();
-  if (!doc.exists) {
-    throw new Error("Sentence not found");
-  }
-  return { id: doc.id, ...doc.data() } as Sentence;
-};
-
 export default {
-  fetchSentences,
-  fetchSentenceById,
+  fetchAndShuffleSentences,
 };

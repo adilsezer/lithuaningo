@@ -1,6 +1,6 @@
 import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
-import { retrieveData, storeData } from "@utils/storageUtil";
+import { retrieveData } from "@utils/storageUtil";
 import { toTitleCase } from "./stringUtils";
 import { getCurrentDateKey } from "./dateUtils";
 
@@ -33,129 +33,215 @@ export const initializeQuizState = (): QuizState => ({
 });
 
 const SENTENCES_KEY = `sentences-${getCurrentDateKey()}`;
-const LAST_CHOSEN_WORD_KEY = "lastChosenWord";
+
+const fetchLearnedAndAllSentencesWithWords = async () => {
+  const learnedSentences = await retrieveData<Sentence[]>(SENTENCES_KEY);
+
+  if (!learnedSentences) {
+    throw new Error("No learned sentences found.");
+  }
+
+  console.log(
+    "Learned Sentences:",
+    learnedSentences.map((s) => s.sentence)
+  );
+
+  const allSentences = await sentenceService.fetchAndShuffleSentences();
+
+  const allWords = await wordService.fetchWords();
+
+  return { learnedSentences, allSentences, allWords };
+};
+
+const getLearnedWordsDetails = (
+  learnedSentences: Sentence[],
+  allWords: Word[]
+) => {
+  const learnedWords = new Set<string>(
+    learnedSentences.flatMap((sentence) =>
+      sentence.sentence.split(" ").map(cleanWord)
+    )
+  );
+
+  const learnedWordsDetails = Array.from(learnedWords)
+    .map(
+      (word) =>
+        allWords.find((wordDetail) =>
+          wordDetail.grammaticalForms.includes(word.toLowerCase())
+        ) || null
+    )
+    .filter((wordDetail): wordDetail is Word => !!wordDetail);
+
+  console.log(
+    "Learned Words Details:",
+    learnedWordsDetails.map((wd) => wd.id)
+  );
+
+  return learnedWordsDetails;
+};
+
+const shuffleArray = <T>(array: T[]): T[] => {
+  return array.sort(() => 0.5 - Math.random());
+};
+
+const getRelatedSentences = (allSentences: Sentence[], wordDetail: Word) => {
+  const relatedSentences = allSentences.filter((sentence) =>
+    sentence.sentence
+      .split(" ")
+      .some((word) =>
+        wordDetail.grammaticalForms.includes(cleanWord(word).toLowerCase())
+      )
+  );
+  console.log("Related Sentences for word:", wordDetail.id);
+  relatedSentences.forEach((s, index) => {
+    console.log(`${index + 1}. ${s.sentence}`);
+  });
+
+  return relatedSentences;
+};
+
+const cleanWord = (word: string): string => {
+  return word.replace(/[.,!?;:()"]/g, "");
+};
+
+const removeDuplicates = (sentences: Sentence[]): Sentence[] => {
+  const seenSentences = new Set<string>();
+  const uniqueSentences = sentences.filter((sentence) => {
+    if (seenSentences.has(sentence.sentence)) {
+      return false;
+    }
+    seenSentences.add(sentence.sentence);
+    return true;
+  });
+
+  console.log("Unique Sentences:");
+  uniqueSentences.forEach((s, index) => {
+    console.log(`${index + 1}. ${s.sentence}`);
+  });
+
+  return uniqueSentences;
+};
 
 export const loadQuizData = async (
   userData: any,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
   QUIZ_PROGRESS_KEY: string
-) => {
+): Promise<void> => {
   if (!userData?.id) return;
   try {
-    const fetchedLearnedSentences = await retrieveData<Sentence[]>(
-      SENTENCES_KEY
+    const { learnedSentences, allSentences, allWords } =
+      await fetchLearnedAndAllSentencesWithWords();
+
+    const learnedWordsDetails = getLearnedWordsDetails(
+      learnedSentences,
+      allWords
     );
 
-    if (!fetchedLearnedSentences) {
-      console.error("No learned sentences found.");
-      return;
-    }
+    const sentencesPerWord = Math.ceil(10 / learnedWordsDetails.length);
+    let shuffledSentences: Sentence[] = [];
 
-    const fetchedSentences = await sentenceService.fetchSentences();
+    learnedWordsDetails.forEach((wordDetail) => {
+      const relatedSentences = getRelatedSentences(allSentences, wordDetail);
+      const selectedSentences = shuffleArray(relatedSentences).slice(
+        0,
+        sentencesPerWord
+      );
 
-    const sortedSentencesPromises = fetchedLearnedSentences.map(
-      (learnedSentence) =>
-        getSortedSentencesBySimilarity(learnedSentence, fetchedSentences)
+      console.log(`Selected sentences for word: ${wordDetail.id}`);
+      selectedSentences.forEach((sentence) =>
+        console.log(`- ${sentence.sentence}`)
+      );
+
+      shuffledSentences.push(...selectedSentences);
+    });
+
+    shuffledSentences = removeDuplicates(shuffleArray(shuffledSentences)).slice(
+      0,
+      10
     );
 
-    const sortedSentencesArrays = await Promise.all(sortedSentencesPromises);
-
-    const topSimilarSentences = sortedSentencesArrays.flatMap((sentences) =>
-      sentences.slice(0, 5)
-    );
+    console.log("Shuffled Sentences:");
+    shuffledSentences.forEach((s, index) => {
+      console.log(`${index + 1}. ${s.sentence}`);
+    });
 
     setQuizState((prev) => ({
       ...prev,
-      similarSentences: topSimilarSentences,
+      similarSentences: shuffledSentences,
     }));
 
     const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
+    console.log("Stored Progress:", storedProgress);
+
     if (storedProgress !== null) {
-      if (storedProgress >= topSimilarSentences.length) {
+      if (storedProgress >= shuffledSentences.length) {
         setQuizState((prev) => ({ ...prev, quizCompleted: true }));
       } else {
         setQuizState((prev) => ({ ...prev, questionIndex: storedProgress }));
-        loadQuestion(topSimilarSentences[storedProgress], setQuizState);
+        await loadQuestion(shuffledSentences[storedProgress], setQuizState);
       }
     } else {
-      loadQuestion(topSimilarSentences[0], setQuizState);
+      await loadQuestion(shuffledSentences[0], setQuizState);
     }
   } catch (error) {
     console.error("Error loading quiz data:", error);
   }
 };
 
-const cleanWord = (word: string) => {
-  return word.replace(/[.,!?;:()"]/g, "");
-};
-
 export const loadQuestion = async (
   similarSentence: Sentence,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>
-) => {
+): Promise<void> => {
   try {
-    const fetchedLearnedSentences = await retrieveData<Sentence[]>(
-      SENTENCES_KEY
-    );
+    console.log("Loading question for sentence:", similarSentence.sentence);
 
-    if (!fetchedLearnedSentences) {
-      console.error("No learned sentences found.");
-      return;
-    }
+    const { learnedSentences, allWords } =
+      await fetchLearnedAndAllSentencesWithWords();
 
-    const learnedWords = new Set(
-      fetchedLearnedSentences.flatMap((sentence) =>
+    const learnedWords = new Set<string>(
+      learnedSentences.flatMap((sentence) =>
         sentence.sentence.split(" ").map(cleanWord)
       )
     );
 
-    const sentenceWords = similarSentence.sentence.split(" ").map(cleanWord);
+    const similarSentenceWords = similarSentence.sentence
+      .split(" ")
+      .map(cleanWord);
+    console.log("Similar Sentence Words:", similarSentenceWords);
 
     const skippedWords = getSkippedWords();
 
-    const validWords = sentenceWords.filter(
+    const validWords = similarSentenceWords.filter(
       (word) => learnedWords.has(word) && !skippedWords.includes(word)
     );
+    console.log("Valid Words:", validWords);
 
-    const shuffledWords = validWords.sort(() => 0.5 - Math.random());
+    const shuffledWords = shuffleArray(validWords);
+    console.log("Shuffled Words:", shuffledWords);
 
-    let lastChosenWord =
-      (await retrieveData<string>(LAST_CHOSEN_WORD_KEY)) || "";
     let randomWord: string | undefined;
     let correctWordDetails: Word | null = null;
-    let foundValidWord = false;
 
-    // Try to find a valid word that is not the last chosen word and not the last candidate
-    for (let i = 0; i < shuffledWords.length; i++) {
-      const word = shuffledWords[i];
-
-      if (word !== lastChosenWord || i === shuffledWords.length - 1) {
-        randomWord = word;
-        correctWordDetails = await wordService.fetchWordByGrammaticalForm(
-          randomWord
-        );
-
-        if (correctWordDetails) {
-          foundValidWord = true;
-          break;
-        }
-
-        console.warn("No word details found for the random word", randomWord);
-      }
+    for (const word of shuffledWords) {
+      randomWord = word;
+      correctWordDetails =
+        allWords.find((wordDetail) =>
+          wordDetail.grammaticalForms.includes(word.toLowerCase())
+        ) || null;
+      if (correctWordDetails) break;
     }
 
-    // Fallback to a random word in sentenceWords if no valid word was found
-    if (!foundValidWord) {
-      ("Getting words in sentenceWords if no valid word was found");
-      const fallbackWord =
-        sentenceWords[Math.floor(Math.random() * sentenceWords.length)];
+    if (!correctWordDetails) {
+      const fallbackWord = shuffleArray(similarSentenceWords)[0];
       randomWord = fallbackWord;
-      correctWordDetails = await wordService.fetchWordByGrammaticalForm(
-        randomWord
-      );
+      correctWordDetails =
+        allWords.find((wordDetail) =>
+          wordDetail.grammaticalForms.includes(fallbackWord.toLowerCase())
+        ) || null;
     }
 
     if (!correctWordDetails || !randomWord) {
+      console.error("No valid question could be generated.");
       setQuizState((prev) => ({
         ...prev,
         sentenceText: "No valid question could be generated. Please try again.",
@@ -167,19 +253,27 @@ export const loadQuestion = async (
       return;
     }
 
-    const fetchedWords = await wordService.fetchWords();
-    const otherOptions = await getRandomOptions(
-      fetchedWords,
-      correctWordDetails.englishTranslation // Fetch similar words to the correct answer
+    console.log(
+      "Correct Word Details:",
+      correctWordDetails.id,
+      "Random Word:",
+      randomWord
     );
 
+    const otherOptions = await getRandomOptions(
+      allWords,
+      correctWordDetails.englishTranslation
+    );
+    console.log("Other Options:", otherOptions);
+
     const generatedQuestionType = getRandomQuestionType();
+    console.log("Generated Question Type:", generatedQuestionType);
 
     let generatedSentenceText = "";
     let generatedQuestionText = "";
     let generatedOptions: string[] = [];
-    let generatedTranslation = similarSentence.englishTranslation;
-    let wordImage = correctWordDetails.imageUrl;
+    const generatedTranslation = similarSentence.englishTranslation;
+    const wordImage = correctWordDetails.imageUrl;
     let generatedCorrectAnswerText = toTitleCase(
       correctWordDetails.englishTranslation
     );
@@ -189,18 +283,16 @@ export const loadQuestion = async (
         randomWord
       )}** in the sentence below?`;
       generatedSentenceText = similarSentence.sentence;
-      generatedOptions = [...otherOptions, generatedCorrectAnswerText]
-        .map(toTitleCase)
-        .sort(() => Math.random() - 0.5);
+      generatedOptions = shuffleArray(
+        [...otherOptions, generatedCorrectAnswerText].map(toTitleCase)
+      );
     } else if (generatedQuestionType === "fillInTheBlank") {
-      const sentenceWithBlank = similarSentence.sentence.replace(
+      generatedQuestionText = `Complete the sentence:`;
+      generatedSentenceText = similarSentence.sentence.replace(
         randomWord,
         "[...]"
       );
-      generatedQuestionText = `Complete the sentence:`;
-      generatedSentenceText = sentenceWithBlank;
-      generatedCorrectAnswerText = toTitleCase(randomWord); // Use the hidden word itself
-      generatedOptions = [];
+      generatedCorrectAnswerText = toTitleCase(randomWord);
     } else if (generatedQuestionType === "trueFalse") {
       const randomBool = Math.random() > 0.5;
       const givenTranslation = randomBool
@@ -214,7 +306,12 @@ export const loadQuestion = async (
       generatedOptions = ["True", "False"];
     }
 
-    await storeData(LAST_CHOSEN_WORD_KEY, randomWord);
+    console.log("Generated Question Text:", generatedQuestionText);
+    console.log("Generated Sentence Text:", generatedSentenceText);
+    console.log("Generated Translation:", generatedTranslation);
+    console.log("Word Image:", wordImage);
+    console.log("Generated Correct Answer Text:", generatedCorrectAnswerText);
+    console.log("Generated Options:", generatedOptions);
 
     setQuizState((prev) => ({
       ...prev,
@@ -233,113 +330,6 @@ export const loadQuestion = async (
 };
 
 // Utility functions
-
-function levenshtein(a: string, b: string): number {
-  const matrix = [];
-
-  // Initialize the matrix
-  for (let i = 0; i <= b.length; i++) {
-    matrix[i] = [i];
-  }
-
-  for (let j = 0; j <= a.length; j++) {
-    matrix[0][j] = j;
-  }
-
-  // Fill the matrix
-  for (let i = 1; i <= b.length; i++) {
-    for (let j = 1; j <= a.length; j++) {
-      if (b.charAt(i - 1) == a.charAt(j - 1)) {
-        matrix[i][j] = matrix[i - 1][j - 1];
-      } else {
-        matrix[i][j] = Math.min(
-          matrix[i - 1][j - 1] + 1,
-          Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
-        );
-      }
-    }
-  }
-
-  return matrix[b.length][a.length];
-}
-
-export const getSimilarityScores = (
-  target: string,
-  candidates: string[]
-): Map<string, number> => {
-  const similarityScores = new Map<string, number>();
-
-  candidates.forEach((candidate) => {
-    const distance = levenshtein(target, candidate);
-    const similarity = 1 / (1 + distance); // Convert distance to similarity
-    similarityScores.set(candidate, similarity);
-  });
-
-  return similarityScores;
-};
-
-export const getSortedSentencesBySimilarity = async (
-  learnedSentence: Sentence,
-  allSentences: Sentence[]
-): Promise<Sentence[]> => {
-  const candidateSentences = allSentences.map((sentence) => sentence.sentence);
-
-  const similarityScores = getSimilarityScores(
-    learnedSentence.sentence,
-    candidateSentences
-  );
-
-  return allSentences
-    .sort(
-      (a, b) =>
-        similarityScores.get(b.sentence)! - similarityScores.get(a.sentence)!
-    )
-    .map((item) => item);
-};
-
-export const getRandomOptions = async (
-  words: Word[],
-  correctAnswerText: string
-): Promise<string[]> => {
-  const numberPattern =
-    /^(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)([-\s]?)(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)*$/i;
-
-  const candidateWords = words
-    .map((word) => word.englishTranslation)
-    .filter((word) => !numberPattern.test(word.toLowerCase())); // Exclude number words
-
-  const similarityScores = getSimilarityScores(
-    correctAnswerText,
-    candidateWords
-  );
-
-  const sortedOptions = Array.from(similarityScores.entries())
-    .filter(([word]) => word !== correctAnswerText)
-    .sort((a, b) => b[1] - a[1])
-    .map(([word]) => word);
-
-  const topTwoOptions = sortedOptions.slice(0, 2);
-
-  // Get the remaining candidates that are not in the top two options
-  const remainingCandidates = candidateWords.filter(
-    (word) => !topTwoOptions.includes(word) && word !== correctAnswerText
-  );
-
-  // Select a random word from the remaining candidates
-  const randomIndex = Math.floor(Math.random() * remainingCandidates.length);
-  const randomOption = remainingCandidates[randomIndex];
-
-  // Combine the top two options with the random option
-  const finalOptions = [...topTwoOptions, randomOption];
-
-  // Shuffle the final options array to avoid any positional bias
-  for (let i = finalOptions.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [finalOptions[i], finalOptions[j]] = [finalOptions[j], finalOptions[i]];
-  }
-
-  return finalOptions;
-};
 
 export const getSkippedWords = (): string[] => {
   return [
@@ -363,19 +353,81 @@ export const getRandomQuestionType = ():
   | "multipleChoice"
   | "fillInTheBlank"
   | "trueFalse" => {
-  // Generate a random value between 0 (inclusive) and 1 (exclusive)
   const randomValue = Math.random();
+  return randomValue < 0.45
+    ? "multipleChoice"
+    : randomValue < 0.85
+    ? "fillInTheBlank"
+    : "trueFalse";
+};
 
-  // Return "multipleChoice" if randomValue is less than 0.45 (45% chance)
-  if (randomValue < 0.45) {
-    return "multipleChoice";
+export const getRandomOptions = async (
+  words: Word[],
+  correctAnswerText: string
+): Promise<string[]> => {
+  const numberPattern =
+    /^(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)([-\s]?)(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)*$/i;
+
+  const candidateWords = words
+    .map((word) => word.englishTranslation)
+    .filter((word) => !numberPattern.test(word.toLowerCase()));
+
+  const similarityScores = getSimilarityScores(
+    correctAnswerText,
+    candidateWords
+  );
+
+  const sortedOptions = Array.from(similarityScores.entries())
+    .filter(([word]) => word !== correctAnswerText)
+    .sort((a, b) => b[1] - a[1])
+    .map(([word]) => word);
+
+  const topTwoOptions = sortedOptions.slice(0, 2);
+  const remainingCandidates = candidateWords.filter(
+    (word) => !topTwoOptions.includes(word) && word !== correctAnswerText
+  );
+
+  const randomOption = shuffleArray(remainingCandidates)[0];
+  const finalOptions = shuffleArray([...topTwoOptions, randomOption]);
+
+  console.log("Final Options:", finalOptions);
+
+  return finalOptions;
+};
+
+function levenshtein(a: string, b: string): number {
+  const matrix = Array.from({ length: b.length + 1 }, (_, i) => [i]);
+  for (let j = 0; j <= a.length; j++) matrix[0][j] = j;
+
+  for (let i = 1; i <= b.length; i++) {
+    for (let j = 1; j <= a.length; j++) {
+      matrix[i][j] =
+        b[i - 1] === a[j - 1]
+          ? matrix[i - 1][j - 1]
+          : Math.min(
+              matrix[i - 1][j - 1] + 1,
+              Math.min(matrix[i][j - 1] + 1, matrix[i - 1][j] + 1)
+            );
+    }
   }
-  // Return "fillInTheBlank" if randomValue is between 0.45 (inclusive) and 0.85 (exclusive) (40% chance)
-  else if (randomValue < 0.85) {
-    return "fillInTheBlank";
-  }
-  // Return "trueFalse" if randomValue is 0.85 or greater (15% chance)
-  else {
-    return "trueFalse";
-  }
+  return matrix[b.length][a.length];
+}
+
+export const getSimilarityScores = (
+  target: string,
+  candidates: string[]
+): Map<string, number> => {
+  const similarityScores = new Map(
+    candidates.map((candidate) => {
+      const distance = levenshtein(target, candidate);
+      return [candidate, 1 / (1 + distance)];
+    })
+  );
+
+  console.log("Similarity Scores:");
+  Array.from(similarityScores.entries()).forEach(([key, value], index) => {
+    console.log(`${index + 1}. ${key}: ${value}`);
+  });
+
+  return similarityScores;
 };
