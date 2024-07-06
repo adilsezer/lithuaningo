@@ -14,16 +14,16 @@ import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
 import CompletedScreen from "@components/CompletedScreen";
-import { storeData } from "@utils/storageUtil";
+import { storeData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import useData from "../../hooks/useData";
 import {
   loadQuizData,
   loadQuestion,
-  QuizState,
   initializeQuizState,
-} from "@utils/learningUtils";
+} from "../engine/quizEngine";
 import BackButton from "@components/BackButton";
+import { QuizState } from "../../state/quizState";
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
@@ -50,20 +50,21 @@ const QuizScreen: React.FC = () => {
       if (quizState.questionIndex < quizState.similarSentences.length) {
         loadQuestion(
           quizState.similarSentences[quizState.questionIndex],
-          setQuizState
+          setQuizState,
+          userData
         );
-        setQuizState((prev) => ({ ...prev, quizCompleted: false }));
+        setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: false }));
       } else {
-        setQuizState((prev) => ({ ...prev, quizCompleted: true }));
+        setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: true }));
       }
     }
-  }, [quizState.questionIndex, quizState.similarSentences]);
+  }, [quizState.questionIndex, quizState.similarSentences, userData]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     const timeSpent = 1;
     await updateStats(isCorrect, timeSpent);
 
-    setQuizState((prev) => ({
+    setQuizState((prev: QuizState) => ({
       ...prev,
       showContinueButton: true,
     }));
@@ -71,7 +72,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
-    setQuizState((prev) => ({
+    setQuizState((prev: QuizState) => ({
       ...prev,
       questionIndex: quizState.questionIndex + 1,
     }));

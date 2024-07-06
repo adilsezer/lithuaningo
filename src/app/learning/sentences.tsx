@@ -17,8 +17,9 @@ import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import BackButton from "@components/BackButton";
 import { getCurrentDateKey } from "@utils/dateUtils";
-import { retrieveData, storeData } from "@utils/storageUtil";
+import { retrieveData, storeData } from "@utils/storageUtils";
 import CompletedScreen from "@components/CompletedScreen";
+import { cleanWord } from "@utils/stringUtils";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -31,8 +32,10 @@ const SentencesScreen: React.FC = () => {
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
 
-  const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
-  const SENTENCES_KEY = `sentences-${getCurrentDateKey()}`;
+  const COMPLETION_STATUS_KEY = `completionStatus_${
+    userData?.id
+  }_${getCurrentDateKey()}`;
+  const SENTENCES_KEY = `sentences_${userData?.id}_${getCurrentDateKey()}`;
 
   const { width } = Dimensions.get("window");
   const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -79,16 +82,14 @@ const SentencesScreen: React.FC = () => {
     loadSentencesAndWords();
   }, [userData, dispatch]);
 
-  const cleanWord = (word: string) => {
-    return word.replace(/[.,!?;:()"]/g, "");
-  };
-
   useEffect(() => {
     if (sentences.length > 0) {
-      const allWords = sentences.flatMap((sentence) =>
+      const allWords = sentences.flatMap((sentence: Sentence) =>
         sentence.sentence.split(" ").map(cleanWord)
       );
-      const allClicked = allWords.every((word) => clickedWords.includes(word));
+      const allClicked = allWords.every((word: string) =>
+        clickedWords.includes(word)
+      );
       if (allClicked) {
         setWordsCompleted(true);
       }
@@ -158,7 +159,7 @@ const SentencesScreen: React.FC = () => {
       <Text style={globalStyles.subtitle}>
         Click on each word to find out what it means.
       </Text>
-      {sentences.map((sentence) => (
+      {sentences.map((sentence: Sentence) => (
         <View key={sentence.id} style={styles.sentenceContainer}>
           {sentence.sentence.split(" ").map((word: string, index: number) => (
             <TouchableOpacity

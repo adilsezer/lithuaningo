@@ -46,7 +46,9 @@ const Leaderboard = () => {
   return (
     <ScrollView style={styles.container}>
       <Text style={globalStyles.title}>Leaderboard</Text>
-      <Text style={globalStyles.subtitle}>Last 7 Days</Text>
+      <Text style={globalStyles.subtitle}>
+        Last 7 Days: Total Correct Answers
+      </Text>
       <View style={[styles.header, { backgroundColor: globalColors.primary }]}>
         <Text style={[globalStyles.bold, styles.headerCell, styles.rank]}>
           Rank
