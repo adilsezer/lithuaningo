@@ -39,6 +39,17 @@ const fetchLearnedAndAllSentencesWithWords = async (
   return { learnedSentences, allSentences, allWords };
 };
 
+const findWordDetailsIgnoringPrefix = (
+  word: string,
+  allWords: Word[]
+): Word | null => {
+  return (
+    allWords.find((wordDetail) =>
+      wordDetail.grammaticalForms.includes(word.toLowerCase())
+    ) || null
+  );
+};
+
 const getLearnedWordsDetails = (
   learnedSentences: Sentence[],
   allWords: Word[]
@@ -56,12 +67,16 @@ const getLearnedWordsDetails = (
   );
 
   const learnedWordsDetails = Array.from(learnedWords)
-    .map(
-      (word) =>
-        allWords.find((wordDetail) =>
-          wordDetail.grammaticalForms.includes(word.toLowerCase())
-        ) || null
-    )
+    .flatMap((word) => {
+      let wordDetail = findWordDetailsIgnoringPrefix(word, allWords);
+
+      if (!wordDetail && word.toLowerCase().startsWith("ne")) {
+        const wordWithoutPrefix = word.slice(2);
+        wordDetail = findWordDetailsIgnoringPrefix(wordWithoutPrefix, allWords);
+      }
+
+      return wordDetail ? [wordDetail] : [];
+    })
     .filter((wordDetail): wordDetail is Word => !!wordDetail);
 
   console.log(
@@ -273,10 +288,23 @@ export const loadQuestion = async (
       );
     } else if (generatedQuestionType === "fillInTheBlank") {
       generatedQuestionText = `Complete the sentence:`;
-      generatedSentenceText = similarSentence.sentence.replace(
-        new RegExp(randomWord, "gi"),
-        "[...]"
-      );
+
+      generatedSentenceText = similarSentence.sentence
+        .split(" ")
+        .map((wordInSentence) => {
+          // Strip punctuation from the word in the sentence for comparison
+          let strippedWord = cleanWord(wordInSentence.toLowerCase());
+
+          // Check if the stripped word matches the randomWord
+          if (strippedWord === randomWord) {
+            // Preserve the punctuation
+            let punctuation = wordInSentence.slice(strippedWord.length);
+            return "[...]" + punctuation;
+          } else {
+            return wordInSentence;
+          }
+        })
+        .join(" ");
 
       generatedCorrectAnswerText = toTitleCase(randomWord);
     } else if (generatedQuestionType === "trueFalse") {

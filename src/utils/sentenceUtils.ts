@@ -20,7 +20,7 @@ export const removeDuplicates = (sentences: Sentence[]): Sentence[] => {
   return uniqueSentences;
 };
 
-export const getRelatedSentences = (
+const findRelatedSentencesIgnoringPrefix = (
   allSentences: Sentence[],
   wordDetail: Word
 ): Sentence[] => {
@@ -38,6 +38,33 @@ export const getRelatedSentences = (
   relatedSentences.forEach((s, index) => {
     console.log(`${index + 1}. ${s.sentence}`);
   });
+
+  return relatedSentences;
+};
+
+export const getRelatedSentences = (
+  allSentences: Sentence[],
+  wordDetail: Word
+): Sentence[] => {
+  let relatedSentences = findRelatedSentencesIgnoringPrefix(
+    allSentences,
+    wordDetail
+  );
+
+  // If no related sentences are found and the word starts with 'ne'
+  if (
+    relatedSentences.length === 0 &&
+    wordDetail.id.toLowerCase().startsWith("ne")
+  ) {
+    const wordWithoutPrefix = { ...wordDetail, id: wordDetail.id.slice(2) };
+    relatedSentences = findRelatedSentencesIgnoringPrefix(
+      allSentences,
+      wordWithoutPrefix
+    ).map((sentence) => ({
+      ...sentence,
+      relatedTo: wordDetail.id, // Keep the original id with 'ne' prefix
+    }));
+  }
 
   return relatedSentences;
 };
