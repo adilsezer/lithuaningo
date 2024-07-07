@@ -1,6 +1,6 @@
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import wordService, { Word } from "../../services/data/wordService";
-import { retrieveData } from "../../utils/storageUtils";
+import { retrieveData, storeData } from "../../utils/storageUtils";
 import { toTitleCase, cleanWord } from "../../utils/stringUtils";
 import { getCurrentDateKey } from "../../utils/dateUtils";
 import { initializeQuizState, QuizState } from "../../state/quizState";
@@ -27,11 +27,6 @@ const fetchLearnedAndAllSentencesWithWords = async (
   if (!learnedSentences) {
     throw new Error("No learned sentences found.");
   }
-
-  console.log(
-    "Learned Sentences:",
-    learnedSentences.map((s: Sentence) => s.sentence)
-  );
 
   const allSentences = await sentenceService.fetchAndShuffleSentences();
   const allWords = await wordService.fetchWords();
@@ -79,87 +74,71 @@ const getLearnedWordsDetails = (
     })
     .filter((wordDetail): wordDetail is Word => !!wordDetail);
 
-  console.log(
-    "Learned Words Details:",
-    learnedWordsDetails.map((wd: Word) => wd.id)
-  );
-
   return learnedWordsDetails;
 };
 
 export const loadQuizData = async (
   userData: any,
+  setSentences: React.Dispatch<React.SetStateAction<Sentence[]>>,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
   QUIZ_PROGRESS_KEY: string
 ): Promise<void> => {
   if (!userData?.id) return;
+
+  const QUESTIONS_KEY = `questions_${userData?.id}_${getCurrentDateKey()}`;
   try {
-    const { learnedSentences, allSentences, allWords } =
-      await fetchLearnedAndAllSentencesWithWords(userData);
+    // Check if questions are already stored
+    const storedQuestions = await retrieveData<Sentence[]>(QUESTIONS_KEY);
 
-    const learnedWordsDetails = getLearnedWordsDetails(
-      learnedSentences,
-      allWords
-    );
-    const sentencesPerWord = Math.ceil(10 / learnedWordsDetails.length) + 2; // Increase to account for potential removals
-    let allSelectedSentences: Sentence[] = [];
-
-    learnedWordsDetails.forEach((wordDetail: Word) => {
-      const relatedSentences = getRelatedSentences(allSentences, wordDetail);
-
-      let selectedSentences =
-        relatedSentences.length < sentencesPerWord
-          ? relatedSentences
-          : shuffleArray(relatedSentences).slice(0, sentencesPerWord);
-
-      console.log(`Selected sentences for word: ${wordDetail.id}`);
-      selectedSentences.forEach((sentence: Sentence) =>
-        console.log(`- ${sentence.sentence}`)
-      );
-
-      allSelectedSentences.push(...selectedSentences);
-    });
-
-    allSelectedSentences = removeDuplicates(shuffleArray(allSelectedSentences));
-
-    let finalSentences =
-      allSelectedSentences.length >= 10
-        ? allSelectedSentences.slice(0, 10)
-        : allSelectedSentences;
-
-    if (finalSentences.length === 0) {
-      console.log("Getting random questions");
-      finalSentences = shuffleArray(allSentences).slice(0, 10);
-    }
-
-    console.log("Final Sentences:");
-    finalSentences.forEach((s: Sentence, index: number) => {
-      console.log(`${index + 1}. ${s.sentence} (Selected for: ${s.relatedTo})`);
-    });
-
-    setQuizState((prev: QuizState) => ({
-      ...prev,
-      similarSentences: finalSentences,
-    }));
-
-    const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
-    console.log("Stored Progress:", storedProgress);
-
-    if (storedProgress !== null) {
-      if (storedProgress >= finalSentences.length) {
-        setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: true }));
-      } else {
-        setQuizState((prev: QuizState) => ({
-          ...prev,
-          questionIndex: storedProgress,
-        }));
+    if (storedQuestions && storedQuestions.length > 0) {
+      setSentences(storedQuestions);
+      const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
+      setQuizState((prev: QuizState) => ({
+        ...prev,
+        questionIndex: storedProgress ?? 0,
+        quizCompleted:
+          storedProgress !== null && storedProgress >= storedQuestions.length,
+      }));
+      if (storedProgress !== null && storedProgress < storedQuestions.length) {
         await loadQuestion(
-          finalSentences[storedProgress],
+          storedQuestions[storedProgress],
           setQuizState,
           userData
         );
       }
     } else {
+      const { learnedSentences, allSentences, allWords } =
+        await fetchLearnedAndAllSentencesWithWords(userData);
+      const learnedWordsDetails = getLearnedWordsDetails(
+        learnedSentences,
+        allWords
+      );
+      const sentencesPerWord = Math.ceil(10 / learnedWordsDetails.length) + 2;
+      let allSelectedSentences: Sentence[] = [];
+
+      learnedWordsDetails.forEach((wordDetail: Word) => {
+        const relatedSentences = getRelatedSentences(allSentences, wordDetail);
+        let selectedSentences =
+          relatedSentences.length < sentencesPerWord
+            ? relatedSentences
+            : shuffleArray(relatedSentences).slice(0, sentencesPerWord);
+
+        allSelectedSentences.push(...selectedSentences);
+      });
+
+      allSelectedSentences = removeDuplicates(
+        shuffleArray(allSelectedSentences)
+      );
+      let finalSentences =
+        allSelectedSentences.length >= 10
+          ? allSelectedSentences.slice(0, 10)
+          : allSelectedSentences;
+      if (finalSentences.length === 0) {
+        finalSentences = shuffleArray(allSentences).slice(0, 10);
+      }
+
+      setSentences(finalSentences);
+      await storeData(QUESTIONS_KEY, finalSentences);
       await loadQuestion(finalSentences[0], setQuizState, userData);
     }
   } catch (error) {
@@ -173,8 +152,6 @@ export const loadQuestion = async (
   userData: any
 ): Promise<void> => {
   try {
-    console.log("Loading question for sentence:", similarSentence.sentence);
-
     const { learnedSentences, allWords } =
       await fetchLearnedAndAllSentencesWithWords(userData);
     const learnedWords = new Set<string>(
@@ -184,34 +161,36 @@ export const loadQuestion = async (
           .map((word) => cleanWord(word).toLowerCase())
       )
     );
-    console.log("Learned Words:", learnedWords);
 
     const similarSentenceWords = similarSentence.sentence
       .split(" ")
       .map((word) => cleanWord(word).toLowerCase());
-    console.log("Similar Sentence Words:", similarSentenceWords);
 
     const skippedWords = new Set(
       getSkippedWords().map((word) => word.toLowerCase())
     );
     const validWords = similarSentenceWords.filter((word) =>
-      allWords.some(
-        (wordDetail) =>
-          wordDetail.grammaticalForms.includes(word.toLowerCase()) &&
-          learnedWords.has(
-            wordDetail.grammaticalForms.find((form) =>
-              learnedWords.has(form.toLowerCase())
-            ) || ""
-          ) &&
-          !wordDetail.grammaticalForms.some((form) =>
-            skippedWords.has(form.toLowerCase())
+      allWords.some((wordDetail) => {
+        const forms = wordDetail.grammaticalForms.map((form) =>
+          form.toLowerCase()
+        );
+        const hasLearnedForm = forms.some((form) => learnedWords.has(form));
+        const hasLearnedFormWithNePrefix = forms.some((form) =>
+          Array.from(learnedWords).some(
+            (learnedWord) =>
+              learnedWord.startsWith("ne") && learnedWord.slice(2) === form
           )
-      )
+        );
+
+        return (
+          forms.includes(word.toLowerCase()) &&
+          (hasLearnedForm || hasLearnedFormWithNePrefix) &&
+          !forms.some((form) => skippedWords.has(form))
+        );
+      })
     );
-    console.log("Valid Words:", validWords);
 
     const shuffledWords = shuffleArray(validWords);
-    console.log("Shuffled Words:", shuffledWords);
 
     let randomWord: string | undefined = undefined;
     let correctWordDetails: Word | null = null;
@@ -253,21 +232,12 @@ export const loadQuestion = async (
       return;
     }
 
-    console.log(
-      "Correct Word Details:",
-      correctWordDetails.id,
-      "Random Word:",
-      randomWord
-    );
-
     const otherOptions = await getRandomOptions(
       allWords,
       correctWordDetails.englishTranslation
     );
-    console.log("Other Options:", otherOptions);
 
     const generatedQuestionType = getRandomQuestionType();
-    console.log("Generated Question Type:", generatedQuestionType);
 
     let generatedSentenceText = "";
     let generatedQuestionText = "";
@@ -281,7 +251,7 @@ export const loadQuestion = async (
     if (generatedQuestionType === "multipleChoice") {
       generatedQuestionText = `What is the base form of **${toTitleCase(
         randomWord
-      )}** in the sentence below?`;
+      )}** in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;
       generatedOptions = shuffleArray(
         [...otherOptions, generatedCorrectAnswerText].map(toTitleCase)
@@ -314,18 +284,13 @@ export const loadQuestion = async (
         : otherOptions[0];
       generatedQuestionText = `Does **${toTitleCase(
         randomWord
-      )}** mean **${toTitleCase(givenTranslation)}** in the sentence below?`;
+      )}** mean **${toTitleCase(
+        givenTranslation
+      )}** in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;
       generatedCorrectAnswerText = randomBool ? "True" : "False";
       generatedOptions = ["True", "False"];
     }
-
-    console.log("Generated Question Text:", generatedQuestionText);
-    console.log("Generated Sentence Text:", generatedSentenceText);
-    console.log("Generated Translation:", generatedTranslation);
-    console.log("Word Image:", wordImage);
-    console.log("Generated Correct Answer Text:", generatedCorrectAnswerText);
-    console.log("Generated Options:", generatedOptions);
 
     setQuizState((prev: QuizState) => ({
       ...prev,

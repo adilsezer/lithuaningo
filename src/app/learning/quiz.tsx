@@ -24,9 +24,11 @@ import {
 } from "../engine/quizEngine";
 import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
+import { Sentence } from "../../services/data/sentenceService";
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
+  const [sentences, setSentences] = useState<Sentence[]>([]);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
@@ -39,17 +41,22 @@ const QuizScreen: React.FC = () => {
   useEffect(() => {
     if (userData) {
       dispatch(setLoading(true));
-      loadQuizData(userData, setQuizState, QUIZ_PROGRESS_KEY).finally(() => {
+      loadQuizData(
+        userData,
+        setSentences,
+        setQuizState,
+        QUIZ_PROGRESS_KEY
+      ).finally(() => {
         dispatch(setLoading(false));
       });
     }
   }, [userData, dispatch]);
 
   useEffect(() => {
-    if (quizState.similarSentences.length > 0) {
-      if (quizState.questionIndex < quizState.similarSentences.length) {
+    if (sentences.length > 0) {
+      if (quizState.questionIndex < sentences.length) {
         loadQuestion(
-          quizState.similarSentences[quizState.questionIndex],
+          sentences[quizState.questionIndex],
           setQuizState,
           userData
         );
@@ -58,7 +65,7 @@ const QuizScreen: React.FC = () => {
         setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: true }));
       }
     }
-  }, [quizState.questionIndex, quizState.similarSentences, userData]);
+  }, [quizState.questionIndex, sentences, userData]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     const timeSpent = 1;
@@ -101,8 +108,8 @@ const QuizScreen: React.FC = () => {
             <Text
               style={[globalStyles.subtitle, { color: globalColors.primary }]}
             >
-              {quizState.questionIndex + 1} /{" "}
-              {quizState.similarSentences.length} Questions Complete
+              {quizState.questionIndex + 1} / {sentences.length} Questions
+              Complete
             </Text>
             {quizState.questionType === "multipleChoice" ||
             quizState.questionType === "trueFalse" ? (

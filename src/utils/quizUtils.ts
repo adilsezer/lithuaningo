@@ -1,5 +1,4 @@
 import { Word } from "../services/data/wordService";
-import { toTitleCase } from "./stringUtils";
 
 export const getSkippedWords = (): string[] => [
   "yra",
@@ -57,8 +56,6 @@ export const getRandomOptions = async (
 
   const randomOption = shuffleArray(remainingCandidates)[0];
   const finalOptions = shuffleArray([...topTwoOptions, randomOption]);
-
-  console.log("Final Options:", finalOptions);
 
   return finalOptions;
 };

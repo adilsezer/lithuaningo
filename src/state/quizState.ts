@@ -1,7 +1,6 @@
 import { Sentence } from "../services/data/sentenceService";
 
 export interface QuizState {
-  similarSentences: Sentence[];
   sentenceText: string;
   questionText: string;
   image: string;
@@ -15,7 +14,6 @@ export interface QuizState {
 }
 
 export const initializeQuizState = (): QuizState => ({
-  similarSentences: [],
   questionText: "",
   sentenceText: "",
   translation: "",

@@ -12,11 +12,6 @@ export const removeDuplicates = (sentences: Sentence[]): Sentence[] => {
     return true;
   });
 
-  console.log("Unique Sentences:");
-  uniqueSentences.forEach((s, index) => {
-    console.log(`${index + 1}. ${s.sentence}`);
-  });
-
   return uniqueSentences;
 };
 
@@ -33,11 +28,6 @@ const findRelatedSentencesIgnoringPrefix = (
         )
     )
     .map((sentence) => ({ ...sentence, relatedTo: wordDetail.id }));
-
-  console.log("Related Sentences for word:", wordDetail.id);
-  relatedSentences.forEach((s, index) => {
-    console.log(`${index + 1}. ${s.sentence}`);
-  });
 
   return relatedSentences;
 };
