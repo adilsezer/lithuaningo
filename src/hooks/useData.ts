@@ -1,8 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAppSelector, useAppDispatch } from "../redux/hooks";
 import { selectUserData } from "../redux/slices/userSlice";
-import sentenceService, { Sentence } from "../services/data/sentenceService";
-import wordService, { Word } from "../services/data/wordService";
 import userStatsService, { Stats } from "../services/data/userStatsService";
 
 interface Leader {
@@ -13,8 +11,6 @@ interface Leader {
 
 interface UseDataReturn {
   stats: Stats | null;
-  sentences: Sentence[];
-  words: Word[];
   leaders: Leader[];
   handleAnswer: (isCorrect: boolean, timeSpent: number) => Promise<void>;
 }
@@ -23,8 +19,6 @@ const useData = (): UseDataReturn => {
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
   const [stats, setStats] = useState<Stats | null>(null);
-  const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [words, setWords] = useState<Word[]>([]);
   const [leaders, setLeaders] = useState<Leader[]>([]);
 
   useEffect(() => {
@@ -35,21 +29,6 @@ const useData = (): UseDataReturn => {
           setStats(newStats);
         }
       );
-
-      const loadSentencesAndWords = async () => {
-        try {
-          const [newSentences, newWords] = await Promise.all([
-            sentenceService.fetchAndShuffleSentences(),
-            wordService.fetchWords(),
-          ]);
-          setSentences(newSentences);
-          setWords(newWords);
-        } catch (error) {
-          console.error("Error loading sentences and words:", error);
-        }
-      };
-
-      loadSentencesAndWords();
 
       const unsubscribeLeaders = userStatsService.fetchLeaderboard(
         (newLeaders) => {
@@ -74,7 +53,7 @@ const useData = (): UseDataReturn => {
     }
   };
 
-  return { stats, sentences, words, leaders, handleAnswer };
+  return { stats, leaders, handleAnswer };
 };
 
 export default useData;

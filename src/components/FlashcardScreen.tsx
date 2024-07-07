@@ -28,16 +28,38 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   useEffect(() => {
     const loadWord = async () => {
       try {
-        const fetchedWords = await wordService.fetchWords();
+        dispatch(setLoading(true));
+        const fetchedWords: Word[] = await wordService.fetchWords();
 
-        // Find the word by checking the base form and all grammatical forms
-        const selectedWord = fetchedWords.find(
-          (w) =>
-            w.id.toLowerCase() === wordId.toLowerCase() ||
-            w.grammaticalForms.some(
-              (form) => form.toLowerCase() === wordId.toLowerCase()
-            )
-        );
+        // Function to find word in fetchedWords
+        const findWord = (
+          wordList: Word[],
+          wordToFind: string
+        ): Word | undefined => {
+          return wordList.find(
+            (w) =>
+              w.id.toLowerCase() === wordToFind.toLowerCase() ||
+              w.grammaticalForms.some(
+                (form) => form.toLowerCase() === wordToFind.toLowerCase()
+              )
+          );
+        };
+
+        let selectedWord = findWord(fetchedWords, wordId);
+        if (!selectedWord && wordId.toLowerCase().startsWith("ne")) {
+          const wordWithoutPrefix = wordId.slice(2);
+          selectedWord = findWord(fetchedWords, wordWithoutPrefix);
+
+          // If we found the word without 'ne', we need to add back the prefix
+          if (selectedWord) {
+            selectedWord = {
+              ...selectedWord,
+              id: wordId, // Restore the original wordId with 'ne' prefix
+              englishTranslation: `not ${selectedWord.englishTranslation}`, // Add "not " to the translation
+              imageUrl: "",
+            };
+          }
+        }
 
         setWord(selectedWord || null);
       } catch (error) {

@@ -107,10 +107,15 @@ export const loadQuizData = async (
 
     allSelectedSentences = removeDuplicates(shuffleArray(allSelectedSentences));
 
-    const finalSentences =
+    let finalSentences =
       allSelectedSentences.length >= 10
         ? allSelectedSentences.slice(0, 10)
         : allSelectedSentences;
+
+    if (finalSentences.length === 0) {
+      console.log("Getting random questions");
+      finalSentences = shuffleArray(allSentences).slice(0, 10);
+    }
 
     console.log("Final Sentences:");
     finalSentences.forEach((s: Sentence, index: number) => {
@@ -206,7 +211,12 @@ export const loadQuestion = async (
     }
 
     if (!correctWordDetails) {
-      const fallbackWord = shuffleArray(similarSentenceWords)[0];
+      const fallbackWord =
+        shuffleArray(similarSentenceWords).find((fw) =>
+          allWords.some((wordDetail) =>
+            wordDetail.grammaticalForms.includes(fw.toLowerCase())
+          )
+        ) || shuffleArray(similarSentenceWords)[0];
       randomWord = fallbackWord;
       correctWordDetails =
         allWords.find((wordDetail) =>
