@@ -43,9 +43,15 @@ const getLearnedWordsDetails = (
   learnedSentences: Sentence[],
   allWords: Word[]
 ): Word[] => {
+  const skippedWords = new Set(
+    getSkippedWords().map((word) => cleanWord(word).toLowerCase())
+  );
   const learnedWords = new Set<string>(
     learnedSentences.flatMap((sentence: Sentence) =>
-      sentence.sentence.split(" ").map(cleanWord)
+      sentence.sentence
+        .split(" ")
+        .map((word) => cleanWord(word).toLowerCase())
+        .filter((word) => !skippedWords.has(word))
     )
   );
 
@@ -153,17 +159,34 @@ export const loadQuestion = async (
       await fetchLearnedAndAllSentencesWithWords(userData);
     const learnedWords = new Set<string>(
       learnedSentences.flatMap((sentence: Sentence) =>
-        sentence.sentence.split(" ").map(cleanWord)
+        sentence.sentence
+          .split(" ")
+          .map((word) => cleanWord(word).toLowerCase())
       )
     );
+    console.log("Learned Words:", learnedWords);
+
     const similarSentenceWords = similarSentence.sentence
       .split(" ")
-      .map(cleanWord);
+      .map((word) => cleanWord(word).toLowerCase());
     console.log("Similar Sentence Words:", similarSentenceWords);
 
-    const skippedWords = getSkippedWords();
-    const validWords = similarSentenceWords.filter(
-      (word) => learnedWords.has(word) && !skippedWords.includes(word)
+    const skippedWords = new Set(
+      getSkippedWords().map((word) => word.toLowerCase())
+    );
+    const validWords = similarSentenceWords.filter((word) =>
+      allWords.some(
+        (wordDetail) =>
+          wordDetail.grammaticalForms.includes(word.toLowerCase()) &&
+          learnedWords.has(
+            wordDetail.grammaticalForms.find((form) =>
+              learnedWords.has(form.toLowerCase())
+            ) || ""
+          ) &&
+          !wordDetail.grammaticalForms.some((form) =>
+            skippedWords.has(form.toLowerCase())
+          )
+      )
     );
     console.log("Valid Words:", validWords);
 
@@ -195,7 +218,8 @@ export const loadQuestion = async (
       console.error("No valid question could be generated.");
       setQuizState((prev: QuizState) => ({
         ...prev,
-        sentenceText: "No valid question could be generated. Please try again.",
+        sentenceText:
+          "No valid question could be generated. Please go back and try again.",
         questionText: "",
         translation: "",
         image: "",
@@ -240,9 +264,10 @@ export const loadQuestion = async (
     } else if (generatedQuestionType === "fillInTheBlank") {
       generatedQuestionText = `Complete the sentence:`;
       generatedSentenceText = similarSentence.sentence.replace(
-        randomWord,
+        new RegExp(randomWord, "gi"),
         "[...]"
       );
+
       generatedCorrectAnswerText = toTitleCase(randomWord);
     } else if (generatedQuestionType === "trueFalse") {
       const randomBool = Math.random() > 0.5;
@@ -273,7 +298,6 @@ export const loadQuestion = async (
       correctAnswerText: generatedCorrectAnswerText,
       options: generatedOptions,
       questionType: generatedQuestionType,
-      showContinueButton: false,
     }));
   } catch (error) {
     console.error("Error loading question:", error);

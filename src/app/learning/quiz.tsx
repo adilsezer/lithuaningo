@@ -75,6 +75,7 @@ const QuizScreen: React.FC = () => {
     setQuizState((prev: QuizState) => ({
       ...prev,
       questionIndex: quizState.questionIndex + 1,
+      showContinueButton: false,
     }));
   };
 

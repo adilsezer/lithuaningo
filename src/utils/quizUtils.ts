@@ -74,11 +74,6 @@ export const getSimilarityScores = (
     })
   );
 
-  console.log("Similarity Scores:");
-  Array.from(similarityScores.entries()).forEach(([key, value], index) => {
-    console.log(`${index + 1}. ${key}: ${value}`);
-  });
-
   return similarityScores;
 };
 
