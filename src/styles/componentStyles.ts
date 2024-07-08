@@ -14,9 +14,9 @@ export const createComponentStyles = (colors: ThemeColors) =>
       borderColor: colors.border,
       padding: isTablet ? 25 : 20,
       borderRadius: 10,
-      color: colors.text,
-      fontFamily: "Roboto",
-      fontSize: isTablet ? 24 : 14,
+      color: colors.lightText,
+      fontFamily: "Roboto-Bold",
+      fontSize: isTablet ? 24 : 16,
     },
     button: {
       flexDirection: "row",

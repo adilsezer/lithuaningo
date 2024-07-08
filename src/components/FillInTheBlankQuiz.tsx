@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   Image,
   Dimensions,
@@ -139,7 +138,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       {!isSubmitPressed && (
         <View>
           <CustomTextInput
-            style={globalStyles.input}
+            style={[globalStyles.input, { textAlign: "center" }]}
             placeholder="Type your answer here"
             placeholderTextColor={globalColors.placeholder}
             value={inputText}

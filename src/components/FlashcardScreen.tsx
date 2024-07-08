@@ -4,14 +4,22 @@ import {
   Text,
   Image,
   StyleSheet,
-  Platform,
-  Dimensions,
+  TouchableWithoutFeedback,
 } from "react-native";
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+  withTiming,
+  interpolate,
+  Easing,
+} from "react-native-reanimated";
 import wordService, { Word } from "../services/data/wordService";
 import BackButton from "./BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
+import CustomButton from "./CustomButton";
+import { router } from "expo-router";
 
 interface FlashcardScreenProps {
   wordId: string;
@@ -22,8 +30,28 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
 
-  const { width } = Dimensions.get("window");
-  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
+  const flip = useSharedValue(0);
+
+  const frontAnimatedStyle = useAnimatedStyle(() => {
+    const rotateY = interpolate(flip.value, [0, 1], [0, 180]);
+    return {
+      transform: [{ rotateY: `${rotateY}deg` }],
+    };
+  });
+
+  const backAnimatedStyle = useAnimatedStyle(() => {
+    const rotateY = interpolate(flip.value, [0, 1], [180, 360]);
+    return {
+      transform: [{ rotateY: `${rotateY}deg` }],
+    };
+  });
+
+  const handleFlip = () => {
+    flip.value = withTiming(flip.value === 0 ? 1 : 0, {
+      duration: 500,
+      easing: Easing.inOut(Easing.ease),
+    });
+  };
 
   useEffect(() => {
     const loadWord = async () => {
@@ -31,7 +59,6 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         dispatch(setLoading(true));
         const fetchedWords: Word[] = await wordService.fetchWords();
 
-        // Function to find word in fetchedWords
         const findWord = (
           wordList: Word[],
           wordToFind: string
@@ -50,12 +77,11 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           const wordWithoutPrefix = wordId.slice(2);
           selectedWord = findWord(fetchedWords, wordWithoutPrefix);
 
-          // If we found the word without 'ne', we need to add back the prefix
           if (selectedWord) {
             selectedWord = {
               ...selectedWord,
-              id: wordId, // Restore the original wordId with 'ne' prefix
-              englishTranslation: `not ${selectedWord.englishTranslation}`, // Add "not " to the translation
+              id: wordId,
+              englishTranslation: `not ${selectedWord.englishTranslation}`,
               imageUrl: "",
             };
           }
@@ -88,36 +114,95 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
 
   return (
     <View>
-      <BackButton />
-      {word.imageUrl && (
-        <Image
-          source={{ uri: word.imageUrl }}
-          style={[styles.image, isTablet && styles.imageIpad]}
-        />
-      )}
-      <Text style={globalStyles.title}>Word: {word.id}</Text>
-      <Text style={[globalStyles.title, { color: globalColors.primary }]}>
-        Translation: {word.englishTranslation}
+      <TouchableWithoutFeedback onPress={handleFlip}>
+        <View style={styles.cardContainer}>
+          <Animated.View
+            style={[
+              styles.card,
+              frontAnimatedStyle,
+              { backgroundColor: globalColors.card },
+            ]}
+          >
+            {word.imageUrl && (
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: word.imageUrl }}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+            <Text style={[globalStyles.title]}>Word: {word.id}</Text>
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.card,
+              backAnimatedStyle,
+              styles.cardBack,
+              { backgroundColor: globalColors.card },
+            ]}
+          >
+            {word.imageUrl && (
+              <View style={styles.imageContainer}>
+                <Image
+                  source={{ uri: word.imageUrl }}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              </View>
+            )}
+            <Text style={[globalStyles.title]}>
+              Translation: {word.englishTranslation}
+            </Text>
+          </Animated.View>
+        </View>
+      </TouchableWithoutFeedback>
+      <Text style={globalStyles.subtitle}>
+        Tap the card to flip and see the translation
       </Text>
-      {word.additionalInfo && (
-        <Text style={globalStyles.subtitle}>{word.additionalInfo}</Text>
-      )}
+      <CustomButton title="Mark as Known" onPress={() => router.back()} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  image: {
-    width: 300,
-    height: 300,
-    marginTop: 20,
-    marginBottom: 10,
+  cardContainer: {
+    position: "relative",
+    width: "90%",
+    height: "60%", // Adjust this value to make the card taller
+    marginVertical: 50,
     alignSelf: "center",
-    borderRadius: 10,
+    overflow: "hidden",
   },
-  imageIpad: {
-    width: 500, // Increased width for iPad
-    height: 500, // Increased height for iPad
+  card: {
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    backfaceVisibility: "hidden",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    width: "100%",
+    height: "100%",
+    padding: 25,
+    overflow: "hidden",
+    borderWidth: 0.5,
+  },
+  cardBack: {
+    transform: [{ rotateY: "180deg" }],
+  },
+  imageContainer: {
+    width: "100%",
+    height: "80%",
+    borderRadius: 10,
+    overflow: "hidden",
+    marginVertical: 20,
+    borderWidth: 0.5,
+  },
+  image: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 10,
   },
 });
 

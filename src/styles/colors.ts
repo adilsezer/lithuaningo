@@ -6,6 +6,7 @@ export type ThemeColors = {
   active: string;
   inactive: string;
   text: string;
+  lightText: string;
   link: string;
   placeholder: string;
   border: string;
@@ -25,6 +26,7 @@ export const lightThemeColors: ThemeColors = {
   active: "#66BB6A", // Modern vibrant green (same as primary)
   inactive: "#B0BEC5", // Soft grey
   text: "#2E3B44", // Deep charcoal grey
+  lightText: "#4A5963", // Deep charcoal grey
   link: "#1E88E5", // Crisp, deep sky blue (same as light theme)
   placeholder: "#B0BEC5", // Matches inactive color
   border: "#B0BEC5", // Soft grey (same as inactive)
@@ -44,6 +46,7 @@ export const darkThemeColors: ThemeColors = {
   active: "#66BB6A", // Lively modern green (same as primary)
   inactive: "#455A64", // Cooler, muted blue-grey
   text: "#FAFAFA", // Very light grey (almost white)
+  lightText: "#CFD8DC", // Deep charcoal grey
   link: "#82CAFF", // Crisp, deep sky blue (same as light theme)
   placeholder: "#CFD8DC", // Lighter blue-grey for placeholders, adjusted for dark theme
   border: "#37474F", // Darker shade for borders, adjusted for dark theme

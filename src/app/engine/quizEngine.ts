@@ -249,9 +249,9 @@ export const loadQuestion = async (
     );
 
     if (generatedQuestionType === "multipleChoice") {
-      generatedQuestionText = `What is the base form of **${toTitleCase(
+      generatedQuestionText = `What is the English base form of "**${toTitleCase(
         randomWord
-      )}** in the following sentence?`;
+      )}**" in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;
       generatedOptions = shuffleArray(
         [...otherOptions, generatedCorrectAnswerText].map(toTitleCase)
