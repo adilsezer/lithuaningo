@@ -21,7 +21,7 @@ import {
   loadQuizData,
   loadQuestion,
   initializeQuizState,
-} from "../engine/quizEngine";
+} from "../../engine/quizEngine";
 import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
 import { Sentence } from "../../services/data/sentenceService";

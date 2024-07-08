@@ -1,18 +1,15 @@
-import sentenceService, { Sentence } from "../../services/data/sentenceService";
-import wordService, { Word } from "../../services/data/wordService";
-import { retrieveData, storeData } from "../../utils/storageUtils";
-import { toTitleCase, cleanWord } from "../../utils/stringUtils";
-import { getCurrentDateKey } from "../../utils/dateUtils";
-import { initializeQuizState, QuizState } from "../../state/quizState";
+import sentenceService, { Sentence } from "../services/data/sentenceService";
+import wordService, { Word } from "../services/data/wordService";
+import { retrieveData, storeData } from "../utils/storageUtils";
+import { toTitleCase, cleanWord } from "../utils/stringUtils";
+import { getCurrentDateKey } from "../utils/dateUtils";
+import { initializeQuizState, QuizState } from "../state/quizState";
 import {
   getSkippedWords,
   getRandomQuestionType,
   getRandomOptions,
-} from "../../utils/quizUtils";
-import {
-  removeDuplicates,
-  getRelatedSentences,
-} from "../../utils/sentenceUtils";
+} from "../utils/quizUtils";
+import { removeDuplicates, getRelatedSentences } from "../utils/sentenceUtils";
 
 const fetchLearnedAndAllSentencesWithWords = async (
   userData: any
