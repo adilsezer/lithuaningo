@@ -78,8 +78,10 @@ const Leaderboard = () => {
       ) : (
         <View style={styles.noDataContainer}>
           <Text style={globalStyles.text}>
-            Be the first to make it to the leaderboard! We're currently waiting
-            for new leaders to emerge.
+            Be the first to make it to the leaderboard!
+          </Text>
+          <Text style={globalStyles.text}>
+            We're currently waiting for new leaders to emerge.
           </Text>
         </View>
       )}

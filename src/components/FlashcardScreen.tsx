@@ -20,6 +20,12 @@ import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import CustomButton from "./CustomButton";
 import { router } from "expo-router";
+import CustomTextInput from "./CustomTextInput";
+import {
+  addClickedWord,
+  removeClickedWord,
+} from "@src/redux/slices/clickedWordsSlice";
+import { cleanWord } from "@utils/stringUtils";
 
 interface FlashcardScreenProps {
   wordId: string;
@@ -27,6 +33,9 @@ interface FlashcardScreenProps {
 
 const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const [word, setWord] = useState<Word | null>(null);
+  const [newWord, setNewWord] = useState("");
+  const [translation, setTranslation] = useState("");
+  const [grammaticalForms, setGrammaticalForms] = useState<string>("");
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
 
@@ -51,6 +60,35 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
       duration: 500,
       easing: Easing.inOut(Easing.ease),
     });
+  };
+
+  const handleAddWord = async () => {
+    if (newWord.trim() && translation.trim() && grammaticalForms.trim()) {
+      try {
+        dispatch(setLoading(true));
+        await wordService.addWordForReview({
+          id: newWord,
+          grammaticalForms: grammaticalForms
+            .split(",")
+            .map((form) => form.trim()),
+          englishTranslation: translation,
+          imageUrl: "",
+        });
+        alert(
+          "Thanks for helping improve our app! Your word has been submitted for review."
+        );
+        setNewWord("");
+        setTranslation("");
+        setGrammaticalForms("");
+      } catch (error) {
+        console.error("Error adding word for review:", error);
+        alert("Failed to submit word for review. Please try again.");
+      } finally {
+        dispatch(setLoading(false));
+      }
+    } else {
+      alert("Please fill in all fields.");
+    }
   };
 
   useEffect(() => {
@@ -106,14 +144,52 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           We don't have this word in our database at the moment.
         </Text>
         <Text style={globalStyles.subtitle}>
-          We'll try to add it as soon as possible!
+          Help us improve by adding the word details below. Once reviewed, it
+          will be available for everyone.
         </Text>
+        <CustomTextInput
+          placeholder="Lithuanian word"
+          value={newWord}
+          onChangeText={setNewWord}
+          style={styles.input}
+        />
+        <CustomTextInput
+          placeholder="English translation"
+          value={translation}
+          onChangeText={setTranslation}
+          style={styles.input}
+        />
+        <CustomTextInput
+          placeholder="Grammatical forms (e.g., noriu, norėti, norėjo)"
+          value={grammaticalForms}
+          onChangeText={setGrammaticalForms}
+          style={styles.input}
+        />
+        <Text style={globalStyles.text}>
+          Please enter grammatical forms separated by commas.
+        </Text>
+        <CustomButton title="Submit" onPress={handleAddWord} />
       </View>
     );
   }
 
+  const handleMarkAsKnown = (word: string) => {
+    const cleanedWord = cleanWord(word);
+    dispatch(addClickedWord(cleanedWord));
+    router.back();
+  };
+
+  const handleReviewLater = (word: string) => {
+    const cleanedWord = cleanWord(word);
+    dispatch(removeClickedWord(cleanedWord));
+    router.back();
+  };
+
   return (
     <View>
+      <Text style={[globalStyles.subtitle]}>
+        Tap the card to flip and see the translation
+      </Text>
       <TouchableWithoutFeedback onPress={handleFlip}>
         <View style={styles.cardContainer}>
           <Animated.View
@@ -128,11 +204,11 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                 <Image
                   source={{ uri: word.imageUrl }}
                   style={styles.image}
-                  resizeMode="contain"
+                  resizeMode="cover"
                 />
               </View>
             )}
-            <Text style={[globalStyles.title]}>Word: {word.id}</Text>
+            <Text style={[globalStyles.title]}>{word.id}</Text>
           </Animated.View>
           <Animated.View
             style={[
@@ -147,20 +223,25 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                 <Image
                   source={{ uri: word.imageUrl }}
                   style={styles.image}
-                  resizeMode="contain"
+                  resizeMode="cover"
                 />
               </View>
             )}
-            <Text style={[globalStyles.title]}>
-              Translation: {word.englishTranslation}
-            </Text>
+            <Text style={[globalStyles.title]}>{word.englishTranslation}</Text>
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
-      <Text style={globalStyles.subtitle}>
-        Tap the card to flip and see the translation
-      </Text>
-      <CustomButton title="Mark as Known" onPress={() => router.back()} />
+
+      <CustomButton
+        title="Mark as Known"
+        onPress={() => handleMarkAsKnown(wordId)}
+        style={styles.button}
+      />
+      <CustomButton
+        title="Review Later"
+        style={{ backgroundColor: globalColors.secondary }}
+        onPress={() => handleReviewLater(wordId)}
+      />
     </View>
   );
 };
@@ -169,23 +250,19 @@ const styles = StyleSheet.create({
   cardContainer: {
     position: "relative",
     width: "90%",
-    height: "60%", // Adjust this value to make the card taller
-    marginVertical: 50,
+    height: "60%",
     alignSelf: "center",
-    overflow: "hidden",
   },
   card: {
     justifyContent: "center",
     alignItems: "center",
-    borderRadius: 10,
     backfaceVisibility: "hidden",
     position: "absolute",
     top: 0,
     left: 0,
     width: "100%",
-    height: "100%",
-    padding: 25,
-    overflow: "hidden",
+    height: "90%",
+    borderRadius: 20,
     borderWidth: 0.5,
   },
   cardBack: {
@@ -194,15 +271,20 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: "100%",
     height: "80%",
-    borderRadius: 10,
-    overflow: "hidden",
-    marginVertical: 20,
-    borderWidth: 0.5,
+    paddingHorizontal: 15,
+    marginVertical: 5,
   },
   image: {
     width: "100%",
     height: "100%",
-    borderRadius: 10,
+    borderRadius: 20,
+    borderWidth: 0.5,
+  },
+  input: {
+    marginVertical: 10,
+  },
+  button: {
+    marginTop: 50,
   },
 });
 

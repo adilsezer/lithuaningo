@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   TextInput,
   StyleProp,
@@ -32,6 +32,8 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
+  const [isFocused, setIsFocused] = useState(false);
+
   // Determine if the device is a tablet
   const isTablet =
     (Platform.OS === "ios" && Platform.isPad) || screenWidth >= 768;
@@ -51,11 +53,15 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
     >
       <TextInput
         style={[globalStyles.input, style, { width: "100%" }]}
-        placeholder={placeholder}
+        placeholder={isFocused ? "" : placeholder}
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
         placeholderTextColor={globalColors.placeholder}
+        onFocus={() => setIsFocused(true)}
+        onBlur={() => setIsFocused(false)}
+        autoCapitalize="none"
+        autoCorrect={false}
         {...rest}
       />
     </View>

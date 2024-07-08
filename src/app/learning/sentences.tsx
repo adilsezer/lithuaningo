@@ -12,7 +12,6 @@ import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector, useAppDispatch } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
-import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import BackButton from "@components/BackButton";
@@ -97,9 +96,7 @@ const SentencesScreen: React.FC = () => {
   }, [sentences, clickedWords]);
 
   const handleWordClick = (word: string) => {
-    const cleanedWord = cleanWord(word);
-    dispatch(addClickedWord(cleanedWord));
-    router.push(`/learning/${cleanedWord}`);
+    router.push(`/learning/${cleanWord(word)}`);
   };
 
   const handleProceedToQuiz = async () => {
@@ -159,32 +156,44 @@ const SentencesScreen: React.FC = () => {
       <Text style={globalStyles.subtitle}>
         Click on each word to find out what it means.
       </Text>
-      {sentences.map((sentence: Sentence) => (
-        <View key={sentence.id} style={styles.sentenceContainer}>
-          {sentence.sentence.split(" ").map((word: string, index: number) => (
-            <TouchableOpacity
-              key={`${word}-${index}`}
-              onPress={() => handleWordClick(word)}
+      {sentences.map((sentence: Sentence, index) => (
+        <View key={sentence.id}>
+          <View style={styles.sentenceContainer}>
+            {sentence.sentence
+              .split(" ")
+              .map((word: string, wordIndex: number) => (
+                <TouchableOpacity
+                  key={`${word}-${wordIndex}`}
+                  onPress={() => handleWordClick(word)}
+                  style={[
+                    styles.wordContainer,
+                    {
+                      backgroundColor: clickedWords.includes(cleanWord(word))
+                        ? globalColors.wordHighlightBackground
+                        : globalColors.wordBackground,
+                    },
+                  ]}
+                >
+                  <Text
+                    style={[
+                      globalStyles.text,
+                      styles.wordText,
+                      isTablet && styles.wordTextIpad,
+                    ]}
+                  >
+                    {word}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+          </View>
+          {index < sentences.length - 1 && (
+            <View
               style={[
-                styles.wordContainer,
-                {
-                  backgroundColor: clickedWords.includes(cleanWord(word))
-                    ? globalColors.wordHighlightBackground
-                    : globalColors.wordBackground,
-                },
+                styles.horizontalRule,
+                { borderBottomColor: globalColors.border },
               ]}
-            >
-              <Text
-                style={[
-                  globalStyles.text,
-                  styles.wordText,
-                  isTablet && styles.wordTextIpad,
-                ]}
-              >
-                {word}
-              </Text>
-            </TouchableOpacity>
-          ))}
+            />
+          )}
         </View>
       ))}
       {!wordsCompleted && (
@@ -204,29 +213,34 @@ const SentencesScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  horizontalRule: {
+    width: "80%",
+    alignSelf: "center",
+    borderBottomWidth: 1,
+    marginVertical: 10,
+  },
   sentenceContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginVertical: 5,
-    marginHorizontal: 20,
-    alignSelf: "center",
+    marginVertical: 10,
+    paddingHorizontal: 10,
     justifyContent: "center",
   },
   wordContainer: {
     marginHorizontal: 6,
     marginVertical: 6,
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    minHeight: 40,
-    minWidth: 50,
+    borderRadius: 10,
+    paddingVertical: 6,
+    paddingHorizontal: 8,
+    minHeight: 45,
+    minWidth: 55,
   },
   wordText: {
     fontSize: 20,
     textAlign: "center",
   },
   wordTextIpad: {
-    fontSize: 30, // Larger font size for iPad
+    fontSize: 30,
   },
   allWordsClickedSection: {
     marginVertical: 60,

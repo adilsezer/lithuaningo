@@ -20,6 +20,12 @@ export const getRandomQuestionType = ():
   | "multipleChoice"
   | "fillInTheBlank"
   | "trueFalse" => {
+  if (__DEV__) {
+    // Return a specific value for development environment
+    return "fillInTheBlank";
+  }
+
+  // Normal logic for production environment
   const randomValue = Math.random();
   return randomValue < 0.45
     ? "multipleChoice"

@@ -18,6 +18,16 @@ const fetchWords = async (): Promise<Word[]> => {
   return wordsData;
 };
 
+const addWordForReview = async (wordData: Word): Promise<void> => {
+  try {
+    await firestore().collection("pendingWords").add(wordData);
+  } catch (error) {
+    console.error("Error adding word for review:", error);
+    throw error;
+  }
+};
+
 export default {
   fetchWords,
+  addWordForReview,
 };

@@ -282,11 +282,11 @@ export const loadQuestion = async (
       const givenTranslation = randomBool
         ? generatedCorrectAnswerText
         : otherOptions[0];
-      generatedQuestionText = `Does **${toTitleCase(
+      generatedQuestionText = `Does the English base form of "**${toTitleCase(
         randomWord
-      )}** mean **${toTitleCase(
+      )}**" mean "**${toTitleCase(
         givenTranslation
-      )}** in the following sentence?`;
+      )}**" in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;
       generatedCorrectAnswerText = randomBool ? "True" : "False";
       generatedOptions = ["True", "False"];
