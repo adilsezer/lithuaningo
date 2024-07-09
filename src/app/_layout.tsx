@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "../redux/store";
-import { Slot, Stack } from "expo-router";
+import { Slot } from "expo-router";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
