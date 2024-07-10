@@ -1,15 +1,15 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Alert } from "react-native";
+import { View, Text, Alert, Platform } from "react-native";
 import OrSeperator from "@components/OrSeperator";
 import CustomButton from "@components/CustomButton";
-import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
+import useAuthMethods from "@src/hooks/useAuthMethods";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 import AppleSignInButton from "@components/AppleSignInButton";
 import CustomTextInput from "@components/CustomTextInput";
-import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -30,7 +30,7 @@ const SignUpScreen: React.FC = () => {
     const result = await action();
     dispatch(setLoading(false));
     if (!result.success) {
-      crashlytics().recordError(new Error("Sign up failed")); // Log only errors
+      crashlytics().recordError(new Error("Sign up failed"));
       Alert.alert(
         "Sign Up Failed",
         result.message || "An error occurred during sign up."
@@ -50,7 +50,7 @@ const SignUpScreen: React.FC = () => {
   };
 
   useEffect(() => {
-    crashlytics().log("Sign up screen loaded."); // Log screen load
+    crashlytics().log("Sign up screen loaded.");
   }, []);
 
   return (
@@ -104,10 +104,12 @@ const SignUpScreen: React.FC = () => {
         textStyle={{ color: globalColors.cardText }}
         disabled={loading}
       />
-      <AppleSignInButton
-        onPress={() => performSignUp(handleLoginWithApple)}
-        disabled={loading}
-      />
+      {Platform.OS === "ios" && (
+        <AppleSignInButton
+          onPress={() => performSignUp(handleLoginWithApple)}
+          disabled={loading}
+        />
+      )}
     </View>
   );
 };
