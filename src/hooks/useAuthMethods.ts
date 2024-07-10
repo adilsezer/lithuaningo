@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useAppDispatch } from "../redux/hooks";
 import { getErrorMessage } from "../utils/errorMessages";
 import { useRouter } from "expo-router";
+import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -42,6 +43,8 @@ const useAuthMethods = () => {
         }
         return { success: true, result };
       } catch (error: any) {
+        // Log the error to Crashlytics
+        crashlytics().recordError(error);
         return {
           success: false,
           message: error.code ? getErrorMessage(error.code) : error.message,
@@ -60,6 +63,9 @@ const useAuthMethods = () => {
       const { user } = await signUpWithEmail(email, password, dispatch);
       await user.updateProfile({ displayName: name });
       await sendEmailVerification();
+
+      // Log the sign-up action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
     const result = await handleAction(action, "/auth/login");
     if (result.success) {
@@ -88,6 +94,9 @@ const useAuthMethods = () => {
               email: user.email,
             });
         }
+
+        // Log the sign-in action
+        crashlytics().setUserId(user.uid); // Log only user ID
       } else {
         throw new Error("User does not exist.");
       }
@@ -114,6 +123,9 @@ const useAuthMethods = () => {
             email: user.email,
           });
       }
+
+      // Log the Google sign-in action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
     return await handleAction(action, "/dashboard");
   };
@@ -136,12 +148,20 @@ const useAuthMethods = () => {
             email: user.email,
           });
       }
+
+      // Log the Apple sign-in action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
     return await handleAction(action, "/dashboard");
   };
 
   const handleSignOut = async () => {
-    return await handleAction(() => signOutUser(dispatch), "/");
+    const result = await handleAction(() => signOutUser(dispatch), "/");
+    if (result.success) {
+      // Log the sign-out action
+      crashlytics().log("User signed out."); // Minimal log
+    }
+    return result;
   };
 
   const handlePasswordReset = async (email: string) => {
@@ -206,6 +226,9 @@ const useAuthMethods = () => {
           .doc(user.uid)
           .update({ name: updates.displayName });
       }
+
+      // Log the profile update action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
 
     const result = await handleAction(action, "/dashboard/profile");
@@ -234,6 +257,9 @@ const useAuthMethods = () => {
 
       // Update password
       await updateUserPassword(newPassword, dispatch);
+
+      // Log the password update action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
 
     const result = await handleAction(action, "/dashboard/profile");
@@ -288,6 +314,9 @@ const useAuthMethods = () => {
 
       // Delete user
       await deleteUser(dispatch);
+
+      // Log the account deletion action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
 
     const result = await handleAction(action, "/");

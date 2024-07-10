@@ -11,13 +11,26 @@ import { ActivityIndicator, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingIndicator from "@components/LoadingIndicator";
 import AuthStateListener from "@src/components/AuthStateListener";
+import crashlytics from "@react-native-firebase/crashlytics";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 SplashScreen.preventAutoHideAsync();
 
+// Inner component that uses theme styles
+const InnerRootLayout: React.FC = () => {
+  const { styles: globalStyles } = useThemeStyles();
+
+  return (
+    <SafeAreaView style={globalStyles.pageStyle}>
+      <LoadingIndicator />
+      <AuthStateListener />
+      <Slot />
+    </SafeAreaView>
+  );
+};
+
 const RootLayout: React.FC = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   useEffect(() => {
     async function loadFonts() {
@@ -32,10 +45,14 @@ const RootLayout: React.FC = () => {
     loadFonts();
   }, []);
 
+  useEffect(() => {
+    crashlytics().log("App mounted.");
+  }, []);
+
   if (!fontsLoaded) {
     return (
-      <View style={globalStyles.fullScreenCenter}>
-        <ActivityIndicator size="large" color={globalColors.primary} />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -44,11 +61,7 @@ const RootLayout: React.FC = () => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider>
-          <SafeAreaView style={globalStyles.pageStyle}>
-            <LoadingIndicator />
-            <AuthStateListener />
-            <Slot />
-          </SafeAreaView>
+          <InnerRootLayout />
         </ThemeProvider>
       </PersistGate>
     </Provider>

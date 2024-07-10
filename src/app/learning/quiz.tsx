@@ -25,6 +25,7 @@ import {
 import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
 import { Sentence } from "../../services/data/sentenceService";
+import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
@@ -69,13 +70,18 @@ const QuizScreen: React.FC = () => {
 
   const handleAnswer = async (isCorrect: boolean) => {
     const timeSpent = 1;
-    await updateStats(isCorrect, timeSpent);
+    try {
+      await updateStats(isCorrect, timeSpent);
 
-    setQuizState((prev: QuizState) => ({
-      ...prev,
-      showContinueButton: true,
-    }));
-    storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex + 1);
+      setQuizState((prev: QuizState) => ({
+        ...prev,
+        showContinueButton: true,
+      }));
+      storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex + 1);
+    } catch (error: unknown) {
+      crashlytics().recordError(error as Error); // Type assertion
+      console.error("Error updating stats:", error);
+    }
   };
 
   const handleNextQuestion = () => {
@@ -85,6 +91,10 @@ const QuizScreen: React.FC = () => {
       showContinueButton: false,
     }));
   };
+
+  useEffect(() => {
+    crashlytics().log("Quiz screen loaded.");
+  }, []);
 
   return (
     <KeyboardAvoidingView

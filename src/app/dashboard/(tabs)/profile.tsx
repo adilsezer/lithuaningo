@@ -11,6 +11,7 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
 import ThemeSwitch from "@components/ThemeSwitch"; // Import ThemeSwitch
 import { useTheme } from "@src/context/ThemeContext"; // Import useTheme
+import crashlytics from "@react-native-firebase/crashlytics"; // Add this import
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -87,6 +88,10 @@ export default function ProfileScreen() {
             onPress={handleClearCompletionStatus}
           />
         )}
+        <CustomButton
+          title="Test Crash"
+          onPress={() => crashlytics().crash()}
+        />
         <CustomButton title="Logout" onPress={logout} />
       </View>
     </ScrollView>

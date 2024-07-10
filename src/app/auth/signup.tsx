@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Alert, StyleSheet } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Alert } from "react-native";
 import OrSeperator from "@components/OrSeperator";
 import CustomButton from "@components/CustomButton";
 import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
@@ -9,6 +9,7 @@ import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 import AppleSignInButton from "@components/AppleSignInButton";
 import CustomTextInput from "@components/CustomTextInput";
+import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
 
 const SignUpScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -28,9 +29,8 @@ const SignUpScreen: React.FC = () => {
     dispatch(setLoading(true));
     const result = await action();
     dispatch(setLoading(false));
-    if (result.success) {
-      Alert.alert("Sign Up Successful", result.message);
-    } else {
+    if (!result.success) {
+      crashlytics().recordError(new Error("Sign up failed")); // Log only errors
       Alert.alert(
         "Sign Up Failed",
         result.message || "An error occurred during sign up."
@@ -48,6 +48,10 @@ const SignUpScreen: React.FC = () => {
     }
     performSignUp(() => handleSignUpWithEmail(email, password, displayName));
   };
+
+  useEffect(() => {
+    crashlytics().log("Sign up screen loaded."); // Log screen load
+  }, []);
 
   return (
     <View>

@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, Text, Alert } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 import AppleSignInButton from "@components/AppleSignInButton";
 import CustomTextInput from "@components/CustomTextInput";
+import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -29,9 +30,14 @@ const LoginScreen: React.FC = () => {
     const result = await loginAction();
     dispatch(setLoading(false));
     if (!result.success) {
+      crashlytics().recordError(new Error("Login failed")); // Log only errors
       Alert.alert("Login Failed", result.message || failureMessage);
     }
   };
+
+  useEffect(() => {
+    crashlytics().log("Login screen loaded."); // Log screen load
+  }, []);
 
   return (
     <View>
