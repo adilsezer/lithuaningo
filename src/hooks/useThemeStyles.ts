@@ -1,11 +1,19 @@
-import { useColorScheme } from "react-native";
-import { lightThemeColors, darkThemeColors } from "../styles/colors"; // Update the import paths as needed
+// src/hooks/useThemeStyles.ts
+import { useContext } from "react";
+import { ThemeContext } from "../context/ThemeContext";
+import { lightThemeColors, darkThemeColors } from "../styles/colors";
 import { getGlobalStyles } from "../styles/globalStyles";
 
 export const useThemeStyles = () => {
-  const theme = useColorScheme() || "light"; // Default to 'light' if theme is not determined
-  const colors = theme === "dark" ? darkThemeColors : lightThemeColors;
+  const themeContext = useContext(ThemeContext);
+
+  if (!themeContext) {
+    throw new Error("useThemeStyles must be used within a ThemeProvider");
+  }
+
+  const { isDarkMode } = themeContext;
+  const colors = isDarkMode ? darkThemeColors : lightThemeColors;
   const styles = getGlobalStyles(colors);
 
-  return { theme, styles, colors };
+  return { styles, colors };
 };

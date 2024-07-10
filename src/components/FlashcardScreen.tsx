@@ -25,7 +25,6 @@ import {
   addClickedWord,
   removeClickedWord,
 } from "@src/redux/slices/clickedWordsSlice";
-import { cleanWord } from "@utils/stringUtils";
 
 interface FlashcardScreenProps {
   wordId: string;
@@ -137,6 +136,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   }, [wordId, dispatch]);
 
   if (!word) {
+    dispatch(addClickedWord(wordId));
     return (
       <View>
         <BackButton />
@@ -173,15 +173,12 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     );
   }
 
-  const handleMarkAsKnown = (word: string) => {
-    const cleanedWord = cleanWord(word);
-    dispatch(addClickedWord(cleanedWord));
-    router.back();
-  };
-
-  const handleReviewLater = (word: string) => {
-    const cleanedWord = cleanWord(word);
-    dispatch(removeClickedWord(cleanedWord));
+  const handleMarkButtonClick = (addWord: boolean) => {
+    if (addWord) {
+      dispatch(addClickedWord(wordId));
+    } else {
+      dispatch(removeClickedWord(wordId));
+    }
     router.back();
   };
 
@@ -234,13 +231,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
 
       <CustomButton
         title="Mark as Known"
-        onPress={() => handleMarkAsKnown(wordId)}
+        onPress={() => handleMarkButtonClick(true)}
         style={styles.button}
       />
       <CustomButton
         title="Review Later"
         style={{ backgroundColor: globalColors.secondary }}
-        onPress={() => handleReviewLater(wordId)}
+        onPress={() => handleMarkButtonClick(false)}
       />
     </View>
   );
