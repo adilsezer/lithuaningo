@@ -2,22 +2,24 @@ import firestore from "@react-native-firebase/firestore";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
 
-export interface VersionInfo {
+export interface AppInfo {
   latestVersion: string;
   mandatoryUpdate: boolean;
   updateUrl: string;
+  isUnderMaintenance: boolean;
 }
 
-export const getLatestVersionInfo = async (): Promise<VersionInfo | null> => {
+export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
   try {
     const platform = Platform.OS;
-    const doc = await firestore().collection("appVersions").doc(platform).get();
+    const doc = await firestore().collection("appInfo").doc(platform).get();
     if (doc.exists) {
       const data = doc.data();
       return {
         latestVersion: data?.latestVersion || "0.0.0",
         mandatoryUpdate: data?.mandatoryUpdate || false,
         updateUrl: data?.updateUrl || "",
+        isUnderMaintenance: data?.isUnderMaintenance || false,
       };
     } else {
       return null;
