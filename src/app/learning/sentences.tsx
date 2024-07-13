@@ -19,7 +19,7 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { retrieveData, storeData } from "@utils/storageUtils";
 import CompletedScreen from "@components/CompletedScreen";
 import { cleanWord } from "@utils/stringUtils";
-import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -56,7 +56,6 @@ const SentencesScreen: React.FC = () => {
 
       dispatch(setLoading(true));
       try {
-        // Check if sentences are already stored
         const storedSentences = await retrieveData<Sentence[]>(SENTENCES_KEY);
 
         if (storedSentences && storedSentences.length > 0) {
@@ -68,12 +67,11 @@ const SentencesScreen: React.FC = () => {
 
           setSentences(firstTwoSentences);
 
-          // Store the fetched sentences
           await storeData(SENTENCES_KEY, firstTwoSentences);
         }
       } catch (error: unknown) {
         console.error("Error loading sentences and words:", error);
-        crashlytics().recordError(error as Error); // Type assertion
+        crashlytics().recordError(error as Error);
         setError("Failed to load sentences. Please try again later.");
       } finally {
         dispatch(setLoading(false));
@@ -102,7 +100,7 @@ const SentencesScreen: React.FC = () => {
   };
 
   const handleProceedToQuiz = async () => {
-    storeData(COMPLETION_STATUS_KEY, true);
+    await storeData(COMPLETION_STATUS_KEY, true);
     setSentencesCompleted(true);
     router.push("/learning/quiz");
   };

@@ -5,6 +5,7 @@ import {
   Image,
   StyleSheet,
   TouchableWithoutFeedback,
+  Alert,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -19,7 +20,7 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import CustomButton from "./CustomButton";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import CustomTextInput from "./CustomTextInput";
 import {
   addClickedWord,
@@ -37,6 +38,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const [grammaticalForms, setGrammaticalForms] = useState<string>("");
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
+  const router = useRouter();
 
   const flip = useSharedValue(0);
 
@@ -73,7 +75,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           englishTranslation: translation,
           imageUrl: "",
         });
-        alert(
+        Alert.alert(
           "Thanks for helping improve our app! Your word has been submitted for review."
         );
         setNewWord("");
@@ -81,12 +83,12 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         setGrammaticalForms("");
       } catch (error) {
         console.error("Error adding word for review:", error);
-        alert("Failed to submit word for review. Please try again.");
+        Alert.alert("Failed to submit word for review. Please try again.");
       } finally {
         dispatch(setLoading(false));
       }
     } else {
-      alert("Please fill in all fields.");
+      Alert.alert("Please fill in all fields.");
     }
   };
 
@@ -126,7 +128,6 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
 
         setWord(selectedWord || null);
       } catch (error) {
-        console.error("Error loading word:", error);
       } finally {
         dispatch(setLoading(false));
       }
@@ -135,8 +136,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     loadWord();
   }, [wordId, dispatch]);
 
+  useEffect(() => {
+    if (!word) {
+      dispatch(addClickedWord(wordId));
+    }
+  }, [word, wordId, dispatch]);
+
   if (!word) {
-    dispatch(addClickedWord(wordId));
     return (
       <View>
         <BackButton />
