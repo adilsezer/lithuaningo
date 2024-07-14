@@ -14,7 +14,7 @@ import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
 import CompletedScreen from "@components/CompletedScreen";
-import { storeData, retrieveData } from "@utils/storageUtils";
+import { storeData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import useData from "../../hooks/useData";
 import {
@@ -30,8 +30,6 @@ import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlyt
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
   const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [incorrectQuestions, setIncorrectQuestions] = useState<Sentence[]>([]);
-  const [correctAnswersCount, setCorrectAnswersCount] = useState<number>(0);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
@@ -73,22 +71,7 @@ const QuizScreen: React.FC = () => {
   const handleAnswer = async (isCorrect: boolean) => {
     const timeSpent = 1;
     try {
-      if (
-        quizState.questionIndex < sentences.length &&
-        !quizState.quizCompleted
-      ) {
-        await updateStats(isCorrect, timeSpent);
-      }
-
-      if (isCorrect) {
-        setCorrectAnswersCount((prevCount) => prevCount + 1);
-      } else {
-        // Add incorrect question to the end of the queue
-        setIncorrectQuestions((prev) => [
-          ...prev,
-          sentences[quizState.questionIndex],
-        ]);
-      }
+      await updateStats(isCorrect, timeSpent);
 
       setQuizState((prev: QuizState) => ({
         ...prev,
@@ -102,36 +85,16 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
-    if (quizState.questionIndex < sentences.length - 1) {
-      setQuizState((prev: QuizState) => ({
-        ...prev,
-        questionIndex: quizState.questionIndex + 1,
-        showContinueButton: false,
-      }));
-    } else if (incorrectQuestions.length > 0) {
-      // Move to the next round with incorrect questions
-      setSentences(incorrectQuestions);
-      setIncorrectQuestions([]);
-      setQuizState((prev: QuizState) => ({
-        ...prev,
-        questionIndex: 0,
-        showContinueButton: false,
-      }));
-    } else {
-      setQuizState((prev: QuizState) => ({
-        ...prev,
-        quizCompleted: true,
-      }));
-    }
+    setQuizState((prev: QuizState) => ({
+      ...prev,
+      questionIndex: quizState.questionIndex + 1,
+      showContinueButton: false,
+    }));
   };
 
   useEffect(() => {
     crashlytics().log("Quiz screen loaded.");
   }, []);
-
-  const isQuizCompleted =
-    quizState.quizCompleted && quizState.questionIndex >= sentences.length;
-  const allAnswersCorrect = correctAnswersCount >= sentences.length;
 
   return (
     <KeyboardAvoidingView
@@ -139,25 +102,15 @@ const QuizScreen: React.FC = () => {
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        {isQuizCompleted ? (
+        {quizState.quizCompleted ? (
           <View>
-            {allAnswersCorrect ? (
-              <CompletedScreen
-                title="Congratulations! You've Completed Today's Session!"
-                subtitle="Return tomorrow for a new set of challenges!"
-                buttonText="Go to Leaderboard"
-                navigationRoute="/dashboard/leaderboard"
-                showStats={true}
-              />
-            ) : (
-              <CompletedScreen
-                title="You need to answer all questions correctly to complete the day!"
-                subtitle="Try again!"
-                buttonText="Retry"
-                navigationRoute="/quiz"
-                showStats={false}
-              />
-            )}
+            <CompletedScreen
+              title="Congratulations! You've Completed Today's Session!"
+              subtitle="Return tomorrow for a new set of challenges!"
+              buttonText="Go to Leaderboard"
+              navigationRoute="/dashboard/leaderboard"
+              showStats={true}
+            />
           </View>
         ) : (
           <View>
