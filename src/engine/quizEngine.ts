@@ -1,4 +1,3 @@
-import sentenceService, { Sentence } from "../services/data/sentenceService";
 import wordService, { Word } from "../services/data/wordService";
 import { retrieveData, storeData } from "../utils/storageUtils";
 import { toTitleCase, cleanWord } from "../utils/stringUtils";
@@ -10,16 +9,27 @@ import {
   getRandomOptions,
 } from "../utils/quizUtils";
 import { removeDuplicates, getRelatedSentences } from "../utils/sentenceUtils";
+import sentenceService from "../services/data/sentenceService";
+
+export interface QuizQuestion {
+  questionText: string;
+  sentenceText: string;
+  correctAnswerText: string;
+  translation: string;
+  image: string;
+  options: string[];
+  questionType: "multipleChoice" | "fillInTheBlank" | "trueFalse";
+}
 
 const fetchLearnedAndAllSentencesWithWords = async (
   userData: any
 ): Promise<{
-  learnedSentences: Sentence[];
-  allSentences: Sentence[];
+  learnedSentences: any[];
+  allSentences: any[];
   allWords: Word[];
 }> => {
   const SENTENCES_KEY = `sentences_${userData?.id}_${getCurrentDateKey()}`;
-  const learnedSentences = await retrieveData<Sentence[]>(SENTENCES_KEY);
+  const learnedSentences = await retrieveData<any[]>(SENTENCES_KEY);
 
   if (!learnedSentences) {
     throw new Error("No learned sentences found.");
@@ -27,6 +37,11 @@ const fetchLearnedAndAllSentencesWithWords = async (
 
   const allSentences = await sentenceService.fetchAndShuffleSentences();
   const allWords = await wordService.fetchWords();
+
+  console.log("Fetched learned sentences:");
+  learnedSentences.forEach((sentence, index) =>
+    console.log(`  ${index + 1}: ${sentence.sentence}`)
+  );
 
   return { learnedSentences, allSentences, allWords };
 };
@@ -43,18 +58,18 @@ const findWordDetailsIgnoringPrefix = (
 };
 
 const getLearnedWordsDetails = (
-  learnedSentences: Sentence[],
+  learnedSentences: any[],
   allWords: Word[]
 ): Word[] => {
   const skippedWords = new Set(
     getSkippedWords().map((word) => cleanWord(word).toLowerCase())
   );
   const learnedWords = new Set<string>(
-    learnedSentences.flatMap((sentence: Sentence) =>
+    learnedSentences.flatMap((sentence: any) =>
       sentence.sentence
         .split(" ")
-        .map((word) => cleanWord(word).toLowerCase())
-        .filter((word) => !skippedWords.has(word))
+        .map((word: string) => cleanWord(word).toLowerCase())
+        .filter((word: string) => !skippedWords.has(word))
     )
   );
 
@@ -71,12 +86,17 @@ const getLearnedWordsDetails = (
     })
     .filter((wordDetail): wordDetail is Word => !!wordDetail);
 
+  console.log("Learned words details:");
+  learnedWordsDetails.forEach((wordDetail, index) =>
+    console.log(`  ${index + 1}: ${wordDetail.id}`)
+  );
+
   return learnedWordsDetails;
 };
 
 export const loadQuizData = async (
   userData: any,
-  setSentences: React.Dispatch<React.SetStateAction<Sentence[]>>,
+  setQuestions: React.Dispatch<React.SetStateAction<QuizQuestion[]>>,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
   QUIZ_PROGRESS_KEY: string
 ): Promise<void> => {
@@ -85,33 +105,34 @@ export const loadQuizData = async (
   const QUESTIONS_KEY = `questions_${userData?.id}_${getCurrentDateKey()}`;
   try {
     // Check if questions are already stored
-    const storedQuestions = await retrieveData<Sentence[]>(QUESTIONS_KEY);
+    const storedQuestions = await retrieveData<QuizQuestion[]>(QUESTIONS_KEY);
 
     if (storedQuestions && storedQuestions.length > 0) {
-      setSentences(storedQuestions);
+      console.log("Loaded stored questions:");
+      storedQuestions.forEach((question, index) =>
+        console.log(`  ${index + 1}: ${question.questionText}`)
+      );
+
+      setQuestions(storedQuestions);
       const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
+      console.log("Loaded stored progress:", storedProgress);
       setQuizState((prev: QuizState) => ({
         ...prev,
         questionIndex: storedProgress ?? 0,
         quizCompleted:
           storedProgress !== null && storedProgress >= storedQuestions.length,
       }));
-      if (storedProgress !== null && storedProgress < storedQuestions.length) {
-        await loadQuestion(
-          storedQuestions[storedProgress],
-          setQuizState,
-          userData
-        );
-      }
     } else {
       const { learnedSentences, allSentences, allWords } =
         await fetchLearnedAndAllSentencesWithWords(userData);
+
       const learnedWordsDetails = getLearnedWordsDetails(
         learnedSentences,
         allWords
       );
+
       const sentencesPerWord = Math.ceil(10 / learnedWordsDetails.length) + 2;
-      let allSelectedSentences: Sentence[] = [];
+      let allSelectedSentences: any[] = [];
 
       learnedWordsDetails.forEach((wordDetail: Word) => {
         const relatedSentences = getRelatedSentences(allSentences, wordDetail);
@@ -134,39 +155,62 @@ export const loadQuizData = async (
         finalSentences = shuffleArray(allSentences).slice(0, 10);
       }
 
-      setSentences(finalSentences);
-      await storeData(QUESTIONS_KEY, finalSentences);
-      await loadQuestion(finalSentences[0], setQuizState, userData);
+      console.log("Final selected sentences for questions:");
+      finalSentences.forEach((sentence, index) =>
+        console.log(`  ${index + 1}: ${sentence.sentence}`)
+      );
+
+      const generatedQuestions = await Promise.all(
+        finalSentences.map((sentence) =>
+          generateQuestion(sentence, userData, allWords)
+        )
+      );
+
+      console.log("Generated questions:");
+      generatedQuestions.forEach((question, index) =>
+        console.log(`  ${index + 1}: ${question.questionText}`)
+      );
+
+      setQuestions(generatedQuestions);
+      await storeData(QUESTIONS_KEY, generatedQuestions);
+      setQuizState((prev: QuizState) => ({
+        ...prev,
+        questionIndex: 0,
+        quizCompleted: false,
+        ...generatedQuestions[0],
+      }));
     }
   } catch (error) {
     console.error("Error loading quiz data:", error);
   }
 };
 
-export const loadQuestion = async (
-  similarSentence: Sentence,
-  setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
-  userData: any
-): Promise<void> => {
+const generateQuestion = async (
+  similarSentence: any,
+  userData: any,
+  allWords: Word[]
+): Promise<QuizQuestion> => {
   try {
-    const { learnedSentences, allWords } =
-      await fetchLearnedAndAllSentencesWithWords(userData);
+    const { learnedSentences } = await fetchLearnedAndAllSentencesWithWords(
+      userData
+    );
+
     const learnedWords = new Set<string>(
-      learnedSentences.flatMap((sentence: Sentence) =>
+      learnedSentences.flatMap((sentence: any) =>
         sentence.sentence
           .split(" ")
-          .map((word) => cleanWord(word).toLowerCase())
+          .map((word: string) => cleanWord(word).toLowerCase())
       )
     );
 
     const similarSentenceWords = similarSentence.sentence
       .split(" ")
-      .map((word) => cleanWord(word).toLowerCase());
+      .map((word: string) => cleanWord(word).toLowerCase());
 
     const skippedWords = new Set(
       getSkippedWords().map((word) => word.toLowerCase())
     );
-    const validWords = similarSentenceWords.filter((word) =>
+    const validWords = similarSentenceWords.filter((word: string) =>
       allWords.some((wordDetail) => {
         const forms = wordDetail.grammaticalForms.map((form) =>
           form.toLowerCase()
@@ -186,6 +230,9 @@ export const loadQuestion = async (
         );
       })
     );
+    console.log("Sentence to be asked:", similarSentence.sentence);
+
+    console.log("Valid words for sentence:", validWords);
 
     const shuffledWords = shuffleArray(validWords);
 
@@ -193,10 +240,10 @@ export const loadQuestion = async (
     let correctWordDetails: Word | null = null;
 
     for (const word of shuffledWords) {
-      randomWord = word;
+      randomWord = word as string; // Ensure word is treated as string
       correctWordDetails =
         allWords.find((wordDetail) =>
-          wordDetail.grammaticalForms.includes(word.toLowerCase())
+          wordDetail.grammaticalForms.includes((word as string).toLowerCase())
         ) || null;
       if (correctWordDetails) break;
     }
@@ -205,28 +252,30 @@ export const loadQuestion = async (
       const fallbackWord =
         shuffleArray(similarSentenceWords).find((fw) =>
           allWords.some((wordDetail) =>
-            wordDetail.grammaticalForms.includes(fw.toLowerCase())
+            wordDetail.grammaticalForms.includes((fw as string).toLowerCase())
           )
-        ) || shuffleArray(similarSentenceWords)[0];
-      randomWord = fallbackWord;
+        ) || (shuffleArray(similarSentenceWords)[0] as string);
+      randomWord = fallbackWord as string; // Ensure fallbackWord is treated as string
       correctWordDetails =
         allWords.find((wordDetail) =>
-          wordDetail.grammaticalForms.includes(fallbackWord.toLowerCase())
+          wordDetail.grammaticalForms.includes(
+            (fallbackWord as string).toLowerCase()
+          )
         ) || null;
     }
 
     if (!correctWordDetails || !randomWord) {
       console.error("No valid question could be generated.");
-      setQuizState((prev: QuizState) => ({
-        ...prev,
+      return {
+        questionText: "",
         sentenceText:
           "No valid question could be generated. Please go back and try again.",
-        questionText: "",
+        correctAnswerText: "",
         translation: "",
         image: "",
         options: [],
-      }));
-      return;
+        questionType: "multipleChoice",
+      };
     }
 
     const otherOptions = await getRandomOptions(
@@ -258,7 +307,7 @@ export const loadQuestion = async (
 
       generatedSentenceText = similarSentence.sentence
         .split(" ")
-        .map((wordInSentence) => {
+        .map((wordInSentence: string) => {
           // Strip punctuation from the word in the sentence for comparison
           let strippedWord = cleanWord(wordInSentence.toLowerCase());
 
@@ -289,8 +338,12 @@ export const loadQuestion = async (
       generatedOptions = ["True", "False"];
     }
 
-    setQuizState((prev: QuizState) => ({
-      ...prev,
+    console.log("Generated question details:", {
+      sentenceText: generatedSentenceText,
+      correctAnswerText: generatedCorrectAnswerText,
+    });
+
+    return {
       questionText: generatedQuestionText,
       sentenceText: generatedSentenceText,
       translation: generatedTranslation,
@@ -298,9 +351,10 @@ export const loadQuestion = async (
       correctAnswerText: generatedCorrectAnswerText,
       options: generatedOptions,
       questionType: generatedQuestionType,
-    }));
+    };
   } catch (error) {
-    console.error("Error loading question:", error);
+    console.error("Error generating question:", error);
+    throw error;
   }
 };
 

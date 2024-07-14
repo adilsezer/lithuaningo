@@ -19,17 +19,16 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import useData from "../../hooks/useData";
 import {
   loadQuizData,
-  loadQuestion,
   initializeQuizState,
+  QuizQuestion,
 } from "../../engine/quizEngine";
 import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
-import { Sentence } from "../../services/data/sentenceService";
 import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
-  const [sentences, setSentences] = useState<Sentence[]>([]);
+  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
@@ -44,7 +43,7 @@ const QuizScreen: React.FC = () => {
       dispatch(setLoading(true));
       loadQuizData(
         userData,
-        setSentences,
+        setQuestions,
         setQuizState,
         QUIZ_PROGRESS_KEY
       ).finally(() => {
@@ -54,19 +53,20 @@ const QuizScreen: React.FC = () => {
   }, [userData, dispatch]);
 
   useEffect(() => {
-    if (sentences.length > 0) {
-      if (quizState.questionIndex < sentences.length) {
-        loadQuestion(
-          sentences[quizState.questionIndex],
-          setQuizState,
-          userData
-        );
-        setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: false }));
-      } else {
-        setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: true }));
-      }
+    if (questions.length > 0 && quizState.questionIndex < questions.length) {
+      console.log(
+        "Current Question:",
+        questions[quizState.questionIndex].questionText
+      );
+      setQuizState((prev: QuizState) => ({
+        ...prev,
+        quizCompleted: false,
+        ...questions[quizState.questionIndex],
+      }));
+    } else if (questions.length > 0) {
+      setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: true }));
     }
-  }, [quizState.questionIndex, sentences, userData]);
+  }, [quizState.questionIndex, questions]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     const timeSpent = 1;
@@ -77,7 +77,11 @@ const QuizScreen: React.FC = () => {
         ...prev,
         showContinueButton: true,
       }));
-      storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex + 1);
+      await storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex + 1);
+      console.log("Answer submitted:", {
+        isCorrect,
+        questionIndex: quizState.questionIndex,
+      });
     } catch (error: unknown) {
       crashlytics().recordError(error as Error); // Type assertion
       console.error("Error updating stats:", error);
@@ -85,6 +89,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleNextQuestion = () => {
+    console.log("Moving to next question");
     setQuizState((prev: QuizState) => ({
       ...prev,
       questionIndex: quizState.questionIndex + 1,
@@ -118,7 +123,7 @@ const QuizScreen: React.FC = () => {
             <Text
               style={[globalStyles.subtitle, { color: globalColors.primary }]}
             >
-              {quizState.questionIndex + 1} / {sentences.length} Questions
+              {quizState.questionIndex + 1} / {questions.length} Questions
               Complete
             </Text>
             {quizState.questionType === "multipleChoice" ||
