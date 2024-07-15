@@ -43,11 +43,15 @@ export default function ProfileScreen() {
       userData?.id
     }_${getCurrentDateKey()}`;
     const QUESTIONS_KEY = `questions_${userData?.id}_${getCurrentDateKey()}`;
+    const INCORRECT_QUESTIONS_KEY = `incorrectQuestions_${
+      userData?.id
+    }_${getCurrentDateKey()}`;
 
     await clearData(COMPLETION_STATUS_KEY);
     await clearData(QUIZ_PROGRESS_KEY);
     await clearData(SENTENCES_KEY);
     await clearData(QUESTIONS_KEY);
+    await clearData(INCORRECT_QUESTIONS_KEY);
     Alert.alert("Removed Progress Data");
   };
 

@@ -38,11 +38,6 @@ const fetchLearnedAndAllSentencesWithWords = async (
   const allSentences = await sentenceService.fetchAndShuffleSentences();
   const allWords = await wordService.fetchWords();
 
-  console.log("Fetched learned sentences:");
-  learnedSentences.forEach((sentence, index) =>
-    console.log(`  ${index + 1}: ${sentence.sentence}`)
-  );
-
   return { learnedSentences, allSentences, allWords };
 };
 
@@ -86,11 +81,6 @@ const getLearnedWordsDetails = (
     })
     .filter((wordDetail): wordDetail is Word => !!wordDetail);
 
-  console.log("Learned words details:");
-  learnedWordsDetails.forEach((wordDetail, index) =>
-    console.log(`  ${index + 1}: ${wordDetail.id}`)
-  );
-
   return learnedWordsDetails;
 };
 
@@ -108,14 +98,8 @@ export const loadQuizData = async (
     const storedQuestions = await retrieveData<QuizQuestion[]>(QUESTIONS_KEY);
 
     if (storedQuestions && storedQuestions.length > 0) {
-      console.log("Loaded stored questions:");
-      storedQuestions.forEach((question, index) =>
-        console.log(`  ${index + 1}: ${question.questionText}`)
-      );
-
       setQuestions(storedQuestions);
       const storedProgress = await retrieveData<number>(QUIZ_PROGRESS_KEY);
-      console.log("Loaded stored progress:", storedProgress);
       setQuizState((prev: QuizState) => ({
         ...prev,
         questionIndex: storedProgress ?? 0,
@@ -155,20 +139,10 @@ export const loadQuizData = async (
         finalSentences = shuffleArray(allSentences).slice(0, 10);
       }
 
-      console.log("Final selected sentences for questions:");
-      finalSentences.forEach((sentence, index) =>
-        console.log(`  ${index + 1}: ${sentence.sentence}`)
-      );
-
       const generatedQuestions = await Promise.all(
         finalSentences.map((sentence) =>
           generateQuestion(sentence, userData, allWords)
         )
-      );
-
-      console.log("Generated questions:");
-      generatedQuestions.forEach((question, index) =>
-        console.log(`  ${index + 1}: ${question.questionText}`)
       );
 
       setQuestions(generatedQuestions);
@@ -230,9 +204,6 @@ const generateQuestion = async (
         );
       })
     );
-    console.log("Sentence to be asked:", similarSentence.sentence);
-
-    console.log("Valid words for sentence:", validWords);
 
     const shuffledWords = shuffleArray(validWords);
 
@@ -337,11 +308,6 @@ const generateQuestion = async (
       generatedCorrectAnswerText = randomBool ? "True" : "False";
       generatedOptions = ["True", "False"];
     }
-
-    console.log("Generated question details:", {
-      sentenceText: generatedSentenceText,
-      correctAnswerText: generatedCorrectAnswerText,
-    });
 
     return {
       questionText: generatedQuestionText,

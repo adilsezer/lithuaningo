@@ -14,7 +14,7 @@ import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
 import CompletedScreen from "@components/CompletedScreen";
-import { storeData } from "@utils/storageUtils";
+import { storeData, retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import useData from "../../hooks/useData";
 import {
@@ -24,7 +24,7 @@ import {
 } from "../../engine/quizEngine";
 import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
-import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
@@ -33,8 +33,15 @@ const QuizScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
   const { handleAnswer: updateStats } = useData();
+  const [resetKey, setResetKey] = useState(0);
+  const [isHandlingIncorrectQuestions, setIsHandlingIncorrectQuestions] =
+    useState<boolean>(false);
+  const [showStartMessage, setShowStartMessage] = useState<boolean>(false);
 
   const QUIZ_PROGRESS_KEY = `quizProgress_${
+    userData?.id
+  }_${getCurrentDateKey()}`;
+  const INCORRECT_QUESTIONS_KEY = `incorrectQuestions_${
     userData?.id
   }_${getCurrentDateKey()}`;
 
@@ -54,60 +61,130 @@ const QuizScreen: React.FC = () => {
 
   useEffect(() => {
     if (questions.length > 0 && quizState.questionIndex < questions.length) {
-      console.log(
-        "Current Question:",
-        questions[quizState.questionIndex].questionText
-      );
-      setQuizState((prev: QuizState) => ({
-        ...prev,
-        quizCompleted: false,
-        ...questions[quizState.questionIndex],
-      }));
+      setQuizState((prev: QuizState) => {
+        const newState = {
+          ...prev,
+          quizCompleted: false,
+          ...questions[prev.questionIndex],
+        };
+        return newState;
+      });
+      crashlytics().log(`Question loaded: ${quizState.questionIndex}`);
     } else if (questions.length > 0) {
-      setQuizState((prev: QuizState) => ({ ...prev, quizCompleted: true }));
+      setQuizState((prev: QuizState) => {
+        const newState = { ...prev, quizCompleted: true };
+        return newState;
+      });
+      crashlytics().log("Quiz completed");
     }
-  }, [quizState.questionIndex, questions]);
+  }, [quizState.questionIndex, questions, resetKey]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     const timeSpent = 1;
     try {
-      await updateStats(isCorrect, timeSpent);
+      if (!isHandlingIncorrectQuestions) {
+        await updateStats(isCorrect, timeSpent);
+      }
+      crashlytics().log(`Answer submitted: ${isCorrect}`);
 
-      setQuizState((prev: QuizState) => ({
-        ...prev,
-        showContinueButton: true,
-      }));
+      if (!isCorrect) {
+        const currentQuestion = questions[quizState.questionIndex];
+        let incorrectQuestions = await retrieveData<QuizQuestion[]>(
+          INCORRECT_QUESTIONS_KEY
+        );
+        if (!incorrectQuestions) {
+          incorrectQuestions = [];
+        }
+        incorrectQuestions.push(currentQuestion);
+        await storeData(INCORRECT_QUESTIONS_KEY, incorrectQuestions);
+        crashlytics().log(
+          `Incorrect question stored: ${JSON.stringify(currentQuestion)}`
+        );
+      }
+
       await storeData(QUIZ_PROGRESS_KEY, quizState.questionIndex + 1);
-      console.log("Answer submitted:", {
-        isCorrect,
-        questionIndex: quizState.questionIndex,
+      setQuizState((prev: QuizState) => {
+        const newState = { ...prev, showContinueButton: true };
+        return newState;
       });
-    } catch (error: unknown) {
-      crashlytics().recordError(error as Error); // Type assertion
+    } catch (error) {
+      crashlytics().recordError(error as Error);
       console.error("Error updating stats:", error);
     }
   };
 
-  const handleNextQuestion = () => {
-    console.log("Moving to next question");
-    setQuizState((prev: QuizState) => ({
-      ...prev,
-      questionIndex: quizState.questionIndex + 1,
-      showContinueButton: false,
-    }));
+  const handleNextQuestion = async () => {
+    const incorrectQuestions = await retrieveData<QuizQuestion[]>(
+      INCORRECT_QUESTIONS_KEY
+    );
+
+    crashlytics().log(
+      `Next question: Current Index ${quizState.questionIndex}, Questions Length: ${questions.length}`
+    );
+
+    if (quizState.questionIndex < questions.length - 1) {
+      setQuizState((prev: QuizState) => {
+        const newState = {
+          ...prev,
+          questionIndex: quizState.questionIndex + 1,
+          showContinueButton: false,
+        };
+        return newState;
+      });
+    } else if (incorrectQuestions && incorrectQuestions.length > 0) {
+      crashlytics().log(
+        `Repeating incorrect questions: ${JSON.stringify(incorrectQuestions)}`
+      );
+
+      // Re-initializing the quiz state for incorrect questions
+      setQuestions([...incorrectQuestions]);
+      setQuizState((prev: QuizState) => {
+        const newState = {
+          ...initializeQuizState(),
+          questionIndex: 0,
+          quizCompleted: false,
+        };
+        return newState;
+      });
+      setIsHandlingIncorrectQuestions(true);
+      setShowStartMessage(true);
+      setResetKey((prev) => prev + 1); // Trigger a re-render by updating the resetKey
+      await storeData(INCORRECT_QUESTIONS_KEY, []);
+    } else {
+      setQuizState((prev: QuizState) => {
+        const newState = { ...prev, quizCompleted: true };
+        return newState;
+      });
+    }
   };
 
   useEffect(() => {
     crashlytics().log("Quiz screen loaded.");
   }, []);
 
+  const handleStartButtonClick = () => {
+    setShowStartMessage(false);
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        {quizState.quizCompleted ? (
+      <ScrollView key={resetKey} contentContainerStyle={{ flexGrow: 1 }}>
+        {showStartMessage ? (
+          <View>
+            <Text style={globalStyles.title}>Get Ready to Review!</Text>
+            <Text style={globalStyles.subtitle}>
+              Let's revisit the questions you missed. Tap the button below to
+              start your review session.
+            </Text>
+            <CustomButton
+              title="Start Reviewing"
+              onPress={handleStartButtonClick}
+            />
+          </View>
+        ) : quizState.quizCompleted ? (
           <View>
             <CompletedScreen
               title="Congratulations! You've Completed Today's Session!"
