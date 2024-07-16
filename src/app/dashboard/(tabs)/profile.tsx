@@ -9,9 +9,9 @@ import { setLoading } from "@src/redux/slices/uiSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
-import ThemeSwitch from "@components/ThemeSwitch"; // Import ThemeSwitch
-import { useTheme } from "@src/context/ThemeContext"; // Import useTheme
-import crashlytics from "@react-native-firebase/crashlytics"; // Add this import
+import ThemeSwitch from "@components/ThemeSwitch";
+import { useTheme } from "@src/context/ThemeContext";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -19,7 +19,7 @@ export default function ProfileScreen() {
   const { handleSignOut } = useAuthMethods();
   const router = useRouter();
 
-  const { isDarkMode, toggleTheme } = useTheme(); // Use theme context
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const logout = async () => {
     dispatch(setLoading(true));
@@ -35,24 +35,24 @@ export default function ProfileScreen() {
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
 
   const handleClearCompletionStatus = async () => {
-    const COMPLETION_STATUS_KEY = `completionStatus_${
-      userData?.id
-    }_${getCurrentDateKey()}`;
-    const SENTENCES_KEY = `sentences_${userData?.id}_${getCurrentDateKey()}`;
-    const QUIZ_PROGRESS_KEY = `quizProgress_${
-      userData?.id
-    }_${getCurrentDateKey()}`;
-    const QUESTIONS_KEY = `questions_${userData?.id}_${getCurrentDateKey()}`;
-    const INCORRECT_QUESTIONS_KEY = `incorrectQuestions_${
-      userData?.id
-    }_${getCurrentDateKey()}`;
+    if (!userData) {
+      Alert.alert("No user data available");
+      return;
+    }
 
-    await clearData(COMPLETION_STATUS_KEY);
-    await clearData(QUIZ_PROGRESS_KEY);
-    await clearData(SENTENCES_KEY);
-    await clearData(QUESTIONS_KEY);
-    await clearData(INCORRECT_QUESTIONS_KEY);
-    Alert.alert("Removed Progress Data");
+    const currentDateKey = getCurrentDateKey();
+    const keysToClear = [
+      `completionStatus_${userData.id}_${currentDateKey}`,
+      `sentences_${userData.id}_${currentDateKey}`,
+      `quizProgress_${userData.id}_${currentDateKey}`,
+      `questions_${userData.id}_${currentDateKey}`,
+      `incorrectQuestions_${userData.id}_${currentDateKey}`,
+      `quizQuestions_${userData.id}_${currentDateKey}`,
+      `incorrectProgress_${userData.id}_${currentDateKey}`,
+    ];
+
+    await Promise.all(keysToClear.map((key) => clearData(key)));
+    Alert.alert("Progress data cleared successfully");
   };
 
   if (!isLoggedIn || !userData) {
@@ -92,10 +92,12 @@ export default function ProfileScreen() {
             onPress={handleClearCompletionStatus}
           />
         )}
-        <CustomButton
-          title="Test Crash"
-          onPress={() => crashlytics().crash()}
-        />
+        {__DEV__ && (
+          <CustomButton
+            title="Test Crash"
+            onPress={() => crashlytics().crash()}
+          />
+        )}
         <CustomButton title="Logout" onPress={logout} />
       </View>
     </ScrollView>

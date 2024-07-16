@@ -92,6 +92,9 @@ const SentencesScreen: React.FC = () => {
       if (allClicked) {
         setWordsCompleted(true);
       }
+      if (__DEV__) {
+        setWordsCompleted(true);
+      }
     }
   }, [sentences, clickedWords]);
 

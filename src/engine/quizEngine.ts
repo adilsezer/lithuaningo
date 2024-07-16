@@ -88,11 +88,11 @@ export const loadQuizData = async (
   userData: any,
   setQuestions: React.Dispatch<React.SetStateAction<QuizQuestion[]>>,
   setQuizState: React.Dispatch<React.SetStateAction<QuizState>>,
+  QUESTIONS_KEY: string,
   QUIZ_PROGRESS_KEY: string
 ): Promise<void> => {
   if (!userData?.id) return;
 
-  const QUESTIONS_KEY = `questions_${userData?.id}_${getCurrentDateKey()}`;
   try {
     // Check if questions are already stored
     const storedQuestions = await retrieveData<QuizQuestion[]>(QUESTIONS_KEY);
@@ -151,7 +151,6 @@ export const loadQuizData = async (
         ...prev,
         questionIndex: 0,
         quizCompleted: false,
-        ...generatedQuestions[0],
       }));
     }
   } catch (error) {
