@@ -36,6 +36,8 @@ const QuizScreen: React.FC = () => {
     useState(false);
   const [isInIncorrectQuestionSession, setIsInIncorrectQuestionSession] =
     useState(false);
+  const [correctlyAnsweredDuringSession, setCorrectlyAnsweredDuringSession] =
+    useState<number[]>([]);
 
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
@@ -136,7 +138,7 @@ const QuizScreen: React.FC = () => {
     console.log("Current quiz state:", quizState);
     console.log("Questions length:", questions.length);
     incorrectQuestions.forEach((question, index) => {
-      console.log(`Incorrect Question ${index + 1}:`, question.questionText);
+      console.log(`Incorrect Question ${index + 1}:`, question.sentenceText);
     });
 
     const loadQuestion = (currentQuestions: QuizQuestion[]) => {
@@ -187,28 +189,31 @@ const QuizScreen: React.FC = () => {
       const nextQuestionIndex = quizState.questionIndex + 1;
 
       // Update progress and stats
-      await Promise.all([
-        storeData(QUIZ_PROGRESS_KEY, { progress: nextQuestionIndex }),
-        storeData(INCORRECT_PROGRESS_KEY, { progress: nextQuestionIndex }),
-        updateStats(isCorrect, timeSpent),
-      ]);
+      if (isInIncorrectQuestionSession) {
+        await storeData(INCORRECT_PROGRESS_KEY, {
+          progress: nextQuestionIndex,
+        });
+      } else {
+        await storeData(QUIZ_PROGRESS_KEY, { progress: nextQuestionIndex });
+      }
+      await updateStats(isCorrect, timeSpent);
 
       let updatedIncorrectQuestions = [...incorrectQuestions];
+      let updatedCorrectlyAnsweredDuringSession = [
+        ...correctlyAnsweredDuringSession,
+      ];
 
       if (!isInIncorrectQuestionSession && !isCorrect) {
         updatedIncorrectQuestions.push(questions[quizState.questionIndex]);
-      } else if (isInIncorrectQuestionSession && isCorrect) {
-        updatedIncorrectQuestions = updatedIncorrectQuestions.filter(
-          (_, index) => index !== quizState.questionIndex
-        );
-      }
-
-      if (updatedIncorrectQuestions.length !== incorrectQuestions.length) {
         setIncorrectQuestions(updatedIncorrectQuestions);
         await storeData(INCORRECT_QUESTIONS_KEY, {
           questions: updatedIncorrectQuestions,
         });
+      } else if (isInIncorrectQuestionSession && isCorrect) {
+        updatedCorrectlyAnsweredDuringSession.push(quizState.questionIndex);
       }
+
+      setCorrectlyAnsweredDuringSession(updatedCorrectlyAnsweredDuringSession);
 
       // Update the quiz state
       setQuizState((prev) => ({
@@ -221,13 +226,49 @@ const QuizScreen: React.FC = () => {
     }
   };
 
-  const handleNextQuestion = () => {
+  const handleNextQuestion = async () => {
     console.log("Moving to next question");
-    setQuizState((prev) => ({
-      ...prev,
-      questionIndex: prev.questionIndex + 1,
-      showContinueButton: false,
-    }));
+
+    if (isInIncorrectQuestionSession) {
+      const nextQuestionIndex =
+        (quizState.questionIndex + 1) % incorrectQuestions.length;
+      setQuizState((prev) => ({
+        ...prev,
+        questionIndex: nextQuestionIndex,
+        showContinueButton: false,
+      }));
+
+      // If we have looped through all incorrect questions, check if all have been answered correctly
+      if (nextQuestionIndex === 0) {
+        // Filter out correctly answered questions from incorrectQuestions
+        const remainingIncorrectQuestions = incorrectQuestions.filter(
+          (_, index) => !correctlyAnsweredDuringSession.includes(index)
+        );
+
+        // If no more incorrect questions are left, end the incorrect question session
+        if (remainingIncorrectQuestions.length === 0) {
+          setIsInIncorrectQuestionSession(false);
+          setShowIncorrectQuestionsMessage(false);
+          setQuizState((prev) => ({
+            ...prev,
+            quizCompleted: true,
+          }));
+        } else {
+          // Update incorrectQuestions with remaining questions
+          setIncorrectQuestions(remainingIncorrectQuestions);
+          await storeData(INCORRECT_QUESTIONS_KEY, {
+            questions: remainingIncorrectQuestions,
+          });
+          setCorrectlyAnsweredDuringSession([]);
+        }
+      }
+    } else {
+      setQuizState((prev) => ({
+        ...prev,
+        questionIndex: prev.questionIndex + 1,
+        showContinueButton: false,
+      }));
+    }
   };
 
   const handleStartButtonClick = () => {
