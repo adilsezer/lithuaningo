@@ -38,6 +38,7 @@ const QuizScreen: React.FC = () => {
     useState(false);
   const [correctlyAnsweredDuringSession, setCorrectlyAnsweredDuringSession] =
     useState<number[]>([]);
+  const [resetKey, setResetKey] = useState(0);
 
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
@@ -237,6 +238,7 @@ const QuizScreen: React.FC = () => {
         questionIndex: nextQuestionIndex,
         showContinueButton: false,
       }));
+      setResetKey((prev) => prev + 1); // Trigger a re-render by updating the resetKey
 
       // If we have looped through all incorrect questions, check if all have been answered correctly
       if (nextQuestionIndex === 0) {
@@ -286,7 +288,7 @@ const QuizScreen: React.FC = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView key={resetKey} contentContainerStyle={{ flexGrow: 1 }}>
         {showIncorrectQuestionsMessage ? (
           <View>
             <Text style={globalStyles.title}>Get Ready to Review!</Text>
