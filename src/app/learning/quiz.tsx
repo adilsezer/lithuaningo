@@ -135,39 +135,41 @@ const QuizScreen: React.FC = () => {
   useEffect(() => {
     console.log("Current quiz state:", quizState);
     console.log("Questions length:", questions.length);
-    console.log("Incorrect Questions:", incorrectQuestions);
-    if (
-      (isInIncorrectQuestionSession
-        ? incorrectQuestions.length
-        : questions.length) &&
-      typeof quizState.questionIndex === "number"
-    ) {
+    incorrectQuestions.forEach((question, index) => {
+      console.log(`Incorrect Question ${index + 1}:`, question.questionText);
+    });
+
+    const loadQuestion = (currentQuestions: QuizQuestion[]) => {
       if (
-        quizState.questionIndex <
-        (isInIncorrectQuestionSession
-          ? incorrectQuestions.length
-          : questions.length)
+        currentQuestions.length > 0 &&
+        typeof quizState.questionIndex === "number"
       ) {
-        console.log("Loading question index:", quizState.questionIndex);
-        setQuizState((prev) => ({
-          ...prev,
-          quizCompleted: false,
-          ...(isInIncorrectQuestionSession
-            ? incorrectQuestions[prev.questionIndex]
-            : questions[prev.questionIndex]),
-          showContinueButton: false,
-        }));
-        crashlytics().log(`Question loaded: ${quizState.questionIndex}`);
-      } else if (
-        incorrectQuestions.length > 0 &&
-        !isInIncorrectQuestionSession
-      ) {
-        setShowIncorrectQuestionsMessage(true);
-      } else {
-        console.log("Quiz completed");
-        setQuizState((prev) => ({ ...prev, quizCompleted: true }));
-        crashlytics().log("Quiz completed");
+        if (quizState.questionIndex < currentQuestions.length) {
+          console.log("Loading question index:", quizState.questionIndex);
+          setQuizState((prev) => ({
+            ...prev,
+            quizCompleted: false,
+            ...currentQuestions[prev.questionIndex],
+            showContinueButton: false,
+          }));
+          crashlytics().log(`Question loaded: ${quizState.questionIndex}`);
+        } else if (
+          incorrectQuestions.length > 0 &&
+          !isInIncorrectQuestionSession
+        ) {
+          setShowIncorrectQuestionsMessage(true);
+        } else {
+          console.log("Quiz completed");
+          setQuizState((prev) => ({ ...prev, quizCompleted: true }));
+          crashlytics().log("Quiz completed");
+        }
       }
+    };
+
+    if (isInIncorrectQuestionSession) {
+      loadQuestion(incorrectQuestions);
+    } else {
+      loadQuestion(questions);
     }
   }, [quizState.questionIndex, questions, incorrectQuestions]);
 
@@ -175,36 +177,32 @@ const QuizScreen: React.FC = () => {
     try {
       const timeSpent = 1;
       const nextQuestionIndex = quizState.questionIndex + 1;
-      console.log("Storing progress:", nextQuestionIndex);
-      await storeData(QUIZ_PROGRESS_KEY, { progress: nextQuestionIndex });
-      await storeData(INCORRECT_PROGRESS_KEY, {
-        progress: nextQuestionIndex,
-      });
-      await updateStats(isCorrect, timeSpent);
 
-      // Store incorrect question if answered incorrectly
-      if (!isCorrect) {
-        const currentIncorrectQuestions = [
-          ...incorrectQuestions,
-          questions[quizState.questionIndex],
-        ];
-        console.log("Incorrect Questions Added:", currentIncorrectQuestions);
+      // Update progress and stats
+      await Promise.all([
+        storeData(QUIZ_PROGRESS_KEY, { progress: nextQuestionIndex }),
+        storeData(INCORRECT_PROGRESS_KEY, { progress: nextQuestionIndex }),
+        updateStats(isCorrect, timeSpent),
+      ]);
 
-        setIncorrectQuestions(currentIncorrectQuestions);
-        await storeData(INCORRECT_QUESTIONS_KEY, {
-          questions: currentIncorrectQuestions,
-        });
-      } else {
-        // Remove the question from incorrectQuestions state
-        const updatedIncorrectQuestions = incorrectQuestions.filter(
-          (question, index) => index !== quizState.questionIndex
+      let updatedIncorrectQuestions = [...incorrectQuestions];
+
+      if (!isInIncorrectQuestionSession && !isCorrect) {
+        updatedIncorrectQuestions.push(questions[quizState.questionIndex]);
+      } else if (isInIncorrectQuestionSession && isCorrect) {
+        updatedIncorrectQuestions = updatedIncorrectQuestions.filter(
+          (_, index) => index !== quizState.questionIndex
         );
+      }
+
+      if (updatedIncorrectQuestions.length !== incorrectQuestions.length) {
         setIncorrectQuestions(updatedIncorrectQuestions);
         await storeData(INCORRECT_QUESTIONS_KEY, {
           questions: updatedIncorrectQuestions,
         });
       }
 
+      // Update the quiz state
       setQuizState((prev) => ({
         ...prev,
         showContinueButton: true,
