@@ -211,7 +211,28 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                 />
               </View>
             )}
-            <Text style={[globalStyles.title]}>{word.id}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <Text style={[globalStyles.subtitle, { marginBottom: 6 }]}>
+                Base Form:
+              </Text>
+              <Text style={[globalStyles.title, { marginLeft: 8 }]}>
+                {word.id}
+              </Text>
+            </View>
+            {word.grammaticalForms &&
+              word.grammaticalForms.some((form) => form !== word.id) && (
+                <View>
+                  <Text style={[globalStyles.subtitle]}>Variants:</Text>
+                  {word.grammaticalForms.map(
+                    (form, index) =>
+                      form !== word.id && (
+                        <Text key={index} style={globalStyles.subtitle}>
+                          • {form}
+                        </Text>
+                      )
+                  )}
+                </View>
+              )}
           </Animated.View>
           <Animated.View
             style={[
