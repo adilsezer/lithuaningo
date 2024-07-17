@@ -112,7 +112,7 @@ const QuizScreen: React.FC = () => {
                 ...prev,
                 questionIndex: incorrectQuestionsProgressData?.progress || 0,
                 quizCompleted: false,
-                showContinueButton: true,
+                showContinueButton: false,
               }));
               setShowIncorrectQuestionsMessage(true);
             } else {
@@ -166,12 +166,20 @@ const QuizScreen: React.FC = () => {
       }
     };
 
-    if (isInIncorrectQuestionSession) {
-      loadQuestion(incorrectQuestions);
-    } else {
-      loadQuestion(questions);
+    if (!quizState.showContinueButton) {
+      if (isInIncorrectQuestionSession) {
+        loadQuestion(incorrectQuestions);
+      } else {
+        loadQuestion(questions);
+      }
     }
-  }, [quizState.questionIndex, questions, incorrectQuestions]);
+  }, [
+    quizState.questionIndex,
+    questions,
+    incorrectQuestions,
+    isInIncorrectQuestionSession,
+    quizState.showContinueButton,
+  ]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     try {
