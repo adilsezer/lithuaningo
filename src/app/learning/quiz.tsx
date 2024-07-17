@@ -29,11 +29,18 @@ import crashlytics from "@react-native-firebase/crashlytics";
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [incorrectQuestions, setIncorrectQuestions] = useState<QuizQuestion[]>(
+    []
+  );
+  const [showIncorrectQuestionsMessage, setShowIncorrectQuestionsMessage] =
+    useState(false);
+  const [isInIncorrectQuestionSession, setIsInIncorrectQuestionSession] =
+    useState(false);
+
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
   const { handleAnswer: updateStats } = useData();
-  const [showStartMessage, setShowStartMessage] = useState(false);
 
   const getKey = (type: string) =>
     `${type}_${userData?.id}_${getCurrentDateKey()}`;
@@ -101,14 +108,14 @@ const QuizScreen: React.FC = () => {
 
             if (incorrectQuestionsData?.questions.length) {
               console.log("Handling incorrect questions...");
-              setQuestions(incorrectQuestionsData.questions);
+              setIncorrectQuestions(incorrectQuestionsData.questions);
               setQuizState((prev) => ({
                 ...prev,
                 questionIndex: incorrectQuestionsProgressData?.progress || 0,
                 quizCompleted: false,
                 showContinueButton: true,
               }));
-              setShowStartMessage(true);
+              setShowIncorrectQuestionsMessage(true);
             } else {
               console.log("No incorrect questions to handle.");
               setQuizState((prev) => ({ ...prev, quizCompleted: true }));
@@ -129,23 +136,41 @@ const QuizScreen: React.FC = () => {
   useEffect(() => {
     console.log("Current quiz state:", quizState);
     console.log("Questions length:", questions.length);
-    if (questions.length && typeof quizState.questionIndex === "number") {
-      if (quizState.questionIndex < questions.length) {
+    console.log("Incorrect Questions:", incorrectQuestions);
+    if (
+      (isInIncorrectQuestionSession
+        ? incorrectQuestions.length
+        : questions.length) &&
+      typeof quizState.questionIndex === "number"
+    ) {
+      if (
+        quizState.questionIndex <
+        (isInIncorrectQuestionSession
+          ? incorrectQuestions.length
+          : questions.length)
+      ) {
         console.log("Loading question index:", quizState.questionIndex);
         setQuizState((prev) => ({
           ...prev,
           quizCompleted: false,
-          ...questions[prev.questionIndex],
+          ...(isInIncorrectQuestionSession
+            ? incorrectQuestions[prev.questionIndex]
+            : questions[prev.questionIndex]),
           showContinueButton: false,
         }));
         crashlytics().log(`Question loaded: ${quizState.questionIndex}`);
+      } else if (
+        incorrectQuestions.length > 0 &&
+        !isInIncorrectQuestionSession
+      ) {
+        setShowIncorrectQuestionsMessage(true);
       } else {
         console.log("Quiz completed");
         setQuizState((prev) => ({ ...prev, quizCompleted: true }));
         crashlytics().log("Quiz completed");
       }
     }
-  }, [quizState.questionIndex, questions]);
+  }, [quizState.questionIndex, questions, incorrectQuestions]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     try {
@@ -153,7 +178,34 @@ const QuizScreen: React.FC = () => {
       const nextQuestionIndex = quizState.questionIndex + 1;
       console.log("Storing progress:", nextQuestionIndex);
       await storeData(QUIZ_PROGRESS_KEY, { progress: nextQuestionIndex });
+      await storeData(INCORRECT_PROGRESS_KEY, {
+        progress: nextQuestionIndex,
+      });
       await updateStats(isCorrect, timeSpent);
+
+      // Store incorrect question if answered incorrectly
+      if (!isCorrect) {
+        const currentIncorrectQuestions = [
+          ...incorrectQuestions,
+          questions[quizState.questionIndex],
+        ];
+        console.log("Incorrect Questions Added:", currentIncorrectQuestions);
+
+        setIncorrectQuestions(currentIncorrectQuestions);
+        await storeData(INCORRECT_QUESTIONS_KEY, {
+          questions: currentIncorrectQuestions,
+        });
+      } else {
+        // Remove the question from incorrectQuestions state
+        const updatedIncorrectQuestions = incorrectQuestions.filter(
+          (question, index) => index !== quizState.questionIndex
+        );
+        setIncorrectQuestions(updatedIncorrectQuestions);
+        await storeData(INCORRECT_QUESTIONS_KEY, {
+          questions: updatedIncorrectQuestions,
+        });
+      }
+
       setQuizState((prev) => ({
         ...prev,
         showContinueButton: true,
@@ -175,7 +227,12 @@ const QuizScreen: React.FC = () => {
 
   const handleStartButtonClick = () => {
     console.log("Start button clicked");
-    setShowStartMessage(false);
+    setShowIncorrectQuestionsMessage(false);
+    setIsInIncorrectQuestionSession(true);
+    setQuizState((prev) => ({
+      ...prev,
+      questionIndex: 0,
+    }));
   };
 
   return (
@@ -184,7 +241,7 @@ const QuizScreen: React.FC = () => {
       style={{ flex: 1 }}
     >
       <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
-        {showStartMessage ? (
+        {showIncorrectQuestionsMessage ? (
           <View>
             <Text style={globalStyles.title}>Get Ready to Review!</Text>
             <Text style={globalStyles.subtitle}>
@@ -212,9 +269,15 @@ const QuizScreen: React.FC = () => {
             <Text
               style={[globalStyles.subtitle, { color: globalColors.primary }]}
             >
-              {quizState.questionIndex + 1} / {questions.length} Questions
-              Complete
+              {isInIncorrectQuestionSession
+                ? `${quizState.questionIndex + 1} / ${
+                    incorrectQuestions.length
+                  } Incorrect Questions`
+                : `${quizState.questionIndex + 1} / ${
+                    questions.length
+                  } Questions Complete`}
             </Text>
+
             {quizState.questionType === "multipleChoice" ||
             quizState.questionType === "trueFalse" ? (
               <MultipleChoiceQuiz
