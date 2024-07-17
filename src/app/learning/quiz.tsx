@@ -58,13 +58,20 @@ const QuizScreen: React.FC = () => {
           const mainQuizProgressData = await retrieveData<{ progress: number }>(
             QUIZ_PROGRESS_KEY
           );
-          const mainQuizProgress = mainQuizProgressData?.progress ?? 0;
-          console.log("Main quiz progress:", mainQuizProgress);
-
           const loadedQuestions = await retrieveData<QuizQuestion[]>(
             QUIZ_QUESTIONS_KEY
           );
+          const incorrectQuestionsData = await retrieveData<{
+            questions: QuizQuestion[];
+          }>(INCORRECT_QUESTIONS_KEY);
+          const incorrectQuestionsProgressData = await retrieveData<{
+            progress: number;
+          }>(INCORRECT_PROGRESS_KEY);
+          setIncorrectQuestions(incorrectQuestionsData?.questions ?? []);
+
           console.log("Loaded questions:", loadedQuestions);
+          const mainQuizProgress = mainQuizProgressData?.progress ?? 0;
+          console.log("Main quiz progress:", mainQuizProgress);
 
           if (!loadedQuestions || loadedQuestions.length === 0) {
             console.log("Loading new quiz data...");
@@ -99,16 +106,8 @@ const QuizScreen: React.FC = () => {
             loadedQuestions &&
             loadedQuestions.length > 0
           ) {
-            const incorrectQuestionsData = await retrieveData<{
-              questions: QuizQuestion[];
-            }>(INCORRECT_QUESTIONS_KEY);
-            const incorrectQuestionsProgressData = await retrieveData<{
-              progress: number;
-            }>(INCORRECT_PROGRESS_KEY);
-
             if (incorrectQuestionsData?.questions.length) {
               console.log("Handling incorrect questions...");
-              setIncorrectQuestions(incorrectQuestionsData.questions);
               setQuizState((prev) => ({
                 ...prev,
                 questionIndex: incorrectQuestionsProgressData?.progress || 0,
