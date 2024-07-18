@@ -10,11 +10,16 @@ import {
 import { useRouter } from "expo-router";
 import { cleanWord } from "@utils/stringUtils";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { useAppSelector } from "@src/redux/hooks";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
-const RenderClickableWords: React.FC<{ sentenceText: string }> = ({
+interface RenderClickableWordsProps {
+  sentenceText: string;
+}
+
+const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   sentenceText,
 }) => {
   const router = useRouter();
@@ -23,11 +28,15 @@ const RenderClickableWords: React.FC<{ sentenceText: string }> = ({
   const handleWordClick = (word: string) => {
     router.push(`/learning/${cleanWord(word)}`);
   };
+  const clickedWords = useAppSelector((state) => state.clickedWords);
 
   return (
     <View style={styles.sentenceContainer}>
       {sentenceText.split(" ").map((word: string, index: number) => {
         const cleanedWord = cleanWord(word);
+        const backgroundColor = clickedWords.includes(cleanedWord)
+          ? globalColors.wordHighlightBackground
+          : globalColors.wordBackground;
         if (cleanedWord === "[]") {
           return (
             <View
@@ -58,12 +67,7 @@ const RenderClickableWords: React.FC<{ sentenceText: string }> = ({
           <TouchableOpacity
             key={`${word}-${index}`}
             onPress={() => handleWordClick(word)}
-            style={[
-              styles.wordContainer,
-              {
-                backgroundColor: globalColors.wordBackground,
-              },
-            ]}
+            style={[styles.wordContainer, { backgroundColor }]}
             activeOpacity={0.7}
           >
             <Text

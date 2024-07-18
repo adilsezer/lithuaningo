@@ -90,6 +90,9 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       <View style={styles.sentenceContainer}>
         <RenderClickableWords sentenceText={sentenceText} />
       </View>
+      <Text style={globalStyles.instruction}>
+        Click on each word to find out what it means.
+      </Text>
       <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && (
         <Image
@@ -168,9 +171,8 @@ const styles = StyleSheet.create({
   sentenceContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    alignItems: "center",
     justifyContent: "center",
-    width: "100%",
+    marginVertical: 10,
   },
 });
 

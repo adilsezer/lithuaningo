@@ -95,6 +95,9 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
           <View style={styles.sentenceContainer}>
             <RenderClickableWords sentenceText={sentenceText} />
           </View>
+          <Text style={[globalStyles.instruction]}>
+            Click on each word to find out what it means.
+          </Text>
         </>
       )}
 
@@ -180,6 +183,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     flexWrap: "wrap",
     justifyContent: "center",
+    marginVertical: 10,
   },
 });
 

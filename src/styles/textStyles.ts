@@ -58,5 +58,11 @@ export const createTextStyles = (colors: ThemeColors) => {
     bold: {
       ...boldText,
     },
+    instruction: {
+      ...regularText,
+      color: colors.lightText,
+      marginTop: 5,
+      marginBottom: 20,
+    },
   });
 };
