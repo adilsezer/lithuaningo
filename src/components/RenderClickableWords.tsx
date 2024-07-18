@@ -34,9 +34,12 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
     <View style={styles.sentenceContainer}>
       {sentenceText.split(" ").map((word: string, index: number) => {
         const cleanedWord = cleanWord(word);
-        const backgroundColor = clickedWords.includes(cleanedWord)
+        const backgroundColor = clickedWords
+          .map((word) => word.toLowerCase())
+          .includes(cleanedWord.toLowerCase())
           ? globalColors.wordHighlightBackground
           : globalColors.wordBackground;
+
         if (cleanedWord === "[]") {
           return (
             <View
