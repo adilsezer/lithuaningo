@@ -188,25 +188,92 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   };
 
   const explainGrammaticalForms = (form: string, isVerb: boolean): string => {
-    const nounEndingsMap = [
-      { ending: "as", explanation: "(he - masc. sing.)" },
-      { ending: "a", explanation: "(she - fem. sing.)" },
-      { ending: "ą", explanation: "(him/her - acc.)" },
-      { ending: "i", explanation: "(they - masc. pl.)" },
-      { ending: "os", explanation: "(they - fem. pl. / of)" },
-      { ending: "ai", explanation: "(their - masc. pl.)" },
-      { ending: "ų", explanation: "(of)" },
-      { ending: "oje", explanation: "(in/at)" },
+    const verbEndingsMap = [
+      // Present Tense
+      { ending: "u", translation: "(I)" },
+      { ending: "i", translation: "(you sing.)" },
+      { ending: "a", translation: "(he/she/it)" },
+      { ending: "ame", translation: "(we)" },
+      { ending: "ate", translation: "(you pl.)" },
+      { ending: "a", translation: "(they)" },
+      // Past Tense
+      { ending: "au", translation: "(I)" },
+      { ending: "ai", translation: "(you sing.)" },
+      { ending: "o", translation: "(he/she/it)" },
+      { ending: "ome", translation: "(we)" },
+      { ending: "ote", translation: "(you pl.)" },
+      { ending: "o", translation: "(they)" },
+      // Future Tense
+      { ending: "siu", translation: "(I will)" },
+      { ending: "si", translation: "(you sing. will)" },
+      { ending: "s", translation: "(he/she/it will)" },
+      { ending: "sime", translation: "(we will)" },
+      { ending: "site", translation: "(you pl. will)" },
+      { ending: "s", translation: "(they will)" },
+      // Conditional
+      { ending: "čiau", translation: "(I would)" },
+      { ending: "tum", translation: "(you sing. would)" },
+      { ending: "tų", translation: "(he/she/it would)" },
+      { ending: "tume", translation: "(we would)" },
+      { ending: "tumėte", translation: "(you pl. would)" },
+      { ending: "tų", translation: "(they would)" },
+      // Participles
+      { ending: "damas", translation: "(he -ing)" },
+      { ending: "dama", translation: "(she -ing)" },
+      { ending: "damieji", translation: "(they masc. -ing)" },
+      { ending: "damosios", translation: "(they fem. -ing)" },
+      { ending: "ęs", translation: "(having masc.)" },
+      { ending: "usi", translation: "(having fem.)" },
+      { ending: "ęsi", translation: "(having fem. pl.)" },
     ];
 
-    const verbEndingsMap = [
-      { ending: "u", explanation: "(I)" },
-      { ending: "iau", explanation: "(I would like)" },
-      { ending: "i", explanation: "(you - sing.)" },
-      { ending: "a", explanation: "(he/she/it)" },
-      { ending: "ame", explanation: "(we)" },
-      { ending: "ate", explanation: "(you - pl.)" },
-      { ending: "a", explanation: "(they)" },
+    const nounEndingsMap = [
+      // Singular Noun Endings
+      { ending: "as", translation: "(masc. sing.)" },
+      { ending: "is", translation: "(masc. sing.)" },
+      { ending: "a", translation: "(fem. sing.)" },
+      { ending: "ė", translation: "(fem. sing.)" },
+      { ending: "ą", translation: "(acc. sing.)" },
+      { ending: "ę", translation: "(acc. sing.)" },
+      { ending: "o", translation: "(gen. sing.)" },
+      { ending: "ės", translation: "(gen. sing.)" },
+      { ending: "ui", translation: "(dat. sing.)" },
+      { ending: "iai", translation: "(dat. sing.)" },
+      { ending: "į", translation: "(dat. sing.)" },
+      { ending: "uje", translation: "(loc. sing.)" },
+      { ending: "ėje", translation: "(loc. sing.)" },
+      { ending: "umi", translation: "(inst. sing.)" },
+      { ending: "imi", translation: "(inst. sing.)" },
+      // Plural Noun Endings
+      { ending: "ai", translation: "(masc. pl.)" },
+      { ending: "ys", translation: "(masc. pl.)" },
+      { ending: "os", translation: "(fem. pl./gen. pl.)" },
+      { ending: "ios", translation: "(fem. pl.)" },
+      { ending: "es", translation: "(fem. pl.)" },
+      { ending: "us", translation: "(acc. pl. masc.)" },
+      { ending: "as", translation: "(acc. pl. fem.)" },
+      { ending: "ių", translation: "(gen. pl.)" },
+      { ending: "ų", translation: "(gen. pl.)" },
+      { ending: "omis", translation: "(inst. pl.)" },
+      { ending: "imis", translation: "(inst. pl.)" },
+      { ending: "iais", translation: "(inst. pl.)" },
+      { ending: "uose", translation: "(loc. pl.)" },
+      { ending: "iuose", translation: "(loc. pl.)" },
+      { ending: "ėse", translation: "(loc. pl.)" },
+      // Adjective Endings
+      { ending: "us", translation: "(masc. adj. sing.)" },
+      { ending: "i", translation: "(fem. adj. sing.)" },
+      { ending: "ius", translation: "(masc. adj. pl.)" },
+      { ending: "ios", translation: "(fem. adj. pl.)" },
+      { ending: "ų", translation: "(gen. adj. sing. masc.)" },
+      { ending: "ių", translation: "(gen. adj. pl.)" },
+      { ending: "am", translation: "(dat. adj. sing. masc.)" },
+      { ending: "iam", translation: "(dat. adj. sing. fem.)" },
+      { ending: "ąją", translation: "(acc. adj. sing. fem.)" },
+      { ending: "uoju", translation: "(inst. adj. sing. masc.)" },
+      { ending: "ąja", translation: "(inst. adj. sing. fem.)" },
+      { ending: "uosius", translation: "(acc. adj. pl. masc.)" },
+      { ending: "osioms", translation: "(dat. adj. pl. fem.)" },
     ];
 
     const endingsMap = isVerb ? verbEndingsMap : nounEndingsMap;
@@ -214,17 +281,16 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     // Sort endings by length in descending order to ensure specific matches first
     endingsMap.sort((a, b) => b.ending.length - a.ending.length);
 
-    for (const { ending, explanation } of endingsMap) {
+    for (const { ending, translation } of endingsMap) {
       if (form.endsWith(ending)) {
-        return `${form} ${explanation}`;
+        return `${form} ${translation}`;
       }
     }
-    return `${form} (unknown)`;
+    return `${form}`;
   };
 
   const determineIfVerb = (englishTranslation: string): boolean => {
-    console.log("Determine if verb: " + englishTranslation.startsWith("to "));
-    return englishTranslation.startsWith("to ");
+    return englishTranslation.toLowerCase().startsWith("to ");
   };
 
   return (
@@ -238,14 +304,15 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={[globalStyles.subtitle, { marginBottom: 8 }]}>
-                Base Form:
-              </Text>
-              <Text style={[globalStyles.title, { marginLeft: 8 }]}>
-                {word.id}
-              </Text>
-            </View>
+            <Text style={[globalStyles.title, { marginLeft: 8 }]}>
+              {word.id}
+            </Text>
+            <View
+              style={[
+                styles.horizontalRule,
+                { borderBottomColor: globalColors.border },
+              ]}
+            />
             {word.grammaticalForms &&
               word.grammaticalForms.some((form) => form !== word.id) && (
                 <View>
@@ -253,13 +320,27 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                   {word.grammaticalForms.map(
                     (form, index) =>
                       form !== word.id && (
-                        <Text key={index} style={globalStyles.subtitle}>
-                          •{" "}
-                          {explainGrammaticalForms(
-                            form,
-                            determineIfVerb(word.englishTranslation)
-                          )}
-                        </Text>
+                        <View
+                          key={index}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 4,
+                          }}
+                        >
+                          <Text style={[globalStyles.subtitle]}>•</Text>
+                          <Text
+                            style={[
+                              globalStyles.subtitle,
+                              { marginLeft: 8, flexShrink: 1 },
+                            ]}
+                          >
+                            {explainGrammaticalForms(
+                              form,
+                              determineIfVerb(word.englishTranslation)
+                            )}
+                          </Text>
+                        </View>
                       )
                   )}
                 </View>
@@ -274,6 +355,12 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             ]}
           >
             <Text style={[globalStyles.title]}>{word.englishTranslation}</Text>
+            <View
+              style={[
+                styles.horizontalRule,
+                { borderBottomColor: globalColors.border },
+              ]}
+            />
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
@@ -333,6 +420,12 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 50,
+  },
+  horizontalRule: {
+    width: "80%",
+    alignSelf: "center",
+    borderBottomWidth: 1,
+    marginVertical: 10,
   },
 });
 
