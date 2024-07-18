@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
-  Image,
   StyleSheet,
   TouchableWithoutFeedback,
   Alert,
@@ -188,11 +187,48 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     router.back();
   };
 
+  const explainGrammaticalForms = (form: string, isVerb: boolean): string => {
+    const nounEndingsMap = [
+      { ending: "as", explanation: "(he - masc. sing.)" },
+      { ending: "a", explanation: "(she - fem. sing.)" },
+      { ending: "ą", explanation: "(him/her - acc.)" },
+      { ending: "i", explanation: "(they - masc. pl.)" },
+      { ending: "os", explanation: "(they - fem. pl. / of)" },
+      { ending: "ai", explanation: "(their - masc. pl.)" },
+      { ending: "ų", explanation: "(of)" },
+      { ending: "oje", explanation: "(in/at)" },
+    ];
+
+    const verbEndingsMap = [
+      { ending: "u", explanation: "(I)" },
+      { ending: "iau", explanation: "(I would like)" },
+      { ending: "i", explanation: "(you - sing.)" },
+      { ending: "a", explanation: "(he/she/it)" },
+      { ending: "ame", explanation: "(we)" },
+      { ending: "ate", explanation: "(you - pl.)" },
+      { ending: "a", explanation: "(they)" },
+    ];
+
+    const endingsMap = isVerb ? verbEndingsMap : nounEndingsMap;
+
+    // Sort endings by length in descending order to ensure specific matches first
+    endingsMap.sort((a, b) => b.ending.length - a.ending.length);
+
+    for (const { ending, explanation } of endingsMap) {
+      if (form.endsWith(ending)) {
+        return `${form} ${explanation}`;
+      }
+    }
+    return `${form} (unknown)`;
+  };
+
+  const determineIfVerb = (englishTranslation: string): boolean => {
+    console.log("Determine if verb: " + englishTranslation.startsWith("to "));
+    return englishTranslation.startsWith("to ");
+  };
+
   return (
     <View>
-      <Text style={[globalStyles.subtitle]}>
-        Tap the card to flip and see the translation
-      </Text>
       <TouchableWithoutFeedback onPress={handleFlip}>
         <View style={styles.cardContainer}>
           <Animated.View
@@ -202,17 +238,8 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
-            {word.imageUrl && (
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: word.imageUrl }}
-                  style={styles.image}
-                  resizeMode="cover"
-                />
-              </View>
-            )}
             <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <Text style={[globalStyles.subtitle, { marginBottom: 6 }]}>
+              <Text style={[globalStyles.subtitle, { marginBottom: 8 }]}>
                 Base Form:
               </Text>
               <Text style={[globalStyles.title, { marginLeft: 8 }]}>
@@ -227,7 +254,11 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                     (form, index) =>
                       form !== word.id && (
                         <Text key={index} style={globalStyles.subtitle}>
-                          • {form}
+                          •{" "}
+                          {explainGrammaticalForms(
+                            form,
+                            determineIfVerb(word.englishTranslation)
+                          )}
                         </Text>
                       )
                   )}
@@ -242,20 +273,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
-            {word.imageUrl && (
-              <View style={styles.imageContainer}>
-                <Image
-                  source={{ uri: word.imageUrl }}
-                  style={styles.image}
-                  resizeMode="cover"
-                />
-              </View>
-            )}
             <Text style={[globalStyles.title]}>{word.englishTranslation}</Text>
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
-
+      <Text style={[globalStyles.subtitle]}>
+        Tap the card to flip and see the translation
+      </Text>
       <CustomButton
         title="Mark as Known"
         onPress={() => handleMarkButtonClick(true)}
