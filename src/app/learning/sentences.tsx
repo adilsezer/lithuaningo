@@ -1,12 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  Dimensions,
-} from "react-native";
+import { View, Text, StyleSheet, Dimensions, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -19,6 +12,7 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { retrieveData, storeData } from "@utils/storageUtils";
 import CompletedScreen from "@components/CompletedScreen";
 import { cleanWord } from "@utils/stringUtils";
+import RenderClickableWords from "@components/RenderClickableWords"; // Import RenderClickableWords
 import crashlytics from "@react-native-firebase/crashlytics";
 
 const SentencesScreen: React.FC = () => {
@@ -36,9 +30,6 @@ const SentencesScreen: React.FC = () => {
     userData?.id
   }_${getCurrentDateKey()}`;
   const SENTENCES_KEY = `sentences_${userData?.id}_${getCurrentDateKey()}`;
-
-  const { width } = Dimensions.get("window");
-  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
   useEffect(() => {
     const checkCompletionStatus = async () => {
@@ -97,10 +88,6 @@ const SentencesScreen: React.FC = () => {
       }
     }
   }, [sentences, clickedWords]);
-
-  const handleWordClick = (word: string) => {
-    router.push(`/learning/${cleanWord(word)}`);
-  };
 
   const handleProceedToQuiz = async () => {
     await storeData(COMPLETION_STATUS_KEY, true);
@@ -166,32 +153,7 @@ const SentencesScreen: React.FC = () => {
       {sentences.map((sentence: Sentence, index) => (
         <View key={sentence.id}>
           <View style={styles.sentenceContainer}>
-            {sentence.sentence
-              .split(" ")
-              .map((word: string, wordIndex: number) => (
-                <TouchableOpacity
-                  key={`${word}-${wordIndex}`}
-                  onPress={() => handleWordClick(word)}
-                  style={[
-                    styles.wordContainer,
-                    {
-                      backgroundColor: clickedWords.includes(cleanWord(word))
-                        ? globalColors.wordHighlightBackground
-                        : globalColors.wordBackground,
-                    },
-                  ]}
-                >
-                  <Text
-                    style={[
-                      globalStyles.text,
-                      styles.wordText,
-                      isTablet && styles.wordTextIpad,
-                    ]}
-                  >
-                    {word}
-                  </Text>
-                </TouchableOpacity>
-              ))}
+            <RenderClickableWords sentenceText={sentence.sentence} />
           </View>
           {index < sentences.length - 1 && (
             <View
@@ -232,22 +194,6 @@ const styles = StyleSheet.create({
     marginVertical: 10,
     paddingHorizontal: 10,
     justifyContent: "center",
-  },
-  wordContainer: {
-    marginHorizontal: 6,
-    marginVertical: 6,
-    borderRadius: 10,
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    minHeight: 45,
-    minWidth: 55,
-  },
-  wordText: {
-    fontSize: 20,
-    textAlign: "center",
-  },
-  wordTextIpad: {
-    fontSize: 30,
   },
   allWordsClickedSection: {
     marginVertical: 60,

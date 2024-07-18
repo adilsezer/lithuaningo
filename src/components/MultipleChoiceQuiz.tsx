@@ -10,6 +10,7 @@ import {
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import ExpandableDetails from "./ExpandableDetails";
+import RenderClickableWords from "@components/RenderClickableWords";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -86,7 +87,9 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   return (
     <View>
       <Text style={globalStyles.subtitle}>{renderBoldText(questionText)}</Text>
-      <Text style={globalStyles.title}>{sentenceText}</Text>
+      <View style={styles.sentenceContainer}>
+        <RenderClickableWords sentenceText={sentenceText} />
+      </View>
       <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && (
         <Image
@@ -161,6 +164,13 @@ const styles = StyleSheet.create({
   imageTablet: {
     width: 500,
     height: 500,
+  },
+  sentenceContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    justifyContent: "center",
+    width: "100%",
   },
 });
 
