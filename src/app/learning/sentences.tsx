@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Dimensions, Platform } from "react-native";
+import { View, Text, StyleSheet, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -101,7 +101,7 @@ const SentencesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View>
+      <View style={styles.container}>
         <BackButton />
         <Text style={[globalStyles.text, { color: globalColors.error }]}>
           {error}
@@ -132,7 +132,7 @@ const SentencesScreen: React.FC = () => {
 
   if (sentences.length === 0) {
     return (
-      <View>
+      <View style={styles.container}>
         <BackButton />
         <Text style={globalStyles.text}>
           No new sentences to learn. Please check back later.
@@ -142,7 +142,7 @@ const SentencesScreen: React.FC = () => {
   }
 
   return (
-    <View>
+    <View style={styles.container}>
       <BackButton />
       <Text style={globalStyles.title}>
         Today you will learn the following sentences.
@@ -150,38 +150,48 @@ const SentencesScreen: React.FC = () => {
       <Text style={globalStyles.subtitle}>
         Click on each word to find out what it means.
       </Text>
-      {sentences.map((sentence: Sentence, index) => (
-        <View key={sentence.id}>
-          <View style={styles.sentenceContainer}>
-            <RenderClickableWords sentenceText={sentence.sentence} />
+      <ScrollView contentContainerStyle={styles.contentContainer}>
+        {sentences.map((sentence: Sentence, index) => (
+          <View key={sentence.id}>
+            <View style={styles.sentenceContainer}>
+              <RenderClickableWords sentenceText={sentence.sentence} />
+            </View>
+            {index < sentences.length - 1 && (
+              <View
+                style={[
+                  styles.horizontalRule,
+                  { borderBottomColor: globalColors.border },
+                ]}
+              />
+            )}
           </View>
-          {index < sentences.length - 1 && (
-            <View
-              style={[
-                styles.horizontalRule,
-                { borderBottomColor: globalColors.border },
-              ]}
-            />
-          )}
-        </View>
-      ))}
-      {!wordsCompleted && (
-        <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
-          Click all words to unlock the proceed button.
-        </Text>
-      )}
+        ))}
+        {!wordsCompleted && (
+          <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
+            Click all words to unlock the proceed button.
+          </Text>
+        )}
+      </ScrollView>
       {wordsCompleted && (
-        <CustomButton
-          title="Proceed to Quiz"
-          onPress={handleProceedToQuiz}
-          style={{ marginVertical: 60 }}
-        />
+        <View style={styles.buttonContainer}>
+          <CustomButton
+            title="Proceed to Quiz"
+            onPress={handleProceedToQuiz}
+            style={styles.fixedButton}
+          />
+        </View>
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 80, // Ensure space for the button
+  },
   horizontalRule: {
     width: "80%",
     alignSelf: "center",
@@ -197,6 +207,15 @@ const styles = StyleSheet.create({
   },
   allWordsClickedSection: {
     marginVertical: 60,
+  },
+  buttonContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
+  },
+  fixedButton: {
+    // Additional styles if needed
   },
 });
 

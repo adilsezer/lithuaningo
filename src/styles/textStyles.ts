@@ -62,7 +62,7 @@ export const createTextStyles = (colors: ThemeColors) => {
       ...regularText,
       color: colors.lightText,
       marginTop: 5,
-      marginBottom: 20,
+      marginBottom: 10,
     },
   });
 };

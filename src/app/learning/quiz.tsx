@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   View,
   Text,
@@ -44,6 +44,7 @@ const QuizScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
   const { handleAnswer: updateStats } = useData();
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const getKey = (type: string) =>
     `${type}_${userData?.id}_${getCurrentDateKey()}`;
@@ -285,12 +286,23 @@ const QuizScreen: React.FC = () => {
     });
   };
 
+  // Auto-scroll to bottom to make button visible
+  useEffect(() => {
+    if (quizState.showContinueButton && scrollViewRef.current) {
+      scrollViewRef.current.scrollToEnd({ animated: true });
+    }
+  }, [quizState.showContinueButton]);
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
       style={{ flex: 1 }}
     >
-      <ScrollView key={resetKey} contentContainerStyle={{ flexGrow: 1 }}>
+      <ScrollView
+        key={resetKey}
+        contentContainerStyle={{ flexGrow: 1 }}
+        ref={scrollViewRef}
+      >
         {showIncorrectQuestionsMessage ? (
           <View>
             <Text style={globalStyles.title}>Get Ready to Review!</Text>
@@ -314,7 +326,7 @@ const QuizScreen: React.FC = () => {
             />
           </View>
         ) : (
-          <View>
+          <View style={{ flex: 1 }}>
             <BackButton />
             <Text
               style={[globalStyles.subtitle, { color: globalColors.primary }]}
@@ -351,15 +363,12 @@ const QuizScreen: React.FC = () => {
                 onAnswer={handleAnswer}
               />
             )}
-            {quizState.showContinueButton && (
-              <CustomButton
-                title="Next Question"
-                onPress={handleNextQuestion}
-              />
-            )}
           </View>
         )}
       </ScrollView>
+      {quizState.showContinueButton && (
+        <CustomButton title="Next Question" onPress={handleNextQuestion} />
+      )}
     </KeyboardAvoidingView>
   );
 };
