@@ -49,6 +49,7 @@ export default function ProfileScreen() {
       `incorrectQuestions_${userData.id}_${currentDateKey}`,
       `quizQuestions_${userData.id}_${currentDateKey}`,
       `incorrectProgress_${userData.id}_${currentDateKey}`,
+      `sessionState_${userData.id}_${currentDateKey}`, // Added sessionState key
     ];
 
     await Promise.all(keysToClear.map((key) => clearData(key)));

@@ -51,6 +51,7 @@ const QuizScreen: React.FC = () => {
   const QUIZ_PROGRESS_KEY = getKey("quizProgress");
   const INCORRECT_QUESTIONS_KEY = getKey("incorrectQuestions");
   const INCORRECT_PROGRESS_KEY = getKey("incorrectProgress");
+  const SESSION_STATE_KEY = getKey("sessionState");
 
   useEffect(() => {
     const initializeQuiz = async () => {
@@ -69,7 +70,18 @@ const QuizScreen: React.FC = () => {
           const incorrectQuestionsProgressData = await retrieveData<{
             progress: number;
           }>(INCORRECT_PROGRESS_KEY);
+          const sessionState = await retrieveData<{
+            showIncorrectQuestionsMessage: boolean;
+            isInIncorrectQuestionSession: boolean;
+          }>(SESSION_STATE_KEY);
+
           setIncorrectQuestions(incorrectQuestionsData?.questions ?? []);
+          setShowIncorrectQuestionsMessage(
+            sessionState?.showIncorrectQuestionsMessage ?? false
+          );
+          setIsInIncorrectQuestionSession(
+            sessionState?.isInIncorrectQuestionSession ?? false
+          );
 
           const mainQuizProgress = mainQuizProgressData?.progress ?? 0;
 
@@ -83,8 +95,9 @@ const QuizScreen: React.FC = () => {
                   questionIndex: mainQuizProgress,
                 }));
               },
-              (quizStateUpdate) =>
-                setQuizState((prev) => ({ ...prev, ...quizStateUpdate })),
+              (quizStateUpdate) => {
+                setQuizState((prev) => ({ ...prev, ...quizStateUpdate }));
+              },
               QUIZ_QUESTIONS_KEY,
               QUIZ_PROGRESS_KEY
             );
@@ -111,7 +124,6 @@ const QuizScreen: React.FC = () => {
                 quizCompleted: false,
                 showContinueButton: false,
               }));
-              setShowIncorrectQuestionsMessage(true);
             } else {
               setQuizState((prev) => ({ ...prev, quizCompleted: true }));
             }
@@ -131,35 +143,39 @@ const QuizScreen: React.FC = () => {
   useEffect(() => {
     const loadQuestion = (currentQuestions: QuizQuestion[]) => {
       if (
-        currentQuestions.length > 0 &&
-        typeof quizState.questionIndex === "number"
+        currentQuestions.length === 0 ||
+        typeof quizState.questionIndex !== "number"
       ) {
-        if (quizState.questionIndex < currentQuestions.length) {
-          setQuizState((prev) => ({
-            ...prev,
-            quizCompleted: false,
-            ...currentQuestions[prev.questionIndex],
-            showContinueButton: false,
-          }));
-          crashlytics().log(`Question loaded: ${quizState.questionIndex}`);
-        } else if (
-          incorrectQuestions.length > 0 &&
-          !isInIncorrectQuestionSession
-        ) {
-          setShowIncorrectQuestionsMessage(true);
-        } else {
-          setQuizState((prev) => ({ ...prev, quizCompleted: true }));
-          crashlytics().log("Quiz completed");
-        }
+        return;
+      }
+
+      if (quizState.questionIndex < currentQuestions.length) {
+        setQuizState((prev) => ({
+          ...prev,
+          quizCompleted: false,
+          ...currentQuestions[prev.questionIndex],
+          showContinueButton: false,
+        }));
+        crashlytics().log(`Question loaded: ${quizState.questionIndex}`);
+        return;
+      }
+
+      if (incorrectQuestions.length > 0 && !isInIncorrectQuestionSession) {
+        setShowIncorrectQuestionsMessage(true);
+        return;
+      }
+
+      if (!isInIncorrectQuestionSession) {
+        setQuizState((prev) => ({ ...prev, quizCompleted: true }));
+        crashlytics().log("Quiz completed");
       }
     };
 
     if (!quizState.showContinueButton) {
-      if (isInIncorrectQuestionSession) {
-        loadQuestion(incorrectQuestions);
-      } else {
-        loadQuestion(questions);
-      }
+      const questionsToLoad = isInIncorrectQuestionSession
+        ? incorrectQuestions
+        : questions;
+      loadQuestion(questionsToLoad);
     }
   }, [quizState.questionIndex, questions, incorrectQuestions]);
 
@@ -221,10 +237,17 @@ const QuizScreen: React.FC = () => {
         await storeData(INCORRECT_QUESTIONS_KEY, {
           questions: remainingIncorrectQuestions,
         });
+        await storeData(INCORRECT_PROGRESS_KEY, {
+          progress: nextQuestionIndex,
+        });
         // If no more incorrect questions are left, end the incorrect question session
         if (remainingIncorrectQuestions.length === 0) {
           setIsInIncorrectQuestionSession(false);
           setShowIncorrectQuestionsMessage(false);
+          await storeData(SESSION_STATE_KEY, {
+            showIncorrectQuestionsMessage: false,
+            isInIncorrectQuestionSession: false,
+          });
           setQuizState((prev) => ({ ...prev, quizCompleted: true }));
         } else {
           // Update incorrectQuestions with remaining questions
@@ -249,13 +272,17 @@ const QuizScreen: React.FC = () => {
     }
   };
 
-  const handleStartButtonClick = () => {
+  const handleStartButtonClick = async () => {
     setShowIncorrectQuestionsMessage(false);
     setIsInIncorrectQuestionSession(true);
     setQuizState((prev) => ({
       ...prev,
       questionIndex: 0,
     }));
+    await storeData(SESSION_STATE_KEY, {
+      showIncorrectQuestionsMessage: false,
+      isInIncorrectQuestionSession: true,
+    });
   };
 
   return (
