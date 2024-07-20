@@ -8,7 +8,6 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 export const createComponentStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     input: {
-      backgroundColor: colors.inputBackground,
       width: "100%",
       marginVertical: isTablet ? 15 : 10,
       borderWidth: 1,

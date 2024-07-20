@@ -94,7 +94,6 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
             ],
             color: globalColors.placeholder,
             textAlign: "center",
-            zIndex: 1,
             paddingBottom: 25,
             pointerEvents: "none",
           },
