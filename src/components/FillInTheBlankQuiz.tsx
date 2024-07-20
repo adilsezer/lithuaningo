@@ -19,6 +19,7 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 interface FillInTheBlankQuizProps {
   sentenceText: string;
   questionText: string;
+  questionWord: string;
   translation: string;
   image: string;
   correctAnswerText: string;
@@ -33,6 +34,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   translation,
   image,
   questionIndex,
+  questionWord,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -93,7 +95,10 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
         <>
           <Text style={globalStyles.subtitle}>{questionText}</Text>
           <View style={styles.sentenceContainer}>
-            <RenderClickableWords sentenceText={sentenceText} />
+            <RenderClickableWords
+              sentenceText={sentenceText}
+              answerText={questionWord}
+            />
           </View>
           <Text style={[globalStyles.instruction]}>
             Click on each word to find out what it means.

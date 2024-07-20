@@ -154,7 +154,10 @@ const SentencesScreen: React.FC = () => {
         {sentences.map((sentence: Sentence, index) => (
           <View key={sentence.id}>
             <View style={styles.sentenceContainer}>
-              <RenderClickableWords sentenceText={sentence.sentence} />
+              <RenderClickableWords
+                sentenceText={sentence.sentence}
+                answerText=""
+              />
             </View>
             {index < sentences.length - 1 && (
               <View

@@ -11,10 +11,12 @@ export interface QuizState {
   questionIndex: number;
   showContinueButton: boolean;
   quizCompleted: boolean;
+  questionWord: string;
 }
 
 export const initializeQuizState = (): QuizState => ({
   questionText: "",
+  questionWord: "",
   sentenceText: "",
   translation: "",
   image: "",

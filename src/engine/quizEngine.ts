@@ -19,6 +19,7 @@ export interface QuizQuestion {
   image: string;
   options: string[];
   questionType: "multipleChoice" | "fillInTheBlank" | "trueFalse";
+  questionWord: string;
 }
 
 const fetchLearnedAndAllSentencesWithWords = async (
@@ -245,6 +246,7 @@ const generateQuestion = async (
         image: "",
         options: [],
         questionType: "multipleChoice",
+        questionWord: "",
       };
     }
 
@@ -263,11 +265,10 @@ const generateQuestion = async (
     let generatedCorrectAnswerText = toTitleCase(
       correctWordDetails.englishTranslation
     );
+    let generatedQuestionWord = toTitleCase(randomWord);
 
     if (generatedQuestionType === "multipleChoice") {
-      generatedQuestionText = `What is the English base form of "**${toTitleCase(
-        randomWord
-      )}**" in the following sentence?`;
+      generatedQuestionText = `What is the English base form of "**${generatedQuestionWord}**" in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;
       generatedOptions = shuffleArray(
         [...otherOptions, generatedCorrectAnswerText].map(toTitleCase)
@@ -292,15 +293,13 @@ const generateQuestion = async (
         })
         .join(" ");
 
-      generatedCorrectAnswerText = toTitleCase(randomWord);
+      generatedCorrectAnswerText = generatedQuestionWord;
     } else if (generatedQuestionType === "trueFalse") {
       const randomBool = Math.random() > 0.5;
       const givenTranslation = randomBool
         ? generatedCorrectAnswerText
         : otherOptions[0];
-      generatedQuestionText = `Does the English base form of "**${toTitleCase(
-        randomWord
-      )}**" mean "**${toTitleCase(
+      generatedQuestionText = `Does the English base form of "**${generatedQuestionWord}**" mean "**${toTitleCase(
         givenTranslation
       )}**" in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;
@@ -316,6 +315,7 @@ const generateQuestion = async (
       correctAnswerText: generatedCorrectAnswerText,
       options: generatedOptions,
       questionType: generatedQuestionType,
+      questionWord: generatedQuestionWord,
     };
   } catch (error) {
     console.error("Error generating question:", error);

@@ -350,6 +350,7 @@ const QuizScreen: React.FC = () => {
                 translation={quizState.translation}
                 image={quizState.image}
                 questionIndex={quizState.questionIndex}
+                questionWord={quizState.questionWord}
                 onAnswer={handleAnswer}
               />
             ) : (
@@ -360,6 +361,7 @@ const QuizScreen: React.FC = () => {
                 translation={quizState.translation}
                 image={quizState.image}
                 questionIndex={quizState.questionIndex}
+                questionWord={quizState.questionWord}
                 onAnswer={handleAnswer}
               />
             )}

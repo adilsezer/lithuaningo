@@ -18,6 +18,7 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 interface MultipleChoiceQuizProps {
   sentenceText: string;
   questionText: string;
+  questionWord: string;
   translation: string;
   image: string;
   options: string[];
@@ -34,6 +35,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   translation,
   image,
   questionIndex,
+  questionWord,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -88,7 +90,10 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
     <View>
       <Text style={globalStyles.subtitle}>{renderBoldText(questionText)}</Text>
       <View style={styles.sentenceContainer}>
-        <RenderClickableWords sentenceText={sentenceText} />
+        <RenderClickableWords
+          sentenceText={sentenceText}
+          answerText={questionWord}
+        />
       </View>
       <Text style={globalStyles.instruction}>
         Click on each word to find out what it means.

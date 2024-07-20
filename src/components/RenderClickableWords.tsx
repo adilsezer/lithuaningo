@@ -17,10 +17,12 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 interface RenderClickableWordsProps {
   sentenceText: string;
+  answerText: string;
 }
 
 const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   sentenceText,
+  answerText,
 }) => {
   const router = useRouter();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -40,7 +42,10 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
           ? globalColors.wordHighlightBackground
           : globalColors.wordBackground;
 
-        if (cleanedWord === "[]") {
+        if (
+          answerText.toLowerCase() == cleanedWord.toLowerCase() ||
+          cleanedWord === "[]"
+        ) {
           return (
             <View
               key={`${word}-${index}`}
