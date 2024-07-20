@@ -67,7 +67,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
 
   const placeholderScale = placeholderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 0.8],
+    outputRange: [1, 0.9],
   });
 
   return (
@@ -94,7 +94,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
             ],
             color: globalColors.placeholder,
             textAlign: "center",
-            paddingBottom: 25,
+            paddingBottom: isTablet ? 30 : 20,
             pointerEvents: "none",
           },
         ]}

@@ -48,7 +48,7 @@ export const darkThemeColors: ThemeColors = {
   text: "#FAFAFA", // Very light grey (almost white)
   lightText: "#CFD8DC", // Deep charcoal grey
   link: "#82CAFF", // Crisp, deep sky blue (same as light theme)
-  placeholder: "#CFD8DC", // Lighter blue-grey for placeholders, adjusted for dark theme
+  placeholder: "#607D8B",
   border: "#37474F", // Darker shade for borders, adjusted for dark theme
   error: "#d5304f", // Soft grey (same as inactive)
   card: "#FAFAFA",
