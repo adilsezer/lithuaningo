@@ -33,7 +33,6 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
-  const [isFocused, setIsFocused] = useState(false);
   const [placeholderAnim] = useState(new Animated.Value(value ? 1 : 0));
 
   // Determine if the device is a tablet
@@ -44,7 +43,6 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   const defaultWidth = isTablet ? "75%" : "100%";
 
   const handleFocus = () => {
-    setIsFocused(true);
     Animated.timing(placeholderAnim, {
       toValue: 1,
       duration: 200,
@@ -53,7 +51,6 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   };
 
   const handleBlur = () => {
-    setIsFocused(false);
     if (!value) {
       Animated.timing(placeholderAnim, {
         toValue: 0,
@@ -65,12 +62,12 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
 
   const placeholderTranslateY = placeholderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [0, -20], // Adjust the output range to control the vertical movement of the placeholder
+    outputRange: [10, -10],
   });
 
-  const placeholderOpacity = placeholderAnim.interpolate({
+  const placeholderScale = placeholderAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [1, 0], // Fade out the placeholder when focused
+    outputRange: [1, 0.8],
   });
 
   return (
@@ -91,10 +88,15 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
           globalStyles.bold,
           {
             position: "absolute",
-            transform: [{ translateY: placeholderTranslateY }],
-            opacity: placeholderOpacity,
+            transform: [
+              { translateY: placeholderTranslateY },
+              { scale: placeholderScale },
+            ],
             color: globalColors.placeholder,
             textAlign: "center",
+            zIndex: 1,
+            paddingBottom: 25,
+            pointerEvents: "none",
           },
         ]}
       >

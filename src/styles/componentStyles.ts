@@ -8,15 +8,18 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 export const createComponentStyles = (colors: ThemeColors) =>
   StyleSheet.create({
     input: {
+      backgroundColor: colors.inputBackground,
       width: "100%",
       marginVertical: isTablet ? 15 : 10,
       borderWidth: 1,
       borderColor: colors.border,
-      padding: isTablet ? 25 : 20,
+      paddingHorizontal: isTablet ? 25 : 20,
       borderRadius: 10,
       color: colors.lightText,
       fontFamily: "Roboto-Bold",
       fontSize: isTablet ? 24 : 16,
+      paddingTop: isTablet ? 50 : 30,
+      paddingBottom: isTablet ? 20 : 15,
     },
     button: {
       flexDirection: "row",

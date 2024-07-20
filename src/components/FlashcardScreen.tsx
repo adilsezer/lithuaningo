@@ -126,7 +126,12 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         }
 
         setWord(selectedWord || null);
+
+        if (!selectedWord) {
+          await wordService.addMissingWord(wordId);
+        }
       } catch (error) {
+        console.error("Error loading word:", error);
       } finally {
         dispatch(setLoading(false));
       }
@@ -145,10 +150,10 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     return (
       <View>
         <BackButton />
-        <Text style={globalStyles.contrastSubtitle}>
+        <Text style={globalStyles.subtitle}>
           We don't have this word in our database at the moment.
         </Text>
-        <Text style={globalStyles.contrastSubtitle}>
+        <Text style={globalStyles.subtitle}>
           Help us improve by adding the word details below. Once reviewed, it
           will be available for everyone.
         </Text>
@@ -371,7 +376,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
-      <Text style={[globalStyles.contrastSubtitle]}>
+      <Text style={[globalStyles.subtitle]}>
         Tap the card to flip and see the translation
       </Text>
       <CustomButton

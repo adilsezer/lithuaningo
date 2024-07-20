@@ -27,7 +27,26 @@ const addWordForReview = async (wordData: Word): Promise<void> => {
   }
 };
 
+const addMissingWord = async (word: string): Promise<void> => {
+  try {
+    const docRef = firestore().collection("missingWords").doc(word);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      await docRef.set({ id: word });
+    } else {
+      console.log(
+        `The word "${word}" already exists in the missingWords collection.`
+      );
+    }
+  } catch (error) {
+    console.error("Error adding missing word:", error);
+    throw error;
+  }
+};
+
 export default {
   fetchWords,
   addWordForReview,
+  addMissingWord,
 };
