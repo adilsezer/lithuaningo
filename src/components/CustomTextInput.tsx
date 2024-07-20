@@ -34,7 +34,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   const { width: screenWidth } = useWindowDimensions();
 
   const [isFocused, setIsFocused] = useState(false);
-  const [placeholderAnim] = useState(new Animated.Value(0));
+  const [placeholderAnim] = useState(new Animated.Value(value ? 1 : 0));
 
   // Determine if the device is a tablet
   const isTablet =
@@ -54,11 +54,13 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
 
   const handleBlur = () => {
     setIsFocused(false);
-    Animated.timing(placeholderAnim, {
-      toValue: 0,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
+    if (!value) {
+      Animated.timing(placeholderAnim, {
+        toValue: 0,
+        duration: 200,
+        useNativeDriver: false,
+      }).start();
+    }
   };
 
   const placeholderTranslateY = placeholderAnim.interpolate({

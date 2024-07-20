@@ -24,9 +24,25 @@ export const createTextStyles = (colors: ThemeColors) => {
     fontFamily: "Roboto",
   };
 
+  const contrastBaseText: TextStyle = {
+    ...regularText,
+    color: colors.cardText, // new text style with a different color
+  };
+
+  const contrastBoldText: TextStyle = {
+    ...boldText,
+    color: colors.cardText,
+  };
+
   return StyleSheet.create({
     paragraph: {
       ...regularText,
+      marginVertical: isTablet ? 15 : 10,
+      lineHeight: isTablet ? 24 : 20,
+      textAlign: "left" as TextStyle["textAlign"], // assuming paragraphs are left-aligned
+    },
+    contrastParagraph: {
+      ...contrastBaseText,
       marginVertical: isTablet ? 15 : 10,
       lineHeight: isTablet ? 24 : 20,
       textAlign: "left" as TextStyle["textAlign"], // assuming paragraphs are left-aligned
@@ -36,30 +52,63 @@ export const createTextStyles = (colors: ThemeColors) => {
       fontSize: isTablet ? 32 : 24,
       marginVertical: isTablet ? 15 : 10,
     },
+    contrastTitle: {
+      ...contrastBoldText,
+      fontSize: isTablet ? 32 : 24,
+      marginVertical: isTablet ? 15 : 10,
+    },
     subtitle: {
       ...regularText,
+      fontSize: isTablet ? 24 : 18,
+      marginVertical: isTablet ? 15 : 10,
+    },
+    contrastSubtitle: {
+      ...contrastBaseText,
       fontSize: isTablet ? 24 : 18,
       marginVertical: isTablet ? 15 : 10,
     },
     text: {
       ...regularText,
     },
+    contrastText: {
+      ...contrastBaseText,
+    },
     buttonText: {
       ...boldText,
+      fontSize: isTablet ? 24 : 14,
+    },
+    contrastButtonText: {
+      ...contrastBoldText,
       fontSize: isTablet ? 24 : 14,
     },
     tabText: {
       ...regularText,
       fontSize: isTablet ? 20 : 16,
     },
+    contrastTabText: {
+      ...contrastBaseText,
+      fontSize: isTablet ? 20 : 16,
+    },
     activeTabText: {
       ...boldText,
+    },
+    contrastActiveTabText: {
+      ...contrastBoldText,
     },
     bold: {
       ...boldText,
     },
+    contrastBold: {
+      ...contrastBoldText,
+    },
     instruction: {
       ...regularText,
+      color: colors.lightText,
+      marginTop: 5,
+      marginBottom: 10,
+    },
+    contrastInstruction: {
+      ...contrastBaseText,
       color: colors.lightText,
       marginTop: 5,
       marginBottom: 10,

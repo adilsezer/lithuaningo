@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "Lithuaningo",
     slug: "lithuaningo",
-    version: "1.6.0",
+    version: "2.0.0",
     orientation: "portrait",
     icon: "./assets/icons/ios/icon.png",
     userInterfaceStyle: "automatic",

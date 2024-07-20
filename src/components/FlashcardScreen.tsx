@@ -145,10 +145,10 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     return (
       <View>
         <BackButton />
-        <Text style={globalStyles.subtitle}>
+        <Text style={globalStyles.contrastSubtitle}>
           We don't have this word in our database at the moment.
         </Text>
-        <Text style={globalStyles.subtitle}>
+        <Text style={globalStyles.contrastSubtitle}>
           Help us improve by adding the word details below. Once reviewed, it
           will be available for everyone.
         </Text>
@@ -170,7 +170,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           onChangeText={setGrammaticalForms}
           style={styles.input}
         />
-        <Text style={globalStyles.text}>
+        <Text style={globalStyles.contrastText}>
           Please enter grammatical forms separated by commas.
         </Text>
         <CustomButton title="Submit" onPress={handleAddWord} />
@@ -309,7 +309,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
-            <Text style={[globalStyles.title, { marginLeft: 8 }]}>
+            <Text style={[globalStyles.contrastTitle, { marginLeft: 8 }]}>
               {word.id}
             </Text>
             <View
@@ -321,7 +321,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             {word.grammaticalForms &&
               word.grammaticalForms.some((form) => form !== word.id) && (
                 <View>
-                  <Text style={[globalStyles.subtitle]}>Variants:</Text>
+                  <Text style={[globalStyles.contrastSubtitle]}>Variants:</Text>
                   {word.grammaticalForms.map(
                     (form, index) =>
                       form !== word.id && (
@@ -333,10 +333,10 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                             marginBottom: 4,
                           }}
                         >
-                          <Text style={[globalStyles.subtitle]}>•</Text>
+                          <Text style={[globalStyles.contrastSubtitle]}>•</Text>
                           <Text
                             style={[
-                              globalStyles.subtitle,
+                              globalStyles.contrastSubtitle,
                               { marginLeft: 8, flexShrink: 1 },
                             ]}
                           >
@@ -359,7 +359,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
-            <Text style={[globalStyles.title]}>{word.englishTranslation}</Text>
+            <Text style={[globalStyles.contrastTitle]}>
+              {word.englishTranslation}
+            </Text>
             <View
               style={[
                 styles.horizontalRule,
@@ -369,7 +371,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
-      <Text style={[globalStyles.subtitle]}>
+      <Text style={[globalStyles.contrastSubtitle]}>
         Tap the card to flip and see the translation
       </Text>
       <CustomButton
