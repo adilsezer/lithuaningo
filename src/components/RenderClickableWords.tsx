@@ -36,38 +36,34 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
     <View style={styles.sentenceContainer}>
       {sentenceText.split(" ").map((word: string, index: number) => {
         const cleanedWord = cleanWord(word);
+        const isPlaceholder =
+          answerText.toLowerCase() === cleanedWord.toLowerCase() ||
+          cleanedWord === "[]";
         const backgroundColor = clickedWords
           .map((word) => word.toLowerCase())
           .includes(cleanedWord.toLowerCase())
           ? globalColors.wordHighlightBackground
           : globalColors.wordBackground;
+        const containerStyle = [
+          styles.commonContainer,
+          isPlaceholder && {
+            backgroundColor: globalColors.secondary,
+            borderColor: globalColors.wordBackground,
+            borderWidth: 1,
+          },
+          !isPlaceholder && { backgroundColor },
+        ];
+        const textStyle = [
+          globalStyles.text,
+          isPlaceholder ? styles.placeholderText : styles.wordText,
+          isTablet &&
+            (isPlaceholder ? styles.placeholderTextIpad : styles.wordTextIpad),
+        ];
 
-        if (
-          answerText.toLowerCase() == cleanedWord.toLowerCase() ||
-          cleanedWord === "[]"
-        ) {
+        if (isPlaceholder) {
           return (
-            <View
-              key={`${word}-${index}`}
-              style={[
-                styles.placeholderContainer,
-                {
-                  backgroundColor: globalColors.secondary,
-                  borderColor: globalColors.wordBackground,
-                  borderWidth: 1,
-                },
-                isTablet && styles.placeholderContainerIpad,
-              ]}
-            >
-              <Text
-                style={[
-                  globalStyles.text,
-                  styles.placeholderText,
-                  isTablet && styles.placeholderTextIpad,
-                ]}
-              >
-                {word}
-              </Text>
+            <View key={`${word}-${index}`} style={containerStyle}>
+              <Text style={textStyle}>{word}</Text>
             </View>
           );
         }
@@ -75,18 +71,10 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
           <TouchableOpacity
             key={`${word}-${index}`}
             onPress={() => handleWordClick(word)}
-            style={[styles.wordContainer, { backgroundColor }]}
+            style={containerStyle}
             activeOpacity={0.7}
           >
-            <Text
-              style={[
-                globalStyles.text,
-                styles.wordText,
-                isTablet && styles.wordTextIpad,
-              ]}
-            >
-              {word}
-            </Text>
+            <Text style={textStyle}>{word}</Text>
           </TouchableOpacity>
         );
       })}
@@ -101,7 +89,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
-  wordContainer: {
+  commonContainer: {
     marginHorizontal: 8, // Increase margin for better spacing between words
     marginVertical: 8, // Increase vertical margin for better touch area
     borderRadius: 10,
@@ -121,25 +109,12 @@ const styles = StyleSheet.create({
   wordTextIpad: {
     fontSize: 30,
   },
-  placeholderContainer: {
-    marginHorizontal: 8, // Increase margin for better spacing between placeholders
-    marginVertical: 8, // Increase vertical margin for better touch area
-    borderRadius: 10,
-    paddingVertical: 8, // Increase padding for consistency with wordContainer
-    paddingHorizontal: 10, // Increase padding for consistency with wordContainer
-    alignItems: "center", // Center align horizontally
-    justifyContent: "center", // Center align vertically
-  },
   placeholderText: {
     fontSize: 20,
     textAlign: "center",
   },
   placeholderTextIpad: {
     fontSize: 30,
-  },
-  placeholderContainerIpad: {
-    paddingVertical: 8, // Ensure padding is consistent with wordContainer
-    paddingHorizontal: 10, // Ensure padding is consistent with wordContainer
   },
 });
 
