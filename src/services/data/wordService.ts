@@ -39,10 +39,6 @@ const addMissingWord = async (word: string): Promise<void> => {
 
     if (!doc.exists) {
       await docRef.set({ id: word });
-    } else {
-      console.log(
-        `The word "${word}" already exists in the missingWords collection.`
-      );
     }
   } catch (error) {
     console.error("Error adding missing word:", error);
