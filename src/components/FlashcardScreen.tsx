@@ -26,7 +26,7 @@ import {
   addClickedWord,
   removeClickedWord,
 } from "@src/redux/slices/clickedWordsSlice";
-import { retrieveData } from "@utils/storageUtils"; // Make sure to import this
+import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { selectUserData } from "@src/redux/slices/userSlice";
 
@@ -43,7 +43,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   >([{ lithuanian: "", english: "" }]);
   const [sentenceReviewCompleted, setSentenceReviewCompleted] = useState<
     boolean | null
-  >(null); // Add this state
+  >(null);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -77,7 +77,6 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
       try {
         dispatch(setLoading(true));
         const allWordForms = [{ lithuanian: newWord, english: translation }];
-        // Only include additional word forms if they are filled
         wordForms.forEach((form) => {
           if (form.lithuanian.trim() && form.english.trim()) {
             allWordForms.push(form);
@@ -165,7 +164,6 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     }
   }, [word, wordId, dispatch]);
 
-  // New useEffect to retrieve completion status
   useEffect(() => {
     const fetchCompletionStatus = async () => {
       try {
@@ -282,7 +280,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   };
 
   return (
-    <View>
+    <View style={styles.container}>
       <TouchableWithoutFeedback onPress={handleFlip}>
         <View style={styles.cardContainer}>
           <Animated.View
@@ -388,30 +386,38 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
       <Text style={[globalStyles.subtitle]}>
         Tap the card to flip and see the translation
       </Text>
-      {!sentenceReviewCompleted ? (
-        <View>
+      <View style={styles.buttonContainer}>
+        {!sentenceReviewCompleted ? (
+          <View>
+            <CustomButton
+              title="Review Later"
+              style={[
+                styles.button,
+                { backgroundColor: globalColors.secondary },
+              ]}
+              onPress={() => handleMarkButtonClick(false)}
+            />
+            <CustomButton
+              title="Mark as Known"
+              onPress={() => handleMarkButtonClick(true)}
+            />
+          </View>
+        ) : (
           <CustomButton
-            title="Review Later"
+            title="Go Back"
             style={[styles.button, { backgroundColor: globalColors.secondary }]}
-            onPress={() => handleMarkButtonClick(false)}
+            onPress={() => router.back()}
           />
-          <CustomButton
-            title="Mark as Known"
-            onPress={() => handleMarkButtonClick(true)}
-          />
-        </View>
-      ) : (
-        <CustomButton
-          title="Go Back"
-          style={[styles.button, { backgroundColor: globalColors.secondary }]}
-          onPress={() => router.back()}
-        />
-      )}
+        )}
+      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   cardContainer: {
     position: "relative",
     width: "90%",
@@ -449,7 +455,13 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   button: {
-    marginTop: 50,
+    marginVertical: 10,
+  },
+  buttonContainer: {
+    position: "absolute",
+    bottom: 20,
+    width: "100%",
+    paddingHorizontal: 20,
   },
   horizontalRule: {
     width: "80%",
