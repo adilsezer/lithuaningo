@@ -224,7 +224,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             />
             {index > 0 && (
               <CustomButton
-                title="Remove"
+                title="Remove the Grammatical Form"
                 onPress={() => handleRemoveWordForm(index)}
                 style={{ backgroundColor: globalColors.error }}
               />
