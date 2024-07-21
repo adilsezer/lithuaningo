@@ -33,6 +33,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         backgroundImage: "./assets/icons/android/background.png",
       },
       package: "com.adilsezer.lithuaningo",
+      versionCode: 1,
+      permissions: [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+      ],
     },
     web: {
       favicon: "./assets/images/favicon.png",
