@@ -109,7 +109,18 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       {isSubmitPressed && (
         <Text style={[globalStyles.title]}>{getQuestionWithAnswer()}</Text>
       )}
-      <Text style={globalStyles.subtitle}>Translation: {translation}</Text>
+      <Text
+        style={[
+          globalStyles.italic,
+          styles.translation,
+          {
+            backgroundColor: globalColors.wordBackground,
+            borderColor: globalColors.border,
+          },
+        ]}
+      >
+        Translation: {translation}
+      </Text>
       {image && (
         <Image
           source={{ uri: image }}
@@ -188,6 +199,16 @@ const styles = StyleSheet.create({
     flexWrap: "wrap",
     justifyContent: "center",
     marginVertical: 10,
+  },
+  translation: {
+    padding: 8, // Padding around the text
+    borderRadius: 8, // Rounded corners
+    fontSize: 16, // Slightly larger font size
+    borderWidth: 1, // Border to make it stand out
+    shadowOffset: { width: 0, height: 1 }, // Shadow offset
+    shadowOpacity: 0.1, // Shadow opacity
+    shadowRadius: 1, // Shadow radius
+    elevation: 2, // Elevation for Android
   },
 });
 

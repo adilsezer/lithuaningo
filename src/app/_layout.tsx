@@ -37,6 +37,7 @@ const RootLayout: React.FC = () => {
       await Font.loadAsync({
         Roboto: require("assets/fonts/Roboto-Regular.ttf"),
         "Roboto-Bold": require("assets/fonts/Roboto-Bold.ttf"),
+        "Roboto-Italic": require("assets/fonts/Roboto-Italic.ttf"),
       });
       setFontsLoaded(true);
       SplashScreen.hideAsync();

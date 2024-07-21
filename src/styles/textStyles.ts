@@ -19,6 +19,11 @@ export const createTextStyles = (colors: ThemeColors) => {
     fontFamily: "Roboto-Bold",
   };
 
+  const italicText: TextStyle = {
+    ...baseText,
+    fontFamily: "Roboto-Italic",
+  };
+
   const regularText: TextStyle = {
     ...baseText,
     fontFamily: "Roboto",
@@ -97,6 +102,9 @@ export const createTextStyles = (colors: ThemeColors) => {
     },
     bold: {
       ...boldText,
+    },
+    italic: {
+      ...italicText,
     },
     contrastBold: {
       ...contrastBoldText,
