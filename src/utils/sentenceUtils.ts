@@ -24,7 +24,10 @@ const findRelatedSentencesIgnoringPrefix = (
       sentence.sentence
         .split(" ")
         .some((word) =>
-          wordDetail.grammaticalForms.includes(cleanWord(word).toLowerCase())
+          wordDetail.wordForms.some(
+            (form) =>
+              cleanWord(word).toLowerCase() === form.lithuanian.toLowerCase()
+          )
         )
     )
     .map((sentence) => ({ ...sentence, relatedTo: wordDetail.id }));

@@ -1,9 +1,14 @@
 // services/firebase/wordService.ts
 import firestore from "@react-native-firebase/firestore";
 
+export interface WordForm {
+  lithuanian: string;
+  english: string;
+}
+
 export interface Word {
   id: string; // Document ID, which is the base form of the word
-  grammaticalForms: string[]; // All known grammatical forms of the word
+  wordForms: WordForm[]; // All known forms of the word along with translations
   englishTranslation: string; // Translation of the base form in English
   imageUrl: string; // URL of the image related to the word
   additionalInfo?: string; // Optional additional information

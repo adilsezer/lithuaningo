@@ -48,7 +48,9 @@ const findWordDetailsIgnoringPrefix = (
 ): Word | null => {
   return (
     allWords.find((wordDetail) =>
-      wordDetail.grammaticalForms.includes(word.toLowerCase())
+      wordDetail.wordForms.some(
+        (form) => form.lithuanian.toLowerCase() === word.toLowerCase()
+      )
     ) || null
   );
 };
@@ -186,8 +188,8 @@ const generateQuestion = async (
     );
     const validWords = similarSentenceWords.filter((word: string) =>
       allWords.some((wordDetail) => {
-        const forms = wordDetail.grammaticalForms.map((form) =>
-          form.toLowerCase()
+        const forms = wordDetail.wordForms.map((form) =>
+          form.lithuanian.toLowerCase()
         );
         const hasLearnedForm = forms.some((form) => learnedWords.has(form));
         const hasLearnedFormWithNePrefix = forms.some((form) =>
@@ -214,7 +216,10 @@ const generateQuestion = async (
       randomWord = word as string; // Ensure word is treated as string
       correctWordDetails =
         allWords.find((wordDetail) =>
-          wordDetail.grammaticalForms.includes((word as string).toLowerCase())
+          wordDetail.wordForms.some(
+            (form) =>
+              form.lithuanian.toLowerCase() === (word as string).toLowerCase()
+          )
         ) || null;
       if (correctWordDetails) break;
     }
@@ -223,14 +228,19 @@ const generateQuestion = async (
       const fallbackWord =
         shuffleArray(similarSentenceWords).find((fw) =>
           allWords.some((wordDetail) =>
-            wordDetail.grammaticalForms.includes((fw as string).toLowerCase())
+            wordDetail.wordForms.some(
+              (form) =>
+                form.lithuanian.toLowerCase() === (fw as string).toLowerCase()
+            )
           )
         ) || (shuffleArray(similarSentenceWords)[0] as string);
       randomWord = fallbackWord as string; // Ensure fallbackWord is treated as string
       correctWordDetails =
         allWords.find((wordDetail) =>
-          wordDetail.grammaticalForms.includes(
-            (fallbackWord as string).toLowerCase()
+          wordDetail.wordForms.some(
+            (form) =>
+              form.lithuanian.toLowerCase() ===
+              (fallbackWord as string).toLowerCase()
           )
         ) || null;
     }
