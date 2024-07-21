@@ -235,7 +235,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                               { marginLeft: 8, flexShrink: 1 },
                             ]}
                           >
-                            {`${form.lithuanian} - ${form.english}`}
+                            {form.lithuanian}
                           </Text>
                         </View>
                       )
@@ -260,6 +260,35 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                 { borderBottomColor: globalColors.border },
               ]}
             />
+            {word.wordForms &&
+              word.wordForms.some((form) => form.lithuanian !== word.id) && (
+                <View>
+                  <Text style={[globalStyles.contrastSubtitle]}>Variants:</Text>
+                  {word.wordForms.map(
+                    (form, index) =>
+                      form.lithuanian !== word.id && (
+                        <View
+                          key={index}
+                          style={{
+                            flexDirection: "row",
+                            alignItems: "center",
+                            marginBottom: 4,
+                          }}
+                        >
+                          <Text style={[globalStyles.contrastSubtitle]}>•</Text>
+                          <Text
+                            style={[
+                              globalStyles.contrastSubtitle,
+                              { marginLeft: 8, flexShrink: 1 },
+                            ]}
+                          >
+                            {`${form.lithuanian} - ${form.english}`}
+                          </Text>
+                        </View>
+                      )
+                  )}
+                </View>
+              )}
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
