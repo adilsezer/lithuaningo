@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   Alert,
+  ScrollView,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -34,7 +35,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const [word, setWord] = useState<Word | null>(null);
   const [newWord, setNewWord] = useState("");
   const [translation, setTranslation] = useState("");
-  const [wordForms, setWordForms] = useState<string>("");
+  const [wordForms, setWordForms] = useState<
+    Array<{ lithuanian: string; english: string }>
+  >([{ lithuanian: "", english: "" }]);
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -63,14 +66,20 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   };
 
   const handleAddWord = async () => {
-    if (newWord.trim() && translation.trim() && wordForms.trim()) {
+    if (newWord.trim() && translation.trim()) {
       try {
         dispatch(setLoading(true));
+        const allWordForms = [{ lithuanian: newWord, english: translation }];
+        // Only include additional word forms if they are filled
+        wordForms.forEach((form) => {
+          if (form.lithuanian.trim() && form.english.trim()) {
+            allWordForms.push(form);
+          }
+        });
+
         await wordService.addWordForReview({
           id: newWord,
-          wordForms: wordForms
-            .split(",")
-            .map((form) => ({ lithuanian: form.trim(), english: "" })),
+          wordForms: allWordForms,
           englishTranslation: translation,
           imageUrl: "",
         });
@@ -79,7 +88,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         );
         setNewWord("");
         setTranslation("");
-        setWordForms("");
+        setWordForms([{ lithuanian: "", english: "" }]);
       } catch (error) {
         console.error("Error adding word for review:", error);
         Alert.alert("Failed to submit word for review. Please try again.");
@@ -87,7 +96,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         dispatch(setLoading(false));
       }
     } else {
-      Alert.alert("Please fill in all fields.");
+      Alert.alert(
+        "Please fill in the Lithuanian word and its English translation."
+      );
     }
   };
 
@@ -147,9 +158,29 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     }
   }, [word, wordId, dispatch]);
 
+  const handleAddWordForm = () => {
+    setWordForms([...wordForms, { lithuanian: "", english: "" }]);
+  };
+
+  const handleRemoveWordForm = (index: number) => {
+    const newWordForms = [...wordForms];
+    newWordForms.splice(index, 1);
+    setWordForms(newWordForms);
+  };
+
+  const handleWordFormChange = (
+    index: number,
+    field: "lithuanian" | "english",
+    value: string
+  ) => {
+    const newWordForms = [...wordForms];
+    newWordForms[index][field] = value;
+    setWordForms(newWordForms);
+  };
+
   if (!word) {
     return (
-      <View>
+      <ScrollView>
         <BackButton />
         <Text style={globalStyles.subtitle}>
           We don't have this word in our database at the moment.
@@ -159,28 +190,54 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           will be available for everyone.
         </Text>
         <CustomTextInput
-          placeholder="Lithuanian word"
+          placeholder="Lithuanian word (e.g., norėti)"
           value={newWord}
           onChangeText={setNewWord}
           style={styles.input}
         />
         <CustomTextInput
-          placeholder="English translation"
+          placeholder="English translation (e.g., to want)"
           value={translation}
           onChangeText={setTranslation}
           style={styles.input}
         />
-        <CustomTextInput
-          placeholder="Word forms (e.g., noriu, norėti, norėjo)"
-          value={wordForms}
-          onChangeText={setWordForms}
-          style={styles.input}
-        />
         <Text style={globalStyles.contrastText}>
-          Please enter word forms separated by commas.
+          Enter word forms in Lithuanian and their English translations
         </Text>
+        {wordForms.map((form, index) => (
+          <View key={index}>
+            <CustomTextInput
+              placeholder="Lithuanian grammatical form (e.g., noriu)"
+              value={form.lithuanian}
+              onChangeText={(text) =>
+                handleWordFormChange(index, "lithuanian", text)
+              }
+              style={styles.input}
+            />
+            <CustomTextInput
+              placeholder="Corresponding English translation (e.g., I want)"
+              value={form.english}
+              onChangeText={(text) =>
+                handleWordFormChange(index, "english", text)
+              }
+              style={styles.input}
+            />
+            {index > 0 && (
+              <CustomButton
+                title="Remove"
+                onPress={() => handleRemoveWordForm(index)}
+                style={{ backgroundColor: globalColors.error }}
+              />
+            )}
+          </View>
+        ))}
+        <CustomButton
+          title="Add Another Grammatical Form"
+          onPress={handleAddWordForm}
+          style={{ backgroundColor: globalColors.secondary }}
+        />
         <CustomButton title="Submit" onPress={handleAddWord} />
-      </View>
+      </ScrollView>
     );
   }
 
