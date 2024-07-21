@@ -289,7 +289,7 @@ const generateQuestion = async (
     let generatedQuestionWord = toTitleCase(randomWord);
 
     if (generatedQuestionType === "multipleChoice") {
-      generatedQuestionText = `What is the meaning of "**${generatedQuestionWord}**" in the following sentence?`;
+      generatedQuestionText = `What does "**${generatedQuestionWord}**" mean in the sentence below?`;
       generatedSentenceText = similarSentence.sentence;
       generatedOptions = shuffleArray(
         [...otherOptions, generatedCorrectAnswerText].map(toTitleCase)

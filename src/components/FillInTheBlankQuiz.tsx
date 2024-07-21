@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
-import ExpandableDetails from "./ExpandableDetails";
 import CustomTextInput from "./CustomTextInput";
 import RenderClickableWords from "./RenderClickableWords";
 
@@ -100,17 +99,13 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
               answerText={questionWord}
             />
           </View>
-          <Text style={[globalStyles.instruction]}>
-            Click on each word to find out what it means.
-          </Text>
         </>
       )}
 
       {isSubmitPressed && (
         <Text style={[globalStyles.title]}>{getQuestionWithAnswer()}</Text>
       )}
-
-      <ExpandableDetails translation={translation}></ExpandableDetails>
+      <Text style={globalStyles.subtitle}>{translation}</Text>
       {image && (
         <Image
           source={{ uri: image }}

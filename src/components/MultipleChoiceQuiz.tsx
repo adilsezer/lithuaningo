@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
-import ExpandableDetails from "./ExpandableDetails";
 import RenderClickableWords from "@components/RenderClickableWords";
 
 const { width } = Dimensions.get("window");
@@ -95,9 +94,6 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
           answerText={questionWord}
         />
       </View>
-      <Text style={globalStyles.instruction}>
-        Click on each word to find out what it means.
-      </Text>
       {image && (
         <Image
           source={{ uri: image }}

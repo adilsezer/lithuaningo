@@ -145,7 +145,7 @@ const SentencesScreen: React.FC = () => {
     <View style={styles.container}>
       <BackButton />
       <Text style={globalStyles.title}>
-        Today you will learn the following sentences.
+        Let's review today's vocabulary before practice!
       </Text>
       <Text style={globalStyles.subtitle}>
         Click on each word to find out what it means.

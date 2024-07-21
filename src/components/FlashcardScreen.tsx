@@ -278,7 +278,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             {word.wordForms &&
               word.wordForms.some((form) => form.lithuanian !== word.id) && (
                 <View>
-                  <Text style={[globalStyles.contrastSubtitle]}>Variants:</Text>
+                  <Text style={[globalStyles.contrastSubtitle]}>
+                    Word Forms:
+                  </Text>
                   {word.wordForms.map(
                     (form, index) =>
                       form.lithuanian !== wordId && (
@@ -325,7 +327,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             {word.wordForms &&
               word.wordForms.some((form) => form.lithuanian !== word.id) && (
                 <View>
-                  <Text style={[globalStyles.contrastSubtitle]}>Variants:</Text>
+                  <Text style={[globalStyles.contrastSubtitle]}>
+                    Word Forms:
+                  </Text>
                   {word.wordForms.map(
                     (form, index) =>
                       form.lithuanian !== wordId && (
@@ -361,14 +365,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
         Tap the card to flip and see the translation
       </Text>
       <CustomButton
-        title="Mark as Known"
-        onPress={() => handleMarkButtonClick(true)}
-        style={styles.button}
+        title="Review Later"
+        style={[styles.button, { backgroundColor: globalColors.secondary }]}
+        onPress={() => handleMarkButtonClick(false)}
       />
       <CustomButton
-        title="Review Later"
-        style={{ backgroundColor: globalColors.secondary }}
-        onPress={() => handleMarkButtonClick(false)}
+        title="Mark as Known"
+        onPress={() => handleMarkButtonClick(true)}
       />
     </View>
   );

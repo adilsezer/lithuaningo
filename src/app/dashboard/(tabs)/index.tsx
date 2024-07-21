@@ -41,7 +41,7 @@ const DashboardScreen: React.FC = () => {
     >
       {userData && (
         <Text style={globalStyles.title}>
-          Labas, {userData.name || userData.email}!
+          Hi, {userData.name || userData.email}!
         </Text>
       )}
       <Text style={globalStyles.text}>
