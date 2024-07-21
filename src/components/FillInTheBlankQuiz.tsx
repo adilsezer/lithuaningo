@@ -97,15 +97,19 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
             <RenderClickableWords
               sentenceText={sentenceText}
               answerText={questionWord}
+              useClickedWordsColor={false}
             />
           </View>
+          <Text style={globalStyles.instruction}>
+            Click on each word to find out what it means.
+          </Text>
         </>
       )}
 
       {isSubmitPressed && (
         <Text style={[globalStyles.title]}>{getQuestionWithAnswer()}</Text>
       )}
-      <Text style={globalStyles.subtitle}>{translation}</Text>
+      <Text style={globalStyles.subtitle}>Translation: {translation}</Text>
       {image && (
         <Image
           source={{ uri: image }}

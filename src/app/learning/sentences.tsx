@@ -157,6 +157,7 @@ const SentencesScreen: React.FC = () => {
               <RenderClickableWords
                 sentenceText={sentence.sentence}
                 answerText=""
+                useClickedWordsColor={true}
               />
             </View>
             {index < sentences.length - 1 && (

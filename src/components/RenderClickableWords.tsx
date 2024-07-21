@@ -18,11 +18,13 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 interface RenderClickableWordsProps {
   sentenceText: string;
   answerText: string;
+  useClickedWordsColor: boolean;
 }
 
 const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   sentenceText,
   answerText,
+  useClickedWordsColor,
 }) => {
   const router = useRouter();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -39,17 +41,18 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
         const isPlaceholder =
           answerText.toLowerCase() === cleanedWord.toLowerCase() ||
           cleanedWord === "[]";
-        const backgroundColor = clickedWords
-          .map((word) => word.toLowerCase())
-          .includes(cleanedWord.toLowerCase())
-          ? globalColors.wordHighlightBackground
-          : globalColors.wordBackground;
+        const backgroundColor =
+          useClickedWordsColor &&
+          clickedWords
+            .map((word) => word.toLowerCase())
+            .includes(cleanedWord.toLowerCase())
+            ? globalColors.wordHighlightBackground
+            : globalColors.wordBackground;
         const containerStyle = [
           styles.commonContainer,
           isPlaceholder && {
-            backgroundColor: globalColors.secondary,
-            borderColor: globalColors.wordBackground,
-            borderWidth: 1,
+            borderColor: globalColors.secondary,
+            borderWidth: 2,
           },
           !isPlaceholder && { backgroundColor },
         ];

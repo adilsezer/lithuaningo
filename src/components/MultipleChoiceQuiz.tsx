@@ -92,8 +92,12 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         <RenderClickableWords
           sentenceText={sentenceText}
           answerText={questionWord}
+          useClickedWordsColor={false}
         />
       </View>
+      <Text style={globalStyles.instruction}>
+        Click on each word to find out what it means.
+      </Text>
       {image && (
         <Image
           source={{ uri: image }}
