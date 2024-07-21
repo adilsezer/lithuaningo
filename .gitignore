@@ -83,3 +83,7 @@ google-services.json
 
 # Custom files
 TODO.txt
+
+# Include the folders inside assets/icons
+!assets/icons/android/
+!assets/icons/ios/
