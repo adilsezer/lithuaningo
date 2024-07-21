@@ -17,7 +17,7 @@ import Animated, {
 import wordService, { Word } from "../services/data/wordService";
 import BackButton from "./BackButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { useAppDispatch } from "@src/redux/hooks";
+import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import CustomButton from "./CustomButton";
 import { useRouter } from "expo-router";
@@ -26,6 +26,9 @@ import {
   addClickedWord,
   removeClickedWord,
 } from "@src/redux/slices/clickedWordsSlice";
+import { retrieveData } from "@utils/storageUtils"; // Make sure to import this
+import { getCurrentDateKey } from "@utils/dateUtils";
+import { selectUserData } from "@src/redux/slices/userSlice";
 
 interface FlashcardScreenProps {
   wordId: string;
@@ -38,9 +41,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   const [wordForms, setWordForms] = useState<
     Array<{ lithuanian: string; english: string }>
   >([{ lithuanian: "", english: "" }]);
+  const [sentenceReviewCompleted, setSentenceReviewCompleted] = useState<
+    boolean | null
+  >(null); // Add this state
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const router = useRouter();
+  const userData = useAppSelector(selectUserData);
 
   const flip = useSharedValue(0);
 
@@ -157,6 +164,23 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
       dispatch(addClickedWord(wordId));
     }
   }, [word, wordId, dispatch]);
+
+  // New useEffect to retrieve completion status
+  useEffect(() => {
+    const fetchCompletionStatus = async () => {
+      try {
+        const COMPLETION_STATUS_KEY = `completionStatus_${
+          userData?.id
+        }_${getCurrentDateKey()}`;
+        const status = await retrieveData<boolean>(COMPLETION_STATUS_KEY);
+        setSentenceReviewCompleted(status);
+      } catch (error) {
+        console.error("Error retrieving completion status:", error);
+      }
+    };
+
+    fetchCompletionStatus();
+  }, []);
 
   const handleAddWordForm = () => {
     setWordForms([...wordForms, { lithuanian: "", english: "" }]);
@@ -364,15 +388,25 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
       <Text style={[globalStyles.subtitle]}>
         Tap the card to flip and see the translation
       </Text>
-      <CustomButton
-        title="Review Later"
-        style={[styles.button, { backgroundColor: globalColors.secondary }]}
-        onPress={() => handleMarkButtonClick(false)}
-      />
-      <CustomButton
-        title="Mark as Known"
-        onPress={() => handleMarkButtonClick(true)}
-      />
+      {!sentenceReviewCompleted ? (
+        <View>
+          <CustomButton
+            title="Review Later"
+            style={[styles.button, { backgroundColor: globalColors.secondary }]}
+            onPress={() => handleMarkButtonClick(false)}
+          />
+          <CustomButton
+            title="Mark as Known"
+            onPress={() => handleMarkButtonClick(true)}
+          />
+        </View>
+      ) : (
+        <CustomButton
+          title="Go Back"
+          style={[styles.button, { backgroundColor: globalColors.secondary }]}
+          onPress={() => router.back()}
+        />
+      )}
     </View>
   );
 };
