@@ -211,15 +211,21 @@ const generateQuestion = async (
 
     let randomWord: string | undefined = undefined;
     let correctWordDetails: Word | null = null;
+    let correctForm: string | undefined = undefined;
 
     for (const word of shuffledWords) {
       randomWord = word as string; // Ensure word is treated as string
       correctWordDetails =
         allWords.find((wordDetail) =>
-          wordDetail.wordForms.some(
-            (form) =>
+          wordDetail.wordForms.some((form) => {
+            if (
               form.lithuanian.toLowerCase() === (word as string).toLowerCase()
-          )
+            ) {
+              correctForm = form.english;
+              return true;
+            }
+            return false;
+          })
         ) || null;
       if (correctWordDetails) break;
     }
@@ -228,24 +234,34 @@ const generateQuestion = async (
       const fallbackWord =
         shuffleArray(similarSentenceWords).find((fw) =>
           allWords.some((wordDetail) =>
-            wordDetail.wordForms.some(
-              (form) =>
+            wordDetail.wordForms.some((form) => {
+              if (
                 form.lithuanian.toLowerCase() === (fw as string).toLowerCase()
-            )
+              ) {
+                correctForm = form.english;
+                return true;
+              }
+              return false;
+            })
           )
         ) || (shuffleArray(similarSentenceWords)[0] as string);
       randomWord = fallbackWord as string; // Ensure fallbackWord is treated as string
       correctWordDetails =
         allWords.find((wordDetail) =>
-          wordDetail.wordForms.some(
-            (form) =>
+          wordDetail.wordForms.some((form) => {
+            if (
               form.lithuanian.toLowerCase() ===
               (fallbackWord as string).toLowerCase()
-          )
+            ) {
+              correctForm = form.english;
+              return true;
+            }
+            return false;
+          })
         ) || null;
     }
 
-    if (!correctWordDetails || !randomWord) {
+    if (!correctWordDetails || !randomWord || !correctForm) {
       console.error("No valid question could be generated.");
       return {
         questionText: "",
@@ -260,10 +276,7 @@ const generateQuestion = async (
       };
     }
 
-    const otherOptions = await getRandomOptions(
-      allWords,
-      correctWordDetails.englishTranslation
-    );
+    const otherOptions = await getRandomOptions(allWords, correctForm);
 
     const generatedQuestionType = getRandomQuestionType();
 
@@ -272,13 +285,11 @@ const generateQuestion = async (
     let generatedOptions: string[] = [];
     const generatedTranslation = similarSentence.englishTranslation;
     const wordImage = correctWordDetails.imageUrl;
-    let generatedCorrectAnswerText = toTitleCase(
-      correctWordDetails.englishTranslation
-    );
+    let generatedCorrectAnswerText = toTitleCase(correctForm);
     let generatedQuestionWord = toTitleCase(randomWord);
 
     if (generatedQuestionType === "multipleChoice") {
-      generatedQuestionText = `What is the English base form of "**${generatedQuestionWord}**" in the following sentence?`;
+      generatedQuestionText = `What is the meaning of "**${generatedQuestionWord}**" in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;
       generatedOptions = shuffleArray(
         [...otherOptions, generatedCorrectAnswerText].map(toTitleCase)
@@ -309,7 +320,7 @@ const generateQuestion = async (
       const givenTranslation = randomBool
         ? generatedCorrectAnswerText
         : otherOptions[0];
-      generatedQuestionText = `Does the English base form of "**${generatedQuestionWord}**" mean "**${toTitleCase(
+      generatedQuestionText = `Does "**${generatedQuestionWord}**" mean "**${toTitleCase(
         givenTranslation
       )}**" in the following sentence?`;
       generatedSentenceText = similarSentence.sentence;

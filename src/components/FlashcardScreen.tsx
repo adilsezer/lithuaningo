@@ -184,6 +184,13 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     );
   }
 
+  const getEnglishTranslation = (word: Word, wordId: string): string => {
+    const form = word.wordForms.find(
+      (form) => form.lithuanian.toLowerCase() === wordId.toLowerCase()
+    );
+    return form ? form.english : word.englishTranslation;
+  };
+
   const handleMarkButtonClick = (addWord: boolean) => {
     if (addWord) {
       dispatch(addClickedWord(wordId));
@@ -204,9 +211,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
-            <Text style={[globalStyles.contrastTitle, { marginLeft: 8 }]}>
-              {word.id}
-            </Text>
+            <Text style={[globalStyles.contrastTitle]}>{wordId}</Text>
             <View
               style={[
                 styles.horizontalRule,
@@ -219,7 +224,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                   <Text style={[globalStyles.contrastSubtitle]}>Variants:</Text>
                   {word.wordForms.map(
                     (form, index) =>
-                      form.lithuanian !== word.id && (
+                      form.lithuanian !== wordId && (
                         <View
                           key={index}
                           style={{
@@ -252,7 +257,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             ]}
           >
             <Text style={[globalStyles.contrastTitle]}>
-              {word.englishTranslation}
+              {getEnglishTranslation(word, wordId)}
             </Text>
             <View
               style={[
@@ -266,7 +271,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                   <Text style={[globalStyles.contrastSubtitle]}>Variants:</Text>
                   {word.wordForms.map(
                     (form, index) =>
-                      form.lithuanian !== word.id && (
+                      form.lithuanian !== wordId && (
                         <View
                           key={index}
                           style={{
@@ -282,7 +287,10 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
                               { marginLeft: 8, flexShrink: 1 },
                             ]}
                           >
-                            {`${form.lithuanian} - ${form.english}`}
+                            <Text style={{ fontFamily: "Roboto-Bold" }}>
+                              {form.lithuanian}
+                            </Text>
+                            {`: ${form.english}`}
                           </Text>
                         </View>
                       )

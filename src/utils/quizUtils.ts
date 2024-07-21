@@ -42,7 +42,7 @@ export const getRandomOptions = async (
     /^(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)([-\s]?)(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)*$/i;
 
   const candidateWords = words
-    .map((word) => word.englishTranslation)
+    .flatMap((word) => word.wordForms.map((form) => form.english))
     .filter((word) => !numberPattern.test(word.toLowerCase()));
 
   const similarityScores = getSimilarityScores(

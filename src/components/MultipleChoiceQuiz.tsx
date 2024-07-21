@@ -98,7 +98,6 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
       <Text style={globalStyles.instruction}>
         Click on each word to find out what it means.
       </Text>
-      <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && (
         <Image
           source={{ uri: image }}
