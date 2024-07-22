@@ -51,6 +51,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
         const containerStyle = [
           styles.commonContainer,
           isPlaceholder && {
+            backgroundColor: globalColors.background,
             borderColor: globalColors.secondary,
             borderWidth: 2,
           },

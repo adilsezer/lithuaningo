@@ -209,6 +209,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1, // Shadow opacity
     shadowRadius: 1, // Shadow radius
     elevation: 2, // Elevation for Android
+    marginVertical: 14,
   },
 });
 

@@ -5,6 +5,7 @@ import {
   StyleSheet,
   TouchableWithoutFeedback,
   Alert,
+  Image,
   ScrollView,
 } from "react-native";
 import Animated, {
@@ -280,7 +281,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <TouchableWithoutFeedback onPress={handleFlip}>
         <View style={styles.cardContainer}>
           <Animated.View
@@ -290,6 +291,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
+            {word.imageUrl && (
+              <Image source={{ uri: word.imageUrl }} style={[styles.image]} />
+            )}
             <Text style={[globalStyles.contrastTitle]}>{wordId}</Text>
             <View
               style={[
@@ -337,6 +341,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               { backgroundColor: globalColors.card },
             ]}
           >
+            {word.imageUrl && (
+              <Image source={{ uri: word.imageUrl }} style={[styles.image]} />
+            )}
             <Text style={[globalStyles.contrastTitle]}>
               {getEnglishTranslation(word, wordId)}
             </Text>
@@ -383,7 +390,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
-      <Text style={[globalStyles.subtitle]}>
+      <Text style={[globalStyles.instruction]}>
         Tap the card to flip and see the translation
       </Text>
       <View style={styles.buttonContainer}>
@@ -410,7 +417,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
           />
         )}
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -418,26 +425,31 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollViewContent: {
+    flexGrow: 1,
+    padding: 10,
+    alignItems: "center",
+  },
   cardContainer: {
-    position: "relative",
-    width: "90%",
-    height: "60%",
-    alignSelf: "center",
+    width: "100%",
+    alignItems: "center",
   },
   card: {
     justifyContent: "center",
     alignItems: "center",
     backfaceVisibility: "hidden",
+    width: "100%",
+    borderRadius: 20,
+    borderWidth: 0.5,
+    padding: 20,
+    marginBottom: 20,
+    minHeight: 300,
+  },
+  cardBack: {
     position: "absolute",
     top: 0,
     left: 0,
     width: "100%",
-    height: "90%",
-    borderRadius: 20,
-    borderWidth: 0.5,
-  },
-  cardBack: {
-    transform: [{ rotateY: "180deg" }],
   },
   imageContainer: {
     width: "100%",
@@ -446,10 +458,12 @@ const styles = StyleSheet.create({
     marginVertical: 5,
   },
   image: {
-    width: "100%",
-    height: "100%",
-    borderRadius: 20,
-    borderWidth: 0.5,
+    width: 300,
+    height: 300,
+    marginTop: 20,
+    marginBottom: 10,
+    alignSelf: "center",
+    borderRadius: 10,
   },
   input: {
     marginVertical: 10,
@@ -458,10 +472,8 @@ const styles = StyleSheet.create({
     marginVertical: 10,
   },
   buttonContainer: {
-    position: "absolute",
-    bottom: 20,
     width: "100%",
-    paddingHorizontal: 20,
+    marginVertical: 20,
   },
   horizontalRule: {
     width: "80%",
