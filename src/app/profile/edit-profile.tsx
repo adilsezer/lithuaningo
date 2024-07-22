@@ -79,10 +79,6 @@ const EditProfileScreen: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
-  imagePickerContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-  },
   image: {
     width: 200,
     height: 200,

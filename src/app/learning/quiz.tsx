@@ -86,6 +86,15 @@ const QuizScreen: React.FC = () => {
 
           const mainQuizProgress = mainQuizProgressData?.progress ?? 0;
 
+          console.log("Loaded main quiz progress:", mainQuizProgress);
+
+          incorrectQuestionsData?.questions?.forEach((question, index) => {
+            console.log(
+              `Loaded incorrect questions: ${index + 1}:`,
+              question.sentenceText
+            );
+          });
+
           if (!loadedQuestions || loadedQuestions.length === 0) {
             await loadQuizData(
               userData,
@@ -112,6 +121,8 @@ const QuizScreen: React.FC = () => {
 
           const mainQuizCompleted =
             mainQuizProgress >= (loadedQuestions?.length ?? 0);
+
+          console.log("Main quiz completed:", mainQuizCompleted);
 
           if (
             mainQuizCompleted &&
@@ -143,6 +154,7 @@ const QuizScreen: React.FC = () => {
 
   useEffect(() => {
     const loadQuestion = (currentQuestions: QuizQuestion[]) => {
+      console.log("Loading question. Current index:", quizState.questionIndex);
       if (
         currentQuestions.length === 0 ||
         typeof quizState.questionIndex !== "number"
@@ -185,6 +197,9 @@ const QuizScreen: React.FC = () => {
       const timeSpent = 1;
       const nextQuestionIndex = quizState.questionIndex + 1;
 
+      console.log("Handling answer. Correct:", isCorrect);
+      console.log("Next question index:", nextQuestionIndex);
+
       // Update progress and stats
       if (isInIncorrectQuestionSession) {
         await storeData(INCORRECT_PROGRESS_KEY, {
@@ -212,6 +227,18 @@ const QuizScreen: React.FC = () => {
 
       setCorrectlyAnsweredDuringSession(updatedCorrectlyAnsweredDuringSession);
 
+      updatedIncorrectQuestions?.forEach((question, index) => {
+        console.log(
+          `Updated incorrect questions: ${index + 1}:`,
+          question.sentenceText
+        );
+      });
+
+      console.log(
+        "Correctly answered during session:",
+        updatedCorrectlyAnsweredDuringSession
+      );
+
       // Update the quiz state
       setQuizState((prev) => ({
         ...prev,
@@ -227,6 +254,11 @@ const QuizScreen: React.FC = () => {
     if (isInIncorrectQuestionSession) {
       const nextQuestionIndex =
         (quizState.questionIndex + 1) % incorrectQuestions.length;
+
+      console.log(
+        "Handling next question in incorrect session. Next index:",
+        nextQuestionIndex
+      );
 
       // If we have looped through all incorrect questions, check if all have been answered correctly
       if (nextQuestionIndex === 0) {
@@ -255,6 +287,13 @@ const QuizScreen: React.FC = () => {
           setIncorrectQuestions(remainingIncorrectQuestions);
           setCorrectlyAnsweredDuringSession([]);
         }
+
+        remainingIncorrectQuestions?.forEach((question, index) => {
+          console.log(
+            `Remaining incorrect questions: ${index + 1}:`,
+            question.sentenceText
+          );
+        });
       }
       if (!quizState.quizCompleted) {
         setQuizState((prev) => ({
@@ -265,6 +304,10 @@ const QuizScreen: React.FC = () => {
         setResetKey((prev) => prev + 1); // Trigger a re-render by updating the resetKey
       }
     } else {
+      console.log(
+        "Handling next question in main session. Next index:",
+        quizState.questionIndex + 1
+      );
       setQuizState((prev) => ({
         ...prev,
         questionIndex: prev.questionIndex + 1,
@@ -274,6 +317,7 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleStartButtonClick = async () => {
+    console.log("Starting incorrect question session.");
     setShowIncorrectQuestionsMessage(false);
     setIsInIncorrectQuestionSession(true);
     setQuizState((prev) => ({
