@@ -50,9 +50,6 @@ const DashboardScreen: React.FC = () => {
 
       {validAnnouncements.length > 0 && (
         <View style={[styles.section, { backgroundColor: colors.secondary }]}>
-          <Text style={[globalStyles.bold, { color: colors.cardText }]}>
-            Announcements
-          </Text>
           {validAnnouncements.map((announcement) => (
             <View key={announcement.id}>
               <Text style={[globalStyles.bold, { color: colors.cardText }]}>
