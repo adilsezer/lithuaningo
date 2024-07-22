@@ -276,7 +276,15 @@ const generateQuestion = async (
       };
     }
 
-    const otherOptions = await getRandomOptions(allWords, correctForm);
+    // Strip out additional grammatical details from the correct answer
+    const stripGrammarDetails = (text: string) =>
+      text.replace(/\s*\(.*?\)\s*/g, "");
+
+    const cleanCorrectForm = correctForm
+      ? stripGrammarDetails(correctForm)
+      : "";
+
+    const otherOptions = await getRandomOptions(allWords, cleanCorrectForm);
 
     const generatedQuestionType = getRandomQuestionType();
 
@@ -285,7 +293,7 @@ const generateQuestion = async (
     let generatedOptions: string[] = [];
     const generatedTranslation = similarSentence.englishTranslation;
     const wordImage = correctWordDetails.imageUrl;
-    let generatedCorrectAnswerText = toTitleCase(correctForm);
+    let generatedCorrectAnswerText = toTitleCase(cleanCorrectForm);
     let generatedQuestionWord = toTitleCase(randomWord);
 
     if (generatedQuestionType === "multipleChoice") {

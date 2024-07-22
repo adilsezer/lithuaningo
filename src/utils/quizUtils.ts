@@ -34,6 +34,10 @@ export const getRandomQuestionType = ():
     : "trueFalse";
 };
 
+const stripGrammarDetails = (text: string) =>
+  text.replace(/\s*\(.*?\)\s*/g, "");
+
+// Updated getRandomOptions function to use stripGrammarDetails and ensure uniqueness
 export const getRandomOptions = async (
   words: Word[],
   correctAnswerText: string
@@ -41,23 +45,32 @@ export const getRandomOptions = async (
   const numberPattern =
     /^(zero|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)([-\s]?)(one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|thirteen|fourteen|fifteen|sixteen|seventeen|eighteen|nineteen|twenty|thirty|forty|fifty|sixty|seventy|eighty|ninety|hundred|thousand|million|billion)*$/i;
 
-  const candidateWords = words
-    .flatMap((word) => word.wordForms.map((form) => form.english))
-    .filter((word) => !numberPattern.test(word.toLowerCase()));
+  // Process and clean candidate words
+  const candidateWords = Array.from(
+    new Set(
+      words
+        .flatMap((word) =>
+          word.wordForms.map((form) => stripGrammarDetails(form.english))
+        )
+        .filter((word) => !numberPattern.test(word.toLowerCase()))
+    )
+  );
+
+  const cleanedCorrectAnswerText = stripGrammarDetails(correctAnswerText);
 
   const similarityScores = getSimilarityScores(
-    correctAnswerText,
+    cleanedCorrectAnswerText,
     candidateWords
   );
 
   const sortedOptions = Array.from(similarityScores.entries())
-    .filter(([word]) => word !== correctAnswerText)
+    .filter(([word]) => word !== cleanedCorrectAnswerText)
     .sort((a, b) => b[1] - a[1])
     .map(([word]) => word);
 
   const topTwoOptions = sortedOptions.slice(0, 2);
   const remainingCandidates = candidateWords.filter(
-    (word) => !topTwoOptions.includes(word) && word !== correctAnswerText
+    (word) => !topTwoOptions.includes(word) && word !== cleanedCorrectAnswerText
   );
 
   const randomOption = shuffleArray(remainingCandidates)[0];
