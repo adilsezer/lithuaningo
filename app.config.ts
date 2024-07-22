@@ -60,6 +60,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-apple-authentication",
     ],
     extra: {
+      eas: {
+        projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      },
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
       privacyPolicyUrl:
         "https://adilsezer.github.io/lithuaningo/privacy-policy",
