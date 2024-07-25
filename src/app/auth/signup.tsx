@@ -35,6 +35,11 @@ const SignUpScreen: React.FC = () => {
         "Sign Up Failed",
         result.message || "An error occurred during sign up."
       );
+    } else {
+      Alert.alert(
+        "Sign Up Successful",
+        result.message || "Sign up was successful."
+      );
     }
   };
 
