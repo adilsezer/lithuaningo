@@ -13,6 +13,7 @@ import LoadingIndicator from "@components/LoadingIndicator";
 import AuthStateListener from "@src/components/AuthStateListener";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import ErrorBoundary from "@components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -62,7 +63,9 @@ const RootLayout: React.FC = () => {
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider>
-          <InnerRootLayout />
+          <ErrorBoundary>
+            <InnerRootLayout />
+          </ErrorBoundary>
         </ThemeProvider>
       </PersistGate>
     </Provider>

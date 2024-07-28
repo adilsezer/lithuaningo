@@ -33,6 +33,18 @@ export const createComponentStyles = (colors: ThemeColors) =>
       width: isTablet ? "90%" : "75%",
       justifyContent: "center",
     },
+    iosButtonContainer: {
+      alignItems: "center",
+      backgroundColor: "black",
+      borderRadius: 10,
+      height: 60,
+      alignSelf: "center",
+      justifyContent: "center",
+      paddingVertical: isTablet ? 40 : 35,
+      paddingHorizontal: isTablet ? 25 : 20,
+      marginVertical: isTablet ? 15 : 10,
+      width: isTablet ? "90%" : "75%",
+    },
     icon: {
       width: isTablet ? 25 : 20,
       height: isTablet ? 25 : 20,

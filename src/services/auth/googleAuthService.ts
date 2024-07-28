@@ -2,9 +2,10 @@ import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import { logIn, logOut } from "@src/redux/slices/userSlice";
 import { AppDispatch } from "@src/redux/store";
+import Constants from "expo-constants";
 
 GoogleSignin.configure({
-  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  webClientId: Constants.expoConfig?.extra?.googleWebClientId,
   offlineAccess: true,
 });
 

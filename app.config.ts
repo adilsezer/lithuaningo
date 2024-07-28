@@ -64,6 +64,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
       },
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      androidGoogleServicesBase64: process.env.ANDROID_GOOGLE_SERVICES_BASE64,
+      iosGoogleServicesBase64: process.env.IOS_GOOGLE_SERVICES_BASE64,
       privacyPolicyUrl:
         "https://adilsezer.github.io/lithuaningo/privacy-policy",
       keywords:
