@@ -54,6 +54,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           ios: {
             useFrameworks: "static",
           },
+          android: {
+            enableProguardInReleaseBuilds: true,
+            extraProguardRules: "-keep public class com.horcrux.svg.** {*;}",
+            allowBackup: false,
+          },
         },
       ],
       "expo-font",
