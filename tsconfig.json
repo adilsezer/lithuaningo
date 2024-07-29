@@ -8,7 +8,12 @@
       "@features/*": ["src/features/*"],
       "@app/*": ["src/app/*"],
       "@utils/*": ["src/utils/*"],
-      "@src/*": ["src/*"]
+      "@src/*": ["src/*"],
+      "@redux/*": ["src/redux/*"],
+      "@services/*": ["src/services/*"],
+      "@hooks/*": ["src/hooks/*"],
+      "@context/*": ["src/context/*"],
+      "@styles/*": ["src/styles/*"]
     }
   },
   "extends": "expo/tsconfig.base",
