@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -16,7 +16,15 @@ export default function Tab() {
 
   return (
     <View style={styles.container}>
+      <Image
+        source={require("assets/images/learn_screen.png")}
+        style={styles.image}
+      />
       <Text style={globalStyles.title}>Start Reviewing Today's Words</Text>
+      <Text style={globalStyles.subtitle}>
+        In this session, you'll learn Lithuanian with today's sentences,
+        flashcards, and quizzes. Keep up the awesome work!
+      </Text>
       <CustomButton title="Start" onPress={handleStartLearning} />
     </View>
   );
@@ -26,10 +34,13 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
+    padding: 20,
   },
-  label: {
-    fontSize: 24,
-    fontWeight: "bold",
+  image: {
+    width: "100%",
+    height: "50%",
+    alignSelf: "center",
     marginBottom: 20,
+    borderRadius: 20,
   },
 });

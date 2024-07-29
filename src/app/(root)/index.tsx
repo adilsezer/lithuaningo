@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image, Platform } from "react-native";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -21,8 +21,11 @@ const WelcomeScreen = () => {
       <View style={styles.textContainer}>
         <Text style={globalStyles.title}>Welcome to Lithuaningo</Text>
         <Text style={globalStyles.subtitle}>
-          Your gateway to mastering Lithuanian! Dive into learning with ease and
-          fun.
+          Learn Lithuanian with daily sentences, flashcards for words, and
+          reinforcing quizzes.
+        </Text>
+        <Text style={globalStyles.subtitle}>
+          Join now and compete on our leaderboard!
         </Text>
       </View>
       <View style={styles.buttonContainer}>
@@ -57,7 +60,7 @@ const styles = StyleSheet.create({
   },
   textContainer: {
     width: "100%",
-    paddingHorizontal: 20, // Add padding for better spacing
+    paddingHorizontal: 10, // Add padding for better spacing
     alignItems: "center",
   },
 });
