@@ -87,3 +87,8 @@ TODO.txt
 # Include the folders inside assets/icons
 !assets/icons/android/
 !assets/icons/ios/
+
+credentials.json
+
+# Ignore all .txt files
+*.txt

@@ -29,7 +29,8 @@
         "buildConfiguration": "Release"
       },
       "android": {
-        "gradleCommand": ":app:assembleRelease"
+        "gradleCommand": ":app:assembleRelease",
+        "credentialsSource": "local"
       }
     }
   },
