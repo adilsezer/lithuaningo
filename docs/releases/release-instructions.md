@@ -24,19 +24,13 @@ npm install
 yarn install
 \`\`\`
 
-### 2. Eject the Project (if necessary)
+### 2. Change firebase-crashlytics-gradle version to 3.0.1 (if necessary)
 
-If you haven't already ejected your project from the managed workflow:
-
-\`\`\`bash
-expo eject
-\`\`\`
+Change the version of firebase-crashlytics-gradle in build.gradle to 3.0.1 as it sometimes throws error when building
 
 ### 3. Configure Android Build
 
-Open the `android` folder in Android Studio and follow these steps:
-
-- Set up your signing key as described [here](../android/README.md).
+Open the `android` folder in Android Studio.
 
 ### 4. Build Android APK
 
