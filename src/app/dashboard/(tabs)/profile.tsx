@@ -84,6 +84,10 @@ export default function ProfileScreen() {
           onPress={() => navigateTo("/profile/delete-account")}
         />
         <CustomButton
+          title="Settings"
+          onPress={() => navigateTo("/profile/settings")}
+        />
+        <CustomButton
           title="About the App"
           onPress={() => navigateTo("/about")}
         />

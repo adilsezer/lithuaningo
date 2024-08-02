@@ -14,6 +14,7 @@ import CompletedScreen from "@components/CompletedScreen";
 import { cleanWord } from "@utils/stringUtils";
 import RenderClickableWords from "@components/RenderClickableWords"; // Import RenderClickableWords
 import crashlytics from "@react-native-firebase/crashlytics";
+import { scheduleDailyReviewReminder } from "@services/notification/notificationService"; // Import notification functions
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -92,6 +93,7 @@ const SentencesScreen: React.FC = () => {
   const handleProceedToQuiz = async () => {
     await storeData(COMPLETION_STATUS_KEY, true);
     setSentencesCompleted(true);
+    await scheduleDailyReviewReminder(userData?.id, new Date(), true);
     router.push("/learning/quiz");
   };
 
@@ -178,11 +180,7 @@ const SentencesScreen: React.FC = () => {
       </ScrollView>
       {wordsCompleted && (
         <View style={styles.buttonContainer}>
-          <CustomButton
-            title="Proceed to Quiz"
-            onPress={handleProceedToQuiz}
-            style={styles.fixedButton}
-          />
+          <CustomButton title="Proceed to Quiz" onPress={handleProceedToQuiz} />
         </View>
       )}
     </View>
@@ -217,9 +215,6 @@ const styles = StyleSheet.create({
     bottom: 20,
     left: 20,
     right: 20,
-  },
-  fixedButton: {
-    // Additional styles if needed
   },
 });
 

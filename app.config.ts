@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "Lithuaningo",
     slug: "lithuaningo",
-    version: "2.5.0",
+    version: "2.6.4",
     orientation: "portrait",
     icon: "./assets/icons/ios/icon.png",
     userInterfaceStyle: "automatic",
@@ -22,6 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: "com.adilsezer.lithuaningo",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: ["fetch"],
       },
       usesAppleSignIn: true,
     },
@@ -39,6 +40,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "ACCESS_NETWORK_STATE",
         "READ_EXTERNAL_STORAGE",
         "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
       ],
     },
     web: {
@@ -63,6 +66,14 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ],
       "expo-font",
       "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#ffffff",
+          defaultChannel: "default",
+        },
+      ],
     ],
     extra: {
       eas: {

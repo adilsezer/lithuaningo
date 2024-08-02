@@ -11,6 +11,7 @@ import { ActivityIndicator, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingIndicator from "@components/LoadingIndicator";
 import AuthStateListener from "@src/components/AuthStateListener";
+import NotificationInitializer from "@src/components/NotificationInitializer";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import ErrorBoundary from "@components/ErrorBoundary";
@@ -25,6 +26,7 @@ const InnerRootLayout: React.FC = () => {
     <SafeAreaView style={globalStyles.pageStyle}>
       <LoadingIndicator />
       <AuthStateListener />
+      <NotificationInitializer />
       <Slot />
     </SafeAreaView>
   );
@@ -35,13 +37,17 @@ const RootLayout: React.FC = () => {
 
   useEffect(() => {
     async function loadFonts() {
-      await Font.loadAsync({
-        Roboto: require("assets/fonts/Roboto-Regular.ttf"),
-        "Roboto-Bold": require("assets/fonts/Roboto-Bold.ttf"),
-        "Roboto-Italic": require("assets/fonts/Roboto-Italic.ttf"),
-      });
-      setFontsLoaded(true);
-      SplashScreen.hideAsync();
+      try {
+        await Font.loadAsync({
+          Roboto: require("assets/fonts/Roboto-Regular.ttf"),
+          "Roboto-Bold": require("assets/fonts/Roboto-Bold.ttf"),
+          "Roboto-Italic": require("assets/fonts/Roboto-Italic.ttf"),
+        });
+        setFontsLoaded(true);
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     loadFonts();
