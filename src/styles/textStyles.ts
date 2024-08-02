@@ -72,6 +72,10 @@ export const createTextStyles = (colors: ThemeColors) => {
       fontSize: isTablet ? 24 : 18,
       marginVertical: isTablet ? 15 : 10,
     },
+    subheading: {
+      ...boldText,
+      fontSize: isTablet ? 24 : 18,
+    },
     text: {
       ...regularText,
     },

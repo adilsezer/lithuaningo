@@ -20,7 +20,7 @@ const SettingsScreen: React.FC = () => {
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState<Date | null>(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -31,7 +31,6 @@ const SettingsScreen: React.FC = () => {
       if (time) {
         setReminderTime(new Date(time));
       } else {
-        // If no time is set, use the current reminderTime
         setReminderTime(null);
       }
     };
@@ -91,13 +90,32 @@ const SettingsScreen: React.FC = () => {
             </View>
           </View>
           {reminderTime && (
-            <Text style={globalStyles.bold}>
-              Selected Time:{" "}
-              {reminderTime.toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-              })}{" "}
-            </Text>
+            <View
+              style={[
+                styles.timeContainer,
+                { backgroundColor: globalColors.card },
+              ]}
+            >
+              <Text
+                style={[
+                  globalStyles.subtitle,
+                  { color: globalColors.cardText },
+                ]}
+              >
+                Selected Time
+              </Text>
+              <Text
+                style={[
+                  globalStyles.subheading,
+                  { color: globalColors.cardText },
+                ]}
+              >
+                {reminderTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Text>
+            </View>
           )}
         </>
       )}
@@ -123,6 +141,13 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     alignItems: "flex-end",
+  },
+  timeContainer: {
+    padding: 10,
+    borderRadius: 10,
+    alignItems: "center",
+    marginBottom: 20,
+    marginHorizontal: 20,
   },
 });
 
