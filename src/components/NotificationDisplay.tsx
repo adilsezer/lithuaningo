@@ -1,85 +1,43 @@
-// src/components/ErrorBoundary.tsx
-import React, { Component, ErrorInfo, ReactNode } from "react";
-import { View, Text, StyleSheet, Linking, Image } from "react-native";
-import crashlytics from "@react-native-firebase/crashlytics";
-import CustomButton from "./CustomButton";
+import React from "react";
+import { View, Text, StyleSheet, Image } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import CustomButton from "@components/CustomButton";
 
-interface Props {
-  children: ReactNode;
+interface NotificationDisplayProps {
+  title: string;
+  subtitle: string;
+  buttonText?: string;
+  buttonAction?: () => void;
 }
 
-interface State {
-  hasError: boolean;
-}
+const NotificationDisplay: React.FC<NotificationDisplayProps> = ({
+  title,
+  subtitle,
+  buttonText,
+  buttonAction,
+}) => {
+  const { styles: globalStyles } = useThemeStyles();
 
-class ErrorBoundary extends Component<Props, State> {
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
-
-  static getDerivedStateFromError(error: Error) {
-    // Update state so the next render will show the fallback UI.
-    return { hasError: true };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log the error to an error reporting service
-    crashlytics().recordError(error);
-    console.error("ErrorBoundary caught an error", error, errorInfo);
-  }
-
-  handleRetry = () => {
-    this.setState({ hasError: false });
-  };
-
-  handleContactSupport = () => {
-    Linking.openURL("mailto:Lithuaningo@gmail.com");
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <View style={styles.container}>
-          <Image
-            source={require("../../assets/images/icon.png")}
-            style={styles.logo}
-          />
-          <Text style={styles.title}>Oops! Something went wrong.</Text>
-          <Text style={styles.subtitle}>
-            Please try again or contact support if the issue persists.
-          </Text>
-          <CustomButton title="Try Again" onPress={this.handleRetry} />
-          <CustomButton
-            title="Contact Support"
-            onPress={this.handleContactSupport}
-          />
-        </View>
-      );
-    }
-
-    return this.props.children;
-  }
-}
+  return (
+    <View style={styles.container}>
+      <Image
+        source={require("../../assets/images/icon.png")}
+        style={styles.logo}
+      />
+      <Text style={globalStyles.title}>{title}</Text>
+      <Text style={globalStyles.subtitle}>{subtitle}</Text>
+      {buttonText && buttonAction && (
+        <CustomButton onPress={buttonAction} title={buttonText} />
+      )}
+    </View>
+  );
+};
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
     padding: 20,
-    alignItems: "center",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 20,
   },
   logo: {
     width: 100,
@@ -90,4 +48,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default ErrorBoundary;
+export default NotificationDisplay;
