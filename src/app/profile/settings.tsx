@@ -71,73 +71,91 @@ const SettingsScreen: React.FC = () => {
   return (
     <View>
       <BackButton />
-      <Text style={[globalStyles.title, { marginBottom: 40 }]}>
-        Daily Reminder Settings
-      </Text>
-      <View style={styles.setting}>
-        <Text style={globalStyles.subtitle}>Enable Daily Reminder</Text>
-        <Switch value={reminderEnabled} onValueChange={handleToggleReminder} />
+      <Text style={[globalStyles.title, styles.title]}>Settings</Text>
+      <View style={styles.dailyReminder}>
+        <Text style={[globalStyles.subheading, styles.subheading]}>
+          Daily Reminder
+        </Text>
+        <View style={styles.setting}>
+          <Text style={globalStyles.subtitle}>Enable Daily Reminder</Text>
+          <Switch
+            value={reminderEnabled}
+            onValueChange={handleToggleReminder}
+          />
+        </View>
+        {reminderEnabled && (
+          <>
+            <View style={styles.setting}>
+              <Text style={globalStyles.subtitle}>Set Reminder Time</Text>
+              <View style={styles.buttonContainer}>
+                <CustomButton
+                  title="Choose Time"
+                  onPress={() => setDatePickerVisibility(true)}
+                />
+              </View>
+            </View>
+            {reminderTime && (
+              <View
+                style={[
+                  styles.timeContainer,
+                  { backgroundColor: globalColors.card },
+                ]}
+              >
+                <Text
+                  style={[
+                    globalStyles.subtitle,
+                    { color: globalColors.cardText },
+                  ]}
+                >
+                  Reminder Time
+                </Text>
+                <Text
+                  style={[
+                    globalStyles.subheading,
+                    { color: globalColors.cardText },
+                  ]}
+                >
+                  {reminderTime.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </Text>
+              </View>
+            )}
+          </>
+        )}
+        <DateTimePickerModal
+          isVisible={isDatePickerVisible}
+          mode="time"
+          onConfirm={handleConfirm}
+          onCancel={() => setDatePickerVisibility(false)}
+          isDarkModeEnabled={false}
+        />
+        <CustomButton title="Save Settings" onPress={saveSettings} />
       </View>
-      {reminderEnabled && (
-        <>
-          <View style={styles.setting}>
-            <Text style={globalStyles.subtitle}>Set Reminder Time</Text>
-            <View style={styles.buttonContainer}>
-              <CustomButton
-                title="Choose Time"
-                onPress={() => setDatePickerVisibility(true)}
-              />
-            </View>
-          </View>
-          {reminderTime && (
-            <View
-              style={[
-                styles.timeContainer,
-                { backgroundColor: globalColors.card },
-              ]}
-            >
-              <Text
-                style={[
-                  globalStyles.subtitle,
-                  { color: globalColors.cardText },
-                ]}
-              >
-                Selected Time
-              </Text>
-              <Text
-                style={[
-                  globalStyles.subheading,
-                  { color: globalColors.cardText },
-                ]}
-              >
-                {reminderTime.toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </Text>
-            </View>
-          )}
-        </>
-      )}
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="time"
-        onConfirm={handleConfirm}
-        onCancel={() => setDatePickerVisibility(false)}
-        isDarkModeEnabled={false}
-      />
-      <CustomButton title="Save Settings" onPress={saveSettings} />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  title: {
+    marginBottom: 20,
+  },
+  subheading: {
+    marginBottom: 20,
+  },
+  dailyReminder: {
+    borderWidth: 0.2,
+    borderRadius: 10,
+    borderColor: "grey",
+    paddingHorizontal: 20,
+    paddingVertical: 30,
+  },
   setting: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
     marginBottom: 20,
-    paddingHorizontal: 20,
   },
   buttonContainer: {
     alignItems: "flex-end",
@@ -147,7 +165,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     marginBottom: 20,
-    marginHorizontal: 20,
   },
 });
 
