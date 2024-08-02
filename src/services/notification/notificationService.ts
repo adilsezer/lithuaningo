@@ -9,6 +9,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const NOTIFICATION_PROMPT_KEY = "hasPromptedForNotifications";
 
+// Set notification handler to handle how notifications are presented
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -17,6 +18,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// Request notification permissions
 async function requestPermissions() {
   if (!Device.isDevice) {
     console.warn("Bypassing physical device check for testing on simulator");
@@ -24,25 +26,6 @@ async function requestPermissions() {
   }
 
   try {
-    const { status: existingStatus } =
-      await Notifications.getPermissionsAsync();
-    let finalStatus = existingStatus;
-    if (existingStatus !== "granted") {
-      const { status } = await Notifications.requestPermissionsAsync();
-      finalStatus = status;
-    }
-    if (finalStatus !== "granted") {
-      alert("Failed to enable the push notification!");
-      return finalStatus;
-    }
-
-    const projectId =
-      Constants?.expoConfig?.extra?.eas?.projectId ??
-      Constants?.easConfig?.projectId;
-    if (!projectId) {
-      throw new Error("Project ID not found");
-    }
-
     if (Platform.OS === "android") {
       try {
         await Notifications.setNotificationChannelAsync("default", {
@@ -56,6 +39,18 @@ async function requestPermissions() {
       }
     }
 
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
+    let finalStatus = existingStatus;
+    if (existingStatus !== "granted") {
+      const { status } = await Notifications.requestPermissionsAsync();
+      finalStatus = status;
+    }
+    if (finalStatus !== "granted") {
+      alert("Failed to enable push notifications!");
+      return finalStatus;
+    }
+
     return finalStatus;
   } catch (e) {
     console.error(e);
@@ -63,6 +58,7 @@ async function requestPermissions() {
   }
 }
 
+// Check if the user has reviewed today
 async function checkIfReviewedToday(
   userId: string | undefined
 ): Promise<boolean> {
@@ -71,12 +67,14 @@ async function checkIfReviewedToday(
   return completionStatus ?? false;
 }
 
+// Get the next day's date
 function getNextDayDate(date: Date): Date {
   const nextDay = new Date(date);
   nextDay.setDate(date.getDate() + 1);
   return nextDay;
 }
 
+// Schedule daily review reminder notification
 export async function scheduleDailyReviewReminder(
   userId: string | undefined,
   time: Date,
@@ -106,6 +104,7 @@ export async function scheduleDailyReviewReminder(
   }
 }
 
+// Cancel all scheduled notifications
 export async function cancelAllScheduledNotifications() {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
@@ -114,15 +113,18 @@ export async function cancelAllScheduledNotifications() {
   }
 }
 
+// Check if the user has been prompted for notifications
 async function hasPromptedForNotifications() {
   const value = await AsyncStorage.getItem(NOTIFICATION_PROMPT_KEY);
   return value === "true";
 }
 
+// Set that the user has been prompted for notifications
 async function setPromptedForNotifications() {
   await AsyncStorage.setItem(NOTIFICATION_PROMPT_KEY, "true");
 }
 
+// Initialize notifications
 export async function initializeNotifications(userId: string | undefined) {
   const hasPrompted = await hasPromptedForNotifications();
 

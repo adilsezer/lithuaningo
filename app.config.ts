@@ -42,6 +42,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "WRITE_EXTERNAL_STORAGE",
         "RECEIVE_BOOT_COMPLETED",
         "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
       ],
     },
     web: {
