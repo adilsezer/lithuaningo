@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         backgroundImage: "./assets/icons/android/background.png",
       },
       package: "com.adilsezer.lithuaningo",
-      versionCode: 11,
+      versionCode: 12,
       permissions: [
         "INTERNET",
         "ACCESS_NETWORK_STATE",
