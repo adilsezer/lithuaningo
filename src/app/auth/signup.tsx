@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Alert, Platform } from "react-native";
+import { Text, Alert, Platform, ScrollView } from "react-native";
 import OrSeperator from "@components/OrSeperator";
 import CustomButton from "@components/CustomButton";
 import useAuthMethods from "@src/hooks/useAuthMethods";
@@ -59,7 +59,7 @@ const SignUpScreen: React.FC = () => {
   }, []);
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>Create Account</Text>
       <CustomTextInput
@@ -115,7 +115,7 @@ const SignUpScreen: React.FC = () => {
           disabled={loading}
         />
       )}
-    </View>
+    </ScrollView>
   );
 };
 

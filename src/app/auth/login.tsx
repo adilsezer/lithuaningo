@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, Alert, Platform } from "react-native";
+import { Text, Alert, Platform, ScrollView } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
@@ -40,7 +40,7 @@ const LoginScreen: React.FC = () => {
   }, []);
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>Welcome Back</Text>
       <CustomTextInput
@@ -98,7 +98,7 @@ const LoginScreen: React.FC = () => {
         path={"/auth/signup"}
         style={{ textAlign: "center" }}
       />
-    </View>
+    </ScrollView>
   );
 };
 

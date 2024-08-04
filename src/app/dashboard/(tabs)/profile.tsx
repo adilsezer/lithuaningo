@@ -91,7 +91,7 @@ export default function ProfileScreen() {
           title="About the App"
           onPress={() => navigateTo("/about")}
         />
-        {__DEV__ && (
+        {/* {__DEV__ && (
           <CustomButton
             title="Clear Completion Status"
             onPress={handleClearCompletionStatus}
@@ -102,7 +102,7 @@ export default function ProfileScreen() {
             title="Test Crash"
             onPress={() => crashlytics().crash()}
           />
-        )}
+        )} */}
         <CustomButton title="Logout" onPress={logout} />
       </View>
     </ScrollView>

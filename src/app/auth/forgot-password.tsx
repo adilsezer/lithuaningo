@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Alert } from "react-native";
+import { Text, Alert, ScrollView } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import CustomButton from "@components/CustomButton";
@@ -40,7 +40,7 @@ const ForgotPasswordScreen: React.FC = () => {
   };
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>Forgot Password?</Text>
       <Text style={globalStyles.text}>
@@ -60,7 +60,7 @@ const ForgotPasswordScreen: React.FC = () => {
         title={loading ? "Sending..." : "Continue"}
         disabled={loading}
       />
-    </View>
+    </ScrollView>
   );
 };
 
