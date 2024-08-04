@@ -130,6 +130,7 @@ const SettingsScreen: React.FC = () => {
           onConfirm={handleConfirm}
           onCancel={() => setDatePickerVisibility(false)}
           isDarkModeEnabled={false}
+          textColor="black"
         />
         <CustomButton title="Save Settings" onPress={saveSettings} />
       </View>

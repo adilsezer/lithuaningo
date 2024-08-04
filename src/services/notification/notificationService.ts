@@ -1,7 +1,6 @@
 // src/services/notificationService.ts
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
-import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { retrieveData } from "@utils/storageUtils";
