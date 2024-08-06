@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "Lithuaningo",
     slug: "lithuaningo",
-    version: "2.6.6",
+    version: "2.6.7",
     orientation: "portrait",
     icon: "./assets/icons/ios/icon.png",
     userInterfaceStyle: "automatic",
@@ -34,7 +34,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         backgroundImage: "./assets/icons/android/background.png",
       },
       package: "com.adilsezer.lithuaningo",
-      versionCode: 14,
+      versionCode: 15,
       permissions: [
         "INTERNET",
         "ACCESS_NETWORK_STATE",

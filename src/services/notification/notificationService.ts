@@ -3,10 +3,11 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
 import { getCurrentDateKey } from "@utils/dateUtils";
-import { retrieveData } from "@utils/storageUtils";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { storeData, retrieveData } from "@utils/storageUtils";
 
 const NOTIFICATION_PROMPT_KEY = "hasPromptedForNotifications";
+const REMINDER_ENABLED_KEY = "reminderEnabled";
+const REMINDER_TIME_KEY = "reminderTime";
 
 // Set notification handler to handle how notifications are presented
 Notifications.setNotificationHandler({
@@ -114,13 +115,13 @@ export async function cancelAllScheduledNotifications() {
 
 // Check if the user has been prompted for notifications
 async function hasPromptedForNotifications() {
-  const value = await AsyncStorage.getItem(NOTIFICATION_PROMPT_KEY);
-  return value === "true";
+  const value = await retrieveData<boolean>(NOTIFICATION_PROMPT_KEY);
+  return value === true;
 }
 
 // Set that the user has been prompted for notifications
 async function setPromptedForNotifications() {
-  await AsyncStorage.setItem(NOTIFICATION_PROMPT_KEY, "true");
+  await storeData(NOTIFICATION_PROMPT_KEY, true);
 }
 
 // Initialize notifications
@@ -130,8 +131,10 @@ export async function initializeNotifications(userId: string | undefined) {
   if (!hasPrompted) {
     const permissionStatus = await requestPermissions();
     if (permissionStatus === "granted") {
+      await storeData(REMINDER_ENABLED_KEY, true);
       const defaultReminderTime = new Date();
       defaultReminderTime.setHours(19, 0, 0, 0);
+      await storeData(REMINDER_TIME_KEY, defaultReminderTime.toISOString());
       await scheduleDailyReviewReminder(userId, defaultReminderTime);
       await setPromptedForNotifications();
     }
