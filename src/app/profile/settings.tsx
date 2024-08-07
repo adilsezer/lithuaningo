@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, Text, Switch, StyleSheet, Alert } from "react-native";
+import {
+  View,
+  Text,
+  Switch,
+  StyleSheet,
+  Alert,
+  ScrollView,
+} from "react-native";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import {
@@ -66,7 +73,7 @@ const SettingsScreen: React.FC = () => {
   };
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={[globalStyles.title, styles.title]}>Settings</Text>
       <View style={styles.dailyReminder}>
@@ -82,15 +89,6 @@ const SettingsScreen: React.FC = () => {
         </View>
         {reminderEnabled && (
           <>
-            <View style={styles.setting}>
-              <Text style={globalStyles.subtitle}>Set Reminder Time</Text>
-              <View style={styles.buttonContainer}>
-                <CustomButton
-                  title="Choose Time"
-                  onPress={() => setDatePickerVisibility(true)}
-                />
-              </View>
-            </View>
             {reminderTime && (
               <View
                 style={[
@@ -117,6 +115,11 @@ const SettingsScreen: React.FC = () => {
                     minute: "2-digit",
                   })}
                 </Text>
+                <CustomButton
+                  title="Choose Another Time"
+                  onPress={() => setDatePickerVisibility(true)}
+                  style={{ backgroundColor: globalColors.secondary }}
+                />
               </View>
             )}
           </>
@@ -131,7 +134,7 @@ const SettingsScreen: React.FC = () => {
         />
         <CustomButton title="Save Settings" onPress={saveSettings} />
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -155,13 +158,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     marginBottom: 20,
   },
-  buttonContainer: {
-    alignItems: "flex-end",
-  },
   timeContainer: {
     padding: 10,
     borderRadius: 10,
-    alignItems: "center",
     marginBottom: 20,
   },
 });

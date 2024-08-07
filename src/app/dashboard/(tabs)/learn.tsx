@@ -1,5 +1,5 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
+import { ScrollView, Text, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -15,7 +15,7 @@ export default function Tab() {
   const { styles: globalStyles } = useThemeStyles();
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       <Image
         source={require("assets/images/learn_screen.png")}
         style={styles.image}
@@ -26,19 +26,19 @@ export default function Tab() {
         flashcards, and quizzes. Keep up the awesome work!
       </Text>
       <CustomButton title="Start" onPress={handleStartLearning} />
-    </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  scrollContainer: {
+    flexGrow: 1,
     justifyContent: "center",
     padding: 20,
   },
   image: {
     width: "100%",
-    height: "50%",
+    height: 300, // Adjust the height as needed
     alignSelf: "center",
     marginBottom: 20,
     borderRadius: 20,

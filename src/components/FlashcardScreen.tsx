@@ -7,6 +7,7 @@ import {
   Alert,
   Image,
   ScrollView,
+  Dimensions,
 } from "react-native";
 import Animated, {
   useSharedValue,
@@ -280,6 +281,9 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
     router.back();
   };
 
+  const windowWidth = Dimensions.get("window").width;
+  const isSmallScreen = windowWidth < 375;
+
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <TouchableWithoutFeedback onPress={handleFlip}>
@@ -292,7 +296,10 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             ]}
           >
             {word.imageUrl && (
-              <Image source={{ uri: word.imageUrl }} style={[styles.image]} />
+              <Image
+                source={{ uri: word.imageUrl }}
+                style={[styles.image, isSmallScreen && styles.smallImage]}
+              />
             )}
             <Text style={[globalStyles.contrastTitle]}>{wordId}</Text>
             <View
@@ -342,7 +349,10 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
             ]}
           >
             {word.imageUrl && (
-              <Image source={{ uri: word.imageUrl }} style={[styles.image]} />
+              <Image
+                source={{ uri: word.imageUrl }}
+                style={[styles.image, isSmallScreen && styles.smallImage]}
+              />
             )}
             <Text style={[globalStyles.contrastTitle]}>
               {getEnglishTranslation(word, wordId)}
@@ -464,6 +474,10 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     alignSelf: "center",
     borderRadius: 10,
+  },
+  smallImage: {
+    width: 250,
+    height: 250,
   },
   input: {
     marginVertical: 10,

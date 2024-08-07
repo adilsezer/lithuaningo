@@ -11,7 +11,6 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
 import ThemeSwitch from "@components/ThemeSwitch";
 import { useTheme } from "@src/context/ThemeContext";
-import crashlytics from "@react-native-firebase/crashlytics";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -115,6 +114,6 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   actionsSection: {
-    marginTop: 10,
+    marginVertical: 20,
   },
 });

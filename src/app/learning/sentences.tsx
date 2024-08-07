@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView } from "react-native";
+import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector, useAppDispatch } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import CustomButton from "@components/CustomButton";
@@ -12,9 +11,10 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { retrieveData, storeData } from "@utils/storageUtils";
 import CompletedScreen from "@components/CompletedScreen";
 import { cleanWord } from "@utils/stringUtils";
-import RenderClickableWords from "@components/RenderClickableWords"; // Import RenderClickableWords
+import RenderClickableWords from "@components/RenderClickableWords";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { scheduleDailyReviewReminder } from "@services/notification/notificationService"; // Import notification functions
+import { scheduleDailyReviewReminder } from "@services/notification/notificationService";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -103,18 +103,18 @@ const SentencesScreen: React.FC = () => {
 
   if (error) {
     return (
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <BackButton />
         <Text style={[globalStyles.text, { color: globalColors.error }]}>
           {error}
         </Text>
-      </View>
+      </ScrollView>
     );
   }
 
   if (sentencesCompleted) {
     return (
-      <View>
+      <ScrollView>
         <CompletedScreen
           title="Fantastic! You've Reviewed All the Words for Today!"
           subtitle="Ready to test your knowledge?"
@@ -128,23 +128,23 @@ const SentencesScreen: React.FC = () => {
             router.push("/dashboard");
           }}
         />
-      </View>
+      </ScrollView>
     );
   }
 
   if (sentences.length === 0) {
     return (
-      <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <BackButton />
         <Text style={globalStyles.text}>
           No new sentences to learn. Please check back later.
         </Text>
-      </View>
+      </ScrollView>
     );
   }
 
   return (
-    <View style={styles.container}>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       <BackButton />
       <Text style={globalStyles.title}>
         Let's review today's vocabulary before practice!
@@ -152,7 +152,7 @@ const SentencesScreen: React.FC = () => {
       <Text style={globalStyles.subtitle}>
         Click on each word to find out what it means.
       </Text>
-      <ScrollView contentContainerStyle={styles.contentContainer}>
+      <View style={styles.contentContainer}>
         {sentences.map((sentence: Sentence, index) => (
           <View key={sentence.id}>
             <View style={styles.sentenceContainer}>
@@ -177,17 +177,21 @@ const SentencesScreen: React.FC = () => {
             Click all words to unlock the proceed button.
           </Text>
         )}
-      </ScrollView>
+      </View>
       {wordsCompleted && (
         <View style={styles.buttonContainer}>
           <CustomButton title="Proceed to Quiz" onPress={handleProceedToQuiz} />
         </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 20,
+  },
   container: {
     flex: 1,
   },
