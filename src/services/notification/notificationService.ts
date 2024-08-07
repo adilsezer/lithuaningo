@@ -47,7 +47,6 @@ async function requestPermissions() {
       finalStatus = status;
     }
     if (finalStatus !== "granted") {
-      alert("Failed to enable push notifications!");
       return finalStatus;
     }
 
