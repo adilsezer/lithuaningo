@@ -15,6 +15,7 @@ import RenderClickableWords from "@components/RenderClickableWords";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { scheduleDailyReviewReminder } from "@services/notification/notificationService";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { SENTENCE_KEYS } from "@config/constants"; // Import the constants
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -27,10 +28,11 @@ const SentencesScreen: React.FC = () => {
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
 
-  const COMPLETION_STATUS_KEY = `completionStatus_${
-    userData?.id
-  }_${getCurrentDateKey()}`;
-  const SENTENCES_KEY = `sentences_${userData?.id}_${getCurrentDateKey()}`;
+  const getKey = (keyFunc: (userId: string, dateKey: string) => string) =>
+    userData ? keyFunc(userData.id, getCurrentDateKey()) : "";
+
+  const COMPLETION_STATUS_KEY = getKey(SENTENCE_KEYS.COMPLETION_STATUS_KEY);
+  const SENTENCES_KEY = getKey(SENTENCE_KEYS.SENTENCES_KEY);
 
   useEffect(() => {
     const checkCompletionStatus = async () => {

@@ -4,10 +4,7 @@ import * as Device from "expo-device";
 import { Platform } from "react-native";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { storeData, retrieveData } from "@utils/storageUtils";
-
-const NOTIFICATION_PROMPT_KEY = "hasPromptedForNotifications";
-const REMINDER_ENABLED_KEY = "reminderEnabled";
-const REMINDER_TIME_KEY = "reminderTime";
+import { NOTIFICATION_KEYS, SENTENCE_KEYS } from "@config/constants";
 
 // Set notification handler to handle how notifications are presented
 Notifications.setNotificationHandler({
@@ -61,7 +58,10 @@ async function requestPermissions() {
 async function checkIfReviewedToday(
   userId: string | undefined
 ): Promise<boolean> {
-  const COMPLETION_STATUS_KEY = `completionStatus_${userId}_${getCurrentDateKey()}`;
+  const COMPLETION_STATUS_KEY = SENTENCE_KEYS.COMPLETION_STATUS_KEY(
+    userId!,
+    getCurrentDateKey()
+  );
   const completionStatus = await retrieveData<boolean>(COMPLETION_STATUS_KEY);
   return completionStatus ?? false;
 }
@@ -114,13 +114,15 @@ export async function cancelAllScheduledNotifications() {
 
 // Check if the user has been prompted for notifications
 async function hasPromptedForNotifications() {
-  const value = await retrieveData<boolean>(NOTIFICATION_PROMPT_KEY);
+  const value = await retrieveData<boolean>(
+    NOTIFICATION_KEYS.NOTIFICATION_PROMPT_KEY
+  );
   return value === true;
 }
 
 // Set that the user has been prompted for notifications
 async function setPromptedForNotifications() {
-  await storeData(NOTIFICATION_PROMPT_KEY, true);
+  await storeData(NOTIFICATION_KEYS.NOTIFICATION_PROMPT_KEY, true);
 }
 
 // Initialize notifications
@@ -130,10 +132,13 @@ export async function initializeNotifications(userId: string | undefined) {
   if (!hasPrompted) {
     const permissionStatus = await requestPermissions();
     if (permissionStatus === "granted") {
-      await storeData(REMINDER_ENABLED_KEY, true);
+      await storeData(NOTIFICATION_KEYS.REMINDER_ENABLED, true);
       const defaultReminderTime = new Date();
       defaultReminderTime.setHours(19, 0, 0, 0);
-      await storeData(REMINDER_TIME_KEY, defaultReminderTime.toISOString());
+      await storeData(
+        NOTIFICATION_KEYS.REMINDER_TIME,
+        defaultReminderTime.toISOString()
+      );
       await scheduleDailyReviewReminder(userId, defaultReminderTime);
       await setPromptedForNotifications();
     }

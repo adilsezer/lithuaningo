@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import firestore from "@react-native-firebase/firestore";
 import { useAppSelector } from "@src/redux/hooks";
 import { selectIsAuthenticated } from "@src/redux/slices/userSlice";
+import { COLLECTIONS } from "@config/constants";
 
 interface Announcement {
   id: string;
@@ -20,7 +21,9 @@ const useAnnouncements = () => {
         return;
       }
 
-      const snapshot = await firestore().collection("announcements").get();
+      const snapshot = await firestore()
+        .collection(COLLECTIONS.ANNOUNCEMENTS)
+        .get();
       const announcementsData = snapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),

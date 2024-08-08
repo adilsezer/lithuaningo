@@ -13,7 +13,8 @@
       "@services/*": ["src/services/*"],
       "@hooks/*": ["src/hooks/*"],
       "@context/*": ["src/context/*"],
-      "@styles/*": ["src/styles/*"]
+      "@styles/*": ["src/styles/*"],
+      "@config/*": ["config/*"]
     }
   },
   "extends": "expo/tsconfig.base",

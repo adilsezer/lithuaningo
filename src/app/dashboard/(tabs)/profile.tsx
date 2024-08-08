@@ -11,6 +11,7 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
 import ThemeSwitch from "@components/ThemeSwitch";
 import { useTheme } from "@src/context/ThemeContext";
+import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -41,14 +42,13 @@ export default function ProfileScreen() {
 
     const currentDateKey = getCurrentDateKey();
     const keysToClear = [
-      `completionStatus_${userData.id}_${currentDateKey}`,
-      `sentences_${userData.id}_${currentDateKey}`,
-      `quizProgress_${userData.id}_${currentDateKey}`,
-      `questions_${userData.id}_${currentDateKey}`,
-      `incorrectQuestions_${userData.id}_${currentDateKey}`,
-      `quizQuestions_${userData.id}_${currentDateKey}`,
-      `incorrectProgress_${userData.id}_${currentDateKey}`,
-      `sessionState_${userData.id}_${currentDateKey}`, // Added sessionState key
+      SENTENCE_KEYS.COMPLETION_STATUS_KEY(userData.id, currentDateKey),
+      SENTENCE_KEYS.SENTENCES_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.QUIZ_PROGRESS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.QUIZ_QUESTIONS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.INCORRECT_QUESTIONS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.INCORRECT_PROGRESS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.SESSION_STATE_KEY(userData.id, currentDateKey),
     ];
 
     await Promise.all(keysToClear.map((key) => clearData(key)));

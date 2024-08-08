@@ -1,3 +1,4 @@
+import { COLLECTIONS } from "@config/constants";
 import firestore from "@react-native-firebase/firestore";
 
 export interface Sentence {
@@ -10,7 +11,7 @@ export interface Sentence {
 }
 
 const fetchAndShuffleSentences = async (): Promise<Sentence[]> => {
-  const snapshot = await firestore().collection("sentences").get();
+  const snapshot = await firestore().collection(COLLECTIONS.SENTENCES).get();
   const sentencesData = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),

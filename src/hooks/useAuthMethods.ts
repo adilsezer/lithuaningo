@@ -24,6 +24,7 @@ import {
 } from "@src/services/auth/appleAuthService";
 import firestore from "@react-native-firebase/firestore";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { COLLECTIONS } from "@config/constants";
 
 type ActionHandler<T = void> = () => Promise<T>;
 
@@ -82,12 +83,12 @@ const useAuthMethods = () => {
 
       if (user) {
         const userDoc = await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .get();
         if (!userDoc.exists) {
           await firestore()
-            .collection("userProfiles")
+            .collection(COLLECTIONS.USERS)
             .doc(user.uid)
             .set({
               name: user.displayName || "No Name",
@@ -111,12 +112,12 @@ const useAuthMethods = () => {
       const user = userCredential.user;
 
       const userDoc = await firestore()
-        .collection("userProfiles")
+        .collection(COLLECTIONS.USERS)
         .doc(user.uid)
         .get();
       if (!userDoc.exists) {
         await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .set({
             name: user.displayName || "No Name",
@@ -136,12 +137,12 @@ const useAuthMethods = () => {
       const user = userCredential.user;
 
       const userDoc = await firestore()
-        .collection("userProfiles")
+        .collection(COLLECTIONS.USERS)
         .doc(user.uid)
         .get();
       if (!userDoc.exists) {
         await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .set({
             name: user.displayName || "No Name",
@@ -222,7 +223,7 @@ const useAuthMethods = () => {
 
       if (updates.displayName) {
         await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .update({ name: updates.displayName });
       }
@@ -310,7 +311,7 @@ const useAuthMethods = () => {
       await reauthenticateUser(credential, dispatch);
 
       // Delete user document from Firestore
-      await firestore().collection("userProfiles").doc(user.uid).delete();
+      await firestore().collection(COLLECTIONS.USERS).doc(user.uid).delete();
 
       // Delete user
       await deleteUser(dispatch);

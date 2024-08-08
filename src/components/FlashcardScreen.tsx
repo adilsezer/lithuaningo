@@ -31,6 +31,7 @@ import {
 import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { selectUserData } from "@src/redux/slices/userSlice";
+import { SENTENCE_KEYS } from "@config/constants"; // Import the constants
 
 interface FlashcardScreenProps {
   wordId: string;
@@ -169,18 +170,21 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
   useEffect(() => {
     const fetchCompletionStatus = async () => {
       try {
-        const COMPLETION_STATUS_KEY = `completionStatus_${
-          userData?.id
-        }_${getCurrentDateKey()}`;
-        const status = await retrieveData<boolean>(COMPLETION_STATUS_KEY);
-        setSentenceReviewCompleted(status);
+        if (userData?.id) {
+          const COMPLETION_STATUS_KEY = SENTENCE_KEYS.COMPLETION_STATUS_KEY(
+            userData.id,
+            getCurrentDateKey()
+          );
+          const status = await retrieveData<boolean>(COMPLETION_STATUS_KEY);
+          setSentenceReviewCompleted(status);
+        }
       } catch (error) {
         console.error("Error retrieving completion status:", error);
       }
     };
 
     fetchCompletionStatus();
-  }, []);
+  }, [userData]);
 
   const handleAddWordForm = () => {
     setWordForms([...wordForms, { lithuanian: "", english: "" }]);

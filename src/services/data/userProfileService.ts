@@ -1,8 +1,9 @@
+import { COLLECTIONS } from "@config/constants";
 import firestore from "@react-native-firebase/firestore";
 
 const fetchUserProfile = async (userId: string) => {
   const userDoc = await firestore()
-    .collection("userProfiles")
+    .collection(COLLECTIONS.USERS)
     .doc(userId)
     .get();
   if (!userDoc.exists) {

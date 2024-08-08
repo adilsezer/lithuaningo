@@ -1,6 +1,7 @@
 import firestore from "@react-native-firebase/firestore";
 import { Platform } from "react-native";
 import Constants from "expo-constants";
+import { COLLECTIONS } from "@config/constants";
 
 export interface AppInfo {
   latestVersion: string;
@@ -12,7 +13,10 @@ export interface AppInfo {
 export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
   try {
     const platform = Platform.OS;
-    const doc = await firestore().collection("appInfo").doc(platform).get();
+    const doc = await firestore()
+      .collection(COLLECTIONS.APP_INFO)
+      .doc(platform)
+      .get();
     if (doc.exists) {
       const data = doc.data();
       return {

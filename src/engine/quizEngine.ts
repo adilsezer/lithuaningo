@@ -10,6 +10,7 @@ import {
 } from "../utils/quizUtils";
 import { removeDuplicates, getRelatedSentences } from "../utils/sentenceUtils";
 import sentenceService from "../services/data/sentenceService";
+import { SENTENCE_KEYS } from "@config/constants";
 
 export interface QuizQuestion {
   questionText: string;
@@ -29,7 +30,10 @@ const fetchLearnedAndAllSentencesWithWords = async (
   allSentences: any[];
   allWords: Word[];
 }> => {
-  const SENTENCES_KEY = `sentences_${userData?.id}_${getCurrentDateKey()}`;
+  const SENTENCES_KEY = SENTENCE_KEYS.SENTENCES_KEY(
+    userData?.id,
+    getCurrentDateKey()
+  );
   const learnedSentences = await retrieveData<any[]>(SENTENCES_KEY);
 
   if (!learnedSentences) {

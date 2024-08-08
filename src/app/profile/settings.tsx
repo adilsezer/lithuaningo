@@ -18,9 +18,7 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { storeData, retrieveData } from "@utils/storageUtils"; // Updated import
-
-const REMINDER_ENABLED_KEY = "reminderEnabled";
-const REMINDER_TIME_KEY = "reminderTime";
+import { NOTIFICATION_KEYS } from "@config/constants";
 
 const SettingsScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
@@ -31,8 +29,10 @@ const SettingsScreen: React.FC = () => {
 
   useEffect(() => {
     const loadSettings = async () => {
-      const enabled = await retrieveData<boolean>(REMINDER_ENABLED_KEY);
-      const time = await retrieveData<string>(REMINDER_TIME_KEY);
+      const enabled = await retrieveData<boolean>(
+        NOTIFICATION_KEYS.REMINDER_ENABLED
+      );
+      const time = await retrieveData<string>(NOTIFICATION_KEYS.REMINDER_TIME);
 
       setReminderEnabled(enabled === true);
       if (time) {
@@ -57,9 +57,12 @@ const SettingsScreen: React.FC = () => {
   };
 
   const saveSettings = async () => {
-    await storeData(REMINDER_ENABLED_KEY, reminderEnabled);
+    await storeData(NOTIFICATION_KEYS.REMINDER_ENABLED, reminderEnabled);
     if (reminderTime) {
-      await storeData(REMINDER_TIME_KEY, reminderTime.toISOString());
+      await storeData(
+        NOTIFICATION_KEYS.REMINDER_TIME,
+        reminderTime.toISOString()
+      );
     }
     if (reminderEnabled && userData?.id && reminderTime) {
       await scheduleDailyReviewReminder(userData.id, reminderTime);

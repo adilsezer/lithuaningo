@@ -25,6 +25,7 @@ import {
 import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
 import crashlytics from "@react-native-firebase/crashlytics";
+import { QUIZ_KEYS } from "@config/constants"; // Import the constants
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
@@ -46,13 +47,14 @@ const QuizScreen: React.FC = () => {
   const { handleAnswer: updateStats } = useData();
   const scrollViewRef = useRef<ScrollView>(null);
 
-  const getKey = (type: string) =>
-    `${type}_${userData?.id}_${getCurrentDateKey()}`;
-  const QUIZ_QUESTIONS_KEY = getKey("quizQuestions");
-  const QUIZ_PROGRESS_KEY = getKey("quizProgress");
-  const INCORRECT_QUESTIONS_KEY = getKey("incorrectQuestions");
-  const INCORRECT_PROGRESS_KEY = getKey("incorrectProgress");
-  const SESSION_STATE_KEY = getKey("sessionState");
+  const getKey = (keyFunc: (userId: string, dateKey: string) => string) =>
+    userData ? keyFunc(userData.id, getCurrentDateKey()) : "";
+
+  const QUIZ_QUESTIONS_KEY = getKey(QUIZ_KEYS.QUIZ_QUESTIONS_KEY);
+  const QUIZ_PROGRESS_KEY = getKey(QUIZ_KEYS.QUIZ_PROGRESS_KEY);
+  const INCORRECT_QUESTIONS_KEY = getKey(QUIZ_KEYS.INCORRECT_QUESTIONS_KEY);
+  const INCORRECT_PROGRESS_KEY = getKey(QUIZ_KEYS.INCORRECT_PROGRESS_KEY);
+  const SESSION_STATE_KEY = getKey(QUIZ_KEYS.SESSION_STATE_KEY);
 
   useEffect(() => {
     const initializeQuiz = async () => {

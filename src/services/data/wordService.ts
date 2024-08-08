@@ -1,4 +1,5 @@
 // services/firebase/wordService.ts
+import { COLLECTIONS } from "@config/constants";
 import firestore from "@react-native-firebase/firestore";
 
 export interface WordForm {
@@ -15,7 +16,7 @@ export interface Word {
 }
 
 const fetchWords = async (): Promise<Word[]> => {
-  const snapshot = await firestore().collection("words").get();
+  const snapshot = await firestore().collection(COLLECTIONS.WORDS).get();
   const wordsData = snapshot.docs.map((doc) => ({
     id: doc.id,
     ...doc.data(),
@@ -25,7 +26,7 @@ const fetchWords = async (): Promise<Word[]> => {
 
 const addWordForReview = async (wordData: Word): Promise<void> => {
   try {
-    await firestore().collection("pendingWords").add(wordData);
+    await firestore().collection(COLLECTIONS.PENDING_WORDS).add(wordData);
   } catch (error) {
     console.error("Error adding word for review:", error);
     throw error;
@@ -34,7 +35,7 @@ const addWordForReview = async (wordData: Word): Promise<void> => {
 
 const addMissingWord = async (word: string): Promise<void> => {
   try {
-    const docRef = firestore().collection("missingWords").doc(word);
+    const docRef = firestore().collection(COLLECTIONS.MISSING_WORDS).doc(word);
     const doc = await docRef.get();
 
     if (!doc.exists) {

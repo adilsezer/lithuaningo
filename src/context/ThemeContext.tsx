@@ -8,6 +8,7 @@ import React, {
 } from "react";
 import { Appearance } from "react-native";
 import { storeData, retrieveData } from "@utils/storageUtils";
+import { THEME_KEYS } from "@config/constants";
 
 interface ThemeContextProps {
   isDarkMode: boolean;
@@ -25,7 +26,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
   useEffect(() => {
     const loadTheme = async () => {
       try {
-        const storedTheme = await retrieveData<string>("theme");
+        const storedTheme = await retrieveData<string>(THEME_KEYS.THEME);
         if (storedTheme !== null) {
           setIsDarkMode(storedTheme === "dark");
         } else {
@@ -43,7 +44,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({
     try {
       setIsDarkMode((prevMode) => {
         const newMode = !prevMode;
-        storeData("theme", newMode ? "dark" : "light");
+        storeData(THEME_KEYS.THEME, newMode ? "dark" : "light");
         return newMode;
       });
       setManualMode(true);
