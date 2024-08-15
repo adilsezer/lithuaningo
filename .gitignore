@@ -89,6 +89,3 @@ TODO.txt
 !assets/icons/ios/
 
 credentials.json
-
-# Ignore all .txt files
-*.txt

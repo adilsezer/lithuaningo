@@ -316,7 +316,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               word.wordForms.some((form) => form.lithuanian !== word.id) && (
                 <View>
                   <Text style={[globalStyles.contrastSubtitle]}>
-                    Word Forms:
+                    Related Word Forms:
                   </Text>
                   {word.wordForms.map(
                     (form, index) =>
@@ -371,7 +371,7 @@ const FlashcardScreen: React.FC<FlashcardScreenProps> = ({ wordId }) => {
               word.wordForms.some((form) => form.lithuanian !== word.id) && (
                 <View>
                   <Text style={[globalStyles.contrastSubtitle]}>
-                    Word Forms:
+                    Related Word Forms:
                   </Text>
                   {word.wordForms.map(
                     (form, index) =>
