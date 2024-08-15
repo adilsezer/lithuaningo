@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
-import ExpandableDetails from "./ExpandableDetails";
+import RenderClickableWords from "@components/RenderClickableWords";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -17,6 +17,7 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 interface MultipleChoiceQuizProps {
   sentenceText: string;
   questionText: string;
+  questionWord: string;
   translation: string;
   image: string;
   options: string[];
@@ -33,6 +34,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   translation,
   image,
   questionIndex,
+  questionWord,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -86,8 +88,16 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   return (
     <View>
       <Text style={globalStyles.subtitle}>{renderBoldText(questionText)}</Text>
-      <Text style={globalStyles.title}>{sentenceText}</Text>
-      <ExpandableDetails translation={translation}></ExpandableDetails>
+      <View style={styles.sentenceContainer}>
+        <RenderClickableWords
+          sentenceText={sentenceText}
+          answerText={questionWord}
+          useClickedWordsColor={false}
+        />
+      </View>
+      <Text style={globalStyles.instruction}>
+        Click on each word to find out what it means.
+      </Text>
       {image && (
         <Image
           source={{ uri: image }}
@@ -161,6 +171,12 @@ const styles = StyleSheet.create({
   imageTablet: {
     width: 500,
     height: 500,
+  },
+  sentenceContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginVertical: 10,
   },
 });
 

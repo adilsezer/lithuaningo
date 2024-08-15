@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useAppDispatch } from "../redux/hooks";
 import { getErrorMessage } from "../utils/errorMessages";
 import { useRouter } from "expo-router";
+import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
 import {
   signInWithEmail,
   signUpWithEmail,
@@ -23,6 +24,7 @@ import {
 } from "@src/services/auth/appleAuthService";
 import firestore from "@react-native-firebase/firestore";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
+import { COLLECTIONS } from "@config/constants";
 
 type ActionHandler<T = void> = () => Promise<T>;
 
@@ -42,6 +44,8 @@ const useAuthMethods = () => {
         }
         return { success: true, result };
       } catch (error: any) {
+        // Log the error to Crashlytics
+        crashlytics().recordError(error);
         return {
           success: false,
           message: error.code ? getErrorMessage(error.code) : error.message,
@@ -60,6 +64,9 @@ const useAuthMethods = () => {
       const { user } = await signUpWithEmail(email, password, dispatch);
       await user.updateProfile({ displayName: name });
       await sendEmailVerification();
+
+      // Log the sign-up action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
     const result = await handleAction(action, "/auth/login");
     if (result.success) {
@@ -76,18 +83,21 @@ const useAuthMethods = () => {
 
       if (user) {
         const userDoc = await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .get();
         if (!userDoc.exists) {
           await firestore()
-            .collection("userProfiles")
+            .collection(COLLECTIONS.USERS)
             .doc(user.uid)
             .set({
               name: user.displayName || "No Name",
               email: user.email,
             });
         }
+
+        // Log the sign-in action
+        crashlytics().setUserId(user.uid); // Log only user ID
       } else {
         throw new Error("User does not exist.");
       }
@@ -102,18 +112,21 @@ const useAuthMethods = () => {
       const user = userCredential.user;
 
       const userDoc = await firestore()
-        .collection("userProfiles")
+        .collection(COLLECTIONS.USERS)
         .doc(user.uid)
         .get();
       if (!userDoc.exists) {
         await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .set({
             name: user.displayName || "No Name",
             email: user.email,
           });
       }
+
+      // Log the Google sign-in action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
     return await handleAction(action, "/dashboard");
   };
@@ -124,24 +137,32 @@ const useAuthMethods = () => {
       const user = userCredential.user;
 
       const userDoc = await firestore()
-        .collection("userProfiles")
+        .collection(COLLECTIONS.USERS)
         .doc(user.uid)
         .get();
       if (!userDoc.exists) {
         await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .set({
             name: user.displayName || "No Name",
             email: user.email,
           });
       }
+
+      // Log the Apple sign-in action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
     return await handleAction(action, "/dashboard");
   };
 
   const handleSignOut = async () => {
-    return await handleAction(() => signOutUser(dispatch), "/");
+    const result = await handleAction(() => signOutUser(dispatch), "/");
+    if (result.success) {
+      // Log the sign-out action
+      crashlytics().log("User signed out."); // Minimal log
+    }
+    return result;
   };
 
   const handlePasswordReset = async (email: string) => {
@@ -202,10 +223,13 @@ const useAuthMethods = () => {
 
       if (updates.displayName) {
         await firestore()
-          .collection("userProfiles")
+          .collection(COLLECTIONS.USERS)
           .doc(user.uid)
           .update({ name: updates.displayName });
       }
+
+      // Log the profile update action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
 
     const result = await handleAction(action, "/dashboard/profile");
@@ -234,6 +258,9 @@ const useAuthMethods = () => {
 
       // Update password
       await updateUserPassword(newPassword, dispatch);
+
+      // Log the password update action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
 
     const result = await handleAction(action, "/dashboard/profile");
@@ -284,10 +311,13 @@ const useAuthMethods = () => {
       await reauthenticateUser(credential, dispatch);
 
       // Delete user document from Firestore
-      await firestore().collection("userProfiles").doc(user.uid).delete();
+      await firestore().collection(COLLECTIONS.USERS).doc(user.uid).delete();
 
       // Delete user
       await deleteUser(dispatch);
+
+      // Log the account deletion action
+      crashlytics().setUserId(user.uid); // Log only user ID
     };
 
     const result = await handleAction(action, "/");

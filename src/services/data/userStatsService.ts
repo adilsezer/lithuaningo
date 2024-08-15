@@ -1,4 +1,5 @@
 // services/firebase/userStatsService.ts
+import { COLLECTIONS } from "@config/constants";
 import firestore, {
   FirebaseFirestoreTypes,
 } from "@react-native-firebase/firestore";
@@ -22,7 +23,7 @@ const fetchStats = (
   onStatsChange: (stats: Stats | null) => void
 ) => {
   return firestore()
-    .collection("userProfiles")
+    .collection(COLLECTIONS.USERS)
     .doc(userId)
     .onSnapshot(
       (doc) => {
@@ -46,7 +47,7 @@ const fetchLeaderboard = (
   ) => void
 ) => {
   return firestore()
-    .collection("userProfiles")
+    .collection(COLLECTIONS.USERS)
     .orderBy("weeklyCorrectAnswers", "desc")
     .limit(20)
     .onSnapshot(
@@ -61,7 +62,10 @@ const fetchLeaderboard = (
             };
           })
         );
-        onLeadersChange(leaders);
+
+        // Filter out users with a score of 0
+        const filteredLeaders = leaders.filter((leader) => leader.score > 0);
+        onLeadersChange(filteredLeaders);
       },
       (error) => {
         console.error("Error fetching leaders:", error);
@@ -76,7 +80,7 @@ const updateUserStats = async (
   timeSpent: number
 ): Promise<void> => {
   try {
-    const userStatsRef = firestore().collection("userProfiles").doc(userId);
+    const userStatsRef = firestore().collection(COLLECTIONS.USERS).doc(userId);
     const userStatsSnapshot = await userStatsRef.get();
 
     let userStats: Stats;

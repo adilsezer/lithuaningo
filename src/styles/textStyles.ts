@@ -19,9 +19,24 @@ export const createTextStyles = (colors: ThemeColors) => {
     fontFamily: "Roboto-Bold",
   };
 
+  const italicText: TextStyle = {
+    ...baseText,
+    fontFamily: "Roboto-Italic",
+  };
+
   const regularText: TextStyle = {
     ...baseText,
     fontFamily: "Roboto",
+  };
+
+  const contrastBaseText: TextStyle = {
+    ...regularText,
+    color: colors.cardText, // new text style with a different color
+  };
+
+  const contrastBoldText: TextStyle = {
+    ...boldText,
+    color: colors.cardText,
   };
 
   return StyleSheet.create({
@@ -31,8 +46,19 @@ export const createTextStyles = (colors: ThemeColors) => {
       lineHeight: isTablet ? 24 : 20,
       textAlign: "left" as TextStyle["textAlign"], // assuming paragraphs are left-aligned
     },
+    contrastParagraph: {
+      ...contrastBaseText,
+      marginVertical: isTablet ? 15 : 10,
+      lineHeight: isTablet ? 24 : 20,
+      textAlign: "left" as TextStyle["textAlign"], // assuming paragraphs are left-aligned
+    },
     title: {
       ...boldText,
+      fontSize: isTablet ? 32 : 24,
+      marginVertical: isTablet ? 15 : 10,
+    },
+    contrastTitle: {
+      ...contrastBoldText,
       fontSize: isTablet ? 32 : 24,
       marginVertical: isTablet ? 15 : 10,
     },
@@ -41,22 +67,63 @@ export const createTextStyles = (colors: ThemeColors) => {
       fontSize: isTablet ? 24 : 18,
       marginVertical: isTablet ? 15 : 10,
     },
+    contrastSubtitle: {
+      ...contrastBaseText,
+      fontSize: isTablet ? 24 : 18,
+      marginVertical: isTablet ? 15 : 10,
+    },
+    subheading: {
+      ...boldText,
+      fontSize: isTablet ? 24 : 18,
+    },
     text: {
       ...regularText,
     },
+    contrastText: {
+      ...contrastBaseText,
+    },
     buttonText: {
       ...boldText,
+      fontSize: isTablet ? 24 : 14,
+    },
+    contrastButtonText: {
+      ...contrastBoldText,
       fontSize: isTablet ? 24 : 14,
     },
     tabText: {
       ...regularText,
       fontSize: isTablet ? 20 : 16,
     },
+    contrastTabText: {
+      ...contrastBaseText,
+      fontSize: isTablet ? 20 : 16,
+    },
     activeTabText: {
       ...boldText,
     },
+    contrastActiveTabText: {
+      ...contrastBoldText,
+    },
     bold: {
       ...boldText,
+    },
+    italic: {
+      ...italicText,
+    },
+    contrastBold: {
+      ...contrastBoldText,
+    },
+    instruction: {
+      ...regularText,
+      color: colors.lightText,
+      marginTop: 5,
+      marginBottom: 10,
+    },
+    contrastInstruction: {
+      ...contrastBaseText,
+      color: colors.lightText,
+      marginTop: 5,
+      marginBottom: 10,
     },
   });
 };

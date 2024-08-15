@@ -1,25 +1,21 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Platform,
-  Dimensions,
-} from "react-native";
+import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import sentenceService, { Sentence } from "../../services/data/sentenceService";
-import userProfileService from "../../services/data/userProfileService";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppSelector, useAppDispatch } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
-import { addClickedWord } from "@src/redux/slices/clickedWordsSlice";
 import CustomButton from "@components/CustomButton";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import BackButton from "@components/BackButton";
 import { getCurrentDateKey } from "@utils/dateUtils";
-import { retrieveData, storeData } from "@utils/storageUtil";
+import { retrieveData, storeData } from "@utils/storageUtils";
 import CompletedScreen from "@components/CompletedScreen";
+import { cleanWord } from "@utils/stringUtils";
+import RenderClickableWords from "@components/RenderClickableWords";
+import crashlytics from "@react-native-firebase/crashlytics";
+import { scheduleDailyReviewReminder } from "@services/notification/notificationService";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { SENTENCE_KEYS } from "@config/constants"; // Import the constants
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -32,10 +28,11 @@ const SentencesScreen: React.FC = () => {
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
 
-  const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
+  const getKey = (keyFunc: (userId: string, dateKey: string) => string) =>
+    userData ? keyFunc(userData.id, getCurrentDateKey()) : "";
 
-  const { width } = Dimensions.get("window");
-  const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
+  const COMPLETION_STATUS_KEY = getKey(SENTENCE_KEYS.COMPLETION_STATUS_KEY);
+  const SENTENCES_KEY = getKey(SENTENCE_KEYS.SENTENCES_KEY);
 
   useEffect(() => {
     const checkCompletionStatus = async () => {
@@ -53,25 +50,22 @@ const SentencesScreen: React.FC = () => {
 
       dispatch(setLoading(true));
       try {
-        const [fetchedSentences, userProfile] = await Promise.all([
-          sentenceService.fetchSentences(),
-          userProfileService.fetchUserProfile(userData.id),
-        ]);
+        const storedSentences = await retrieveData<Sentence[]>(SENTENCES_KEY);
 
-        const learnedSentenceIds: string[] =
-          userProfile?.learnedSentences || [];
+        if (storedSentences && storedSentences.length > 0) {
+          setSentences(storedSentences);
+        } else {
+          const fetchedSentences =
+            await sentenceService.fetchAndShuffleSentences();
+          const firstTwoSentences = fetchedSentences.slice(0, 2);
 
-        const filteredSentences = fetchedSentences
-          .filter(
-            (sentence: Sentence) =>
-              sentence.isMainSentence &&
-              !learnedSentenceIds.includes(sentence.id)
-          )
-          .slice(0, 2);
+          setSentences(firstTwoSentences);
 
-        setSentences(filteredSentences);
-      } catch (error) {
+          await storeData(SENTENCES_KEY, firstTwoSentences);
+        }
+      } catch (error: unknown) {
         console.error("Error loading sentences and words:", error);
+        crashlytics().recordError(error as Error);
         setError("Failed to load sentences. Please try again later.");
       } finally {
         dispatch(setLoading(false));
@@ -81,63 +75,48 @@ const SentencesScreen: React.FC = () => {
     loadSentencesAndWords();
   }, [userData, dispatch]);
 
-  const cleanWord = (word: string) => {
-    return word.replace(/[.,!?;:()"]/g, "");
-  };
-
   useEffect(() => {
     if (sentences.length > 0) {
-      const allWords = sentences.flatMap((sentence) =>
+      const allWords = sentences.flatMap((sentence: Sentence) =>
         sentence.sentence.split(" ").map(cleanWord)
       );
-      const allClicked = allWords.every((word) => clickedWords.includes(word));
+      const allClicked = allWords.every((word: string) =>
+        clickedWords.includes(word)
+      );
       if (allClicked) {
+        setWordsCompleted(true);
+      }
+      if (__DEV__) {
         setWordsCompleted(true);
       }
     }
   }, [sentences, clickedWords]);
 
-  const handleWordClick = (word: string) => {
-    const cleanedWord = cleanWord(word);
-    dispatch(addClickedWord(cleanedWord));
-    router.push(`/learning/${cleanedWord}`);
-  };
-
-  const updateUserLearnedSentences = async () => {
-    if (!userData?.id) return;
-
-    const sentenceIds = sentences.map((sentence) => sentence.id);
-    try {
-      await userProfileService.updateUserLearnedSentences(
-        userData.id,
-        sentenceIds
-      );
-    } catch (error) {
-      console.error("Error updating learned sentences:", error);
-    }
-  };
-
   const handleProceedToQuiz = async () => {
-    await updateUserLearnedSentences();
-    storeData(COMPLETION_STATUS_KEY, true);
+    await storeData(COMPLETION_STATUS_KEY, true);
     setSentencesCompleted(true);
+    await scheduleDailyReviewReminder(userData?.id, new Date(), true);
     router.push("/learning/quiz");
   };
 
+  useEffect(() => {
+    crashlytics().log("Sentences screen loaded.");
+  }, []);
+
   if (error) {
     return (
-      <View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <BackButton />
         <Text style={[globalStyles.text, { color: globalColors.error }]}>
           {error}
         </Text>
-      </View>
+      </ScrollView>
     );
   }
 
   if (sentencesCompleted) {
     return (
-      <View>
+      <ScrollView>
         <CompletedScreen
           title="Fantastic! You've Reviewed All the Words for Today!"
           subtitle="Ready to test your knowledge?"
@@ -151,101 +130,97 @@ const SentencesScreen: React.FC = () => {
             router.push("/dashboard");
           }}
         />
-      </View>
+      </ScrollView>
     );
   }
 
   if (sentences.length === 0) {
     return (
-      <View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
         <BackButton />
         <Text style={globalStyles.text}>
           No new sentences to learn. Please check back later.
         </Text>
-      </View>
+      </ScrollView>
     );
   }
 
   return (
-    <View>
+    <ScrollView contentContainerStyle={styles.scrollContainer}>
       <BackButton />
       <Text style={globalStyles.title}>
-        Today you will learn the following sentences.
+        Let's review today's vocabulary before practice!
       </Text>
       <Text style={globalStyles.subtitle}>
         Click on each word to find out what it means.
       </Text>
-      {sentences.map((sentence) => (
-        <View key={sentence.id} style={styles.sentenceContainer}>
-          {sentence.sentence.split(" ").map((word: string, index: number) => (
-            <TouchableOpacity
-              key={`${word}-${index}`}
-              onPress={() => handleWordClick(word)}
-              style={[
-                styles.wordContainer,
-                {
-                  backgroundColor: clickedWords.includes(cleanWord(word))
-                    ? globalColors.wordHighlightBackground
-                    : globalColors.wordBackground,
-                },
-              ]}
-            >
-              <Text
+      <View style={styles.contentContainer}>
+        {sentences.map((sentence: Sentence, index) => (
+          <View key={sentence.id}>
+            <View style={styles.sentenceContainer}>
+              <RenderClickableWords
+                sentenceText={sentence.sentence}
+                answerText=""
+                useClickedWordsColor={true}
+              />
+            </View>
+            {index < sentences.length - 1 && (
+              <View
                 style={[
-                  globalStyles.text,
-                  styles.wordText,
-                  isTablet && styles.wordTextIpad,
+                  styles.horizontalRule,
+                  { borderBottomColor: globalColors.border },
                 ]}
-              >
-                {word}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      ))}
-      {!wordsCompleted && (
-        <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
-          Click all words to unlock the proceed button.
-        </Text>
-      )}
+              />
+            )}
+          </View>
+        ))}
+        {!wordsCompleted && (
+          <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
+            Click all words to unlock the proceed button.
+          </Text>
+        )}
+      </View>
       {wordsCompleted && (
-        <CustomButton
-          title="Proceed to Quiz"
-          onPress={handleProceedToQuiz}
-          style={{ marginVertical: 60 }}
-        />
+        <View style={styles.buttonContainer}>
+          <CustomButton title="Proceed to Quiz" onPress={handleProceedToQuiz} />
+        </View>
       )}
-    </View>
+    </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+    padding: 20,
+  },
+  container: {
+    flex: 1,
+  },
+  contentContainer: {
+    paddingBottom: 80, // Ensure space for the button
+  },
+  horizontalRule: {
+    width: "80%",
+    alignSelf: "center",
+    borderBottomWidth: 1,
+    marginVertical: 10,
+  },
   sentenceContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginVertical: 5,
-    marginHorizontal: 20,
-    alignSelf: "center",
+    marginVertical: 10,
+    paddingHorizontal: 10,
     justifyContent: "center",
-  },
-  wordContainer: {
-    marginHorizontal: 6,
-    marginVertical: 6,
-    borderRadius: 8,
-    paddingVertical: 4,
-    paddingHorizontal: 6,
-    minHeight: 40,
-    minWidth: 50,
-  },
-  wordText: {
-    fontSize: 20,
-    textAlign: "center",
-  },
-  wordTextIpad: {
-    fontSize: 30, // Larger font size for iPad
   },
   allWordsClickedSection: {
     marginVertical: 60,
+  },
+  buttonContainer: {
+    position: "absolute",
+    bottom: 20,
+    left: 20,
+    right: 20,
   },
 });
 

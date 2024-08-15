@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TextInput, Alert } from "react-native";
+import React, { useEffect, useState } from "react";
+import { Text, Alert, Platform, ScrollView } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "@components/CustomButton";
 import OrSeperator from "@components/OrSeperator";
@@ -10,6 +10,7 @@ import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
 import AppleSignInButton from "@components/AppleSignInButton";
 import CustomTextInput from "@components/CustomTextInput";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const LoginScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -29,12 +30,17 @@ const LoginScreen: React.FC = () => {
     const result = await loginAction();
     dispatch(setLoading(false));
     if (!result.success) {
+      crashlytics().recordError(new Error("Login failed"));
       Alert.alert("Login Failed", result.message || failureMessage);
     }
   };
 
+  useEffect(() => {
+    crashlytics().log("Login screen loaded.");
+  }, []);
+
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>Welcome Back</Text>
       <CustomTextInput
@@ -79,18 +85,20 @@ const LoginScreen: React.FC = () => {
         textStyle={{ color: globalColors.cardText }}
         disabled={loading}
       />
-      <AppleSignInButton
-        onPress={() =>
-          performLogin(handleLoginWithApple, "Unable to login with Apple.")
-        }
-        disabled={loading}
-      />
+      {Platform.OS === "ios" && (
+        <AppleSignInButton
+          onPress={() =>
+            performLogin(handleLoginWithApple, "Unable to login with Apple.")
+          }
+          disabled={loading}
+        />
+      )}
       <NavigationLink
         text={"Don't have an account? Sign Up"}
         path={"/auth/signup"}
         style={{ textAlign: "center" }}
       />
-    </View>
+    </ScrollView>
   );
 };
 

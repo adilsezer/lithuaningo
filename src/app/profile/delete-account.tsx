@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Alert, Text } from "react-native";
+import { ScrollView, Alert, Text } from "react-native";
 import useAuthMethods from "../../hooks/useAuthMethods";
 import CustomTextInput from "@components/CustomTextInput";
 import BackButton from "@components/BackButton";
@@ -58,7 +58,7 @@ const DeleteAccountScreen = () => {
   };
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.text}>
         Deleting your account is a permanent action and cannot be undone. All
@@ -75,7 +75,7 @@ const DeleteAccountScreen = () => {
         />
       )}
       <CustomButton title="Delete Account" onPress={handleDelete} />
-    </View>
+    </ScrollView>
   );
 };
 

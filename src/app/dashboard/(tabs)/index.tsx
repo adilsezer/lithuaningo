@@ -10,12 +10,18 @@ import ProgressBar from "@components/ProgressBar";
 import { determineUserLevel } from "@utils/userLevel";
 import CustomButton from "@components/CustomButton";
 import { router } from "expo-router";
+import useAnnouncements from "@src/hooks/useAnnouncements"; // Import the hook
 
 const DashboardScreen: React.FC = () => {
   const { stats } = useData();
   const { styles: globalStyles, colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const userLevel = determineUserLevel(stats);
+  const announcements = useAnnouncements(); // Use the hook
+
+  const validAnnouncements = announcements.filter(
+    (announcement) => announcement.title && announcement.content
+  );
 
   const {
     currentStreak = 0,
@@ -35,12 +41,28 @@ const DashboardScreen: React.FC = () => {
     >
       {userData && (
         <Text style={globalStyles.title}>
-          Labas, {userData.name || userData.email}!
+          Hi, {userData.name || userData.email}!
         </Text>
       )}
       <Text style={globalStyles.text}>
         Let's continue learning Lithuanian together!
       </Text>
+
+      {validAnnouncements.length > 0 && (
+        <View style={[styles.section, { backgroundColor: colors.secondary }]}>
+          {validAnnouncements.map((announcement) => (
+            <View key={announcement.id}>
+              <Text style={[globalStyles.bold, { color: colors.cardText }]}>
+                {announcement.title}
+              </Text>
+              <Text style={[globalStyles.text, { color: colors.cardText }]}>
+                {announcement.content}
+              </Text>
+            </View>
+          ))}
+        </View>
+      )}
+
       <View style={[styles.section, { backgroundColor: colors.card }]}>
         <Text style={[globalStyles.bold, { color: colors.cardText }]}>
           Today's Learning

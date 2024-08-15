@@ -6,7 +6,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     ...config,
     name: "Lithuaningo",
     slug: "lithuaningo",
-    version: "1.5.0",
+    version: "2.6.7",
     orientation: "portrait",
     icon: "./assets/icons/ios/icon.png",
     userInterfaceStyle: "automatic",
@@ -22,6 +22,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: "com.adilsezer.lithuaningo",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
+        UIBackgroundModes: ["fetch"],
       },
       usesAppleSignIn: true,
     },
@@ -33,6 +34,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         backgroundImage: "./assets/icons/android/background.png",
       },
       package: "com.adilsezer.lithuaningo",
+      versionCode: 15,
+      permissions: [
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
+      ],
     },
     web: {
       favicon: "./assets/images/favicon.png",
@@ -47,13 +58,32 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           ios: {
             useFrameworks: "static",
           },
+          android: {
+            enableProguardInReleaseBuilds: true,
+            extraProguardRules: "-keep public class com.horcrux.svg.** {*;}",
+            allowBackup: false,
+          },
         },
       ],
       "expo-font",
       "expo-apple-authentication",
+      [
+        "expo-notifications",
+        {
+          icon: "./assets/images/icon.png",
+          color: "#ffffff",
+          defaultChannel: "default",
+        },
+      ],
     ],
     extra: {
+      eas: {
+        projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      },
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+      androidGoogleServicesBase64: process.env.ANDROID_GOOGLE_SERVICES_BASE64,
+      iosGoogleServicesBase64: process.env.IOS_GOOGLE_SERVICES_BASE64,
       privacyPolicyUrl:
         "https://adilsezer.github.io/lithuaningo/privacy-policy",
       keywords:

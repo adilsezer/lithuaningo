@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
-  TextInput,
   StyleSheet,
   Image,
   Dimensions,
@@ -10,8 +9,8 @@ import {
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
-import ExpandableDetails from "./ExpandableDetails";
 import CustomTextInput from "./CustomTextInput";
+import RenderClickableWords from "./RenderClickableWords";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -19,6 +18,7 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 interface FillInTheBlankQuizProps {
   sentenceText: string;
   questionText: string;
+  questionWord: string;
   translation: string;
   image: string;
   correctAnswerText: string;
@@ -33,6 +33,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   translation,
   image,
   questionIndex,
+  questionWord,
   onAnswer,
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -90,12 +91,36 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   return (
     <View>
       {!isSubmitPressed && (
-        <Text style={globalStyles.subtitle}>{questionText}</Text>
+        <>
+          <Text style={globalStyles.subtitle}>{questionText}</Text>
+          <View style={styles.sentenceContainer}>
+            <RenderClickableWords
+              sentenceText={sentenceText}
+              answerText={questionWord}
+              useClickedWordsColor={false}
+            />
+          </View>
+          <Text style={globalStyles.instruction}>
+            Click on each word to find out what it means.
+          </Text>
+        </>
       )}
-      <Text style={globalStyles.title}>
-        {isSubmitPressed ? getQuestionWithAnswer() : sentenceText}
+
+      {isSubmitPressed && (
+        <Text style={[globalStyles.title]}>{getQuestionWithAnswer()}</Text>
+      )}
+      <Text
+        style={[
+          globalStyles.italic,
+          styles.translation,
+          {
+            backgroundColor: globalColors.wordBackground,
+            borderColor: globalColors.border,
+          },
+        ]}
+      >
+        Translation: {translation}
       </Text>
-      <ExpandableDetails translation={translation}></ExpandableDetails>
       {image && (
         <Image
           source={{ uri: image }}
@@ -139,7 +164,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       {!isSubmitPressed && (
         <View>
           <CustomTextInput
-            style={globalStyles.input}
+            style={[globalStyles.input, { textAlign: "center" }]}
             placeholder="Type your answer here"
             placeholderTextColor={globalColors.placeholder}
             value={inputText}
@@ -168,6 +193,23 @@ const styles = StyleSheet.create({
   imageTablet: {
     width: 500, // Full width for tablet
     height: 500,
+  },
+  sentenceContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  translation: {
+    padding: 8, // Padding around the text
+    borderRadius: 8, // Rounded corners
+    fontSize: 16, // Slightly larger font size
+    borderWidth: 1, // Border to make it stand out
+    shadowOffset: { width: 0, height: 1 }, // Shadow offset
+    shadowOpacity: 0.1, // Shadow opacity
+    shadowRadius: 1, // Shadow radius
+    elevation: 2, // Elevation for Android
+    marginVertical: 14,
   },
 });
 

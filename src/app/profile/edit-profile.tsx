@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, Alert, StyleSheet } from "react-native";
+import { Text, Alert, ScrollView } from "react-native";
 import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import { updateUserProfile as updateUserProfileAction } from "@src/redux/slices/userSlice";
@@ -53,7 +53,7 @@ const EditProfileScreen: React.FC = () => {
   };
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>Edit Profile</Text>
       {isPasswordProvider && (
@@ -74,21 +74,8 @@ const EditProfileScreen: React.FC = () => {
         placeholderTextColor={globalColors.placeholder}
       />
       <CustomButton title="Save Changes" onPress={handleUpdateProfile} />
-    </View>
+    </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  imagePickerContainer: {
-    alignItems: "center",
-    marginVertical: 20,
-  },
-  image: {
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    marginVertical: 10,
-  },
-});
 
 export default EditProfileScreen;

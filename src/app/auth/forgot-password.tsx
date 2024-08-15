@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, Alert } from "react-native";
+import { Text, Alert, ScrollView } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
 import CustomButton from "@components/CustomButton";
@@ -7,6 +7,7 @@ import BackButton from "@components/BackButton";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
 import { selectIsLoading, setLoading } from "@src/redux/slices/uiSlice";
 import CustomTextInput from "@components/CustomTextInput";
+import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
 
 const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -28,6 +29,9 @@ const ForgotPasswordScreen: React.FC = () => {
     if (result.success) {
       Alert.alert("Success", result.message);
     } else {
+      crashlytics().recordError(
+        new Error(result.message || "Failed to send password reset email.")
+      ); // Log only errors
       Alert.alert(
         "Error",
         result.message || "Failed to send password reset email."
@@ -36,7 +40,7 @@ const ForgotPasswordScreen: React.FC = () => {
   };
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>Forgot Password?</Text>
       <Text style={globalStyles.text}>
@@ -56,7 +60,7 @@ const ForgotPasswordScreen: React.FC = () => {
         title={loading ? "Sending..." : "Continue"}
         disabled={loading}
       />
-    </View>
+    </ScrollView>
   );
 };
 

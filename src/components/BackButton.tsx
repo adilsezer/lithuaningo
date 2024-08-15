@@ -1,5 +1,10 @@
 import React from "react";
-import { TouchableOpacity, Dimensions, Platform } from "react-native";
+import {
+  TouchableOpacity,
+  Dimensions,
+  Platform,
+  StyleSheet,
+} from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
@@ -14,11 +19,21 @@ const BackButton: React.FC = () => {
   return (
     <TouchableOpacity
       onPress={() => router.back()}
-      style={{ alignSelf: "flex-start", margin: 10 }}
+      style={styles.button}
+      activeOpacity={0.6}
     >
       <Ionicons name="arrow-back" size={iconSize} color={globalColors.text} />
     </TouchableOpacity>
   );
 };
+
+const styles = StyleSheet.create({
+  button: {
+    alignSelf: "flex-start",
+    margin: 10,
+    minWidth: 50, // Ensures the touchable area is at least 50x50
+    minHeight: 30,
+  },
+});
 
 export default BackButton;

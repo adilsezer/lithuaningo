@@ -20,11 +20,17 @@
       }
     },
     "production": {
+      "env": {
+        "EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID": "$EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID",
+        "ANDROID_GOOGLE_SERVICES_BASE64": "$ANDROID_GOOGLE_SERVICES_BASE64",
+        "IOS_GOOGLE_SERVICES_BASE64": "$IOS_GOOGLE_SERVICES_BASE64"
+      },
       "ios": {
         "buildConfiguration": "Release"
       },
       "android": {
-        "gradleCommand": ":app:assembleRelease"
+        "gradleCommand": ":app:assembleRelease",
+        "credentialsSource": "local"
       }
     }
   },

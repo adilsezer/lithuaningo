@@ -7,14 +7,19 @@ import CustomButton from "@components/CustomButton";
 import { useRouter } from "expo-router";
 import { setLoading } from "@src/redux/slices/uiSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { clearData } from "@utils/storageUtil";
 import { getCurrentDateKey } from "@utils/dateUtils";
+import { clearData } from "@utils/storageUtils";
+import ThemeSwitch from "@components/ThemeSwitch";
+import { useTheme } from "@src/context/ThemeContext";
+import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const { handleSignOut } = useAuthMethods();
   const router = useRouter();
+
+  const { isDarkMode, toggleTheme } = useTheme();
 
   const logout = async () => {
     dispatch(setLoading(true));
@@ -30,14 +35,24 @@ export default function ProfileScreen() {
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
 
   const handleClearCompletionStatus = async () => {
-    const COMPLETION_STATUS_KEY = `completionStatus-${getCurrentDateKey()}`;
-    const QUIZ_PROGRESS_KEY = `quizProgress_${
-      userData?.id
-    }_${getCurrentDateKey()}`;
+    if (!userData) {
+      Alert.alert("No user data available");
+      return;
+    }
 
-    await clearData(COMPLETION_STATUS_KEY);
-    await clearData(QUIZ_PROGRESS_KEY);
-    Alert.alert("Removed Progress Data");
+    const currentDateKey = getCurrentDateKey();
+    const keysToClear = [
+      SENTENCE_KEYS.COMPLETION_STATUS_KEY(userData.id, currentDateKey),
+      SENTENCE_KEYS.SENTENCES_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.QUIZ_PROGRESS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.QUIZ_QUESTIONS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.INCORRECT_QUESTIONS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.INCORRECT_PROGRESS_KEY(userData.id, currentDateKey),
+      QUIZ_KEYS.SESSION_STATE_KEY(userData.id, currentDateKey),
+    ];
+
+    await Promise.all(keysToClear.map((key) => clearData(key)));
+    Alert.alert("Progress data cleared successfully");
   };
 
   if (!isLoggedIn || !userData) {
@@ -50,10 +65,9 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.profileSection}>
-        <Text style={globalStyles.title}>{userData.name || "User"}</Text>
-        <Text style={globalStyles.subtitle}>{userData.email}</Text>
-      </View>
+      <ThemeSwitch onToggle={toggleTheme} isDarkMode={isDarkMode} />
+      <Text style={globalStyles.title}>{userData.name || "User"}</Text>
+      <Text style={globalStyles.subtitle}>{userData.email}</Text>
 
       <View style={styles.actionsSection}>
         <CustomButton
@@ -69,10 +83,25 @@ export default function ProfileScreen() {
           onPress={() => navigateTo("/profile/delete-account")}
         />
         <CustomButton
+          title="Settings"
+          onPress={() => navigateTo("/profile/settings")}
+        />
+        <CustomButton
           title="About the App"
           onPress={() => navigateTo("/about")}
         />
-
+        {/* {__DEV__ && (
+          <CustomButton
+            title="Clear Completion Status"
+            onPress={handleClearCompletionStatus}
+          />
+        )}
+        {__DEV__ && (
+          <CustomButton
+            title="Test Crash"
+            onPress={() => crashlytics().crash()}
+          />
+        )} */}
         <CustomButton title="Logout" onPress={logout} />
       </View>
     </ScrollView>
@@ -84,25 +113,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
-  profileSection: {
-    alignItems: "center",
-  },
   actionsSection: {
-    marginTop: 30,
-  },
-  button: {
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-  },
-  buttonText: {
-    textAlign: "center",
-    fontWeight: "600",
-  },
-  profilePic: {
-    width: 100,
-    height: 100,
-    borderRadius: 75,
-    marginVertical: 10,
+    marginVertical: 20,
   },
 });

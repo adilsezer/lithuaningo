@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { View, Text, Alert } from "react-native";
+import { ScrollView, Text, Alert, StyleSheet } from "react-native";
 import { useAppDispatch } from "@src/redux/hooks";
 import { setLoading } from "@src/redux/slices/uiSlice";
-import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
+import useAuthMethods from "@src/hooks/useAuthMethods";
 import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
@@ -13,7 +13,7 @@ import auth from "@react-native-firebase/auth";
 const ChangePasswordScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const { handleUpdateUserPassword } = useAuthMethods(); // Corrected hook usage inside the component
+  const { handleUpdateUserPassword } = useAuthMethods();
   const router = useRouter();
 
   const [currentPassword, setCurrentPassword] = useState<string>("");
@@ -57,7 +57,7 @@ const ChangePasswordScreen: React.FC = () => {
   };
 
   return (
-    <View>
+    <ScrollView>
       <BackButton />
       <Text style={globalStyles.title}>Change Password</Text>
       {isPasswordProvider && (
@@ -87,7 +87,7 @@ const ChangePasswordScreen: React.FC = () => {
         placeholderTextColor={globalColors.placeholder}
       />
       <CustomButton title="Change Password" onPress={handleChangePassword} />
-    </View>
+    </ScrollView>
   );
 };
 

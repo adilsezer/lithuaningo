@@ -1,39 +1,66 @@
+// src/app/_layout.tsx
 import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
 import { store, persistor } from "../redux/store";
-import { Slot, Stack } from "expo-router";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { Slot } from "expo-router";
+import { ThemeProvider } from "@src/context/ThemeContext";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingIndicator from "@components/LoadingIndicator";
-import AuthStateListener from "@src/components/AuthStateListener"; // Import the AuthStateListener component
+import AuthStateListener from "@src/components/AuthStateListener";
+import NotificationInitializer from "@src/components/NotificationInitializer";
+import crashlytics from "@react-native-firebase/crashlytics";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import ErrorBoundary from "@components/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
 
+// Inner component that uses theme styles
+const InnerRootLayout: React.FC = () => {
+  const { styles: globalStyles } = useThemeStyles();
+
+  return (
+    <SafeAreaView style={globalStyles.pageStyle}>
+      <LoadingIndicator />
+      <AuthStateListener />
+      <NotificationInitializer />
+      <Slot />
+    </SafeAreaView>
+  );
+};
+
 const RootLayout: React.FC = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   useEffect(() => {
     async function loadFonts() {
-      await Font.loadAsync({
-        Roboto: require("assets/fonts/Roboto-Regular.ttf"),
-        "Roboto-Bold": require("assets/fonts/Roboto-Bold.ttf"),
-      });
-      setFontsLoaded(true);
-      SplashScreen.hideAsync();
+      try {
+        await Font.loadAsync({
+          Roboto: require("assets/fonts/Roboto-Regular.ttf"),
+          "Roboto-Bold": require("assets/fonts/Roboto-Bold.ttf"),
+          "Roboto-Italic": require("assets/fonts/Roboto-Italic.ttf"),
+        });
+        setFontsLoaded(true);
+        await SplashScreen.hideAsync();
+      } catch (e) {
+        console.error(e);
+      }
     }
 
     loadFonts();
   }, []);
 
+  useEffect(() => {
+    crashlytics().log("App mounted.");
+  }, []);
+
   if (!fontsLoaded) {
     return (
-      <View style={globalStyles.fullScreenCenter}>
-        <ActivityIndicator size="large" color={globalColors.primary} />
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator size="large" />
       </View>
     );
   }
@@ -41,11 +68,11 @@ const RootLayout: React.FC = () => {
   return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
-        <SafeAreaView style={globalStyles.pageStyle}>
-          <LoadingIndicator />
-          <AuthStateListener />
-          <Slot />
-        </SafeAreaView>
+        <ThemeProvider>
+          <ErrorBoundary>
+            <InnerRootLayout />
+          </ErrorBoundary>
+        </ThemeProvider>
       </PersistGate>
     </Provider>
   );
