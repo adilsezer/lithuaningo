@@ -92,18 +92,31 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
         </View>
       )}
       {showStats && (
-        <View style={styles.timerContainer}>
-          <Text style={globalStyles.subtitle}>Time until next challenge:</Text>
-          <Text style={globalStyles.title}>
-            {`${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`}
-          </Text>
+        <View>
+          <View style={styles.timerContainer}>
+            <Text style={globalStyles.subtitle}>
+              Next challenge available in:
+            </Text>
+            <Text style={globalStyles.title}>
+              {`${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`}
+            </Text>
+          </View>
+          <CustomButton
+            title={"Unlock More Challenges"}
+            onPress={() =>
+              router.push("/in-app-purchase/unlimited-sentences-screen")
+            }
+            style={{
+              backgroundColor: globalColors.secondary,
+            }}
+          />
         </View>
       )}
       <CustomButton
         title={buttonText}
         onPress={() => router.push(navigationRoute)}
         style={{
-          backgroundColor: globalColors.secondary,
+          backgroundColor: globalColors.primary,
           marginTop: 20,
         }}
       />
