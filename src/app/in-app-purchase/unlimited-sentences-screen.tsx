@@ -6,6 +6,7 @@ import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 const UnlimitedSentencesScreen = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -41,6 +42,9 @@ const UnlimitedSentencesScreen = () => {
         onPress={purchaseExtraContent}
         disabled={isPurchasing}
         style={{ backgroundColor: globalColors.secondary }}
+        icon={
+          <FontAwesome5 name="unlock-alt" size={20} color={globalColors.text} />
+        } // Pass the FontAwesome icon as a propv
       />
     </ScrollView>
   );

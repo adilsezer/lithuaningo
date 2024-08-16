@@ -5,6 +5,7 @@ import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import useData from "@src/hooks/useData";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 interface CompletedScreenProps {
   title: string;
@@ -106,6 +107,13 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
             onPress={() =>
               router.push("/in-app-purchase/unlimited-sentences-screen")
             }
+            icon={
+              <FontAwesome5
+                name="unlock-alt"
+                size={20}
+                color={globalColors.text}
+              />
+            } // Pass the FontAwesome icon as a propv
             style={{
               backgroundColor: globalColors.secondary,
             }}

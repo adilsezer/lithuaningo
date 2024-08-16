@@ -3,19 +3,13 @@ import * as RNIap from "react-native-iap";
 import { Alert, Platform } from "react-native";
 import firestore from "@react-native-firebase/firestore";
 import { COLLECTIONS } from "@config/constants"; // Adjust the import path as needed
-
-const iosProductId = process.env.IOS_PRODUCT_ID;
-const androidProductId = process.env.ANDROID_PRODUCT_ID;
-
-if (!iosProductId || !androidProductId) {
-  console.error("Missing environment variables for product IDs.");
-  throw new Error("Product IDs must be defined in the environment variables.");
-}
+import Constants from "expo-constants";
+import { router } from "expo-router";
 
 const itemSkus: string[] =
   Platform.select({
-    ios: [iosProductId],
-    android: [androidProductId],
+    ios: [Constants.expoConfig?.extra?.iosProductId || ""],
+    android: [Constants.expoConfig?.extra?.androidProductId || ""],
   }) || [];
 
 export const usePurchaseExtraContent = (userId: string) => {
@@ -64,7 +58,6 @@ export const usePurchaseExtraContent = (userId: string) => {
     } catch (err: any) {
       // Specify the error type
       console.warn("Purchase failed:", err.message);
-      Alert.alert("Purchase Failed", "Unable to complete the purchase.");
     } finally {
       setIsPurchasing(false);
     }
@@ -78,10 +71,7 @@ export const usePurchaseExtraContent = (userId: string) => {
           // Process the receipt and unlock content
           updateUserProfileAfterPurchase(); // Update the user profile in Firestore
           RNIap.finishTransaction({ purchase }); // Pass an object with the purchase property
-          Alert.alert(
-            "Success!",
-            "You've successfully unlocked unlimited sentence access. Enjoy your enhanced learning experience!"
-          );
+          router.push("/learning/sentences");
         }
       }
     );
