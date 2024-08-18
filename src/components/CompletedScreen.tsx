@@ -111,7 +111,7 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
               <FontAwesome5
                 name="unlock-alt"
                 size={20}
-                color={globalColors.text}
+                color={globalColors.buttonText}
               />
             } // Pass the FontAwesome icon as a propv
             style={{

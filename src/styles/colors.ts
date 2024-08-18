@@ -16,6 +16,7 @@ export type ThemeColors = {
   cardText: string;
   wordBackground: string; // Default word background color
   wordHighlightBackground: string; // Highlighted word background color
+  buttonText: string;
 };
 
 export const lightThemeColors: ThemeColors = {
@@ -36,6 +37,7 @@ export const lightThemeColors: ThemeColors = {
   success: "#66BB6A", // Modern vibrant green
   wordBackground: "#f0f0f0", // Light background color for better contrast
   wordHighlightBackground: "#d3f8d3", // Light green background color for clicked words
+  buttonText: "#2E3B44",
 };
 
 export const darkThemeColors: ThemeColors = {
@@ -56,4 +58,5 @@ export const darkThemeColors: ThemeColors = {
   success: "#66BB6A", // Modern vibrant green
   wordBackground: "#37474F", // Darker background color for better contrast
   wordHighlightBackground: "#66BB6A", // Modern vibrant green background color for clicked words
+  buttonText: "#2E3B44",
 };

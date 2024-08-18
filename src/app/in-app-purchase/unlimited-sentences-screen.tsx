@@ -43,7 +43,11 @@ const UnlimitedSentencesScreen = () => {
         disabled={isPurchasing}
         style={{ backgroundColor: globalColors.secondary }}
         icon={
-          <FontAwesome5 name="unlock-alt" size={20} color={globalColors.text} />
+          <FontAwesome5
+            name="unlock-alt"
+            size={20}
+            color={globalColors.buttonText}
+          />
         } // Pass the FontAwesome icon as a propv
       />
     </ScrollView>

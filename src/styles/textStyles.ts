@@ -85,6 +85,7 @@ export const createTextStyles = (colors: ThemeColors) => {
     buttonText: {
       ...boldText,
       fontSize: isTablet ? 24 : 14,
+      color: colors.buttonText,
     },
     contrastButtonText: {
       ...contrastBoldText,
