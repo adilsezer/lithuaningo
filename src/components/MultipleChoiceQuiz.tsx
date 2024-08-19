@@ -18,7 +18,6 @@ interface MultipleChoiceQuizProps {
   sentenceText: string;
   questionText: string;
   questionWord: string;
-  translation: string;
   image: string;
   options: string[];
   correctAnswerText: string;
@@ -31,7 +30,6 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   questionText,
   options,
   correctAnswerText,
-  translation,
   image,
   questionIndex,
   questionWord,

@@ -25,7 +25,10 @@ import {
 import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { QUIZ_KEYS } from "@config/constants"; // Import the constants
+import { QUIZ_KEYS } from "@config/constants";
+import userProfileService from "@services/data/userProfileService";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { router } from "expo-router";
 
 const QuizScreen: React.FC = () => {
   const [quizState, setQuizState] = useState<QuizState>(initializeQuizState());
@@ -40,12 +43,14 @@ const QuizScreen: React.FC = () => {
   const [correctlyAnsweredDuringSession, setCorrectlyAnsweredDuringSession] =
     useState<number[]>([]);
   const [resetKey, setResetKey] = useState(0);
+  const [isPremiumUser, setIsPremiumUser] = useState<boolean>(false); // State for purchase status
 
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
   const { handleAnswer: updateStats } = useData();
   const scrollViewRef = useRef<ScrollView>(null);
+  const { getUserPremiumStatus } = userProfileService;
 
   const getKey = (keyFunc: (userId: string, dateKey: string) => string) =>
     userData ? keyFunc(userData.id, getCurrentDateKey()) : "";
@@ -61,6 +66,9 @@ const QuizScreen: React.FC = () => {
       if (userData) {
         dispatch(setLoading(true));
         try {
+          const purchasedStatus = await getUserPremiumStatus(userData.id);
+          setIsPremiumUser(purchasedStatus);
+
           const mainQuizProgressData = await retrieveData<{ progress: number }>(
             QUIZ_PROGRESS_KEY
           );
@@ -87,8 +95,6 @@ const QuizScreen: React.FC = () => {
           );
 
           const mainQuizProgress = mainQuizProgressData?.progress ?? 0;
-
-          incorrectQuestionsData?.questions?.forEach((question, index) => {});
 
           if (!loadedQuestions || loadedQuestions.length === 0) {
             await loadQuizData(
@@ -306,6 +312,21 @@ const QuizScreen: React.FC = () => {
     });
   };
 
+  const handleRegenerateContent = async () => {
+    try {
+      await storeData(QUIZ_QUESTIONS_KEY, null);
+      await storeData(QUIZ_PROGRESS_KEY, null);
+      await storeData(INCORRECT_QUESTIONS_KEY, null);
+      await storeData(INCORRECT_PROGRESS_KEY, null);
+      await storeData(SESSION_STATE_KEY, null);
+
+      router.push("/learning/sentences");
+    } catch (error) {
+      console.error("Error resetting content:", error);
+      crashlytics().recordError(error as Error);
+    }
+  };
+
   // Auto-scroll to bottom to make button visible
   useEffect(() => {
     if (quizState.showContinueButton && scrollViewRef.current) {
@@ -344,6 +365,39 @@ const QuizScreen: React.FC = () => {
               navigationRoute="/dashboard/leaderboard"
               showStats={true}
             />
+            {!isPremiumUser ? (
+              <CustomButton
+                title={"Unlock Unlimited Challenges"}
+                onPress={() =>
+                  router.push("/in-app-purchase/unlimited-sentences-screen")
+                }
+                icon={
+                  <FontAwesome5
+                    name="unlock-alt"
+                    size={20}
+                    color={globalColors.buttonText}
+                  />
+                }
+                style={{
+                  backgroundColor: globalColors.secondary,
+                }}
+              />
+            ) : (
+              <CustomButton
+                title={"Start a New Challenge"}
+                onPress={handleRegenerateContent}
+                icon={
+                  <FontAwesome5
+                    name="star"
+                    size={20}
+                    color={globalColors.buttonText}
+                  />
+                }
+                style={{
+                  backgroundColor: globalColors.secondary,
+                }}
+              />
+            )}
           </View>
         ) : (
           <View style={{ flex: 1 }}>
@@ -367,7 +421,6 @@ const QuizScreen: React.FC = () => {
                 sentenceText={quizState.sentenceText}
                 options={quizState.options}
                 correctAnswerText={quizState.correctAnswerText}
-                translation={quizState.translation}
                 image={quizState.image}
                 questionIndex={quizState.questionIndex}
                 questionWord={quizState.questionWord}

@@ -23,22 +23,22 @@ const UnlimitedSentencesScreen = () => {
         source={require("assets/images/unlock_sentences.jpeg")}
         style={styles.image}
       />
-      <Text style={globalStyles.title}>Unlimited Sentences Access</Text>
+      <Text style={globalStyles.title}>Unlimited Challenge Access</Text>
       <Text style={[globalStyles.subtitle, { textAlign: "justify" }]}>
-        Study more with unlimited sentence practice! This in-app purchase
-        unlocks unlimited access to sentence exercises, allowing you to study
-        without the daily limit of 2 sentences. Unlock your full potential and
-        accelerate your language learning journey!
+        This in-app purchase unlocks unlimited access to word and sentence
+        exercises, allowing you to study without the daily limit of 2 sentences.
+        Unlock your full potential and accelerate your language learning
+        journey!
       </Text>
 
       <Text style={globalStyles.subheading}>Why Upgrade?</Text>
       <Text style={[globalStyles.subtitle, { textAlign: "left" }]}>
-        • Unlimited access to all sentence exercises{"\n"}• No daily sentence
-        limit{"\n"}• Improve faster by practicing more{"\n"}
+        • Unlimited access to all exercises{"\n"}• No daily sentence limit{"\n"}
+        • Improve faster by practicing more{"\n"}
       </Text>
 
       <CustomButton
-        title={isPurchasing ? "Processing..." : "Unlock Unlimited Sentences"}
+        title={isPurchasing ? "Processing..." : "Unlock Unlimited Challenges"}
         onPress={purchaseExtraContent}
         disabled={isPurchasing}
         style={{ backgroundColor: globalColors.secondary }}

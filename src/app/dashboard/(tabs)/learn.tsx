@@ -5,6 +5,7 @@ import CustomButton from "@components/CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppDispatch } from "@src/redux/hooks";
 import { resetClickedWords } from "@src/redux/slices/clickedWordsSlice";
+import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
 
 export default function Tab() {
   const dispatch = useAppDispatch();
@@ -12,7 +13,7 @@ export default function Tab() {
     dispatch(resetClickedWords());
     router.push("/learning/sentences");
   };
-  const { styles: globalStyles } = useThemeStyles();
+  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -26,6 +27,22 @@ export default function Tab() {
         flashcards, and quizzes. Keep up the awesome work!
       </Text>
       <CustomButton title="Start" onPress={handleStartLearning} />
+      <CustomButton
+        title={"Unlock Unlimited Challenges"}
+        onPress={() =>
+          router.push("/in-app-purchase/unlimited-sentences-screen")
+        }
+        icon={
+          <FontAwesome5
+            name="unlock-alt"
+            size={20}
+            color={globalColors.buttonText}
+          />
+        }
+        style={{
+          backgroundColor: globalColors.secondary,
+        }}
+      />
     </ScrollView>
   );
 }

@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import * as RNIap from "react-native-iap";
 import { Alert, Platform } from "react-native";
-import firestore from "@react-native-firebase/firestore";
-import { COLLECTIONS } from "@config/constants"; // Adjust the import path as needed
 import Constants from "expo-constants";
 import { router } from "expo-router";
+import userProfileService from "@services/data/userProfileService";
+
+const { updatePurchasedExtraContent } = userProfileService;
 
 const itemSkus: string[] =
   Platform.select({
@@ -15,7 +16,6 @@ const itemSkus: string[] =
 export const usePurchaseExtraContent = (userId: string) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
 
-  // Handle the case where userId is an empty string
   if (!userId) {
     console.warn("Invalid userId provided to usePurchaseExtraContent.");
     return {
@@ -25,26 +25,6 @@ export const usePurchaseExtraContent = (userId: string) => {
       isPurchasing: false,
     };
   }
-
-  const updateUserProfileAfterPurchase = async () => {
-    try {
-      const userDocRef = firestore().collection(COLLECTIONS.USERS).doc(userId);
-      const userDoc = await userDocRef.get();
-
-      if (userDoc.exists) {
-        await userDocRef.update({
-          hasPurchasedExtraContent: true,
-        });
-      } else {
-        await userDocRef.set({
-          hasPurchasedExtraContent: true,
-          // Add any other fields you might need here
-        });
-      }
-    } catch (error) {
-      console.error("Error updating user profile after purchase:", error);
-    }
-  };
 
   const purchaseExtraContent = async () => {
     setIsPurchasing(true);
@@ -56,7 +36,6 @@ export const usePurchaseExtraContent = (userId: string) => {
         Alert.alert("Error", "No products found.");
       }
     } catch (err: any) {
-      // Specify the error type
       console.warn("Purchase failed:", err.message);
     } finally {
       setIsPurchasing(false);
@@ -65,12 +44,11 @@ export const usePurchaseExtraContent = (userId: string) => {
 
   useEffect(() => {
     const purchaseUpdateSubscription = RNIap.purchaseUpdatedListener(
-      (purchase) => {
+      async (purchase) => {
         const receipt = purchase.transactionReceipt;
         if (receipt) {
-          // Process the receipt and unlock content
-          updateUserProfileAfterPurchase(); // Update the user profile in Firestore
-          RNIap.finishTransaction({ purchase }); // Pass an object with the purchase property
+          await updatePurchasedExtraContent(userId, true); // Await here to ensure the update is completed
+          await RNIap.finishTransaction({ purchase });
           router.push("/learning/sentences");
         }
       }
@@ -88,7 +66,7 @@ export const usePurchaseExtraContent = (userId: string) => {
       purchaseUpdateSubscription.remove();
       purchaseErrorSubscription.remove();
     };
-  }, []);
+  }, [userId]);
 
   return { purchaseExtraContent, isPurchasing };
 };

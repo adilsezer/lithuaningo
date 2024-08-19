@@ -46,7 +46,7 @@ export const darkThemeColors: ThemeColors = {
   tertiary: "#d5304f", // Red
   background: "#263238", // Dark slate
   active: "#66BB6A", // Lively modern green (same as primary)
-  inactive: "#455A64", // Cooler, muted blue-grey
+  inactive: "#B0BEC5", // Cooler, muted blue-grey
   text: "#FAFAFA", // Very light grey (almost white)
   lightText: "#CFD8DC", // Deep charcoal grey
   link: "#82CAFF", // Crisp, deep sky blue (same as light theme)
