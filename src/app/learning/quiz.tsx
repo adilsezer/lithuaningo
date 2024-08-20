@@ -368,9 +368,9 @@ const QuizScreen: React.FC = () => {
             />
             {!isPremiumUser ? (
               <CustomButton
-                title={"Unlock Unlimited Challenges"}
+                title={"Unlock Unlimited Learning"}
                 onPress={() =>
-                  router.push("/in-app-purchase/unlimited-sentences-screen")
+                  router.push("/in-app-purchase/unlimited-learning-screen")
                 }
                 icon={
                   <FontAwesome5
