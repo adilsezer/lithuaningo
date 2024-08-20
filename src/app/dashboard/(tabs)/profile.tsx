@@ -12,13 +12,14 @@ import { clearData } from "@utils/storageUtils";
 import ThemeSwitch from "@components/ThemeSwitch";
 import { useTheme } from "@src/context/ThemeContext";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { usePremiumStatus } from "@hooks/useUserStatus";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const { handleSignOut } = useAuthMethods();
   const router = useRouter();
-
   const { isDarkMode, toggleTheme } = useTheme();
 
   const logout = async () => {
@@ -33,6 +34,7 @@ export default function ProfileScreen() {
 
   const userData = useAppSelector(selectUserData);
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
+  const isPremiumUser = usePremiumStatus(); // Get the premium status
 
   const handleClearCompletionStatus = async () => {
     if (!userData) {
@@ -66,10 +68,16 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <ThemeSwitch onToggle={toggleTheme} isDarkMode={isDarkMode} />
-      <Text style={globalStyles.title}>{userData.name || "User"}</Text>
+      <Text style={globalStyles.title}>{userData.name || "User"} </Text>
       <Text style={globalStyles.subtitle}>{userData.email}</Text>
+      {isPremiumUser && (
+        <View style={{ alignItems: "center", marginVertical: 15 }}>
+          <FontAwesome5 name="crown" size={20} color={globalColors.secondary} />
 
-      <View style={styles.actionsSection}>
+          <Text style={globalStyles.subtitle}>Premium User</Text>
+        </View>
+      )}
+      <View>
         <CustomButton
           title="Edit Profile"
           onPress={() => navigateTo("/profile/edit-profile")}
@@ -90,18 +98,6 @@ export default function ProfileScreen() {
           title="About the App"
           onPress={() => navigateTo("/about")}
         />
-        {/* {__DEV__ && (
-          <CustomButton
-            title="Clear Completion Status"
-            onPress={handleClearCompletionStatus}
-          />
-        )}
-        {__DEV__ && (
-          <CustomButton
-            title="Test Crash"
-            onPress={() => crashlytics().crash()}
-          />
-        )} */}
         <CustomButton title="Logout" onPress={logout} />
       </View>
     </ScrollView>
@@ -112,8 +108,5 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-  },
-  actionsSection: {
-    marginVertical: 20,
   },
 });

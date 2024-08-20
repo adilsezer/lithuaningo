@@ -1,19 +1,19 @@
 import React from "react";
 import { Image, Text, StyleSheet, ScrollView } from "react-native";
 import CustomButton from "@components/CustomButton"; // Adjust the import path as needed
-import { usePurchaseExtraContent } from "@hooks/usePurchaseExtraContent"; // Adjust the import path as needed
 import { useAppSelector } from "@src/redux/hooks";
 import { selectUserData } from "@src/redux/slices/userSlice";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import BackButton from "@components/BackButton";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { usePurchaseExtraContent } from "@hooks/useUserStatus"; // Import the hook
 
 const UnlimitedSentencesScreen = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
 
   const { purchaseExtraContent, isPurchasing } = usePurchaseExtraContent(
-    userData?.id ?? ""
+    userData?.id || ""
   );
 
   return (

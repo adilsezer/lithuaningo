@@ -4,6 +4,8 @@ import CustomButton from "./CustomButton";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { FontAwesome5 } from "@expo/vector-icons";
+import { usePremiumStatus } from "@src/hooks/useUserStatus";
 import useData from "@src/hooks/useData";
 
 interface CompletedScreenProps {
@@ -24,15 +26,18 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const router = useRouter();
   const { stats } = useData();
+  const isPremiumUser = usePremiumStatus();
   const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining());
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setTimeRemaining(calculateTimeRemaining());
-    }, 1000);
+    if (!isPremiumUser) {
+      const timer = setInterval(() => {
+        setTimeRemaining(calculateTimeRemaining());
+      }, 1000);
 
-    return () => clearInterval(timer);
-  }, []);
+      return () => clearInterval(timer);
+    }
+  }, [isPremiumUser]);
 
   function calculateTimeRemaining() {
     const now = new Date();
@@ -92,17 +97,43 @@ const CompletedScreen: React.FC<CompletedScreenProps> = ({
         </View>
       )}
       {showStats && (
-        <View>
-          <View style={styles.timerContainer}>
-            <Text style={globalStyles.subtitle}>
-              Next challenge available in:
-            </Text>
-            <Text style={globalStyles.title}>
-              {`${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`}
-            </Text>
-          </View>
+        <View
+          style={
+            isPremiumUser
+              ? { alignItems: "center", marginVertical: 20 }
+              : styles.timerContainer
+          }
+        >
+          {isPremiumUser ? (
+            <>
+              <FontAwesome5
+                name="crown"
+                size={30}
+                color={globalColors.secondary}
+              />
+              <Text
+                style={[
+                  globalStyles.subtitle,
+                  { marginTop: 20, textAlign: "center" },
+                ]}
+              >
+                As a premium user, you can use the "Start a New Challenge"
+                button to generate a new set of challenges anytime.
+              </Text>
+            </>
+          ) : (
+            <>
+              <Text style={globalStyles.subtitle}>
+                Next challenge available in:
+              </Text>
+              <Text style={globalStyles.title}>
+                {`${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`}
+              </Text>
+            </>
+          )}
         </View>
       )}
+
       <CustomButton
         title={buttonText}
         onPress={() => router.push(navigationRoute)}

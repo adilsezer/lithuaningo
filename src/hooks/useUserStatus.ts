@@ -4,8 +4,11 @@ import { Alert, Platform } from "react-native";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import userProfileService from "@services/data/userProfileService";
+import { useAppSelector } from "@src/redux/hooks";
+import { selectUserData } from "@src/redux/slices/userSlice";
 
-const { updatePurchasedExtraContent } = userProfileService;
+const { updatePurchasedExtraContent, getUserPremiumStatus } =
+  userProfileService;
 
 const itemSkus: string[] =
   Platform.select({
@@ -13,10 +16,35 @@ const itemSkus: string[] =
     android: [Constants.expoConfig?.extra?.androidProductId || ""],
   }) || [];
 
+// Hook for retrieving premium status
+export const usePremiumStatus = () => {
+  const userData = useAppSelector(selectUserData);
+  const [isPremiumUser, setIsPremiumUser] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchPremiumStatus = async () => {
+      if (userData) {
+        try {
+          const purchasedStatus = await getUserPremiumStatus(userData.id);
+          setIsPremiumUser(purchasedStatus);
+        } catch (error) {
+          console.error("Error fetching premium status:", error);
+        }
+      }
+    };
+
+    fetchPremiumStatus();
+  }, [userData]);
+
+  return isPremiumUser;
+};
+
+// Hook for purchasing extra content
 export const usePurchaseExtraContent = (userId: string) => {
   const [isPurchasing, setIsPurchasing] = useState(false);
 
-  if (!userId) {
+  // Handle case where userId is an empty string
+  if (!userId || userId.trim() === "") {
     console.warn("Invalid userId provided to usePurchaseExtraContent.");
     return {
       purchaseExtraContent: () => {
@@ -47,9 +75,9 @@ export const usePurchaseExtraContent = (userId: string) => {
       async (purchase) => {
         const receipt = purchase.transactionReceipt;
         if (receipt) {
-          await updatePurchasedExtraContent(userId, true); // Await here to ensure the update is completed
+          await updatePurchasedExtraContent(userId, true);
           await RNIap.finishTransaction({ purchase });
-          router.push("/learning/sentences");
+          router.push("/dashboard/learn");
         }
       }
     );

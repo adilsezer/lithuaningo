@@ -5,6 +5,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Alert,
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
@@ -14,7 +15,7 @@ import MultipleChoiceQuiz from "@components/MultipleChoiceQuiz";
 import FillInTheBlankQuiz from "@components/FillInTheBlankQuiz";
 import CustomButton from "@components/CustomButton";
 import CompletedScreen from "@components/CompletedScreen";
-import { storeData, retrieveData } from "@utils/storageUtils";
+import { storeData, retrieveData, resetAllQuizKeys } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import useData from "../../hooks/useData";
 import {
@@ -26,8 +27,8 @@ import BackButton from "@components/BackButton";
 import { QuizState } from "../../state/quizState";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { QUIZ_KEYS } from "@config/constants";
-import userProfileService from "@services/data/userProfileService";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome5";
+import { usePremiumStatus } from "@src/hooks/useUserStatus";
+import { FontAwesome5 } from "@expo/vector-icons";
 import { router } from "expo-router";
 
 const QuizScreen: React.FC = () => {
@@ -43,14 +44,13 @@ const QuizScreen: React.FC = () => {
   const [correctlyAnsweredDuringSession, setCorrectlyAnsweredDuringSession] =
     useState<number[]>([]);
   const [resetKey, setResetKey] = useState(0);
-  const [isPremiumUser, setIsPremiumUser] = useState<boolean>(false); // State for purchase status
 
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
+  const isPremiumUser = usePremiumStatus();
   const dispatch = useAppDispatch();
   const { handleAnswer: updateStats } = useData();
   const scrollViewRef = useRef<ScrollView>(null);
-  const { getUserPremiumStatus } = userProfileService;
 
   const getKey = (keyFunc: (userId: string, dateKey: string) => string) =>
     userData ? keyFunc(userData.id, getCurrentDateKey()) : "";
@@ -66,9 +66,6 @@ const QuizScreen: React.FC = () => {
       if (userData) {
         dispatch(setLoading(true));
         try {
-          const purchasedStatus = await getUserPremiumStatus(userData.id);
-          setIsPremiumUser(purchasedStatus);
-
           const mainQuizProgressData = await retrieveData<{ progress: number }>(
             QUIZ_PROGRESS_KEY
           );
@@ -314,16 +311,20 @@ const QuizScreen: React.FC = () => {
 
   const handleRegenerateContent = async () => {
     try {
-      await storeData(QUIZ_QUESTIONS_KEY, null);
-      await storeData(QUIZ_PROGRESS_KEY, null);
-      await storeData(INCORRECT_QUESTIONS_KEY, null);
-      await storeData(INCORRECT_PROGRESS_KEY, null);
-      await storeData(SESSION_STATE_KEY, null);
-
-      router.push("/learning/sentences");
+      if (userData) {
+        dispatch(setLoading(true));
+        await resetAllQuizKeys(userData.id);
+        Alert.alert(
+          "Success",
+          "Content reset. Redirecting to the learn tab to start a new challenge.",
+          [{ text: "OK", onPress: () => router.push("/dashboard/learn") }]
+        );
+      }
     } catch (error) {
       console.error("Error resetting content:", error);
       crashlytics().recordError(error as Error);
+    } finally {
+      dispatch(setLoading(false));
     }
   };
 
@@ -388,7 +389,7 @@ const QuizScreen: React.FC = () => {
                 onPress={handleRegenerateContent}
                 icon={
                   <FontAwesome5
-                    name="star"
+                    name="crown"
                     size={20}
                     color={globalColors.buttonText}
                   />
