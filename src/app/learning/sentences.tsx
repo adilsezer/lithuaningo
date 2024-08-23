@@ -55,8 +55,10 @@ const SentencesScreen: React.FC = () => {
         if (storedSentences && storedSentences.length > 0) {
           setSentences(storedSentences);
         } else {
-          const fetchedSentences =
-            await sentenceService.fetchAndShuffleSentences();
+          const fetchedSentences = await sentenceService.fetchSentences(
+            userData?.id,
+            true
+          );
           const firstTwoSentences = fetchedSentences.slice(0, 2);
 
           setSentences(firstTwoSentences);

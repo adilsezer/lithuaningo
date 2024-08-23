@@ -40,7 +40,7 @@ const fetchLearnedAndAllSentencesWithWords = async (
     throw new Error("No learned sentences found.");
   }
 
-  const allSentences = await sentenceService.fetchAndShuffleSentences();
+  const allSentences = await sentenceService.fetchSentences(userData?.id);
   const allWords = await wordService.fetchWords();
 
   return { learnedSentences, allSentences, allWords };
@@ -50,13 +50,13 @@ const findWordDetailsIgnoringPrefix = (
   word: string,
   allWords: Word[]
 ): Word | null => {
-  return (
+  const foundWord =
     allWords.find((wordDetail) =>
       wordDetail.wordForms.some(
         (form) => form.lithuanian.toLowerCase() === word.toLowerCase()
       )
-    ) || null
-  );
+    ) || null;
+  return foundWord;
 };
 
 const getLearnedWordsDetails = (

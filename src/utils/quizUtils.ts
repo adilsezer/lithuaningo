@@ -14,24 +14,23 @@ export const getSkippedWords = (): string[] => [
   "jie",
   "jos",
   "tai",
+  "į",
 ];
 
 export const getRandomQuestionType = ():
   | "multipleChoice"
   | "fillInTheBlank"
   | "trueFalse" => {
-  // if (__DEV__) {
-  //   // Return a specific value for development environment
-  //   return "fillInTheBlank";
-  // }
-
-  // Normal logic for production environment
   const randomValue = Math.random();
-  return randomValue < 0.45
-    ? "multipleChoice"
-    : randomValue < 0.85
-    ? "fillInTheBlank"
-    : "trueFalse";
+
+  const questionType =
+    randomValue < 0.45
+      ? "multipleChoice"
+      : randomValue < 0.85
+      ? "fillInTheBlank"
+      : "trueFalse";
+
+  return questionType;
 };
 
 const stripGrammarDetails = (text: string) =>
@@ -69,11 +68,13 @@ export const getRandomOptions = async (
     .map(([word]) => word);
 
   const topTwoOptions = sortedOptions.slice(0, 2);
+
   const remainingCandidates = candidateWords.filter(
     (word) => !topTwoOptions.includes(word) && word !== cleanedCorrectAnswerText
   );
 
   const randomOption = shuffleArray(remainingCandidates)[0];
+
   const finalOptions = shuffleArray([...topTwoOptions, randomOption]);
 
   return finalOptions;
@@ -86,7 +87,8 @@ export const getSimilarityScores = (
   const similarityScores = new Map(
     candidates.map((candidate) => {
       const distance = levenshtein(target, candidate);
-      return [candidate, 1 / (1 + distance)];
+      const score = 1 / (1 + distance);
+      return [candidate, score];
     })
   );
 
@@ -108,8 +110,10 @@ const levenshtein = (a: string, b: string): number => {
             );
     }
   }
+
   return matrix[b.length][a.length];
 };
 
-const shuffleArray = <T>(array: T[]): T[] =>
-  array.sort(() => 0.5 - Math.random());
+const shuffleArray = <T>(array: T[]): T[] => {
+  return array.sort(() => 0.5 - Math.random());
+};

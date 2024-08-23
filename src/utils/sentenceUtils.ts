@@ -1,5 +1,6 @@
 import { Sentence } from "../services/data/sentenceService";
 import { Word } from "../services/data/wordService";
+import { getSkippedWords } from "./quizUtils";
 import { cleanWord } from "./stringUtils";
 
 export const removeDuplicates = (sentences: Sentence[]): Sentence[] => {
@@ -19,18 +20,41 @@ const findRelatedSentencesIgnoringPrefix = (
   allSentences: Sentence[],
   wordDetail: Word
 ): Sentence[] => {
+  const skippedWords = new Set(
+    getSkippedWords().map((word) => cleanWord(word).toLowerCase())
+  );
+
   const relatedSentences = allSentences
     .filter((sentence) =>
-      sentence.sentence
-        .split(" ")
-        .some((word) =>
-          wordDetail.wordForms.some(
-            (form) =>
-              cleanWord(word).toLowerCase() === form.lithuanian.toLowerCase()
+      sentence.sentence.split(" ").some((word) => {
+        const cleanedWord = cleanWord(word).toLowerCase();
+
+        // Skip if any word form is in the skipped words
+        if (
+          wordDetail.wordForms.some((form) =>
+            skippedWords.has(form.lithuanian.toLowerCase())
           )
-        )
+        ) {
+          return false;
+        }
+
+        const isRelated = wordDetail.wordForms.some(
+          (form) => cleanedWord === form.lithuanian.toLowerCase()
+        );
+
+        return isRelated;
+      })
     )
-    .map((sentence) => ({ ...sentence, relatedTo: wordDetail.id }));
+    .map((sentence) => ({ ...sentence }));
+
+  // Shuffle the related sentences
+  for (let i = relatedSentences.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [relatedSentences[i], relatedSentences[j]] = [
+      relatedSentences[j],
+      relatedSentences[i],
+    ];
+  }
 
   return relatedSentences;
 };
@@ -55,7 +79,6 @@ export const getRelatedSentences = (
       wordWithoutPrefix
     ).map((sentence) => ({
       ...sentence,
-      relatedTo: wordDetail.id, // Keep the original id with 'ne' prefix
     }));
   }
 

@@ -6,8 +6,8 @@ export const API_KEYS = {
 
 export const COLLECTIONS = {
   USERS: "userProfiles",
-  SENTENCES: "sentences",
-  WORDS: "words",
+  SENTENCES: __DEV__ ? "testSentences" : "sentences",
+  WORDS: __DEV__ ? "testWords" : "words",
   PENDING_WORDS: "pendingWords",
   MISSING_WORDS: "missingWords",
   ANNOUNCEMENTS: "announcements",

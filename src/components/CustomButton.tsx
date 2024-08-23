@@ -9,6 +9,7 @@ import {
   TouchableOpacityProps,
   useWindowDimensions,
   Platform,
+  Image,
 } from "react-native";
 import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
@@ -59,7 +60,11 @@ const CustomButton: React.FC<ButtonProps> = ({
         disabled={disabled}
       >
         <View style={{ flexDirection: "row", alignItems: "center" }}>
-          {icon && icon}
+          {icon && typeof icon === "number" ? (
+            <Image source={icon} style={{ width: 20, height: 20 }} />
+          ) : (
+            icon
+          )}
           <Text
             style={[
               globalStyles.buttonText,
