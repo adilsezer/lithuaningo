@@ -23,7 +23,11 @@ const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
       <AppleAuthentication.AppleAuthenticationButton
         buttonType={AppleAuthentication.AppleAuthenticationButtonType.CONTINUE}
         buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
-        style={[globalStyles.button, { width: "100%" }]}
+        style={[
+          globalStyles.button,
+          { width: "100%" },
+          isTablet && { height: 65 },
+        ]}
         onPress={disabled ? () => {} : onPress}
       />
     </View>
