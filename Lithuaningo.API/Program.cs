@@ -8,7 +8,8 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // Configure Firestore
-builder.Services.AddSingleton(FirestoreDb.Create("your-project-id")); // Replace with your project ID
+var projectId = builder.Configuration.GetValue<string>("FirestoreSettings:ProjectId");
+builder.Services.AddSingleton(FirestoreDb.Create(projectId));
 
 // Register services
 builder.Services.AddScoped<WordService>();
@@ -17,12 +18,13 @@ builder.Services.AddScoped<StatsService>();
 builder.Services.AddScoped<QuizService>();
 
 // Configure CORS
+var allowedOrigins = builder.Configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend",
         policy =>
         {
-            policy.WithOrigins("http://localhost:3000") // Replace with your frontend URL
+            policy.WithOrigins(allowedOrigins)
                   .AllowAnyMethod()
                   .AllowAnyHeader();
         });
