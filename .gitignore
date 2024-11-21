@@ -79,7 +79,7 @@ artifacts/
 credentials.json
 **/credentials/**/*.json
 !**/credentials/**/*.template.json
-service-account*.json
+!**/credentials/**/service-account.template.json
 firebase-adminsdk*.json
 local.settings.json
 .env*
