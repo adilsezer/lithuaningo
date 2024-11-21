@@ -1,4 +1,5 @@
 using Google.Cloud.Firestore;
+using System.IO;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,9 +8,23 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Configure Firestore
-var projectId = builder.Configuration.GetValue<string>("FirestoreSettings:ProjectId");
-builder.Services.AddSingleton(FirestoreDb.Create(projectId));
+// Add configuration
+builder.Services.Configure<FirestoreSettings>(
+    builder.Configuration.GetSection("FirestoreSettings"));
+
+// Get settings
+var firestoreSettings = builder.Configuration
+    .GetSection("FirestoreSettings")
+    .Get<FirestoreSettings>();
+
+// Create full path
+var credentialsPath = Path.Combine(
+    Directory.GetCurrentDirectory(), 
+    firestoreSettings?.CredentialsPath ?? "credentials/credentials.json"
+);
+
+// Add Firestore
+builder.Services.AddSingleton(FirestoreDb.Create(firestoreSettings?.ProjectId));
 
 // Register services
 builder.Services.AddScoped<WordService>();
