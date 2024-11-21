@@ -77,6 +77,8 @@ artifacts/
 *.[Ss]ecret
 *.credentials
 credentials.json
+**/credentials/**/*.json
+!**/credentials/**/*.template.json
 service-account*.json
 firebase-adminsdk*.json
 local.settings.json

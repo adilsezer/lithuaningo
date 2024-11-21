@@ -11,11 +11,16 @@ builder.Services.AddSwaggerGen();
 // Add configuration
 builder.Services.Configure<FirestoreSettings>(
     builder.Configuration.GetSection("FirestoreSettings"));
+builder.Services.Configure<GoogleAuthSettings>(
+    builder.Configuration.GetSection("GoogleAuthSettings"));
 
 // Get settings
 var firestoreSettings = builder.Configuration
     .GetSection("FirestoreSettings")
     .Get<FirestoreSettings>();
+var googleAuthSettings = builder.Configuration
+    .GetSection("GoogleAuthSettings")
+    .Get<GoogleAuthSettings>();
 
 // Create full path
 var credentialsPath = Path.Combine(
