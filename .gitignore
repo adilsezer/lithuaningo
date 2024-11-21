@@ -131,3 +131,7 @@ logs/
 # Include specific asset folders
 !assets/icons/android/
 !assets/icons/ios/
+
+# HTTP request files
+*.http
+!*.template.http
