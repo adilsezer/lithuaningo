@@ -1,14 +1,33 @@
+using Google.Cloud.Firestore;
+
+[FirestoreData]
 public class Word
 {
-    public string Id { get; set; }
-    public List<WordForm> WordForms { get; set; }
-    public string EnglishTranslation { get; set; }
-    public string ImageUrl { get; set; }
-    public string AdditionalInfo { get; set; }
+    [FirestoreDocumentId]
+    public string Id { get; set; } = string.Empty;
+    
+    [FirestoreProperty]
+    public string additionalInfo { get; set; } = string.Empty;
+
+    [FirestoreProperty]
+    public string englishTranslation { get; set; } = string.Empty;
+
+    [FirestoreProperty]
+    public List<string> grammaticalForms { get; set; } = new();
+
+    [FirestoreProperty]
+    public string imageUrl { get; set; } = string.Empty;
+
+    [FirestoreProperty]
+    public List<WordForm> wordForms { get; set; } = new();
 }
 
+[FirestoreData]
 public class WordForm
 {
-    public string Lithuanian { get; set; }
-    public string English { get; set; }
+    [FirestoreProperty]
+    public string english { get; set; } = string.Empty;
+
+    [FirestoreProperty]
+    public string lithuanian { get; set; } = string.Empty;
 }
