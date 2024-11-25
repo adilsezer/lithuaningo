@@ -18,6 +18,13 @@ public class UserController : ControllerBase
         return userProfile != null ? Ok(userProfile) : NotFound();
     }
 
+    [HttpGet("{userId}/progress")]
+    public async Task<ActionResult<UserProfile>> GetProgress(string userId)
+    {
+        var progress = await _userService.GetUserProfileAsync(userId);
+        return progress != null ? Ok(progress) : NotFound();
+    }
+
     [HttpPut]
     public async Task<IActionResult> UpdateUserProfile([FromBody] UserProfile userProfile)
     {

@@ -70,7 +70,6 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Register Services
     services.AddScoped<WordService>();
     services.AddScoped<UserService>();
-    services.AddScoped<StatsService>();
     services.AddScoped<QuizService>();
     
     // Configure CORS

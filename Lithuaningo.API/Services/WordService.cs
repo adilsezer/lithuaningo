@@ -17,12 +17,12 @@ public class WordService
 
     public async Task AddWordForReviewAsync(Word word)
     {
-        await _db.Collection("pending_words").AddAsync(word);
+        await _db.Collection("pendingWords").AddAsync(word);
     }
 
     public async Task AddMissingWordAsync(string word)
     {
-        var docRef = _db.Collection("missing_words").Document(word);
+        var docRef = _db.Collection("missingWords").Document(word);
         var doc = await docRef.GetSnapshotAsync();
         if (!doc.Exists)
         {

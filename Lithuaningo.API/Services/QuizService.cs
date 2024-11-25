@@ -43,7 +43,7 @@ public class QuizService
 
     private async Task<List<string>> FetchLearnedSentencesAsync(string userId)
     {
-        var userDoc = await _db.Collection("users").Document(userId).GetSnapshotAsync();
+        var userDoc = await _db.Collection("userProfiles").Document(userId).GetSnapshotAsync();
         if (!userDoc.Exists) return new List<string>();
 
         var userData = userDoc.ConvertTo<UserProfile>();
