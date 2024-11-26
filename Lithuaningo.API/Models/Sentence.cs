@@ -3,6 +3,9 @@ using Google.Cloud.Firestore;
 [FirestoreData]
 public class Sentence
 {
+    [FirestoreDocumentId]
+    public string Id { get; set; } = string.Empty;
+
     [FirestoreProperty("displayOrder")]
     public int DisplayOrder { get; set; }
 

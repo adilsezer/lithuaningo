@@ -1,177 +1,218 @@
-using Google.Cloud.Firestore;
+// Services/QuizService.cs
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Google.Cloud.Firestore;
 
 public class QuizService
 {
     private readonly FirestoreDb _db;
-    private readonly HashSet<string> _skippedWords = new(new[]
-    {
-        "yra", "aš", "buvo", "mano", "ir", "tu", "jis", "ji", 
-        "mes", "jie", "jos", "tai", "į"
-    }.Select(w => w.ToLower()));
+    private readonly UserService _userService;
+    private readonly SentenceService _sentenceService;
+    private readonly Random _random = new Random();
 
-    private const int MAX_SENTENCES_PER_WORD = 2;
-    private const int MAX_QUIZ_QUESTIONS = 10;
-
-    public QuizService(FirestoreDb db)
+    public QuizService(FirestoreDb db, UserService userService, SentenceService sentenceService)
     {
-        _db = db ?? throw new ArgumentNullException(nameof(db));
+        _db = db;
+        _userService = userService;
+        _sentenceService = sentenceService;
     }
 
-    public async Task<List<QuizQuestion>> LoadQuizDataAsync(string userId)
+    public async Task<QuizData> GenerateQuizAsync(string userId)
     {
-        ArgumentNullException.ThrowIfNullOrEmpty(userId);
+        var allSentences = await _sentenceService.GetSentencesAsync();
+        var userProfile = await _userService.GetUserProfileAsync(userId);
+        var lastTwoLearnedSentences = userProfile?.LearnedSentences?.TakeLast(2).ToList() ?? new List<string>();
 
-        var (learnedSentences, allWords) = await FetchInitialDataAsync(userId);
-        var learnedWordsDetails = ExtractLearnedWordsDetails(learnedSentences, allWords);
-        
-        return await GenerateQuizQuestionsAsync(learnedWordsDetails);
-    }
-
-    private async Task<(List<string> LearnedSentences, List<Word> AllWords)> FetchInitialDataAsync(string userId)
-    {
-        var learnedSentencesTask = FetchLearnedSentencesAsync(userId);
-        var allWordsTask = FetchAllWordsAsync();
-
-        await Task.WhenAll(learnedSentencesTask, allWordsTask);
-
-        return (await learnedSentencesTask, await allWordsTask);
-    }
-
-    private async Task<List<string>> FetchLearnedSentencesAsync(string userId)
-    {
-        var userDoc = await _db.Collection("userProfiles").Document(userId).GetSnapshotAsync();
-        if (!userDoc.Exists) return new List<string>();
-
-        var userData = userDoc.ConvertTo<UserProfile>();
-        return userData?.LearnedSentences ?? new List<string>();
-    }
-
-    private async Task<List<Word>> FetchAllWordsAsync()
-    {
-        var snapshot = await _db.Collection("words").GetSnapshotAsync();
-        return snapshot.Documents
-            .Select(doc => doc.ConvertTo<Word>())
+        // Filter sentences based on learned words
+        var relevantSentences = allSentences
+            .Where(s => lastTwoLearnedSentences.Any(ls => ls == s.Id))
             .ToList();
-    }
 
-    private List<Word> ExtractLearnedWordsDetails(List<string> learnedSentences, List<Word> allWords)
-    {
-        var learnedWords = learnedSentences
-            .SelectMany(sentence => sentence.Split(' '))
-            .Select(word => word.ToLower())
-            .Where(word => !_skippedWords.Contains(word))
-            .Distinct();
-
-        return learnedWords
-            .Select(word => FindWordWithPrefixHandling(word, allWords))
-            .Where(word => word != null)
-            .ToList()!;
-    }
-
-    private Word? FindWordWithPrefixHandling(string word, List<Word> allWords)
-    {
-        var wordDetail = FindWordDetailsIgnoringPrefix(word, allWords);
-        if (wordDetail != null) return wordDetail;
-
-        // Handle "ne" prefix
-        if (word.StartsWith("ne") && word.Length > 2)
+        if (relevantSentences.Count < 10)
         {
-            return FindWordDetailsIgnoringPrefix(word[2..], allWords);
+            while (relevantSentences.Count < 10)
+            {
+                relevantSentences.Add(allSentences[_random.Next(allSentences.Count)]);
+            }
         }
 
-        return null;
+        // Shuffle sentences to randomize selection
+        relevantSentences = relevantSentences.OrderBy(s => _random.Next()).ToList();
+
+        var quizQuestions = new List<QuizQuestion>();
+
+        // Define the number of each question type
+        var questionTypeCounts = new Dictionary<QuestionType, int>
+        {
+            { QuestionType.MultipleChoice, 6 },
+            { QuestionType.TrueFalse, 2 },
+            { QuestionType.FillInTheBlank, 2 }
+        };
+
+        int currentIndex = 0;
+
+        foreach (var qt in questionTypeCounts)
+        {
+            for (int i = 0; i < qt.Value; i++)
+            {
+                var sentence = relevantSentences[currentIndex++];
+                switch (qt.Key)
+                {
+                    case QuestionType.MultipleChoice:
+                        quizQuestions.Add(GenerateMultipleChoiceQuestion(sentence, allSentences));
+                        break;
+                    case QuestionType.TrueFalse:
+                        quizQuestions.Add(GenerateTrueFalseQuestion(sentence, allSentences));
+                        break;
+                    case QuestionType.FillInTheBlank:
+                        quizQuestions.Add(GenerateFillInTheBlankQuestion(sentence));
+                        break;
+                }
+            }
+        }
+
+        return new QuizData { Questions = quizQuestions };
     }
 
-    private Word? FindWordDetailsIgnoringPrefix(string word, List<Word> allWords)
+    private QuizQuestion GenerateMultipleChoiceQuestion(Sentence sentence, List<Sentence> allSentences)
     {
-        return allWords.FirstOrDefault(wordDetail =>
-            wordDetail.wordForms.Any(form => 
-                form.lithuanian.ToLower() == word));
-    }
-
-    private async Task<List<QuizQuestion>> GenerateQuizQuestionsAsync(List<Word> learnedWordsDetails)
-    {
-        var allSentences = await FetchAllSentencesAsync();
-        var selectedSentences = SelectRelevantSentences(learnedWordsDetails, allSentences);
-        
-        return (await Task.WhenAll(
-            selectedSentences.Select(sentence => 
-                GenerateQuestionAsync(sentence, learnedWordsDetails))
-        )).ToList();
-    }
-
-    private List<string> SelectRelevantSentences(List<Word> learnedWordsDetails, List<string> allSentences)
-    {
-        return learnedWordsDetails
-            .SelectMany(wordDetail => 
-                GetRelatedSentences(allSentences, wordDetail)
-                    .Take(MAX_SENTENCES_PER_WORD))
-            .Distinct()
-            .Take(MAX_QUIZ_QUESTIONS)
-            .ToList();
-    }
-
-    private async Task<QuizQuestion> GenerateQuestionAsync(string sentence, List<Word> allWords)
-    {
-        var translation = await TranslateSentenceAsync(sentence);
-        var options = GenerateOptions(translation, allWords);
-
+        var correctAnswer = sentence.EnglishTranslation;
+        var options = GenerateOptions(correctAnswer, allSentences, exclude: correctAnswer);
         return new QuizQuestion
         {
-            QuestionText = "What does this sentence mean?",
-            SentenceText = sentence,
-            CorrectAnswerText = translation,
-            Translation = translation,
-            Options = options,
-            QuestionType = "multipleChoice",
-            QuestionWord = ExtractMainWord(sentence, allWords)
+            QuestionType = QuestionType.MultipleChoice,
+            QuestionText = $"What does the word {correctAnswer} mean in the following sentence?",
+            SentenceText = sentence.Text,
+            CorrectAnswer = correctAnswer,
+            Options = options
         };
     }
 
-    private async Task<string> TranslateSentenceAsync(string sentence)
+    private QuizQuestion GenerateTrueFalseQuestion(Sentence sentence, List<Sentence> allSentences)
     {
-        // TODO: Implement actual translation logic
-        var snapshot = await _db.Collection("sentences")
-            .WhereEqualTo("lithuanian", sentence)
-            .Limit(1)
-            .GetSnapshotAsync();
+        bool isCorrect = _random.NextDouble() < 0.5;
+        string statement;
 
-        var doc = snapshot.FirstOrDefault();
-        return doc?.GetValue<string>("english") ?? "Translation pending";
+        if (isCorrect)
+        {
+            statement = sentence.EnglishTranslation;
+        }
+        else
+        {
+            // Get all sentences except the current one
+            var incorrectSentences = allSentences
+                .Where(s => s.EnglishTranslation != sentence.EnglishTranslation)
+                .ToList();
+
+            if (!incorrectSentences.Any())
+            {
+                // Fallback if no other sentences available
+                isCorrect = true;
+                statement = sentence.EnglishTranslation;
+            }
+            else
+            {
+                // Pick a random incorrect translation
+                var incorrectSentence = incorrectSentences[_random.Next(incorrectSentences.Count)];
+                statement = incorrectSentence.EnglishTranslation;
+            }
+        }
+
+        return new QuizQuestion
+        {
+            QuestionType = QuestionType.TrueFalse,
+            QuestionText = $"Does the following sentence mean \"{statement}\"?",
+            SentenceText = sentence.Text,
+            CorrectAnswer = isCorrect ? "True" : "False",
+            Options = new List<string> { "True", "False" }
+        };
     }
 
-    private List<string> GenerateOptions(string correctAnswer, List<Word> allWords)
+    private QuizQuestion GenerateFillInTheBlankQuestion(Sentence sentence)
     {
-        // TODO: Implement proper options generation
-        var options = new List<string> { correctAnswer };
-        // Add distractor options here
-        return options;
+        var words = sentence.Text.Split(' ').ToList();
+        if (words.Count == 0)
+        {
+            throw new Exception("Sentence has no words to replace.");
+        }
+
+        int wordIndex = _random.Next(words.Count);
+        string missingWord = words[wordIndex];
+        words[wordIndex] = "_____";
+        string sentenceWithBlank = string.Join(" ", words);
+
+        return new QuizQuestion
+        {
+            QuestionType = QuestionType.FillInTheBlank,
+            QuestionText = "Fill in the blank in the following sentence:",
+            SentenceText = sentenceWithBlank,
+            CorrectAnswer = missingWord,
+            Options = new List<string>()
+        };
     }
 
-    private string ExtractMainWord(string sentence, List<Word> allWords)
+    private List<string> GenerateOptions(string correctAnswer, List<Sentence> allSentences, string exclude)
     {
-        // TODO: Implement logic to extract the main word from the sentence
-        return sentence.Split(' ').FirstOrDefault() ?? string.Empty;
-    }
-
-    private async Task<List<string>> FetchAllSentencesAsync()
-    {
-        var snapshot = await _db.Collection("sentences").GetSnapshotAsync();
-        return snapshot.Documents
-            .Select(doc => doc.ConvertTo<Sentence>().Text)
+        var similarOptions = allSentences
+            .Where(s => s.EnglishTranslation != exclude)
+            .OrderBy(s => LevenshteinDistance(s.EnglishTranslation.ToLower(), correctAnswer.ToLower()))
+            .Take(2)
+            .Select(s => s.EnglishTranslation)
             .ToList();
+
+        var randomOption = allSentences
+            .Where(s => s.EnglishTranslation != exclude && !similarOptions.Contains(s.EnglishTranslation))
+            .OrderBy(s => _random.Next())
+            .FirstOrDefault()?.EnglishTranslation;
+
+        var options = new List<string>(similarOptions);
+
+        if (!string.IsNullOrEmpty(randomOption))
+        {
+            options.Add(randomOption);
+        }
+
+        // Ensure there are at least 3 options
+        while (options.Count < 3)
+        {
+            var filler = allSentences[_random.Next(allSentences.Count)].EnglishTranslation;
+            if (filler != exclude && !options.Contains(filler))
+            {
+                options.Add(filler);
+            }
+        }
+
+        // Shuffle options
+        return options.OrderBy(o => _random.Next()).ToList();
     }
 
-    private List<string> GetRelatedSentences(List<string> allSentences, Word wordDetail)
+    private int LevenshteinDistance(string a, string b)
     {
-        return allSentences
-            .Where(sentence => 
-                sentence.Contains(wordDetail.englishTranslation, 
-                    StringComparison.OrdinalIgnoreCase))
-            .ToList();
+        if (string.IsNullOrEmpty(a))
+            return string.IsNullOrEmpty(b) ? 0 : b.Length;
+
+        if (string.IsNullOrEmpty(b))
+            return a.Length;
+
+        int[,] distance = new int[a.Length + 1, b.Length + 1];
+
+        for (int i = 0; i <= a.Length; distance[i, 0] = i++) { }
+        for (int j = 0; j <= b.Length; distance[0, j] = j++) { }
+
+        for (int i = 1; i <= a.Length; i++)
+        {
+            for (int j = 1; j <= b.Length; j++)
+            {
+                int cost = (b[j - 1] == a[i - 1]) ? 0 : 1;
+
+                distance[i, j] = Math.Min(
+                    Math.Min(distance[i - 1, j] + 1, distance[i, j - 1] + 1),
+                    distance[i - 1, j - 1] + cost);
+            }
+        }
+
+        return distance[a.Length, b.Length];
     }
 }

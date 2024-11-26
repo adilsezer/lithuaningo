@@ -11,10 +11,29 @@ public class QuizController : ControllerBase
         _quizService = quizService;
     }
 
-    [HttpGet("{userId}")]
-    public async Task<IActionResult> LoadQuizData(string userId)
+    /// <summary>
+    /// Generates a new quiz based on the user's learned words.
+    /// </summary>
+    /// <param name="userId">The ID of the user.</param>
+    /// <returns>A set of quiz questions.</returns>
+    [HttpGet("generate")]
+    public async Task<IActionResult> GenerateQuiz([FromQuery] string userId)
     {
-        var quizData = await _quizService.LoadQuizDataAsync(userId);
-        return Ok(quizData);
+        if (string.IsNullOrEmpty(userId))
+        {
+            return BadRequest("UserId is required.");
+        }
+
+        try
+        {
+            var quizData = await _quizService.GenerateQuizAsync(userId);
+            return Ok(quizData);
+        }
+        catch (Exception ex)
+        {
+            // Log the exception (implementation depends on your logging setup)
+            Console.Error.WriteLine(ex.Message);
+            return StatusCode(500, "An error occurred while generating the quiz.");
+        }
     }
 }
