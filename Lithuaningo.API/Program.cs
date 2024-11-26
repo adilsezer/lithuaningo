@@ -71,6 +71,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<WordService>();
     services.AddScoped<UserService>();
     services.AddScoped<QuizService>();
+    services.AddScoped<SentenceService>();
     
     // Configure CORS
     var allowedOrigins = configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
