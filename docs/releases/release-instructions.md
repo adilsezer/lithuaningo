@@ -27,6 +27,8 @@ yarn install
 ### 2. Change firebase-crashlytics-gradle version to 3.0.1 (if necessary)
 
 Change the version of firebase-crashlytics-gradle in build.gradle to 3.0.1 as it sometimes throws error when building
+Add the below line into android/app/build.gradle
+missingDimensionStrategy 'store', 'play'
 
 ### 3. Configure Android Build
 
