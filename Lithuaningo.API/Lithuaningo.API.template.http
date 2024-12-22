@@ -1,6 +1,0 @@
-@LithuaningoAPI_HostAddress = http://localhost:5136
-
-GET {{LithuaningoAPI_HostAddress}}/weatherforecast/
-Accept: application/json
-
-###

@@ -1,6 +1,7 @@
 public enum QuestionType
 {
     MultipleChoice,
+    FillInTheBlank,
     TrueFalse,
-    FillInTheBlank
+    ReorderWords,
 }
