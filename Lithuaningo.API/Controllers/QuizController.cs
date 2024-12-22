@@ -1,14 +1,15 @@
 using Microsoft.AspNetCore.Mvc;
+using Services.Quiz.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]
 public class QuizController : ControllerBase
 {
-    private readonly QuizService _quizService;
+    private readonly IQuizService _quizService;
 
-    public QuizController(QuizService quizService)
+    public QuizController(IQuizService quizService)
     {
-        _quizService = quizService;
+        _quizService = quizService ?? throw new ArgumentNullException(nameof(quizService));
     }
 
     /// <summary>
@@ -17,12 +18,13 @@ public class QuizController : ControllerBase
     /// <param name="userId">The ID of the user.</param>
     /// <returns>A set of quiz questions.</returns>
     [HttpGet("generate")]
-    public async Task<IActionResult> GenerateQuiz([FromQuery] string userId)
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<QuizQuestion>))]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<IEnumerable<QuizQuestion>>> GenerateQuiz([FromQuery] string userId)
     {
         if (string.IsNullOrEmpty(userId))
-        {
             return BadRequest("UserId is required.");
-        }
 
         try
         {

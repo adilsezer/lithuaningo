@@ -1,6 +1,9 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
+using Services.Quiz;
+using Services.Quiz.Interfaces;
+using Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,11 +37,10 @@ await app.RunAsync();
 void ConfigureFirebase(IConfiguration configuration)
 {
     var firestoreSettings = configuration.GetSection("FirestoreSettings").Get<FirestoreSettings>();
-    var credentialsPath = Path.Combine(Directory.GetCurrentDirectory(), 
+    var credentialsPath = Path.Combine(Directory.GetCurrentDirectory(),
         firestoreSettings?.CredentialsPath ?? "credentials/firebase/serviceAccountKey.json");
-    
-    Console.WriteLine($"Loading Firebase credentials from: {credentialsPath}");
-    
+
+
     if (!File.Exists(credentialsPath))
     {
         throw new FileNotFoundException($"Firebase credentials file not found at: {credentialsPath}");
@@ -61,25 +63,28 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddControllers();
     services.AddEndpointsApiExplorer();
     services.AddSwaggerGen();
-    
+
     services.Configure<FirestoreSettings>(configuration.GetSection("FirestoreSettings"));
-    
+
     var firestoreSettings = configuration.GetSection("FirestoreSettings").Get<FirestoreSettings>();
     services.AddSingleton(FirestoreDb.Create(firestoreSettings?.ProjectId));
-    
-    // Register Services
-    services.AddScoped<WordService>();
-    services.AddScoped<UserService>();
-    services.AddScoped<QuizService>();
-    services.AddScoped<SentenceService>();
-    
+
+    // Register Services with their interfaces
+    services.AddScoped<IUserService, UserService>();
+    services.AddScoped<ISentenceService, SentenceService>();
+    services.AddScoped<IWordService, WordService>();
+    services.AddScoped<IQuizService, QuizService>();
+    services.AddScoped<IQuestionGeneratorFactory, QuestionGeneratorFactory>();
+
     // Configure CORS
-    var allowedOrigins = configuration.GetSection("CorsSettings:AllowedOrigins").Get<string[]>();
+    services.Configure<CorsSettings>(configuration.GetSection("CorsSettings"));
+    var corsSettings = configuration.GetSection("CorsSettings").Get<CorsSettings>();
+
     services.AddCors(options =>
     {
         options.AddPolicy("AllowFrontend", policy =>
         {
-            policy.WithOrigins(allowedOrigins ?? Array.Empty<string>())
+            policy.WithOrigins(corsSettings?.AllowedOrigins ?? Array.Empty<string>())
                   .AllowAnyMethod()
                   .AllowAnyHeader();
         });

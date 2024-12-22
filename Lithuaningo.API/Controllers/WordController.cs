@@ -4,31 +4,34 @@ using Microsoft.AspNetCore.Mvc;
 [Route("api/[controller]")]
 public class WordController : ControllerBase
 {
-    private readonly WordService _wordService;
+    private readonly IWordService _wordService;
 
-    public WordController(WordService wordService)
+    public WordController(IWordService wordService)
     {
-        _wordService = wordService;
+        _wordService = wordService ?? throw new ArgumentNullException(nameof(wordService));
     }
 
-    [HttpGet]
-    public async Task<IActionResult> GetWords()
+    [HttpGet("{word}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WordForm))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<WordForm>> GetWordForms(string word)
     {
-        var words = await _wordService.FetchWordsAsync();
-        return Ok(words);
+        var result = await _wordService.GetWordForm(word);
+        if (result == null)
+            return NotFound();
+
+        return Ok(result);
     }
 
-    [HttpPost("review")]
-    public async Task<IActionResult> AddWordForReview([FromBody] Word word)
+    [HttpGet("lemma/{lemma}")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WordForm))]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<WordForm>> GetLemma(string lemma)
     {
-        await _wordService.AddWordForReviewAsync(word);
-        return NoContent();
-    }
+        var result = await _wordService.GetLemma(lemma);
+        if (result == null)
+            return NotFound();
 
-    [HttpPost("missing")]
-    public async Task<IActionResult> AddMissingWord([FromBody] string word)
-    {
-        await _wordService.AddMissingWordAsync(word);
-        return NoContent();
+        return Ok(result);
     }
 }

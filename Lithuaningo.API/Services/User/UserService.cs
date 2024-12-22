@@ -1,5 +1,5 @@
 using Google.Cloud.Firestore;
-public class UserService
+public class UserService : IUserService
 {
     private readonly FirestoreDb _db;
 
@@ -8,13 +8,19 @@ public class UserService
         _db = db ?? throw new ArgumentNullException(nameof(db));
     }
 
-    public async Task<UserProfile?> GetUserProfileAsync(string userId)
+    public async Task<UserProfile> GetUserProfileAsync(string userId)
     {
         if (string.IsNullOrEmpty(userId))
             throw new ArgumentNullException(nameof(userId));
 
         var doc = await _db.Collection("userProfiles").Document(userId).GetSnapshotAsync();
-        return doc.Exists ? doc.ConvertTo<UserProfile>() : null;
+
+        if (!doc.Exists)
+        {
+            throw new Exception("User not found");
+        }
+
+        return doc.ConvertTo<UserProfile>();
     }
 
     public async Task UpdateUserProfileAsync(UserProfile userProfile)
