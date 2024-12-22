@@ -4,7 +4,8 @@ namespace Services.Quiz.Generators;
 
 public class ReorderWordsQuestionGenerator : BaseQuestionGenerator
 {
-    public ReorderWordsQuestionGenerator(IWordService wordService) : base(wordService) { }
+    public ReorderWordsQuestionGenerator(IWordService wordService, IRandomGenerator randomGenerator)
+        : base(wordService, randomGenerator) { }
 
     public override Task<QuizQuestion> GenerateQuestion(
         Sentence sentence,
@@ -12,7 +13,7 @@ public class ReorderWordsQuestionGenerator : BaseQuestionGenerator
         Dictionary<string, WordForm> wordFormsCache)
     {
         var words = TextUtilities.GetSanitizedWords(sentence.Text);
-        var shuffledWords = words.OrderBy(_ => Random.Next()).ToList();
+        var shuffledWords = words.OrderBy(_ => RandomGenerator.Next(100)).ToList();
 
         var question = new QuizQuestion
         {

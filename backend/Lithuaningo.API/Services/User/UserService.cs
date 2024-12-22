@@ -13,12 +13,12 @@ public class UserService : IUserService
         if (string.IsNullOrEmpty(userId))
             throw new ArgumentNullException(nameof(userId));
 
-        var doc = await _db.Collection("userProfiles").Document(userId).GetSnapshotAsync();
+        var doc = await _db.Collection("userProfiles")
+            .Document(userId)
+            .GetSnapshotAsync();
 
         if (!doc.Exists)
-        {
             throw new Exception("User not found");
-        }
 
         return doc.ConvertTo<UserProfile>();
     }
@@ -31,6 +31,8 @@ public class UserService : IUserService
         if (string.IsNullOrEmpty(userProfile.Id))
             throw new ArgumentException("User ID cannot be null or empty", nameof(userProfile));
 
-        await _db.Collection("userProfiles").Document(userProfile.Id).SetAsync(userProfile);
+        await _db.Collection("userProfiles")
+            .Document(userProfile.Id)
+            .SetAsync(userProfile);
     }
 }

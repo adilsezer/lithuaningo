@@ -4,13 +4,13 @@ public class SentenceService : ISentenceService
 {
     private readonly FirestoreDb _db;
     private readonly IUserService _userService;
-    private readonly Random _random;
+    private readonly IRandomGenerator _randomGenerator;
 
-    public SentenceService(FirestoreDb db, IUserService userService)
+    public SentenceService(FirestoreDb db, IUserService userService, IRandomGenerator randomGenerator)
     {
         _db = db;
         _userService = userService;
-        _random = new Random();
+        _randomGenerator = randomGenerator;
     }
 
     private async Task<List<Sentence>> GetSentencesByIdsAsync(List<string> sentenceIds, int limit = 50)
@@ -48,7 +48,7 @@ public class SentenceService : ISentenceService
         if (learnedSentenceIds == null || !learnedSentenceIds.Any())
             throw new Exception("User has no learned sentences");
 
-        var randomId = learnedSentenceIds[_random.Next(learnedSentenceIds.Count)];
+        var randomId = learnedSentenceIds[_randomGenerator.Next(learnedSentenceIds.Count)];
         var sentences = await GetSentencesByIdsAsync(new List<string> { randomId });
         return sentences.FirstOrDefault() ?? throw new Exception("Sentence not found");
     }

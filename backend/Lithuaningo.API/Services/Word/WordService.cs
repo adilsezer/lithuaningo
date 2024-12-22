@@ -6,7 +6,7 @@ public class WordService : IWordService
 
     public WordService(FirestoreDb db)
     {
-        _db = db;
+        _db = db ?? throw new ArgumentNullException(nameof(db));
     }
 
     public async Task<WordForm?> GetWordForm(string word)

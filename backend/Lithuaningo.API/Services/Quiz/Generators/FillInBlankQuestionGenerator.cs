@@ -2,7 +2,8 @@ namespace Services.Quiz.Generators;
 
 public class FillInBlankQuestionGenerator : BaseQuestionGenerator
 {
-    public FillInBlankQuestionGenerator(IWordService wordService) : base(wordService) { }
+    public FillInBlankQuestionGenerator(IWordService wordService, IRandomGenerator randomGenerator)
+        : base(wordService, randomGenerator) { }
 
     public override Task<QuizQuestion> GenerateQuestion(
         Sentence sentence,

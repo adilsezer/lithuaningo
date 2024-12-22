@@ -3,14 +3,9 @@ using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
 using Services.Quiz;
 using Services.Quiz.Interfaces;
-using Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Configure Firebase first
-ConfigureFirebase(builder.Configuration);
-
-// Configure Kestrel
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
     serverOptions.ListenAnyIP(7016, listenOptions =>
@@ -18,6 +13,9 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
         listenOptions.UseHttps();
     });
 });
+
+// Configure Firebase first
+ConfigureFirebase(builder.Configuration);
 
 // Configure Services
 ConfigureServices(builder.Services, builder.Configuration);
@@ -75,6 +73,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<IWordService, WordService>();
     services.AddScoped<IQuizService, QuizService>();
     services.AddScoped<IQuestionGeneratorFactory, QuestionGeneratorFactory>();
+    services.AddSingleton<IRandomGenerator, RandomGenerator>();
 
     // Configure CORS
     services.Configure<CorsSettings>(configuration.GetSection("CorsSettings"));

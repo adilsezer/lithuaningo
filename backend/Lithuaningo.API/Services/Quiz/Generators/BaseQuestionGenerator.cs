@@ -5,12 +5,13 @@ namespace Services.Quiz.Generators;
 
 public abstract class BaseQuestionGenerator : IQuestionGenerator
 {
-    protected readonly Random Random = new();
-    protected readonly IWordService _wordService;
+    protected readonly IRandomGenerator RandomGenerator;
+    protected readonly IWordService WordService;
 
-    protected BaseQuestionGenerator(IWordService wordService)
+    protected BaseQuestionGenerator(IWordService wordService, IRandomGenerator randomGenerator)
     {
-        _wordService = wordService;
+        WordService = wordService;
+        RandomGenerator = randomGenerator;
     }
 
     public abstract Task<QuizQuestion> GenerateQuestion(
@@ -24,7 +25,7 @@ public abstract class BaseQuestionGenerator : IQuestionGenerator
             .Where(w => !TextUtilities.IsExcludedWord(w))
             .Where(w => wordFormsCache.ContainsKey(w))
             .Where(w => w != excludeWord)
-            .OrderBy(_ => Random.Next())
+            .OrderBy(_ => RandomGenerator.Next(100))
             .ToList();
 
         return words.Any()
@@ -34,7 +35,7 @@ public abstract class BaseQuestionGenerator : IQuestionGenerator
 
     protected async Task<Lemma> GetLemmaForWord(WordForm wordForm)
     {
-        var lemma = await _wordService.GetLemma(wordForm.LemmaId);
+        var lemma = await WordService.GetLemma(wordForm.LemmaId);
         return lemma ?? throw new InvalidOperationException($"Lemma not found for lemma ID: {wordForm.LemmaId}");
     }
 }

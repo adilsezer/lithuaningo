@@ -14,7 +14,8 @@ public class MultipleChoiceQuestionGenerator : BaseQuestionGenerator
 
     public MultipleChoiceQuestionGenerator(
         IWordService wordService,
-        ISentenceService sentenceService) : base(wordService)
+        ISentenceService sentenceService,
+        IRandomGenerator randomGenerator) : base(wordService, randomGenerator)
     {
         _sentenceService = sentenceService;
         _multipleChoiceFormats = InitializeMultipleChoiceFormats();
@@ -121,7 +122,7 @@ public class MultipleChoiceQuestionGenerator : BaseQuestionGenerator
         for (int i = options.Count + 1; options.Count < 4; i++)
             options.Add($"Option {i}");
 
-        return options.OrderBy(_ => Random.Next()).ToList();
+        return options.OrderBy(_ => RandomGenerator.Next(100)).ToList();
     }
 
     private async Task<WordForm> GetRandomWordFromNewSentence(
@@ -157,7 +158,7 @@ public class MultipleChoiceQuestionGenerator : BaseQuestionGenerator
         var validWord = GetRandomValidWord(sentence.Text, wordFormsCache);
         var lemma = await GetLemmaForWord(validWord);
 
-        var choiceFormat = _multipleChoiceFormats[Random.Next(_multipleChoiceFormats.Length)];
+        var choiceFormat = _multipleChoiceFormats[RandomGenerator.Next(_multipleChoiceFormats.Length)];
 
         return (choiceFormat, validWord, lemma);
     }

@@ -14,14 +14,15 @@ public class TrueFalseQuestionGenerator : BaseQuestionGenerator
             string.Format("The word '{0}' is a {1}", word, partOfSpeech))
     };
 
-    public TrueFalseQuestionGenerator(IWordService wordService) : base(wordService) { }
+    public TrueFalseQuestionGenerator(IWordService wordService, IRandomGenerator randomGenerator)
+        : base(wordService, randomGenerator) { }
 
     public override async Task<QuizQuestion> GenerateQuestion(
         Sentence sentence,
         string userId,
         Dictionary<string, WordForm> wordFormsCache)
     {
-        var isTrue = Random.Next(2) == 0;
+        var isTrue = RandomGenerator.Next(2) == 0;
         var (word, translation, enAttributes, partOfSpeech, differentProperties) =
             await GetWordAndTranslation(sentence.Text, isTrue, wordFormsCache);
 
@@ -34,7 +35,7 @@ public class TrueFalseQuestionGenerator : BaseQuestionGenerator
                 (index == 2 && differentProperties.HasFlag(DifferentProperties.PartOfSpeech)))
                 .ToArray();
 
-        var templateIndex = Random.Next(availableTemplates.Length);
+        var templateIndex = RandomGenerator.Next(availableTemplates.Length);
         var (_, formatFunc) = availableTemplates[templateIndex];
 
         return new QuizQuestion

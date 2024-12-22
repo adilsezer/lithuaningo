@@ -7,17 +7,18 @@ public class QuizService : IQuizService
     private readonly ISentenceService _sentenceService;
     private readonly IWordService _wordService;
     private readonly IQuestionGeneratorFactory _questionGeneratorFactory;
-    private readonly Random _random;
+    private readonly IRandomGenerator _randomGenerator;
 
     public QuizService(
         ISentenceService sentenceService,
         IWordService wordService,
-        IQuestionGeneratorFactory questionGeneratorFactory)
+        IQuestionGeneratorFactory questionGeneratorFactory,
+        IRandomGenerator randomGenerator)
     {
         _sentenceService = sentenceService;
         _wordService = wordService;
         _questionGeneratorFactory = questionGeneratorFactory;
-        _random = new Random();
+        _randomGenerator = randomGenerator;
     }
 
     public async Task<List<QuizQuestion>> GenerateQuizAsync(string userId)
@@ -137,6 +138,6 @@ public class QuizService : IQuizService
         }
 
         // Shuffle the questions
-        return types.OrderBy(_ => _random.Next()).ToList();
+        return types.OrderBy(_ => _randomGenerator.Next(availableTypes.Count)).ToList();
     }
 }
