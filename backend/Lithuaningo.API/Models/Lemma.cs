@@ -3,7 +3,6 @@ using Google.Cloud.Firestore;
 [FirestoreData]
 public class Lemma
 {
-    // lemma	part_of_speech	translation	definitions	ipa	examples	image_url	audio_url	notes
     [FirestoreDocumentId]
     public string Id { get; set; } = string.Empty;
 

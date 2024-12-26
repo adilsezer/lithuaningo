@@ -17,7 +17,7 @@ export const retrieveData = async <T>(key: string): Promise<T | null> => {
     return stringValue != null ? JSON.parse(stringValue) : null;
   } catch (error) {
     console.error(`Failed to retrieve data for key ${key}:`, error);
-    return null; // Default to null in case of error
+    return null;
   }
 };
 
@@ -29,12 +29,10 @@ export const clearData = async (key: string): Promise<void> => {
   }
 };
 
-// New function to reset all quiz-related keys
 export const resetAllQuizKeys = async (userId: string): Promise<void> => {
   try {
     const dateKey = getCurrentDateKey();
 
-    // Generate the actual keys by calling the key-generating functions
     const QUIZ_QUESTIONS_KEY = QUIZ_KEYS.QUIZ_QUESTIONS_KEY(userId, dateKey);
     const QUIZ_PROGRESS_KEY = QUIZ_KEYS.QUIZ_PROGRESS_KEY(userId, dateKey);
     const INCORRECT_QUESTIONS_KEY = QUIZ_KEYS.INCORRECT_QUESTIONS_KEY(
@@ -52,7 +50,6 @@ export const resetAllQuizKeys = async (userId: string): Promise<void> => {
     );
     const SENTENCES_KEY = SENTENCE_KEYS.SENTENCES_KEY(userId, dateKey);
 
-    // Clear all the keys
     await clearData(QUIZ_QUESTIONS_KEY);
     await clearData(QUIZ_PROGRESS_KEY);
     await clearData(INCORRECT_QUESTIONS_KEY);

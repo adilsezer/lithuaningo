@@ -2,10 +2,14 @@ using Google.Cloud.Firestore;
 public class UserService : IUserService
 {
     private readonly FirestoreDb _db;
+    private readonly ISentenceService _sentenceService;
+    private readonly IRandomGenerator _randomGenerator;
 
-    public UserService(FirestoreDb db)
+    public UserService(FirestoreDb db, ISentenceService sentenceService, IRandomGenerator randomGenerator)
     {
         _db = db ?? throw new ArgumentNullException(nameof(db));
+        _sentenceService = sentenceService ?? throw new ArgumentNullException(nameof(sentenceService));
+        _randomGenerator = randomGenerator ?? throw new ArgumentNullException(nameof(randomGenerator));
     }
 
     public async Task<UserProfile> GetUserProfileAsync(string userId)
@@ -34,5 +38,51 @@ public class UserService : IUserService
         await _db.Collection("userProfiles")
             .Document(userProfile.Id)
             .SetAsync(userProfile);
+    }
+
+    public async Task AddUserLearnedSentencesAsync(string userId, List<string> sentenceIds)
+    {
+        var user = await GetUserProfileAsync(userId);
+        user.LearnedSentences.AddRange(sentenceIds);
+        await UpdateUserProfileAsync(user);
+    }
+
+    public async Task<List<Sentence>> GetLearnedSentencesAsync(string userId)
+    {
+        var user = await GetUserProfileAsync(userId);
+        return await _sentenceService.GetSentencesByIdsAsync(user.LearnedSentences);
+    }
+
+    public async Task<List<Sentence>> GetLastNLearnedSentencesAsync(string userId, int count)
+    {
+        var user = await GetUserProfileAsync(userId);
+        var lastNIds = user.LearnedSentences?.TakeLast(count).ToList() ?? new List<string>();
+        return await _sentenceService.GetSentencesByIdsAsync(lastNIds);
+    }
+
+    public async Task<Sentence> GetRandomLearnedSentenceAsync(string userId)
+    {
+        var user = await GetUserProfileAsync(userId);
+        var learnedSentenceIds = user.LearnedSentences;
+        if (learnedSentenceIds == null || !learnedSentenceIds.Any())
+            throw new Exception("User has no learned sentences");
+
+        var randomId = learnedSentenceIds[_randomGenerator.Next(learnedSentenceIds.Count)];
+        var sentences = await _sentenceService.GetSentencesByIdsAsync(new List<string> { randomId });
+        return sentences.FirstOrDefault() ?? throw new Exception("Sentence not found");
+    }
+
+    public async Task CreateUserProfileAsync(string userId)
+    {
+        await _db.Collection("userProfiles")
+            .Document(userId)
+            .SetAsync(new UserProfile { Id = userId });
+    }
+
+    public async Task DeleteUserProfileAsync(string userId)
+    {
+        await _db.Collection("userProfiles")
+            .Document(userId)
+            .DeleteAsync();
     }
 }

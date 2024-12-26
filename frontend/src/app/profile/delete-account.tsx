@@ -1,10 +1,10 @@
 import React, { useState } from "react";
 import { ScrollView, Alert, Text } from "react-native";
-import useAuthMethods from "../../hooks/useAuthMethods";
-import CustomTextInput from "@components/CustomTextInput";
-import BackButton from "@components/BackButton";
-import CustomButton from "@components/CustomButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import useAuthMethods from "@hooks/useAuthMethods";
+import CustomTextInput from "@components/ui/CustomTextInput";
+import BackButton from "@components/layout/BackButton";
+import CustomButton from "@components/ui/CustomButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
 import auth from "@react-native-firebase/auth";
 
 const DeleteAccountScreen = () => {

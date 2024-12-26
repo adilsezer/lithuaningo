@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { Linking } from "react-native";
-import NotificationDisplay from "@components/NotificationDisplay";
-import { AppInfo, getLatestAppInfo } from "@src/services/data/appInfoService";
+import NotificationDisplay from "@components/ui/NotificationDisplay";
+import { AppInfo } from "@src/types";
+import { getLatestAppInfo } from "@services/data/appInfoService";
 
 const NotificationScreen: React.FC = () => {
   const [notification, setNotification] = useState<AppInfo | null>(null);
@@ -23,9 +24,7 @@ const NotificationScreen: React.FC = () => {
         title="Oops!"
         subtitle="We couldn't retrieve the server information. Please try again later."
         buttonText="Retry"
-        buttonAction={() => {
-          // Implement a retry mechanism or navigation
-        }}
+        buttonAction={() => {}}
       />
     );
   }

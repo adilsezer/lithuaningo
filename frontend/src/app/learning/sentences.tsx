@@ -1,21 +1,22 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
-import sentenceService, { Sentence } from "../../services/data/sentenceService";
-import { useAppSelector, useAppDispatch } from "@src/redux/hooks";
-import { selectUserData } from "@src/redux/slices/userSlice";
-import CustomButton from "@components/CustomButton";
-import { setLoading } from "@src/redux/slices/uiSlice";
-import BackButton from "@components/BackButton";
+import { useAppSelector, useAppDispatch } from "@redux/hooks";
+import { selectUserData } from "@redux/slices/userSlice";
+import CustomButton from "@components/ui/CustomButton";
+import { setLoading } from "@redux/slices/uiSlice";
+import BackButton from "@components/layout/BackButton";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { retrieveData, storeData } from "@utils/storageUtils";
-import CompletedScreen from "@components/CompletedScreen";
+import CompletedLayout from "@components/learning/CompletedLayout";
 import { cleanWord } from "@utils/stringUtils";
-import RenderClickableWords from "@components/RenderClickableWords";
+import RenderClickableWords from "@components/learning/RenderClickableWords";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { scheduleDailyReviewReminder } from "@services/notification/notificationService";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { SENTENCE_KEYS } from "@config/constants"; // Import the constants
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import { SENTENCE_KEYS } from "@config/constants";
+import { Sentence } from "@src/types";
+import sentenceService from "@services/data/sentenceService";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -56,8 +57,7 @@ const SentencesScreen: React.FC = () => {
           setSentences(storedSentences);
         } else {
           const fetchedSentences = await sentenceService.fetchSentences(
-            userData?.id,
-            true
+            userData?.id
           );
           const firstTwoSentences = fetchedSentences.slice(0, 2);
 
@@ -80,7 +80,7 @@ const SentencesScreen: React.FC = () => {
   useEffect(() => {
     if (sentences.length > 0) {
       const allWords = sentences.flatMap((sentence: Sentence) =>
-        sentence.sentence.split(" ").map(cleanWord)
+        sentence.text.split(" ").map(cleanWord)
       );
       const allClicked = allWords.every((word: string) =>
         clickedWords.includes(word)
@@ -119,7 +119,7 @@ const SentencesScreen: React.FC = () => {
   if (sentencesCompleted) {
     return (
       <ScrollView>
-        <CompletedScreen
+        <CompletedLayout
           title="Fantastic! You've Reviewed All the Words for Today!"
           subtitle="Ready to test your knowledge?"
           buttonText="Start Quiz"
@@ -161,7 +161,7 @@ const SentencesScreen: React.FC = () => {
           <View key={sentence.id}>
             <View style={styles.sentenceContainer}>
               <RenderClickableWords
-                sentenceText={sentence.sentence}
+                sentenceText={sentence.text}
                 answerText=""
                 useClickedWordsColor={true}
               />
@@ -200,7 +200,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   contentContainer: {
-    paddingBottom: 80, // Ensure space for the button
+    paddingBottom: 80,
   },
   horizontalRule: {
     width: "80%",

@@ -4,18 +4,18 @@ using Services.Quiz.Interfaces;
 
 public class QuizService : IQuizService
 {
-    private readonly ISentenceService _sentenceService;
+    private readonly IUserService _userService;
     private readonly IWordService _wordService;
     private readonly IQuestionGeneratorFactory _questionGeneratorFactory;
     private readonly IRandomGenerator _randomGenerator;
 
     public QuizService(
-        ISentenceService sentenceService,
+        IUserService userService,
         IWordService wordService,
         IQuestionGeneratorFactory questionGeneratorFactory,
         IRandomGenerator randomGenerator)
     {
-        _sentenceService = sentenceService;
+        _userService = userService;
         _wordService = wordService;
         _questionGeneratorFactory = questionGeneratorFactory;
         _randomGenerator = randomGenerator;
@@ -23,10 +23,9 @@ public class QuizService : IQuizService
 
     public async Task<List<QuizQuestion>> GenerateQuizAsync(string userId)
     {
-        var sentences = await _sentenceService.GetLastNLearnedSentencesAsync(userId, 6);
+        var sentences = await _userService.GetLastNLearnedSentencesAsync(userId, 6);
         var (primarySentences, secondarySentences) = SplitSentences(sentences);
 
-        // Cache word forms for all sentences at once
         var allSentences = primarySentences.Concat(secondarySentences).Distinct();
         var wordFormsCache = await BuildWordFormsCache(allSentences);
 
@@ -50,7 +49,6 @@ public class QuizService : IQuizService
         var primarySentences = sentences.Take(2).ToList();
         var secondarySentences = sentences.Skip(2).Take(4).ToList();
 
-        // If we don't have enough sentences for secondary questions, use primary sentences
         if (!secondarySentences.Any())
         {
             secondarySentences = primarySentences;
@@ -100,7 +98,6 @@ public class QuizService : IQuizService
             }
             catch
             {
-                // Log the error and try a different question type if possible
                 var fallbackGenerator = _questionGeneratorFactory.Create(QuestionType.ReorderWords);
                 var fallbackQuestion = await fallbackGenerator.GenerateQuestion(sentence, userId, wordFormsCache);
                 questions.Add(fallbackQuestion);
@@ -122,13 +119,11 @@ public class QuizService : IQuizService
 
         var types = new List<QuestionType>();
 
-        // Add base questions
         foreach (var (type, baseCount) in baseTypes)
         {
             types.AddRange(Enumerable.Repeat(type, Math.Min(baseCount, count)));
         }
 
-        // Distribute remaining questions
         var remaining = count - types.Count;
         var availableTypes = Enum.GetValues<QuestionType>().ToList();
 
@@ -137,7 +132,6 @@ public class QuizService : IQuizService
             types.Add(availableTypes[i % availableTypes.Count]);
         }
 
-        // Shuffle the questions
         return types.OrderBy(_ => _randomGenerator.Next(availableTypes.Count)).ToList();
     }
 }

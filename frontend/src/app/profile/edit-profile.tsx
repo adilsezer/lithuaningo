@@ -1,20 +1,20 @@
 import React, { useState } from "react";
 import { Text, Alert, ScrollView } from "react-native";
-import { useAppDispatch } from "@src/redux/hooks";
-import { setLoading } from "@src/redux/slices/uiSlice";
-import { updateUserProfile as updateUserProfileAction } from "@src/redux/slices/userSlice";
-import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
-import CustomButton from "@components/CustomButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import BackButton from "@components/BackButton";
+import { useAppDispatch } from "@redux/hooks";
+import { setLoading } from "@redux/slices/uiSlice";
+import { updateUserProfile as updateUserProfileAction } from "@redux/slices/userSlice";
+import useAuthMethods from "@hooks/useAuthMethods";
+import CustomButton from "@components/ui/CustomButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import BackButton from "@components/layout/BackButton";
 import { useRouter } from "expo-router";
-import CustomTextInput from "@components/CustomTextInput";
+import CustomTextInput from "@components/ui/CustomTextInput";
 import auth from "@react-native-firebase/auth";
 
 const EditProfileScreen: React.FC = () => {
   const dispatch = useAppDispatch();
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const { handleUpdateUserProfile } = useAuthMethods(); // Corrected hook usage inside the component
+  const { handleUpdateUserProfile } = useAuthMethods();
   const router = useRouter();
 
   const [currentPassword, setCurrentPassword] = useState<string>("");

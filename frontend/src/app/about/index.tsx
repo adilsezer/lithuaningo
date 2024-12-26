@@ -2,8 +2,8 @@ import React from "react";
 import { Text, StyleSheet, ScrollView, Alert, View } from "react-native";
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
-import BackButton from "@components/BackButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import BackButton from "@components/layout/BackButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 
 export default function AboutScreen() {

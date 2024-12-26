@@ -26,7 +26,6 @@ public class TrueFalseQuestionGenerator : BaseQuestionGenerator
         var (word, translation, enAttributes, partOfSpeech, differentProperties) =
             await GetWordAndTranslation(sentence.Text, isTrue, wordFormsCache);
 
-        // For false questions, only select from templates that match our different properties
         var availableTemplates = isTrue
             ? QuestionTemplates
             : QuestionTemplates.Where((t, index) =>
@@ -64,13 +63,11 @@ public class TrueFalseQuestionGenerator : BaseQuestionGenerator
     {
         const int maxAttempts = 10;
 
-        // Helper function to validate word properties
         bool IsValidWord(WordForm word, Lemma lemma) =>
             !string.IsNullOrEmpty(word.EnAttributes) &&
             !string.IsNullOrEmpty(lemma.Translation) &&
             !string.IsNullOrEmpty(lemma.PartOfSpeech);
 
-        // Get valid correct word
         WordForm correctWord = GetRandomValidWord(sentence, wordFormsCache);
         Lemma correctLemma = await GetLemmaForWord(correctWord);
 
@@ -96,7 +93,6 @@ public class TrueFalseQuestionGenerator : BaseQuestionGenerator
             var alternativeWord = GetRandomValidWord(sentence, wordFormsCache, excludeWord: correctWord.Word);
             var alternateLemma = await GetLemmaForWord(alternativeWord);
 
-            // Skip invalid words
             if (!IsValidWord(alternativeWord, alternateLemma))
                 continue;
 
@@ -114,7 +110,6 @@ public class TrueFalseQuestionGenerator : BaseQuestionGenerator
             }
         }
 
-        // Fallback: modify the translation to ensure it's false
         return (correctWord.Word, correctLemma.Translation + " (not)", correctWord.EnAttributes, correctLemma.PartOfSpeech, DifferentProperties.Translation);
     }
 }

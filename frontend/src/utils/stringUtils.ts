@@ -1,5 +1,3 @@
-// src/utils/stringUtils.ts
-
 export const toTitleCase = (str: string) => {
   return str
     .toLowerCase()

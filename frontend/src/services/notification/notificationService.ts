@@ -1,4 +1,3 @@
-// src/services/notificationService.ts
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
@@ -6,7 +5,6 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { storeData, retrieveData } from "@utils/storageUtils";
 import { NOTIFICATION_KEYS, SENTENCE_KEYS } from "@config/constants";
 
-// Set notification handler to handle how notifications are presented
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -15,7 +13,6 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Request notification permissions
 async function requestPermissions() {
   if (!Device.isDevice) {
     console.warn("Bypassing physical device check for testing on simulator");
@@ -54,7 +51,6 @@ async function requestPermissions() {
   }
 }
 
-// Check if the user has reviewed today
 async function checkIfReviewedToday(
   userId: string | undefined
 ): Promise<boolean> {
@@ -66,14 +62,12 @@ async function checkIfReviewedToday(
   return completionStatus ?? false;
 }
 
-// Get the next day's date
 function getNextDayDate(date: Date): Date {
   const nextDay = new Date(date);
   nextDay.setDate(date.getDate() + 1);
   return nextDay;
 }
 
-// Schedule daily review reminder notification
 export async function scheduleDailyReviewReminder(
   userId: string | undefined,
   time: Date,
@@ -92,9 +86,9 @@ export async function scheduleDailyReviewReminder(
           sound: "default",
         },
         trigger: {
+          type: Notifications.SchedulableTriggerInputTypes.DAILY,
           hour: notificationDate.getHours(),
           minute: notificationDate.getMinutes(),
-          repeats: true,
         },
       });
     }
@@ -103,7 +97,6 @@ export async function scheduleDailyReviewReminder(
   }
 }
 
-// Cancel all scheduled notifications
 export async function cancelAllScheduledNotifications() {
   try {
     await Notifications.cancelAllScheduledNotificationsAsync();
@@ -112,7 +105,6 @@ export async function cancelAllScheduledNotifications() {
   }
 }
 
-// Check if the user has been prompted for notifications
 async function hasPromptedForNotifications() {
   const value = await retrieveData<boolean>(
     NOTIFICATION_KEYS.NOTIFICATION_PROMPT_KEY
@@ -120,12 +112,10 @@ async function hasPromptedForNotifications() {
   return value === true;
 }
 
-// Set that the user has been prompted for notifications
 async function setPromptedForNotifications() {
   await storeData(NOTIFICATION_KEYS.NOTIFICATION_PROMPT_KEY, true);
 }
 
-// Initialize notifications
 export async function initializeNotifications(userId: string | undefined) {
   const hasPrompted = await hasPromptedForNotifications();
 

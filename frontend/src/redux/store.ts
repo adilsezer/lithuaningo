@@ -1,5 +1,3 @@
-// src/store/store.ts
-
 import { configureStore, combineReducers } from "@reduxjs/toolkit";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
@@ -14,7 +12,7 @@ import {
 } from "redux-persist";
 
 import userReducer from "./slices/userSlice";
-import uiReducer from "./slices/uiSlice"; // Import the uiReducer
+import uiReducer from "./slices/uiSlice";
 import clickedWordsReducer from "./slices/clickedWordsSlice";
 
 const rootReducer = combineReducers({
@@ -25,8 +23,8 @@ const rootReducer = combineReducers({
 
 const persistConfig = {
   key: "root",
-  storage: AsyncStorage, // Use AsyncStorage for React Native
-  whitelist: ["user"], // Specify which reducers should be persisted
+  storage: AsyncStorage,
+  whitelist: ["user"],
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

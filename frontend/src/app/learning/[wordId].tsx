@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import FlashcardScreen from "../../components/FlashcardScreen";
+import FlashcardScreen from "@components/learning/Flashcard";
 import { useLocalSearchParams } from "expo-router";
 import { View, Text, StyleSheet } from "react-native";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { useAppDispatch } from "@src/redux/hooks";
-import { setLoading } from "@src/redux/slices/uiSlice";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useAppDispatch } from "@redux/hooks";
+import { setLoading } from "@redux/slices/uiSlice";
 
 const Flashcard = () => {
   const { wordId } = useLocalSearchParams<{ wordId: string }>();
@@ -18,7 +18,7 @@ const Flashcard = () => {
   }, [wordId, dispatch]);
 
   if (!wordId) {
-    dispatch(setLoading(false)); // Ensure loading is false when there's no wordId
+    dispatch(setLoading(false));
     return (
       <View style={styles.errorContainer}>
         <Text style={[globalStyles.text, { color: globalColors.error }]}>

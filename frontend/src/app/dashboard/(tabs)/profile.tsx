@@ -1,19 +1,18 @@
 import React from "react";
 import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
-import useAuthMethods from "@src/hooks/useAuthMethods";
-import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
-import { selectUserData, selectIsLoggedIn } from "@src/redux/slices/userSlice";
-import CustomButton from "@components/CustomButton";
+import useAuthMethods from "@hooks/useAuthMethods";
+import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { selectUserData, selectIsLoggedIn } from "@redux/slices/userSlice";
+import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
-import { setLoading } from "@src/redux/slices/uiSlice";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { setLoading } from "@redux/slices/uiSlice";
+import { useThemeStyles } from "@hooks/useThemeStyles";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
-import ThemeSwitch from "@components/ThemeSwitch";
-import { useTheme } from "@src/context/ThemeContext";
+import ThemeSwitch from "@components/ui/ThemeSwitch";
+import { useTheme } from "@context/ThemeContext";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { usePremiumStatus } from "@hooks/useUserStatus";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -34,7 +33,6 @@ export default function ProfileScreen() {
 
   const userData = useAppSelector(selectUserData);
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
-  const isPremiumUser = usePremiumStatus(); // Get the premium status
 
   const handleClearCompletionStatus = async () => {
     if (!userData) {
@@ -70,13 +68,6 @@ export default function ProfileScreen() {
       <ThemeSwitch onToggle={toggleTheme} isDarkMode={isDarkMode} />
       <Text style={globalStyles.title}>{userData.name || "User"} </Text>
       <Text style={globalStyles.subtitle}>{userData.email}</Text>
-      {isPremiumUser && (
-        <View style={{ alignItems: "center", marginVertical: 15 }}>
-          <FontAwesome5 name="crown" size={20} color={globalColors.secondary} />
-
-          <Text style={globalStyles.subtitle}>Premium User</Text>
-        </View>
-      )}
       <View>
         <CustomButton
           title="Edit Profile"

@@ -7,17 +7,17 @@ import {
   Alert,
   ScrollView,
 } from "react-native";
-import { useAppSelector } from "@src/redux/hooks";
-import { selectUserData } from "@src/redux/slices/userSlice";
+import { useAppSelector } from "@redux/hooks";
+import { selectUserData } from "@redux/slices/userSlice";
 import {
   cancelAllScheduledNotifications,
   scheduleDailyReviewReminder,
 } from "@services/notification/notificationService";
-import CustomButton from "@components/CustomButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import BackButton from "@components/BackButton";
+import CustomButton from "@components/ui/CustomButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import BackButton from "@components/layout/BackButton";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { storeData, retrieveData } from "@utils/storageUtils"; // Updated import
+import { storeData, retrieveData } from "@utils/storageUtils";
 import { NOTIFICATION_KEYS } from "@config/constants";
 
 const SettingsScreen: React.FC = () => {

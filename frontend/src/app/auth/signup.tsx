@@ -1,14 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { Text, Alert, Platform, ScrollView } from "react-native";
-import OrSeperator from "@components/OrSeperator";
-import CustomButton from "@components/CustomButton";
-import useAuthMethods from "@src/hooks/useAuthMethods";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import BackButton from "@components/BackButton";
-import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
-import { setLoading, selectIsLoading } from "@src/redux/slices/uiSlice";
-import AppleSignInButton from "@components/AppleSignInButton";
-import CustomTextInput from "@components/CustomTextInput";
+import OrSeparator from "@components/ui/OrSeparator";
+import CustomButton from "@components/ui/CustomButton";
+import useAuthMethods from "@hooks/useAuthMethods";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import BackButton from "@components/layout/BackButton";
+import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import AppleSignInButton from "@components/auth/AppleSignInButton";
+import CustomTextInput from "@components/ui/CustomTextInput";
 import crashlytics from "@react-native-firebase/crashlytics";
 
 const SignUpScreen: React.FC = () => {
@@ -100,7 +100,7 @@ const SignUpScreen: React.FC = () => {
         title={"Sign Up"}
         disabled={loading}
       />
-      <OrSeperator />
+      <OrSeparator />
       <CustomButton
         onPress={() => performSignUp(handleLoginWithGoogle)}
         title={"Sign up with Google"}

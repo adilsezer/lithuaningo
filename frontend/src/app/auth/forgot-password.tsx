@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { Text, Alert, ScrollView } from "react-native";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import useAuthMethods from "@src/hooks/useAuthMethods"; // Corrected import statement
-import CustomButton from "@components/CustomButton";
-import BackButton from "@components/BackButton";
-import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
-import { selectIsLoading, setLoading } from "@src/redux/slices/uiSlice";
-import CustomTextInput from "@components/CustomTextInput";
-import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import useAuthMethods from "@hooks/useAuthMethods";
+import CustomButton from "@components/ui/CustomButton";
+import BackButton from "@components/layout/BackButton";
+import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { selectIsLoading, setLoading } from "@redux/slices/uiSlice";
+import CustomTextInput from "@components/ui/CustomTextInput";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 const ForgotPasswordScreen: React.FC = () => {
   const [email, setEmail] = useState<string>("");
@@ -23,15 +23,15 @@ const ForgotPasswordScreen: React.FC = () => {
       Alert.alert("Input Required", "Please enter your email address.");
       return;
     }
-    dispatch(setLoading(true)); // Dispatch action to set loading true
+    dispatch(setLoading(true));
     const result = await handlePasswordReset(email);
-    dispatch(setLoading(false)); // Dispatch action to set loading false
+    dispatch(setLoading(false));
     if (result.success) {
       Alert.alert("Success", result.message);
     } else {
       crashlytics().recordError(
         new Error(result.message || "Failed to send password reset email.")
-      ); // Log only errors
+      );
       Alert.alert(
         "Error",
         result.message || "Failed to send password reset email."

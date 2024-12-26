@@ -1,7 +1,7 @@
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { logIn, logOut } from "@src/redux/slices/userSlice";
-import { AppDispatch } from "@src/redux/store";
+import { logIn, logOut } from "@redux/slices/userSlice";
+import { AppDispatch } from "@redux/store";
 
 export const signInWithApple = async (
   dispatch: AppDispatch

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import { ScrollView, Text, Alert, StyleSheet } from "react-native";
-import { useAppDispatch } from "@src/redux/hooks";
-import { setLoading } from "@src/redux/slices/uiSlice";
-import useAuthMethods from "@src/hooks/useAuthMethods";
-import CustomButton from "@components/CustomButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import BackButton from "@components/BackButton";
+import { useAppDispatch } from "@redux/hooks";
+import { setLoading } from "@redux/slices/uiSlice";
+import useAuthMethods from "@hooks/useAuthMethods";
+import CustomButton from "@components/ui/CustomButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import BackButton from "@components/layout/BackButton";
 import { useRouter } from "expo-router";
-import CustomTextInput from "@components/CustomTextInput";
+import CustomTextInput from "@components/ui/CustomTextInput";
 import auth from "@react-native-firebase/auth";
 
 const ChangePasswordScreen: React.FC = () => {

@@ -1,8 +1,7 @@
-// src/hooks/useThemeStyles.ts
 import { useContext } from "react";
-import { ThemeContext } from "../context/ThemeContext";
-import { lightThemeColors, darkThemeColors } from "../styles/colors";
-import { getGlobalStyles } from "../styles/globalStyles";
+import { ThemeContext } from "@context/ThemeContext";
+import { lightThemeColors, darkThemeColors } from "@src/styles/theme/colors";
+import { getGlobalStyles } from "@styles/global/globalStyles";
 
 export const useThemeStyles = () => {
   const themeContext = useContext(ThemeContext);

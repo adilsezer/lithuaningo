@@ -1,12 +1,12 @@
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { AppDispatch } from "../../redux/store";
+import { AppDispatch } from "@redux/store";
 import {
   logIn,
   logOut,
   requireReauthentication,
   clearReauthenticationRequirement,
   deleteUserAccount,
-} from "../../redux/slices/userSlice";
+} from "@redux/slices/userSlice";
 
 type FirebaseError = {
   code: string;
@@ -88,7 +88,7 @@ export const signOutUser = async (dispatch: AppDispatch): Promise<void> => {
   }
 };
 
-export const updateUserProfile = async (
+export const updateAuthUserProfile = async (
   updates: FirebaseAuthTypes.UpdateProfile,
   dispatch: AppDispatch
 ): Promise<void> => {
@@ -141,7 +141,7 @@ export const sendEmailVerification = async (): Promise<void> => {
 
     const currentTime = Date.now();
     const timeSinceLastVerification = currentTime - lastEmailVerificationTime;
-    const verificationCooldown = 300000; // 5 minute cooldown
+    const verificationCooldown = 300000;
 
     if (timeSinceLastVerification < verificationCooldown) {
       throw new Error(

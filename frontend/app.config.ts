@@ -23,6 +23,15 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ["fetch"],
+        NSAppTransportSecurity: {
+          NSAllowsArbitraryLoads: true,
+          NSExceptionDomains: {
+            localhost: {
+              NSExceptionAllowsInsecureHTTPLoads: true,
+              NSIncludesSubdomains: true
+            }
+          }
+        }
       },
       usesAppleSignIn: true,
     },

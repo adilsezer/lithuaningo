@@ -24,7 +24,6 @@ public class WordService : IWordService
 
     public async Task<Lemma?> GetLemma(string lemma)
     {
-        // Try all three case variations
         foreach (var variant in new[] {
             lemma.ToLower(),
             lemma.ToUpper(),

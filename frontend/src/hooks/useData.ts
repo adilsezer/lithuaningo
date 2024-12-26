@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { useAppSelector, useAppDispatch } from "../redux/hooks";
-import { selectUserData } from "../redux/slices/userSlice";
-import userStatsService, { Stats } from "../services/data/userStatsService";
+import { useAppSelector, useAppDispatch } from "@redux/hooks";
+import { selectUserData } from "@redux/slices/userSlice";
+import userStatsService from "@services/data/userStatsService";
 
 interface Leader {
   id: string;

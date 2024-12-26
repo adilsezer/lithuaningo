@@ -9,15 +9,15 @@ public struct MultipleChoiceFormat
 
 public class MultipleChoiceQuestionGenerator : BaseQuestionGenerator
 {
-    private readonly ISentenceService _sentenceService;
+    private readonly IUserService _userService;
     private readonly MultipleChoiceFormat[] _multipleChoiceFormats;
 
     public MultipleChoiceQuestionGenerator(
         IWordService wordService,
-        ISentenceService sentenceService,
+        IUserService userService,
         IRandomGenerator randomGenerator) : base(wordService, randomGenerator)
     {
-        _sentenceService = sentenceService;
+        _userService = userService;
         _multipleChoiceFormats = InitializeMultipleChoiceFormats();
     }
 
@@ -65,7 +65,6 @@ public class MultipleChoiceQuestionGenerator : BaseQuestionGenerator
             var (questionType, validWord, lemma) = await PrepareQuestionComponents(sentence, wordFormsCache);
             var correctAnswer = questionType.GetAnswer(lemma, validWord);
 
-            // Skip this attempt if the correct answer is empty
             if (string.IsNullOrWhiteSpace(correctAnswer))
             {
                 continue;
@@ -118,7 +117,6 @@ public class MultipleChoiceQuestionGenerator : BaseQuestionGenerator
                 options.Add(option);
         }
 
-        // Fill remaining slots with numbered placeholders
         for (int i = options.Count + 1; options.Count < 4; i++)
             options.Add($"Option {i}");
 
@@ -129,7 +127,7 @@ public class MultipleChoiceQuestionGenerator : BaseQuestionGenerator
         string userId,
         Dictionary<string, WordForm> wordFormsCache)
     {
-        var randomSentence = await _sentenceService.GetRandomLearnedSentenceAsync(userId);
+        var randomSentence = await _userService.GetRandomLearnedSentenceAsync(userId);
         return randomSentence != null
             ? GetRandomValidWord(randomSentence.Text, wordFormsCache)
             : throw new InvalidOperationException("No random sentence available");

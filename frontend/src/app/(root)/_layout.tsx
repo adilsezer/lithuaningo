@@ -1,33 +1,15 @@
 import React, { useEffect } from "react";
 import { Redirect, router, Slot } from "expo-router";
-import { useAppSelector } from "../../redux/hooks";
-import { selectIsAuthenticated } from "@src/redux/slices/userSlice";
-import {
-  getLatestAppInfo,
-  getCurrentVersion,
-} from "../../services/data/appInfoService";
+import { useAppSelector } from "@redux/hooks";
+import { selectIsAuthenticated } from "@redux/slices/userSlice";
+import { useAppVersionCheck } from "@hooks/useAppVersionCheck";
 
 const AppLayout: React.FC = () => {
   const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const checkAppVersion = useAppVersionCheck();
 
   useEffect(() => {
-    const checkAppInfo = async () => {
-      const latestAppInfo = await getLatestAppInfo();
-      const currentVersion = getCurrentVersion();
-
-      if (latestAppInfo) {
-        const needsMaintenance = latestAppInfo.isUnderMaintenance;
-        const needsUpdate =
-          latestAppInfo.latestVersion !== currentVersion &&
-          latestAppInfo.mandatoryUpdate;
-
-        if (needsMaintenance || needsUpdate) {
-          router.push("/notification");
-        }
-      }
-    };
-
-    checkAppInfo();
+    checkAppVersion();
   }, []);
 
   if (isAuthenticated) {

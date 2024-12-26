@@ -1,33 +1,10 @@
-import firestore from "@react-native-firebase/firestore";
-import { Platform } from "react-native";
 import Constants from "expo-constants";
-import { COLLECTIONS } from "@config/constants";
-
-export interface AppInfo {
-  latestVersion: string;
-  mandatoryUpdate: boolean;
-  updateUrl: string;
-  isUnderMaintenance: boolean;
-}
+import apiClient from "@services/api/apiClient";
+import { AppInfo } from "@src/types";
 
 export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
   try {
-    const platform = Platform.OS;
-    const doc = await firestore()
-      .collection(COLLECTIONS.APP_INFO)
-      .doc(platform)
-      .get();
-    if (doc.exists) {
-      const data = doc.data();
-      return {
-        latestVersion: data?.latestVersion || "0.0.0",
-        mandatoryUpdate: data?.mandatoryUpdate || false,
-        updateUrl: data?.updateUrl || "",
-        isUnderMaintenance: data?.isUnderMaintenance || false,
-      };
-    } else {
-      return null;
-    }
+    return await apiClient.getAppInfo();
   } catch (error) {
     console.error("Error fetching latest version:", error);
     return null;

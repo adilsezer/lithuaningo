@@ -1,33 +1,44 @@
 using FirebaseAdmin;
 using Google.Apis.Auth.OAuth2;
 using Google.Cloud.Firestore;
-using Services.Quiz;
+using Lithuaningo.API.Controllers;
+using Lithuaningo.API.Services;
+using Lithuaningo.API.Services.Interfaces;
+using Services.Announcements;
 using Services.Quiz.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.WebHost.ConfigureKestrel(serverOptions =>
 {
-    serverOptions.ListenAnyIP(7016, listenOptions =>
+    if (builder.Environment.IsDevelopment())
     {
-        listenOptions.UseHttps();
-    });
+        // Using HTTP for development
+        serverOptions.ListenAnyIP(7016);
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("🚀 Server successfully started at http://localhost:7016");
+        Console.ResetColor();
+    }
+    else
+    {
+        // Using HTTPS for production
+        serverOptions.ListenAnyIP(7016, listenOptions =>
+        {
+            listenOptions.UseHttps();
+        });
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine("🚀 Server successfully started at https://localhost:7016");
+        Console.ResetColor();
+    }
 });
 
-// Configure Firebase first
 ConfigureFirebase(builder.Configuration);
 
-// Configure Services
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
-// Configure Middleware
 ConfigureMiddleware(app);
-
-Console.ForegroundColor = ConsoleColor.Green;
-Console.WriteLine("🚀 Server successfully started at https://localhost:7016");
-Console.ResetColor();
 
 await app.RunAsync();
 
@@ -58,24 +69,30 @@ void ConfigureFirebase(IConfiguration configuration)
 // Service Configuration
 void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 {
+    // Basic Services
     services.AddControllers();
     services.AddEndpointsApiExplorer();
     services.AddSwaggerGen();
 
+    // Firebase Configuration
     services.Configure<FirestoreSettings>(configuration.GetSection("FirestoreSettings"));
-
     var firestoreSettings = configuration.GetSection("FirestoreSettings").Get<FirestoreSettings>();
     services.AddSingleton(FirestoreDb.Create(firestoreSettings?.ProjectId));
 
-    // Register Services with their interfaces
+    // Core Services
     services.AddScoped<IUserService, UserService>();
     services.AddScoped<ISentenceService, SentenceService>();
     services.AddScoped<IWordService, WordService>();
+    services.AddScoped<IAnnouncementService, AnnouncementService>();
+    services.AddScoped<IAppInfoService, AppInfoService>();
+    services.AddScoped<ILeaderboardService, LeaderboardService>();
+
+    // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
     services.AddScoped<IQuestionGeneratorFactory, QuestionGeneratorFactory>();
     services.AddSingleton<IRandomGenerator, RandomGenerator>();
 
-    // Configure CORS
+    // CORS Configuration
     services.Configure<CorsSettings>(configuration.GetSection("CorsSettings"));
     var corsSettings = configuration.GetSection("CorsSettings").Get<CorsSettings>();
 
@@ -88,9 +105,17 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
                   .AllowAnyHeader();
         });
     });
+
+    services.AddControllers()
+            .AddApplicationPart(typeof(UserController).Assembly)
+            .AddApplicationPart(typeof(WordController).Assembly)
+            .AddApplicationPart(typeof(SentenceController).Assembly)
+            .AddApplicationPart(typeof(QuizController).Assembly)
+            .AddApplicationPart(typeof(AnnouncementController).Assembly)
+            .AddApplicationPart(typeof(AppInfoController).Assembly)
+            .AddApplicationPart(typeof(LeaderboardController).Assembly);
 }
 
-// Middleware Configuration
 void ConfigureMiddleware(WebApplication app)
 {
     if (app.Environment.IsDevelopment())
@@ -98,8 +123,11 @@ void ConfigureMiddleware(WebApplication app)
         app.UseSwagger();
         app.UseSwaggerUI();
     }
+    else
+    {
+        app.UseHttpsRedirection();
+    }
 
-    app.UseHttpsRedirection();
     app.UseCors("AllowFrontend");
     app.UseAuthorization();
     app.MapControllers();

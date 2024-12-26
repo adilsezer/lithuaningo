@@ -2,12 +2,13 @@ export const API_KEYS = {
   GOOGLE_WEB_CLIENT_ID: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
   ANDROID_GOOGLE_SERVICES_BASE64: process.env.ANDROID_GOOGLE_SERVICES_BASE64,
   IOS_GOOGLE_SERVICES_BASE64: process.env.IOS_GOOGLE_SERVICES_BASE64,
+  API_URL: process.env.EXPO_PUBLIC_API_URL,
 };
 
 export const COLLECTIONS = {
   USERS: "userProfiles",
-  SENTENCES: __DEV__ ? "testSentences" : "sentences",
-  WORDS: __DEV__ ? "testWords" : "words",
+  SENTENCES: "sentences",
+  WORDS: "words",
   PENDING_WORDS: "pendingWords",
   MISSING_WORDS: "missingWords",
   ANNOUNCEMENTS: "announcements",

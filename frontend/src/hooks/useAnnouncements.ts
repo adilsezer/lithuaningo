@@ -1,14 +1,8 @@
 import { useState, useEffect } from "react";
-import firestore from "@react-native-firebase/firestore";
-import { useAppSelector } from "@src/redux/hooks";
-import { selectIsAuthenticated } from "@src/redux/slices/userSlice";
-import { COLLECTIONS } from "@config/constants";
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-}
+import { useAppSelector } from "@redux/hooks";
+import { selectIsAuthenticated } from "@redux/slices/userSlice";
+import apiClient from "@services/api/apiClient";
+import { Announcement } from "@src/types";
 
 const useAnnouncements = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -21,14 +15,13 @@ const useAnnouncements = () => {
         return;
       }
 
-      const snapshot = await firestore()
-        .collection(COLLECTIONS.ANNOUNCEMENTS)
-        .get();
-      const announcementsData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      })) as Announcement[];
-      setAnnouncements(announcementsData);
+      try {
+        const announcementsData = await apiClient.getAnnouncements();
+        setAnnouncements(announcementsData);
+      } catch (error) {
+        console.error("Failed to fetch announcements:", error);
+        setAnnouncements([]);
+      }
     };
 
     fetchAnnouncements();

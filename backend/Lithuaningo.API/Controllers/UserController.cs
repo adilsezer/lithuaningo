@@ -23,15 +23,39 @@ public class UserController : ControllerBase
         return userProfile != null ? Ok(userProfile) : NotFound();
     }
 
-    [HttpPut]
+    [HttpPost("learned-sentences")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> AddUserLearnedSentences(string userId, [FromBody] List<string> sentenceIds)
+    {
+        await _userService.AddUserLearnedSentencesAsync(userId, sentenceIds);
+        return NoContent();
+    }
+
+    [HttpPost("create-user-profile")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> CreateUserProfile(string userId)
+    {
+        await _userService.CreateUserProfileAsync(userId);
+        return NoContent();
+    }
+
+    [HttpPut("update-user-profile")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult> UpdateUserProfile([FromBody] UserProfile userProfile)
     {
-        if (userProfile == null)
-            return BadRequest("User profile cannot be null.");
-
         await _userService.UpdateUserProfileAsync(userProfile);
+        return NoContent();
+    }
+
+    [HttpDelete("delete-user-profile")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public async Task<ActionResult> DeleteUserProfile(string userId)
+    {
+        await _userService.DeleteUserProfileAsync(userId);
         return NoContent();
     }
 }

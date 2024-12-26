@@ -1,186 +1,170 @@
-import { useCallback } from "react";
-import { useAppDispatch } from "../redux/hooks";
-import { getErrorMessage } from "../utils/errorMessages";
+import { useAppDispatch } from "@redux/hooks";
+import { getErrorMessage } from "@utils/errorMessages";
 import { useRouter } from "expo-router";
-import crashlytics from "@react-native-firebase/crashlytics"; // Import Crashlytics
+import crashlytics from "@react-native-firebase/crashlytics";
 import {
   signInWithEmail,
   signUpWithEmail,
   signOutUser,
   sendPasswordResetEmail,
-  updateUserProfile,
+  updateAuthUserProfile,
   sendEmailVerification,
   updateUserPassword,
   deleteUser,
   reauthenticateUser,
-} from "@src/services/auth/firebaseAuthService";
+} from "@services/auth/firebaseAuthService";
 import {
   signInWithGoogle,
   getGoogleCredential,
-} from "@src/services/auth/googleAuthService";
+} from "@services/auth/googleAuthService";
 import {
   signInWithApple,
   getAppleCredential,
-} from "@src/services/auth/appleAuthService";
-import firestore from "@react-native-firebase/firestore";
+} from "@services/auth/appleAuthService";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { COLLECTIONS } from "@config/constants";
-
-type ActionHandler<T = void> = () => Promise<T>;
+import apiClient from "@services/api/apiClient";
 
 const useAuthMethods = () => {
   const dispatch = useAppDispatch();
   const router = useRouter();
 
-  const handleAction = useCallback(
-    async <T>(
-      action: ActionHandler<T>,
-      successPath?: string
-    ): Promise<{ success: boolean; message?: string; result?: T }> => {
-      try {
-        const result = await action();
-        if (successPath) {
-          router.replace(successPath);
-        }
-        return { success: true, result };
-      } catch (error: any) {
-        // Log the error to Crashlytics
-        crashlytics().recordError(error);
-        return {
-          success: false,
-          message: error.code ? getErrorMessage(error.code) : error.message,
-        };
-      }
-    },
-    [router, dispatch]
-  );
+  const ensureUserProfile = async (user: FirebaseAuthTypes.User) => {
+    const userProfile = await apiClient.getUserProfile(user.uid);
+
+    if (!userProfile) {
+      await apiClient.createUserProfile(user.uid);
+      const newUserProfile = await apiClient.getUserProfile(user.uid);
+      newUserProfile.name = user.displayName || "No Name";
+      newUserProfile.email = user.email || "";
+      await apiClient.updateUserProfile(newUserProfile);
+    }
+
+    return userProfile;
+  };
 
   const handleSignUpWithEmail = async (
     email: string,
     password: string,
     name: string
   ) => {
-    const action = async () => {
+    try {
       const { user } = await signUpWithEmail(email, password, dispatch);
       await user.updateProfile({ displayName: name });
       await sendEmailVerification();
 
-      // Log the sign-up action
-      crashlytics().setUserId(user.uid); // Log only user ID
-    };
-    const result = await handleAction(action, "/auth/login");
-    if (result.success) {
-      result.message =
-        "Registration successful! Please verify your email to continue.";
+      crashlytics().setUserId(user.uid);
+
+      router.replace("/auth/login");
+      return {
+        success: true,
+        message:
+          "Registration successful! Please verify your email to continue.",
+      };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
     }
-    return result;
   };
 
   const handleLoginWithEmail = async (email: string, password: string) => {
-    const action = async () => {
+    try {
       const userCredential = await signInWithEmail(email, password, dispatch);
       const user = userCredential.user;
 
-      if (user) {
-        const userDoc = await firestore()
-          .collection(COLLECTIONS.USERS)
-          .doc(user.uid)
-          .get();
-        if (!userDoc.exists) {
-          await firestore()
-            .collection(COLLECTIONS.USERS)
-            .doc(user.uid)
-            .set({
-              name: user.displayName || "No Name",
-              email: user.email,
-            });
-        }
+      if (!user) throw new Error("User does not exist.");
 
-        // Log the sign-in action
-        crashlytics().setUserId(user.uid); // Log only user ID
-      } else {
-        throw new Error("User does not exist.");
-      }
-    };
+      await ensureUserProfile(user);
 
-    return await handleAction(action, "/dashboard");
+      crashlytics().setUserId(user.uid);
+      router.replace("/dashboard");
+      return { success: true };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
+    }
   };
 
   const handleLoginWithGoogle = async () => {
-    const action = async () => {
+    try {
       const userCredential = await signInWithGoogle(dispatch);
       const user = userCredential.user;
 
-      const userDoc = await firestore()
-        .collection(COLLECTIONS.USERS)
-        .doc(user.uid)
-        .get();
-      if (!userDoc.exists) {
-        await firestore()
-          .collection(COLLECTIONS.USERS)
-          .doc(user.uid)
-          .set({
-            name: user.displayName || "No Name",
-            email: user.email,
-          });
-      }
+      await ensureUserProfile(user);
 
-      // Log the Google sign-in action
-      crashlytics().setUserId(user.uid); // Log only user ID
-    };
-    return await handleAction(action, "/dashboard");
+      crashlytics().setUserId(user.uid);
+      router.replace("/dashboard");
+      return { success: true };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
+    }
   };
 
   const handleLoginWithApple = async () => {
-    const action = async () => {
+    try {
       const userCredential = await signInWithApple(dispatch);
       const user = userCredential.user;
 
-      const userDoc = await firestore()
-        .collection(COLLECTIONS.USERS)
-        .doc(user.uid)
-        .get();
-      if (!userDoc.exists) {
-        await firestore()
-          .collection(COLLECTIONS.USERS)
-          .doc(user.uid)
-          .set({
-            name: user.displayName || "No Name",
-            email: user.email,
-          });
-      }
+      await ensureUserProfile(user);
 
-      // Log the Apple sign-in action
-      crashlytics().setUserId(user.uid); // Log only user ID
-    };
-    return await handleAction(action, "/dashboard");
+      crashlytics().setUserId(user.uid);
+      router.replace("/dashboard");
+      return { success: true };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
+    }
   };
 
   const handleSignOut = async () => {
-    const result = await handleAction(() => signOutUser(dispatch), "/");
-    if (result.success) {
-      // Log the sign-out action
-      crashlytics().log("User signed out."); // Minimal log
+    try {
+      await signOutUser(dispatch);
+      crashlytics().log("User signed out.");
+      router.replace("/");
+      return { success: true };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
     }
-    return result;
   };
 
   const handlePasswordReset = async (email: string) => {
-    const result = await handleAction(
-      () => sendPasswordResetEmail(email),
-      "/auth/login"
-    );
-    if (result.success) {
-      result.message = "Password reset email sent. Please check your inbox.";
+    try {
+      await sendPasswordResetEmail(email);
+      router.replace("/auth/login");
+      return {
+        success: true,
+        message: "Password reset email sent. Please check your inbox.",
+      };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
     }
-    return result;
   };
 
   const handleUpdateUserProfile = async (
     currentPassword: string,
     updates: { displayName?: string }
   ) => {
-    const action = async () => {
+    try {
       const user = auth().currentUser;
       if (!user) {
         throw new Error("No user is currently signed in.");
@@ -219,59 +203,64 @@ const useAuthMethods = () => {
       }
 
       await reauthenticateUser(credential, dispatch);
-      await updateUserProfile(updates, dispatch);
+      await updateAuthUserProfile(updates, dispatch);
 
+      const userProfile = await apiClient.getUserProfile(user.uid);
+      if (!userProfile) throw new Error("User profile does not exist.");
       if (updates.displayName) {
-        await firestore()
-          .collection(COLLECTIONS.USERS)
-          .doc(user.uid)
-          .update({ name: updates.displayName });
+        userProfile.name = updates.displayName;
+        await apiClient.updateUserProfile(userProfile);
       }
 
-      // Log the profile update action
-      crashlytics().setUserId(user.uid); // Log only user ID
-    };
-
-    const result = await handleAction(action, "/dashboard/profile");
-    if (result.success) {
-      result.message = "Profile updated successfully.";
+      crashlytics().setUserId(user.uid);
+      router.replace("/dashboard/profile");
+      return {
+        success: true,
+        message: "Profile updated successfully.",
+      };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
     }
-    return result;
   };
 
   const handleUpdateUserPassword = async (
     currentPassword: string,
     newPassword: string
   ) => {
-    const action = async () => {
+    try {
       const user = auth().currentUser;
       if (!user) {
         throw new Error("No user is currently signed in.");
       }
 
-      // Reauthenticate user with current password
       const credential = auth.EmailAuthProvider.credential(
         user.email!,
         currentPassword
       );
       await reauthenticateUser(credential, dispatch);
-
-      // Update password
       await updateUserPassword(newPassword, dispatch);
 
-      // Log the password update action
-      crashlytics().setUserId(user.uid); // Log only user ID
-    };
-
-    const result = await handleAction(action, "/dashboard/profile");
-    if (result.success) {
-      result.message = "Password updated successfully.";
+      crashlytics().setUserId(user.uid);
+      router.replace("/dashboard/profile");
+      return {
+        success: true,
+        message: "Password updated successfully.",
+      };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
     }
-    return result;
   };
 
   const handleDeleteUserAccount = async (password?: string) => {
-    const action = async () => {
+    try {
       const user = auth().currentUser;
       if (!user) {
         throw new Error("No user is currently signed in.");
@@ -282,7 +271,6 @@ const useAuthMethods = () => {
       if (
         user.providerData.some((provider) => provider.providerId === "password")
       ) {
-        // If user signed in with email and password
         if (!password) {
           throw new Error("Password is required for reauthentication.");
         }
@@ -307,36 +295,41 @@ const useAuthMethods = () => {
         throw new Error("Failed to retrieve credential for reauthentication.");
       }
 
-      // Reauthenticate user
       await reauthenticateUser(credential, dispatch);
-
-      // Delete user document from Firestore
-      await firestore().collection(COLLECTIONS.USERS).doc(user.uid).delete();
-
-      // Delete user
+      await apiClient.deleteUserProfile(user.uid);
       await deleteUser(dispatch);
 
-      // Log the account deletion action
-      crashlytics().setUserId(user.uid); // Log only user ID
-    };
-
-    const result = await handleAction(action, "/");
-    if (result.success) {
-      result.message = "Account deleted successfully.";
+      crashlytics().setUserId(user.uid);
+      router.replace("/");
+      return {
+        success: true,
+        message: "Account deleted successfully.",
+      };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
     }
-    return result;
   };
 
   const handleReauthenticateUser = async (
     credential: FirebaseAuthTypes.AuthCredential
   ) => {
-    const result = await handleAction(() =>
-      reauthenticateUser(credential, dispatch)
-    );
-    if (result.success) {
-      result.message = "User re-authenticated successfully.";
+    try {
+      await reauthenticateUser(credential, dispatch);
+      return {
+        success: true,
+        message: "User re-authenticated successfully.",
+      };
+    } catch (error: any) {
+      crashlytics().recordError(error);
+      return {
+        success: false,
+        message: error.code ? getErrorMessage(error.code) : error.message,
+      };
     }
-    return result;
   };
 
   return {

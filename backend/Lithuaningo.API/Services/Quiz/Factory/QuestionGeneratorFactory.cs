@@ -5,16 +5,16 @@ using Services.Quiz.Interfaces;
 public class QuestionGeneratorFactory : IQuestionGeneratorFactory
 {
     private readonly IWordService _wordService;
-    private readonly ISentenceService _sentenceService;
+    private readonly IUserService _userService;
     private readonly IRandomGenerator _randomGenerator;
 
     public QuestionGeneratorFactory(
         IWordService wordService,
-        ISentenceService sentenceService,
+        IUserService userService,
         IRandomGenerator randomGenerator)
     {
         _wordService = wordService;
-        _sentenceService = sentenceService;
+        _userService = userService;
         _randomGenerator = randomGenerator;
     }
 
@@ -22,7 +22,7 @@ public class QuestionGeneratorFactory : IQuestionGeneratorFactory
     {
         return type switch
         {
-            QuestionType.MultipleChoice => new MultipleChoiceQuestionGenerator(_wordService, _sentenceService, _randomGenerator),
+            QuestionType.MultipleChoice => new MultipleChoiceQuestionGenerator(_wordService, _userService, _randomGenerator),
             QuestionType.FillInTheBlank => new FillInBlankQuestionGenerator(_wordService, _randomGenerator),
             QuestionType.TrueFalse => new TrueFalseQuestionGenerator(_wordService, _randomGenerator),
             QuestionType.ReorderWords => new ReorderWordsQuestionGenerator(_wordService, _randomGenerator),

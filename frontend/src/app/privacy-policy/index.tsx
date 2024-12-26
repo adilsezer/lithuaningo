@@ -1,5 +1,5 @@
-import BackButton from "@components/BackButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import BackButton from "@components/layout/BackButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
 import React from "react";
 import { View, Text, StyleSheet, ScrollView, Linking } from "react-native";
 

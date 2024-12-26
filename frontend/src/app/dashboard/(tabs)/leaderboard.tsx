@@ -1,9 +1,8 @@
-// Leaderboard.tsx
 import React from "react";
 import { StyleSheet, View, Text, ScrollView } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import useData from "@src/hooks/useData";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import useData from "@hooks/useData";
 
 const Leaderboard = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
@@ -16,7 +15,7 @@ const Leaderboard = () => {
           <FontAwesome
             name="trophy"
             size={20}
-            color={globalColors.secondary} // Yellow
+            color={globalColors.secondary}
             style={styles.trophy}
           />
         );
@@ -25,7 +24,7 @@ const Leaderboard = () => {
           <FontAwesome
             name="trophy"
             size={20}
-            color={globalColors.primary} // Green
+            color={globalColors.primary}
             style={styles.trophy}
           />
         );
@@ -34,7 +33,7 @@ const Leaderboard = () => {
           <FontAwesome
             name="trophy"
             size={20}
-            color={globalColors.tertiary} // Red
+            color={globalColors.tertiary}
             style={styles.trophy}
           />
         );

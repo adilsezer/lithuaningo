@@ -1,6 +1,5 @@
-// styles/textStyles.ts
 import { StyleSheet, Dimensions, Platform, TextStyle } from "react-native";
-import { ThemeColors } from "./colors";
+import { ThemeColors } from "./theme/colors";
 
 const { width } = Dimensions.get("window");
 
@@ -31,7 +30,7 @@ export const createTextStyles = (colors: ThemeColors) => {
 
   const contrastBaseText: TextStyle = {
     ...regularText,
-    color: colors.cardText, // new text style with a different color
+    color: colors.cardText,
   };
 
   const contrastBoldText: TextStyle = {
@@ -44,13 +43,13 @@ export const createTextStyles = (colors: ThemeColors) => {
       ...regularText,
       marginVertical: isTablet ? 15 : 10,
       lineHeight: isTablet ? 24 : 20,
-      textAlign: "left" as TextStyle["textAlign"], // assuming paragraphs are left-aligned
+      textAlign: "left" as TextStyle["textAlign"],
     },
     contrastParagraph: {
       ...contrastBaseText,
       marginVertical: isTablet ? 15 : 10,
       lineHeight: isTablet ? 24 : 20,
-      textAlign: "left" as TextStyle["textAlign"], // assuming paragraphs are left-aligned
+      textAlign: "left" as TextStyle["textAlign"],
     },
     title: {
       ...boldText,

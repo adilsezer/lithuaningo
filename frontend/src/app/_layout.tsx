@@ -1,24 +1,22 @@
-// src/app/_layout.tsx
 import React, { useState, useEffect } from "react";
 import { Provider } from "react-redux";
 import { PersistGate } from "redux-persist/integration/react";
-import { store, persistor } from "../redux/store";
+import { store, persistor } from "@redux/store";
 import { Slot } from "expo-router";
-import { ThemeProvider } from "@src/context/ThemeContext";
+import { ThemeProvider } from "@context/ThemeContext";
 import * as Font from "expo-font";
 import * as SplashScreen from "expo-splash-screen";
 import { ActivityIndicator, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import LoadingIndicator from "@components/LoadingIndicator";
-import AuthStateListener from "@src/components/AuthStateListener";
-import NotificationInitializer from "@src/components/NotificationInitializer";
+import LoadingIndicator from "@components/ui/LoadingIndicator";
+import AuthStateListener from "@providers/AuthStateListener";
+import NotificationInitializer from "@providers/NotificationInitializer";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import ErrorBoundary from "@components/ErrorBoundary";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import ErrorBoundary from "@components/error/ErrorBoundary";
 
 SplashScreen.preventAutoHideAsync();
 
-// Inner component that uses theme styles
 const InnerRootLayout: React.FC = () => {
   const { styles: globalStyles } = useThemeStyles();
 

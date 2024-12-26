@@ -1,21 +1,19 @@
 import React from "react";
 import { ScrollView, Text, Alert, StyleSheet, Image } from "react-native";
 import { router } from "expo-router";
-import CustomButton from "@components/CustomButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { useAppDispatch, useAppSelector } from "@src/redux/hooks";
-import { resetClickedWords } from "@src/redux/slices/clickedWordsSlice";
+import CustomButton from "@components/ui/CustomButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { resetClickedWords } from "@redux/slices/clickedWordsSlice";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { setLoading } from "@src/redux/slices/uiSlice";
+import { setLoading } from "@redux/slices/uiSlice";
 import { resetAllQuizKeys } from "@utils/storageUtils";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { usePremiumStatus } from "@hooks/useUserStatus"; // Combined hooks
-import { selectUserData } from "@src/redux/slices/userSlice";
+import { selectUserData } from "@redux/slices/userSlice";
 
 export default function Tab() {
   const dispatch = useAppDispatch();
   const userData = useAppSelector(selectUserData);
-  const isPremiumUser = usePremiumStatus(); // Use the premium status hook
 
   const handleStartLearning = () => {
     dispatch(resetClickedWords());
@@ -54,39 +52,20 @@ export default function Tab() {
         flashcards, and quizzes. Keep up the awesome work!
       </Text>
       <CustomButton title="Start" onPress={handleStartLearning} />
-      {!isPremiumUser ? (
-        <CustomButton
-          title={"Unlock Unlimited Learning"}
-          onPress={() =>
-            router.push("/in-app-purchase/unlimited-learning-screen")
-          }
-          icon={
-            <FontAwesome5
-              name="unlock-alt"
-              size={20}
-              color={globalColors.buttonText}
-            />
-          }
-          style={{
-            backgroundColor: globalColors.secondary,
-          }}
-        />
-      ) : (
-        <CustomButton
-          title={"Start a New Challenge"}
-          onPress={handleRegenerateContent}
-          icon={
-            <FontAwesome5
-              name="crown"
-              size={20}
-              color={globalColors.buttonText}
-            />
-          }
-          style={{
-            backgroundColor: globalColors.secondary,
-          }}
-        />
-      )}
+      <CustomButton
+        title={"Start a New Challenge"}
+        onPress={handleRegenerateContent}
+        icon={
+          <FontAwesome5
+            name="crown"
+            size={20}
+            color={globalColors.buttonText}
+          />
+        }
+        style={{
+          backgroundColor: globalColors.secondary,
+        }}
+      />
     </ScrollView>
   );
 }
@@ -99,7 +78,7 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 300, // Adjust the height as needed
+    height: 300,
     alignSelf: "center",
     marginBottom: 20,
     borderRadius: 20,

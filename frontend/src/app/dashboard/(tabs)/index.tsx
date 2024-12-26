@@ -1,23 +1,20 @@
 import React from "react";
 import { ScrollView, View, Text, StyleSheet } from "react-native";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
-import { useAppSelector } from "@src/redux/hooks";
-import { selectUserData } from "@src/redux/slices/userSlice";
-import useData from "@src/hooks/useData";
-import StatCard from "@components/StatCard";
-import { formatTime } from "@src/utils/dateUtils";
-import ProgressBar from "@components/ProgressBar";
-import { determineUserLevel } from "@utils/userLevel";
-import CustomButton from "@components/CustomButton";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useAppSelector } from "@redux/hooks";
+import { selectUserData } from "@redux/slices/userSlice";
+import useData from "@hooks/useData";
+import { formatTime } from "@utils/dateUtils";
+import ProgressBar from "@components/ui/ProgressBar";
+import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
-import useAnnouncements from "@src/hooks/useAnnouncements"; // Import the hook
+import useAnnouncements from "@hooks/useAnnouncements";
 
 const DashboardScreen: React.FC = () => {
   const { stats } = useData();
   const { styles: globalStyles, colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
-  const userLevel = determineUserLevel(stats);
-  const announcements = useAnnouncements(); // Use the hook
+  const announcements = useAnnouncements();
 
   const validAnnouncements = announcements.filter(
     (announcement) => announcement.title && announcement.content
@@ -80,24 +77,6 @@ const DashboardScreen: React.FC = () => {
         title="Start Review"
         onPress={() => router.push("/dashboard/learn")}
       />
-      <Text style={[globalStyles.title]}>Your Progress</Text>
-      <View style={styles.row}>
-        <StatCard title="Your Level" value={`${userLevel}`} />
-      </View>
-      <View style={styles.row}>
-        <StatCard title="Current Streak" value={`${currentStreak} days`} />
-        <StatCard title="Longest Streak" value={`${longestStreak} days`} />
-      </View>
-      <View style={styles.row}>
-        <StatCard
-          title="Total Answered Questions"
-          value={`${totalAnsweredQuestions}`}
-        />
-        <StatCard
-          title="Time Spent Total"
-          value={formatTime(minutesSpentTotal)}
-        />
-      </View>
     </ScrollView>
   );
 };

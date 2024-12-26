@@ -15,33 +15,21 @@ public class UserProfile
     [FirestoreProperty("learnedSentences")]
     public List<string> LearnedSentences { get; set; } = new();
 
-    [FirestoreProperty("currentStreak")]
-    public int CurrentStreak { get; set; }
-
-    [FirestoreProperty("longestStreak")]
-    public int LongestStreak { get; set; }
-
-    [FirestoreProperty("minutesSpentToday")]
-    public int MinutesSpentToday { get; set; }
-
-    [FirestoreProperty("minutesSpentTotal")]
-    public int MinutesSpentTotal { get; set; }
-
     [FirestoreProperty("todayAnsweredQuestions")]
-    public int TodayAnsweredQuestions { get; set; }
+    public int TodayAnsweredQuestions { get; set; } = 0;
 
     [FirestoreProperty("todayCorrectAnsweredQuestions")]
-    public int TodayCorrectAnsweredQuestions { get; set; }
+    public int TodayCorrectAnsweredQuestions { get; set; } = 0;
 
     [FirestoreProperty("todayWrongAnsweredQuestions")]
-    public int TodayWrongAnsweredQuestions { get; set; }
-
-    [FirestoreProperty("totalAnsweredQuestions")]
-    public int TotalAnsweredQuestions { get; set; }
-
-    [FirestoreProperty("weeklyCorrectAnswers")]
-    public int WeeklyCorrectAnswers { get; set; }
+    public int TodayWrongAnsweredQuestions { get; set; } = 0;
 
     [FirestoreProperty("lastCompleted")]
-    public Timestamp LastCompleted { get; set; }
+    public Timestamp LastCompleted { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
+
+    [FirestoreProperty("isAdmin")]
+    public bool IsAdmin { get; set; } = false;
+
+    [FirestoreProperty("hasPurchasedExtraContent")]
+    public bool HasPurchasedExtraContent { get; set; } = false;
 }
