@@ -9,7 +9,7 @@ import { Appearance } from "react-native";
 import { storeData, retrieveData } from "@utils/storageUtils";
 import { THEME_KEYS } from "@config/constants";
 
-interface ThemeContextProps {
+export interface ThemeContextProps {
   isDarkMode: boolean;
   toggleTheme: () => void;
 }

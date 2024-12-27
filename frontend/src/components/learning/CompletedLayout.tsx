@@ -4,9 +4,7 @@ import CustomButton from "@components/ui/CustomButton";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
-import useData from "@hooks/useData";
-
+import { useUserStats } from "@hooks/useUserStats";
 interface CompletedLayoutProps {
   title: string;
   subtitle: string;
@@ -24,7 +22,11 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 }) => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const router = useRouter();
-  const { stats } = useData();
+  const {
+    todayAnsweredQuestions,
+    todayCorrectAnsweredQuestions,
+    todayWrongAnsweredQuestions,
+  } = useUserStats();
   const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining());
 
   useEffect(() => {
@@ -55,7 +57,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
       <Text style={[globalStyles.subtitle, { marginTop: 20 }]}>{subtitle}</Text>
       {showStats && (
         <View style={styles.statsContainer}>
-          {stats?.todayAnsweredQuestions !== undefined && (
+          {todayAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="help-circle-outline"
@@ -63,12 +65,12 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 color={globalColors.primary}
               />
               <Text style={[globalStyles.text, styles.statText]}>
-                {stats.todayAnsweredQuestions}
+                {todayAnsweredQuestions}
               </Text>
               <Text style={globalStyles.text}>Total Questions</Text>
             </View>
           )}
-          {stats?.todayCorrectAnsweredQuestions !== undefined && (
+          {todayCorrectAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="checkmark-circle-outline"
@@ -76,16 +78,16 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 color="green"
               />
               <Text style={[globalStyles.text, styles.statText]}>
-                {stats?.todayCorrectAnsweredQuestions}
+                {todayCorrectAnsweredQuestions}
               </Text>
               <Text style={globalStyles.text}>Correct Answers</Text>
             </View>
           )}
-          {stats?.todayWrongAnsweredQuestions !== undefined && (
+          {todayWrongAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons name="close-circle-outline" size={24} color="red" />
               <Text style={[globalStyles.text, styles.statText]}>
-                {stats?.todayWrongAnsweredQuestions}
+                {todayWrongAnsweredQuestions}
               </Text>
               <Text style={globalStyles.text}>Wrong Answers</Text>
             </View>

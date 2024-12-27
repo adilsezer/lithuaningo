@@ -12,7 +12,6 @@ import { clearData } from "@utils/storageUtils";
 import ThemeSwitch from "@components/ui/ThemeSwitch";
 import { useTheme } from "@context/ThemeContext";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
-import { FontAwesome5 } from "@expo/vector-icons";
 
 export default function ProfileScreen() {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();

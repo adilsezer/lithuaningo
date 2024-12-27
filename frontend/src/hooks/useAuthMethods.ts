@@ -16,7 +16,7 @@ import {
 import {
   signInWithGoogle,
   getGoogleCredential,
-} from "@services/auth/googleAuthService";
+} from "@src/services/auth/googleAuthService";
 import {
   signInWithApple,
   getAppleCredential,

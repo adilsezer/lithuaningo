@@ -160,7 +160,7 @@ const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
                 style={[styles.image, isSmallScreen && styles.smallImage]}
               />
             )}
-            <Text style={[globalStyles.contrastTitle]}>{word?.english}</Text>
+            <Text style={[globalStyles.contrastTitle]}>{word?.word}</Text>
             <View
               style={[
                 styles.horizontalRule,

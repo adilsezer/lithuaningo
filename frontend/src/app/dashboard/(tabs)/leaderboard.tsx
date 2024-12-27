@@ -2,11 +2,11 @@ import React from "react";
 import { StyleSheet, View, Text, ScrollView } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import useData from "@hooks/useData";
+import { useLeaderboard } from "@hooks/useLeaderboard";
 
 const Leaderboard = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const { leaders } = useData();
+  const leaders = useLeaderboard();
 
   const getTrophyIcon = (index: number) => {
     switch (index) {
@@ -60,7 +60,7 @@ const Leaderboard = () => {
       {leaders.length > 0 ? (
         leaders.map((leader, index) => (
           <View
-            key={leader.id}
+            key={leader.userId}
             style={[styles.row, { borderBottomColor: globalColors.primary }]}
           >
             <Text style={[globalStyles.text, styles.cell, styles.rank]}>
@@ -70,7 +70,7 @@ const Leaderboard = () => {
               {leader.name} {getTrophyIcon(index)}
             </Text>
             <Text style={[globalStyles.text, styles.cell, styles.score]}>
-              {leader.score}
+              {leader.points}
             </Text>
           </View>
         ))

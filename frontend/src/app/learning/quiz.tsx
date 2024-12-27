@@ -17,12 +17,12 @@ import CustomButton from "@components/ui/CustomButton";
 import CompletedLayout from "@components/learning/CompletedLayout";
 import { storeData, retrieveData, resetAllQuizKeys } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
-import useData from "@hooks/useData";
 import BackButton from "@components/layout/BackButton";
 import { QUIZ_KEYS } from "@config/constants";
 import { router } from "expo-router";
-import { QuestionType, QuizQuestion } from "@src/types";
+import { QuizQuestion } from "@src/types";
 import { generateQuiz } from "@services/data/quizService";
+import { useAnswerHandler } from "@src/hooks/useAnswerHandler";
 
 const QuizScreen: React.FC = () => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -33,7 +33,7 @@ const QuizScreen: React.FC = () => {
   const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
-  const { handleAnswer: updateStats } = useData();
+  const updateStats = useAnswerHandler();
   const scrollViewRef = useRef<ScrollView>(null);
 
   const getStorageKey = (
@@ -85,7 +85,7 @@ const QuizScreen: React.FC = () => {
       await storeData(QUIZ_PROGRESS_KEY, {
         progress: currentQuestionIndex + 1,
       });
-      await updateStats(isCorrect, 1);
+      await updateStats(isCorrect);
       setShowContinueButton(true);
     } catch (error) {
       console.error("Error handling answer:", error);

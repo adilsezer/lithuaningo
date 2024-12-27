@@ -1,16 +1,16 @@
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 import type { RootState } from "@redux/store";
+import { UserProfile } from "@src/types/UserProfile";
 
-interface UserProfile {
-  id: string;
-  name: string | null;
-  email: string;
-  emailVerified: boolean;
-}
+// You can create a subset type for Redux if needed
+type ReduxUserProfile = Pick<
+  UserProfile,
+  "id" | "name" | "email" | "emailVerified"
+>;
 
 interface UserState {
   isLoggedIn: boolean;
-  data: UserProfile | null;
+  data: ReduxUserProfile | null;
   needsReauthentication: boolean;
 }
 
@@ -24,7 +24,7 @@ const userSlice = createSlice({
   name: "user",
   initialState,
   reducers: {
-    logIn: (state, action: PayloadAction<UserProfile>) => {
+    logIn: (state, action: PayloadAction<ReduxUserProfile>) => {
       state.isLoggedIn = true;
       state.data = action.payload;
       state.needsReauthentication = false;
@@ -34,7 +34,10 @@ const userSlice = createSlice({
       state.data = null;
       state.needsReauthentication = false;
     },
-    updateUserProfile: (state, action: PayloadAction<Partial<UserProfile>>) => {
+    updateUserProfile: (
+      state,
+      action: PayloadAction<Partial<ReduxUserProfile>>
+    ) => {
       if (state.isLoggedIn && state.data) {
         state.data = { ...state.data, ...action.payload };
       }
@@ -64,7 +67,7 @@ export const {
 
 export const selectIsLoggedIn = (state: RootState): boolean =>
   state.user.isLoggedIn;
-export const selectUserData = (state: RootState): UserProfile | null =>
+export const selectUserData = (state: RootState): ReduxUserProfile | null =>
   state.user.data;
 export const selectNeedsReauthentication = (state: RootState): boolean =>
   state.user.needsReauthentication;

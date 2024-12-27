@@ -3,31 +3,24 @@ import { ScrollView, View, Text, StyleSheet } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
-import useData from "@hooks/useData";
-import { formatTime } from "@utils/dateUtils";
 import ProgressBar from "@components/ui/ProgressBar";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
 import useAnnouncements from "@hooks/useAnnouncements";
+import { useUserStats } from "@hooks/useUserStats";
 
 const DashboardScreen: React.FC = () => {
-  const { stats } = useData();
   const { styles: globalStyles, colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const announcements = useAnnouncements();
-
+  const {
+    todayAnsweredQuestions,
+    todayCorrectAnsweredQuestions,
+    todayWrongAnsweredQuestions,
+  } = useUserStats();
   const validAnnouncements = announcements.filter(
     (announcement) => announcement.title && announcement.content
   );
-
-  const {
-    currentStreak = 0,
-    longestStreak = 0,
-    totalAnsweredQuestions: totalAnsweredQuestions = 0,
-    todayAnsweredQuestions: todayAnsweredQuestions = 0,
-    minutesSpentToday = 0,
-    minutesSpentTotal = 0,
-  } = stats || {};
 
   return (
     <ScrollView
@@ -65,10 +58,13 @@ const DashboardScreen: React.FC = () => {
           Today's Learning
         </Text>
         <Text style={[globalStyles.text, { color: colors.cardText }]}>
-          Completed Questions: {todayAnsweredQuestions}
+          Answered Questions: {todayAnsweredQuestions}
         </Text>
         <Text style={[globalStyles.text, { color: colors.cardText }]}>
-          Time Spent Today: {formatTime(minutesSpentToday)}
+          Correct Answers: {todayCorrectAnsweredQuestions}
+        </Text>
+        <Text style={[globalStyles.text, { color: colors.cardText }]}>
+          Wrong Answers: {todayWrongAnsweredQuestions}
         </Text>
         <ProgressBar progress={todayAnsweredQuestions / 10} />
       </View>

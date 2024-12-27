@@ -8,10 +8,10 @@ import {
   StyleProp,
   ViewStyle,
 } from "react-native";
+import { ThemeContextProps } from "@context/ThemeContext";
 
-interface ThemeSwitchProps {
+interface ThemeSwitchProps extends Pick<ThemeContextProps, "isDarkMode"> {
   onToggle: () => void;
-  isDarkMode: boolean;
   containerStyle?: StyleProp<ViewStyle>;
 }
 
