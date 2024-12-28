@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, View, Text, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useAppSelector, useAppDispatch } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
@@ -17,6 +17,7 @@ import { useThemeStyles } from "@hooks/useThemeStyles";
 import { SENTENCE_KEYS } from "@config/constants";
 import { Sentence } from "@src/types";
 import sentenceService from "@services/data/sentenceService";
+import { SectionTitle, Subtitle, SectionText } from "@components/typography";
 
 const SentencesScreen: React.FC = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
@@ -24,7 +25,7 @@ const SentencesScreen: React.FC = () => {
   const [wordsCompleted, setWordsCompleted] = useState(false);
   const [sentencesCompleted, setSentencesCompleted] = useState(false);
   const router = useRouter();
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
@@ -60,9 +61,7 @@ const SentencesScreen: React.FC = () => {
             userData?.id
           );
           const firstTwoSentences = fetchedSentences.slice(0, 2);
-
           setSentences(firstTwoSentences);
-
           await storeData(SENTENCES_KEY, firstTwoSentences);
         }
       } catch (error: unknown) {
@@ -101,17 +100,11 @@ const SentencesScreen: React.FC = () => {
     router.push("/learning/quiz");
   };
 
-  useEffect(() => {
-    crashlytics().log("Sentences screen loaded.");
-  }, []);
-
   if (error) {
     return (
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <BackButton />
-        <Text style={[globalStyles.text, { color: globalColors.error }]}>
-          {error}
-        </Text>
+        <SectionText style={{ color: colors.error }}>{error}</SectionText>
       </ScrollView>
     );
   }
@@ -128,9 +121,7 @@ const SentencesScreen: React.FC = () => {
         />
         <CustomButton
           title="Go to Dashboard"
-          onPress={() => {
-            router.push("/dashboard");
-          }}
+          onPress={() => router.push("/dashboard")}
         />
       </ScrollView>
     );
@@ -140,9 +131,9 @@ const SentencesScreen: React.FC = () => {
     return (
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <BackButton />
-        <Text style={globalStyles.text}>
+        <SectionText>
           No new sentences to learn. Please check back later.
-        </Text>
+        </SectionText>
       </ScrollView>
     );
   }
@@ -150,12 +141,10 @@ const SentencesScreen: React.FC = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <BackButton />
-      <Text style={globalStyles.title}>
+      <SectionTitle>
         Let's review today's vocabulary before practice!
-      </Text>
-      <Text style={globalStyles.subtitle}>
-        Click on each word to find out what it means.
-      </Text>
+      </SectionTitle>
+      <Subtitle>Click on each word to find out what it means.</Subtitle>
       <View style={styles.contentContainer}>
         {sentences.map((sentence: Sentence, index) => (
           <View key={sentence.id}>
@@ -170,16 +159,16 @@ const SentencesScreen: React.FC = () => {
               <View
                 style={[
                   styles.horizontalRule,
-                  { borderBottomColor: globalColors.border },
+                  { borderBottomColor: colors.border },
                 ]}
               />
             )}
           </View>
         ))}
         {!wordsCompleted && (
-          <Text style={[globalStyles.subtitle, styles.allWordsClickedSection]}>
+          <Subtitle style={styles.allWordsClickedSection}>
             Click all words to unlock the proceed button.
-          </Text>
+          </Subtitle>
         )}
       </View>
       {wordsCompleted && (
@@ -195,9 +184,6 @@ const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     padding: 20,
-  },
-  container: {
-    flex: 1,
   },
   contentContainer: {
     paddingBottom: 80,

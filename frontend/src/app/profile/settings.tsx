@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  Switch,
-  StyleSheet,
-  Alert,
-  ScrollView,
-} from "react-native";
+import { View, Switch, StyleSheet, Alert, ScrollView } from "react-native";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import {
@@ -19,13 +12,14 @@ import BackButton from "@components/layout/BackButton";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { storeData, retrieveData } from "@utils/storageUtils";
 import { NOTIFICATION_KEYS } from "@config/constants";
+import { SectionTitle, Subtitle, SectionText } from "@components/typography";
 
 const SettingsScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState<Date | null>(null);
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -78,55 +72,40 @@ const SettingsScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <Text style={[globalStyles.title, styles.title]}>Settings</Text>
-      <View style={styles.dailyReminder}>
-        <Text style={[globalStyles.subheading, styles.subheading]}>
-          Daily Reminder
-        </Text>
-        <View style={styles.setting}>
-          <Text style={globalStyles.subtitle}>Enable Daily Reminder</Text>
-          <Switch
-            value={reminderEnabled}
-            onValueChange={handleToggleReminder}
-          />
+      <View style={styles.container}>
+        <SectionTitle>Settings</SectionTitle>
+
+        <View style={styles.section}>
+          <Subtitle>Daily Reminder</Subtitle>
+
+          <View style={styles.setting}>
+            <SectionText>Enable Daily Reminder</SectionText>
+            <Switch
+              value={reminderEnabled}
+              onValueChange={handleToggleReminder}
+            />
+          </View>
+
+          {reminderEnabled && reminderTime && (
+            <View
+              style={[styles.timeContainer, { backgroundColor: colors.card }]}
+            >
+              <SectionText contrast>Reminder Time</SectionText>
+              <Subtitle contrast>
+                {reminderTime.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </Subtitle>
+              <CustomButton
+                title="Choose Another Time"
+                onPress={() => setDatePickerVisibility(true)}
+                style={{ backgroundColor: colors.secondary }}
+              />
+            </View>
+          )}
         </View>
-        {reminderEnabled && (
-          <>
-            {reminderTime && (
-              <View
-                style={[
-                  styles.timeContainer,
-                  { backgroundColor: globalColors.card },
-                ]}
-              >
-                <Text
-                  style={[
-                    globalStyles.subtitle,
-                    { color: globalColors.cardText },
-                  ]}
-                >
-                  Reminder Time
-                </Text>
-                <Text
-                  style={[
-                    globalStyles.subheading,
-                    { color: globalColors.cardText },
-                  ]}
-                >
-                  {reminderTime.toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </Text>
-                <CustomButton
-                  title="Choose Another Time"
-                  onPress={() => setDatePickerVisibility(true)}
-                  style={{ backgroundColor: globalColors.secondary }}
-                />
-              </View>
-            )}
-          </>
-        )}
+
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
           mode="time"
@@ -135,36 +114,43 @@ const SettingsScreen: React.FC = () => {
           isDarkModeEnabled={false}
           textColor="black"
         />
-        <CustomButton title="Save Settings" onPress={saveSettings} />
+
+        <CustomButton
+          title="Save Settings"
+          onPress={saveSettings}
+          style={styles.saveButton}
+        />
       </View>
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  title: {
-    marginBottom: 20,
+  container: {
+    padding: 20,
   },
-  subheading: {
-    marginBottom: 20,
-  },
-  dailyReminder: {
+  section: {
     borderWidth: 0.2,
     borderRadius: 10,
     borderColor: "grey",
     paddingHorizontal: 20,
     paddingVertical: 30,
+    marginVertical: 20,
   },
   setting: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginVertical: 15,
   },
   timeContainer: {
-    padding: 10,
+    padding: 15,
     borderRadius: 10,
-    marginBottom: 20,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  saveButton: {
+    marginTop: 20,
   },
 });
 

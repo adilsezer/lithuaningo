@@ -1,22 +1,16 @@
 import React, { useState } from "react";
-import { Text, Alert, ScrollView } from "react-native";
-import { useAppDispatch } from "@redux/hooks";
-import { setLoading } from "@redux/slices/uiSlice";
-import { updateUserProfile as updateUserProfileAction } from "@redux/slices/userSlice";
-import useAuthMethods from "@hooks/useAuthMethods";
-import CustomButton from "@components/ui/CustomButton";
+import { ScrollView, StyleSheet } from "react-native";
+import { useAuth } from "@hooks/useAuth";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
-import { useRouter } from "expo-router";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import auth from "@react-native-firebase/auth";
+import { SectionTitle, Instruction } from "@components/typography";
 
 const EditProfileScreen: React.FC = () => {
-  const dispatch = useAppDispatch();
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const { handleUpdateUserProfile } = useAuthMethods();
-  const router = useRouter();
-
+  const { colors } = useThemeStyles();
+  const { updateProfile } = useAuth();
   const [currentPassword, setCurrentPassword] = useState<string>("");
   const [name, setName] = useState<string>("");
 
@@ -26,56 +20,62 @@ const EditProfileScreen: React.FC = () => {
   );
 
   const handleUpdateProfile = async () => {
-    if (!name) {
-      Alert.alert("Error", "Name is required.");
-      return;
-    }
+    if (!name) return;
 
-    dispatch(setLoading(true));
-
-    try {
-      const result = await handleUpdateUserProfile(
-        isPasswordProvider ? currentPassword : "",
-        {
-          displayName: name,
-        }
-      );
-      if (result.success) {
-        dispatch(updateUserProfileAction({ name }));
-        Alert.alert("Success", "Profile updated successfully.");
-        router.push("/dashboard/profile");
-      } else {
-        Alert.alert("Error", result.message || "Failed to update profile.");
-      }
-    } finally {
-      dispatch(setLoading(false));
-    }
+    await updateProfile(isPasswordProvider ? currentPassword : "", {
+      displayName: name,
+    });
   };
 
   return (
-    <ScrollView>
+    <ScrollView style={styles.container}>
       <BackButton />
-      <Text style={globalStyles.title}>Edit Profile</Text>
+      <SectionTitle>Edit Profile</SectionTitle>
+
       {isPasswordProvider && (
-        <CustomTextInput
-          style={globalStyles.input}
-          placeholder="Current Password"
-          value={currentPassword}
-          secureTextEntry
-          onChangeText={setCurrentPassword}
-          placeholderTextColor={globalColors.placeholder}
-        />
+        <>
+          <Instruction>
+            Please enter your current password to make changes
+          </Instruction>
+          <CustomTextInput
+            style={styles.input}
+            placeholder="Current Password"
+            value={currentPassword}
+            secureTextEntry
+            onChangeText={setCurrentPassword}
+            placeholderTextColor={colors.placeholder}
+          />
+        </>
       )}
+
       <CustomTextInput
-        style={globalStyles.input}
+        style={styles.input}
         placeholder="User Name"
         value={name}
         onChangeText={setName}
-        placeholderTextColor={globalColors.placeholder}
+        placeholderTextColor={colors.placeholder}
       />
-      <CustomButton title="Save Changes" onPress={handleUpdateProfile} />
+
+      <CustomButton
+        title="Save Changes"
+        onPress={handleUpdateProfile}
+        style={styles.button}
+      />
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 20,
+  },
+  input: {
+    marginBottom: 15,
+  },
+  button: {
+    marginTop: 10,
+  },
+});
 
 export default EditProfileScreen;

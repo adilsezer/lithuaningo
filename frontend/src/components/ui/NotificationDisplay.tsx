@@ -1,7 +1,7 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { View, StyleSheet, Image } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
+import { SectionTitle, Subtitle } from "@components/typography";
 
 interface NotificationDisplayProps {
   title: string;
@@ -16,13 +16,11 @@ const NotificationDisplay: React.FC<NotificationDisplayProps> = ({
   buttonText,
   buttonAction,
 }) => {
-  const { styles: globalStyles } = useThemeStyles();
-
   return (
     <View style={styles.container}>
       <Image source={require("assets/images/icon.png")} style={styles.logo} />
-      <Text style={globalStyles.title}>{title}</Text>
-      <Text style={globalStyles.subtitle}>{subtitle}</Text>
+      <SectionTitle>{title}</SectionTitle>
+      <Subtitle>{subtitle}</Subtitle>
       {buttonText && buttonAction && (
         <CustomButton onPress={buttonAction} title={buttonText} />
       )}

@@ -1,7 +1,8 @@
 import React from "react";
-import { Text, TouchableOpacity, StyleSheet, TextStyle } from "react-native";
+import { TouchableOpacity, StyleSheet, TextStyle } from "react-native";
 import { router } from "expo-router";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import { LinkText } from "@components/typography";
 
 interface NavigationLinkProps {
   text: string;
@@ -14,24 +15,13 @@ const NavigationLink: React.FC<NavigationLinkProps> = ({
   path,
   style,
 }) => {
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-
   const handlePress = () => {
     router.push(path);
   };
 
   return (
     <TouchableOpacity onPress={handlePress}>
-      <Text
-        style={[
-          globalStyles.text,
-          { color: globalColors.link },
-          styles.link,
-          style,
-        ]}
-      >
-        {text}
-      </Text>
+      <LinkText style={[styles.link, style]}>{text}</LinkText>
     </TouchableOpacity>
   );
 };

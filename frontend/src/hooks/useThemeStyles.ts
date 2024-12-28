@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { ThemeContext } from "@context/ThemeContext";
-import { lightThemeColors, darkThemeColors } from "@src/styles/theme/colors";
-import { getGlobalStyles } from "@styles/global/globalStyles";
+import { lightThemeColors, darkThemeColors } from "@src/styles/colors";
+import { createBaseStyles } from "@styles/baseStyles";
 
 export const useThemeStyles = () => {
   const themeContext = useContext(ThemeContext);
@@ -12,7 +12,7 @@ export const useThemeStyles = () => {
 
   const { isDarkMode } = themeContext;
   const colors = isDarkMode ? darkThemeColors : lightThemeColors;
-  const styles = getGlobalStyles(colors);
+  const { layout, components } = createBaseStyles(colors);
 
-  return { styles, colors };
+  return { colors, layout, components };
 };

@@ -1,26 +1,24 @@
-import React, { useEffect, useState } from "react";
-import { Text, ScrollView } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import useAuthMethods from "@hooks/useAuthMethods";
+import React, { useEffect } from "react";
+import { ScrollView } from "react-native";
+import { useAuth } from "@hooks/useAuth";
 import { useAppSelector } from "@redux/hooks";
 import { selectIsLoading } from "@redux/slices/uiSlice";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import NavigationLink from "@components/layout/NavigationLink";
 import BackButton from "@components/layout/BackButton";
-import OrSeparator from "@components/ui/OrSeparator";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
-import { useAuthOperation } from "@hooks/useAuthOperation";
 import crashlytics from "@react-native-firebase/crashlytics";
 import CustomButton from "@components/ui/CustomButton";
+import { SectionTitle } from "@components/typography";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import Divider from "@components/ui/Divider";
 
 const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = React.useState("");
+  const [password, setPassword] = React.useState("");
   const loading = useAppSelector(selectIsLoading);
-  const { styles: globalStyles } = useThemeStyles();
-  const { handleLoginWithEmail, handleLoginWithGoogle, handleLoginWithApple } =
-    useAuthMethods();
-  const { performAuthOperation } = useAuthOperation();
+  const { colors } = useThemeStyles();
+  const { signIn, signInWithSocial } = useAuth();
 
   useEffect(() => {
     crashlytics().log("Login screen loaded.");
@@ -29,7 +27,7 @@ const LoginScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <Text style={globalStyles.title}>Welcome Back</Text>
+      <SectionTitle>Welcome Back</SectionTitle>
 
       <CustomTextInput
         placeholder="Email"
@@ -37,43 +35,35 @@ const LoginScreen: React.FC = () => {
         onChangeText={setEmail}
         autoCapitalize="none"
         keyboardType="email-address"
+        placeholderTextColor={colors.placeholder}
       />
       <CustomTextInput
         placeholder="Password"
         value={password}
         onChangeText={setPassword}
         secureTextEntry
+        placeholderTextColor={colors.placeholder}
       />
 
       <CustomButton
-        onPress={() =>
-          performAuthOperation(
-            () => handleLoginWithEmail(email, password),
-            "Login Failed"
-          )
-        }
+        onPress={() => signIn(email, password)}
         title="Log In with Email"
         disabled={loading}
       />
 
       <NavigationLink text="Forgot Password?" path="/auth/forgot-password" />
 
-      <OrSeparator />
+      <Divider content="Or" />
 
       <SocialAuthButtons
-        onGooglePress={() =>
-          performAuthOperation(handleLoginWithGoogle, "Google Login Failed")
-        }
-        onApplePress={() =>
-          performAuthOperation(handleLoginWithApple, "Apple Login Failed")
-        }
+        onGooglePress={() => signInWithSocial("google")}
+        onApplePress={() => signInWithSocial("apple")}
         disabled={loading}
       />
 
       <NavigationLink
         text="Don't have an account? Sign Up"
         path="/auth/signup"
-        style={{ textAlign: "center" }}
       />
     </ScrollView>
   );

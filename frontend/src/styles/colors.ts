@@ -32,7 +32,7 @@ export const lightThemeColors: ThemeColors = {
   placeholder: "#B0BEC5",
   border: "#B0BEC5",
   error: "#d5304f",
-  card: "#ECEFF1",
+  card: "#f0f0f0",
   cardText: "#2E3B44",
   success: "#66BB6A",
   wordBackground: "#f0f0f0",

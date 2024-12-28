@@ -5,7 +5,7 @@ import { selectIsLoading } from "@redux/slices/uiSlice";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 
 const LoadingIndicator = () => {
-  const { colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const isLoading = useAppSelector(selectIsLoading);
   const [showLoading, setShowLoading] = useState(false);
   const [delayedIsLoading, setDelayedIsLoading] = useState(false);
@@ -48,12 +48,12 @@ const LoadingIndicator = () => {
         <View
           style={[
             styles.activityIndicatorWrapper,
-            { backgroundColor: globalColors.background },
+            { backgroundColor: colors.background },
           ]}
         >
           <ActivityIndicator
             size="large"
-            color={globalColors.active}
+            color={colors.active}
             animating={showLoading}
             accessibilityLabel="Loading content"
           />

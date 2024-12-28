@@ -30,7 +30,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
   containerStyle,
   ...rest
 }) => {
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors, components } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
   const [placeholderAnim] = useState(new Animated.Value(value ? 1 : 0));
@@ -83,14 +83,14 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
     >
       <Animated.Text
         style={[
-          globalStyles.bold,
           {
+            fontFamily: "Roboto-Bold",
             position: "absolute",
             transform: [
               { translateY: placeholderTranslateY },
               { scale: placeholderScale },
             ],
-            color: globalColors.placeholder,
+            color: colors.placeholder,
             textAlign: "center",
             paddingBottom: isTablet ? 30 : 20,
             pointerEvents: "none",
@@ -101,9 +101,12 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
       </Animated.Text>
       <TextInput
         style={[
-          globalStyles.input,
+          components.input,
           style,
-          { width: "100%", textAlign: "center" },
+          {
+            width: "100%",
+            textAlign: "center",
+          },
         ]}
         value={value}
         onChangeText={onChangeText}

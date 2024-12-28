@@ -18,10 +18,10 @@ import ErrorBoundary from "@components/error/ErrorBoundary";
 SplashScreen.preventAutoHideAsync();
 
 const InnerRootLayout: React.FC = () => {
-  const { styles: globalStyles } = useThemeStyles();
+  const { layout } = useThemeStyles();
 
   return (
-    <SafeAreaView style={globalStyles.pageStyle}>
+    <SafeAreaView style={layout.page}>
       <LoadingIndicator />
       <AuthStateListener />
       <NotificationInitializer />

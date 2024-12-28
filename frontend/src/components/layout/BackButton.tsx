@@ -13,7 +13,7 @@ const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 const BackButton: React.FC = () => {
-  const { colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const iconSize = isTablet ? 36 : 24;
 
   return (
@@ -22,7 +22,7 @@ const BackButton: React.FC = () => {
       style={styles.button}
       activeOpacity={0.6}
     >
-      <Ionicons name="arrow-back" size={iconSize} color={globalColors.text} />
+      <Ionicons name="arrow-back" size={iconSize} color={colors.text} />
     </TouchableOpacity>
   );
 };

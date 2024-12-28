@@ -1,9 +1,14 @@
 import React from "react";
-import { Text, StyleSheet, ScrollView, Alert, View } from "react-native";
+import { StyleSheet, ScrollView, Alert, View } from "react-native";
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
 import BackButton from "@components/layout/BackButton";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import {
+  SectionTitle,
+  SectionText,
+  LinkText,
+  Paragraph,
+} from "@components/typography";
 import { useRouter } from "expo-router";
 
 export default function AboutScreen() {
@@ -30,60 +35,50 @@ export default function AboutScreen() {
     }
   };
 
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
   const appVersion = Constants.expoConfig?.version || "Unknown";
 
   return (
     <ScrollView>
       <BackButton />
       <View style={styles.container}>
-        <Text style={globalStyles.title}>About Lithuaningo</Text>
-
-        <Text style={[globalStyles.text, { textAlign: "justify" }]}>
+        <SectionTitle>About Lithuaningo</SectionTitle>
+        <Paragraph style={styles.justifiedText}>
           Lithuaningo is your gateway to mastering Lithuanian! Dive into
           learning with ease and fun. Our app provides a comprehensive learning
           experience with various features and tools to help you become
           proficient in Lithuanian.
-        </Text>
+        </Paragraph>
 
-        <Text style={globalStyles.title}>Contact Us</Text>
-        <Text style={[globalStyles.text]}>
+        <SectionTitle>Contact Us</SectionTitle>
+        <SectionText>
           Email:{" "}
-          <Text
-            style={[
-              globalStyles.text,
-              { color: globalColors.link, textDecorationLine: "underline" },
-            ]}
+          <LinkText
             onPress={() => handleLinkPress("mailto:lithuaningo@gmail.com")}
           >
             lithuaningo@gmail.com
-          </Text>
-        </Text>
+          </LinkText>
+        </SectionText>
 
-        <Text style={globalStyles.title}>License</Text>
-        <Text style={[globalStyles.text]}>
-          This app is licensed under the MIT License.
-        </Text>
+        <SectionTitle>License</SectionTitle>
+        <SectionText>This app is licensed under the MIT License.</SectionText>
 
-        <Text style={globalStyles.title}>Version</Text>
-        <Text style={[globalStyles.text]}>{appVersion}</Text>
+        <SectionTitle>Version</SectionTitle>
+        <SectionText>{appVersion}</SectionText>
 
-        <Text style={globalStyles.title}>Privacy Policy</Text>
-        <Text
-          style={[
-            globalStyles.text,
-            { color: globalColors.link, textDecorationLine: "underline" },
-          ]}
-          onPress={() => router.push("/privacy-policy")}
-        >
+        <SectionTitle>Privacy Policy</SectionTitle>
+        <LinkText onPress={() => router.push("/privacy-policy")}>
           View our Privacy Policy
-        </Text>
+        </LinkText>
       </View>
     </ScrollView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     padding: 20,
+  },
+  justifiedText: {
+    textAlign: "justify",
   },
 });

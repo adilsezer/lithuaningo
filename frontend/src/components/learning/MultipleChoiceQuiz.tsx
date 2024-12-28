@@ -1,15 +1,9 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Dimensions,
-  Platform,
-} from "react-native";
+import { View, StyleSheet, Image, Dimensions, Platform } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "@components/ui/CustomButton";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
+import { SectionTitle, Subtitle, Instruction } from "@components/typography";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -35,7 +29,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
   questionWord,
   onAnswer,
 }) => {
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [optionSelected, setOptionSelected] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -58,34 +52,20 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
 
   const getOptionBackgroundColor = (option: string) => {
     if (!selectedOption) {
-      return globalColors.inactive;
+      return colors.inactive;
     }
     if (selectedOption === option) {
-      return option === correctAnswerText
-        ? globalColors.active
-        : globalColors.error;
+      return option === correctAnswerText ? colors.active : colors.error;
     }
     if (option === correctAnswerText) {
-      return globalColors.active;
+      return colors.active;
     }
-    return globalColors.inactive;
-  };
-
-  const renderBoldText = (text: string) => {
-    const parts = text.split("**");
-    return parts.map((part, index) => (
-      <Text
-        key={index}
-        style={index % 2 === 1 ? { fontFamily: "Roboto-Bold" } : {}}
-      >
-        {part}
-      </Text>
-    ));
+    return colors.inactive;
   };
 
   return (
     <View>
-      <Text style={globalStyles.subtitle}>{renderBoldText(questionText)}</Text>
+      <Subtitle>{questionText}</Subtitle>
       <View style={styles.sentenceContainer}>
         <RenderClickableWords
           sentenceText={sentenceText}
@@ -93,9 +73,7 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
           useClickedWordsColor={false}
         />
       </View>
-      <Text style={globalStyles.instruction}>
-        Click on each word to find out what it means.
-      </Text>
+      <Instruction>Click on each word to find out what it means.</Instruction>
       {image && (
         <Image
           source={{ uri: image }}
@@ -109,10 +87,8 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
               title={option}
               onPress={() => handleOptionPress(option)}
               style={[
-                globalStyles.button,
+                styles.button,
                 {
-                  paddingVertical: 14,
-                  marginVertical: 6,
                   backgroundColor: getOptionBackgroundColor(option),
                 },
               ]}
@@ -121,34 +97,29 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
         ))}
       {optionSelected && (
         <View>
-          <Text style={[globalStyles.subtitle]}>
+          <Subtitle>
             You answered:{" "}
-            <Text
-              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
-            >
+            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
               {selectedOption}
-            </Text>
-          </Text>
-          <Text style={[globalStyles.subtitle]}>
+            </Subtitle>
+          </Subtitle>
+          <Subtitle>
             Correct answer:{" "}
-            <Text
-              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
-            >
+            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
               {correctAnswerText}
-            </Text>
-          </Text>
+            </Subtitle>
+          </Subtitle>
         </View>
       )}
       {isCorrect !== null && (
         <View>
-          <Text
-            style={[
-              globalStyles.title,
-              { color: isCorrect ? globalColors.active : globalColors.error },
-            ]}
+          <SectionTitle
+            style={{
+              color: isCorrect ? colors.active : colors.error,
+            }}
           >
             {isCorrect ? "Correct" : "Incorrect"}
-          </Text>
+          </SectionTitle>
         </View>
       )}
     </View>
@@ -158,6 +129,10 @@ const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
 const styles = StyleSheet.create({
   optionContainer: {
     marginVertical: 5,
+  },
+  button: {
+    paddingVertical: 14,
+    marginVertical: 6,
   },
   image: {
     width: 250,

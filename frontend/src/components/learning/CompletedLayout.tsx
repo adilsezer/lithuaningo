@@ -1,10 +1,12 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, Text, View, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useUserStats } from "@hooks/useUserStats";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import { SectionTitle, Subtitle, SectionText } from "@components/typography";
+
 interface CompletedLayoutProps {
   title: string;
   subtitle: string;
@@ -20,7 +22,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
   navigationRoute,
   showStats,
 }) => {
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const router = useRouter();
   const {
     todayAnsweredQuestions,
@@ -53,8 +55,9 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 
   return (
     <ScrollView>
-      <Text style={[globalStyles.title, { marginTop: 40 }]}>{title}</Text>
-      <Text style={[globalStyles.subtitle, { marginTop: 20 }]}>{subtitle}</Text>
+      <SectionTitle style={{ marginTop: 40 }}>{title}</SectionTitle>
+      <Subtitle style={{ marginTop: 20 }}>{subtitle}</Subtitle>
+
       {showStats && (
         <View style={styles.statsContainer}>
           {todayAnsweredQuestions !== undefined && (
@@ -62,14 +65,15 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
               <Ionicons
                 name="help-circle-outline"
                 size={24}
-                color={globalColors.primary}
+                color={colors.primary}
               />
-              <Text style={[globalStyles.text, styles.statText]}>
+              <SectionText style={styles.statText}>
                 {todayAnsweredQuestions}
-              </Text>
-              <Text style={globalStyles.text}>Total Questions</Text>
+              </SectionText>
+              <SectionText>Total Questions</SectionText>
             </View>
           )}
+
           {todayCorrectAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
@@ -77,31 +81,31 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 size={24}
                 color="green"
               />
-              <Text style={[globalStyles.text, styles.statText]}>
+              <SectionText style={styles.statText}>
                 {todayCorrectAnsweredQuestions}
-              </Text>
-              <Text style={globalStyles.text}>Correct Answers</Text>
+              </SectionText>
+              <SectionText>Correct Answers</SectionText>
             </View>
           )}
+
           {todayWrongAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons name="close-circle-outline" size={24} color="red" />
-              <Text style={[globalStyles.text, styles.statText]}>
+              <SectionText style={styles.statText}>
                 {todayWrongAnsweredQuestions}
-              </Text>
-              <Text style={globalStyles.text}>Wrong Answers</Text>
+              </SectionText>
+              <SectionText>Wrong Answers</SectionText>
             </View>
           )}
         </View>
       )}
+
       {showStats && (
         <View style={styles.timerContainer}>
-          <Text style={globalStyles.subtitle}>
-            Next challenge available in:
-          </Text>
-          <Text style={globalStyles.title}>
+          <Subtitle>Next challenge available in:</Subtitle>
+          <SectionTitle>
             {`${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`}
-          </Text>
+          </SectionTitle>
         </View>
       )}
 
@@ -109,7 +113,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
         title={buttonText}
         onPress={() => router.push(navigationRoute)}
         style={{
-          backgroundColor: globalColors.primary,
+          backgroundColor: colors.primary,
           marginTop: 20,
         }}
       />

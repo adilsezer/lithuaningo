@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
   View,
-  Text,
   StyleSheet,
   TouchableWithoutFeedback,
   Image,
@@ -30,15 +29,16 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { selectUserData } from "@redux/slices/userSlice";
 import { SENTENCE_KEYS } from "@config/constants";
 import { WordForm, Lemma } from "@src/types";
+import { SectionTitle, Instruction } from "@components/typography";
 
-interface Flashcard {
+interface FlashcardProps {
   wordId: string;
 }
 
-const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
+const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
   const [word, setWord] = useState<WordForm | null>(null);
   const [lemma, setLemma] = useState<Lemma | null>(null);
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const router = useRouter();
   const userData = useAppSelector(selectUserData);
@@ -129,7 +129,7 @@ const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
             style={[
               styles.card,
               frontAnimatedStyle,
-              { backgroundColor: globalColors.card },
+              { backgroundColor: colors.card },
             ]}
           >
             {lemma?.imageUrl && (
@@ -138,11 +138,11 @@ const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
                 style={[styles.image, isSmallScreen && styles.smallImage]}
               />
             )}
-            <Text style={[globalStyles.contrastTitle]}>{wordId}</Text>
+            <SectionTitle>{wordId}</SectionTitle>
             <View
               style={[
                 styles.horizontalRule,
-                { borderBottomColor: globalColors.border },
+                { borderBottomColor: colors.border },
               ]}
             />
           </Animated.View>
@@ -151,7 +151,7 @@ const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
               styles.card,
               backAnimatedStyle,
               styles.cardBack,
-              { backgroundColor: globalColors.card },
+              { backgroundColor: colors.card },
             ]}
           >
             {lemma?.imageUrl && (
@@ -160,28 +160,23 @@ const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
                 style={[styles.image, isSmallScreen && styles.smallImage]}
               />
             )}
-            <Text style={[globalStyles.contrastTitle]}>{word?.word}</Text>
+            <SectionTitle>{word?.word}</SectionTitle>
             <View
               style={[
                 styles.horizontalRule,
-                { borderBottomColor: globalColors.border },
+                { borderBottomColor: colors.border },
               ]}
             />
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
-      <Text style={[globalStyles.instruction]}>
-        Tap the card to flip and see the translation
-      </Text>
+      <Instruction>Tap the card to flip and see the translation</Instruction>
       <View style={styles.buttonContainer}>
         {!sentenceReviewCompleted ? (
           <View>
             <CustomButton
               title="Review Later"
-              style={[
-                styles.button,
-                { backgroundColor: globalColors.secondary },
-              ]}
+              style={[styles.button, { backgroundColor: colors.secondary }]}
               onPress={() => handleMarkButtonClick(false)}
             />
             <CustomButton
@@ -192,7 +187,7 @@ const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
         ) : (
           <CustomButton
             title="Go Back"
-            style={[styles.button, { backgroundColor: globalColors.secondary }]}
+            style={[styles.button, { backgroundColor: colors.secondary }]}
             onPress={() => router.back()}
           />
         )}
@@ -202,9 +197,6 @@ const Flashcard: React.FC<Flashcard> = ({ wordId }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   scrollViewContent: {
     flexGrow: 1,
     padding: 10,
@@ -231,12 +223,6 @@ const styles = StyleSheet.create({
     left: 0,
     width: "100%",
   },
-  imageContainer: {
-    width: "100%",
-    height: "80%",
-    paddingHorizontal: 15,
-    marginVertical: 5,
-  },
   image: {
     width: 300,
     height: 300,
@@ -248,9 +234,6 @@ const styles = StyleSheet.create({
   smallImage: {
     width: 250,
     height: 250,
-  },
-  input: {
-    marginVertical: 10,
   },
   button: {
     marginVertical: 10,

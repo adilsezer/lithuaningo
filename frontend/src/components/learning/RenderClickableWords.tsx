@@ -1,16 +1,16 @@
 import React from "react";
 import {
-  Text,
   TouchableOpacity,
   StyleSheet,
   View,
-  Dimensions,
   Platform,
+  Dimensions,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { cleanWord } from "@utils/stringUtils";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useAppSelector } from "@redux/hooks";
+import { SectionText } from "@components/typography";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -27,7 +27,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   useClickedWordsColor,
 }) => {
   const router = useRouter();
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
 
   const handleWordClick = (word: string) => {
     router.push(`/learning/${cleanWord(word)}`);
@@ -46,19 +46,18 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
           clickedWords
             .map((word) => word.toLowerCase())
             .includes(cleanedWord.toLowerCase())
-            ? globalColors.wordHighlightBackground
-            : globalColors.wordBackground;
+            ? colors.wordHighlightBackground
+            : colors.wordBackground;
         const containerStyle = [
           styles.commonContainer,
           isPlaceholder && {
-            backgroundColor: globalColors.background,
-            borderColor: globalColors.secondary,
+            backgroundColor: colors.background,
+            borderColor: colors.secondary,
             borderWidth: 2,
           },
           !isPlaceholder && { backgroundColor },
         ];
         const textStyle = [
-          globalStyles.text,
           isPlaceholder ? styles.placeholderText : styles.wordText,
           isTablet &&
             (isPlaceholder ? styles.placeholderTextIpad : styles.wordTextIpad),
@@ -67,7 +66,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
         if (isPlaceholder) {
           return (
             <View key={`${word}-${index}`} style={containerStyle}>
-              <Text style={textStyle}>{word}</Text>
+              <SectionText style={textStyle}>{word}</SectionText>
             </View>
           );
         }
@@ -78,7 +77,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
             style={containerStyle}
             activeOpacity={0.7}
           >
-            <Text style={textStyle}>{word}</Text>
+            <SectionText style={textStyle}>{word}</SectionText>
           </TouchableOpacity>
         );
       })}

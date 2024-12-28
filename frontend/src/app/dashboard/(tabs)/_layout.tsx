@@ -7,13 +7,21 @@ import { Dimensions, Platform, StyleSheet } from "react-native";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
+// Define tab items configuration
+const TAB_ITEMS = [
+  { name: "index", title: "Home", icon: "home" },
+  { name: "learn", title: "Learn", icon: "play-circle" },
+  { name: "leaderboard", title: "Leaderboard", icon: "trophy" },
+  { name: "profile", title: "Profile", icon: "user" },
+] as const;
+
 export default function TabLayout() {
-  const { colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
 
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: globalColors.active,
+        tabBarActiveTintColor: colors.active,
         tabBarStyle: styles.tabBarStyle,
         headerShown: false,
         tabBarLabelStyle: {
@@ -25,42 +33,18 @@ export default function TabLayout() {
         },
       }}
     >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: "Home",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="home" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="learn"
-        options={{
-          title: "Learn",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="play-circle" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="leaderboard"
-        options={{
-          title: "Leaderboard",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="trophy" color={color} />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="profile"
-        options={{
-          title: "Profile",
-          tabBarIcon: ({ color }) => (
-            <FontAwesome size={28} name="user" color={color} />
-          ),
-        }}
-      />
+      {TAB_ITEMS.map(({ name, title, icon }) => (
+        <Tabs.Screen
+          key={name}
+          name={name}
+          options={{
+            title,
+            tabBarIcon: ({ color }) => (
+              <FontAwesome size={28} name={icon} color={color} />
+            ),
+          }}
+        />
+      ))}
     </Tabs>
   );
 }

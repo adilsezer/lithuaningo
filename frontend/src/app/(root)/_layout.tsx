@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Redirect, router, Slot } from "expo-router";
+import { Redirect, Slot } from "expo-router";
 import { useAppSelector } from "@redux/hooks";
 import { selectIsAuthenticated } from "@redux/slices/userSlice";
 import { useAppVersionCheck } from "@hooks/useAppVersion";

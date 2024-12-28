@@ -1,7 +1,6 @@
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import React, { useState } from "react";
 import {
-  Text,
   TouchableOpacity,
   StyleSheet,
   Animated,
@@ -9,6 +8,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { ThemeContextProps } from "@context/ThemeContext";
+import { SectionText } from "@components/typography";
 
 interface ThemeSwitchProps extends Pick<ThemeContextProps, "isDarkMode"> {
   onToggle: () => void;
@@ -17,7 +17,7 @@ interface ThemeSwitchProps extends Pick<ThemeContextProps, "isDarkMode"> {
 
 const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ onToggle, isDarkMode }) => {
   const [animationValue] = useState(new Animated.Value(isDarkMode ? 1 : 0));
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
 
   const handleToggle = () => {
     Animated.timing(animationValue, {
@@ -30,17 +30,17 @@ const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ onToggle, isDarkMode }) => {
 
   const interpolateBackgroundColor = animationValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [globalColors.primary, globalColors.primary],
+    outputRange: [colors.primary, colors.primary],
   });
 
   const interpolateCircleColor = animationValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [globalColors.text, globalColors.text],
+    outputRange: [colors.text, colors.text],
   });
 
   const interpolateBorderColor = animationValue.interpolate({
     inputRange: [0, 1],
-    outputRange: [globalColors.text, globalColors.text],
+    outputRange: [colors.text, colors.text],
   });
 
   return (
@@ -71,9 +71,7 @@ const ThemeSwitch: React.FC<ThemeSwitchProps> = ({ onToggle, isDarkMode }) => {
           ]}
         />
       </Animated.View>
-      <Text style={globalStyles.text}>
-        {isDarkMode ? "Dark Mode" : "Light Mode"}
-      </Text>
+      <SectionText>{isDarkMode ? "Dark Mode" : "Light Mode"}</SectionText>
     </TouchableOpacity>
   );
 };

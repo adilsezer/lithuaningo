@@ -1,16 +1,10 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  Image,
-  Dimensions,
-  Platform,
-} from "react-native";
+import { View, StyleSheet, Image, Dimensions, Platform } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "@components/ui/CustomButton";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
+import { SectionTitle, Subtitle, Instruction } from "@components/typography";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -36,7 +30,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   questionWord,
   onAnswer,
 }) => {
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const [inputText, setInputText] = useState<string>("");
   const [isSubmitPressed, setIsSubmitPressed] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -91,7 +85,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
     <View>
       {!isSubmitPressed && (
         <>
-          <Text style={globalStyles.subtitle}>{questionText}</Text>
+          <Subtitle>{questionText}</Subtitle>
           <View style={styles.sentenceContainer}>
             <RenderClickableWords
               sentenceText={sentenceText}
@@ -99,73 +93,70 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
               useClickedWordsColor={false}
             />
           </View>
-          <Text style={globalStyles.instruction}>
+          <Instruction>
             Click on each word to find out what it means.
-          </Text>
+          </Instruction>
         </>
       )}
 
       {isSubmitPressed && (
-        <Text style={[globalStyles.title]}>{getQuestionWithAnswer()}</Text>
+        <SectionTitle>{getQuestionWithAnswer()}</SectionTitle>
       )}
-      <Text
+
+      <Subtitle
         style={[
-          globalStyles.italic,
           styles.translation,
           {
-            backgroundColor: globalColors.wordBackground,
-            borderColor: globalColors.border,
+            backgroundColor: colors.wordBackground,
+            borderColor: colors.border,
           },
         ]}
       >
         Translation: {translation}
-      </Text>
+      </Subtitle>
+
       {image && (
         <Image
           source={{ uri: image }}
           style={[styles.image, isTablet && styles.imageTablet]}
         />
       )}
+
       {isSubmitPressed && (
         <View>
-          <Text style={globalStyles.subtitle}>
+          <Subtitle>
             You answered:{" "}
-            <Text
-              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
-            >
+            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
               {inputText}
-            </Text>
-          </Text>
-          <Text style={globalStyles.subtitle}>
+            </Subtitle>
+          </Subtitle>
+          <Subtitle>
             Correct answer:{" "}
-            <Text
-              style={[globalStyles.subtitle, { fontFamily: "Roboto-Bold" }]}
-            >
+            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
               {correctAnswerText}
-            </Text>
-          </Text>
+            </Subtitle>
+          </Subtitle>
         </View>
       )}
+
       {isCorrect !== null && (
         <View>
-          <Text
-            style={[
-              globalStyles.title,
-              {
-                color: isCorrect ? globalColors.active : globalColors.error,
-              },
-            ]}
+          <SectionTitle
+            style={{
+              color: isCorrect ? colors.active : colors.error,
+            }}
           >
             {isCorrect ? "Correct" : "Incorrect"}
-          </Text>
+          </SectionTitle>
         </View>
       )}
+
       {!isSubmitPressed && (
         <View>
           <CustomTextInput
-            style={[globalStyles.input, { textAlign: "center" }]}
+            style={[{ textAlign: "center" }]}
             placeholder="Type your answer here"
-            placeholderTextColor={globalColors.placeholder}
+            placeholderTextColor={colors.placeholder}
             value={inputText}
             onChangeText={(text) => setInputText(text)}
             editable={isCorrect === null}
@@ -202,7 +193,6 @@ const styles = StyleSheet.create({
   translation: {
     padding: 8,
     borderRadius: 8,
-    fontSize: 16,
     borderWidth: 1,
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,

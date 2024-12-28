@@ -1,7 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import {
   View,
-  Text,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -23,6 +22,7 @@ import { router } from "expo-router";
 import { QuizQuestion } from "@src/types";
 import { generateQuiz } from "@services/data/quizService";
 import { useAnswerHandler } from "@src/hooks/useAnswerHandler";
+import { SectionText } from "@components/typography";
 
 const QuizScreen: React.FC = () => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -30,7 +30,7 @@ const QuizScreen: React.FC = () => {
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
 
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
   const updateStats = useAnswerHandler();
@@ -137,20 +137,16 @@ const QuizScreen: React.FC = () => {
       <ScrollView ref={scrollViewRef}>
         <View style={{ flex: 1 }}>
           <BackButton />
-          <Text
-            style={[globalStyles.subtitle, { color: globalColors.primary }]}
-          >
+          <SectionText style={{ color: colors.primary }}>
             {`${currentQuestionIndex + 1} / ${
               questions.length
             } Questions Complete`}
-          </Text>
+          </SectionText>
 
           {questions.length > 0 &&
             currentQuestionIndex < questions.length &&
             (questions[currentQuestionIndex].questionType ===
-              "MultipleChoice" ||
-            questions[currentQuestionIndex].questionType ===
-              "FillInTheBlank" ? (
+            "MultipleChoice" ? (
               <MultipleChoiceQuiz
                 questionWord={""}
                 correctAnswerText={""}

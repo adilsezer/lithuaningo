@@ -1,7 +1,8 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { View, Text, StyleSheet, Linking, Image, Alert } from "react-native";
+import { View, StyleSheet, Linking, Image, Alert } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
 import CustomButton from "@components/ui/CustomButton";
+import { SectionTitle, Subtitle } from "@components/typography";
 
 interface Props {
   children: ReactNode;
@@ -47,10 +48,10 @@ class ErrorBoundary extends Component<Props, State> {
             source={require("assets/images/icon.png")}
             style={styles.logo}
           />
-          <Text style={styles.title}>Oops! Something went wrong.</Text>
-          <Text style={styles.subtitle}>
+          <SectionTitle>Oops! Something went wrong.</SectionTitle>
+          <Subtitle>
             Please try again or contact support if the issue persists.
-          </Text>
+          </Subtitle>
           <CustomButton title="Try Again" onPress={this.handleRetry} />
           <CustomButton
             title="Contact Support"
@@ -68,24 +69,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
-  },
-  title: {
-    fontSize: 22,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 18,
-    textAlign: "center",
-    marginBottom: 20,
+    alignItems: "center",
+    padding: 20,
   },
   logo: {
     width: 100,
     height: 100,
     marginBottom: 20,
     borderRadius: 20,
-    alignSelf: "center",
   },
 });
 

@@ -1,39 +1,38 @@
 import React from "react";
-import { View, Text, ScrollView, StyleSheet, Alert } from "react-native";
-import useAuthMethods from "@hooks/useAuthMethods";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { View, ScrollView, StyleSheet, Alert } from "react-native";
+import { useAuth } from "@hooks/useAuth";
+import { useAppSelector } from "@redux/hooks";
 import { selectUserData, selectIsLoggedIn } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
-import { setLoading } from "@redux/slices/uiSlice";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
 import ThemeSwitch from "@components/ui/ThemeSwitch";
 import { useTheme } from "@context/ThemeContext";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
+import { SectionTitle, Subtitle } from "@components/typography";
+
+const PROFILE_ACTIONS = [
+  { title: "Edit Profile", path: "/profile/edit-profile" },
+  { title: "Change Password", path: "/profile/change-password" },
+  { title: "Delete Account", path: "/profile/delete-account" },
+  { title: "Settings", path: "/profile/settings" },
+  { title: "About the App", path: "/about" },
+] as const;
 
 export default function ProfileScreen() {
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const dispatch = useAppDispatch();
-  const { handleSignOut } = useAuthMethods();
-  const router = useRouter();
+  const { signOut } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
-
-  const logout = async () => {
-    dispatch(setLoading(true));
-    await handleSignOut();
-    dispatch(setLoading(false));
-  };
-
-  const navigateTo = (path: string) => {
-    router.push(path);
-  };
+  const router = useRouter();
 
   const userData = useAppSelector(selectUserData);
   const isLoggedIn = useAppSelector(selectIsLoggedIn);
 
-  const handleClearCompletionStatus = async () => {
+  const handleNavigation = (path: string) => {
+    router.push(path);
+  };
+
+  const handleClearProgress = async () => {
     if (!userData) {
       Alert.alert("No user data available");
       return;
@@ -50,14 +49,14 @@ export default function ProfileScreen() {
       QUIZ_KEYS.SESSION_STATE_KEY(userData.id, currentDateKey),
     ];
 
-    await Promise.all(keysToClear.map((key) => clearData(key)));
+    await Promise.all(keysToClear.map(clearData));
     Alert.alert("Progress data cleared successfully");
   };
 
   if (!isLoggedIn || !userData) {
     return (
       <View style={styles.container}>
-        <Text style={globalStyles.title}>No user data available</Text>
+        <SectionTitle>No user data available</SectionTitle>
       </View>
     );
   }
@@ -65,30 +64,18 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <ThemeSwitch onToggle={toggleTheme} isDarkMode={isDarkMode} />
-      <Text style={globalStyles.title}>{userData.name || "User"} </Text>
-      <Text style={globalStyles.subtitle}>{userData.email}</Text>
+      <SectionTitle>{userData.name || "User"}</SectionTitle>
+      <Subtitle>{userData.email}</Subtitle>
+
       <View>
-        <CustomButton
-          title="Edit Profile"
-          onPress={() => navigateTo("/profile/edit-profile")}
-        />
-        <CustomButton
-          title="Change Password"
-          onPress={() => navigateTo("/profile/change-password")}
-        />
-        <CustomButton
-          title="Delete Account"
-          onPress={() => navigateTo("/profile/delete-account")}
-        />
-        <CustomButton
-          title="Settings"
-          onPress={() => navigateTo("/profile/settings")}
-        />
-        <CustomButton
-          title="About the App"
-          onPress={() => navigateTo("/about")}
-        />
-        <CustomButton title="Logout" onPress={logout} />
+        {PROFILE_ACTIONS.map(({ title, path }) => (
+          <CustomButton
+            key={title}
+            title={title}
+            onPress={() => handleNavigation(path)}
+          />
+        ))}
+        <CustomButton title="Logout" onPress={signOut} />
       </View>
     </ScrollView>
   );

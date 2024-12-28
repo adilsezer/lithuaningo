@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import FlashcardScreen from "@components/learning/Flashcard";
 import { useLocalSearchParams } from "expo-router";
-import { View, Text, StyleSheet } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { View, StyleSheet } from "react-native";
 import { useAppDispatch } from "@redux/hooks";
 import { setLoading } from "@redux/slices/uiSlice";
+import { SectionText } from "@components/typography";
+import { useThemeStyles } from "@hooks/useThemeStyles";
 
 const Flashcard = () => {
   const { wordId } = useLocalSearchParams<{ wordId: string }>();
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
+  const { colors } = useThemeStyles();
   const dispatch = useAppDispatch();
 
   useEffect(() => {
@@ -21,9 +22,9 @@ const Flashcard = () => {
     dispatch(setLoading(false));
     return (
       <View style={styles.errorContainer}>
-        <Text style={[globalStyles.text, { color: globalColors.error }]}>
+        <SectionText style={{ color: colors.error }}>
           Error: wordId is missing
-        </Text>
+        </SectionText>
       </View>
     );
   }

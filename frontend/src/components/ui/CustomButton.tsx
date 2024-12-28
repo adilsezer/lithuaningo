@@ -1,7 +1,6 @@
 import React from "react";
 import {
   TouchableOpacity,
-  Text,
   StyleProp,
   ViewStyle,
   TextStyle,
@@ -12,6 +11,7 @@ import {
   Image,
 } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import { ButtonText } from "@components/typography";
 
 interface ButtonProps extends TouchableOpacityProps {
   onPress: () => void;
@@ -20,6 +20,7 @@ interface ButtonProps extends TouchableOpacityProps {
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
   width?: number | string;
+  variant?: "primary" | "secondary";
 }
 
 const CustomButton: React.FC<ButtonProps> = ({
@@ -30,8 +31,9 @@ const CustomButton: React.FC<ButtonProps> = ({
   textStyle,
   width,
   disabled,
+  variant = "primary",
 }) => {
-  const { styles: globalStyles } = useThemeStyles();
+  const { components, layout, colors } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
   const isTablet =
@@ -45,17 +47,18 @@ const CustomButton: React.FC<ButtonProps> = ({
       ? { width: defaultWidth }
       : {};
 
-  const buttonStyle: StyleProp<ViewStyle> = [
-    globalStyles.button,
-    style,
-    disabled ? { opacity: 0.5 } : {},
-    widthStyle,
-  ];
-
   return (
-    <View style={globalStyles.centerContainer}>
+    <View style={layout.center}>
       <TouchableOpacity
-        style={buttonStyle}
+        style={[
+          components.button,
+          variant === "secondary" && {
+            backgroundColor: colors.secondary,
+          },
+          disabled && { opacity: 0.5 },
+          widthStyle,
+          style,
+        ]}
         onPress={onPress}
         disabled={disabled}
       >
@@ -65,15 +68,9 @@ const CustomButton: React.FC<ButtonProps> = ({
           ) : (
             icon
           )}
-          <Text
-            style={[
-              globalStyles.buttonText,
-              textStyle,
-              { marginLeft: icon ? 8 : 0 },
-            ]}
-          >
+          <ButtonText style={[textStyle, { marginLeft: icon ? 8 : 0 }]}>
             {title}
-          </Text>
+          </ButtonText>
         </View>
       </TouchableOpacity>
     </View>
