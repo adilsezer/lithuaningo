@@ -1,25 +1,43 @@
 import React, { useState } from "react";
 import { ScrollView, StyleSheet } from "react-native";
-import { useAuth } from "@hooks/useAuth";
-import CustomTextInput from "@components/ui/CustomTextInput";
-import BackButton from "@components/layout/BackButton";
-import CustomButton from "@components/ui/CustomButton";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useAuth } from "@hooks/useAuth";
 import auth from "@react-native-firebase/auth";
+import BackButton from "@components/layout/BackButton";
+import CustomTextInput from "@components/ui/CustomTextInput";
+import CustomButton from "@components/ui/CustomButton";
 import { SectionTitle, Paragraph } from "@components/typography";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 const DeleteAccountScreen: React.FC = () => {
   const [password, setPassword] = useState("");
-  const { deleteAccount } = useAuth();
   const { colors } = useThemeStyles();
+  const { deleteAccount } = useAuth();
 
   const user = auth().currentUser;
   const isPasswordProvider = user?.providerData.some(
     (provider) => provider.providerId === "password"
   );
 
-  const handleDelete = async () => {
-    await deleteAccount(isPasswordProvider ? password : undefined);
+  const handleDelete = () => {
+    AlertDialog.confirm({
+      title: "Confirm Deletion",
+      message:
+        "Are you sure you want to delete your account? This action cannot be undone.",
+      confirmText: "Delete",
+      confirmStyle: "destructive",
+      onConfirm: async () => {
+        if (isPasswordProvider && !password.trim()) {
+          AlertDialog.error(
+            "Please enter your password to delete your account"
+          );
+          return;
+        }
+
+        await deleteAccount(isPasswordProvider ? password : undefined);
+        AlertDialog.success("Your account has been deleted successfully");
+      },
+    });
   };
 
   return (

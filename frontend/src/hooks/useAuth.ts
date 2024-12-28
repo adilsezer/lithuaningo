@@ -12,11 +12,11 @@ import {
   reauthenticateUser,
 } from "@services/auth/authService";
 import { useAuthOperation } from "./useAuthOperation";
-import { Alert } from "react-native";
 import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import crashlytics from "@react-native-firebase/crashlytics";
 import auth from "@react-native-firebase/auth";
 import apiClient from "@src/services/api/apiClient";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 export const useAuth = () => {
   const dispatch = useAppDispatch();
@@ -28,16 +28,14 @@ export const useAuth = () => {
       const response = await signUpWithEmail(email, password, name, dispatch);
       if (response.success) {
         crashlytics().log("User signed up successfully");
-        Alert.alert(
-          "Verification Email Sent",
-          "Please check your email to verify your account before logging in.",
-          [
-            {
-              text: "OK",
-              onPress: () => router.replace("/auth/login"),
-            },
-          ]
-        );
+        AlertDialog.show({
+          title: "Verification Email Sent",
+          message:
+            "Please check your email to verify your account before logging in.",
+          buttons: [
+            { text: "OK", onPress: () => router.replace("/auth/login") },
+          ],
+        });
       }
       return response;
     }, "Sign Up Failed");

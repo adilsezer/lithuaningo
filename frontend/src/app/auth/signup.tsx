@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { Alert, Platform, ScrollView } from "react-native";
+import { Platform, ScrollView } from "react-native";
 import Divider from "@components/ui/Divider";
 import CustomButton from "@components/ui/CustomButton";
 import { useAuth } from "@hooks/useAuth";
@@ -11,6 +11,7 @@ import CustomTextInput from "@components/ui/CustomTextInput";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 const SignUpScreen: React.FC = () => {
   const [email, setEmail] = React.useState<string>("");
@@ -23,10 +24,10 @@ const SignUpScreen: React.FC = () => {
 
   const handleSignUp = () => {
     if (confirmPassword !== password) {
-      Alert.alert("Error", "Passwords don't match");
+      AlertDialog.error("Passwords don't match");
       return;
     } else if (!displayName) {
-      Alert.alert("Error", "Please enter a name");
+      AlertDialog.error("Please enter a name");
       return;
     }
     signUp(email, password, displayName);

@@ -1,8 +1,9 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { View, StyleSheet, Linking, Image, Alert } from "react-native";
+import { View, StyleSheet, Linking, Image } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
 import CustomButton from "@components/ui/CustomButton";
 import { SectionTitle, Subtitle } from "@components/typography";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 interface Props {
   children: ReactNode;
@@ -36,7 +37,7 @@ class ErrorBoundary extends Component<Props, State> {
       await Linking.openURL("mailto:Lithuaningo@gmail.com");
     } catch (error) {
       console.error("Failed to open URL:", error);
-      Alert.alert("Error", "Failed to open email client.");
+      AlertDialog.error("Failed to open email client");
     }
   };
 

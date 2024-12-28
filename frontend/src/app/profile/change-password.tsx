@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { ScrollView, StyleSheet } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useThemeStyles } from "@hooks/useThemeStyles";
@@ -7,68 +7,112 @@ import BackButton from "@components/layout/BackButton";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import auth from "@react-native-firebase/auth";
 import { SectionTitle, Instruction } from "@components/typography";
+import { AlertDialog } from "@components/ui/AlertDialog";
+
+interface PasswordForm {
+  currentPassword: string;
+  newPassword: string;
+  confirmNewPassword: string;
+}
 
 const ChangePasswordScreen: React.FC = () => {
   const { colors } = useThemeStyles();
   const { updatePassword } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState<string>("");
-  const [newPassword, setNewPassword] = useState<string>("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState<string>("");
+  const [form, setForm] = React.useState<PasswordForm>({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: "",
+  });
+  const [isLoading, setIsLoading] = React.useState(false);
 
   const user = auth().currentUser;
   const isPasswordProvider = user?.providerData.some(
     (provider) => provider.providerId === "password"
   );
 
-  const handleChangePassword = async () => {
-    if (newPassword !== confirmNewPassword) {
-      return;
-    }
+  const updateFormField = (field: keyof PasswordForm) => (value: string) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
 
-    if (isPasswordProvider) {
-      await updatePassword(currentPassword, newPassword);
+  const validateForm = (): boolean => {
+    if (
+      !form.currentPassword ||
+      !form.newPassword ||
+      !form.confirmNewPassword
+    ) {
+      AlertDialog.error("All fields are required");
+      return false;
+    }
+    if (form.newPassword !== form.confirmNewPassword) {
+      AlertDialog.error("New passwords don't match");
+      return false;
+    }
+    if (form.newPassword.length < 6) {
+      AlertDialog.error("New password must be at least 6 characters");
+      return false;
+    }
+    return true;
+  };
+
+  const handleChangePassword = async () => {
+    if (!validateForm()) return;
+
+    setIsLoading(true);
+    try {
+      await updatePassword(form.currentPassword, form.newPassword);
+      setForm({ currentPassword: "", newPassword: "", confirmNewPassword: "" });
+      AlertDialog.success("Password updated successfully");
+    } catch (err) {
+      AlertDialog.error(
+        err instanceof Error ? err.message : "Failed to update password"
+      );
+    } finally {
+      setIsLoading(false);
     }
   };
+
+  const renderPasswordForm = () => (
+    <>
+      <CustomTextInput
+        placeholder="Current Password"
+        value={form.currentPassword}
+        secureTextEntry
+        onChangeText={updateFormField("currentPassword")}
+        placeholderTextColor={colors.placeholder}
+      />
+      <CustomTextInput
+        placeholder="New Password"
+        value={form.newPassword}
+        secureTextEntry
+        onChangeText={updateFormField("newPassword")}
+        placeholderTextColor={colors.placeholder}
+      />
+      <CustomTextInput
+        placeholder="Confirm New Password"
+        value={form.confirmNewPassword}
+        secureTextEntry
+        onChangeText={updateFormField("confirmNewPassword")}
+        placeholderTextColor={colors.placeholder}
+      />
+      <CustomButton
+        title="Change Password"
+        onPress={handleChangePassword}
+        disabled={isLoading}
+      />
+    </>
+  );
 
   return (
     <ScrollView style={styles.container}>
       <BackButton />
       <SectionTitle>Change Password</SectionTitle>
 
-      {!isPasswordProvider && (
+      {!isPasswordProvider ? (
         <Instruction>
           Password change is only available for email/password accounts.
         </Instruction>
-      )}
-
-      {isPasswordProvider && (
-        <>
-          <CustomTextInput
-            placeholder="Current Password"
-            value={currentPassword}
-            secureTextEntry
-            onChangeText={setCurrentPassword}
-            placeholderTextColor={colors.placeholder}
-          />
-          <CustomTextInput
-            placeholder="New Password"
-            value={newPassword}
-            secureTextEntry
-            onChangeText={setNewPassword}
-            placeholderTextColor={colors.placeholder}
-          />
-          <CustomTextInput
-            placeholder="Confirm New Password"
-            value={confirmNewPassword}
-            secureTextEntry
-            onChangeText={setConfirmNewPassword}
-            placeholderTextColor={colors.placeholder}
-          />
-          <CustomButton
-            title="Change Password"
-            onPress={handleChangePassword}
-          />
-        </>
+      ) : (
+        renderPasswordForm()
       )}
     </ScrollView>
   );

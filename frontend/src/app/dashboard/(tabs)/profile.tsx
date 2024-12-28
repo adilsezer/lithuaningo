@@ -1,5 +1,5 @@
 import React from "react";
-import { View, ScrollView, StyleSheet, Alert } from "react-native";
+import { View, ScrollView, StyleSheet } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData, selectIsLoggedIn } from "@redux/slices/userSlice";
@@ -11,6 +11,7 @@ import ThemeSwitch from "@components/ui/ThemeSwitch";
 import { useTheme } from "@context/ThemeContext";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 import { SectionTitle, Subtitle } from "@components/typography";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
@@ -32,25 +33,34 @@ export default function ProfileScreen() {
     router.push(path);
   };
 
-  const handleClearProgress = async () => {
-    if (!userData) {
-      Alert.alert("No user data available");
-      return;
-    }
+  const handleClearProgress = () => {
+    AlertDialog.confirm({
+      title: "Clear Progress",
+      message:
+        "Are you sure you want to clear today's progress? This action cannot be undone.",
+      confirmText: "Clear",
+      confirmStyle: "destructive",
+      onConfirm: async () => {
+        if (!userData) {
+          AlertDialog.error("No user data available");
+          return;
+        }
 
-    const currentDateKey = getCurrentDateKey();
-    const keysToClear = [
-      SENTENCE_KEYS.COMPLETION_STATUS_KEY(userData.id, currentDateKey),
-      SENTENCE_KEYS.SENTENCES_KEY(userData.id, currentDateKey),
-      QUIZ_KEYS.QUIZ_PROGRESS_KEY(userData.id, currentDateKey),
-      QUIZ_KEYS.QUIZ_QUESTIONS_KEY(userData.id, currentDateKey),
-      QUIZ_KEYS.INCORRECT_QUESTIONS_KEY(userData.id, currentDateKey),
-      QUIZ_KEYS.INCORRECT_PROGRESS_KEY(userData.id, currentDateKey),
-      QUIZ_KEYS.SESSION_STATE_KEY(userData.id, currentDateKey),
-    ];
+        const currentDateKey = getCurrentDateKey();
+        const keysToClear = [
+          SENTENCE_KEYS.COMPLETION_STATUS_KEY(userData.id, currentDateKey),
+          SENTENCE_KEYS.SENTENCES_KEY(userData.id, currentDateKey),
+          QUIZ_KEYS.QUIZ_PROGRESS_KEY(userData.id, currentDateKey),
+          QUIZ_KEYS.QUIZ_QUESTIONS_KEY(userData.id, currentDateKey),
+          QUIZ_KEYS.INCORRECT_QUESTIONS_KEY(userData.id, currentDateKey),
+          QUIZ_KEYS.INCORRECT_PROGRESS_KEY(userData.id, currentDateKey),
+          QUIZ_KEYS.SESSION_STATE_KEY(userData.id, currentDateKey),
+        ];
 
-    await Promise.all(keysToClear.map(clearData));
-    Alert.alert("Progress data cleared successfully");
+        await Promise.all(keysToClear.map(clearData));
+        AlertDialog.success("Progress data cleared successfully");
+      },
+    });
   };
 
   if (!isLoggedIn || !userData) {

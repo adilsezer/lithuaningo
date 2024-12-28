@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, ScrollView, Alert, View } from "react-native";
+import { StyleSheet, ScrollView, View } from "react-native";
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
 import BackButton from "@components/layout/BackButton";
@@ -10,6 +10,7 @@ import {
   Paragraph,
 } from "@components/typography";
 import { useRouter } from "expo-router";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 export default function AboutScreen() {
   const router = useRouter();
@@ -20,15 +21,13 @@ export default function AboutScreen() {
       if (supported) {
         await Linking.openURL(url);
       } else {
-        Alert.alert(
-          "Error",
+        AlertDialog.error(
           "Unable to open the link. Please check if the app to handle the URL is installed and configured."
         );
         console.error("Unsupported URL: ", url);
       }
     } catch (err) {
-      Alert.alert(
-        "Error",
+      AlertDialog.error(
         "An error occurred while trying to open the URL. Please try again later."
       );
       console.error("Failed to open URL:", err);

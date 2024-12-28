@@ -1,16 +1,10 @@
 import React, { useEffect, useState, useRef } from "react";
-import {
-  View,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Alert,
-} from "react-native";
+import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useAppDispatch, useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import { setLoading } from "@redux/slices/uiSlice";
-import MultipleChoiceQuiz from "@components/learning/MultipleChoiceQuiz";
+import MultipleChoiceQuestion from "@components/learning/MultipleChoiceQuestion";
 import FillInTheBlankQuiz from "@components/learning/FillInTheBlank";
 import CustomButton from "@components/ui/CustomButton";
 import CompletedLayout from "@components/learning/CompletedLayout";
@@ -23,6 +17,7 @@ import { QuizQuestion } from "@src/types";
 import { generateQuiz } from "@services/data/quizService";
 import { useAnswerHandler } from "@src/hooks/useAnswerHandler";
 import { SectionText } from "@components/typography";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 const QuizScreen: React.FC = () => {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
@@ -98,18 +93,26 @@ const QuizScreen: React.FC = () => {
   };
 
   const handleRegenerateContent = async () => {
-    if (!userData) return;
+    if (!userData) {
+      AlertDialog.error("No user data available");
+      return;
+    }
 
     try {
       dispatch(setLoading(true));
       await resetAllQuizKeys(userData.id);
-      Alert.alert(
-        "Success",
-        "Content reset. Redirecting to the learn tab to start a new challenge.",
-        [{ text: "OK", onPress: () => router.push("/dashboard/learn") }]
-      );
+      AlertDialog.show({
+        title: "Success",
+        message:
+          "Content reset. Redirecting to the learn tab to start a new challenge.",
+        buttons: [
+          { text: "OK", onPress: () => router.push("/dashboard/learn") },
+        ],
+      });
     } catch (error) {
-      console.error("Error resetting content:", error);
+      AlertDialog.error(
+        error instanceof Error ? error.message : "Error resetting content"
+      );
     } finally {
       dispatch(setLoading(false));
     }
@@ -147,7 +150,7 @@ const QuizScreen: React.FC = () => {
             currentQuestionIndex < questions.length &&
             (questions[currentQuestionIndex].questionType ===
             "MultipleChoice" ? (
-              <MultipleChoiceQuiz
+              <MultipleChoiceQuestion
                 questionWord={""}
                 correctAnswerText={""}
                 {...questions[currentQuestionIndex]}

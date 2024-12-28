@@ -1,7 +1,7 @@
 import { useAppDispatch } from "@redux/hooks";
 import { setLoading } from "@redux/slices/uiSlice";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { Alert } from "react-native";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 interface AuthResponse {
   success: boolean;
@@ -23,14 +23,14 @@ export const useAuthOperation = () => {
         crashlytics().recordError(
           new Error(`${errorTitle}: ${result.message}`)
         );
-        Alert.alert(errorTitle, result.message);
+        AlertDialog.error(result.message || "An error occurred", errorTitle);
       } else if (successMessage) {
-        Alert.alert("Success", successMessage);
+        AlertDialog.success(successMessage);
       }
       return result;
     } catch (error: any) {
       crashlytics().recordError(error);
-      Alert.alert(errorTitle, error.message);
+      AlertDialog.error(error.message, errorTitle);
       return { success: false, message: error.message };
     } finally {
       dispatch(setLoading(false));

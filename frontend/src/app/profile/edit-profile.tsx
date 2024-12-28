@@ -6,13 +6,15 @@ import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import auth from "@react-native-firebase/auth";
-import { SectionTitle, Instruction } from "@components/typography";
+import { SectionTitle } from "@components/typography";
+import { AlertDialog } from "@components/ui/AlertDialog";
 
 const EditProfileScreen: React.FC = () => {
   const { colors } = useThemeStyles();
   const { updateProfile } = useAuth();
-  const [currentPassword, setCurrentPassword] = useState<string>("");
-  const [name, setName] = useState<string>("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [name, setName] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
 
   const user = auth().currentUser;
   const isPasswordProvider = user?.providerData.some(
@@ -20,11 +22,24 @@ const EditProfileScreen: React.FC = () => {
   );
 
   const handleUpdateProfile = async () => {
-    if (!name) return;
+    if (!name.trim()) {
+      AlertDialog.error("Name is required");
+      return;
+    }
 
-    await updateProfile(isPasswordProvider ? currentPassword : "", {
-      displayName: name,
-    });
+    try {
+      setIsLoading(true);
+      await updateProfile(isPasswordProvider ? currentPassword : "", {
+        displayName: name.trim(),
+      });
+      AlertDialog.success("Profile updated successfully");
+    } catch (err) {
+      AlertDialog.error(
+        err instanceof Error ? err.message : "Failed to update profile"
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -33,19 +48,14 @@ const EditProfileScreen: React.FC = () => {
       <SectionTitle>Edit Profile</SectionTitle>
 
       {isPasswordProvider && (
-        <>
-          <Instruction>
-            Please enter your current password to make changes
-          </Instruction>
-          <CustomTextInput
-            style={styles.input}
-            placeholder="Current Password"
-            value={currentPassword}
-            secureTextEntry
-            onChangeText={setCurrentPassword}
-            placeholderTextColor={colors.placeholder}
-          />
-        </>
+        <CustomTextInput
+          style={styles.input}
+          placeholder="Current Password"
+          value={currentPassword}
+          secureTextEntry
+          onChangeText={setCurrentPassword}
+          placeholderTextColor={colors.placeholder}
+        />
       )}
 
       <CustomTextInput
@@ -60,6 +70,7 @@ const EditProfileScreen: React.FC = () => {
         title="Save Changes"
         onPress={handleUpdateProfile}
         style={styles.button}
+        disabled={isLoading}
       />
     </ScrollView>
   );

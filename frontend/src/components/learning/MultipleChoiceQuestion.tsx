@@ -8,7 +8,7 @@ import { SectionTitle, Subtitle, Instruction } from "@components/typography";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
-interface MultipleChoiceQuizProps {
+interface MultipleChoiceQuestionProps {
   sentenceText: string;
   questionText: string;
   questionWord: string;
@@ -19,7 +19,7 @@ interface MultipleChoiceQuizProps {
   onAnswer: (isCorrect: boolean) => void;
 }
 
-const MultipleChoiceQuiz: React.FC<MultipleChoiceQuizProps> = ({
+const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
   sentenceText,
   questionText,
   options,
@@ -153,4 +153,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default MultipleChoiceQuiz;
+export default MultipleChoiceQuestion;
