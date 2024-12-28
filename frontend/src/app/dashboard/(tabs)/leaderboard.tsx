@@ -4,7 +4,7 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useLeaderboard } from "@hooks/useLeaderboard";
 import { SectionTitle, Subtitle, SectionText } from "@components/typography";
-import { Leader } from "@src/types/Leader";
+import { LeaderboardEntry } from "@src/types/LeaderboardEntry";
 type TrophyPosition = 0 | 1 | 2;
 
 const TROPHY_COLORS: Record<TrophyPosition, string> = {
@@ -52,23 +52,21 @@ const TableHeader = ({ colors }: { colors: any }) => (
 );
 
 const LeaderRow = ({
-  leader,
+  entry,
   position,
   colors,
 }: {
-  leader: Leader;
+  entry: LeaderboardEntry;
   position: number;
   colors: any;
 }) => (
   <View style={[styles.row, { borderBottomColor: colors.primary }]}>
     <SectionText style={[styles.cell, styles.rank]}>{position + 1}</SectionText>
     <View style={[styles.cell, styles.nameContainer]}>
-      <SectionText>{leader.name}</SectionText>
+      <SectionText>{entry.name}</SectionText>
       <TrophyIcon position={position} colors={colors} />
     </View>
-    <SectionText style={[styles.cell, styles.score]}>
-      {leader.points}
-    </SectionText>
+    <SectionText style={[styles.cell, styles.score]}>{entry.score}</SectionText>
   </View>
 );
 
@@ -83,7 +81,7 @@ const EmptyState = () => (
 
 const LeaderboardScreen = () => {
   const { colors } = useThemeStyles();
-  const leaders = useLeaderboard();
+  const { entries } = useLeaderboard();
 
   return (
     <ScrollView style={styles.container}>
@@ -92,11 +90,11 @@ const LeaderboardScreen = () => {
 
       <TableHeader colors={colors} />
 
-      {leaders.length > 0 ? (
-        leaders.map((leader, index) => (
+      {entries.length > 0 ? (
+        entries.map((entry, index) => (
           <LeaderRow
-            key={leader.userId}
-            leader={leader}
+            key={entry.id}
+            entry={entry}
             position={index}
             colors={colors}
           />

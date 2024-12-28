@@ -1,28 +1,38 @@
 import { useEffect, useState } from "react";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
-import userStatsService from "@services/data/userStatsService";
-import { Leader } from "@src/types/Leader";
+import { LeaderboardEntry } from "@src/types/LeaderboardEntry";
+import leaderboardService from "@services/data/leaderboardService";
 
 export const useLeaderboard = () => {
   const userData = useAppSelector(selectUserData);
-  const [leaders, setLeaders] = useState<Leader[]>([]);
+  const [leaderboardEntries, setLeaderboardEntries] = useState<
+    LeaderboardEntry[]
+  >([]);
 
   useEffect(() => {
     if (userData?.id) {
-      const unsubscribe = userStatsService.fetchLeaderboard((newLeaders) => {
-        setLeaders(
-          newLeaders.map((leader) => ({
-            userId: leader.id,
-            name: leader.name,
-            points: leader.score,
-          }))
-        );
-      });
+      leaderboardService
+        .getLeaderboardEntries()
+        .then((newLeaderboardEntries) => {
+          setLeaderboardEntries(newLeaderboardEntries);
+        });
 
-      return () => unsubscribe();
+      return () => {};
     }
   }, [userData]);
 
-  return leaders;
+  const updateEntry = async (entry: LeaderboardEntry) => {
+    const updatedEntry = await leaderboardService.updateLeaderboardEntry(entry);
+    if (!updatedEntry) return;
+
+    setLeaderboardEntries((prevEntries) =>
+      prevEntries.map((e) => (e.id === entry.id ? updatedEntry : e))
+    );
+  };
+
+  return {
+    entries: leaderboardEntries,
+    updateEntry,
+  };
 };

@@ -8,7 +8,7 @@ import {
   UserProfile,
   Announcement,
   AppInfo,
-  Leaderboard,
+  LeaderboardEntry,
 } from "@src/types";
 
 const getBaseUrl = () => {
@@ -146,10 +146,16 @@ class ApiClient {
     return this.request<AppInfo>(`/appInfo/${Platform.OS}`);
   }
 
-  async getLeaderboard() {
-    return this.request<Leaderboard[]>(`/leaderboard`);
+  async getLeaderboardEntries() {
+    return this.request<LeaderboardEntry[]>(`/leaderboard`);
+  }
+
+  async updateLeaderboardEntry(entry: LeaderboardEntry) {
+    return this.request(`/leaderboard`, {
+      method: "PUT",
+      body: JSON.stringify(entry),
+    });
   }
 }
 
 export default ApiClient.getInstance();
-//

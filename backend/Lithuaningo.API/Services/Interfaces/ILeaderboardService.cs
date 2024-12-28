@@ -2,5 +2,7 @@ namespace Lithuaningo.API.Services.Interfaces;
 
 public interface ILeaderboardService
 {
-    Task<List<Leaderboard>> GetLeaderboardAsync();
+    Task AddLeaderboardEntryAsync(LeaderboardEntry entry);
+    Task<List<LeaderboardEntry>> GetLeaderboardEntriesAsync();
+    Task ResetLeaderboardAsync();
 }

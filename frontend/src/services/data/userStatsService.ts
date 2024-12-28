@@ -18,31 +18,6 @@ const fetchStats = (
   return () => clearInterval(interval);
 };
 
-const fetchLeaderboard = (
-  onLeadersChange: (
-    leaders: { id: string; name: string; score: number }[]
-  ) => void
-) => {
-  const interval = setInterval(async () => {
-    try {
-      const leaderboard = await apiClient.getLeaderboard();
-      const filteredLeaders = leaderboard
-        .filter((leader) => leader.points > 0)
-        .map((leader) => ({
-          id: leader.userId,
-          name: leader.name,
-          score: leader.points,
-        }));
-      onLeadersChange(filteredLeaders);
-    } catch (error) {
-      console.error("Error fetching leaders:", error);
-      onLeadersChange([]);
-    }
-  }, 5000);
-
-  return () => clearInterval(interval);
-};
-
 const updateUserStats = async (
   userId: string,
   isCorrect: boolean
@@ -63,6 +38,5 @@ const updateUserStats = async (
 
 export default {
   fetchStats,
-  fetchLeaderboard,
   updateUserStats,
 };

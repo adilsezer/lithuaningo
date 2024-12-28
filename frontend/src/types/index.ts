@@ -1,6 +1,6 @@
 export type { Announcement } from "./Announcement";
 export type { AppInfo } from "./AppInfo";
-export type { Leader as Leaderboard } from "./Leader";
+export type { LeaderboardEntry } from "./LeaderboardEntry";
 export type { Lemma } from "./Lemma";
 export enum QuestionType {
   MultipleChoice = "MultipleChoice",
