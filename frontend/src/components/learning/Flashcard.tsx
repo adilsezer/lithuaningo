@@ -14,10 +14,8 @@ import Animated, {
   interpolate,
   Easing,
 } from "react-native-reanimated";
-import apiClient from "@services/api/apiClient";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { setLoading } from "@redux/slices/uiSlice";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import {
@@ -28,16 +26,15 @@ import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { selectUserData } from "@redux/slices/userSlice";
 import { SENTENCE_KEYS } from "@config/constants";
-import { WordForm, Lemma } from "@src/types";
 import { SectionTitle, Instruction } from "@components/typography";
+import { useWordData } from "@hooks/useWordData";
 
 interface FlashcardProps {
   wordId: string;
 }
 
 const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
-  const [word, setWord] = useState<WordForm | null>(null);
-  const [lemma, setLemma] = useState<Lemma | null>(null);
+  const { word, lemma } = useWordData(wordId);
   const { colors } = useThemeStyles();
   const dispatch = useAppDispatch();
   const router = useRouter();
@@ -64,24 +61,6 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
       easing: Easing.inOut(Easing.ease),
     });
   };
-
-  useEffect(() => {
-    const loadWord = async () => {
-      try {
-        dispatch(setLoading(true));
-        const wordForm = await apiClient.getWordForm(wordId);
-        setWord(wordForm);
-        const lemma = await apiClient.getLemma(wordForm.lemmaId);
-        setLemma(lemma);
-      } catch (error) {
-        console.error("Error loading word:", error);
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    loadWord();
-  }, [wordId, dispatch]);
 
   useEffect(() => {
     if (!word) {

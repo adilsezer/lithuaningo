@@ -14,11 +14,10 @@ import BackButton from "@components/layout/BackButton";
 import { QUIZ_KEYS } from "@config/constants";
 import { router } from "expo-router";
 import { QuizQuestion } from "@src/types";
-import { generateQuiz } from "@services/data/quizService";
+import { useQuizQuestions } from "@hooks/useQuizQuestions";
 import { useUserProfile } from "@hooks/useUserProfile";
 import { SectionText } from "@components/typography";
 import { AlertDialog } from "@components/ui/AlertDialog";
-import { useQuizQuestions } from "@hooks/useQuizQuestions";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
 import ErrorMessage from "@components/ui/ErrorMessage";
 
@@ -58,9 +57,8 @@ const QuizScreen: React.FC = () => {
           refetchQuestions(savedQuestions);
           setCurrentQuestionIndex(savedProgress?.progress ?? 0);
         } else {
-          const newQuestions = await generateQuiz(userData.id);
-          refetchQuestions(newQuestions);
-          await storeData(QUIZ_QUESTIONS_KEY, newQuestions);
+          await refetchQuestions();
+          await storeData(QUIZ_QUESTIONS_KEY, questions);
         }
       } catch (error) {
         console.error("Error initializing quiz:", error);

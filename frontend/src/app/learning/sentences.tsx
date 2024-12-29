@@ -4,15 +4,13 @@ import { useRouter } from "expo-router";
 import { useAppSelector, useAppDispatch } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
-import { setLoading } from "@redux/slices/uiSlice";
 import BackButton from "@components/layout/BackButton";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { retrieveData, storeData } from "@utils/storageUtils";
 import CompletedLayout from "@components/learning/CompletedLayout";
 import { cleanWord } from "@utils/stringUtils";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
-import crashlytics from "@react-native-firebase/crashlytics";
-import { scheduleDailyReviewReminder } from "@services/notification/notificationService";
+import { useReminderSettings } from "@hooks/useReminderSettings";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { SENTENCE_KEYS } from "@config/constants";
 import { Sentence } from "@src/types";
@@ -29,6 +27,7 @@ const SentencesScreen: React.FC = () => {
   const userData = useAppSelector(selectUserData);
   const clickedWords = useAppSelector((state) => state.clickedWords);
   const dispatch = useAppDispatch();
+  const { reminderTime, setReminderTime } = useReminderSettings(userData?.id);
 
   const getKey = (keyFunc: (userId: string, dateKey: string) => string) =>
     userData ? keyFunc(userData.id, getCurrentDateKey()) : "";
@@ -66,7 +65,11 @@ const SentencesScreen: React.FC = () => {
   const handleProceedToQuiz = async () => {
     await storeData(COMPLETION_STATUS_KEY, true);
     setSentencesCompleted(true);
-    await scheduleDailyReviewReminder(userData?.id, new Date(), true);
+
+    if (reminderTime) {
+      setReminderTime(reminderTime);
+    }
+
     router.push("/learning/quiz");
   };
 
