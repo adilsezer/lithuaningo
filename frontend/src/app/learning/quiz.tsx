@@ -15,12 +15,15 @@ import { QUIZ_KEYS } from "@config/constants";
 import { router } from "expo-router";
 import { QuizQuestion } from "@src/types";
 import { generateQuiz } from "@services/data/quizService";
-import { useAnswerHandler } from "@src/hooks/useAnswerHandler";
+import { useUserProfile } from "@hooks/useUserProfile";
 import { SectionText } from "@components/typography";
 import { AlertDialog } from "@components/ui/AlertDialog";
+import { useQuizQuestions } from "@hooks/useQuizQuestions";
+import LoadingIndicator from "@components/ui/LoadingIndicator";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 const QuizScreen: React.FC = () => {
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const { questions, loading, error, refetchQuestions } = useQuizQuestions();
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [showContinueButton, setShowContinueButton] = useState(false);
   const [isQuizCompleted, setIsQuizCompleted] = useState(false);
@@ -28,8 +31,8 @@ const QuizScreen: React.FC = () => {
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
-  const updateStats = useAnswerHandler();
   const scrollViewRef = useRef<ScrollView>(null);
+  const { updateAnswerStats } = useUserProfile();
 
   const getStorageKey = (
     keyFunc: (userId: string, dateKey: string) => string
@@ -52,11 +55,11 @@ const QuizScreen: React.FC = () => {
         );
 
         if (savedQuestions?.length) {
-          setQuestions(savedQuestions);
+          refetchQuestions(savedQuestions);
           setCurrentQuestionIndex(savedProgress?.progress ?? 0);
         } else {
           const newQuestions = await generateQuiz(userData.id);
-          setQuestions(newQuestions);
+          refetchQuestions(newQuestions);
           await storeData(QUIZ_QUESTIONS_KEY, newQuestions);
         }
       } catch (error) {
@@ -80,7 +83,7 @@ const QuizScreen: React.FC = () => {
       await storeData(QUIZ_PROGRESS_KEY, {
         progress: currentQuestionIndex + 1,
       });
-      await updateStats(isCorrect);
+      await updateAnswerStats(isCorrect);
       setShowContinueButton(true);
     } catch (error) {
       console.error("Error handling answer:", error);
@@ -117,6 +120,14 @@ const QuizScreen: React.FC = () => {
       dispatch(setLoading(false));
     }
   };
+
+  if (loading) {
+    return <LoadingIndicator />;
+  }
+
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
 
   if (isQuizCompleted) {
     return (

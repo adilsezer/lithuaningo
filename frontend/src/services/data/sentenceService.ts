@@ -1,7 +1,7 @@
 import apiClient from "@services/api/apiClient";
 import { Sentence } from "@src/types";
 
-const fetchSentences = async (userId: string): Promise<Sentence[]> => {
+export const fetchSentences = async (userId: string): Promise<Sentence[]> => {
   try {
     return await apiClient.getSentences(userId);
   } catch (error) {

@@ -31,29 +31,37 @@ export const LearningProgressCard: React.FC<LearningProgressCardProps> = ({
   answeredQuestions,
   correctAnswers,
   colors,
-}) => (
-  <View style={[styles.card, { backgroundColor: colors.card }]}>
-    <SectionText style={[styles.cardTitle, { color: colors.cardText }]}>
-      Daily Learning Progress
-    </SectionText>
-    <SectionText style={[styles.subtitle, { color: colors.cardText }]}>
-      Track your daily progress. Answer 10 questions today!
-    </SectionText>
-    <View style={styles.row}>
-      <StatItem
-        label="Questions Answered"
-        value={answeredQuestions}
-        colors={colors}
-      />
-      <StatItem
-        label="Correct Answers"
-        value={correctAnswers}
-        colors={colors}
+}) => {
+  const wrongAnswers = answeredQuestions - correctAnswers;
+
+  return (
+    <View style={[styles.card, { backgroundColor: colors.card }]}>
+      <SectionText style={[styles.cardTitle, { color: colors.cardText }]}>
+        Daily Learning Progress
+      </SectionText>
+      <SectionText style={[styles.subtitle, { color: colors.cardText }]}>
+        Track your daily progress. Answer 10 questions today!
+      </SectionText>
+      <View style={styles.row}>
+        <StatItem
+          label="Questions Answered"
+          value={answeredQuestions}
+          colors={colors}
+        />
+        <StatItem
+          label="Correct Answers"
+          value={correctAnswers}
+          colors={colors}
+        />
+        <StatItem label="Wrong Answers" value={wrongAnswers} colors={colors} />
+      </View>
+      <ProgressBar
+        progress={answeredQuestions / 10}
+        style={{ marginTop: 16 }}
       />
     </View>
-    <ProgressBar progress={answeredQuestions / 10} style={{ marginTop: 16 }} />
-  </View>
-);
+  );
+};
 
 const styles = StyleSheet.create({
   card: {
@@ -73,14 +81,16 @@ const styles = StyleSheet.create({
   subtitle: {
     fontSize: 14,
     opacity: 0.7,
-    marginVertical: 4,
+    marginVertical: 8,
   },
   row: {
     flexDirection: "row",
-    justifyContent: "space-around",
+    justifyContent: "space-between",
   },
   centered: {
     alignItems: "center",
     marginVertical: 4,
+    flex: 1,
+    paddingHorizontal: 4,
   },
 });

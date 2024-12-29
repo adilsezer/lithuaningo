@@ -16,12 +16,12 @@ import { scheduleDailyReviewReminder } from "@services/notification/notification
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { SENTENCE_KEYS } from "@config/constants";
 import { Sentence } from "@src/types";
-import sentenceService from "@services/data/sentenceService";
+import { useSentences } from "@hooks/useSentences";
 import { SectionTitle, Subtitle, SectionText } from "@components/typography";
+import LoadingIndicator from "@components/ui/LoadingIndicator";
 
 const SentencesScreen: React.FC = () => {
-  const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [error, setError] = useState<string | null>(null);
+  const { sentences, loading, error } = useSentences();
   const [wordsCompleted, setWordsCompleted] = useState(false);
   const [sentencesCompleted, setSentencesCompleted] = useState(false);
   const router = useRouter();
@@ -47,36 +47,6 @@ const SentencesScreen: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const loadSentencesAndWords = async () => {
-      if (!userData?.id) return;
-
-      dispatch(setLoading(true));
-      try {
-        const storedSentences = await retrieveData<Sentence[]>(SENTENCES_KEY);
-
-        if (storedSentences && storedSentences.length > 0) {
-          setSentences(storedSentences);
-        } else {
-          const fetchedSentences = await sentenceService.fetchSentences(
-            userData?.id
-          );
-          const firstTwoSentences = fetchedSentences.slice(0, 2);
-          setSentences(firstTwoSentences);
-          await storeData(SENTENCES_KEY, firstTwoSentences);
-        }
-      } catch (error: unknown) {
-        console.error("Error loading sentences and words:", error);
-        crashlytics().recordError(error as Error);
-        setError("Failed to load sentences. Please try again later.");
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    loadSentencesAndWords();
-  }, [userData, dispatch]);
-
-  useEffect(() => {
     if (sentences.length > 0) {
       const allWords = sentences.flatMap((sentence: Sentence) =>
         sentence.text.split(" ").map(cleanWord)
@@ -99,6 +69,10 @@ const SentencesScreen: React.FC = () => {
     await scheduleDailyReviewReminder(userData?.id, new Date(), true);
     router.push("/learning/quiz");
   };
+
+  if (loading) {
+    return <LoadingIndicator />;
+  }
 
   if (error) {
     return (

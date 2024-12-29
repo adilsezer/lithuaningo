@@ -21,9 +21,6 @@ public class UserProfile
     [FirestoreProperty("todayCorrectAnsweredQuestions")]
     public int TodayCorrectAnsweredQuestions { get; set; } = 0;
 
-    [FirestoreProperty("todayWrongAnsweredQuestions")]
-    public int TodayWrongAnsweredQuestions { get; set; } = 0;
-
     [FirestoreProperty("lastCompleted")]
     public Timestamp LastCompleted { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
 

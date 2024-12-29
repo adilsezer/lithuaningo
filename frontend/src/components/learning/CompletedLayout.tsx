@@ -3,7 +3,7 @@ import { ScrollView, View, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useUserStats } from "@hooks/useUserStats";
+import { useUserProfile } from "@hooks/useUserProfile";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { SectionTitle, Subtitle, SectionText } from "@components/typography";
 
@@ -24,11 +24,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 }) => {
   const { colors } = useThemeStyles();
   const router = useRouter();
-  const {
-    todayAnsweredQuestions,
-    todayCorrectAnsweredQuestions,
-    todayWrongAnsweredQuestions,
-  } = useUserStats();
+  const { profile } = useUserProfile();
   const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining());
 
   useEffect(() => {
@@ -60,7 +56,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 
       {showStats && (
         <View style={styles.statsContainer}>
-          {todayAnsweredQuestions !== undefined && (
+          {profile?.todayAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="help-circle-outline"
@@ -68,13 +64,13 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 color={colors.primary}
               />
               <SectionText style={styles.statText}>
-                {todayAnsweredQuestions}
+                {profile?.todayAnsweredQuestions}
               </SectionText>
               <SectionText>Total Questions</SectionText>
             </View>
           )}
 
-          {todayCorrectAnsweredQuestions !== undefined && (
+          {profile?.todayCorrectAnsweredQuestions !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="checkmark-circle-outline"
@@ -82,21 +78,23 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 color="green"
               />
               <SectionText style={styles.statText}>
-                {todayCorrectAnsweredQuestions}
+                {profile?.todayCorrectAnsweredQuestions}
               </SectionText>
               <SectionText>Correct Answers</SectionText>
             </View>
           )}
 
-          {todayWrongAnsweredQuestions !== undefined && (
-            <View style={styles.statItem}>
-              <Ionicons name="close-circle-outline" size={24} color="red" />
-              <SectionText style={styles.statText}>
-                {todayWrongAnsweredQuestions}
-              </SectionText>
-              <SectionText>Wrong Answers</SectionText>
-            </View>
-          )}
+          {profile?.todayAnsweredQuestions !== undefined &&
+            profile?.todayCorrectAnsweredQuestions !== undefined && (
+              <View style={styles.statItem}>
+                <Ionicons name="close-circle-outline" size={24} color="red" />
+                <SectionText style={styles.statText}>
+                  {profile.todayAnsweredQuestions -
+                    profile.todayCorrectAnsweredQuestions}
+                </SectionText>
+                <SectionText>Wrong Answers</SectionText>
+              </View>
+            )}
         </View>
       )}
 

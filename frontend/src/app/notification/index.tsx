@@ -1,75 +1,43 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Linking } from "react-native";
+import { useAppInfo } from "@context/AppInfoContext";
+import LoadingIndicator from "@components/ui/LoadingIndicator";
 import NotificationDisplay from "@components/ui/NotificationDisplay";
-import { AppInfo } from "@src/types";
-import { getLatestAppInfo } from "@services/data/appInfoService";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 const NOTIFICATION_CONFIGS = {
-  error: {
-    title: "Oops!",
-    subtitle:
-      "We couldn't retrieve the server information. Please try again later.",
-    buttonText: "Retry",
-  },
   maintenance: {
-    title: "Scheduled Maintenance",
-    subtitle:
-      "Our servers are currently undergoing maintenance. We'll be back shortly. Thank you for your patience!",
+    title: "Under Maintenance",
+    subtitle: "We're currently performing maintenance. Please try again later.",
   },
   update: {
-    title: "Update Available",
-    subtitle:
-      "A new version of Lithuaningo is available. Please update to continue.",
+    title: "Update Required",
+    subtitle: "Please update to the latest version to continue using the app.",
     buttonText: "Update Now",
   },
 } as const;
 
 const NotificationScreen: React.FC = () => {
-  const [notification, setNotification] = useState<AppInfo | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const { appInfo, loading, error, isUnderMaintenance } = useAppInfo();
 
-  const fetchAppInfo = async () => {
-    try {
-      setIsLoading(true);
-      setError(false);
-      const appInfo = await getLatestAppInfo();
-      setNotification(appInfo);
-    } catch (err) {
-      setError(true);
-      console.error("Failed to fetch app info:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchAppInfo();
-  }, []);
-
-  if (isLoading) {
-    return null;
+  if (loading) {
+    return <LoadingIndicator />;
   }
 
-  if (error || !notification) {
-    return (
-      <NotificationDisplay
-        {...NOTIFICATION_CONFIGS.error}
-        buttonAction={fetchAppInfo}
-      />
-    );
+  if (error) {
+    return <ErrorMessage message={error} />;
   }
 
-  if (notification.isUnderMaintenance) {
+  if (isUnderMaintenance) {
     return <NotificationDisplay {...NOTIFICATION_CONFIGS.maintenance} />;
   }
 
-  if (notification.updateUrl) {
+  if (appInfo?.updateUrl) {
     return (
       <NotificationDisplay
         {...NOTIFICATION_CONFIGS.update}
         buttonAction={() => {
-          Linking.openURL(notification.updateUrl!).catch((err) =>
+          Linking.openURL(appInfo.updateUrl!).catch((err) =>
             console.error("Failed to open URL:", err)
           );
         }}

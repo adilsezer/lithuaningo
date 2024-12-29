@@ -11,26 +11,14 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
 import AuthStateListener from "@providers/AuthStateListener";
 import NotificationInitializer from "@providers/NotificationInitializer";
-import crashlytics from "@react-native-firebase/crashlytics";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import ErrorBoundary from "@components/error/ErrorBoundary";
+import { AppInfoProvider } from "@context/AppInfoContext";
 
 SplashScreen.preventAutoHideAsync();
 
 const InnerRootLayout: React.FC = () => {
   const { layout } = useThemeStyles();
-
-  return (
-    <SafeAreaView style={layout.page}>
-      <LoadingIndicator />
-      <AuthStateListener />
-      <NotificationInitializer />
-      <Slot />
-    </SafeAreaView>
-  );
-};
-
-const RootLayout: React.FC = () => {
   const [fontsLoaded, setFontsLoaded] = useState(false);
 
   useEffect(() => {
@@ -51,10 +39,6 @@ const RootLayout: React.FC = () => {
     loadFonts();
   }, []);
 
-  useEffect(() => {
-    crashlytics().log("App mounted.");
-  }, []);
-
   if (!fontsLoaded) {
     return (
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
@@ -64,11 +48,24 @@ const RootLayout: React.FC = () => {
   }
 
   return (
+    <SafeAreaView style={layout.page}>
+      <LoadingIndicator />
+      <AuthStateListener />
+      <NotificationInitializer />
+      <Slot />
+    </SafeAreaView>
+  );
+};
+
+const RootLayout: React.FC = () => {
+  return (
     <Provider store={store}>
       <PersistGate loading={null} persistor={persistor}>
         <ThemeProvider>
           <ErrorBoundary>
-            <InnerRootLayout />
+            <AppInfoProvider>
+              <InnerRootLayout />
+            </AppInfoProvider>
           </ErrorBoundary>
         </ThemeProvider>
       </PersistGate>

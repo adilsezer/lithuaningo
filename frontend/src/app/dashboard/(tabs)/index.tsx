@@ -6,7 +6,7 @@ import { selectUserData } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
 import useAnnouncements from "@hooks/useAnnouncements";
-import { useUserStats } from "@hooks/useUserStats";
+import { useUserProfile } from "@hooks/useUserProfile";
 import { SectionTitle, SectionText } from "@components/typography";
 import Divider from "@components/ui/Divider";
 import { useTheme } from "@src/context/ThemeContext";
@@ -18,8 +18,7 @@ const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const announcements = useAnnouncements();
-  const { todayAnsweredQuestions, todayCorrectAnsweredQuestions } =
-    useUserStats();
+  const { profile } = useUserProfile();
   const { isDarkMode } = useTheme();
 
   const validAnnouncements = announcements.filter((a) => a.title && a.content);
@@ -36,8 +35,8 @@ const DashboardScreen: React.FC = () => {
           />
         )}
         <LearningProgressCard
-          answeredQuestions={todayAnsweredQuestions}
-          correctAnswers={todayCorrectAnsweredQuestions}
+          answeredQuestions={profile?.todayAnsweredQuestions ?? 0}
+          correctAnswers={profile?.todayCorrectAnsweredQuestions ?? 0}
           colors={colors}
         />
         <WordOfTheDayCard
