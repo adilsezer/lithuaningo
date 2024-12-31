@@ -156,6 +156,10 @@ class ApiClient {
       body: JSON.stringify(entry),
     });
   }
+
+  async getRandomSentence(limit: number = 1) {
+    return this.request<Sentence>(`/sentence/random?limit=${limit}`);
+  }
 }
 
 export default ApiClient.getInstance();

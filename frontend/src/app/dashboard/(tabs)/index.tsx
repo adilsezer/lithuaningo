@@ -1,5 +1,5 @@
-import React from "react";
-import { ScrollView, View, StyleSheet, useColorScheme } from "react-native";
+import React, { useEffect, useState } from "react";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
@@ -13,6 +13,9 @@ import { useTheme } from "@src/context/ThemeContext";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { LearningProgressCard } from "@components/dashboard/LearningProgressCard";
 import { WordOfTheDayCard } from "@components/dashboard/WordOfTheDayCard";
+import { useSentences } from "@hooks/useSentences";
+import { useWordData } from "@hooks/useWordData";
+import { cleanWord } from "@utils/stringUtils";
 
 const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
@@ -20,8 +23,26 @@ const DashboardScreen: React.FC = () => {
   const announcements = useAnnouncements();
   const { profile } = useUserProfile();
   const { isDarkMode } = useTheme();
+  const { randomSentence, fetchRandomSentence } = useSentences();
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const { word: wordForm, lemma } = useWordData(selectedWord || undefined);
 
   const validAnnouncements = announcements.filter((a) => a.title && a.content);
+
+  useEffect(() => {
+    fetchRandomSentence();
+  }, []);
+
+  useEffect(() => {
+    if (randomSentence?.text) {
+      console.log("randomSentence", randomSentence);
+      // Get a random word from the sentence
+      const words = randomSentence.text.split(" ");
+      const randomIndex = Math.floor(Math.random() * words.length);
+      const word = cleanWord(words[randomIndex]);
+      setSelectedWord(word);
+    }
+  }, [randomSentence]);
 
   return (
     <ScrollView>
@@ -40,12 +61,12 @@ const DashboardScreen: React.FC = () => {
           colors={colors}
         />
         <WordOfTheDayCard
-          word="Labas"
-          loading={false}
-          partOfSpeech="Interjection"
-          ipa="[ˈlɑbɑs]"
-          englishTranslation="Hello"
-          sentenceUsage="Labas, as irgi!"
+          word={wordForm?.word || selectedWord || "Loading..."}
+          loading={!wordForm || !lemma}
+          partOfSpeech={lemma?.partOfSpeech || ""}
+          ipa={lemma?.ipa || ""}
+          englishTranslation={lemma?.translation || ""}
+          sentenceUsage={randomSentence?.text || ""}
           isDarkMode={isDarkMode}
           backgroundColor={colors.secondary}
         />

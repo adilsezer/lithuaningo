@@ -1,7 +1,7 @@
 import apiClient from "@services/api/apiClient";
 import { Sentence } from "@src/types";
 
-export const fetchSentences = async (userId: string): Promise<Sentence[]> => {
+const fetchSentences = async (userId: string): Promise<Sentence[]> => {
   try {
     return await apiClient.getSentences(userId);
   } catch (error) {
@@ -31,8 +31,18 @@ const getLastNLearnedSentences = async (
   }
 };
 
-export default {
+const getRandomSentence = async (limit?: number): Promise<Sentence> => {
+  try {
+    return await apiClient.getRandomSentence(limit);
+  } catch (error) {
+    console.error("Error fetching random sentence:", error);
+    throw error;
+  }
+};
+
+export {
   fetchSentences,
   getLearnedSentences,
   getLastNLearnedSentences,
+  getRandomSentence,
 };

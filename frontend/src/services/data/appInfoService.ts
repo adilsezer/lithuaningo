@@ -4,7 +4,6 @@ import { AppInfo } from "@src/types";
 
 export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
   try {
-    console.log("Fetching latest app info");
     return await apiClient.getAppInfo();
   } catch (error) {
     console.error("Error fetching latest version:", error);

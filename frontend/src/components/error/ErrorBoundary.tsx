@@ -44,7 +44,7 @@ class ErrorBoundary extends Component<Props, State> {
   render() {
     if (this.state.hasError) {
       return (
-        <View>
+        <View style={styles.container}>
           <Image
             source={require("assets/images/icon.png")}
             style={styles.logo}

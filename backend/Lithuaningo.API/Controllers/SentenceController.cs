@@ -16,4 +16,10 @@ public class SentenceController : ControllerBase
     {
         return await _sentenceService.GetSentencesByIdsAsync(sentenceIds);
     }
+
+    [HttpGet("random")]
+    public async Task<Sentence> GetRandomSentence()
+    {
+        return await _sentenceService.GetRandomSentenceAsync();
+    }
 }

@@ -6,33 +6,53 @@ import * as sentenceService from "@services/data/sentenceService";
 
 export const useSentences = () => {
   const [sentences, setSentences] = useState<Sentence[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [randomSentence, setRandomSentence] = useState<Sentence | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const userData = useAppSelector(selectUserData);
 
-  useEffect(() => {
-    const fetchSentences = async () => {
-      try {
-        if (!userData?.id) {
-          throw new Error("No user ID available");
-        }
-        setLoading(true);
-        const fetchedSentences = await sentenceService.fetchSentences(
-          userData.id
-        );
-        setSentences(fetchedSentences);
-      } catch (err) {
-        setError(
-          err instanceof Error ? err.message : "Failed to fetch sentences"
-        );
-        console.error("Error fetching sentences:", err);
-      } finally {
-        setLoading(false);
+  const fetchSentences = async () => {
+    try {
+      if (!userData?.id) {
+        throw new Error("No user ID available");
       }
-    };
+      setLoading(true);
+      const fetchedSentences = await sentenceService.fetchSentences(
+        userData.id
+      );
+      setSentences(fetchedSentences);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch sentences"
+      );
+      console.error("Error fetching sentences:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchSentences();
-  }, [userData?.id]);
+  const fetchRandomSentence = async () => {
+    try {
+      setLoading(true);
+      const sentence = await sentenceService.getRandomSentence();
+      setRandomSentence(sentence);
+      console.log("randomSentence", sentence);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to fetch random sentence"
+      );
+      console.error("Error fetching random sentence:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  return { sentences, loading, error };
+  return {
+    sentences,
+    randomSentence,
+    loading,
+    error,
+    fetchRandomSentence,
+    fetchSentences,
+  };
 };
