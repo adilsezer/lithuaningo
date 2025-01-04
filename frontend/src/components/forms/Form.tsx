@@ -1,89 +1,192 @@
 import React from "react";
 import { View, StyleSheet, ViewStyle } from "react-native";
-import CustomTextInput from "@components/ui/CustomTextInput";
-import CustomButton from "@components/ui/CustomButton";
+import {
+  useForm,
+  Controller,
+  FieldValues,
+  UseFormProps,
+  Path,
+  DefaultValues,
+} from "react-hook-form";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useForm, Controller } from "react-hook-form";
+import CustomButton from "@components/ui/CustomButton";
+import CustomTextInput from "@components/ui/CustomTextInput";
+import {
+  CustomPicker,
+  CustomSwitch,
+  CustomSlider,
+  CustomCheckbox,
+  CustomDatePicker,
+  CustomImagePicker,
+} from "@components/ui/form-inputs";
 
-export interface FormField {
-  name: string;
+type FieldType =
+  | "text"
+  | "email"
+  | "password"
+  | "picker"
+  | "switch"
+  | "slider"
+  | "checkbox"
+  | "date"
+  | "image";
+
+export type FormField<T> = {
+  name: keyof T;
   label: string;
-  type?: "text" | "email" | "password";
+  type: FieldType;
   rules?: {
     required?: string | boolean;
-    pattern?: {
-      value: RegExp;
-      message: string;
-    };
-    minLength?: {
-      value: number;
-      message: string;
-    };
-    maxLength?: {
-      value: number;
-      message: string;
-    };
-    validate?: (
-      value: string,
-      formValues: Record<string, string>
-    ) => string | boolean | undefined;
+    pattern?: { value: RegExp; message: string };
+    minLength?: { value: number; message: string };
+    maxLength?: { value: number; message: string };
+    validate?: (value: any, formValues: T) => string | boolean | undefined;
   };
-  autoCapitalize?: "none" | "sentences" | "words" | "characters";
-}
+  // Additional props based on type
+  options?: Array<{ label: string; value: string }>; // for picker
+  minimumValue?: number; // for slider
+  maximumValue?: number; // for slider
+  step?: number; // for slider
+  mode?: "date" | "time"; // for date picker
+  minimumDate?: Date; // for date picker
+  maximumDate?: Date; // for date picker
+  autoCapitalize?: "none" | "sentences" | "words" | "characters"; // for text inputs
+};
 
-interface FormProps {
-  fields: FormField[];
-  onSubmit: (values: Record<string, string>) => any;
+interface FormProps<T extends FieldValues> {
+  fields: FormField<T>[];
+  onSubmit: (data: T) => Promise<void> | void;
   submitButtonText: string;
   isLoading?: boolean;
-  defaultValues?: Record<string, string>;
-  mode?: "onChange" | "onBlur" | "onSubmit" | "onTouched" | "all";
+  options?: Omit<UseFormProps<T>, "defaultValues">;
+  defaultValues?: DefaultValues<T>;
   style?: ViewStyle;
   submitButtonStyle?: ViewStyle;
 }
 
-export const Form: React.FC<FormProps> = ({
+export function Form<T extends FieldValues>({
   fields,
   onSubmit,
   submitButtonText,
   isLoading = false,
-  defaultValues = {},
-  mode = "onBlur",
+  options,
+  defaultValues,
   style,
   submitButtonStyle,
-}) => {
+}: FormProps<T>) {
   const { colors } = useThemeStyles();
+  const form = useForm<T>({
+    ...options,
+    defaultValues,
+  });
+
   const {
     control,
     handleSubmit,
     formState: { errors, isSubmitting, isDirty, isValid },
-  } = useForm<Record<string, string>>({
-    defaultValues,
-    mode,
-  });
+  } = form;
+
+  const renderField = (
+    field: FormField<T>,
+    { onChange, onBlur, value }: any
+  ) => {
+    const commonProps = {
+      label: field.label,
+      error: errors[field.name]?.message as string,
+    };
+
+    switch (field.type) {
+      case "text":
+      case "email":
+      case "password":
+        return (
+          <CustomTextInput
+            {...commonProps}
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            secureTextEntry={field.type === "password"}
+            keyboardType={field.type === "email" ? "email-address" : "default"}
+            autoCapitalize={field.autoCapitalize || "none"}
+            placeholderTextColor={colors.text}
+          />
+        );
+
+      case "picker":
+        return (
+          <CustomPicker
+            {...commonProps}
+            value={value}
+            onValueChange={onChange}
+            options={field.options || []}
+          />
+        );
+
+      case "switch":
+        return (
+          <CustomSwitch
+            {...commonProps}
+            value={value}
+            onValueChange={onChange}
+          />
+        );
+
+      case "slider":
+        return (
+          <CustomSlider
+            {...commonProps}
+            value={value ?? field.minimumValue}
+            onValueChange={onChange}
+            minimumValue={field.minimumValue || 0}
+            maximumValue={field.maximumValue || 100}
+            step={field.step}
+          />
+        );
+
+      case "checkbox":
+        return (
+          <CustomCheckbox
+            {...commonProps}
+            value={value}
+            onValueChange={onChange}
+          />
+        );
+
+      case "date":
+        return (
+          <CustomDatePicker
+            {...commonProps}
+            value={value ?? new Date()}
+            onChange={onChange}
+            mode={field.mode}
+            minimumDate={field.minimumDate}
+            maximumDate={field.maximumDate}
+          />
+        );
+
+      case "image":
+        return (
+          <CustomImagePicker
+            {...commonProps}
+            value={value}
+            onChange={onChange}
+          />
+        );
+    }
+  };
 
   return (
     <View style={[styles.container, style]}>
       {fields.map((field) => (
         <Controller
-          key={field.name}
+          key={String(field.name)}
           control={control}
-          name={field.name}
+          name={field.name as Path<T>}
           rules={field.rules}
-          render={({ field: { onChange, onBlur, value } }) => (
-            <CustomTextInput
-              placeholder={field.label}
-              value={value}
-              onChangeText={onChange}
-              onBlur={onBlur}
-              secureTextEntry={field.type === "password"}
-              keyboardType={
-                field.type === "email" ? "email-address" : "default"
-              }
-              autoCapitalize={field.autoCapitalize || "none"}
-              placeholderTextColor={colors.placeholder}
-              error={errors[field.name]?.message}
-            />
+          render={({ field: fieldProps }) => (
+            <View style={styles.fieldContainer}>
+              {renderField(field, fieldProps)}
+            </View>
           )}
         />
       ))}
@@ -95,12 +198,15 @@ export const Form: React.FC<FormProps> = ({
       />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     width: "100%",
     paddingHorizontal: 16,
+  },
+  fieldContainer: {
+    marginBottom: 16,
   },
   submitButton: {
     marginTop: 16,

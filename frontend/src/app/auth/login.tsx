@@ -9,23 +9,8 @@ import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import Divider from "@components/ui/Divider";
-import { Form, FormField } from "@components/forms/Form";
+import { Form } from "@components/forms/Form";
 import { FORM_RULES } from "@utils/formValidation";
-
-const loginFields: FormField[] = [
-  {
-    name: "email",
-    label: "Email",
-    type: "email",
-    rules: FORM_RULES.email,
-  },
-  {
-    name: "password",
-    label: "Password",
-    type: "password",
-    rules: { required: "Password is required" },
-  },
-];
 
 const LoginScreen: React.FC = () => {
   const loading = useAppSelector(selectIsLoading);
@@ -40,12 +25,28 @@ const LoginScreen: React.FC = () => {
       <BackButton />
       <SectionTitle>Welcome Back</SectionTitle>
 
-      <Form
-        fields={loginFields}
-        onSubmit={({ email, password }) => signIn(email, password)}
+      <Form<{ email: string; password: string }>
+        fields={[
+          {
+            name: "email",
+            label: "Email",
+            type: "email",
+            rules: FORM_RULES.email,
+          },
+          {
+            name: "password",
+            label: "Password",
+            type: "password",
+            rules: { required: "Password is required" },
+          },
+        ]}
+        onSubmit={async (data) => {
+          await signIn(data.email, data.password);
+        }}
         submitButtonText="Log In with Email"
         isLoading={loading}
-        mode="onBlur"
+        options={{ mode: "onBlur" }}
+        defaultValues={{ email: "", password: "" }}
       />
 
       <NavigationLink text="Forgot Password?" path="/auth/forgot-password" />

@@ -10,6 +10,12 @@ import { Form, FormField } from "@components/forms/Form";
 import { FORM_RULES } from "@utils/formValidation";
 import auth from "@react-native-firebase/auth";
 
+interface EditProfileForm {
+  displayName: string;
+  email: string;
+  currentPassword: string;
+}
+
 const editProfileFields: FormField[] = [
   {
     name: "displayName",
@@ -50,11 +56,14 @@ const EditProfileScreen: React.FC = () => {
       <BackButton />
       <SectionTitle>Edit Profile</SectionTitle>
 
-      <Form
+      <Form<EditProfileForm>
         fields={editProfileFields}
-        onSubmit={({ currentPassword, displayName, email }) =>
-          updateProfile(currentPassword, { displayName, email })
-        }
+        onSubmit={async (values) => {
+          await updateProfile(values.currentPassword, {
+            displayName: values.displayName,
+            email: values.email,
+          });
+        }}
         submitButtonText="Save Changes"
         isLoading={loading}
         mode="onBlur"
