@@ -34,4 +34,12 @@ public class WordController : ControllerBase
 
         return Ok(result);
     }
+
+    [HttpGet("random")]
+    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<WordOfTheDay>))]
+    public async Task<ActionResult<List<WordOfTheDay>>> GetRandomWordsOfTheDay([FromQuery] int count = 5)
+    {
+        var result = await _wordService.GetRandomWordsOfTheDay(count);
+        return Ok(result);
+    }
 }

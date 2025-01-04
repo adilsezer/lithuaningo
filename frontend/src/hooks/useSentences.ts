@@ -36,7 +36,6 @@ export const useSentences = () => {
       setLoading(true);
       const sentence = await sentenceService.getRandomSentence();
       setRandomSentence(sentence);
-      console.log("randomSentence", sentence);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Failed to fetch random sentence"
