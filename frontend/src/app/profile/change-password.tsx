@@ -1,128 +1,68 @@
-import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import React, { useEffect } from "react";
+import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
-import CustomTextInput from "@components/ui/CustomTextInput";
-import auth from "@react-native-firebase/auth";
-import { SectionTitle, Instruction } from "@components/typography";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAppSelector } from "@redux/hooks";
+import { selectIsLoading } from "@redux/slices/uiSlice";
+import crashlytics from "@react-native-firebase/crashlytics";
+import { SectionTitle } from "@components/typography";
+import { Form, FormField } from "@components/forms/Form";
+import { FORM_RULES } from "@utils/formValidation";
 
-interface PasswordForm {
-  currentPassword: string;
-  newPassword: string;
-  confirmNewPassword: string;
-}
+const changePasswordFields: FormField[] = [
+  {
+    name: "currentPassword",
+    label: "Current Password",
+    type: "password",
+    rules: { required: "Current password is required" },
+  },
+  {
+    name: "newPassword",
+    label: "New Password",
+    type: "password",
+    rules: {
+      ...FORM_RULES.password,
+      validate: (value: string, formValues: Record<string, string>) =>
+        value !== formValues.currentPassword ||
+        "New password must be different from current password",
+    },
+  },
+  {
+    name: "confirmPassword",
+    label: "Confirm New Password",
+    type: "password",
+    rules: {
+      required: "Please confirm your new password",
+      validate: (value: string, formValues: Record<string, string>) =>
+        value === formValues.newPassword || "Passwords don't match",
+    },
+  },
+];
 
 const ChangePasswordScreen: React.FC = () => {
-  const { colors } = useThemeStyles();
+  const loading = useAppSelector(selectIsLoading);
   const { updatePassword } = useAuth();
-  const [form, setForm] = React.useState<PasswordForm>({
-    currentPassword: "",
-    newPassword: "",
-    confirmNewPassword: "",
-  });
-  const [isLoading, setIsLoading] = React.useState(false);
 
-  const user = auth().currentUser;
-  const isPasswordProvider = user?.providerData.some(
-    (provider) => provider.providerId === "password"
-  );
-
-  const updateFormField = (field: keyof PasswordForm) => (value: string) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const validateForm = (): boolean => {
-    if (
-      !form.currentPassword ||
-      !form.newPassword ||
-      !form.confirmNewPassword
-    ) {
-      AlertDialog.error("All fields are required");
-      return false;
-    }
-    if (form.newPassword !== form.confirmNewPassword) {
-      AlertDialog.error("New passwords don't match");
-      return false;
-    }
-    if (form.newPassword.length < 6) {
-      AlertDialog.error("New password must be at least 6 characters");
-      return false;
-    }
-    return true;
-  };
-
-  const handleChangePassword = async () => {
-    if (!validateForm()) return;
-
-    setIsLoading(true);
-    try {
-      await updatePassword(form.currentPassword, form.newPassword);
-      setForm({ currentPassword: "", newPassword: "", confirmNewPassword: "" });
-      AlertDialog.success("Password updated successfully");
-    } catch (err) {
-      AlertDialog.error(
-        err instanceof Error ? err.message : "Failed to update password"
-      );
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const renderPasswordForm = () => (
-    <>
-      <CustomTextInput
-        placeholder="Current Password"
-        value={form.currentPassword}
-        secureTextEntry
-        onChangeText={updateFormField("currentPassword")}
-        placeholderTextColor={colors.placeholder}
-      />
-      <CustomTextInput
-        placeholder="New Password"
-        value={form.newPassword}
-        secureTextEntry
-        onChangeText={updateFormField("newPassword")}
-        placeholderTextColor={colors.placeholder}
-      />
-      <CustomTextInput
-        placeholder="Confirm New Password"
-        value={form.confirmNewPassword}
-        secureTextEntry
-        onChangeText={updateFormField("confirmNewPassword")}
-        placeholderTextColor={colors.placeholder}
-      />
-      <CustomButton
-        title="Change Password"
-        onPress={handleChangePassword}
-        disabled={isLoading}
-      />
-    </>
-  );
+  useEffect(() => {
+    crashlytics().log("Change password screen loaded.");
+  }, []);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView>
       <BackButton />
       <SectionTitle>Change Password</SectionTitle>
 
-      {!isPasswordProvider ? (
-        <Instruction>
-          Password change is only available for email/password accounts.
-        </Instruction>
-      ) : (
-        renderPasswordForm()
-      )}
+      <Form
+        fields={changePasswordFields}
+        onSubmit={({ currentPassword, newPassword }) =>
+          updatePassword(currentPassword, newPassword)
+        }
+        submitButtonText="Change Password"
+        isLoading={loading}
+        mode="onChange"
+      />
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-});
 
 export default ChangePasswordScreen;

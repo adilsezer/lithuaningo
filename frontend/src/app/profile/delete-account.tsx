@@ -1,25 +1,33 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import React, { useEffect } from "react";
+import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import auth from "@react-native-firebase/auth";
 import BackButton from "@components/layout/BackButton";
-import CustomTextInput from "@components/ui/CustomTextInput";
-import CustomButton from "@components/ui/CustomButton";
-import { SectionTitle, Paragraph } from "@components/typography";
+import { useAppSelector } from "@redux/hooks";
+import { selectIsLoading } from "@redux/slices/uiSlice";
+import crashlytics from "@react-native-firebase/crashlytics";
+import { SectionTitle, Instruction } from "@components/typography";
+import { Form, FormField } from "@components/forms/Form";
+import auth from "@react-native-firebase/auth";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
-const DeleteAccountScreen: React.FC = () => {
-  const [password, setPassword] = useState("");
-  const { colors } = useThemeStyles();
-  const { deleteAccount } = useAuth();
+const deleteAccountFields: FormField[] = [
+  {
+    name: "password",
+    label: "Current Password",
+    type: "password",
+    rules: { required: "Please enter your password to confirm deletion" },
+  },
+];
 
+const DeleteAccountScreen: React.FC = () => {
+  const loading = useAppSelector(selectIsLoading);
+  const { deleteAccount } = useAuth();
   const user = auth().currentUser;
   const isPasswordProvider = user?.providerData.some(
     (provider) => provider.providerId === "password"
   );
 
-  const handleDelete = () => {
+  const handleDeleteAccount = async (values: Record<string, string>) => {
     AlertDialog.confirm({
       title: "Confirm Deletion",
       message:
@@ -27,58 +35,44 @@ const DeleteAccountScreen: React.FC = () => {
       confirmText: "Delete",
       confirmStyle: "destructive",
       onConfirm: async () => {
-        if (isPasswordProvider && !password.trim()) {
+        try {
+          await deleteAccount(values.password);
+        } catch (error) {
           AlertDialog.error(
-            "Please enter your password to delete your account"
+            error instanceof Error ? error.message : "Failed to delete account"
           );
-          return;
         }
-
-        await deleteAccount(isPasswordProvider ? password : undefined);
-        AlertDialog.success("Your account has been deleted successfully");
       },
     });
   };
 
+  useEffect(() => {
+    crashlytics().log("Delete account screen loaded.");
+  }, []);
+
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView>
       <BackButton />
       <SectionTitle>Delete Account</SectionTitle>
+      <Instruction>
+        This action cannot be undone. All your data will be permanently deleted.
+      </Instruction>
 
-      <Paragraph>
-        Deleting your account is a permanent action and cannot be undone. All
-        your data will be lost.
-        {isPasswordProvider &&
-          " To proceed, please enter your password below to confirm your identity and delete your account."}
-      </Paragraph>
-
-      {isPasswordProvider && (
-        <CustomTextInput
-          secureTextEntry
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          placeholderTextColor={colors.placeholder}
+      {isPasswordProvider ? (
+        <Form
+          fields={deleteAccountFields}
+          onSubmit={handleDeleteAccount}
+          submitButtonText="Delete Account"
+          isLoading={loading}
+          mode="onChange"
         />
+      ) : (
+        <Instruction>
+          Account deletion is only available for email/password accounts.
+        </Instruction>
       )}
-
-      <CustomButton
-        title="Delete Account"
-        onPress={handleDelete}
-        style={styles.deleteButton}
-      />
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  deleteButton: {
-    marginTop: 20,
-  },
-});
 
 export default DeleteAccountScreen;

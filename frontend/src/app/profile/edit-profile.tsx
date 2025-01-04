@@ -1,92 +1,67 @@
-import React, { useState } from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import React, { useEffect } from "react";
+import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
-import CustomTextInput from "@components/ui/CustomTextInput";
-import auth from "@react-native-firebase/auth";
+import { useAppSelector } from "@redux/hooks";
+import { selectIsLoading } from "@redux/slices/uiSlice";
+import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { Form, FormField } from "@components/forms/Form";
+import { FORM_RULES } from "@utils/formValidation";
+import auth from "@react-native-firebase/auth";
+
+const editProfileFields: FormField[] = [
+  {
+    name: "displayName",
+    label: "Display Name",
+    type: "text",
+    rules: FORM_RULES.name,
+  },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    rules: FORM_RULES.email,
+  },
+  {
+    name: "currentPassword",
+    label: "Current Password",
+    type: "password",
+    rules: { required: "Current password is required" },
+  },
+];
 
 const EditProfileScreen: React.FC = () => {
-  const { colors } = useThemeStyles();
+  const loading = useAppSelector(selectIsLoading);
   const { updateProfile } = useAuth();
-  const [isLoading, setIsLoading] = useState(false);
-  const [name, setName] = useState("");
-  const [currentPassword, setCurrentPassword] = useState("");
-
   const user = auth().currentUser;
-  const isPasswordProvider = user?.providerData.some(
-    (provider) => provider.providerId === "password"
-  );
 
-  const handleUpdateProfile = async () => {
-    if (!name.trim()) {
-      AlertDialog.error("Name is required");
-      return;
-    }
+  useEffect(() => {
+    crashlytics().log("Edit profile screen loaded.");
+  }, []);
 
-    try {
-      setIsLoading(true);
-      await updateProfile(isPasswordProvider ? currentPassword : "", {
-        displayName: name.trim(),
-      });
-      AlertDialog.success("Profile updated successfully");
-    } catch (err) {
-      AlertDialog.error(
-        err instanceof Error ? err.message : "Failed to update profile"
-      );
-    } finally {
-      setIsLoading(false);
-    }
+  const defaultValues = {
+    displayName: user?.displayName || "",
+    email: user?.email || "",
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView>
       <BackButton />
       <SectionTitle>Edit Profile</SectionTitle>
 
-      {isPasswordProvider && (
-        <CustomTextInput
-          style={styles.input}
-          placeholder="Current Password"
-          value={currentPassword}
-          secureTextEntry
-          onChangeText={setCurrentPassword}
-          placeholderTextColor={colors.placeholder}
-        />
-      )}
-
-      <CustomTextInput
-        style={styles.input}
-        placeholder="User Name"
-        value={name}
-        onChangeText={setName}
-        placeholderTextColor={colors.placeholder}
-      />
-
-      <CustomButton
-        title="Save Changes"
-        onPress={handleUpdateProfile}
-        style={styles.button}
-        disabled={isLoading}
+      <Form
+        fields={editProfileFields}
+        onSubmit={({ currentPassword, displayName, email }) =>
+          updateProfile(currentPassword, { displayName, email })
+        }
+        submitButtonText="Save Changes"
+        isLoading={loading}
+        mode="onBlur"
+        defaultValues={defaultValues}
       />
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    padding: 20,
-  },
-  input: {
-    marginBottom: 15,
-  },
-  button: {
-    marginTop: 10,
-  },
-});
 
 export default EditProfileScreen;

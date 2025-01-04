@@ -7,31 +7,47 @@ import BackButton from "@components/layout/BackButton";
 import { useAppSelector } from "@redux/hooks";
 import { selectIsLoading } from "@redux/slices/uiSlice";
 import AppleSignInButton from "@components/auth/AppleSignInButton";
-import CustomTextInput from "@components/ui/CustomTextInput";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { Form, FormField } from "@components/forms/Form";
+import { FORM_RULES } from "@utils/formValidation";
+
+const signupFields: FormField[] = [
+  {
+    name: "displayName",
+    label: "Name",
+    type: "text",
+    rules: FORM_RULES.name,
+  },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    rules: FORM_RULES.email,
+  },
+  {
+    name: "password",
+    label: "Password",
+    type: "password",
+    rules: FORM_RULES.password,
+  },
+  {
+    name: "confirmPassword",
+    label: "Confirm Password",
+    type: "password",
+    rules: {
+      required: "Please confirm your password",
+      validate: (value: string, formValues: Record<string, string>) =>
+        value === formValues.password || "Passwords don't match",
+    },
+  },
+];
 
 const SignUpScreen: React.FC = () => {
-  const [email, setEmail] = React.useState<string>("");
-  const [displayName, setDisplayName] = React.useState<string>("");
-  const [password, setPassword] = React.useState<string>("");
-  const [confirmPassword, setConfirmPassword] = React.useState<string>("");
   const loading = useAppSelector(selectIsLoading);
   const { colors } = useThemeStyles();
   const { signUp, signInWithSocial } = useAuth();
-
-  const handleSignUp = () => {
-    if (confirmPassword !== password) {
-      AlertDialog.error("Passwords don't match");
-      return;
-    } else if (!displayName) {
-      AlertDialog.error("Please enter a name");
-      return;
-    }
-    signUp(email, password, displayName);
-  };
 
   useEffect(() => {
     crashlytics().log("Sign up screen loaded.");
@@ -42,37 +58,15 @@ const SignUpScreen: React.FC = () => {
       <BackButton />
       <SectionTitle>Create Account</SectionTitle>
 
-      <CustomTextInput
-        placeholder="Name"
-        value={displayName}
-        onChangeText={setDisplayName}
-        autoCapitalize="none"
-        placeholderTextColor={colors.placeholder}
+      <Form
+        fields={signupFields}
+        onSubmit={({ email, password, displayName }) =>
+          signUp(email, password, displayName)
+        }
+        submitButtonText="Sign Up"
+        isLoading={loading}
+        mode="onChange"
       />
-      <CustomTextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        placeholderTextColor={colors.placeholder}
-      />
-      <CustomTextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholderTextColor={colors.placeholder}
-      />
-      <CustomTextInput
-        placeholder="Confirm Password"
-        value={confirmPassword}
-        onChangeText={setConfirmPassword}
-        secureTextEntry
-        placeholderTextColor={colors.placeholder}
-      />
-
-      <CustomButton onPress={handleSignUp} title="Sign Up" disabled={loading} />
 
       <Divider content="Or" />
 

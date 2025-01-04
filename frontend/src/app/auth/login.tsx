@@ -3,21 +3,32 @@ import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useAppSelector } from "@redux/hooks";
 import { selectIsLoading } from "@redux/slices/uiSlice";
-import CustomTextInput from "@components/ui/CustomTextInput";
 import NavigationLink from "@components/layout/NavigationLink";
 import BackButton from "@components/layout/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import crashlytics from "@react-native-firebase/crashlytics";
-import CustomButton from "@components/ui/CustomButton";
 import { SectionTitle } from "@components/typography";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import Divider from "@components/ui/Divider";
+import { Form, FormField } from "@components/forms/Form";
+import { FORM_RULES } from "@utils/formValidation";
+
+const loginFields: FormField[] = [
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    rules: FORM_RULES.email,
+  },
+  {
+    name: "password",
+    label: "Password",
+    type: "password",
+    rules: { required: "Password is required" },
+  },
+];
 
 const LoginScreen: React.FC = () => {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
   const loading = useAppSelector(selectIsLoading);
-  const { colors } = useThemeStyles();
   const { signIn, signInWithSocial } = useAuth();
 
   useEffect(() => {
@@ -29,26 +40,12 @@ const LoginScreen: React.FC = () => {
       <BackButton />
       <SectionTitle>Welcome Back</SectionTitle>
 
-      <CustomTextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        placeholderTextColor={colors.placeholder}
-      />
-      <CustomTextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        placeholderTextColor={colors.placeholder}
-      />
-
-      <CustomButton
-        onPress={() => signIn(email, password)}
-        title="Log In with Email"
-        disabled={loading}
+      <Form
+        fields={loginFields}
+        onSubmit={({ email, password }) => signIn(email, password)}
+        submitButtonText="Log In with Email"
+        isLoading={loading}
+        mode="onBlur"
       />
 
       <NavigationLink text="Forgot Password?" path="/auth/forgot-password" />

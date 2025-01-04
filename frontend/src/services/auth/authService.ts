@@ -168,8 +168,16 @@ export const signOut = async (dispatch: AppDispatch): Promise<AuthResponse> => {
         (provider) => provider.providerId === "google.com"
       )
     ) {
-      await GoogleSignin.revokeAccess();
-      await GoogleSignin.signOut();
+      try {
+        const isSignedIn = await GoogleSignin.isSignedIn();
+        if (isSignedIn) {
+          await GoogleSignin.revokeAccess();
+          await GoogleSignin.signOut();
+        }
+      } catch (googleError) {
+        console.error("Google sign out error:", googleError);
+        // Continue with Firebase sign out even if Google sign out fails
+      }
     }
     await auth().signOut();
     dispatch(logOut());
