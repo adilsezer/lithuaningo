@@ -20,18 +20,21 @@ const signupFields: FormField[] = [
     label: "Name",
     type: "text",
     rules: FORM_RULES.name,
+    placeholder: "Name",
   },
   {
     name: "email",
     label: "Email",
     type: "email",
     rules: FORM_RULES.email,
+    placeholder: "Email",
   },
   {
     name: "password",
     label: "Password",
     type: "password",
     rules: FORM_RULES.password,
+    placeholder: "Password",
   },
   {
     name: "confirmPassword",
@@ -42,6 +45,7 @@ const signupFields: FormField[] = [
       validate: (value, formValues) =>
         value === formValues.password || "Passwords don't match",
     },
+    placeholder: "Confirm Password",
   },
 ];
 

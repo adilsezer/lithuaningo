@@ -17,6 +17,7 @@ export type ThemeColors = {
   wordBackground: string;
   wordHighlightBackground: string;
   buttonText: string;
+  inputBackground: string;
 };
 
 export const lightThemeColors: ThemeColors = {
@@ -29,7 +30,7 @@ export const lightThemeColors: ThemeColors = {
   text: "#2E3B44",
   lightText: "#4A5963",
   link: "#1E88E5",
-  placeholder: "#B0BEC5",
+  placeholder: "#9E9E9E",
   border: "#B0BEC5",
   error: "#d5304f",
   card: "#f0f0f0",
@@ -38,6 +39,7 @@ export const lightThemeColors: ThemeColors = {
   wordBackground: "#f0f0f0",
   wordHighlightBackground: "#d3f8d3",
   buttonText: "#2E3B44",
+  inputBackground: "#F5F5F5",
 };
 
 export const darkThemeColors: ThemeColors = {
@@ -59,4 +61,5 @@ export const darkThemeColors: ThemeColors = {
   wordBackground: "#37474F",
   wordHighlightBackground: "#66BB6A",
   buttonText: "#2E3B44",
+  inputBackground: "#37474F",
 };

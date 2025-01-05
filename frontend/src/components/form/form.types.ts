@@ -32,8 +32,13 @@ export type FieldTypeProps = {
   text: {
     autoCapitalize?: "none" | "sentences" | "words" | "characters";
     placeholder?: string;
+    editable?: boolean;
   };
-  email: { autoCapitalize?: "none"; placeholder?: string };
+  email: {
+    autoCapitalize?: "none";
+    placeholder?: string;
+    editable?: boolean;
+  };
   password: { autoCapitalize?: "none"; placeholder?: string };
   picker: { options: Array<{ label: string; value: string }> };
   switch: Record<string, never>;

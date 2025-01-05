@@ -19,20 +19,14 @@ const getEditProfileFields = (
     label: "Display Name",
     type: "text",
     rules: FORM_RULES.name,
-    defaultValue: user?.displayName || "",
-  },
-  {
-    name: "email",
-    label: "Email",
-    type: "email",
-    rules: FORM_RULES.email,
-    defaultValue: user?.email || "",
+    placeholder: "Display Name",
   },
   {
     name: "currentPassword",
     label: "Current Password",
     type: "password",
     rules: { required: "Current password is required" },
+    placeholder: "Password",
   },
 ];
 

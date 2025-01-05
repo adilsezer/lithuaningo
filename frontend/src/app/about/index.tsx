@@ -39,44 +39,39 @@ export default function AboutScreen() {
   return (
     <ScrollView>
       <BackButton />
-      <View style={styles.container}>
-        <SectionTitle>About Lithuaningo</SectionTitle>
-        <Paragraph style={styles.justifiedText}>
-          Lithuaningo is your gateway to mastering Lithuanian! Dive into
-          learning with ease and fun. Our app provides a comprehensive learning
-          experience with various features and tools to help you become
-          proficient in Lithuanian.
-        </Paragraph>
+      <SectionTitle>About Lithuaningo</SectionTitle>
+      <Paragraph style={styles.justifiedText}>
+        Lithuaningo is your gateway to mastering Lithuanian! Dive into learning
+        with ease and fun. Our app provides a comprehensive learning experience
+        with various features and tools to help you become proficient in
+        Lithuanian.
+      </Paragraph>
 
-        <SectionTitle>Contact Us</SectionTitle>
-        <SectionText>
-          Email:{" "}
-          <LinkText
-            onPress={() => handleLinkPress("mailto:lithuaningo@gmail.com")}
-          >
-            lithuaningo@gmail.com
-          </LinkText>
-        </SectionText>
-
-        <SectionTitle>License</SectionTitle>
-        <SectionText>This app is licensed under the MIT License.</SectionText>
-
-        <SectionTitle>Version</SectionTitle>
-        <SectionText>{appVersion}</SectionText>
-
-        <SectionTitle>Privacy Policy</SectionTitle>
-        <LinkText onPress={() => router.push("/privacy-policy")}>
-          View our Privacy Policy
+      <SectionTitle>Contact Us</SectionTitle>
+      <SectionText>
+        Email:{" "}
+        <LinkText
+          onPress={() => handleLinkPress("mailto:lithuaningo@gmail.com")}
+        >
+          lithuaningo@gmail.com
         </LinkText>
-      </View>
+      </SectionText>
+
+      <SectionTitle>License</SectionTitle>
+      <SectionText>This app is licensed under the MIT License.</SectionText>
+
+      <SectionTitle>Version</SectionTitle>
+      <SectionText>{appVersion}</SectionText>
+
+      <SectionTitle>Privacy Policy</SectionTitle>
+      <LinkText onPress={() => router.push("/privacy-policy")}>
+        View our Privacy Policy
+      </LinkText>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
   justifiedText: {
     textAlign: "justify",
   },

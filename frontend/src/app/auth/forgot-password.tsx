@@ -16,6 +16,7 @@ const forgotPasswordFields: FormField[] = [
     label: "Email",
     type: "email",
     rules: FORM_RULES.email,
+    placeholder: "Email",
   },
 ];
 

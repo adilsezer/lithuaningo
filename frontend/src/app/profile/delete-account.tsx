@@ -11,16 +11,13 @@ import type { FormField } from "@components/form/form.types";
 import auth from "@react-native-firebase/auth";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
-interface DeleteAccountForm {
-  password: string;
-}
-
 const deleteAccountFields: FormField[] = [
   {
     name: "password",
     label: "Current Password",
     type: "password",
     rules: { required: "Please enter your password to confirm deletion" },
+    placeholder: "Password",
   },
 ];
 
@@ -32,7 +29,7 @@ const DeleteAccountScreen: React.FC = () => {
     (provider) => provider.providerId === "password"
   );
 
-  const handleDeleteAccount = async (values: DeleteAccountForm) => {
+  const handleDeleteAccount = async (values: { password: string }) => {
     AlertDialog.confirm({
       title: "Confirm Deletion",
       message:
@@ -64,7 +61,7 @@ const DeleteAccountScreen: React.FC = () => {
       </Instruction>
 
       {isPasswordProvider ? (
-        <Form<DeleteAccountForm>
+        <Form
           fields={deleteAccountFields}
           onSubmit={handleDeleteAccount}
           submitButtonText="Delete Account"

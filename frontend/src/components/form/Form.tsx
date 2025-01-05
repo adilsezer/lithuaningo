@@ -57,7 +57,7 @@ export function Form<T extends FieldValues>({
   } = form;
 
   return (
-    <View style={[styles.container, style]}>
+    <View style={style}>
       {fields.map((field) => (
         <Controller
           key={field.name}
@@ -88,12 +88,8 @@ export function Form<T extends FieldValues>({
 }
 
 const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-    paddingHorizontal: 16,
-  },
   fieldContainer: {
-    marginBottom: 4,
+    marginBottom: 6,
   },
   submitButton: {
     marginTop: 4,

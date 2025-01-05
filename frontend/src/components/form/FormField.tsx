@@ -43,9 +43,8 @@ export const FormField: React.FC<FormFieldProps> = ({
           secureTextEntry={field.type === "password"}
           keyboardType={field.type === "email" ? "email-address" : "default"}
           autoCapitalize={field.autoCapitalize || "none"}
-          placeholderTextColor={colors.placeholder}
           placeholder={field.placeholder}
-          style={{ textAlign: "center" }}
+          editable={field.type === "password" ? true : field.editable !== false}
         />
       );
 

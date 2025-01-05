@@ -21,30 +21,25 @@ const SettingsScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <View style={styles.container}>
-        <SectionTitle>Settings</SectionTitle>
+      <SectionTitle>Settings</SectionTitle>
 
-        <ReminderSettings
-          reminderEnabled={reminderEnabled}
-          reminderTime={reminderTime}
-          onToggleReminder={setReminderEnabled}
-          onTimeChange={setReminderTime}
-        />
+      <ReminderSettings
+        reminderEnabled={reminderEnabled}
+        reminderTime={reminderTime}
+        onToggleReminder={setReminderEnabled}
+        onTimeChange={setReminderTime}
+      />
 
-        <CustomButton
-          title="Save Settings"
-          onPress={saveSettings}
-          style={styles.saveButton}
-        />
-      </View>
+      <CustomButton
+        title="Save Settings"
+        onPress={saveSettings}
+        style={styles.saveButton}
+      />
     </ScrollView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 20,
-  },
   saveButton: {
     marginTop: 20,
   },

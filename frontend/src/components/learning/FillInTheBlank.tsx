@@ -20,10 +20,6 @@ interface FillInTheBlankQuizProps {
   onAnswer: (isCorrect: boolean) => void;
 }
 
-interface QuizFormValues {
-  answer: string;
-}
-
 const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   sentenceText,
   questionText,
@@ -64,7 +60,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       .toLowerCase();
   };
 
-  const handleFormSubmit = (values: QuizFormValues) => {
+  const handleFormSubmit = (values: { answer: string }) => {
     const correct =
       normalizeAnswer(values.answer.trim()) ===
       normalizeAnswer(correctAnswerText.trim());
@@ -167,7 +163,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       )}
 
       {!isSubmitPressed && (
-        <Form<QuizFormValues>
+        <Form
           fields={quizFields}
           onSubmit={handleFormSubmit}
           submitButtonText="Submit"

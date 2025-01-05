@@ -1,10 +1,23 @@
-import React, { useState } from "react";
-import { View, Switch } from "react-native";
+import React, { useEffect } from "react";
+import {
+  View,
+  Animated,
+  LayoutAnimation,
+  Platform,
+  UIManager,
+} from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import CustomButton from "@components/ui/CustomButton";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { Subtitle, SectionText } from "@components/typography";
+import { Subtitle } from "@components/typography";
 import { StyleSheet } from "react-native";
+import { CustomDatePicker } from "@components/ui/CustomDatePicker";
+import { CustomSwitch } from "@components/ui/CustomSwitch";
+
+// Enable LayoutAnimation for Android
+if (Platform.OS === "android") {
+  if (UIManager.setLayoutAnimationEnabledExperimental) {
+    UIManager.setLayoutAnimationEnabledExperimental(true);
+  }
+}
 
 interface ReminderSettingsProps {
   reminderEnabled: boolean;
@@ -19,50 +32,41 @@ export const ReminderSettings: React.FC<ReminderSettingsProps> = ({
   onToggleReminder,
   onTimeChange,
 }) => {
-  const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const { colors } = useThemeStyles();
 
-  const handleConfirm = (selectedTime: Date) => {
-    const roundedTime = new Date(selectedTime);
-    roundedTime.setSeconds(0, 0);
-    onTimeChange(roundedTime);
-    setDatePickerVisibility(false);
-  };
+  useEffect(() => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+  }, [reminderEnabled]);
 
   return (
     <View style={styles.section}>
       <Subtitle>Daily Reminder</Subtitle>
 
       <View style={styles.setting}>
-        <SectionText>Enable Daily Reminder</SectionText>
-        <Switch value={reminderEnabled} onValueChange={onToggleReminder} />
+        <CustomSwitch
+          value={reminderEnabled}
+          onValueChange={(value) => {
+            LayoutAnimation.configureNext(
+              LayoutAnimation.Presets.easeInEaseOut
+            );
+            onToggleReminder(value);
+          }}
+          label="Enable Daily Reminder"
+        />
       </View>
 
-      {reminderEnabled && reminderTime && (
-        <View style={[styles.timeContainer, { backgroundColor: colors.card }]}>
-          <SectionText contrast>Reminder Time</SectionText>
-          <Subtitle contrast>
-            {reminderTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-            })}
-          </Subtitle>
-          <CustomButton
-            title="Choose Another Time"
-            onPress={() => setDatePickerVisibility(true)}
-            style={{ backgroundColor: colors.secondary }}
+      {reminderEnabled && (
+        <Animated.View
+          style={[styles.timeContainer, { backgroundColor: colors.card }]}
+        >
+          <CustomDatePicker
+            value={reminderTime || new Date()}
+            onChange={onTimeChange}
+            label="Reminder Time"
+            mode="time"
           />
-        </View>
+        </Animated.View>
       )}
-
-      <DateTimePickerModal
-        isVisible={isDatePickerVisible}
-        mode="time"
-        onConfirm={handleConfirm}
-        onCancel={() => setDatePickerVisibility(false)}
-        isDarkModeEnabled={false}
-        textColor="black"
-      />
     </View>
   );
 };
@@ -77,9 +81,6 @@ const styles = StyleSheet.create({
     marginVertical: 20,
   },
   setting: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     marginVertical: 15,
   },
   timeContainer: {
@@ -87,5 +88,6 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginTop: 20,
     alignItems: "center",
+    overflow: "hidden",
   },
 });

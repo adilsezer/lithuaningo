@@ -16,12 +16,14 @@ const changePasswordFields: FormField[] = [
     label: "Current Password",
     type: "password",
     rules: { required: "Current password is required" },
+    placeholder: "Current Password",
   },
   {
     name: "newPassword",
     label: "New Password",
     type: "password",
     rules: FORM_RULES.password,
+    placeholder: "New Password",
   },
   {
     name: "confirmPassword",
@@ -32,6 +34,7 @@ const changePasswordFields: FormField[] = [
       validate: (value, formValues) =>
         value === formValues.newPassword || "Passwords don't match",
     },
+    placeholder: "Confirm New Password",
   },
 ];
 

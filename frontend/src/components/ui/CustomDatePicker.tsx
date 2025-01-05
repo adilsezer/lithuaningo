@@ -58,7 +58,12 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
           { borderColor: error ? colors.error : colors.border },
         ]}
       >
-        <Text style={[styles.value, { color: colors.text }]}>
+        <Text
+          style={[
+            styles.value,
+            { color: colors.primary, textAlign: "center", fontSize: 24 },
+          ]}
+        >
           {formatDate(value)}
         </Text>
       </Pressable>

@@ -24,7 +24,11 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
       <TextInput
         style={[
           styles.input,
-          { backgroundColor: colors.card },
+          {
+            backgroundColor: colors.inputBackground,
+            borderWidth: 0.5,
+            borderColor: colors.border,
+          },
           error && styles.inputError,
           style,
         ]}
@@ -43,10 +47,11 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   input: {
-    height: 48,
+    height: 60,
     borderRadius: 8,
     paddingHorizontal: 16,
     fontSize: 16,
+    textAlign: "center",
   },
   inputError: {
     borderWidth: 1,
