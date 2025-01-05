@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Image, Dimensions, Platform } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import CustomButton from "@components/ui/CustomButton";
-import CustomTextInput from "@components/ui/CustomTextInput";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
 import { SectionTitle, Subtitle, Instruction } from "@components/typography";
+import { Form } from "@components/form/Form";
+import type { FormField } from "@components/form/form.types";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -20,6 +20,10 @@ interface FillInTheBlankQuizProps {
   onAnswer: (isCorrect: boolean) => void;
 }
 
+interface QuizFormValues {
+  answer: string;
+}
+
 const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   sentenceText,
   questionText,
@@ -31,14 +35,14 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   onAnswer,
 }) => {
   const { colors } = useThemeStyles();
-  const [inputText, setInputText] = useState<string>("");
   const [isSubmitPressed, setIsSubmitPressed] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [submittedAnswer, setSubmittedAnswer] = useState<string>("");
 
   useEffect(() => {
-    setInputText("");
     setIsSubmitPressed(false);
     setIsCorrect(null);
+    setSubmittedAnswer("");
   }, [questionIndex]);
 
   const normalizeAnswer = (answer: string): string => {
@@ -60,11 +64,12 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       .toLowerCase();
   };
 
-  const handleFormSubmit = () => {
+  const handleFormSubmit = (values: QuizFormValues) => {
     const correct =
-      normalizeAnswer(inputText.trim()) ===
+      normalizeAnswer(values.answer.trim()) ===
       normalizeAnswer(correctAnswerText.trim());
     setIsCorrect(correct);
+    setSubmittedAnswer(values.answer);
     onAnswer(correct);
     setIsSubmitPressed(true);
   };
@@ -80,6 +85,16 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
 
     return sentenceText.replace("[...]", adjustedAnswer);
   };
+
+  const quizFields: FormField[] = [
+    {
+      name: "answer",
+      type: "text",
+      label: "Answer",
+      placeholder: "Type your answer here",
+      rules: { required: "Please enter your answer" },
+    },
+  ];
 
   return (
     <View>
@@ -127,7 +142,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
           <Subtitle>
             You answered:{" "}
             <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
-              {inputText}
+              {submittedAnswer}
             </Subtitle>
           </Subtitle>
           <Subtitle>
@@ -152,21 +167,12 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       )}
 
       {!isSubmitPressed && (
-        <View>
-          <CustomTextInput
-            style={[{ textAlign: "center" }]}
-            placeholder="Type your answer here"
-            placeholderTextColor={colors.placeholder}
-            value={inputText}
-            onChangeText={(text) => setInputText(text)}
-            editable={isCorrect === null}
-          />
-          <CustomButton
-            title="Submit"
-            onPress={handleFormSubmit}
-            disabled={isCorrect !== null}
-          />
-        </View>
+        <Form<QuizFormValues>
+          fields={quizFields}
+          onSubmit={handleFormSubmit}
+          submitButtonText="Submit"
+          style={styles.form}
+        />
       )}
     </View>
   );
@@ -199,6 +205,9 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 2,
     marginVertical: 14,
+  },
+  form: {
+    paddingHorizontal: 0,
   },
 });
 

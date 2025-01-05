@@ -6,9 +6,14 @@ import { useAppSelector } from "@redux/hooks";
 import { selectIsLoading } from "@redux/slices/uiSlice";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle, Instruction } from "@components/typography";
-import { Form, FormField } from "@components/forms/Form";
+import { Form } from "@components/form/Form";
+import type { FormField } from "@components/form/form.types";
 import auth from "@react-native-firebase/auth";
 import { AlertDialog } from "@components/ui/AlertDialog";
+
+interface DeleteAccountForm {
+  password: string;
+}
 
 const deleteAccountFields: FormField[] = [
   {
@@ -27,7 +32,7 @@ const DeleteAccountScreen: React.FC = () => {
     (provider) => provider.providerId === "password"
   );
 
-  const handleDeleteAccount = async (values: Record<string, string>) => {
+  const handleDeleteAccount = async (values: DeleteAccountForm) => {
     AlertDialog.confirm({
       title: "Confirm Deletion",
       message:
@@ -59,12 +64,12 @@ const DeleteAccountScreen: React.FC = () => {
       </Instruction>
 
       {isPasswordProvider ? (
-        <Form
+        <Form<DeleteAccountForm>
           fields={deleteAccountFields}
           onSubmit={handleDeleteAccount}
           submitButtonText="Delete Account"
           isLoading={loading}
-          mode="onChange"
+          options={{ mode: "onBlur" }}
         />
       ) : (
         <Instruction>

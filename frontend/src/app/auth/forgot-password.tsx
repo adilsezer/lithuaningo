@@ -6,8 +6,18 @@ import { selectIsLoading } from "@redux/slices/uiSlice";
 import BackButton from "@components/layout/BackButton";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle, Instruction } from "@components/typography";
-import { Form } from "@components/forms/Form";
+import { Form } from "@components/form/Form";
+import type { FormField } from "@components/form/form.types";
 import { FORM_RULES } from "@utils/formValidation";
+
+const forgotPasswordFields: FormField[] = [
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    rules: FORM_RULES.email,
+  },
+];
 
 const ForgotPasswordScreen: React.FC = () => {
   const loading = useAppSelector(selectIsLoading);
@@ -25,22 +35,14 @@ const ForgotPasswordScreen: React.FC = () => {
         Enter your email and we will send you a link to reset your password.
       </Instruction>
 
-      <Form<{ email: string }>
-        fields={[
-          {
-            name: "email",
-            label: "Email",
-            type: "email",
-            rules: FORM_RULES.email,
-          },
-        ]}
+      <Form
+        fields={forgotPasswordFields}
         onSubmit={async (data) => {
           await resetPassword(data.email);
         }}
-        submitButtonText="Send Reset Link"
+        submitButtonText="Reset Password"
         isLoading={loading}
         options={{ mode: "onBlur" }}
-        defaultValues={{ email: "" }}
       />
     </ScrollView>
   );

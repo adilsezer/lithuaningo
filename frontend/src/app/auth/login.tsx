@@ -9,12 +9,34 @@ import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import Divider from "@components/ui/Divider";
-import { Form } from "@components/forms/Form";
+import { Form } from "@components/form/Form";
+import type { FormField } from "@components/form/form.types";
 import { FORM_RULES } from "@utils/formValidation";
+import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useNavigation } from "@react-navigation/native";
+
+const loginFields: FormField[] = [
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    placeholder: "Email",
+    rules: FORM_RULES.email,
+  },
+  {
+    name: "password",
+    label: "Password",
+    type: "password",
+    placeholder: "Password",
+    rules: { required: "Password is required" },
+  },
+];
 
 const LoginScreen: React.FC = () => {
   const loading = useAppSelector(selectIsLoading);
+  const { colors } = useThemeStyles();
   const { signIn, signInWithSocial } = useAuth();
+  const navigation = useNavigation();
 
   useEffect(() => {
     crashlytics().log("Login screen loaded.");
@@ -25,28 +47,14 @@ const LoginScreen: React.FC = () => {
       <BackButton />
       <SectionTitle>Welcome Back</SectionTitle>
 
-      <Form<{ email: string; password: string }>
-        fields={[
-          {
-            name: "email",
-            label: "Email",
-            type: "email",
-            rules: FORM_RULES.email,
-          },
-          {
-            name: "password",
-            label: "Password",
-            type: "password",
-            rules: { required: "Password is required" },
-          },
-        ]}
+      <Form
+        fields={loginFields}
         onSubmit={async (data) => {
           await signIn(data.email, data.password);
         }}
-        submitButtonText="Log In with Email"
+        submitButtonText="Sign In"
         isLoading={loading}
         options={{ mode: "onBlur" }}
-        defaultValues={{ email: "", password: "" }}
       />
 
       <NavigationLink text="Forgot Password?" path="/auth/forgot-password" />

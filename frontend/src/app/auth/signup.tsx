@@ -10,15 +10,40 @@ import AppleSignInButton from "@components/auth/AppleSignInButton";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { Form } from "@components/forms/Form";
+import { Form } from "@components/form/Form";
 import { FORM_RULES } from "@utils/formValidation";
+import type { FormField } from "@components/form/form.types";
 
-type SignUpForm = {
-  displayName: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-};
+const signupFields: FormField[] = [
+  {
+    name: "displayName",
+    label: "Name",
+    type: "text",
+    rules: FORM_RULES.name,
+  },
+  {
+    name: "email",
+    label: "Email",
+    type: "email",
+    rules: FORM_RULES.email,
+  },
+  {
+    name: "password",
+    label: "Password",
+    type: "password",
+    rules: FORM_RULES.password,
+  },
+  {
+    name: "confirmPassword",
+    label: "Confirm Password",
+    type: "password",
+    rules: {
+      required: "Please confirm your password",
+      validate: (value, formValues) =>
+        value === formValues.password || "Passwords don't match",
+    },
+  },
+];
 
 const SignUpScreen: React.FC = () => {
   const loading = useAppSelector(selectIsLoading);
@@ -34,49 +59,14 @@ const SignUpScreen: React.FC = () => {
       <BackButton />
       <SectionTitle>Create Account</SectionTitle>
 
-      <Form<SignUpForm>
-        fields={[
-          {
-            name: "displayName",
-            label: "Name",
-            type: "text",
-            rules: FORM_RULES.name,
-          },
-          {
-            name: "email",
-            label: "Email",
-            type: "email",
-            rules: FORM_RULES.email,
-          },
-          {
-            name: "password",
-            label: "Password",
-            type: "password",
-            rules: FORM_RULES.password,
-          },
-          {
-            name: "confirmPassword",
-            label: "Confirm Password",
-            type: "password",
-            rules: {
-              required: "Please confirm your password",
-              validate: (value, formValues) =>
-                value === formValues.password || "Passwords don't match",
-            },
-          },
-        ]}
+      <Form
+        fields={signupFields}
         onSubmit={async (data) => {
           await signUp(data.email, data.password, data.displayName);
         }}
         submitButtonText="Sign Up"
         isLoading={loading}
-        options={{ mode: "onChange" }}
-        defaultValues={{
-          displayName: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-        }}
+        options={{ mode: "onBlur" }}
       />
 
       <Divider content="Or" />

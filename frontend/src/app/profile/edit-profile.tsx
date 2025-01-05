@@ -6,28 +6,27 @@ import { useAppSelector } from "@redux/hooks";
 import { selectIsLoading } from "@redux/slices/uiSlice";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
-import { Form, FormField } from "@components/forms/Form";
+import { Form } from "@components/form/Form";
+import type { FormField } from "@components/form/form.types";
 import { FORM_RULES } from "@utils/formValidation";
 import auth from "@react-native-firebase/auth";
 
-interface EditProfileForm {
-  displayName: string;
-  email: string;
-  currentPassword: string;
-}
-
-const editProfileFields: FormField[] = [
+const getEditProfileFields = (
+  user: ReturnType<typeof auth>["currentUser"]
+): FormField[] => [
   {
     name: "displayName",
     label: "Display Name",
     type: "text",
     rules: FORM_RULES.name,
+    defaultValue: user?.displayName || "",
   },
   {
     name: "email",
     label: "Email",
     type: "email",
     rules: FORM_RULES.email,
+    defaultValue: user?.email || "",
   },
   {
     name: "currentPassword",
@@ -46,28 +45,22 @@ const EditProfileScreen: React.FC = () => {
     crashlytics().log("Edit profile screen loaded.");
   }, []);
 
-  const defaultValues = {
-    displayName: user?.displayName || "",
-    email: user?.email || "",
-  };
-
   return (
     <ScrollView>
       <BackButton />
       <SectionTitle>Edit Profile</SectionTitle>
 
-      <Form<EditProfileForm>
-        fields={editProfileFields}
-        onSubmit={async (values) => {
-          await updateProfile(values.currentPassword, {
-            displayName: values.displayName,
-            email: values.email,
+      <Form
+        fields={getEditProfileFields(user)}
+        onSubmit={async (data) => {
+          await updateProfile(data.currentPassword, {
+            displayName: data.displayName,
+            email: data.email,
           });
         }}
         submitButtonText="Save Changes"
         isLoading={loading}
-        mode="onBlur"
-        defaultValues={defaultValues}
+        options={{ mode: "onBlur" }}
       />
     </ScrollView>
   );
