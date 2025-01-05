@@ -8,12 +8,12 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { SectionText } from "@components/typography";
+import { SectionText, SectionTitle, Subtitle } from "@components/typography";
 import { Ionicons } from "@expo/vector-icons";
-import { WordOfTheDay } from "@src/types";
+import { DashboardWord } from "@src/types";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 
-type WordContentProps = WordOfTheDay & { isDarkMode: boolean };
+type WordContentProps = DashboardWord & { isDarkMode: boolean };
 
 const WordContent = ({
   lemma,
@@ -25,7 +25,6 @@ const WordContent = ({
 }: WordContentProps) => {
   const { colors } = useThemeStyles();
   const textStyle = { color: colors.cardText };
-  const subtitleStyle = { color: colors.cardSubtitle };
 
   return (
     <View style={styles.content}>
@@ -34,22 +33,16 @@ const WordContent = ({
           {lemma}
         </SectionText>
         <SectionText
-          style={[styles.subtitle, subtitleStyle]}
+          style={[styles.subtitle, { color: colors.cardSubtitle }]}
           contrast={isDarkMode}
         >
-          ({partOfSpeech})
-        </SectionText>
-        <SectionText
-          style={[styles.subtitle, subtitleStyle]}
-          contrast={isDarkMode}
-        >
-          {ipa}
+          ({partOfSpeech}) • {ipa}
         </SectionText>
       </View>
 
-      <View style={styles.centered}>
+      <View style={styles.textBlock}>
         <SectionText
-          style={[styles.subtitle, subtitleStyle]}
+          style={[styles.label, { color: colors.cardSubtitle }]}
           contrast={isDarkMode}
         >
           Meaning:
@@ -59,9 +52,9 @@ const WordContent = ({
         </SectionText>
       </View>
 
-      <View style={styles.centered}>
+      <View style={styles.textBlock}>
         <SectionText
-          style={[styles.subtitle, subtitleStyle]}
+          style={[styles.label, { color: colors.cardSubtitle }]}
           contrast={isDarkMode}
         >
           Example:
@@ -74,22 +67,19 @@ const WordContent = ({
   );
 };
 
-export const WordOfTheDayCard = ({
+export const ExpandYourVocabularyCard = ({
   words,
   loading,
   isDarkMode,
 }: {
-  words: WordOfTheDay[];
+  words: DashboardWord[];
   loading: boolean;
   isDarkMode: boolean;
 }) => {
-  const { width: windowWidth } = useWindowDimensions();
   const [activeIndex, setActiveIndex] = useState(0);
   const fadeAnim = useState(new Animated.Value(1))[0];
   const slideAnim = useState(new Animated.Value(0))[0];
   const { colors } = useThemeStyles();
-
-  const cardWidth = windowWidth - 48;
 
   const navigateToCard = (direction: "next" | "prev") => {
     const isNext = direction === "next";
@@ -139,12 +129,32 @@ export const WordOfTheDayCard = ({
 
   return (
     <View style={styles.container}>
-      <SectionText
-        style={[styles.headerTitle, { color: colors.text }]}
-        contrast={isDarkMode}
-      >
-        Expand Your Vocabulary
-      </SectionText>
+      <Subtitle>Expand Your Vocabulary</Subtitle>
+      <View style={styles.footer}>
+        <View style={styles.pagination}>
+          {words.map((_, index) => (
+            <View
+              key={index}
+              style={[
+                styles.dot,
+                {
+                  backgroundColor:
+                    activeIndex === index ? colors.primary : colors.inactive,
+                  width: activeIndex === index ? 20 : 8,
+                },
+              ]}
+            />
+          ))}
+        </View>
+        {!loading && words.length > 0 && (
+          <SectionText
+            style={[styles.counter, { color: colors.lightText }]}
+            contrast={isDarkMode}
+          >
+            {activeIndex + 1} of {words.length} words
+          </SectionText>
+        )}
+      </View>
 
       <View style={styles.cardWrapper}>
         <Animated.View
@@ -152,7 +162,6 @@ export const WordOfTheDayCard = ({
             styles.card,
             {
               backgroundColor: colors.secondary,
-              width: cardWidth,
               opacity: fadeAnim,
               transform: [{ translateX: slideAnim }],
             },
@@ -201,48 +210,13 @@ export const WordOfTheDayCard = ({
           </TouchableOpacity>
         )}
       </View>
-
-      <View style={styles.footer}>
-        <View style={styles.pagination}>
-          {words.map((_, index) => (
-            <View
-              key={index}
-              style={[
-                styles.dot,
-                {
-                  backgroundColor:
-                    activeIndex === index ? colors.primary : colors.inactive,
-                  width: activeIndex === index ? 20 : 8,
-                },
-              ]}
-            />
-          ))}
-        </View>
-        {!loading && words.length > 0 && (
-          <SectionText
-            style={[styles.counter, { color: colors.lightText }]}
-            contrast={isDarkMode}
-          >
-            {activeIndex + 1} of {words.length}
-          </SectionText>
-        )}
-      </View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    marginVertical: 28,
-    paddingHorizontal: 12,
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: "600",
-  },
-  counter: {
-    fontSize: 14,
-    marginLeft: 12,
+    marginTop: 20,
   },
   cardWrapper: {
     position: "relative",
@@ -250,34 +224,42 @@ const styles = StyleSheet.create({
   },
   card: {
     borderRadius: 12,
-    padding: 20,
-    marginVertical: 10,
-    borderWidth: Platform.select({ ios: 0.2, android: 0.5 }),
+    width: "100%",
+    padding: 16,
+    marginTop: 10,
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
+        shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.1,
-        shadowRadius: 4,
+        shadowRadius: 3,
       },
       android: {
-        elevation: 3,
+        elevation: 2,
       },
     }),
   },
   content: {
-    gap: 12,
+    gap: 16,
   },
   centered: {
     alignItems: "center",
   },
+  textBlock: {
+    alignItems: "center",
+    gap: 4,
+  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
+    marginBottom: 4,
   },
   subtitle: {
     fontSize: 14,
-    marginVertical: 4,
+  },
+  label: {
+    fontSize: 14,
+    fontWeight: "500",
   },
   example: {
     fontStyle: "italic",
@@ -287,46 +269,49 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: 12,
+    marginTop: 8,
   },
   pagination: {
     flexDirection: "row",
     alignItems: "center",
   },
   dot: {
-    height: 8,
-    borderRadius: 4,
-    marginHorizontal: 4,
+    height: 6,
+    borderRadius: 3,
+    marginHorizontal: 3,
   },
   navButton: {
     position: "absolute",
     top: "50%",
-    transform: [{ translateY: -25 }],
+    transform: [{ translateY: -20 }],
     zIndex: 1,
-    padding: 5,
   },
   navButtonInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     justifyContent: "center",
     alignItems: "center",
     ...Platform.select({
       ios: {
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
       },
       android: {
-        elevation: 5,
+        elevation: 3,
       },
     }),
   },
   leftButton: {
-    left: -12,
+    left: 16,
   },
   rightButton: {
-    right: -12,
+    right: 16,
+  },
+  counter: {
+    marginLeft: 8,
+    fontSize: 12,
   },
 });

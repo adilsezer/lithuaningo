@@ -1,7 +1,13 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Quiz.Interfaces;
 using Lithuaningo.API.Utilities;
-using Services.Quiz.Interfaces;
 
-namespace Services.Quiz.Generators;
+namespace Lithuaningo.API.Services.Quiz.Generators;
 
 public abstract class BaseQuestionGenerator : IQuestionGenerator
 {
@@ -14,10 +20,7 @@ public abstract class BaseQuestionGenerator : IQuestionGenerator
         RandomGenerator = randomGenerator;
     }
 
-    public abstract Task<QuizQuestion> GenerateQuestion(
-        Sentence sentence,
-        string userId,
-        Dictionary<string, WordForm> wordFormsCache);
+    public abstract Task<QuizQuestion> GenerateQuestion(Sentence sentence, string userId, Dictionary<string, WordForm> wordFormsCache);
 
     protected WordForm GetRandomValidWord(string sentence, Dictionary<string, WordForm> wordFormsCache, string? excludeWord = null)
     {

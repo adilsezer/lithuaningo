@@ -1,5 +1,5 @@
 import apiClient from "@services/api/apiClient";
-import { WordForm, Lemma, WordOfTheDay } from "@src/types";
+import { WordForm, Lemma, DashboardWord } from "@src/types";
 
 const getWordForm = async (word: string): Promise<WordForm | null> => {
   try {
@@ -19,7 +19,7 @@ const getLemma = async (lemma: string): Promise<Lemma | null> => {
   }
 };
 
-const getRandomWords = async (count: number = 5): Promise<WordOfTheDay[]> => {
+const getRandomWords = async (count: number = 5): Promise<DashboardWord[]> => {
   try {
     return await apiClient.getRandomWords(count);
   } catch (error) {

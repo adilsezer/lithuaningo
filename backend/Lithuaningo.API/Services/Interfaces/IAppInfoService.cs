@@ -1,3 +1,5 @@
+using Lithuaningo.API.Models;
+using System.Threading.Tasks;
 
 namespace Lithuaningo.API.Services.Interfaces;
 

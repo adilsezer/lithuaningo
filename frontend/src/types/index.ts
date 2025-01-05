@@ -7,4 +7,4 @@ export type { QuizQuestion } from "./QuizQuestion";
 export type { Sentence } from "./Sentence";
 export type { UserProfile } from "./UserProfile";
 export type { WordForm } from "./WordForm";
-export type { WordOfTheDay } from "./WordOfTheDay";
+export type { DashboardWord } from "./DashboardWord";

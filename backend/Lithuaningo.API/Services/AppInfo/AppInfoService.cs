@@ -1,5 +1,8 @@
 using Google.Cloud.Firestore;
+using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
+using System;
+using System.Threading.Tasks;
 
 namespace Lithuaningo.API.Services;
 
@@ -26,20 +29,6 @@ public class AppInfoService : IAppInfoService
         {
             var docRef = _db.Collection(COLLECTION_NAME).Document(platform);
             var snapshot = await docRef.GetSnapshotAsync();
-
-            if (!snapshot.Exists)
-            {
-                // Return default app info if none exists
-                return new AppInfo
-                {
-                    Id = platform,
-                    LatestVersion = "1.0.0",
-                    MandatoryUpdate = false,
-                    UpdateUrl = string.Empty,
-                    IsUnderMaintenance = false
-                };
-            }
-
             return snapshot.ConvertTo<AppInfo>();
         }
         catch (Exception ex)

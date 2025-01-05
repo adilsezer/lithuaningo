@@ -1,5 +1,7 @@
 using Google.Cloud.Firestore;
 
+namespace Lithuaningo.API.Models;
+
 [FirestoreData]
 public class AppInfo
 {

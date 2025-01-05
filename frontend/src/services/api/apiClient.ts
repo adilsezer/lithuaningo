@@ -10,7 +10,7 @@ import {
   Announcement,
   AppInfo,
   LeaderboardEntry,
-  WordOfTheDay,
+  DashboardWord,
 } from "@src/types";
 
 export class ApiError extends Error {
@@ -185,7 +185,7 @@ class ApiClient {
   }
 
   async getRandomWords(count: number = 5) {
-    return this.request<WordOfTheDay[]>(`/word/random`, {
+    return this.request<DashboardWord[]>(`/word/random`, {
       params: { count },
     });
   }

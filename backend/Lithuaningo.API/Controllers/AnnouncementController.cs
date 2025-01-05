@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Services.Announcements;
+using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Models;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 

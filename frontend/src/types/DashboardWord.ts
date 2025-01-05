@@ -1,4 +1,4 @@
-export interface WordOfTheDay {
+export interface DashboardWord {
   lemma: string;
   partOfSpeech: string;
   ipa: string;

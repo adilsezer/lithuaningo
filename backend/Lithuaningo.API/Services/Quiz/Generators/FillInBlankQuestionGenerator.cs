@@ -1,4 +1,9 @@
-namespace Services.Quiz.Generators;
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
+using Services.Quiz.Interfaces;
+using System.Threading.Tasks;
+
+namespace Lithuaningo.API.Services.Quiz.Generators;
 
 public class FillInBlankQuestionGenerator : BaseQuestionGenerator
 {

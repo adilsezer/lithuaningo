@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lithuaningo.API.Models;
 
-namespace Services.Quiz.Interfaces;
+namespace Lithuaningo.API.Services.Quiz.Interfaces;
 
 public interface IQuestionGenerator
 {
@@ -17,4 +17,4 @@ public interface IQuestionGenerator
         Sentence sentence,
         string userId,
         Dictionary<string, WordForm> wordFormsCache);
-}
+} 

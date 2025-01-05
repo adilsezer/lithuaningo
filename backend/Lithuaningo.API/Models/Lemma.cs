@@ -1,4 +1,7 @@
 using Google.Cloud.Firestore;
+using System.Collections.Generic;
+
+namespace Lithuaningo.API.Models;
 
 [FirestoreData]
 public class Lemma

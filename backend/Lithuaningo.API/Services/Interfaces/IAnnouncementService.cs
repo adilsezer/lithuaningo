@@ -1,4 +1,8 @@
-namespace Services.Announcements;
+using Lithuaningo.API.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Lithuaningo.API.Services.Interfaces;
 
 public interface IAnnouncementService
 {

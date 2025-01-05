@@ -1,6 +1,10 @@
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Utilities;
+using Services.Quiz.Interfaces;
+using System.Threading.Tasks;
 
-namespace Services.Quiz.Generators;
+namespace Lithuaningo.API.Services.Quiz.Generators;
 
 public class ReorderWordsQuestionGenerator : BaseQuestionGenerator
 {

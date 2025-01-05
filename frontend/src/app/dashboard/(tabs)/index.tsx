@@ -11,10 +11,10 @@ import { SectionTitle, SectionText } from "@components/typography";
 import Divider from "@components/ui/Divider";
 import { useTheme } from "@src/context/ThemeContext";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
-import { LearningProgressCard } from "@components/dashboard/LearningProgressCard";
-import { WordOfTheDayCard } from "@components/dashboard/WordOfTheDayCard";
+import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
+import { ExpandYourVocabularyCard } from "@components/dashboard/ExpandYourVocabularyCard";
 import wordService from "@services/data/wordService";
-import { WordOfTheDay } from "@src/types";
+import { DashboardWord } from "@src/types";
 
 const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
@@ -22,7 +22,7 @@ const DashboardScreen: React.FC = () => {
   const announcements = useAnnouncements();
   const { profile } = useUserProfile();
   const { isDarkMode } = useTheme();
-  const [wordsData, setWordsData] = useState<WordOfTheDay[]>([]);
+  const [wordsData, setWordsData] = useState<DashboardWord[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -50,24 +50,24 @@ const DashboardScreen: React.FC = () => {
           />
         )}
 
-        <LearningProgressCard
+        <DailyChallengeCard
           answeredQuestions={profile?.todayAnsweredQuestions ?? 0}
           correctAnswers={profile?.todayCorrectAnsweredQuestions ?? 0}
           colors={colors}
         />
+        <CustomButton
+          title="Start Daily Challenge"
+          onPress={() => router.push("/dashboard/challenge")}
+        />
 
-        <WordOfTheDayCard
+        <ExpandYourVocabularyCard
           words={wordsData}
           loading={isLoading}
           isDarkMode={isDarkMode}
         />
-
-        <Divider style={{ marginVertical: 16 }} />
-
-        <SectionText>Want to learn more?</SectionText>
         <CustomButton
-          title="Start Learning"
-          onPress={() => router.push("/dashboard/learn")}
+          title="Expand Your Vocabulary"
+          onPress={() => router.push("/dashboard/decks")}
         />
       </View>
     </ScrollView>

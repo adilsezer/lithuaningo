@@ -1,5 +1,11 @@
 using Google.Cloud.Firestore;
-using Services.Announcements;
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Lithuaningo.API.Services;
 
 public class AnnouncementService : IAnnouncementService
 {

@@ -1,45 +1,53 @@
 using Microsoft.AspNetCore.Mvc;
+using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Models;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-[ApiController]
-[Route("api/[controller]")]
-public class WordController : ControllerBase
+namespace Lithuaningo.API.Controllers
 {
-    private readonly IWordService _wordService;
-
-    public WordController(IWordService wordService)
+    [ApiController]
+    [Route("api/[controller]")]
+    public class WordController : ControllerBase
     {
-        _wordService = wordService ?? throw new ArgumentNullException(nameof(wordService));
-    }
+        private readonly IWordService _wordService;
 
-    [HttpGet("{word}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WordForm))]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<WordForm>> GetWordForms(string word)
-    {
-        var result = await _wordService.GetWordForm(word);
-        if (result == null)
-            return NotFound();
+        public WordController(IWordService wordService)
+        {
+            _wordService = wordService ?? throw new ArgumentNullException(nameof(wordService));
+        }
 
-        return Ok(result);
-    }
+        [HttpGet("{word}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WordForm))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<WordForm>> GetWordForms(string word)
+        {
+            var result = await _wordService.GetWordForm(word);
+            if (result == null)
+                return NotFound();
 
-    [HttpGet("lemma/{lemma}")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WordForm))]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<WordForm>> GetLemma(string lemma)
-    {
-        var result = await _wordService.GetLemma(lemma);
-        if (result == null)
-            return NotFound();
+            return Ok(result);
+        }
 
-        return Ok(result);
-    }
+        [HttpGet("lemma/{lemma}")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(WordForm))]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<ActionResult<WordForm>> GetLemma(string lemma)
+        {
+            var result = await _wordService.GetLemma(lemma);
+            if (result == null)
+                return NotFound();
 
-    [HttpGet("random")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<WordOfTheDay>))]
-    public async Task<ActionResult<List<WordOfTheDay>>> GetRandomWordsOfTheDay([FromQuery] int count = 5)
-    {
-        var result = await _wordService.GetRandomWordsOfTheDay(count);
-        return Ok(result);
+            return Ok(result);
+        }
+
+        [HttpGet("random")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DashboardWord>))]
+        public async Task<ActionResult<List<DashboardWord>>> GetRandomWordsOfTheDay([FromQuery] int count = 5)
+        {
+            var result = await _wordService.GetRandomWordsOfTheDay(count);
+            return Ok(result);
+        }
     }
 }

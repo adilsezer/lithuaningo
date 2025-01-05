@@ -85,4 +85,25 @@ public class UserService : IUserService
             .Document(userId)
             .DeleteAsync();
     }
+
+    public async Task<List<UserProfile>> GetDailyLeaderboardAsync(int limit = 10)
+    {
+        try
+        {
+            var snapshot = await _db.Collection("userProfiles")
+                .WhereGreaterThan("TodayAnsweredQuestions", 0)
+                .OrderByDescending("TodayCorrectAnsweredQuestions")
+                .Limit(limit)
+                .GetSnapshotAsync();
+
+            return snapshot.Documents
+                .Select(d => d.ConvertTo<UserProfile>())
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error getting daily leaderboard: {ex.Message}");
+            throw;
+        }
+    }
 }

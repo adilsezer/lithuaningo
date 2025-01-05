@@ -1,6 +1,10 @@
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Quiz.Factory;
+using Lithuaningo.API.Services.Quiz.Interfaces;
 using Lithuaningo.API.Utilities;
-using Services.Quiz;
-using Services.Quiz.Interfaces;
+
+namespace Lithuaningo.API.Services.Quiz;
 
 public class QuizService : IQuizService
 {

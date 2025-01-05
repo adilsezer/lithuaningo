@@ -4,8 +4,10 @@ using Google.Cloud.Firestore;
 using Lithuaningo.API.Controllers;
 using Lithuaningo.API.Services;
 using Lithuaningo.API.Services.Interfaces;
-using Services.Announcements;
-using Services.Quiz.Interfaces;
+using Lithuaningo.API.Services.Quiz;
+using Lithuaningo.API.Services.Quiz.Factory;
+using Lithuaningo.API.Services.Quiz.Interfaces;
+using Lithuaningo.API.Settings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -85,7 +87,9 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<IWordService, WordService>();
     services.AddScoped<IAnnouncementService, AnnouncementService>();
     services.AddScoped<IAppInfoService, AppInfoService>();
-    services.AddScoped<ILeaderboardService, LeaderboardService>();
+    services.AddScoped<IDeckService, DeckService>();
+    services.AddScoped<IFlashcardService, FlashcardService>();
+    
 
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
@@ -113,7 +117,8 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
             .AddApplicationPart(typeof(QuizController).Assembly)
             .AddApplicationPart(typeof(AnnouncementController).Assembly)
             .AddApplicationPart(typeof(AppInfoController).Assembly)
-            .AddApplicationPart(typeof(LeaderboardController).Assembly);
+            .AddApplicationPart(typeof(DeckController).Assembly)
+            .AddApplicationPart(typeof(FlashcardController).Assembly);
 }
 
 void ConfigureMiddleware(WebApplication app)

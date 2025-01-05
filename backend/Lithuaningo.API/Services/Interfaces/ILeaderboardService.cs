@@ -1,8 +1,13 @@
-namespace Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Models;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
-public interface ILeaderboardService
+namespace Lithuaningo.API.Services.Interfaces
 {
-    Task AddLeaderboardEntryAsync(LeaderboardEntry entry);
-    Task<List<LeaderboardEntry>> GetLeaderboardEntriesAsync();
-    Task ResetLeaderboardAsync();
-}
+    public interface ILeaderboardService
+    {
+        Task<List<LeaderboardEntry>> GetLeaderboardAsync(int? limit = null);
+        Task AddLeaderboardEntryAsync(LeaderboardEntry entry);
+        Task ResetLeaderboardAsync();
+    }
+} 

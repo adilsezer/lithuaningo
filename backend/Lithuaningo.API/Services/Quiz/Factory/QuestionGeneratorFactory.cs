@@ -1,6 +1,9 @@
 using System;
-using Services.Quiz.Generators;
-using Services.Quiz.Interfaces;
+using Lithuaningo.API.Services.Quiz.Generators;
+using Lithuaningo.API.Services.Quiz.Interfaces;
+using Lithuaningo.API.Services.Interfaces;
+
+namespace Lithuaningo.API.Services.Quiz.Factory;
 
 public class QuestionGeneratorFactory : IQuestionGeneratorFactory
 {

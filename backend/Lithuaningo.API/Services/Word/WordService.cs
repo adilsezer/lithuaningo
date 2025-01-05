@@ -1,5 +1,12 @@
 using Google.Cloud.Firestore;
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Utilities;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+
+namespace Lithuaningo.API.Services;
 
 public class WordService : IWordService
 {
@@ -42,9 +49,9 @@ public class WordService : IWordService
         return null;
     }
 
-    public async Task<List<WordOfTheDay>> GetRandomWordsOfTheDay(int count)
+    public async Task<List<DashboardWord>> GetRandomWordsOfTheDay(int count)
     {
-        var words = new List<WordOfTheDay>();
+        var words = new List<DashboardWord>();
         var usedLemmaIds = new HashSet<string>();
 
         var sentenceSnapshot = await _db.Collection("sentences")
@@ -74,7 +81,7 @@ public class WordService : IWordService
                 if (lemma == null) continue;
 
                 usedLemmaIds.Add(wordForm.LemmaId);
-                words.Add(new WordOfTheDay
+                words.Add(new DashboardWord
                 {
                     Lemma = wordForm.LemmaId,
                     PartOfSpeech = lemma.PartOfSpeech,
