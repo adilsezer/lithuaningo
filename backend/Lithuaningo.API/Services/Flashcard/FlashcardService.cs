@@ -42,7 +42,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var snapshot = await _db.Collection(COLLECTION_NAME)
-                    .WhereEqualTo("CreatedBy", userId)
+                    .WhereEqualTo("createdBy", userId)
                     .GetSnapshotAsync();
 
                 return snapshot.Documents.Select(d => d.ConvertTo<Flashcard>()).ToList();
@@ -122,8 +122,8 @@ namespace Lithuaningo.API.Services
 
                 await docRef.UpdateAsync(new Dictionary<string, object>
                 {
-                    { "VotesUp", flashcard.VotesUp },
-                    { "VotesDown", flashcard.VotesDown }
+                    { "votesUp", flashcard.VotesUp },
+                    { "votesDown", flashcard.VotesDown }
                 });
 
                 return true;
@@ -139,13 +139,12 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                // Simple spaced repetition logic: cards not reviewed in the last 24 hours
                 var cutoffTime = DateTime.UtcNow.AddHours(-24);
 
                 var snapshot = await _db.Collection(COLLECTION_NAME)
-                    .WhereEqualTo("CreatedBy", userId)
-                    .WhereLessThan("LastReviewedAt", cutoffTime)
-                    .OrderBy("LastReviewedAt")
+                    .WhereEqualTo("createdBy", userId)
+                    .WhereLessThan("lastReviewedAt", cutoffTime)
+                    .OrderBy("lastReviewedAt")
                     .Limit(limit)
                     .GetSnapshotAsync();
 
@@ -175,9 +174,9 @@ namespace Lithuaningo.API.Services
 
                 await docRef.UpdateAsync(new Dictionary<string, object>
                 {
-                    { "ReviewCount", flashcard.ReviewCount },
-                    { "LastReviewedAt", flashcard.LastReviewedAt },
-                    { "CorrectRate", flashcard.CorrectRate }
+                    { "reviewCount", flashcard.ReviewCount },
+                    { "lastReviewedAt", flashcard.LastReviewedAt },
+                    { "correctRate", flashcard.CorrectRate }
                 });
             }
             catch (Exception ex)
@@ -191,16 +190,14 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                // Note: This is a simple implementation. For production, you might want to implement
-                // a more sophisticated random selection method
                 var snapshot = await _db.Collection(COLLECTION_NAME)
-                    .OrderBy("CreatedAt")
-                    .Limit(limit * 3)  // Get more than needed to allow for random selection
+                    .OrderBy("createdAt")
+                    .Limit(limit * 3)
                     .GetSnapshotAsync();
 
                 return snapshot.Documents
                     .Select(d => d.ConvertTo<Flashcard>())
-                    .OrderBy(x => Guid.NewGuid())  // Random ordering
+                    .OrderBy(x => Guid.NewGuid())
                     .Take(limit)
                     .ToList();
             }
@@ -237,11 +234,11 @@ namespace Lithuaningo.API.Services
             {
                 var report = new Dictionary<string, object>
                 {
-                    { "FlashcardId", id },
-                    { "ReportedBy", userId },
-                    { "Reason", reason },
-                    { "CreatedAt", DateTime.UtcNow },
-                    { "Status", "Pending" }
+                    { "flashcardId", id },
+                    { "reportedBy", userId },
+                    { "reason", reason },
+                    { "createdAt", DateTime.UtcNow },
+                    { "status", "pending" }
                 };
 
                 await _db.Collection(REPORTS_COLLECTION).AddAsync(report);

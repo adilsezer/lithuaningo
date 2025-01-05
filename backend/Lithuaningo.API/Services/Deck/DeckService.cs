@@ -21,11 +21,11 @@ public class DeckService : IDeckService
     {
         try
         {
-            var query = _db.Collection(COLLECTION_NAME).WhereEqualTo("IsPublic", true);
+            var query = _db.Collection(COLLECTION_NAME).WhereEqualTo("isPublic", true);
 
             if (!string.IsNullOrEmpty(category))
             {
-                query = query.WhereEqualTo("Category", category);
+                query = query.WhereEqualTo("category", category);
             }
 
             if (limit.HasValue)
@@ -67,7 +67,7 @@ public class DeckService : IDeckService
         try
         {
             var snapshot = await _db.Collection(COLLECTION_NAME)
-                .WhereEqualTo("CreatedBy", userId)
+                .WhereEqualTo("createdBy", userId)
                 .GetSnapshotAsync();
 
             return snapshot.Documents.Select(d => d.ConvertTo<Models.Deck>()).ToList();
@@ -84,8 +84,8 @@ public class DeckService : IDeckService
         try
         {
             var snapshot = await _db.Collection(COLLECTION_NAME)
-                .WhereEqualTo("IsPublic", true)
-                .OrderByDescending("Rating")
+                .WhereEqualTo("isPublic", true)
+                .OrderByDescending("rating")
                 .Limit(limit)
                 .GetSnapshotAsync();
 
@@ -132,9 +132,8 @@ public class DeckService : IDeckService
     {
         try
         {
-            // Delete all flashcards in the deck
             var flashcardsSnapshot = await _db.Collection("flashcards")
-                .WhereEqualTo("DeckId", id)
+                .WhereEqualTo("deckId", id)
                 .GetSnapshotAsync();
 
             var batch = _db.StartBatch();
@@ -143,7 +142,6 @@ public class DeckService : IDeckService
                 batch.Delete(doc.Reference);
             }
 
-            // Delete the deck
             batch.Delete(_db.Collection(COLLECTION_NAME).Document(id));
             await batch.CommitAsync();
         }
@@ -170,8 +168,8 @@ public class DeckService : IDeckService
 
             await docRef.UpdateAsync(new Dictionary<string, object>
             {
-                { "Rating", newRating },
-                { "VotesCount", votesCount }
+                { "rating", newRating },
+                { "votesCount", votesCount }
             });
 
             return true;
@@ -188,11 +186,11 @@ public class DeckService : IDeckService
         try
         {
             var baseQuery = _db.Collection(COLLECTION_NAME)
-                .WhereEqualTo("IsPublic", true);
+                .WhereEqualTo("isPublic", true);
 
             if (!string.IsNullOrEmpty(category))
             {
-                baseQuery = baseQuery.WhereEqualTo("Category", category);
+                baseQuery = baseQuery.WhereEqualTo("category", category);
             }
 
             var snapshot = await baseQuery.GetSnapshotAsync();
@@ -217,7 +215,7 @@ public class DeckService : IDeckService
         try
         {
             var snapshot = await _db.Collection("flashcards")
-                .WhereEqualTo("DeckId", deckId)
+                .WhereEqualTo("deckId", deckId)
                 .GetSnapshotAsync();
 
             return snapshot.Documents.Select(d => d.ConvertTo<Flashcard>()).ToList();
