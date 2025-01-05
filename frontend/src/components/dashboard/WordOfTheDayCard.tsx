@@ -24,8 +24,8 @@ const WordContent = ({
   isDarkMode,
 }: WordContentProps) => {
   const { colors } = useThemeStyles();
-  const textStyle = { color: colors.text };
-  const subtitleStyle = { color: colors.lightText };
+  const textStyle = { color: colors.cardText };
+  const subtitleStyle = { color: colors.cardSubtitle };
 
   return (
     <View style={styles.content}>
