@@ -14,27 +14,30 @@ const changePasswordFields: FormField[] = [
   {
     name: "currentPassword",
     label: "Current Password",
+    category: "text-input",
     type: "password",
-    rules: { required: "Current password is required" },
     placeholder: "Current Password",
+    validation: { required: true, message: "Current password is required" },
   },
   {
     name: "newPassword",
     label: "New Password",
+    category: "text-input",
     type: "password",
-    rules: FORM_RULES.password,
     placeholder: "New Password",
+    validation: FORM_RULES.password,
   },
   {
     name: "confirmPassword",
     label: "Confirm New Password",
+    category: "text-input",
     type: "password",
-    rules: {
-      required: "Please confirm your new password",
+    placeholder: "Confirm New Password",
+    validation: {
+      required: true,
       validate: (value, formValues) =>
         value === formValues.newPassword || "Passwords don't match",
     },
-    placeholder: "Confirm New Password",
   },
 ];
 

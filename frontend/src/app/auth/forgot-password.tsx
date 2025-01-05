@@ -14,9 +14,10 @@ const forgotPasswordFields: FormField[] = [
   {
     name: "email",
     label: "Email",
+    category: "text-input",
     type: "email",
-    rules: FORM_RULES.email,
     placeholder: "Email",
+    validation: FORM_RULES.email,
   },
 ];
 

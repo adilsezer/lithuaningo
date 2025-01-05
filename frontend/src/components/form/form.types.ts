@@ -1,5 +1,13 @@
 import { UseFormProps, FieldValues } from "react-hook-form";
-import { ViewStyle } from "react-native";
+import { KeyboardType, ViewStyle } from "react-native";
+
+export type FieldCategory =
+  | "text-input"
+  | "toggle"
+  | "selection"
+  | "range"
+  | "datetime"
+  | "media";
 
 export type FieldType =
   | "text"
@@ -13,44 +21,46 @@ export type FieldType =
   | "image";
 
 export type ValidationRule = {
-  required?: string | boolean;
-  pattern?: { value: RegExp; message: string };
-  minLength?: { value: number; message: string };
-  maxLength?: { value: number; message: string };
-  validate?: (value: any, formValues: any) => string | boolean | undefined;
-};
-
-export type BaseFieldProps = {
-  name: string;
-  label: string;
-  type: FieldType;
-  rules?: ValidationRule;
-  defaultValue?: any;
-};
-
-export type FieldTypeProps = {
-  text: {
-    autoCapitalize?: "none" | "sentences" | "words" | "characters";
-    placeholder?: string;
-    editable?: boolean;
-  };
-  email: {
-    autoCapitalize?: "none";
-    placeholder?: string;
-    editable?: boolean;
-  };
-  password: { autoCapitalize?: "none"; placeholder?: string };
-  picker: { options: Array<{ label: string; value: string }> };
-  switch: Record<string, never>;
-  checkbox: Record<string, never>;
-  slider: { minimumValue?: number; maximumValue?: number; step?: number };
-  date: { mode?: "date" | "time"; minimumDate?: Date; maximumDate?: Date };
-  image: Record<string, never>;
+  required?: boolean;
+  pattern?: RegExp;
+  message?: string;
+  minLength?: number;
+  maxLength?: number;
+  validate?: (value: any, formValues?: any) => string | boolean;
 };
 
 export type FormField = {
-  [K in FieldType]: BaseFieldProps & { type: K } & FieldTypeProps[K];
-}[FieldType];
+  name: string;
+  label: string;
+  category: FieldCategory;
+  type: FieldType;
+  validation?: ValidationRule;
+  defaultValue?: any;
+
+  // Text inputs
+  placeholder?: string;
+  secureTextEntry?: boolean;
+  keyboardType?: KeyboardType;
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  editable?: boolean;
+
+  // Selection/Toggle
+  options?: Array<{ label: string; value: any }>;
+
+  // Range
+  min?: number;
+  max?: number;
+  step?: number;
+
+  // DateTime
+  mode?: "date" | "time";
+  minDate?: Date;
+  maxDate?: Date;
+
+  // Media
+  allowMultiple?: boolean;
+  maxSize?: number;
+};
 
 export interface FormProps<T extends FieldValues> {
   fields: Array<FormField>;

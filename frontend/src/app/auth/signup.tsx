@@ -18,34 +18,38 @@ const signupFields: FormField[] = [
   {
     name: "displayName",
     label: "Name",
+    category: "text-input",
     type: "text",
-    rules: FORM_RULES.name,
     placeholder: "Name",
+    validation: FORM_RULES.name,
   },
   {
     name: "email",
     label: "Email",
+    category: "text-input",
     type: "email",
-    rules: FORM_RULES.email,
     placeholder: "Email",
+    validation: FORM_RULES.email,
   },
   {
     name: "password",
     label: "Password",
+    category: "text-input",
     type: "password",
-    rules: FORM_RULES.password,
     placeholder: "Password",
+    validation: FORM_RULES.password,
   },
   {
     name: "confirmPassword",
     label: "Confirm Password",
+    category: "text-input",
     type: "password",
-    rules: {
-      required: "Please confirm your password",
+    placeholder: "Confirm Password",
+    validation: {
+      required: true,
       validate: (value, formValues) =>
         value === formValues.password || "Passwords don't match",
     },
-    placeholder: "Confirm Password",
   },
 ];
 

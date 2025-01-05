@@ -1,5 +1,4 @@
 import React from "react";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import { CustomPicker } from "@components/ui/CustomPicker";
 import { CustomSwitch } from "@components/ui/CustomSwitch";
@@ -24,68 +23,74 @@ export const FormField: React.FC<FormFieldProps> = ({
   value,
   error,
 }) => {
-  const { colors } = useThemeStyles();
+  const { label, category, type, validation, defaultValue, ...inputProps } =
+    field;
   const props = {
-    label: field.label,
+    label,
     error,
     value,
     onBlur,
+    ...inputProps,
   };
 
-  switch (field.type) {
-    case "text":
-    case "email":
-    case "password":
+  switch (category) {
+    case "text-input":
       return (
         <CustomTextInput
           {...props}
           onChangeText={onChange}
-          secureTextEntry={field.type === "password"}
-          keyboardType={field.type === "email" ? "email-address" : "default"}
+          secureTextEntry={type === "password"}
+          keyboardType={type === "email" ? "email-address" : "default"}
           autoCapitalize={field.autoCapitalize || "none"}
-          placeholder={field.placeholder}
-          editable={field.type === "password" ? true : field.editable !== false}
         />
       );
 
-    case "picker":
+    case "selection":
       return (
         <CustomPicker
           {...props}
           onValueChange={onChange}
-          options={field.options}
+          options={field.options || []}
         />
       );
 
-    case "switch":
-      return <CustomSwitch {...props} onValueChange={onChange} />;
+    case "toggle":
+      return type === "switch" ? (
+        <CustomSwitch {...props} onValueChange={onChange} />
+      ) : (
+        <CustomCheckbox {...props} onValueChange={onChange} />
+      );
 
-    case "checkbox":
-      return <CustomCheckbox {...props} onValueChange={onChange} />;
-
-    case "slider":
+    case "range":
       return (
         <CustomSlider
           {...props}
           onValueChange={onChange}
-          minimumValue={field.minimumValue || 0}
-          maximumValue={field.maximumValue || 100}
+          minimumValue={field.min || 0}
+          maximumValue={field.max || 100}
           step={field.step}
         />
       );
 
-    case "date":
+    case "datetime":
       return (
         <CustomDatePicker
           {...props}
           onChange={onChange}
           mode={field.mode}
-          minimumDate={field.minimumDate}
-          maximumDate={field.maximumDate}
+          minimumDate={field.minDate}
+          maximumDate={field.maxDate}
         />
       );
 
-    case "image":
-      return <CustomImagePicker {...props} onChange={onChange} />;
+    case "media":
+      return (
+        <CustomImagePicker
+          {...props}
+          onChange={onChange}
+          maxSize={field.maxSize}
+          allowMultiple={field.allowMultiple}
+        />
+      );
   }
 };

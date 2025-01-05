@@ -15,9 +15,13 @@ const deleteAccountFields: FormField[] = [
   {
     name: "password",
     label: "Current Password",
+    category: "text-input",
     type: "password",
-    rules: { required: "Please enter your password to confirm deletion" },
     placeholder: "Password",
+    validation: {
+      required: true,
+      message: "Please enter your password to confirm deletion",
+    },
   },
 ];
 

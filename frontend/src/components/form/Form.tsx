@@ -12,15 +12,16 @@ import CustomButton from "@components/ui/CustomButton";
 import { FormProps, FormField as FormFieldType } from "./form.types";
 import { FormField } from "./FormField";
 
-const getDefaultValueByType = (field: FormFieldType): any => {
-  switch (field.type) {
-    case "switch":
-    case "checkbox":
+const getDefaultValueByCategory = (field: FormFieldType): any => {
+  switch (field.category) {
+    case "toggle":
       return false;
-    case "slider":
-      return field.minimumValue || 0;
-    case "date":
+    case "range":
+      return field.min || 0;
+    case "datetime":
       return new Date();
+    case "media":
+      return null;
     default:
       return "";
   }
@@ -42,7 +43,7 @@ export function Form<T extends FieldValues>({
       ...fields.reduce(
         (acc, field) => ({
           ...acc,
-          [field.name]: field.defaultValue ?? getDefaultValueByType(field),
+          [field.name]: field.defaultValue ?? getDefaultValueByCategory(field),
         }),
         {}
       ),
@@ -63,7 +64,7 @@ export function Form<T extends FieldValues>({
           key={field.name}
           control={control}
           name={field.name as Path<T>}
-          rules={field.rules}
+          rules={field.validation}
           render={({ field: fieldProps }) => (
             <View style={styles.fieldContainer}>
               <FormField

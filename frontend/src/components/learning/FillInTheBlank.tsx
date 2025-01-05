@@ -85,10 +85,11 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   const quizFields: FormField[] = [
     {
       name: "answer",
-      type: "text",
       label: "Answer",
+      category: "text-input",
+      type: "text",
       placeholder: "Type your answer here",
-      rules: { required: "Please enter your answer" },
+      validation: { required: true, message: "Please enter your answer" },
     },
   ];
 

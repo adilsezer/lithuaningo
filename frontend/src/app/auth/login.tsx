@@ -19,16 +19,18 @@ const loginFields: FormField[] = [
   {
     name: "email",
     label: "Email",
+    category: "text-input",
     type: "email",
     placeholder: "Email",
-    rules: FORM_RULES.email,
+    validation: FORM_RULES.email,
   },
   {
     name: "password",
     label: "Password",
+    category: "text-input",
     type: "password",
     placeholder: "Password",
-    rules: { required: "Password is required" },
+    validation: { required: true, message: "Password is required" },
   },
 ];
 

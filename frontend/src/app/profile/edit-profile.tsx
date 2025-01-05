@@ -17,16 +17,21 @@ const getEditProfileFields = (
   {
     name: "displayName",
     label: "Display Name",
+    category: "text-input",
     type: "text",
-    rules: FORM_RULES.name,
     placeholder: "Display Name",
+    validation: FORM_RULES.name,
   },
   {
     name: "currentPassword",
     label: "Current Password",
+    category: "text-input",
     type: "password",
-    rules: { required: "Current password is required" },
     placeholder: "Password",
+    validation: {
+      required: true,
+      message: "Current password is required",
+    },
   },
 ];
 
