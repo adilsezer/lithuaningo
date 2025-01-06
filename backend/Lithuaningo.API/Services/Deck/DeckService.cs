@@ -11,13 +11,14 @@ public class DeckService : IDeckService
 {
     private readonly FirestoreDb _db;
     private const string COLLECTION_NAME = "decks";
+    private const string VOTES_COLLECTION = "deckVotes";
 
     public DeckService(FirestoreDb db)
     {
         _db = db;
     }
 
-    public async Task<List<Models.Deck>> GetDecksAsync(string? category = null, int? limit = null)
+    public async Task<List<Models.Deck>> GetDecksAsync(string? category = null, int? limit = 20)
     {
         try
         {
@@ -28,10 +29,8 @@ public class DeckService : IDeckService
                 query = query.WhereEqualTo("category", category);
             }
 
-            if (limit.HasValue)
-            {
-                query = query.Limit(limit.Value);
-            }
+            // Always apply a limit
+            query = query.Limit(limit ?? 20);
 
             var snapshot = await query.GetSnapshotAsync();
             return snapshot.Documents.Select(d => d.ConvertTo<Models.Deck>()).ToList();
@@ -83,13 +82,28 @@ public class DeckService : IDeckService
     {
         try
         {
-            var snapshot = await _db.Collection(COLLECTION_NAME)
+            // Get public decks with limit * 2 to have enough after filtering
+            var decksSnapshot = await _db.Collection(COLLECTION_NAME)
                 .WhereEqualTo("isPublic", true)
-                .OrderByDescending("rating")
-                .Limit(limit)
+                .Limit(limit * 2)
                 .GetSnapshotAsync();
 
-            return snapshot.Documents.Select(d => d.ConvertTo<Models.Deck>()).ToList();
+            var decks = decksSnapshot.Documents.Select(d => d.ConvertTo<Models.Deck>()).ToList();
+            var decksWithRatings = new List<(Models.Deck Deck, double Rating, int VoteCount)>();
+            
+            foreach (var deck in decks)
+            {
+                if (deck.Id == null) continue;
+                var (rating, voteCount) = await GetDeckRatingAsync(deck.Id);
+                decksWithRatings.Add((deck, rating, voteCount));
+            }
+
+            return decksWithRatings
+                .OrderByDescending(d => d.Rating)
+                .ThenByDescending(d => d.VoteCount)
+                .Take(limit)
+                .Select(d => d.Deck)
+                .ToList();
         }
         catch (Exception ex)
         {
@@ -156,21 +170,40 @@ public class DeckService : IDeckService
     {
         try
         {
-            var docRef = _db.Collection(COLLECTION_NAME).Document(id);
-            var snapshot = await docRef.GetSnapshotAsync();
-
-            if (!snapshot.Exists)
+            // Check if deck exists
+            var deckRef = _db.Collection(COLLECTION_NAME).Document(id);
+            var deckSnapshot = await deckRef.GetSnapshotAsync();
+            if (!deckSnapshot.Exists)
                 return false;
 
-            var deck = snapshot.ConvertTo<Models.Deck>();
-            var votesCount = deck.VotesCount + (isUpvote ? 1 : -1);
-            var newRating = (deck.Rating * deck.VotesCount + (isUpvote ? 1 : 0)) / votesCount;
+            // Check for existing vote
+            var voteQuery = _db.Collection(VOTES_COLLECTION)
+                .WhereEqualTo("deckId", id)
+                .WhereEqualTo("userId", userId);
+            var voteSnapshot = await voteQuery.GetSnapshotAsync();
+            var existingVote = voteSnapshot.Documents.Count > 0 ? voteSnapshot.Documents[0] : null;
 
-            await docRef.UpdateAsync(new Dictionary<string, object>
+            if (existingVote != null)
             {
-                { "rating", newRating },
-                { "votesCount", votesCount }
-            });
+                var vote = existingVote.ConvertTo<DeckVote>();
+                if (vote.IsUpvote == isUpvote)
+                    return true; // Same vote, no change needed
+
+                // Update existing vote
+                await existingVote.Reference.UpdateAsync("isUpvote", isUpvote);
+            }
+            else
+            {
+                // Create new vote
+                var vote = new DeckVote
+                {
+                    DeckId = id,
+                    UserId = userId,
+                    IsUpvote = isUpvote,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _db.Collection(VOTES_COLLECTION).AddAsync(vote);
+            }
 
             return true;
         }
@@ -255,6 +288,55 @@ public class DeckService : IDeckService
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error removing flashcard from deck: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task ReportDeckAsync(string id, string userId, string reason)
+    {
+        try
+        {
+            var reportRef = _db.Collection("reports").Document();
+            var report = new Dictionary<string, object>
+            {
+                { "deckId", id },
+                { "userId", userId },
+                { "reason", reason },
+                { "createdAt", DateTime.UtcNow },
+                { "status", "pending" }
+            };
+
+            await reportRef.SetAsync(report);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error reporting deck {id}: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<(double Rating, int VoteCount)> GetDeckRatingAsync(string deckId)
+    {
+        try
+        {
+            var votesSnapshot = await _db.Collection(VOTES_COLLECTION)
+                .WhereEqualTo("deckId", deckId)
+                .GetSnapshotAsync();
+
+            if (votesSnapshot.Count == 0)
+                return (0, 0);
+
+            var votes = votesSnapshot.Documents.Select(d => d.ConvertTo<DeckVote>());
+            var upvotes = votes.Count(v => v.IsUpvote);
+            var totalVotes = votesSnapshot.Count;
+
+            // Calculate rating as percentage of upvotes (0 to 1)
+            var rating = (double)upvotes / totalVotes;
+            return (rating, totalVotes);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error getting deck rating: {ex.Message}");
             throw;
         }
     }

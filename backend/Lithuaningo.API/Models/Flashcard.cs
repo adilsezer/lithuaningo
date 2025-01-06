@@ -22,24 +22,9 @@ public class Flashcard
     [FirestoreProperty("exampleSentence")]
     public string? ExampleSentence { get; set; }
 
-    [FirestoreProperty("votesUp")]
-    public int VotesUp { get; set; }
-
-    [FirestoreProperty("votesDown")]
-    public int VotesDown { get; set; }
-
     [FirestoreProperty("createdBy")]
     public string CreatedBy { get; set; } = string.Empty;
 
     [FirestoreProperty("createdAt")]
     public DateTime CreatedAt { get; set; }
-
-    [FirestoreProperty("lastReviewedAt")]
-    public DateTime? LastReviewedAt { get; set; }
-
-    [FirestoreProperty("reviewCount")]
-    public int ReviewCount { get; set; }
-
-    [FirestoreProperty("correctRate")]
-    public double CorrectRate { get; set; }
 } 

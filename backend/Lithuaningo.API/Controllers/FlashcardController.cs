@@ -52,13 +52,6 @@ namespace Lithuaningo.API.Controllers
             return NoContent();
         }
 
-        [HttpPost("{id}/vote")]
-        public async Task<ActionResult<bool>> VoteFlashcard(string id, [FromQuery] string userId, [FromQuery] bool isUpvote)
-        {
-            var result = await _flashcardService.VoteFlashcardAsync(id, userId, isUpvote);
-            return Ok(result);
-        }
-
         [HttpGet("due-for-review")]
         public async Task<ActionResult<List<Flashcard>>> GetDueForReview([FromQuery] string userId, [FromQuery] int limit = 20)
         {
@@ -85,13 +78,6 @@ namespace Lithuaningo.API.Controllers
         {
             var flashcards = await _flashcardService.SearchFlashcardsAsync(query);
             return Ok(flashcards);
-        }
-
-        [HttpPost("{id}/report")]
-        public async Task<ActionResult> ReportFlashcard(string id, [FromQuery] string userId, [FromBody] string reason)
-        {
-            await _flashcardService.ReportFlashcardAsync(id, userId, reason);
-            return NoContent();
         }
     }
 } 

@@ -21,7 +21,10 @@ public class AnnouncementService : IAnnouncementService
     {
         try
         {
-            var snapshot = await _db.Collection(COLLECTION_NAME).GetSnapshotAsync();
+            var snapshot = await _db.Collection(COLLECTION_NAME)
+                .OrderByDescending("createdAt")
+                .Limit(10)
+                .GetSnapshotAsync();
             return snapshot.Documents.Select(doc => doc.ConvertTo<Announcement>());
         }
         catch (Exception ex)

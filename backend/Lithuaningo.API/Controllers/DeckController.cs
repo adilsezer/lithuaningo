@@ -76,6 +76,13 @@ namespace Lithuaningo.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("{id}/report")]
+        public async Task<ActionResult> ReportDeck(string id, [FromQuery] string userId, [FromBody] string reason)
+        {
+            await _deckService.ReportDeckAsync(id, userId, reason);
+            return NoContent();
+        }
+
         [HttpGet("search")]
         public async Task<ActionResult<List<Deck>>> SearchDecks([FromQuery] string query, [FromQuery] string? category = null)
         {

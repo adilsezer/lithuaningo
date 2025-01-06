@@ -25,6 +25,7 @@ namespace Lithuaningo.API.Services
                 var snapshot = await _db.Collection(COLLECTION_NAME)
                     .WhereEqualTo("deckId", deckId)
                     .OrderByDescending("createdAt")
+                    .Limit(20)
                     .GetSnapshotAsync();
 
                 return snapshot.Documents

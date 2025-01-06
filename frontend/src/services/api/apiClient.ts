@@ -11,6 +11,7 @@ import {
   AppInfo,
   LeaderboardEntry,
   DashboardWord,
+  Deck,
 } from "@src/types";
 
 export class ApiError extends Error {
@@ -187,6 +188,60 @@ class ApiClient {
   async getRandomWords(count: number = 5) {
     return this.request<DashboardWord[]>(`/word/random`, {
       params: { count },
+    });
+  }
+
+  async getDecks(category?: string, query?: string) {
+    return this.request<Deck[]>("/deck", {
+      params: { category, query },
+    });
+  }
+
+  async getDeckById(id: string) {
+    return this.request<Deck>(`/deck/${id}`);
+  }
+
+  async getUserDecks(userId: string) {
+    return this.request<Deck[]>(`/deck/user/${userId}`);
+  }
+
+  async createDeck(deck: Deck) {
+    return this.request<string>("/deck", {
+      method: "POST",
+      data: deck,
+    });
+  }
+
+  async updateDeck(id: string, deck: Deck) {
+    return this.request<void>(`/deck/${id}`, {
+      method: "PUT",
+      data: deck,
+    });
+  }
+
+  async deleteDeck(id: string) {
+    return this.request<void>(`/deck/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async voteDeck(id: string, userId: string, isUpvote: boolean) {
+    return this.request<boolean>(`/deck/${id}/vote`, {
+      method: "POST",
+      params: { userId, isUpvote },
+    });
+  }
+
+  async reportDeck(id: string, userId: string, reason: string) {
+    return this.request<void>(`/deck/${id}/report`, {
+      method: "POST",
+      data: { userId, reason },
+    });
+  }
+
+  async searchDecks(query: string, category?: string) {
+    return this.request<Deck[]>("/deck/search", {
+      params: { query, category },
     });
   }
 }

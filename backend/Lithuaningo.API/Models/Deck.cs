@@ -25,12 +25,6 @@ public class Deck
     [FirestoreProperty("createdAt")]
     public DateTime CreatedAt { get; set; }
 
-    [FirestoreProperty("rating")]
-    public double Rating { get; set; }
-
-    [FirestoreProperty("votesCount")]
-    public int VotesCount { get; set; }
-
     [FirestoreProperty("isPublic")]
     public bool IsPublic { get; set; }
 

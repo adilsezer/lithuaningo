@@ -11,7 +11,6 @@ namespace Lithuaningo.API.Services
     {
         private readonly FirestoreDb _db;
         private const string COLLECTION_NAME = "flashcards";
-        private const string REPORTS_COLLECTION = "reports";
 
         public FlashcardService(FirestoreDb db)
         {
@@ -43,6 +42,7 @@ namespace Lithuaningo.API.Services
             {
                 var snapshot = await _db.Collection(COLLECTION_NAME)
                     .WhereEqualTo("createdBy", userId)
+                    .Limit(50)
                     .GetSnapshotAsync();
 
                 return snapshot.Documents.Select(d => d.ConvertTo<Flashcard>()).ToList();
@@ -61,10 +61,6 @@ namespace Lithuaningo.API.Services
                 var docRef = _db.Collection(COLLECTION_NAME).Document();
                 flashcard.Id = docRef.Id;
                 flashcard.CreatedAt = DateTime.UtcNow;
-                flashcard.VotesUp = 0;
-                flashcard.VotesDown = 0;
-                flashcard.ReviewCount = 0;
-                flashcard.CorrectRate = 0;
 
                 await docRef.SetAsync(flashcard);
                 return flashcard.Id;
@@ -103,48 +99,13 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<bool> VoteFlashcardAsync(string id, string userId, bool isUpvote)
-        {
-            try
-            {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
-                var snapshot = await docRef.GetSnapshotAsync();
-
-                if (!snapshot.Exists)
-                    return false;
-
-                var flashcard = snapshot.ConvertTo<Flashcard>();
-                
-                if (isUpvote)
-                    flashcard.VotesUp++;
-                else
-                    flashcard.VotesDown++;
-
-                await docRef.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "votesUp", flashcard.VotesUp },
-                    { "votesDown", flashcard.VotesDown }
-                });
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error voting for flashcard {id}: {ex.Message}");
-                throw;
-            }
-        }
-
         public async Task<List<Flashcard>> GetDueForReviewAsync(string userId, int limit = 20)
         {
             try
             {
-                var cutoffTime = DateTime.UtcNow.AddHours(-24);
-
                 var snapshot = await _db.Collection(COLLECTION_NAME)
                     .WhereEqualTo("createdBy", userId)
-                    .WhereLessThan("lastReviewedAt", cutoffTime)
-                    .OrderBy("lastReviewedAt")
+                    .OrderBy("createdAt")
                     .Limit(limit)
                     .GetSnapshotAsync();
 
@@ -166,18 +127,6 @@ namespace Lithuaningo.API.Services
 
                 if (!snapshot.Exists)
                     return;
-
-                var flashcard = snapshot.ConvertTo<Flashcard>();
-                flashcard.ReviewCount++;
-                flashcard.LastReviewedAt = DateTime.UtcNow;
-                flashcard.CorrectRate = ((flashcard.CorrectRate * (flashcard.ReviewCount - 1)) + (wasCorrect ? 1 : 0)) / flashcard.ReviewCount;
-
-                await docRef.UpdateAsync(new Dictionary<string, object>
-                {
-                    { "reviewCount", flashcard.ReviewCount },
-                    { "lastReviewedAt", flashcard.LastReviewedAt },
-                    { "correctRate", flashcard.CorrectRate }
-                });
             }
             catch (Exception ex)
             {
@@ -191,14 +140,13 @@ namespace Lithuaningo.API.Services
             try
             {
                 var snapshot = await _db.Collection(COLLECTION_NAME)
-                    .OrderBy("createdAt")
-                    .Limit(limit * 3)
+                    .OrderByDescending("createdAt")
+                    .Limit(limit)
                     .GetSnapshotAsync();
 
                 return snapshot.Documents
                     .Select(d => d.ConvertTo<Flashcard>())
-                    .OrderBy(x => Guid.NewGuid())
-                    .Take(limit)
+                    .OrderBy(_ => Guid.NewGuid())
                     .ToList();
             }
             catch (Exception ex)
@@ -212,40 +160,19 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var snapshot = await _db.Collection(COLLECTION_NAME).GetSnapshotAsync();
+                var snapshot = await _db.Collection(COLLECTION_NAME)
+                    .Limit(20)
+                    .GetSnapshotAsync();
                 
                 return snapshot.Documents
                     .Select(d => d.ConvertTo<Flashcard>())
                     .Where(f => f.Front.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                               f.Back.Contains(query, StringComparison.OrdinalIgnoreCase) ||
-                               (f.ExampleSentence != null && f.ExampleSentence.Contains(query, StringComparison.OrdinalIgnoreCase)))
+                               f.Back.Contains(query, StringComparison.OrdinalIgnoreCase))
                     .ToList();
             }
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"Error searching flashcards: {ex.Message}");
-                throw;
-            }
-        }
-
-        public async Task ReportFlashcardAsync(string id, string userId, string reason)
-        {
-            try
-            {
-                var report = new Dictionary<string, object>
-                {
-                    { "flashcardId", id },
-                    { "reportedBy", userId },
-                    { "reason", reason },
-                    { "createdAt", DateTime.UtcNow },
-                    { "status", "pending" }
-                };
-
-                await _db.Collection(REPORTS_COLLECTION).AddAsync(report);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine($"Error reporting flashcard {id}: {ex.Message}");
                 throw;
             }
         }
