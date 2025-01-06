@@ -89,18 +89,17 @@ public class DeckService : IDeckService
                 .GetSnapshotAsync();
 
             var decks = decksSnapshot.Documents.Select(d => d.ConvertTo<Models.Deck>()).ToList();
-            var decksWithRatings = new List<(Models.Deck Deck, double Rating, int VoteCount)>();
+            var decksWithRatings = new List<(Models.Deck Deck, double Rating)>();
             
             foreach (var deck in decks)
             {
                 if (deck.Id == null) continue;
-                var (rating, voteCount) = await GetDeckRatingAsync(deck.Id);
-                decksWithRatings.Add((deck, rating, voteCount));
+                var rating = await GetDeckRatingAsync(deck.Id);
+                decksWithRatings.Add((deck, rating));
             }
 
             return decksWithRatings
                 .OrderByDescending(d => d.Rating)
-                .ThenByDescending(d => d.VoteCount)
                 .Take(limit)
                 .Select(d => d.Deck)
                 .ToList();
@@ -315,7 +314,7 @@ public class DeckService : IDeckService
         }
     }
 
-    public async Task<(double Rating, int VoteCount)> GetDeckRatingAsync(string deckId)
+    public async Task<double> GetDeckRatingAsync(string deckId)
     {
         try
         {
@@ -324,15 +323,14 @@ public class DeckService : IDeckService
                 .GetSnapshotAsync();
 
             if (votesSnapshot.Count == 0)
-                return (0, 0);
+                return 0;
 
             var votes = votesSnapshot.Documents.Select(d => d.ConvertTo<DeckVote>());
             var upvotes = votes.Count(v => v.IsUpvote);
             var totalVotes = votesSnapshot.Count;
 
             // Calculate rating as percentage of upvotes (0 to 1)
-            var rating = (double)upvotes / totalVotes;
-            return (rating, totalVotes);
+            return (double)upvotes / totalVotes;
         }
         catch (Exception ex)
         {

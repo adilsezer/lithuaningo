@@ -3,9 +3,8 @@ export interface Deck {
   title: string;
   description: string;
   category: string;
-  flashcardCount: number;
-  rating: number;
   createdBy: string;
   createdAt: string;
-  updatedAt: string;
+  isPublic: boolean;
+  tags: string[];
 }

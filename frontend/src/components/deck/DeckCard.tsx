@@ -1,10 +1,17 @@
-import React from "react";
-import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import React, { useEffect, useState } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  ScrollView,
+} from "react-native";
 import { router } from "expo-router";
 import { SectionText, SectionTitle } from "@components/typography";
 import { Deck } from "@src/types";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useDecks } from "@hooks/useDecks";
 
 interface DeckCardProps {
   deck: Deck;
@@ -22,6 +29,16 @@ export const DeckCard: React.FC<DeckCardProps> = ({
   onQuiz,
 }) => {
   const { colors } = useThemeStyles();
+  const { getDeckRating } = useDecks();
+  const [rating, setRating] = useState<number>(0);
+
+  useEffect(() => {
+    const fetchRating = async () => {
+      const deckRating = await getDeckRating(deck.id);
+      setRating(deckRating);
+    };
+    fetchRating();
+  }, [deck.id, getDeckRating]);
 
   return (
     <View
@@ -48,6 +65,26 @@ export const DeckCard: React.FC<DeckCardProps> = ({
         {deck.description}
       </Text>
 
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tagsContainer}
+      >
+        {deck.tags.map((tag, index) => (
+          <View
+            key={index}
+            style={[
+              styles.tagChip,
+              { backgroundColor: colors.secondary + "20" },
+            ]}
+          >
+            <Text style={[styles.tagChipText, { color: colors.secondary }]}>
+              {tag}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+
       <View style={styles.metaInfo}>
         <View style={styles.creator}>
           <FontAwesome5 name="user" size={12} color={colors.cardText} />
@@ -58,24 +95,19 @@ export const DeckCard: React.FC<DeckCardProps> = ({
         <View style={styles.rating}>
           <FontAwesome5 name="star" size={12} color={colors.secondary} />
           <Text style={[styles.metaText, { color: colors.cardText }]}>
-            {deck.rating}
+            {(rating * 100).toFixed(0)}%
           </Text>
         </View>
       </View>
 
-      <View style={styles.stats}>
-        <View style={styles.stat}>
-          <FontAwesome5
-            name="layer-group"
-            size={14}
-            color={colors.cardText}
-            solid
-          />
-          <SectionText style={[styles.statText, { color: colors.cardText }]}>
-            {deck.flashcardCount} cards
-          </SectionText>
+      {!deck.isPublic && (
+        <View style={styles.privateTag}>
+          <FontAwesome5 name="lock" size={12} color={colors.error} />
+          <Text style={[styles.privateText, { color: colors.error }]}>
+            Private
+          </Text>
         </View>
-      </View>
+      )}
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity
@@ -170,6 +202,19 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     lineHeight: 20,
   },
+  tagsContainer: {
+    flexDirection: "row",
+    marginBottom: 12,
+  },
+  tagChip: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginRight: 8,
+  },
+  tagChipText: {
+    fontSize: 12,
+  },
   metaInfo: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -188,18 +233,15 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 12,
   },
-  stats: {
-    flexDirection: "row",
-    marginBottom: 16,
-    gap: 16,
-  },
-  stat: {
+  privateTag: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 4,
+    marginBottom: 12,
   },
-  statText: {
-    fontSize: 14,
+  privateText: {
+    fontSize: 12,
+    fontWeight: "500",
   },
   buttonContainer: {
     flexDirection: "row",

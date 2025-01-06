@@ -9,3 +9,4 @@ export type { UserProfile } from "./UserProfile";
 export type { WordForm } from "./WordForm";
 export type { DashboardWord } from "./DashboardWord";
 export type { Deck } from "./Deck";
+export * from "./Flashcard";

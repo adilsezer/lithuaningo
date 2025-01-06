@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, FlatList, ActivityIndicator } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  ActivityIndicator,
+  Text,
+} from "react-native";
 import { SectionTitle } from "@components/typography";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useDecks } from "@hooks/useDecks";
@@ -10,29 +16,54 @@ import { CategoryPicker } from "@components/ui/CategoryPicker";
 import { SearchBar } from "@components/ui/SearchBar";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
+import CustomButton from "@components/ui/CustomButton";
 
 export default function DecksScreen() {
-  const { decks, isLoading, fetchDecks, voteDeck, searchDecks } = useDecks();
+  const {
+    decks,
+    isLoading,
+    fetchDecks,
+    voteDeck,
+    searchDecks,
+    getTopRatedDecks,
+  } = useDecks();
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"all" | "top">("all");
   const userData = useAppSelector(selectUserData);
   const { colors } = useThemeStyles();
   const router = useRouter();
 
   useEffect(() => {
-    if (searchQuery.trim()) {
-      searchDecks(searchQuery);
-    } else {
-      fetchDecks(selectedCategory);
+    loadDecks();
+  }, [selectedCategory, searchQuery, viewMode]);
+
+  const loadDecks = async () => {
+    try {
+      setError(null);
+      if (searchQuery.trim()) {
+        await searchDecks(searchQuery);
+      } else if (viewMode === "top") {
+        await getTopRatedDecks();
+      } else {
+        await fetchDecks(selectedCategory);
+      }
+    } catch (err) {
+      setError("Failed to load decks. Please try again later.");
+      console.error("Error loading decks:", err);
     }
-  }, [selectedCategory, searchQuery]);
+  };
 
   const handleSearch = (query: string) => {
     setSearchQuery(query);
+    setViewMode("all");
   };
 
   const handleCategoryChange = (category: string) => {
     setSelectedCategory(category);
+    setSearchQuery("");
+    setViewMode("all");
   };
 
   const handleVote = async (deckId: string, isUpvote: boolean) => {
@@ -40,7 +71,12 @@ export default function DecksScreen() {
       AlertDialog.error("Please login to vote");
       return;
     }
-    await voteDeck(deckId, userData.id, isUpvote);
+    try {
+      await voteDeck(deckId, userData.id, isUpvote);
+    } catch (err) {
+      AlertDialog.error("Failed to vote. Please try again later.");
+      console.error("Error voting:", err);
+    }
   };
 
   const handleReport = (deckId: string) => {
@@ -73,16 +109,8 @@ export default function DecksScreen() {
     router.push(`/decks/${deckId}/quiz`);
   };
 
-  if (isLoading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={colors.active} />
-      </View>
-    );
-  }
-
-  return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+  const renderHeader = () => (
+    <>
       <SectionTitle>Decks</SectionTitle>
       <SearchBar
         onSearch={handleSearch}
@@ -94,6 +122,46 @@ export default function DecksScreen() {
         selectedCategory={selectedCategory}
         onSelectCategory={handleCategoryChange}
       />
+      <View style={styles.viewModeContainer}>
+        <CustomButton
+          title="All Decks"
+          onPress={() => setViewMode("all")}
+          style={[
+            styles.viewModeButton,
+            viewMode === "all" && { backgroundColor: colors.primary },
+          ]}
+        />
+        <CustomButton
+          title="Top Rated"
+          onPress={() => setViewMode("top")}
+          style={[
+            styles.viewModeButton,
+            viewMode === "top" && { backgroundColor: colors.primary },
+          ]}
+        />
+      </View>
+    </>
+  );
+
+  if (isLoading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color={colors.active} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <CustomButton title="Retry" onPress={loadDecks} />
+      </View>
+    );
+  }
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
         data={decks}
         renderItem={({ item }) => (
@@ -107,6 +175,12 @@ export default function DecksScreen() {
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
+        ListHeaderComponent={renderHeader}
+        ListEmptyComponent={
+          <Text style={[styles.emptyText, { color: colors.text }]}>
+            No decks found
+          </Text>
+        }
       />
     </View>
   );
@@ -122,15 +196,35 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  title: {
-    fontSize: 32,
-    marginBottom: 24,
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+  },
+  errorText: {
+    fontSize: 16,
+    marginBottom: 16,
     textAlign: "center",
+  },
+  emptyText: {
+    fontSize: 16,
+    textAlign: "center",
+    marginTop: 32,
   },
   searchBar: {
     marginBottom: 16,
   },
   list: {
     paddingBottom: 16,
+  },
+  viewModeContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginVertical: 16,
+    gap: 8,
+  },
+  viewModeButton: {
+    flex: 1,
   },
 });

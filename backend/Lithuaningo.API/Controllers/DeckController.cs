@@ -110,5 +110,12 @@ namespace Lithuaningo.API.Controllers
             await _deckService.RemoveFlashcardFromDeckAsync(deckId, flashcardId);
             return NoContent();
         }
+
+        [HttpGet("{id}/rating")]
+        public async Task<ActionResult<double>> GetDeckRating(string id)
+        {
+            var rating = await _deckService.GetDeckRatingAsync(id);
+            return Ok(rating);
+        }
     }
 } 

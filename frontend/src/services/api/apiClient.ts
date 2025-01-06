@@ -12,6 +12,7 @@ import {
   LeaderboardEntry,
   DashboardWord,
   Deck,
+  Flashcard,
 } from "@src/types";
 
 export class ApiError extends Error {
@@ -242,6 +243,86 @@ class ApiClient {
   async searchDecks(query: string, category?: string) {
     return this.request<Deck[]>("/deck/search", {
       params: { query, category },
+    });
+  }
+
+  async getTopRatedDecks(limit: number = 10) {
+    return this.request<Deck[]>(`/deck/top-rated`, {
+      params: { limit },
+    });
+  }
+
+  async getDeckFlashcards(deckId: string) {
+    return this.request<Flashcard[]>(`/deck/${deckId}/flashcards`);
+  }
+
+  async addFlashcardToDeck(deckId: string, flashcard: Flashcard) {
+    return this.request<string>(`/deck/${deckId}/flashcards`, {
+      method: "POST",
+      data: flashcard,
+    });
+  }
+
+  async removeFlashcardFromDeck(deckId: string, flashcardId: string) {
+    return this.request(`/deck/${deckId}/flashcards/${flashcardId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getDeckRating(id: string) {
+    return this.request<number>(`/deck/${id}/rating`);
+  }
+
+  async getFlashcardById(id: string) {
+    return this.request<Flashcard>(`/flashcard/${id}`);
+  }
+
+  async getUserFlashcards(userId: string) {
+    return this.request<Flashcard[]>(`/flashcard/user/${userId}`);
+  }
+
+  async createFlashcard(flashcard: Flashcard) {
+    return this.request<string>(`/flashcard`, {
+      method: "POST",
+      data: flashcard,
+    });
+  }
+
+  async updateFlashcard(id: string, flashcard: Flashcard) {
+    return this.request(`/flashcard/${id}`, {
+      method: "PUT",
+      data: flashcard,
+    });
+  }
+
+  async deleteFlashcard(id: string) {
+    return this.request(`/flashcard/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getDueForReview(userId: string, limit: number = 20) {
+    return this.request<Flashcard[]>(`/flashcard/due-for-review`, {
+      params: { userId, limit },
+    });
+  }
+
+  async updateReviewStatus(id: string, wasCorrect: boolean) {
+    return this.request(`/flashcard/${id}/review`, {
+      method: "POST",
+      params: { wasCorrect },
+    });
+  }
+
+  async getRandomFlashcards(limit: number = 10) {
+    return this.request<Flashcard[]>(`/flashcard/random`, {
+      params: { limit },
+    });
+  }
+
+  async searchFlashcards(query: string) {
+    return this.request<Flashcard[]>(`/flashcard/search`, {
+      params: { query },
     });
   }
 }

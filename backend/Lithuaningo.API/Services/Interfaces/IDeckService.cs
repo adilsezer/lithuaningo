@@ -19,5 +19,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<string> AddFlashcardToDeckAsync(string deckId, Flashcard flashcard);
         Task RemoveFlashcardFromDeckAsync(string deckId, string flashcardId);
         Task ReportDeckAsync(string id, string userId, string reason);
+        Task<double> GetDeckRatingAsync(string deckId);
     }
 } 
