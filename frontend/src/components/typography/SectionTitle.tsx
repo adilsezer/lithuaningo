@@ -23,7 +23,7 @@ export const SectionTitle: React.FC<SectionTitleProps> = ({
           fontSize: 24,
           color: contrast ? colors.background : colors.text,
           textAlign: "center",
-          marginVertical: 16,
+          marginBottom: 8,
         },
         style,
       ]}

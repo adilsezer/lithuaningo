@@ -1,31 +1,37 @@
 import React from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  TouchableOpacity,
-  Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import CustomButton from "./CustomButton";
+import { ViewMode } from "@hooks/useDecks";
 
-const categories = ["All", "Beginner", "Advanced", "Verbs"];
+const categories = ["Beginner", "Advanced", "Verbs"];
+const viewModes = [
+  { id: "all" as const, label: "All Decks" },
+  { id: "top" as const, label: "Top Rated" },
+  { id: "my" as const, label: "My Decks" },
+];
 
 interface Props {
   selectedCategory: string;
   onSelectCategory: (category: string) => void;
+  viewMode: ViewMode;
+  onViewModeChange: (mode: ViewMode) => void;
 }
 
 export const CategoryPicker = ({
   selectedCategory,
   onSelectCategory,
+  viewMode,
+  onViewModeChange,
 }: Props) => {
   const { colors } = useThemeStyles();
 
   const isSelected = (category: string) => {
-    if (category === "All") {
-      return selectedCategory === "";
-    }
     return selectedCategory === category;
+  };
+
+  const isViewModeSelected = (mode: ViewMode) => {
+    return viewMode === mode && selectedCategory === "";
   };
 
   return (
@@ -35,11 +41,44 @@ export const CategoryPicker = ({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.container}
       >
+        {viewModes.map((mode) => (
+          <CustomButton
+            key={mode.id}
+            title={mode.label}
+            onPress={() => {
+              onViewModeChange(mode.id);
+              onSelectCategory("");
+            }}
+            style={[
+              styles.chip,
+              {
+                backgroundColor: isViewModeSelected(mode.id)
+                  ? colors.primary
+                  : "transparent",
+                borderColor: isViewModeSelected(mode.id)
+                  ? colors.primary
+                  : colors.border,
+              },
+            ]}
+            textStyle={[
+              styles.chipText,
+              {
+                color: isViewModeSelected(mode.id)
+                  ? colors.background
+                  : colors.text,
+              },
+            ]}
+            width="auto"
+          />
+        ))}
         {categories.map((category) => (
-          <TouchableOpacity
+          <CustomButton
             key={category}
-            activeOpacity={0.7}
-            onPress={() => onSelectCategory(category === "All" ? "" : category)}
+            title={category}
+            onPress={() => {
+              onSelectCategory(category);
+              onViewModeChange("all");
+            }}
             style={[
               styles.chip,
               {
@@ -51,18 +90,14 @@ export const CategoryPicker = ({
                   : colors.border,
               },
             ]}
-          >
-            <Text
-              style={[
-                styles.chipText,
-                {
-                  color: isSelected(category) ? colors.background : colors.text,
-                },
-              ]}
-            >
-              {category}
-            </Text>
-          </TouchableOpacity>
+            textStyle={[
+              styles.chipText,
+              {
+                color: isSelected(category) ? colors.background : colors.text,
+              },
+            ]}
+            width="auto"
+          />
         ))}
       </ScrollView>
     </View>

@@ -93,7 +93,7 @@ export const DeckCard = memo<DeckCardProps>(
           <CustomButton
             title="Quiz"
             onPress={() => actions.onQuiz(deck.id)}
-            style={[styles.actionButton, { backgroundColor: colors.tertiary }]}
+            style={[styles.actionButton, { backgroundColor: colors.secondary }]}
             width="auto"
           />
         </View>

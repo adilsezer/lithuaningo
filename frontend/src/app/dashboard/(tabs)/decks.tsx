@@ -1,11 +1,5 @@
 import React, { useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  Text,
-  TouchableOpacity,
-} from "react-native";
+import { View, StyleSheet, FlatList, Text } from "react-native";
 import { SectionTitle } from "@components/typography";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useDecks } from "@hooks/useDecks";
@@ -18,6 +12,7 @@ import { useRouter } from "expo-router";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
+import CustomButton from "@components/ui/CustomButton";
 
 export default function DecksScreen() {
   const userData = useAppSelector(selectUserData);
@@ -56,44 +51,12 @@ export default function DecksScreen() {
     list: {
       flexGrow: 1,
     },
-
     headerContainer: {
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
       marginBottom: 16,
     },
-    searchBar: {
-      marginBottom: 16,
-    },
-
-    viewModeContainer: {
-      flexDirection: "row",
-      justifyContent: "space-between",
-      gap: 8,
-      marginTop: 16,
-    },
-    viewModeButton: {
-      flex: 1,
-      backgroundColor: colors.background,
-      paddingVertical: 12,
-      paddingHorizontal: 12,
-      borderRadius: 12,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    activeViewModeButton: {
-      backgroundColor: colors.primary,
-    },
-    viewModeText: {
-      fontSize: 14,
-      fontWeight: "500",
-      color: colors.secondary,
-    },
-    activeViewModeText: {
-      color: colors.background,
-    },
-
     emptyText: {
       fontSize: 16,
       textAlign: "center",
@@ -140,63 +103,14 @@ export default function DecksScreen() {
       <SearchBar
         onSearch={setSearchQuery}
         placeholder="Search decks and flashcards..."
-        style={styles.searchBar}
         initialValue={searchQuery}
       />
       <CategoryPicker
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
       />
-      <View style={styles.viewModeContainer}>
-        <TouchableOpacity
-          onPress={() => setViewMode("all")}
-          style={[
-            styles.viewModeButton,
-            viewMode === "all" && styles.activeViewModeButton,
-          ]}
-        >
-          <Text
-            style={[
-              styles.viewModeText,
-              viewMode === "all" && styles.activeViewModeText,
-            ]}
-          >
-            All Decks
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setViewMode("top")}
-          style={[
-            styles.viewModeButton,
-            viewMode === "top" && styles.activeViewModeButton,
-          ]}
-        >
-          <Text
-            style={[
-              styles.viewModeText,
-              viewMode === "top" && styles.activeViewModeText,
-            ]}
-          >
-            Top Rated
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => setViewMode("my")}
-          style={[
-            styles.viewModeButton,
-            viewMode === "my" && styles.activeViewModeButton,
-          ]}
-        >
-          <Text
-            style={[
-              styles.viewModeText,
-              viewMode === "my" && styles.activeViewModeText,
-            ]}
-          >
-            My Decks
-          </Text>
-        </TouchableOpacity>
-      </View>
     </>
   );
 

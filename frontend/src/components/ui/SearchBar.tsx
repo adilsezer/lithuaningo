@@ -52,7 +52,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     <View style={[styles.container, style, { backgroundColor: colors.card }]}>
       <Ionicons name="search" size={20} color={colors.text} />
       <TextInput
-        style={[styles.input, { color: colors.text }]}
+        style={{ color: colors.text }}
         value={value}
         onChangeText={handleChangeText}
         placeholder={placeholder}
@@ -66,14 +66,8 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    padding: 16,
     borderRadius: 12,
-    marginHorizontal: 16,
-    marginVertical: 8,
     gap: 8,
-  },
-  input: {
-    flex: 1,
-    fontSize: 16,
   },
 });
