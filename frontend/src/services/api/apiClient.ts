@@ -13,6 +13,10 @@ import {
   DashboardWord,
   Deck,
   Flashcard,
+  Comment,
+  QuizResult,
+  PracticeProgress,
+  PracticeStats,
 } from "@src/types";
 
 export class ApiError extends Error {
@@ -324,6 +328,55 @@ class ApiClient {
     return this.request<Flashcard[]>(`/flashcard/search`, {
       params: { query },
     });
+  }
+
+  async getDeckComments(deckId: string) {
+    return this.request<Comment[]>(`/deck/${deckId}/comments`);
+  }
+
+  async addDeckComment(comment: Omit<Comment, "id" | "createdAt">) {
+    return this.request<string>(`/deck/${comment.deckId}/comments`, {
+      method: "POST",
+      data: comment,
+    });
+  }
+
+  async deleteDeckComment(commentId: string) {
+    return this.request(`/deck/comments/${commentId}`, {
+      method: "DELETE",
+    });
+  }
+
+  async startDeckQuiz(deckId: string) {
+    return this.request<QuizQuestion[]>(`/deck/${deckId}/quiz/start`);
+  }
+
+  async submitDeckQuizResult(result: Omit<QuizResult, "completedAt">) {
+    return this.request<void>(`/deck/${result.deckId}/quiz/submit`, {
+      method: "POST",
+      data: result,
+    });
+  }
+
+  async getDeckQuizHistory(userId: string) {
+    return this.request<QuizResult[]>(`/user/${userId}/quiz-history`);
+  }
+
+  async trackPracticeProgress(progress: Omit<PracticeProgress, "timestamp">) {
+    return this.request<void>(`/deck/${progress.deckId}/practice/track`, {
+      method: "POST",
+      data: progress,
+    });
+  }
+
+  async getPracticeStats(deckId: string, userId: string) {
+    return this.request<PracticeStats>(`/deck/${deckId}/practice/stats`, {
+      params: { userId },
+    });
+  }
+
+  async getPracticeHistory(userId: string) {
+    return this.request<PracticeProgress[]>(`/user/${userId}/practice-history`);
   }
 }
 

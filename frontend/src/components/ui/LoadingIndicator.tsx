@@ -1,20 +1,43 @@
 import React, { useState, useEffect } from "react";
-import { View, ActivityIndicator, StyleSheet, Modal } from "react-native";
+import {
+  View,
+  ActivityIndicator,
+  StyleSheet,
+  Modal,
+  ViewStyle,
+} from "react-native";
 import { useAppSelector } from "@redux/hooks";
 import { selectIsLoading } from "@redux/slices/uiSlice";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 
-const LoadingIndicator = () => {
+interface LoadingIndicatorProps {
+  // If true, shows as modal overlay. If false, shows inline
+  modal?: boolean;
+  // For inline mode only
+  style?: ViewStyle;
+  // For inline mode only
+  size?: "small" | "large";
+  // Optional minimum display time in ms (for modal only)
+  minimumDisplayTime?: number;
+}
+
+export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
+  modal = true,
+  style,
+  size = "large",
+  minimumDisplayTime = 200,
+}) => {
   const { colors } = useThemeStyles();
-  const isLoading = useAppSelector(selectIsLoading);
+  const globalIsLoading = useAppSelector(selectIsLoading);
   const [showLoading, setShowLoading] = useState(false);
   const [delayedIsLoading, setDelayedIsLoading] = useState(false);
-  const minimumDisplayTime = 200;
 
   useEffect(() => {
+    if (!modal) return;
+
     let timer: ReturnType<typeof setTimeout>;
 
-    if (isLoading) {
+    if (globalIsLoading) {
       setDelayedIsLoading(true);
     } else if (delayedIsLoading) {
       timer = setTimeout(() => {
@@ -27,7 +50,7 @@ const LoadingIndicator = () => {
         clearTimeout(timer);
       }
     };
-  }, [isLoading, delayedIsLoading]);
+  }, [globalIsLoading, delayedIsLoading, modal, minimumDisplayTime]);
 
   useEffect(() => {
     if (delayedIsLoading) {
@@ -36,6 +59,18 @@ const LoadingIndicator = () => {
       setShowLoading(false);
     }
   }, [delayedIsLoading]);
+
+  if (!modal) {
+    return (
+      <View style={[styles.inlineContainer, style]}>
+        <ActivityIndicator
+          size={size}
+          color={colors.active}
+          accessibilityLabel="Loading content"
+        />
+      </View>
+    );
+  }
 
   return (
     <Modal
@@ -76,6 +111,11 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     alignItems: "center",
     justifyContent: "center",
+  },
+  inlineContainer: {
+    padding: 16,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
 

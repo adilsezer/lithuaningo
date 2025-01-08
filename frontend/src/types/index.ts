@@ -1,9 +1,15 @@
 export type { Announcement } from "./Announcement";
 export type { AppInfo } from "./AppInfo";
+export type { Comment } from "./Comment";
 export type { LeaderboardEntry } from "./LeaderboardEntry";
 export type { Lemma } from "./Lemma";
 export { QuestionType } from "./QuestionType";
 export type { QuizQuestion } from "./QuizQuestion";
+export type { QuizResult } from "./QuizResult";
+export type {
+  PracticeProgress,
+  PracticeStats,
+} from "@services/data/practiceService";
 export type { Sentence } from "./Sentence";
 export type { UserProfile } from "./UserProfile";
 export type { WordForm } from "./WordForm";

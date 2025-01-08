@@ -1,170 +1,138 @@
-import React, { useEffect, useState } from "react";
+import React, { memo } from "react";
 import {
   View,
-  StyleSheet,
   Text,
+  StyleSheet,
   TouchableOpacity,
   ScrollView,
 } from "react-native";
-import { router } from "expo-router";
-import { SectionText, SectionTitle } from "@components/typography";
-import { Deck } from "@src/types";
 import { FontAwesome5 } from "@expo/vector-icons";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useDecks } from "@hooks/useDecks";
+import { DeckCardProps } from "./deck.types";
+import CustomButton from "@components/ui/CustomButton";
 
-interface DeckCardProps {
-  deck: Deck;
-  onVote: (deckId: string, isUpvote: boolean) => void;
-  onReport: (deckId: string) => void;
-  onComment: (deckId: string) => void;
-  onQuiz: (deckId: string) => void;
-}
-
-export const DeckCard: React.FC<DeckCardProps> = ({
-  deck,
-  onVote,
-  onReport,
-  onComment,
-  onQuiz,
-}) => {
-  const { colors } = useThemeStyles();
-  const { getDeckRating } = useDecks();
-  const [rating, setRating] = useState<number>(0);
-
-  useEffect(() => {
-    const fetchRating = async () => {
-      const deckRating = await getDeckRating(deck.id);
-      setRating(deckRating);
-    };
-    fetchRating();
-  }, [deck.id, getDeckRating]);
-
-  return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: colors.card, borderColor: colors.border },
-      ]}
-    >
-      <View style={styles.header}>
-        <SectionTitle style={[styles.title, { color: colors.text }]}>
-          {deck.title}
-        </SectionTitle>
-        <View style={[styles.tag, { backgroundColor: colors.success + "20" }]}>
-          <SectionText style={[styles.tagText, { color: colors.success }]}>
-            {deck.category}
-          </SectionText>
-        </View>
-      </View>
-
-      <Text
-        style={[styles.description, { color: colors.cardText }]}
-        numberOfLines={2}
+export const DeckCard = memo<DeckCardProps>(
+  ({ deck, rating, actions, colors }) => {
+    return (
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
       >
-        {deck.description}
-      </Text>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tagsContainer}
-      >
-        {deck.tags.map((tag, index) => (
+        {/* Header */}
+        <View style={styles.header}>
+          <Text
+            style={[styles.title, { color: colors.text }]}
+            numberOfLines={2}
+          >
+            {deck.title}
+          </Text>
           <View
-            key={index}
             style={[
-              styles.tagChip,
-              { backgroundColor: colors.secondary + "20" },
+              styles.categoryTag,
+              { backgroundColor: colors.success + "20" },
             ]}
           >
-            <Text style={[styles.tagChipText, { color: colors.secondary }]}>
-              {tag}
+            <Text style={[styles.categoryText, { color: colors.success }]}>
+              {deck.category}
             </Text>
           </View>
-        ))}
-      </ScrollView>
-
-      <View style={styles.metaInfo}>
-        <View style={styles.creator}>
-          <FontAwesome5 name="user" size={12} color={colors.cardText} />
-          <Text style={[styles.metaText, { color: colors.cardText }]}>
-            {deck.createdBy}
-          </Text>
         </View>
-        <View style={styles.rating}>
-          <FontAwesome5 name="star" size={12} color={colors.secondary} />
-          <Text style={[styles.metaText, { color: colors.cardText }]}>
-            {(rating * 100).toFixed(0)}%
-          </Text>
+
+        {/* Content */}
+        <Text
+          style={[styles.description, { color: colors.cardText }]}
+          numberOfLines={2}
+        >
+          {deck.description}
+        </Text>
+
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tagsContainer}
+        >
+          {deck.tags.map((tag, index) => (
+            <View
+              key={index}
+              style={[
+                styles.tagChip,
+                { backgroundColor: colors.secondary + "20" },
+              ]}
+            >
+              <Text style={[styles.tagText, { color: colors.secondary }]}>
+                {tag}
+              </Text>
+            </View>
+          ))}
+        </ScrollView>
+
+        <View style={styles.metaInfo}>
+          <View style={styles.creator}>
+            <FontAwesome5 name="user" size={12} color={colors.cardText} />
+            <Text style={[styles.metaText, { color: colors.cardText }]}>
+              {deck.createdBy}
+            </Text>
+          </View>
+          <View style={styles.rating}>
+            <FontAwesome5 name="star" size={12} color={colors.secondary} />
+            <Text style={[styles.metaText, { color: colors.cardText }]}>
+              {(rating * 100).toFixed(0)}%
+            </Text>
+          </View>
+        </View>
+
+        {/* Actions */}
+        <View style={styles.buttonContainer}>
+          <CustomButton
+            title="Practice"
+            onPress={() => actions.onPractice(deck.id)}
+            style={[styles.actionButton, { backgroundColor: colors.success }]}
+            width="auto"
+          />
+          <CustomButton
+            title="Quiz"
+            onPress={() => actions.onQuiz(deck.id)}
+            style={[styles.actionButton, { backgroundColor: colors.tertiary }]}
+            width="auto"
+          />
+        </View>
+
+        {/* Interactions */}
+        <View style={styles.interactions}>
+          <TouchableOpacity
+            onPress={() => actions.onVote(true)}
+            style={styles.iconButton}
+          >
+            <FontAwesome5 name="thumbs-up" size={20} color={colors.cardText} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => actions.onVote(false)}
+            style={styles.iconButton}
+          >
+            <FontAwesome5
+              name="thumbs-down"
+              size={20}
+              color={colors.cardText}
+            />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => actions.onComment(deck.id)}
+            style={styles.iconButton}
+          >
+            <FontAwesome5 name="comment" size={20} color={colors.cardText} />
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={actions.onReport}
+            style={styles.iconButton}
+          >
+            <FontAwesome5 name="flag" size={20} color={colors.cardText} />
+          </TouchableOpacity>
         </View>
       </View>
-
-      {!deck.isPublic && (
-        <View style={styles.privateTag}>
-          <FontAwesome5 name="lock" size={12} color={colors.error} />
-          <Text style={[styles.privateText, { color: colors.error }]}>
-            Private
-          </Text>
-        </View>
-      )}
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[
-            styles.button,
-            styles.practiceButton,
-            { backgroundColor: colors.success },
-          ]}
-          onPress={() => router.push(`/decks/${deck.id}`)}
-        >
-          <Text style={[styles.buttonText, { color: colors.background }]}>
-            Practice
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.button,
-            styles.quizButton,
-            { backgroundColor: colors.tertiary },
-          ]}
-          onPress={() => onQuiz(deck.id)}
-        >
-          <Text style={[styles.buttonText, { color: colors.background }]}>
-            Quiz
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.actions}>
-        <TouchableOpacity
-          onPress={() => onVote(deck.id, true)}
-          style={styles.iconButton}
-        >
-          <FontAwesome5 name="thumbs-up" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => onVote(deck.id, false)}
-          style={styles.iconButton}
-        >
-          <FontAwesome5 name="thumbs-down" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => onComment(deck.id)}
-          style={styles.iconButton}
-        >
-          <FontAwesome5 name="comment" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => onReport(deck.id)}
-          style={styles.iconButton}
-        >
-          <FontAwesome5 name="flag" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
+    );
+  }
+);
 
 const styles = StyleSheet.create({
   card: {
@@ -188,14 +156,16 @@ const styles = StyleSheet.create({
     fontSize: 20,
     flex: 1,
     marginRight: 8,
+    fontWeight: "600",
   },
-  tag: {
+  categoryTag: {
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 12,
   },
-  tagText: {
+  categoryText: {
     fontSize: 14,
+    fontWeight: "500",
   },
   description: {
     fontSize: 14,
@@ -212,7 +182,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginRight: 8,
   },
-  tagChipText: {
+  tagText: {
     fontSize: 12,
   },
   metaInfo: {
@@ -233,34 +203,20 @@ const styles = StyleSheet.create({
   metaText: {
     fontSize: 12,
   },
-  privateTag: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    marginBottom: 12,
-  },
-  privateText: {
-    fontSize: 12,
-    fontWeight: "500",
-  },
   buttonContainer: {
     flexDirection: "row",
-    gap: 8,
+    justifyContent: "center",
+    gap: 16,
     marginBottom: 16,
   },
-  button: {
-    flex: 1,
-    padding: 12,
+  actionButton: {
+    flex: 0,
+    minWidth: 125,
     borderRadius: 20,
-    alignItems: "center",
+    paddingHorizontal: 32,
+    paddingVertical: 12,
   },
-  practiceButton: {},
-  quizButton: {},
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "600",
-  },
-  actions: {
+  interactions: {
     flexDirection: "row",
     justifyContent: "center",
     gap: 20,
