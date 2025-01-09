@@ -15,6 +15,7 @@ import CustomButton from "@components/ui/CustomButton";
 import quizService from "@services/data/quizService";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
+import BackButton from "@components/layout/BackButton";
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
@@ -98,6 +99,7 @@ export default function QuizScreen() {
   if (error) {
     return (
       <View style={styles.centerContainer}>
+        <BackButton />
         <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
         <CustomButton title="Retry" onPress={startQuiz} />
       </View>
@@ -118,6 +120,7 @@ export default function QuizScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <BackButton />
       <SectionTitle>Quiz</SectionTitle>
       <Text style={[styles.progress, { color: colors.text }]}>
         Question {currentIndex + 1} of {questions.length}

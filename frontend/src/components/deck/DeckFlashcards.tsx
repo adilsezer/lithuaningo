@@ -25,7 +25,6 @@ interface DeckFlashcardsProps {
 }
 
 export const DeckFlashcards: React.FC<DeckFlashcardsProps> = ({
-  deckId,
   flashcards,
   isLoading,
   error,

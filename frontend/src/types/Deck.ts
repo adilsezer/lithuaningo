@@ -4,6 +4,7 @@ export interface Deck {
   description: string;
   category: string;
   createdBy: string;
+  createdByUsername: string;
   createdAt: string;
   isPublic: boolean;
   tags: string[];

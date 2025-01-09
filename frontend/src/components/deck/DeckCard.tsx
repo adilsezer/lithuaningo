@@ -69,7 +69,7 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
         <View style={styles.creator}>
           <FontAwesome5 name="user" size={12} color={colors.cardText} />
           <Text style={[styles.metaText, { color: colors.cardText }]}>
-            {deck.createdBy}
+            {deck.createdByUsername}
           </Text>
         </View>
         <View style={styles.rating}>

@@ -22,6 +22,9 @@ public class Deck
     [FirestoreProperty("createdBy")]
     public string CreatedBy { get; set; } = string.Empty;
 
+    [FirestoreProperty("createdByUsername")]
+    public string CreatedByUsername { get; set; } = string.Empty;
+
     [FirestoreProperty("createdAt")]
     public DateTime CreatedAt { get; set; }
 

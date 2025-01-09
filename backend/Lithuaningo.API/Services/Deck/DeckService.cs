@@ -10,12 +10,14 @@ namespace Lithuaningo.API.Services;
 public class DeckService : IDeckService
 {
     private readonly FirestoreDb _db;
+    private readonly IUserService _userService;
     private const string COLLECTION_NAME = "decks";
     private const string VOTES_COLLECTION = "deckVotes";
 
-    public DeckService(FirestoreDb db)
+    public DeckService(FirestoreDb db, IUserService userService)
     {
         _db = db;
+        _userService = userService;
     }
 
     public async Task<List<Models.Deck>> GetDecksAsync(string? category = null, int? limit = 20)
@@ -115,6 +117,9 @@ public class DeckService : IDeckService
     {
         try
         {
+            var user = await _userService.GetUserProfileAsync(deck.CreatedBy);
+            deck.CreatedByUsername = user?.Name ?? "Unknown User";
+            
             var docRef = _db.Collection(COLLECTION_NAME).Document();
             deck.Id = docRef.Id;
             await docRef.SetAsync(deck);

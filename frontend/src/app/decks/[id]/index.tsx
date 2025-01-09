@@ -13,6 +13,7 @@ import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
+import BackButton from "@components/layout/BackButton";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
@@ -92,6 +93,7 @@ export default function PracticeScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <BackButton />
       <SectionTitle>Practice</SectionTitle>
       {userData && <PracticeStats deckId={id as string} userId={userData.id} />}
       <Text style={[styles.progress, { color: colors.text }]}>
