@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { View, StyleSheet, Text, TouchableOpacity } from "react-native";
+import React, { useState, useRef } from "react";
+import {
+  View,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  Animated,
+} from "react-native";
 import { Flashcard } from "@src/types";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { FontAwesome5 } from "@expo/vector-icons";
@@ -16,15 +22,43 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
   const { colors } = useThemeStyles();
+  const flipAnim = useRef(new Animated.Value(0)).current;
 
-  const handleFlip = () => setIsFlipped(!isFlipped);
+  const handleFlip = () => {
+    const toValue = isFlipped ? 0 : 1;
+    Animated.spring(flipAnim, {
+      toValue,
+      friction: 8,
+      tension: 10,
+      useNativeDriver: true,
+    }).start();
+    setIsFlipped(!isFlipped);
+  };
 
-  const renderCardContent = () => (
+  const frontInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+  const backInterpolate = flipAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["180deg", "360deg"],
+  });
+
+  const frontAnimatedStyle = {
+    transform: [{ rotateY: frontInterpolate }],
+  };
+
+  const backAnimatedStyle = {
+    transform: [{ rotateY: backInterpolate }],
+  };
+
+  const renderCardContent = (isBack: boolean) => (
     <View style={styles.content}>
       <Text style={[styles.mainText, { color: colors.text }]}>
-        {isFlipped ? flashcard.back : flashcard.front}
+        {isBack ? flashcard.back : flashcard.front}
       </Text>
-      {flashcard.exampleSentence && !isFlipped && (
+      {flashcard.exampleSentence && !isBack && (
         <Text style={[styles.exampleText, { color: colors.cardText }]}>
           Example: {flashcard.exampleSentence}
         </Text>
@@ -39,6 +73,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         onPress={() => {
           onAnswer(false);
           setIsFlipped(false);
+          flipAnim.setValue(0);
         }}
         style={[styles.button, { backgroundColor: colors.error }]}
       />
@@ -47,6 +82,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         onPress={() => {
           onAnswer(true);
           setIsFlipped(false);
+          flipAnim.setValue(0);
         }}
         style={[styles.button, { backgroundColor: colors.success }]}
       />
@@ -55,26 +91,63 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity
-        onPress={handleFlip}
-        style={[styles.card, { backgroundColor: colors.card }]}
-        activeOpacity={0.8}
-      >
-        {renderCardContent()}
-        <FontAwesome5
-          name="undo"
-          size={16}
-          color={colors.cardText}
-          style={styles.flipIcon}
-        />
-      </TouchableOpacity>
-      {isFlipped && renderAnswerButtons()}
+      <View style={styles.cardWrapper}>
+        <TouchableOpacity
+          onPress={handleFlip}
+          activeOpacity={0.8}
+          style={styles.cardContainer}
+        >
+          <Animated.View
+            style={[
+              styles.card,
+              { backgroundColor: colors.card },
+              styles.cardFace,
+              frontAnimatedStyle,
+            ]}
+          >
+            {renderCardContent(false)}
+            <FontAwesome5
+              name="undo"
+              size={16}
+              color={colors.cardText}
+              style={styles.flipIcon}
+            />
+          </Animated.View>
+          <Animated.View
+            style={[
+              styles.card,
+              { backgroundColor: colors.card },
+              styles.cardFace,
+              styles.cardBack,
+              backAnimatedStyle,
+            ]}
+          >
+            {renderCardContent(true)}
+            <FontAwesome5
+              name="undo"
+              size={16}
+              color={colors.cardText}
+              style={styles.flipIcon}
+            />
+          </Animated.View>
+        </TouchableOpacity>
+      </View>
+      {isFlipped && (
+        <View style={styles.buttonsWrapper}>{renderAnswerButtons()}</View>
+      )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
+    flex: 1,
+  },
+  cardWrapper: {
+    flex: 1,
+    minHeight: 400,
+  },
+  cardContainer: {
     flex: 1,
   },
   card: {
@@ -88,7 +161,17 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
-    marginBottom: 24,
+  },
+  cardFace: {
+    backfaceVisibility: "hidden",
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  cardBack: {
+    transform: [{ rotateY: "180deg" }],
   },
   content: {
     alignItems: "center",
@@ -113,17 +196,20 @@ const styles = StyleSheet.create({
     right: 20,
     opacity: 0.5,
   },
+  buttonsWrapper: {
+    marginTop: 24,
+  },
   answerButtons: {
     flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 16,
+    justifyContent: "center",
+    gap: 12,
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
   button: {
     borderRadius: 12,
-    paddingVertical: 12,
+    paddingVertical: 20,
     paddingHorizontal: 24,
-    minWidth: 120,
+    minWidth: 150,
   },
 });

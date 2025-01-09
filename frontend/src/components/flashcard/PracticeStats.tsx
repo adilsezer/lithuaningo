@@ -92,8 +92,6 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
 
   return (
     <View style={styles.container}>
-      <SectionTitle style={styles.title}>Practice Statistics</SectionTitle>
-
       <View style={styles.statsContainer}>
         <StatItem
           icon="book"
