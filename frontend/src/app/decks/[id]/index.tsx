@@ -45,17 +45,20 @@ export default function PracticeScreen() {
         isCorrect,
       });
 
-      setStats((prev) => ({
-        correct: prev.correct + (isCorrect ? 1 : 0),
-        total: prev.total + 1,
-      }));
+      const newStats = {
+        correct: stats.correct + (isCorrect ? 1 : 0),
+        total: stats.total + 1,
+      };
+      setStats(newStats);
 
       if (currentIndex < flashcards.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
-        const percentage = Math.round((stats.correct / stats.total) * 100);
+        const percentage = Math.round(
+          (newStats.correct / newStats.total) * 100
+        );
         AlertDialog.success(
-          `Practice completed! Score: ${stats.correct}/${stats.total} (${percentage}%)`
+          `Practice completed! Score: ${newStats.correct}/${newStats.total} (${percentage}%)`
         );
         setCurrentIndex(0);
         setStats({ correct: 0, total: 0 });
