@@ -29,12 +29,6 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
           Example: {flashcard.exampleSentence}
         </Text>
       )}
-      <FontAwesome5
-        name="undo"
-        size={16}
-        color={colors.cardText}
-        style={styles.flipIcon}
-      />
     </View>
   );
 
@@ -67,6 +61,12 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         activeOpacity={0.8}
       >
         {renderCardContent()}
+        <FontAwesome5
+          name="undo"
+          size={16}
+          color={colors.cardText}
+          style={styles.flipIcon}
+        />
       </TouchableOpacity>
       {isFlipped && renderAnswerButtons()}
     </View>
@@ -109,8 +109,8 @@ const styles = StyleSheet.create({
   },
   flipIcon: {
     position: "absolute",
-    bottom: 16,
-    right: 16,
+    bottom: 20,
+    right: 20,
     opacity: 0.5,
   },
   answerButtons: {

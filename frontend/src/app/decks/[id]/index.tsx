@@ -3,7 +3,6 @@ import { View, StyleSheet, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useDecks } from "@hooks/useDecks";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { Flashcard } from "@src/types";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import { SectionTitle } from "@components/typography";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
