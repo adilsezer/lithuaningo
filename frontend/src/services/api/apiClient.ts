@@ -365,7 +365,11 @@ class ApiClient {
   async trackPracticeProgress(progress: Omit<PracticeProgress, "timestamp">) {
     return this.request<void>(`/deck/${progress.deckId}/practice/track`, {
       method: "POST",
-      data: progress,
+      params: {
+        userId: progress.userId,
+        flashcardId: progress.flashcardId,
+        isCorrect: progress.isCorrect,
+      },
     });
   }
 
@@ -376,7 +380,9 @@ class ApiClient {
   }
 
   async getPracticeHistory(userId: string) {
-    return this.request<PracticeProgress[]>(`/user/${userId}/practice-history`);
+    return this.request<PracticeStats[]>(
+      `/deck/user/${userId}/practice-history`
+    );
   }
 }
 

@@ -8,11 +8,22 @@ export interface PracticeProgress {
   timestamp: string;
 }
 
+export interface CardProgress {
+  correctAttempts: number;
+  totalAttempts: number;
+  lastPracticed: string;
+  mastered: boolean;
+}
+
 export interface PracticeStats {
+  id: string;
+  userId: string;
+  deckId: string;
   totalCards: number;
   masteredCards: number;
   needsPractice: number;
   lastPracticed: string;
+  cardProgress: { [key: string]: CardProgress };
 }
 
 class PracticeService {

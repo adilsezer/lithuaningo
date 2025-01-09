@@ -50,6 +50,10 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
     (stats.masteredCards / stats.totalCards) * 100
   );
 
+  const recentlyPracticedCards = Object.entries(stats.cardProgress).filter(
+    ([_, progress]) => !progress.mastered
+  ).length;
+
   return (
     <View style={styles.container}>
       <SectionTitle style={styles.title}>Practice Statistics</SectionTitle>
@@ -99,6 +103,9 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
       <Text style={[styles.lastPracticed, { color: colors.cardText }]}>
         Last practiced: {new Date(stats.lastPracticed).toLocaleDateString()}
       </Text>
+      <Text style={[styles.additionalStats, { color: colors.cardText }]}>
+        Recently practiced cards: {recentlyPracticedCards}
+      </Text>
     </View>
   );
 };
@@ -144,6 +151,11 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   lastPracticed: {
+    fontSize: 12,
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  additionalStats: {
     fontSize: 12,
     textAlign: "center",
   },

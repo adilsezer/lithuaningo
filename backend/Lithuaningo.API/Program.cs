@@ -89,6 +89,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<IAppInfoService, AppInfoService>();
     services.AddScoped<IDeckService, DeckService>();
     services.AddScoped<IFlashcardService, FlashcardService>();
+    services.AddScoped<IPracticeService, PracticeService>();
     
 
     // Quiz Related Services
@@ -118,7 +119,8 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
             .AddApplicationPart(typeof(AnnouncementController).Assembly)
             .AddApplicationPart(typeof(AppInfoController).Assembly)
             .AddApplicationPart(typeof(DeckController).Assembly)
-            .AddApplicationPart(typeof(FlashcardController).Assembly);
+            .AddApplicationPart(typeof(FlashcardController).Assembly)
+            .AddApplicationPart(typeof(PracticeController).Assembly);
 }
 
 void ConfigureMiddleware(WebApplication app)
