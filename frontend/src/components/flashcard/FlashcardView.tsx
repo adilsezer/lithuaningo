@@ -15,20 +15,49 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   onAnswer,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const [hasAnswered, setHasAnswered] = useState(false);
   const { colors } = useThemeStyles();
 
-  const handleFlip = () => {
-    if (!hasAnswered) {
-      setIsFlipped(!isFlipped);
-    }
-  };
+  const handleFlip = () => setIsFlipped(!isFlipped);
 
-  const handleAnswer = (isCorrect: boolean) => {
-    onAnswer(isCorrect);
-    setIsFlipped(false);
-    setHasAnswered(false);
-  };
+  const renderCardContent = () => (
+    <View style={styles.content}>
+      <Text style={[styles.mainText, { color: colors.text }]}>
+        {isFlipped ? flashcard.back : flashcard.front}
+      </Text>
+      {flashcard.exampleSentence && !isFlipped && (
+        <Text style={[styles.exampleText, { color: colors.cardText }]}>
+          Example: {flashcard.exampleSentence}
+        </Text>
+      )}
+      <FontAwesome5
+        name="undo"
+        size={16}
+        color={colors.cardText}
+        style={styles.flipIcon}
+      />
+    </View>
+  );
+
+  const renderAnswerButtons = () => (
+    <View style={styles.answerButtons}>
+      <CustomButton
+        title="Incorrect"
+        onPress={() => {
+          onAnswer(false);
+          setIsFlipped(false);
+        }}
+        style={[styles.button, { backgroundColor: colors.error }]}
+      />
+      <CustomButton
+        title="Correct"
+        onPress={() => {
+          onAnswer(true);
+          setIsFlipped(false);
+        }}
+        style={[styles.button, { backgroundColor: colors.success }]}
+      />
+    </View>
+  );
 
   return (
     <View style={styles.container}>
@@ -37,39 +66,9 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         style={[styles.card, { backgroundColor: colors.card }]}
         activeOpacity={0.8}
       >
-        <View style={styles.content}>
-          <Text style={[styles.mainText, { color: colors.text }]}>
-            {isFlipped ? flashcard.back : flashcard.front}
-          </Text>
-          {flashcard.exampleSentence && isFlipped && (
-            <Text style={[styles.exampleText, { color: colors.cardText }]}>
-              Example: {flashcard.exampleSentence}
-            </Text>
-          )}
-        </View>
-        <View style={styles.flipIcon}>
-          <FontAwesome5
-            name="undo"
-            size={16}
-            color={colors.cardText}
-            style={{ opacity: 0.5 }}
-          />
-        </View>
+        {renderCardContent()}
       </TouchableOpacity>
-      {isFlipped && !hasAnswered && (
-        <View style={styles.answerButtons}>
-          <CustomButton
-            title="Incorrect"
-            onPress={() => handleAnswer(false)}
-            style={[styles.button, { backgroundColor: colors.error }]}
-          />
-          <CustomButton
-            title="Correct"
-            onPress={() => handleAnswer(true)}
-            style={[styles.button, { backgroundColor: colors.success }]}
-          />
-        </View>
-      )}
+      {isFlipped && renderAnswerButtons()}
     </View>
   );
 };
@@ -89,10 +88,12 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
     shadowRadius: 2,
+    marginBottom: 24,
   },
   content: {
     alignItems: "center",
     padding: 16,
+    width: "100%",
   },
   mainText: {
     fontSize: 24,
@@ -110,14 +111,19 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 16,
     right: 16,
+    opacity: 0.5,
   },
   answerButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
     gap: 16,
-    marginTop: 16,
+    paddingHorizontal: 16,
+    paddingBottom: 16,
   },
   button: {
-    flex: 1,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    minWidth: 120,
   },
 });
