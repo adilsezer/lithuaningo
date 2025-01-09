@@ -20,6 +20,7 @@ export const useDecks = (currentUserId?: string) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
   const [viewMode, setViewMode] = useState<ViewMode>("all");
+  const [deckRatings, setDeckRatings] = useState<Record<string, number>>({});
 
   // Cache deck ratings with a 5-minute expiry
   const ratingsCache = useRef<DeckRatings>({});
@@ -170,6 +171,19 @@ export const useDecks = (currentUserId?: string) => {
     setSearchQuery("");
   }, [viewMode]);
 
+  const loadDeckRatings = useCallback(async () => {
+    const ratings: Record<string, number> = {};
+    for (const deck of decks) {
+      ratings[deck.id] = await getDeckRating(deck.id);
+    }
+    setDeckRatings(ratings);
+  }, [decks, getDeckRating]);
+
+  // Add useEffect to load ratings when decks change
+  useEffect(() => {
+    loadDeckRatings();
+  }, [loadDeckRatings]);
+
   return {
     // States
     decks: filteredDecks,
@@ -181,6 +195,7 @@ export const useDecks = (currentUserId?: string) => {
     viewMode,
     isEmpty,
     emptyMessage,
+    deckRatings,
 
     // Actions
     setSearchQuery,

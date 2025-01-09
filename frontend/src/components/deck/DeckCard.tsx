@@ -9,130 +9,120 @@ import {
 import { FontAwesome5 } from "@expo/vector-icons";
 import { DeckCardProps } from "./deck.types";
 import CustomButton from "@components/ui/CustomButton";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
-export const DeckCard = memo<DeckCardProps>(
-  ({ deck, rating, actions, colors }) => {
-    return (
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.card, borderColor: colors.border },
-        ]}
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text
-            style={[styles.title, { color: colors.text }]}
-            numberOfLines={2}
-          >
-            {deck.title}
-          </Text>
-          <View
-            style={[
-              styles.categoryTag,
-              { backgroundColor: colors.success + "20" },
-            ]}
-          >
-            <Text style={[styles.categoryText, { color: colors.success }]}>
-              {deck.category}
-            </Text>
-          </View>
-        </View>
-
-        {/* Content */}
-        <Text
-          style={[styles.description, { color: colors.cardText }]}
-          numberOfLines={2}
-        >
-          {deck.description}
+export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
+  const { colors } = useThemeStyles();
+  return (
+    <View
+      style={[
+        styles.card,
+        { backgroundColor: colors.card, borderColor: colors.border },
+      ]}
+    >
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
+          {deck.title}
         </Text>
-
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tagsContainer}
+        <View
+          style={[
+            styles.categoryTag,
+            { backgroundColor: colors.success + "20" },
+          ]}
         >
-          {deck.tags.map((tag, index) => (
-            <View
-              key={index}
-              style={[
-                styles.tagChip,
-                { backgroundColor: colors.secondary + "20" },
-              ]}
-            >
-              <Text style={[styles.tagText, { color: colors.secondary }]}>
-                {tag}
-              </Text>
-            </View>
-          ))}
-        </ScrollView>
-
-        <View style={styles.metaInfo}>
-          <View style={styles.creator}>
-            <FontAwesome5 name="user" size={12} color={colors.cardText} />
-            <Text style={[styles.metaText, { color: colors.cardText }]}>
-              {deck.createdBy}
-            </Text>
-          </View>
-          <View style={styles.rating}>
-            <FontAwesome5 name="star" size={12} color={colors.secondary} />
-            <Text style={[styles.metaText, { color: colors.cardText }]}>
-              {(rating * 100).toFixed(0)}%
-            </Text>
-          </View>
-        </View>
-
-        {/* Actions */}
-        <View style={styles.buttonContainer}>
-          <CustomButton
-            title="Practice"
-            onPress={() => actions.onPractice(deck.id)}
-            style={[styles.actionButton, { backgroundColor: colors.success }]}
-            width="auto"
-          />
-          <CustomButton
-            title="Quiz"
-            onPress={() => actions.onQuiz(deck.id)}
-            style={[styles.actionButton, { backgroundColor: colors.secondary }]}
-            width="auto"
-          />
-        </View>
-
-        {/* Interactions */}
-        <View style={styles.interactions}>
-          <TouchableOpacity
-            onPress={() => actions.onVote(true)}
-            style={styles.iconButton}
-          >
-            <FontAwesome5 name="thumbs-up" size={20} color={colors.cardText} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => actions.onVote(false)}
-            style={styles.iconButton}
-          >
-            <FontAwesome5
-              name="thumbs-down"
-              size={20}
-              color={colors.cardText}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => actions.onComment(deck.id)}
-            style={styles.iconButton}
-          >
-            <FontAwesome5 name="comment" size={20} color={colors.cardText} />
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={actions.onReport}
-            style={styles.iconButton}
-          >
-            <FontAwesome5 name="flag" size={20} color={colors.cardText} />
-          </TouchableOpacity>
+          <Text style={[styles.categoryText, { color: colors.success }]}>
+            {deck.category}
+          </Text>
         </View>
       </View>
-    );
-  }
-);
+
+      {/* Content */}
+      <Text
+        style={[styles.description, { color: colors.cardText }]}
+        numberOfLines={2}
+      >
+        {deck.description}
+      </Text>
+
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tagsContainer}
+      >
+        {deck.tags.map((tag, index) => (
+          <View
+            key={index}
+            style={[
+              styles.tagChip,
+              { backgroundColor: colors.secondary + "20" },
+            ]}
+          >
+            <Text style={[styles.tagText, { color: colors.secondary }]}>
+              {tag}
+            </Text>
+          </View>
+        ))}
+      </ScrollView>
+
+      <View style={styles.metaInfo}>
+        <View style={styles.creator}>
+          <FontAwesome5 name="user" size={12} color={colors.cardText} />
+          <Text style={[styles.metaText, { color: colors.cardText }]}>
+            {deck.createdBy}
+          </Text>
+        </View>
+        <View style={styles.rating}>
+          <FontAwesome5 name="star" size={12} color={colors.secondary} />
+          <Text style={[styles.metaText, { color: colors.cardText }]}>
+            {(rating * 100).toFixed(0)}%
+          </Text>
+        </View>
+      </View>
+
+      {/* Actions */}
+      <View style={styles.buttonContainer}>
+        <CustomButton
+          title="Practice"
+          onPress={() => actions.onPractice(deck.id)}
+          style={[styles.actionButton, { backgroundColor: colors.success }]}
+          width="auto"
+        />
+        <CustomButton
+          title="Quiz"
+          onPress={() => actions.onQuiz(deck.id)}
+          style={[styles.actionButton, { backgroundColor: colors.secondary }]}
+          width="auto"
+        />
+      </View>
+
+      {/* Interactions */}
+      <View style={styles.interactions}>
+        <TouchableOpacity
+          onPress={() => actions.onVote(true)}
+          style={styles.iconButton}
+        >
+          <FontAwesome5 name="thumbs-up" size={20} color={colors.cardText} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => actions.onVote(false)}
+          style={styles.iconButton}
+        >
+          <FontAwesome5 name="thumbs-down" size={20} color={colors.cardText} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          onPress={() => actions.onComment(deck.id)}
+          style={styles.iconButton}
+        >
+          <FontAwesome5 name="comment" size={20} color={colors.cardText} />
+        </TouchableOpacity>
+        <TouchableOpacity onPress={actions.onReport} style={styles.iconButton}>
+          <FontAwesome5 name="flag" size={20} color={colors.cardText} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+});
 
 const styles = StyleSheet.create({
   card: {

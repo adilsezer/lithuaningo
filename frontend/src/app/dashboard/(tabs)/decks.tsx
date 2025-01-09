@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View, StyleSheet, FlatList, Text } from "react-native";
 import { SectionTitle } from "@components/typography";
 import { DeckCard } from "@components/deck/DeckCard";
@@ -12,13 +12,11 @@ import { useRouter } from "expo-router";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
-import CustomButton from "@components/ui/CustomButton";
 
 export default function DecksScreen() {
   const userData = useAppSelector(selectUserData);
   const { colors } = useThemeStyles();
   const router = useRouter();
-  const [deckRatings, setDeckRatings] = useState<Record<string, number>>({});
 
   const {
     decks,
@@ -27,15 +25,14 @@ export default function DecksScreen() {
     searchQuery,
     selectedCategory,
     viewMode,
-    isEmpty,
     emptyMessage,
+    deckRatings,
     setSearchQuery,
     setSelectedCategory,
     setViewMode,
     fetchDecks,
     voteDeck,
     reportDeck,
-    getDeckRating,
   } = useDecks(userData?.id);
 
   const styles = StyleSheet.create({
@@ -67,17 +64,6 @@ export default function DecksScreen() {
   useEffect(() => {
     fetchDecks();
   }, [fetchDecks]);
-
-  useEffect(() => {
-    const loadRatings = async () => {
-      const ratings: Record<string, number> = {};
-      for (const deck of decks) {
-        ratings[deck.id] = await getDeckRating(deck.id);
-      }
-      setDeckRatings(ratings);
-    };
-    loadRatings();
-  }, [decks, getDeckRating]);
 
   const handleComment = (deckId: string) => {
     if (!userData) {
@@ -130,7 +116,6 @@ export default function DecksScreen() {
           <DeckCard
             deck={item}
             rating={deckRatings[item.id] || 0}
-            colors={colors}
             actions={{
               onVote: (isUpvote) =>
                 userData?.id && voteDeck(item.id, userData.id, isUpvote),
