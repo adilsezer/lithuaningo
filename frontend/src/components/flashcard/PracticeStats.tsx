@@ -11,6 +11,29 @@ interface PracticeStatsProps {
   userId: string;
 }
 
+const StatItem = ({
+  icon,
+  value,
+  label,
+  color,
+}: {
+  icon: string;
+  value: number;
+  label: string;
+  color: string;
+}) => {
+  const { colors } = useThemeStyles();
+  return (
+    <View style={styles.statItem}>
+      <FontAwesome5 name={icon} size={20} color={color} />
+      <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
+      <Text style={[styles.statLabel, { color: colors.cardText }]}>
+        {label}
+      </Text>
+    </View>
+  );
+};
+
 export const PracticeStats: React.FC<PracticeStatsProps> = ({
   deckId,
   userId,
@@ -18,90 +41,94 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
   const { colors } = useThemeStyles();
   const [stats, setStats] = useState<IPracticeStats | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    const loadStats = async () => {
+      try {
+        setIsLoading(true);
+        const data = await apiClient.getPracticeStats(deckId, userId);
+        setStats(data);
+      } catch (err) {
+        console.error("Error loading practice stats:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
     loadStats();
   }, [deckId, userId]);
 
-  const loadStats = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await apiClient.getPracticeStats(deckId, userId);
-      setStats(data);
-    } catch (err) {
-      setError("Failed to load practice statistics");
-      console.error("Error loading practice stats:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  if (isLoading) {
-    return null;
-  }
-
-  if (error || !stats) {
-    return null;
-  }
+  if (isLoading || !stats) return null;
 
   const masteryPercentage = Math.round(
     (stats.masteredCards / stats.totalCards) * 100
   );
-
-  const recentlyPracticedCards = Object.entries(stats.cardProgress).filter(
-    ([_, progress]) => !progress.mastered
+  const recentlyPracticedCards = Object.values(stats.cardProgress).filter(
+    (p) => !p.mastered
   ).length;
+
+  const getTimeAgo = (date: string | Date) => {
+    try {
+      const lastPracticedDate = new Date(date);
+      if (isNaN(lastPracticedDate.getTime())) return "Just now";
+
+      const minutes = Math.floor(
+        (Date.now() - lastPracticedDate.getTime()) / 60000
+      );
+      if (minutes < 1) return "Just now";
+      if (minutes < 60) return `${minutes}m ago`;
+      if (minutes < 1440) return `${Math.floor(minutes / 60)}h ago`;
+      if (minutes < 10080) return `${Math.floor(minutes / 1440)}d ago`;
+
+      return lastPracticedDate.toLocaleDateString(undefined, {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch {
+      return "Just now";
+    }
+  };
 
   return (
     <View style={styles.container}>
       <SectionTitle style={styles.title}>Practice Statistics</SectionTitle>
+
       <View style={styles.statsContainer}>
-        <View style={styles.statItem}>
-          <FontAwesome5 name="book" size={20} color={colors.primary} />
-          <Text style={[styles.statValue, { color: colors.text }]}>
-            {stats.totalCards}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.cardText }]}>
-            Total Cards
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <FontAwesome5 name="check-circle" size={20} color={colors.success} />
-          <Text style={[styles.statValue, { color: colors.text }]}>
-            {stats.masteredCards}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.cardText }]}>
-            Mastered
-          </Text>
-        </View>
-        <View style={styles.statItem}>
-          <FontAwesome5 name="sync" size={20} color={colors.error} />
-          <Text style={[styles.statValue, { color: colors.text }]}>
-            {stats.needsPractice}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.cardText }]}>
-            Need Practice
-          </Text>
-        </View>
+        <StatItem
+          icon="book"
+          value={stats.totalCards}
+          label="Total Cards"
+          color={colors.primary}
+        />
+        <StatItem
+          icon="check-circle"
+          value={stats.masteredCards}
+          label="Mastered"
+          color={colors.success}
+        />
+        <StatItem
+          icon="sync"
+          value={stats.needsPractice}
+          label="Need Practice"
+          color={colors.error}
+        />
       </View>
+
       <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
         <View
           style={[
             styles.progressFill,
-            {
-              backgroundColor: colors.success,
-              width: `${masteryPercentage}%`,
-            },
+            { backgroundColor: colors.success, width: `${masteryPercentage}%` },
           ]}
         />
       </View>
+
       <Text style={[styles.progressText, { color: colors.cardText }]}>
         {masteryPercentage}% Mastered
       </Text>
       <Text style={[styles.lastPracticed, { color: colors.cardText }]}>
-        Last practiced: {new Date(stats.lastPracticed).toLocaleDateString()}
+        Last practiced: {getTimeAgo(stats.lastPracticed)}
       </Text>
       <Text style={[styles.additionalStats, { color: colors.cardText }]}>
         Recently practiced cards: {recentlyPracticedCards}
