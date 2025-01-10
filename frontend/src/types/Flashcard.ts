@@ -4,6 +4,7 @@ export interface Flashcard {
   front: string;
   back: string;
   audioUrl?: string;
+  imageUrl?: string;
   exampleSentence?: string;
   createdBy: string;
   createdAt: string;

@@ -5,16 +5,82 @@ import {
   Text,
   TouchableOpacity,
   Animated,
+  Image,
 } from "react-native";
 import { Flashcard } from "@src/types";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { FontAwesome5 } from "@expo/vector-icons";
 import CustomButton from "@components/ui/CustomButton";
+import { Audio } from "expo-av";
 
 interface FlashcardViewProps {
   flashcard: Flashcard;
   onAnswer: (isCorrect: boolean) => void;
 }
+
+const AudioButton = ({ url }: { url: string }) => {
+  const [sound, setSound] = useState<Audio.Sound>();
+  const { colors } = useThemeStyles();
+
+  React.useEffect(() => {
+    return () => {
+      sound?.unloadAsync();
+    };
+  }, [sound]);
+
+  const playSound = async () => {
+    try {
+      if (sound) await sound.unloadAsync();
+      const { sound: newSound } = await Audio.Sound.createAsync({ uri: url });
+      setSound(newSound);
+      await newSound.playAsync();
+    } catch (error) {
+      console.error("Error playing sound:", error);
+    }
+  };
+
+  return (
+    <TouchableOpacity
+      onPress={playSound}
+      style={[styles.audioButton, { backgroundColor: colors.primary }]}
+    >
+      <FontAwesome5 name="volume-up" size={20} color={colors.buttonText} />
+    </TouchableOpacity>
+  );
+};
+
+const CardContent = ({
+  text,
+  example,
+  imageUrl,
+  audioUrl,
+}: {
+  text: string;
+  example?: string;
+  imageUrl?: string;
+  audioUrl?: string;
+}) => {
+  const { colors } = useThemeStyles();
+
+  return (
+    <View style={styles.content}>
+      {imageUrl && (
+        <Image
+          source={{ uri: imageUrl }}
+          style={styles.image}
+          resizeMode="contain"
+        />
+      )}
+      <Text style={[styles.mainText, { color: colors.text }]}>{text}</Text>
+      {example && (
+        <Text style={[styles.exampleText, { color: colors.cardText }]}>
+          Example: {example}
+        </Text>
+      )}
+      {audioUrl && <AudioButton url={audioUrl} />}
+    </View>
+  );
+};
 
 export const FlashcardView: React.FC<FlashcardViewProps> = ({
   flashcard,
@@ -25,9 +91,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const flipAnim = useRef(new Animated.Value(0)).current;
 
   const handleFlip = () => {
-    const toValue = isFlipped ? 0 : 1;
     Animated.spring(flipAnim, {
-      toValue,
+      toValue: isFlipped ? 0 : 1,
       friction: 8,
       tension: 10,
       useNativeDriver: true,
@@ -35,105 +100,95 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     setIsFlipped(!isFlipped);
   };
 
-  const frontInterpolate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["0deg", "180deg"],
-  });
-
-  const backInterpolate = flipAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["180deg", "360deg"],
-  });
-
   const frontAnimatedStyle = {
-    transform: [{ rotateY: frontInterpolate }],
+    transform: [
+      {
+        rotateY: flipAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: ["0deg", "180deg"],
+        }),
+      },
+    ],
   };
 
   const backAnimatedStyle = {
-    transform: [{ rotateY: backInterpolate }],
+    transform: [
+      {
+        rotateY: flipAnim.interpolate({
+          inputRange: [0, 1],
+          outputRange: ["180deg", "360deg"],
+        }),
+      },
+    ],
   };
 
-  const renderCardContent = (isBack: boolean) => (
-    <View style={styles.content}>
-      <Text style={[styles.mainText, { color: colors.text }]}>
-        {isBack ? flashcard.back : flashcard.front}
-      </Text>
-      {flashcard.exampleSentence && !isBack && (
-        <Text style={[styles.exampleText, { color: colors.cardText }]}>
-          Example: {flashcard.exampleSentence}
-        </Text>
-      )}
-    </View>
-  );
-
-  const renderAnswerButtons = () => (
-    <View style={styles.answerButtons}>
-      <CustomButton
-        title="Incorrect"
-        onPress={() => {
-          onAnswer(false);
-          setIsFlipped(false);
-          flipAnim.setValue(0);
-        }}
-        style={[styles.button, { backgroundColor: colors.error }]}
-      />
-      <CustomButton
-        title="Correct"
-        onPress={() => {
-          onAnswer(true);
-          setIsFlipped(false);
-          flipAnim.setValue(0);
-        }}
-        style={[styles.button, { backgroundColor: colors.success }]}
-      />
-    </View>
-  );
+  const handleAnswer = (isCorrect: boolean) => {
+    onAnswer(isCorrect);
+    setIsFlipped(false);
+    flipAnim.setValue(0);
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.cardWrapper}>
-        <TouchableOpacity
-          onPress={handleFlip}
-          activeOpacity={0.8}
-          style={styles.cardContainer}
+      <TouchableOpacity
+        onPress={handleFlip}
+        activeOpacity={0.8}
+        style={styles.cardContainer}
+      >
+        <Animated.View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card },
+            styles.cardFace,
+            frontAnimatedStyle,
+          ]}
         >
-          <Animated.View
-            style={[
-              styles.card,
-              { backgroundColor: colors.card },
-              styles.cardFace,
-              frontAnimatedStyle,
-            ]}
-          >
-            {renderCardContent(false)}
-            <FontAwesome5
-              name="undo"
-              size={16}
-              color={colors.cardText}
-              style={styles.flipIcon}
-            />
-          </Animated.View>
-          <Animated.View
-            style={[
-              styles.card,
-              { backgroundColor: colors.card },
-              styles.cardFace,
-              styles.cardBack,
-              backAnimatedStyle,
-            ]}
-          >
-            {renderCardContent(true)}
-            <FontAwesome5
-              name="undo"
-              size={16}
-              color={colors.cardText}
-              style={styles.flipIcon}
-            />
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
+          <CardContent
+            text={flashcard.front}
+            example={flashcard.exampleSentence}
+            imageUrl={flashcard.imageUrl}
+            audioUrl={flashcard.audioUrl}
+          />
+          <FontAwesome5
+            name="undo"
+            size={16}
+            color={colors.cardText}
+            style={styles.flipIcon}
+          />
+        </Animated.View>
+        <Animated.View
+          style={[
+            styles.card,
+            { backgroundColor: colors.card },
+            styles.cardFace,
+            styles.cardBack,
+            backAnimatedStyle,
+          ]}
+        >
+          <CardContent text={flashcard.back} />
+          <FontAwesome5
+            name="undo"
+            size={16}
+            color={colors.cardText}
+            style={styles.flipIcon}
+          />
+        </Animated.View>
+      </TouchableOpacity>
       {isFlipped && (
-        <View style={styles.buttonsWrapper}>{renderAnswerButtons()}</View>
+        <View style={styles.buttonsWrapper}>
+          <View style={styles.answerButtons}>
+            <CustomButton
+              title="Incorrect"
+              onPress={() => handleAnswer(false)}
+              style={[styles.button, { backgroundColor: colors.error }]}
+            />
+            <CustomButton
+              title="Correct"
+              onPress={() => handleAnswer(true)}
+              style={[styles.button, { backgroundColor: colors.success }]}
+            />
+          </View>
+        </View>
       )}
     </View>
   );
@@ -141,9 +196,6 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  cardWrapper: {
     flex: 1,
     minHeight: 400,
   },
@@ -211,5 +263,16 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 24,
     minWidth: 150,
+  },
+  image: {
+    width: "100%",
+    height: 200,
+    marginBottom: 16,
+    borderRadius: 10,
+  },
+  audioButton: {
+    padding: 12,
+    borderRadius: 30,
+    marginTop: 16,
   },
 });

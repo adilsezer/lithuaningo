@@ -19,6 +19,9 @@ public class Flashcard
     [FirestoreProperty("audioUrl")]
     public string? AudioUrl { get; set; }
 
+    [FirestoreProperty("imageUrl")]
+    public string? ImageUrl { get; set; }
+
     [FirestoreProperty("exampleSentence")]
     public string? ExampleSentence { get; set; }
 
