@@ -23,8 +23,8 @@ namespace Lithuaningo.API.Models
         [FirestoreProperty("needsPractice")]
         public int NeedsPractice { get; set; }
 
-        [FirestoreProperty("lastPracticed")]
-        public Timestamp LastPracticed { get; set; }
+        [FirestoreProperty("lastPracticed", ConverterType = typeof(TimestampConverter))]
+        public DateTime LastPracticed { get; set; }
 
         [FirestoreProperty("cardProgress")]
         public Dictionary<string, CardProgress> CardProgress { get; set; } = new();
@@ -39,8 +39,8 @@ namespace Lithuaningo.API.Models
         [FirestoreProperty("totalAttempts")]
         public int TotalAttempts { get; set; }
 
-        [FirestoreProperty("lastPracticed")]
-        public Timestamp LastPracticed { get; set; }
+        [FirestoreProperty("lastPracticed", ConverterType = typeof(TimestampConverter))]
+        public DateTime LastPracticed { get; set; }
 
         [FirestoreProperty("mastered")]
         public bool Mastered { get; set; }

@@ -63,9 +63,6 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
   const masteryPercentage = Math.round(
     (stats.masteredCards / stats.totalCards) * 100
   );
-  const recentlyPracticedCards = Object.values(stats.cardProgress).filter(
-    (p) => !p.mastered
-  ).length;
 
   const getTimeAgo = (date: string | Date) => {
     try {
@@ -128,9 +125,6 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
       <Text style={[styles.lastPracticed, { color: colors.cardText }]}>
         Last practiced: {getTimeAgo(stats.lastPracticed)}
       </Text>
-      <Text style={[styles.additionalStats, { color: colors.cardText }]}>
-        Recently practiced cards: {recentlyPracticedCards}
-      </Text>
     </View>
   );
 };
@@ -179,9 +173,5 @@ const styles = StyleSheet.create({
     fontSize: 12,
     textAlign: "center",
     marginBottom: 8,
-  },
-  additionalStats: {
-    fontSize: 12,
-    textAlign: "center",
   },
 });

@@ -37,14 +37,14 @@ namespace Lithuaningo.API.Services
                         TotalCards = flashcards.Count,
                         MasteredCards = 0,
                         NeedsPractice = flashcards.Count,
-                        LastPracticed = Timestamp.FromDateTime(DateTime.UtcNow),
+                        LastPracticed = DateTime.UtcNow,
                         CardProgress = flashcards.ToDictionary(
                             f => f.Id!,
                             _ => new CardProgress
                             {
                                 CorrectAttempts = 0,
                                 TotalAttempts = 0,
-                                LastPracticed = Timestamp.FromDateTime(DateTime.UtcNow),
+                                LastPracticed = DateTime.UtcNow,
                                 Mastered = false
                             }
                         )
@@ -97,7 +97,7 @@ namespace Lithuaningo.API.Services
                     {
                         progress.CorrectAttempts++;
                     }
-                    progress.LastPracticed = Timestamp.FromDateTime(DateTime.UtcNow);
+                    progress.LastPracticed = DateTime.UtcNow;
                     progress.Mastered = progress.CorrectAttempts >= MASTERY_THRESHOLD;
 
                     // Update overall stats
@@ -107,7 +107,7 @@ namespace Lithuaningo.API.Services
                         stats.NeedsPractice = Math.Max(0, stats.NeedsPractice - 1);
                     }
 
-                    stats.LastPracticed = Timestamp.FromDateTime(DateTime.UtcNow);
+                    stats.LastPracticed = DateTime.UtcNow;
 
                     transaction.Set(docRef, stats);
                 });

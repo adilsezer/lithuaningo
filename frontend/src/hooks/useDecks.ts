@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Deck, Flashcard } from "@src/types";
+import { Deck } from "@src/types";
 import deckService from "@services/data/deckService";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
@@ -14,7 +14,6 @@ interface DeckRatings {
 
 export const useDecks = (currentUserId?: string) => {
   const [decks, setDecks] = useState<Deck[]>([]);
-  const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -136,22 +135,6 @@ export const useDecks = (currentUserId?: string) => {
     [handleError]
   );
 
-  const fetchFlashcards = useCallback(
-    async (deckId: string) => {
-      try {
-        setIsLoading(true);
-        clearError();
-        const data = await deckService.getDeckFlashcards(deckId);
-        setFlashcards(data);
-      } catch (error) {
-        handleError(error, "Failed to load flashcards");
-      } finally {
-        setIsLoading(false);
-      }
-    },
-    [handleError, clearError]
-  );
-
   // Derived states with memoization
   const filteredDecks = useMemo(() => {
     if (!decks) return [];
@@ -187,7 +170,6 @@ export const useDecks = (currentUserId?: string) => {
   return {
     // States
     decks: filteredDecks,
-    flashcards,
     isLoading,
     error,
     searchQuery,
@@ -206,6 +188,5 @@ export const useDecks = (currentUserId?: string) => {
     voteDeck,
     reportDeck,
     getDeckRating,
-    fetchFlashcards,
   };
 };

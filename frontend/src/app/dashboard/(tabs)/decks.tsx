@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
+import CustomButton from "@components/ui/CustomButton";
 
 export default function DecksScreen() {
   const userData = useAppSelector(selectUserData);
@@ -49,10 +50,14 @@ export default function DecksScreen() {
       flexGrow: 1,
     },
     headerContainer: {
+      flexDirection: "column",
+      gap: 12,
+      marginBottom: 16,
+    },
+    titleRow: {
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      marginBottom: 16,
     },
     emptyText: {
       fontSize: 16,
@@ -81,10 +86,25 @@ export default function DecksScreen() {
     router.push(`/decks/${deckId}/quiz`);
   };
 
+  const handleAddFlashcard = () => {
+    if (!userData) {
+      AlertDialog.error("Please login to add flashcards");
+      return;
+    }
+    router.push("/flashcards/new");
+  };
+
   const renderHeader = () => (
     <>
       <View style={styles.headerContainer}>
-        <SectionTitle>Decks</SectionTitle>
+        <View style={styles.titleRow}>
+          <SectionTitle>Decks</SectionTitle>
+        </View>
+        <CustomButton
+          title="Add New Deck"
+          onPress={handleAddFlashcard}
+          variant="primary"
+        />
       </View>
       <SearchBar
         onSearch={setSearchQuery}

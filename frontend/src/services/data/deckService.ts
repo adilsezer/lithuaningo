@@ -1,5 +1,5 @@
 import apiClient from "../api/apiClient";
-import { Deck, Flashcard } from "@src/types";
+import { Deck } from "@src/types";
 
 class DeckService {
   async getDecks(category?: string) {
@@ -40,18 +40,6 @@ class DeckService {
 
   async getTopRatedDecks(limit?: number) {
     return apiClient.getTopRatedDecks(limit);
-  }
-
-  async getDeckFlashcards(deckId: string) {
-    return apiClient.getDeckFlashcards(deckId);
-  }
-
-  async addFlashcardToDeck(deckId: string, flashcard: Flashcard) {
-    return apiClient.addFlashcardToDeck(deckId, flashcard);
-  }
-
-  async removeFlashcardFromDeck(deckId: string, flashcardId: string) {
-    return apiClient.removeFlashcardFromDeck(deckId, flashcardId);
   }
 
   async getDeckRating(id: string) {

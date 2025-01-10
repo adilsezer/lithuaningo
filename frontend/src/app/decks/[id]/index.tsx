@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useDecks } from "@hooks/useDecks";
+import { useFlashcards } from "@hooks/useFlashcards";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import { SectionTitle } from "@components/typography";
@@ -16,7 +16,7 @@ import BackButton from "@components/layout/BackButton";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
-  const { fetchFlashcards, flashcards, isLoading, error } = useDecks();
+  const { fetchDeckFlashcards, flashcards, isLoading, error } = useFlashcards();
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -27,9 +27,9 @@ export default function PracticeScreen() {
 
   useEffect(() => {
     if (id) {
-      fetchFlashcards(id as string);
+      fetchDeckFlashcards(id as string);
     }
-  }, [id, fetchFlashcards]);
+  }, [id, fetchDeckFlashcards]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     if (!userData) {
@@ -77,7 +77,7 @@ export default function PracticeScreen() {
     return (
       <ErrorMessage
         message={error}
-        onRetry={() => id && fetchFlashcards(id as string)}
+        onRetry={() => id && fetchDeckFlashcards(id as string)}
         fullScreen
       />
     );
