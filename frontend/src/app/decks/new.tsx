@@ -68,12 +68,6 @@ export default function NewDeckScreen() {
         required: false,
       },
     },
-    {
-      name: "isPublic",
-      label: "Make deck public",
-      category: "toggle",
-      type: "switch",
-    },
   ];
 
   const handleSubmit = async (data: Partial<Deck>) => {
@@ -83,22 +77,22 @@ export default function NewDeckScreen() {
         return;
       }
 
-      const newDeck: Omit<Deck, "id" | "createdAt"> = {
+      const newDeck: Omit<Deck, "id"> = {
         title: data.title || "",
         description: data.description || "",
         category: data.category || "",
         createdBy: userData.id,
         createdByUsername: userData.name || "",
-        isPublic: data.isPublic || false,
+        createdAt: new Date().toISOString(),
         tags:
           typeof data.tags === "string"
             ? (data.tags as string).split(",").map((tag: string) => tag.trim())
             : (data.tags as string[]) || [],
       };
 
-      await deckService.createDeck(newDeck as Deck);
+      const deckId = await deckService.createDeck(newDeck as Deck);
       AlertDialog.success("Deck created successfully");
-      router.back();
+      router.push(`/flashcards/new?deckId=${deckId}`);
     } catch (error) {
       AlertDialog.error("Failed to create deck");
       console.error("Error creating deck:", error);
@@ -114,9 +108,6 @@ export default function NewDeckScreen() {
           fields={fields}
           onSubmit={handleSubmit}
           submitButtonText="Create Deck"
-          defaultValues={{
-            isPublic: true,
-          }}
         />
       </ScrollView>
     </View>

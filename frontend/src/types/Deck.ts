@@ -6,6 +6,5 @@ export interface Deck {
   createdBy: string;
   createdByUsername: string;
   createdAt: string;
-  isPublic: boolean;
   tags: string[];
 }

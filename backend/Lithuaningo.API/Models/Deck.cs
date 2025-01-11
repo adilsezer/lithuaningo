@@ -28,9 +28,6 @@ public class Deck
     [FirestoreProperty("createdAt")]
     public DateTime CreatedAt { get; set; }
 
-    [FirestoreProperty("isPublic")]
-    public bool IsPublic { get; set; }
-
     [FirestoreProperty("tags")]
     public List<string> Tags { get; set; } = new();
 }

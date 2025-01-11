@@ -24,7 +24,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var query = _db.Collection(COLLECTION_NAME).WhereEqualTo("isPublic", true);
+            Query query = _db.Collection(COLLECTION_NAME);
 
             if (!string.IsNullOrEmpty(category))
             {
@@ -84,12 +84,11 @@ public class DeckService : IDeckService
     {
         try
         {
-            // Get public decks with limit * 2 to have enough after filtering
-            var decksSnapshot = await _db.Collection(COLLECTION_NAME)
-                .WhereEqualTo("isPublic", true)
-                .Limit(limit * 2)
-                .GetSnapshotAsync();
+            // Get decks with limit * 2 to have enough after filtering
+            Query query = _db.Collection(COLLECTION_NAME)
+                .Limit(limit * 2);
 
+            var decksSnapshot = await query.GetSnapshotAsync();
             var decks = decksSnapshot.Documents.Select(d => d.ConvertTo<Models.Deck>()).ToList();
             var decksWithRatings = new List<(Models.Deck Deck, double Rating)>();
             
@@ -222,8 +221,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var baseQuery = _db.Collection(COLLECTION_NAME)
-                .WhereEqualTo("isPublic", true);
+            Query baseQuery = _db.Collection(COLLECTION_NAME);
 
             if (!string.IsNullOrEmpty(category))
             {
