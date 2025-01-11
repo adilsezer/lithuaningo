@@ -18,7 +18,7 @@ interface Props {
   onViewModeChange: (mode: ViewMode) => void;
 }
 
-export const CategoryPicker = ({
+export const CustomCategoryPicker = ({
   selectedCategory,
   onSelectCategory,
   viewMode,

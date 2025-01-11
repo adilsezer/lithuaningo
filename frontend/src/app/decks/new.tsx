@@ -105,10 +105,6 @@ export default function NewDeckScreen() {
     }
   };
 
-  const handleCancel = () => {
-    router.back();
-  };
-
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BackButton />

@@ -5,7 +5,7 @@ import { DeckCard } from "@components/deck/DeckCard";
 import { useDecks } from "@hooks/useDecks";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
-import { CategoryPicker } from "@components/ui/CategoryPicker";
+import { CustomCategoryPicker } from "@components/ui/CustomCategoryPicker";
 import { SearchBar } from "@components/ui/SearchBar";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
@@ -111,7 +111,7 @@ export default function DecksScreen() {
         placeholder="Search decks and flashcards..."
         initialValue={searchQuery}
       />
-      <CategoryPicker
+      <CustomCategoryPicker
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
         viewMode={viewMode}
