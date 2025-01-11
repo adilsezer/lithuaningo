@@ -8,7 +8,7 @@ import {
   Animated,
   Easing,
 } from "react-native";
-import { SectionText, SectionTitle, Subtitle } from "@components/typography";
+import { SectionText, Subtitle } from "@components/typography";
 import { Ionicons } from "@expo/vector-icons";
 import { DashboardWord } from "@src/types";
 import { useThemeStyles } from "@hooks/useThemeStyles";

@@ -85,7 +85,8 @@ export default function PracticeScreen() {
 
   if (flashcards.length === 0) {
     return (
-      <View style={styles.centerContainer}>
+      <View>
+        <BackButton />
         <Text style={[styles.emptyText, { color: colors.text }]}>
           No flashcards found in this deck
         </Text>

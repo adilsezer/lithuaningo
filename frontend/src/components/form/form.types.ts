@@ -7,7 +7,8 @@ export type FieldCategory =
   | "selection"
   | "range"
   | "datetime"
-  | "media";
+  | "audio-input"
+  | "image-input";
 
 export type FieldType =
   | "text"
@@ -18,6 +19,7 @@ export type FieldType =
   | "checkbox"
   | "slider"
   | "date"
+  | "audio"
   | "image";
 
 export type ValidationRule = {
@@ -57,9 +59,12 @@ export type FormField = {
   minDate?: Date;
   maxDate?: Date;
 
-  // Media
+  // Image
   allowMultiple?: boolean;
   maxSize?: number;
+
+  // Audio
+  maxDuration?: number;
 };
 
 export interface FormProps<T extends FieldValues> {

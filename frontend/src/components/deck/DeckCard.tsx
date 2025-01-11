@@ -28,10 +28,10 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
         <View
           style={[
             styles.categoryTag,
-            { backgroundColor: colors.success + "20" },
+            { backgroundColor: colors.success + "50" },
           ]}
         >
-          <Text style={[styles.categoryText, { color: colors.success }]}>
+          <Text style={[styles.categoryText, { color: colors.text }]}>
             {deck.category}
           </Text>
         </View>
@@ -55,12 +55,10 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
             key={index}
             style={[
               styles.tagChip,
-              { backgroundColor: colors.secondary + "20" },
+              { backgroundColor: colors.secondary + "50" },
             ]}
           >
-            <Text style={[styles.tagText, { color: colors.secondary }]}>
-              {tag}
-            </Text>
+            <Text style={[styles.tagText, { color: colors.text }]}>{tag}</Text>
           </View>
         ))}
       </ScrollView>

@@ -3,8 +3,8 @@ import { ScrollView, StyleSheet, View } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import { ViewMode } from "@hooks/useDecks";
+import { deckCategories } from "@src/types/DeckCategory";
 
-const categories = ["Beginner", "Advanced", "Verbs"];
 const viewModes = [
   { id: "all" as const, label: "All Decks" },
   { id: "top" as const, label: "Top Rated" },
@@ -71,7 +71,7 @@ export const CategoryPicker = ({
             width="auto"
           />
         ))}
-        {categories.map((category) => (
+        {deckCategories.map((category) => (
           <CustomButton
             key={category}
             title={category}

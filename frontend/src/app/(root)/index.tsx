@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, View, Image, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import CustomButton from "@components/ui/CustomButton";
-import { SectionText, SectionTitle, Subtitle } from "@components/typography";
+import { SectionText, SectionTitle } from "@components/typography";
 import ThemeSwitch from "@components/ui/ThemeSwitch";
 import { useTheme } from "@src/context/ThemeContext";
 

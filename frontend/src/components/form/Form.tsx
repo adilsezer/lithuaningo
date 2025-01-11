@@ -20,7 +20,8 @@ const getDefaultValueByCategory = (field: FormFieldType): any => {
       return field.min || 0;
     case "datetime":
       return new Date();
-    case "media":
+    case "audio-input":
+    case "image-input":
       return null;
     default:
       return "";

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { FlashcardForm } from "@components/flashcard/FlashcardForm";
 import { useRouter } from "expo-router";
 import { useAppSelector } from "@redux/hooks";
@@ -8,19 +8,13 @@ import { useThemeStyles } from "@hooks/useThemeStyles";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import type { Flashcard } from "@src/types";
 import { useFlashcards } from "@hooks/useFlashcards";
+import BackButton from "@components/layout/BackButton";
 
 export default function NewFlashcardScreen() {
   const router = useRouter();
   const userData = useAppSelector(selectUserData);
   const { colors } = useThemeStyles();
   const { addFlashcardToDeck } = useFlashcards();
-
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-  });
 
   const handleSubmit = async (
     flashcard: Omit<Flashcard, "id" | "createdAt">
@@ -48,14 +42,17 @@ export default function NewFlashcardScreen() {
   };
 
   return (
-    <View style={styles.container}>
-      <FlashcardForm
-        onSubmit={handleSubmit}
-        onCancel={handleCancel}
-        initialValues={{
-          createdBy: userData?.id || "",
-        }}
-      />
+    <View>
+      <BackButton />
+      <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+        <FlashcardForm
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
+          initialValues={{
+            createdBy: userData?.id || "",
+          }}
+        />
+      </ScrollView>
     </View>
   );
 }

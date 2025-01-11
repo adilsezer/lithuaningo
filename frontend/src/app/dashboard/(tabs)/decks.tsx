@@ -91,7 +91,7 @@ export default function DecksScreen() {
       AlertDialog.error("Please login to add flashcards");
       return;
     }
-    router.push("/flashcards/new");
+    router.push("/decks/new");
   };
 
   const renderHeader = () => (

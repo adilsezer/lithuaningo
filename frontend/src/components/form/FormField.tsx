@@ -7,6 +7,7 @@ import { CustomSlider } from "@components/ui/CustomSlider";
 import { CustomDatePicker } from "@components/ui/CustomDatePicker";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";
 import { FormField as FormFieldType } from "./form.types";
+import { CustomAudioPicker } from "@components/ui/CustomAudioPicker";
 
 interface FormFieldProps {
   field: FormFieldType;
@@ -83,14 +84,16 @@ export const FormField: React.FC<FormFieldProps> = ({
         />
       );
 
-    case "media":
+    case "image-input":
       return (
         <CustomImagePicker
           {...props}
           onChange={onChange}
           maxSize={field.maxSize}
-          allowMultiple={field.allowMultiple}
         />
       );
+
+    case "audio-input":
+      return <CustomAudioPicker {...props} onChange={onChange} />;
   }
 };

@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { PracticeStats as IPracticeStats } from "@src/types";
-import { SectionTitle } from "@components/typography";
 import { FontAwesome5 } from "@expo/vector-icons";
 import apiClient from "@services/api/apiClient";
 

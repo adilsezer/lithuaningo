@@ -49,6 +49,20 @@ export const FlashcardForm: React.FC<FlashcardFormProps> = ({
       placeholder: "Enter an example sentence (optional)",
       defaultValue: initialValues?.exampleSentence,
     },
+    {
+      name: "audioUrl",
+      label: "Audio",
+      category: "audio-input",
+      type: "audio",
+      defaultValue: initialValues?.audioUrl,
+    },
+    {
+      name: "imageUrl",
+      label: "Image",
+      category: "image-input",
+      type: "image",
+      defaultValue: initialValues?.imageUrl,
+    },
   ];
 
   const handleSubmit = async (data: Partial<Flashcard>) => {
@@ -58,18 +72,20 @@ export const FlashcardForm: React.FC<FlashcardFormProps> = ({
       exampleSentence: data.exampleSentence,
       deckId: initialValues?.deckId || "",
       createdBy: initialValues?.createdBy || "",
+      audioUrl: data.audioUrl,
+      imageUrl: data.imageUrl,
     });
   };
 
   return (
     <View style={styles.container}>
       <SectionTitle>
-        {initialValues ? "Edit Flashcard" : "Add Flashcard"}
+        {initialValues?.id ? "Edit Flashcard" : "Add Flashcard"}
       </SectionTitle>
       <Form
         fields={fields}
         onSubmit={handleSubmit}
-        submitButtonText={initialValues ? "Save" : "Add"}
+        submitButtonText={initialValues?.id ? "Save" : "Add"}
         defaultValues={initialValues}
       />
     </View>
