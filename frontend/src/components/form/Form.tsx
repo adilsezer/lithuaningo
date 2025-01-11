@@ -1,16 +1,17 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Text } from "react-native";
 import {
   useForm,
   Controller,
   FieldValues,
   Path,
-  FieldError,
   DefaultValues,
 } from "react-hook-form";
 import CustomButton from "@components/ui/CustomButton";
 import { FormProps, FormField as FormFieldType } from "./form.types";
 import { FormField } from "./FormField";
+import { AlertDialog } from "@components/ui/AlertDialog";
+import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 const getDefaultValueByCategory = (field: FormFieldType): any => {
   switch (field.category) {
@@ -38,7 +39,11 @@ export function Form<T extends FieldValues>({
   style,
   submitButtonStyle,
 }: FormProps<T>) {
+  const { colors } = useThemeStyles();
+
   const form = useForm<T>({
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     ...options,
     defaultValues: {
       ...fields.reduce(
@@ -54,9 +59,31 @@ export function Form<T extends FieldValues>({
 
   const {
     control,
-    handleSubmit,
-    formState: { errors, isSubmitting },
+    handleSubmit: formHandleSubmit,
+    formState: { errors: formErrors, isSubmitting },
   } = form;
+
+  const handleFormSubmit = async (data: T) => {
+    try {
+      await onSubmit(data);
+    } catch (error) {
+      AlertDialog.error("An error occurred while submitting the form");
+    }
+  };
+
+  const onError = (errors: any) => {
+    const errorMessages = Object.entries(errors)
+      .map(([field, error]: [string, any]) => {
+        const fieldConfig = fields.find((f) => f.name === field);
+        return (
+          error.message ||
+          fieldConfig?.validation?.message ||
+          `${fieldConfig?.label || field} is required`
+        );
+      })
+      .join("\n");
+    AlertDialog.error(errorMessages);
+  };
 
   return (
     <View style={style}>
@@ -73,14 +100,13 @@ export function Form<T extends FieldValues>({
                 onChange={fieldProps.onChange}
                 onBlur={fieldProps.onBlur}
                 value={fieldProps.value}
-                error={(errors[field.name as Path<T>] as FieldError)?.message}
               />
             </View>
           )}
         />
       ))}
       <CustomButton
-        onPress={handleSubmit(onSubmit)}
+        onPress={formHandleSubmit(handleFormSubmit, onError)}
         title={isSubmitting ? "Submitting..." : submitButtonText}
         disabled={isLoading || isSubmitting}
         style={[styles.submitButton, submitButtonStyle]}
