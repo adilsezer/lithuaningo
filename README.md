@@ -1,108 +1,173 @@
 # Lithuaningo
 
-Welcome to **Lithuaningo**! Lithuaningo is a mobile application designed to help you master the Lithuanian language through engaging and interactive learning methods. Whether you're a beginner or looking to improve your skills, Lithuaningo provides a comprehensive and fun way to learn Lithuanian.
+A mobile application for learning the Lithuanian language through interactive exercises and daily practice.
+
+---
+
+## Tech Stack
+
+### Frontend
+
+- React Native with Expo (v52)
+- TypeScript
+- Redux Toolkit for state management
+- Firebase Authentication
+- Firebase Crashlytics
+- Expo Router for navigation
+
+### Backend
+
+- .NET 8.0 Web API
+- Firebase Admin SDK
+- Google Cloud Firestore
+- Swagger/OpenAPI documentation
+
+---
 
 ## Features
 
-- **User Authentication**: Secure login via Email, Google Sign-In, and Apple Sign-In.
-- **Interactive Learning Modules**: Multiple-choice, fill-in-the-blank, and true/false exercises to enhance your language skills.
-- **Progress Tracking**: Detailed statistics to monitor your learning journey and achievements.
-- **User Profile Management**: Customize and manage your personal details and preferences.
-- **Leaderboard**: Track and compare your progress with other users to stay motivated.
-- **Daily Sentence Learning**: Learn new sentences every day, focusing on understanding and translating them.
-- **Word Teaching**: Focus on teaching individual words within the context of sentences before moving to quizzes.
-- **Quiz and Review**: Daily quizzes to test your knowledge based on the words and sentences you have learned. Similar sentences are used to reinforce learning.
-- **Weekly Leaderboard**: Engage with other users through a weekly leaderboard, motivating you to stay consistent and competitive.
-- **Crash and Performance Data**: Logs and diagnostics to continuously improve app stability and performance.
+- **User Authentication**: Secure login via Email, Google Sign-In, and Apple Sign-In
+- **Interactive Learning Modules**: Multiple-choice, fill-in-the-blank, and true/false exercises
+- **Progress Tracking**: Detailed statistics and learning analytics
+- **User Profile Management**: Customizable profiles with learning preferences
+- **Leaderboard System**: Competitive learning with weekly rankings
+- **Daily Sentence Learning**: Context-based sentence learning
+- **Word Teaching**: Systematic vocabulary building
+- **Quiz System**: Adaptive daily quizzes
+- **Offline Support**: Learn without an internet connection
+- **Cross-Platform**: Available for iOS and Android
+- **Cloud Sync**: Seamless data synchronization across devices
+- **Performance Analytics**: Crash reporting and usage analytics
 
-## How It Works
-
-1. **Daily Sentence Learning**: Each day, you are presented with new sentences to learn. These sentences help you understand the structure and vocabulary of the Lithuanian language.
-2. **Word Teaching**: From these sentences, each word is highlighted and taught. This helps you build your vocabulary in a contextual manner.
-3. **Quiz and Review**: After learning the words and sentences, you take a quiz to test your knowledge. The quiz uses similar sentences to what you have learned, ensuring that you can apply your knowledge effectively.
-4. **Progress Tracking**: Your progress is tracked daily, showing detailed statistics of your learning journey.
-5. **Weekly Leaderboard**: Your performance is compared with other users on a weekly leaderboard, providing a competitive edge and motivation to improve.
-
-## Screenshots
-
-<p align="center">
-  <img src="assets/images/welcome_screen.png" alt="Welcome Screen" width="200" />
-  <img src="assets/images/signup_screen.png" alt="Signup Screen" width="200" />
-  <img src="assets/images/dashboard.png" alt="Dashboard" width="200" />
-  <img src="assets/images/study_card.png" alt="Study Card" width="200" />
-</p>
+---
 
 ## Installation
 
-Follow these steps to get started with Lithuaningo:
+### Prerequisites
 
-1. **Clone the repository**:
+- Node.js (LTS version)
+- .NET 8.0 SDK
+- Firebase project setup
+- Google Cloud project access
 
-   \`\`\`bash
+### Frontend Setup
+
+1. Clone the repository:
+
+   ```bash
    git clone https://github.com/yourusername/lithuaningo.git
-   cd lithuaningo
-   \`\`\`
+   cd lithuaningo/frontend
+   ```
 
-2. **Install dependencies**:
+2. Install dependencies:
 
-   \`\`\`bash
+   ```bash
    npm install
-   \`\`\`
+   ```
 
-3. **Set up environment variables**:
-   Create a `.env` file in the root directory and add the following:
-
-   \`\`\`env
+3. Configure environment variables:
+   ```bash
    EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID=your-google-web-client-id
    EXPO_PUBLIC_EAS_PROJECT_ID=your-eas-project-id
-   \`\`\`
+   ANDROID_GOOGLE_SERVICES_BASE64=your-base64-encoded-google-services
+   IOS_GOOGLE_SERVICES_BASE64=your-base64-encoded-google-services
+   EXPO_PUBLIC_API_URL=your-api-url
+   ```
 
-4. **Run the project**:
-   \`\`\`bash
-   npm start
-   \`\`\`
+### Backend Setup
 
-## Usage
+1. Navigate to the backend directory:
 
-Use the following commands to interact with the project:
+   ```bash
+   cd ../backend
+   ```
 
-- **Start the development server**:
+2. Restore packages:
 
-  \`\`\`bash
+   ```bash
+   dotnet restore
+   ```
+
+3. Configure Firebase Admin SDK:
+   - Add your Firebase Admin SDK credentials file.
+   - Update configuration in `appsettings.json`.
+
+---
+
+## Development
+
+### Frontend
+
+- Start development server:
+
+  ```bash
   npm start
-  \`\`\`
+  ```
 
-- **Run on an Android device or emulator**:
+- Run on Android:
 
-  \`\`\`bash
+  ```bash
   npm run android
-  \`\`\`
+  ```
 
-- **Run on an iOS device or simulator**:
+- Run on iOS:
 
-  \`\`\`bash
+  ```bash
   npm run ios
-  \`\`\`
+  ```
 
-- **Run the web version**:
-  \`\`\`bash
-  npm run web
-  \`\`\`
+- Run type checking:
+  ```bash
+  npm run ts:check
+  ```
+
+### Backend
+
+- Run API locally:
+
+  ```bash
+  dotnet run --project Lithuaningo.API
+  ```
+
+- Build solution:
+
+  ```bash
+  dotnet build
+  ```
+
+- Run tests:
+  ```bash
+  dotnet test
+  ```
+
+---
 
 ## Contributing
 
 We welcome contributions! Please follow these steps:
 
 1. Fork the repository.
-2. Create a new branch (\`git checkout -b feature-branch\`).
-3. Make your changes.
-4. Commit your changes (\`git commit -m 'Add new feature'\`).
-5. Push to the branch (\`git push origin feature-branch\`).
-6. Open a pull request.
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/amazing-feature
+   ```
+3. Commit your changes:
+   ```bash
+   git commit -m 'Add amazing feature'
+   ```
+4. Push to the branch:
+   ```bash
+   git push origin feature/amazing-feature
+   ```
+5. Open a Pull Request.
+
+---
 
 ## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+
+---
 
 ## Contact
 
