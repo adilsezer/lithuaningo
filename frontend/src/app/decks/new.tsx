@@ -110,7 +110,9 @@ export default function NewDeckScreen() {
       };
 
       const deckId = await deckService.createDeck(newDeck as Deck);
-      AlertDialog.success("Deck created successfully");
+      AlertDialog.success(
+        "Deck created successfully. Please add flashcards to your deck."
+      );
       router.push(`/flashcards/new?deckId=${deckId}`);
     } catch (error) {
       AlertDialog.error("Failed to create deck");

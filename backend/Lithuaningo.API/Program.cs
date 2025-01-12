@@ -8,6 +8,8 @@ using Lithuaningo.API.Services.Quiz;
 using Lithuaningo.API.Services.Quiz.Factory;
 using Lithuaningo.API.Services.Quiz.Interfaces;
 using Lithuaningo.API.Settings;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -74,7 +76,23 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Basic Services
     services.AddControllers();
     services.AddEndpointsApiExplorer();
-    services.AddSwaggerGen();
+    services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo { Title = "Lithuaningo API", Version = "v1" });
+        
+        // Configure Swagger to handle file uploads
+        c.MapType<IFormFile>(() => new Microsoft.OpenApi.Models.OpenApiSchema
+        {
+            Type = "string",
+            Format = "binary"
+        });
+    });
+
+    // Configure file size limits
+    services.Configure<FormOptions>(options =>
+    {
+        options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
+    });
 
     // Firebase Configuration
     services.Configure<FirestoreSettings>(configuration.GetSection("FirestoreSettings"));

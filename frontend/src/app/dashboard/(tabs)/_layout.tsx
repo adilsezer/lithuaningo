@@ -32,6 +32,7 @@ export default function TabLayout() {
           flex: 1,
         },
       }}
+      backBehavior="history"
     >
       {TAB_ITEMS.map(({ name, title, icon }) => (
         <Tabs.Screen

@@ -1,5 +1,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -9,11 +12,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IFlashcardService _flashcardService;
         private readonly IStorageService _storageService;
+        private readonly IOptions<StorageSettings> _storageSettings;
 
-        public FlashcardController(IFlashcardService flashcardService, IStorageService storageService)
+        public FlashcardController(IFlashcardService flashcardService, IStorageService storageService, IOptions<StorageSettings> storageSettings)
         {
             _flashcardService = flashcardService;
             _storageService = storageService;
+            _storageSettings = storageSettings;
         }
 
         [HttpGet("{id}")]
@@ -83,29 +88,27 @@ namespace Lithuaningo.API.Controllers
         }
 
         [HttpPost("upload")]
-        public async Task<ActionResult<Dictionary<string, string>>> UploadFiles(
-            [FromForm] IFormFile? image,
-            [FromForm] IFormFile? audio)
+        [Consumes("multipart/form-data")]
+        public async Task<ActionResult<string>> UploadFlashcardFile([FromForm] FileUploadModel model)
         {
-            var urls = new Dictionary<string, string>();
-            
             try
             {
-                if (image != null)
-                {
-                    urls["imageUrl"] = await _storageService.UploadFileAsync(image, "flashcard-images");
-                }
+                var file = model.File;
+                var subfolder = file.ContentType.StartsWith("audio/") ? _storageSettings.Value.Paths.Audio 
+                    : file.ContentType.StartsWith("image/") ? _storageSettings.Value.Paths.Images 
+                    : _storageSettings.Value.Paths.Other;
+
+                var url = await _storageService.UploadFileAsync(
+                    file,
+                    _storageSettings.Value.Paths.Flashcards,
+                    subfolder
+                );
                 
-                if (audio != null)
-                {
-                    urls["audioUrl"] = await _storageService.UploadFileAsync(audio, "flashcard-audio");
-                }
-                
-                return Ok(urls);
+                return Ok(url);
             }
             catch (Exception)
             {
-                return StatusCode(500, "Error uploading files");
+                return StatusCode(500, "Error uploading flashcard file");
             }
         }
     }

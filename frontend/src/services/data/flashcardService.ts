@@ -17,23 +17,48 @@ class FlashcardService {
     return apiClient.removeFlashcardFromDeck(deckId, flashcardId);
   }
 
+  async uploadFile(file: File): Promise<string> {
+    try {
+      // Validate file type
+      if (file.type.startsWith("audio/") || file.type.startsWith("image/")) {
+        const formData = new FormData();
+        formData.append("File", file);
+        return apiClient.uploadFlashcardFile(formData);
+      } else {
+        throw new Error(
+          "Invalid file type. Only audio and image files are allowed."
+        );
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      throw error;
+    }
+  }
+
   async createFlashcard(
     flashcard: Omit<Flashcard, "id" | "createdAt">,
     image?: File,
     audio?: File
   ): Promise<string> {
-    let uploadedUrls = {};
+    try {
+      // First upload any files and get their URLs
+      const [imageUrl, audioUrl] = await Promise.all([
+        image ? this.uploadFile(image) : Promise.resolve(undefined),
+        audio ? this.uploadFile(audio) : Promise.resolve(undefined),
+      ]);
 
-    if (image || audio) {
-      uploadedUrls = await this.uploadFiles(image, audio);
+      // Create flashcard with the URLs
+      const flashcardData = {
+        ...flashcard,
+        imageUrl,
+        audioUrl,
+      };
+
+      return apiClient.createFlashcard(flashcardData);
+    } catch (error) {
+      console.error("Error in createFlashcard:", error);
+      throw error;
     }
-
-    const flashcardWithUrls = {
-      ...flashcard,
-      ...uploadedUrls,
-    };
-
-    return apiClient.createFlashcard(flashcardWithUrls as Flashcard);
   }
 
   async updateFlashcard(id: string, flashcard: Partial<Flashcard>) {
@@ -46,13 +71,6 @@ class FlashcardService {
 
   async getFlashcardById(id: string) {
     return apiClient.getFlashcardById(id);
-  }
-
-  async uploadFiles(image?: File, audio?: File) {
-    const formData = new FormData();
-    if (image) formData.append("image", image);
-    if (audio) formData.append("audio", audio);
-    return apiClient.uploadFlashcardFiles(formData);
   }
 }
 

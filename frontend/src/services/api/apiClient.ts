@@ -287,8 +287,8 @@ class ApiClient {
     return this.request<Flashcard[]>(`/flashcard/user/${userId}`);
   }
 
-  async createFlashcard(flashcard: Flashcard) {
-    return this.request<string>(`/flashcard`, {
+  async createFlashcard(flashcard: Omit<Flashcard, "id" | "createdAt">) {
+    return this.request<string>("/flashcard", {
       method: "POST",
       data: flashcard,
     });
@@ -387,17 +387,14 @@ class ApiClient {
     );
   }
 
-  async uploadFlashcardFiles(formData: FormData) {
-    return this.request<{ imageUrl?: string; audioUrl?: string }>(
-      "/flashcard/upload",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-        data: formData,
-      }
-    );
+  async uploadFlashcardFile(formData: FormData) {
+    return this.request<string>("/flashcard/upload", {
+      method: "POST",
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+      data: formData,
+    });
   }
 }
 

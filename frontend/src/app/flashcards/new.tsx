@@ -50,16 +50,32 @@ export default function NewFlashcardScreen() {
       placeholder: "Enter an example sentence (optional)",
     },
     {
-      name: "audioUrl",
+      name: "audioFile",
       label: "Audio",
       category: "audio-input",
       type: "audio",
+      validation: {
+        validate: (value: File | undefined) => {
+          if (!value) return true;
+          return (
+            value.type.startsWith("audio/") || "Please upload an audio file"
+          );
+        },
+      },
     },
     {
-      name: "imageUrl",
+      name: "imageFile",
       label: "Image",
       category: "image-input",
       type: "image",
+      validation: {
+        validate: (value: File | undefined) => {
+          if (!value) return true;
+          return (
+            value.type.startsWith("image/") || "Please upload an image file"
+          );
+        },
+      },
     },
   ];
 
