@@ -1,7 +1,6 @@
 # Privacy Policy
 
 Last updated: June 10, 2024
-
 Thank you for choosing Lithuaningo ("us", "we", or "our"). This Privacy Policy explains how we collect, use, and disclose information about you when you use our mobile application ("App").
 
 By using the App, you agree to the collection and use of information in accordance with this Privacy Policy.
@@ -10,79 +9,171 @@ By using the App, you agree to the collection and use of information in accordan
 
 We collect the following types of information:
 
-- **Personal Information**: When you register for an account, we may collect personal information such as your name, email address, and profile picture.
-- **Authentication Data**: Information related to your authentication method (Email, Google Sign-In, or Apple Sign-In).
-- **Usage Data**: We collect information on how you access and use the App, including:
-  - Device information (IP address, browser type, browser version)
-  - App access patterns and navigation
-  - Learning progress and interaction data
-  - Quiz responses and performance metrics
-- **Customer Support Data**: Data generated during customer support requests.
-- **User Content**: User-generated content such as quiz answers and learning interactions.
-- **Performance Data**: Technical information about app performance, including:
-  - App launch times and usage patterns
-  - Crash reports and error logs
-  - Device performance metrics
-  - Network connectivity status
-- **Notification Preferences**: Your preferences for daily review reminders and other notifications.
+### Personal Information
+
+- Name and email address
+- Profile picture and preferences
+- Authentication data (Email, Google, or Apple Sign-In)
+- In-app purchase history
+- Premium subscription status
+
+### Usage Data
+
+- App access patterns and learning behavior
+- Device information and system settings
+- Quiz and flashcard performance
+- Practice session statistics
+- Achievement progress
+- Custom deck creation and management
+- Word and sentence learning history
+
+### Technical Data
+
+- App performance metrics
+- Crash reports and error logs
+- Network connectivity status
+- Device specifications
+- Storage usage statistics
+
+### Content Data
+
+- User-created flashcard decks
+- Custom practice sessions
+- Audio pronunciation recordings
+- Image attachments
+- Learning preferences
+- Theme settings (Dark/Light mode)
 
 ## 2. How We Use Your Information
 
 We use the collected information for:
 
-- Providing and maintaining our App
-- Personalizing your learning experience
-- Tracking your progress and generating statistics
-- Managing user authentication and account security
-- Sending daily review reminders and notifications
-- Analyzing app performance and user behavior
-- Detecting and addressing technical issues
-- Improving our educational content and features
+### Core Functionality
+
+- User authentication and account management
+- Progress tracking and statistics
+- Personalized learning experience
+- Flashcard and deck management
+- Quiz generation and assessment
+
+### Service Improvement
+
+- Performance optimization
+- Content recommendations
+- Feature enhancement
+- Bug fixing and troubleshooting
+- Usage pattern analysis
+
+### User Experience
+
+- Push notification delivery
+- Progress synchronization
+- Offline mode management
+- Theme preferences
+- Accessibility settings
 
 ## 3. Data Storage and Security
 
-- We use Firebase Authentication for secure user management
-- Local data is stored securely using AsyncStorage
-- Crash reports and analytics are handled through Firebase Crashlytics
-- We implement industry-standard security measures to protect your data
+### Storage Methods
+
+- Firebase Authentication for user management
+- Google Cloud Firestore for cloud storage
+- AsyncStorage for local data
+- Firebase Crashlytics for error reporting
+
+### Security Measures
+
+- End-to-end encryption for sensitive data
+- Secure token management
+- Regular security audits
+- Automated backup systems
+- Data access controls
 
 ## 4. Third-Party Services
 
-We use the following third-party services:
+We utilize the following services:
 
-- Google Sign-In for authentication
-- Apple Sign-In for authentication
-- Firebase for backend services
-- Expo for app functionality
-- Firebase Crashlytics for crash reporting
+### Authentication
 
-Each third-party service has its own privacy policy and data handling practices.
+- Google Sign-In
+- Apple Sign-In
+- Email authentication
 
-## 5. Data Deletion
+### Cloud Services
 
-You can request account deletion through the app's profile settings. When you delete your account:
+- Firebase Admin SDK
+- Google Cloud Platform
+- Expo services
 
-- All personal information will be permanently removed
-- Learning progress and statistics will be deleted
-- User-generated content will be removed from our systems
+### Analytics and Monitoring
 
-## 6. Updates and Notifications
+- Firebase Crashlytics
+- Performance monitoring
+- Usage analytics
 
-- You can manage notification preferences in the app settings
-- Daily review reminders can be customized or disabled
-- App updates and maintenance notifications may be sent when necessary
+### Payment Processing
+
+- React Native IAP
+- App Store payments
+- Google Play payments
+
+## 5. Data Management
+
+### Data Access
+
+- View and export learning progress
+- Download user-created content
+- Access practice history
+- Review achievement records
+
+### Data Deletion
+
+- Account deletion through profile settings
+- Content removal options
+- Data export before deletion
+- Subscription cancellation
+
+## 6. User Controls
+
+### Notification Management
+
+- Custom notification settings
+- Daily reminder preferences
+- Progress alerts
+- Achievement notifications
+- Update notifications
+
+### Privacy Controls
+
+- Profile visibility settings
+- Data sharing preferences
+- Offline mode options
+- Sync settings
 
 ## 7. Children's Privacy
 
-Our App is suitable for ages 4 and up. We do not knowingly collect personally identifiable information from children under 13 without parental consent.
+Our App is suitable for ages 4 and up. We comply with COPPA (Children's Online Privacy Protection Act) and similar regulations:
 
-## 8. Contact Us
+- Parental consent required for users under 13
+- Limited data collection for young users
+- Safe content filtering
+- Age-appropriate features
 
-If you have questions about this Privacy Policy, please contact us:
+## 8. Contact Information
+
+For privacy-related inquiries:
 
 - Email: [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com)
-- Website: [Privacy Policy URL](https://adilsezer.github.io/lithuaningo/privacy-policy)
+- Website: [Privacy Policy](https://adilsezer.github.io/lithuaningo/privacy-policy)
+- Support: Available through in-app help center
 
-## 9. Changes to This Policy
+## 9. Policy Updates
 
-We may update this Privacy Policy periodically. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last updated" date.
+We regularly review and update this policy to reflect:
+
+- New features and functionality
+- Changes in data handling practices
+- Updated security measures
+- Regulatory requirements
+
+Last major update: June 10, 2024

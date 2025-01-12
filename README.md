@@ -8,36 +8,117 @@ A mobile application for learning the Lithuanian language through interactive ex
 
 ### Frontend
 
-- React Native with Expo (v52)
+- React Native (0.76.5) with Expo (v52)
 - TypeScript
-- Redux Toolkit for state management
-- Firebase Authentication
-- Firebase Crashlytics
+- Redux Toolkit & Redux Persist for state management
+- Firebase Authentication & Crashlytics
 - Expo Router for navigation
+- React Hook Form for form management
+- React Native IAP for in-app purchases
+- Expo Notifications for push notifications
+- Expo modules:
+  - Image Picker
+  - Linear Gradient
+  - Apple Authentication
+  - Audio/Video
+  - Device
+  - Font
+  - Constants
+  - System UI
+  - Splash Screen
 
 ### Backend
 
 - .NET 8.0 Web API
-- Firebase Admin SDK
-- Google Cloud Firestore
+- Firebase Admin SDK (v3.1.0)
+- Google Cloud Firestore (v3.9.0)
+- gRPC.Net.Client (v2.67.0)
 - Swagger/OpenAPI documentation
+- Custom middleware for:
+  - CORS management
+  - Authentication
+  - Error handling
+  - Request logging
+
+### Services
+
+#### Backend Services
+
+- User Management
+- Sentence Management
+- Word Management
+- Announcements
+- App Information
+- Deck Management
+- Flashcard System
+- Practice Sessions
+- Quiz System with:
+  - Question Generation Factory
+  - Random Generation
+  - Multiple Quiz Types
+
+#### Frontend Services
+
+- Authentication Service
+- API Integration Services
+- Local Storage Service
+- Push Notification Service
+- In-App Purchase Service
+- Analytics Service
 
 ---
 
 ## Features
 
-- **User Authentication**: Secure login via Email, Google Sign-In, and Apple Sign-In
-- **Interactive Learning Modules**: Multiple-choice, fill-in-the-blank, and true/false exercises
-- **Progress Tracking**: Detailed statistics and learning analytics
-- **User Profile Management**: Customizable profiles with learning preferences
-- **Leaderboard System**: Competitive learning with weekly rankings
-- **Daily Sentence Learning**: Context-based sentence learning
-- **Word Teaching**: Systematic vocabulary building
-- **Quiz System**: Adaptive daily quizzes
-- **Offline Support**: Learn without an internet connection
-- **Cross-Platform**: Available for iOS and Android
-- **Cloud Sync**: Seamless data synchronization across devices
-- **Performance Analytics**: Crash reporting and usage analytics
+- **User Authentication**
+
+  - Email/Password login
+  - Google Sign-In
+  - Apple Sign-In
+  - Secure token management
+
+- **Learning System**
+
+  - Multiple-choice questions
+  - Fill-in-the-blank exercises
+  - True/false questions
+  - Flashcard system
+  - Spaced repetition
+  - Progress tracking
+
+- **Content Management**
+
+  - Custom deck creation
+  - Flashcard management
+  - Word categories
+  - Sentence examples
+  - Audio pronunciations
+  - Image attachments
+
+- **Practice & Assessment**
+
+  - Daily quizzes
+  - Practice sessions
+  - Performance analytics
+  - Learning statistics
+  - Achievement system
+
+- **User Experience**
+
+  - Offline support
+  - Cross-platform compatibility
+  - Cloud synchronization
+  - Push notifications
+  - Dark/Light theme
+  - Customizable UI
+  - Accessibility features
+
+- **Premium Features**
+  - Advanced statistics
+  - Additional content
+  - Priority support
+  - Ad-free experience
+  - Custom practice sessions
 
 ---
 
