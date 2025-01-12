@@ -43,7 +43,8 @@ export const createBaseStyles = (colors: ThemeColors) => ({
       paddingVertical: isTablet ? 25 : 20,
       width: isTablet ? "90%" : "75%",
       alignItems: "center",
-      marginVertical: isTablet ? 15 : 10,
+      marginVertical: isTablet ? 20 : 16,
+      alignSelf: "center",
     },
   }),
 });

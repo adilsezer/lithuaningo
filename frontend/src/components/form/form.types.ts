@@ -8,7 +8,8 @@ export type FieldCategory =
   | "range"
   | "datetime"
   | "audio-input"
-  | "image-input";
+  | "image-input"
+  | "link";
 
 export type FieldType =
   | "text"
@@ -20,7 +21,8 @@ export type FieldType =
   | "slider"
   | "date"
   | "audio"
-  | "image";
+  | "image"
+  | "link";
 
 export type ValidationRule = {
   required?: boolean;
@@ -65,6 +67,10 @@ export type FormField = {
 
   // Audio
   maxDuration?: number;
+
+  // Link
+  linkText?: string;
+  onPress?: () => void;
 };
 
 export interface FormProps<T extends FieldValues> {

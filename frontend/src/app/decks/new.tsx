@@ -68,6 +68,25 @@ export default function NewDeckScreen() {
         required: false,
       },
     },
+    {
+      name: "consent",
+      label:
+        "By creating a deck, you confirm it's original, public, and compliant.",
+      category: "toggle",
+      type: "switch",
+      validation: {
+        required: true,
+        message: "You must agree to the terms before creating a deck",
+      },
+    },
+    {
+      name: "terms-link",
+      category: "link",
+      type: "link",
+      label: "Learn more about our terms",
+      linkText: "Learn more about our terms",
+      onPress: () => router.push("/terms-of-service"),
+    },
   ];
 
   const handleSubmit = async (data: Partial<Deck>) => {

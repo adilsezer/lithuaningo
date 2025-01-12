@@ -109,7 +109,7 @@ export function Form<T extends FieldValues>({
         onPress={formHandleSubmit(handleFormSubmit, onError)}
         title={isSubmitting ? "Submitting..." : submitButtonText}
         disabled={isLoading || isSubmitting}
-        style={[styles.submitButton, submitButtonStyle]}
+        style={submitButtonStyle}
       />
     </View>
   );
@@ -118,8 +118,5 @@ export function Form<T extends FieldValues>({
 const styles = StyleSheet.create({
   fieldContainer: {
     marginBottom: 6,
-  },
-  submitButton: {
-    marginTop: 4,
   },
 });

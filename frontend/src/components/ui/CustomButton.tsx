@@ -33,7 +33,7 @@ const CustomButton: React.FC<ButtonProps> = ({
   disabled,
   variant = "primary",
 }) => {
-  const { components, layout, colors } = useThemeStyles();
+  const { components, colors } = useThemeStyles();
   const { width: screenWidth } = useWindowDimensions();
 
   const isTablet =
@@ -48,7 +48,7 @@ const CustomButton: React.FC<ButtonProps> = ({
       : {};
 
   return (
-    <View style={layout.center}>
+    <View>
       <TouchableOpacity
         style={[
           components.button,
