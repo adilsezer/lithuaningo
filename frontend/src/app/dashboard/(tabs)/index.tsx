@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useAppSelector } from "@redux/hooks";
+import { useAppSelector, useAppDispatch } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
@@ -15,6 +15,7 @@ import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
 import { ExpandYourVocabularyCard } from "@components/dashboard/ExpandYourVocabularyCard";
 import wordService from "@services/data/wordService";
 import { DashboardWord } from "@src/types";
+import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
 
 const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
@@ -23,18 +24,28 @@ const DashboardScreen: React.FC = () => {
   const { profile } = useUserProfile();
   const { isDarkMode } = useTheme();
   const [wordsData, setWordsData] = useState<DashboardWord[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectIsLoading);
 
   useEffect(() => {
-    const fetchWords = async () => {
-      setIsLoading(true);
-      const words = await wordService.getRandomWords(5);
-      setWordsData(words);
-      setIsLoading(false);
+    const fetchData = async () => {
+      try {
+        dispatch(setLoading(true));
+        const fetchWords = async () => {
+          const words = await wordService.getRandomWords(5);
+          setWordsData(words);
+        };
+
+        fetchWords();
+      } catch (error) {
+        // ... error handling ...
+      } finally {
+        dispatch(setLoading(false));
+      }
     };
 
-    fetchWords();
-  }, []);
+    fetchData();
+  }, [dispatch]);
 
   const validAnnouncements = announcements.filter((a) => a.title && a.content);
 

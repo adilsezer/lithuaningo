@@ -9,15 +9,17 @@ import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import { SectionTitle } from "@components/typography";
 import { FormField } from "@components/form/form.types";
-import { useAppSelector } from "@redux/hooks";
+import { useAppSelector, useAppDispatch } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
+import { useFlashcards } from "@hooks/useFlashcards";
 
 export default function NewFlashcardScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
+  const { createFlashcard } = useFlashcards();
 
   const fields: FormField[] = [
     {
@@ -88,7 +90,7 @@ export default function NewFlashcardScreen() {
 
       const { imageFile, audioFile, ...flashcardData } = data;
 
-      await flashcardService.createFlashcard(
+      await createFlashcard(
         {
           ...flashcardData,
           deckId,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   View,
   StyleSheet,
@@ -15,34 +15,33 @@ import CustomButton from "@components/ui/CustomButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import commentService from "@services/data/commentService";
-import { useAppSelector } from "@redux/hooks";
+import { useAppDispatch, useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
+import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
 
 export default function CommentsScreen() {
   const { id } = useLocalSearchParams();
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectIsLoading);
   const [comments, setComments] = useState<Comment[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    loadComments();
-  }, [id]);
-
-  const loadComments = async () => {
+  const fetchComments = useCallback(async () => {
     try {
-      setIsLoading(true);
-      setError(null);
+      dispatch(setLoading(true));
       const data = await commentService.getComments(id as string);
       setComments(data);
     } catch (err) {
-      setError("Failed to load comments. Please try again.");
       console.error("Error loading comments:", err);
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
-  };
+  }, [dispatch, id]);
+
+  useEffect(() => {
+    fetchComments();
+  }, [fetchComments]);
 
   const handleAddComment = async (data: { content: string }) => {
     if (!userData) {
@@ -57,7 +56,7 @@ export default function CommentsScreen() {
         content: data.content,
       });
       AlertDialog.success("Comment added successfully");
-      loadComments();
+      fetchComments();
     } catch (err) {
       AlertDialog.error("Failed to add comment");
       console.error("Error adding comment:", err);
@@ -68,7 +67,7 @@ export default function CommentsScreen() {
     try {
       await commentService.deleteComment(commentId);
       AlertDialog.success("Comment deleted successfully");
-      loadComments();
+      fetchComments();
     } catch (err) {
       AlertDialog.error("Failed to delete comment");
       console.error("Error deleting comment:", err);
@@ -93,15 +92,6 @@ export default function CommentsScreen() {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={colors.active} />
-      </View>
-    );
-  }
-
-  if (error) {
-    return (
-      <View style={styles.centerContainer}>
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-        <CustomButton title="Retry" onPress={loadComments} />
       </View>
     );
   }

@@ -13,9 +13,10 @@ import { AlertDialog } from "@components/ui/AlertDialog";
 import { SectionTitle } from "@components/typography";
 import CustomButton from "@components/ui/CustomButton";
 import quizService from "@services/data/quizService";
-import { useAppSelector } from "@redux/hooks";
+import { useAppDispatch, useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import BackButton from "@components/layout/BackButton";
+import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
@@ -25,28 +26,28 @@ export default function QuizScreen() {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<boolean[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectIsLoading);
 
   useEffect(() => {
-    startQuiz();
-  }, [id]);
+    const startQuiz = async () => {
+      try {
+        dispatch(setLoading(true));
+        const data = await quizService.startQuiz(id as string);
+        setQuestions(data);
+        setAnswers(new Array(data.length).fill(false));
+      } catch (err) {
+        setError("Failed to start quiz. Please try again.");
+        console.error("Error starting quiz:", err);
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
 
-  const startQuiz = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      const data = await quizService.startQuiz(id as string);
-      setQuestions(data);
-      setAnswers(new Array(data.length).fill(false));
-    } catch (err) {
-      setError("Failed to start quiz. Please try again.");
-      console.error("Error starting quiz:", err);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    startQuiz();
+  }, [dispatch, id]);
 
   const handleAnswer = (isCorrect: boolean) => {
     const newAnswers = [...answers];

@@ -2,6 +2,8 @@ import { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import { Deck } from "@src/types";
 import deckService from "@services/data/deckService";
 import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
 
 export type ViewMode = "all" | "top" | "my";
 
@@ -13,8 +15,9 @@ interface DeckRatings {
 }
 
 export const useDecks = (currentUserId?: string) => {
+  const dispatch = useAppDispatch();
+  const isLoading = useAppSelector(selectIsLoading);
   const [decks, setDecks] = useState<Deck[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("");
@@ -38,7 +41,7 @@ export const useDecks = (currentUserId?: string) => {
 
   const fetchDecks = useCallback(async () => {
     try {
-      setIsLoading(true);
+      dispatch(setLoading(true));
       clearError();
       let data: Deck[] = [];
 
@@ -56,7 +59,7 @@ export const useDecks = (currentUserId?: string) => {
     } catch (error) {
       handleError(error, "Failed to load decks");
     } finally {
-      setIsLoading(false);
+      dispatch(setLoading(false));
     }
   }, [
     searchQuery,
@@ -65,6 +68,7 @@ export const useDecks = (currentUserId?: string) => {
     currentUserId,
     handleError,
     clearError,
+    dispatch,
   ]);
 
   const getDeckRating = useCallback(
