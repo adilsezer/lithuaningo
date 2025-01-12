@@ -1,7 +1,5 @@
 import React from "react";
-import { StyleSheet, ScrollView, View } from "react-native";
-import * as Linking from "expo-linking";
-import Constants from "expo-constants";
+import { StyleSheet, ScrollView } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import {
   SectionTitle,
@@ -9,32 +7,10 @@ import {
   LinkText,
   Paragraph,
 } from "@components/typography";
-import { useRouter } from "expo-router";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAbout } from "@hooks/useAbout";
 
 export default function AboutScreen() {
-  const router = useRouter();
-
-  const handleLinkPress = async (url: string) => {
-    try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        AlertDialog.error(
-          "Unable to open the link. Please check if the app to handle the URL is installed and configured."
-        );
-        console.error("Unsupported URL: ", url);
-      }
-    } catch (err) {
-      AlertDialog.error(
-        "An error occurred while trying to open the URL. Please try again later."
-      );
-      console.error("Failed to open URL:", err);
-    }
-  };
-
-  const appVersion = Constants.expoConfig?.version || "Unknown";
+  const { appVersion, handleLinkPress, navigateToPrivacyPolicy } = useAbout();
 
   return (
     <ScrollView>
@@ -64,7 +40,7 @@ export default function AboutScreen() {
       <SectionText>{appVersion}</SectionText>
 
       <SectionTitle>Privacy Policy</SectionTitle>
-      <LinkText onPress={() => router.push("/privacy-policy")}>
+      <LinkText onPress={navigateToPrivacyPolicy}>
         View our Privacy Policy
       </LinkText>
     </ScrollView>

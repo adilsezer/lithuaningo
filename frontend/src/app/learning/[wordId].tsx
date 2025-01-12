@@ -1,29 +1,36 @@
-import React, { useEffect } from "react";
+import React from "react";
 import FlashcardScreen from "@components/learning/Flashcard";
 import { useLocalSearchParams } from "expo-router";
 import { View, StyleSheet } from "react-native";
-import { useAppDispatch } from "@redux/hooks";
-import { setLoading } from "@redux/slices/uiSlice";
 import { SectionText } from "@components/typography";
 import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useWordDetails } from "@hooks/useWordDetails";
+import LoadingIndicator from "@components/ui/LoadingIndicator";
 
 const Flashcard = () => {
   const { wordId } = useLocalSearchParams<{ wordId: string }>();
   const { colors } = useThemeStyles();
-  const dispatch = useAppDispatch();
+  const { loading, error, isValidWordId } = useWordDetails(wordId);
 
-  useEffect(() => {
-    if (wordId) {
-      dispatch(setLoading(true));
-    }
-  }, [wordId, dispatch]);
+  if (loading) {
+    return <LoadingIndicator />;
+  }
 
-  if (!wordId) {
-    dispatch(setLoading(false));
+  if (!isValidWordId) {
     return (
       <View style={styles.errorContainer}>
         <SectionText style={{ color: colors.error }}>
           Error: wordId is missing
+        </SectionText>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View style={styles.errorContainer}>
+        <SectionText style={{ color: colors.error }}>
+          {error.message || "An error occurred while loading the word"}
         </SectionText>
       </View>
     );

@@ -1,53 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useAppSelector, useAppDispatch } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
-import useAnnouncements from "@hooks/useAnnouncements";
-import { useUserProfile } from "@hooks/useUserProfile";
-import { SectionTitle, SectionText } from "@components/typography";
-import Divider from "@components/ui/Divider";
-import { useTheme } from "@src/context/ThemeContext";
+import { SectionTitle } from "@components/typography";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
 import { ExpandYourVocabularyCard } from "@components/dashboard/ExpandYourVocabularyCard";
-import wordService from "@services/data/wordService";
-import { DashboardWord } from "@src/types";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { useDashboard } from "@hooks/useDashboard";
 
 const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
-  const announcements = useAnnouncements();
-  const { profile } = useUserProfile();
-  const { isDarkMode } = useTheme();
-  const [wordsData, setWordsData] = useState<DashboardWord[]>([]);
-  const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        dispatch(setLoading(true));
-        const fetchWords = async () => {
-          const words = await wordService.getRandomWords(5);
-          setWordsData(words);
-        };
-
-        fetchWords();
-      } catch (error) {
-        // ... error handling ...
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    fetchData();
-  }, [dispatch]);
-
-  const validAnnouncements = announcements.filter((a) => a.title && a.content);
+  const {
+    userData,
+    validAnnouncements,
+    profile,
+    isDarkMode,
+    wordsData,
+    isLoading,
+  } = useDashboard();
 
   return (
     <ScrollView>

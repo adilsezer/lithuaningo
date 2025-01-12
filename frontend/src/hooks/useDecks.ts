@@ -1,9 +1,11 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
-import { Deck } from "@src/types";
-import deckService from "@services/data/deckService";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useRouter } from "expo-router";
 import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { selectUserData } from "@redux/slices/userSlice";
 import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { AlertDialog } from "@components/ui/AlertDialog";
+import type { Deck } from "@src/types";
+import deckService from "@services/data/deckService";
 
 export type ViewMode = "all" | "top" | "my";
 
@@ -15,7 +17,9 @@ interface DeckRatings {
 }
 
 export const useDecks = (currentUserId?: string) => {
+  const router = useRouter();
   const dispatch = useAppDispatch();
+  const userData = useAppSelector(selectUserData);
   const isLoading = useAppSelector(selectIsLoading);
   const [decks, setDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +143,37 @@ export const useDecks = (currentUserId?: string) => {
     [handleError]
   );
 
+  const createDeck = async (data: Partial<Deck>) => {
+    try {
+      if (!userData?.id) {
+        AlertDialog.error("Please login to create decks");
+        return;
+      }
+
+      const newDeck: Omit<Deck, "id"> = {
+        title: data.title || "",
+        description: data.description || "",
+        category: data.category || "",
+        createdBy: userData.id,
+        createdByUsername: userData.name || "",
+        createdAt: new Date().toISOString(),
+        tags:
+          typeof data.tags === "string"
+            ? (data.tags as string).split(",").map((tag: string) => tag.trim())
+            : (data.tags as string[]) || [],
+      };
+
+      const deckId = await deckService.createDeck(newDeck as Deck);
+      AlertDialog.success(
+        "Deck created successfully. Please add flashcards to your deck."
+      );
+      router.push(`/flashcards/new?deckId=${deckId}`);
+      await fetchDecks(); // Refresh the decks list
+    } catch (error) {
+      handleError(error, "Failed to create deck");
+    }
+  };
+
   // Derived states with memoization
   const filteredDecks = useMemo(() => {
     if (!decks) return [];
@@ -192,5 +227,7 @@ export const useDecks = (currentUserId?: string) => {
     voteDeck,
     reportDeck,
     getDeckRating,
+    createDeck,
+    isAuthenticated: !!userData?.id,
   };
 };

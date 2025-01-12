@@ -1,12 +1,10 @@
 import React from "react";
 import { ScrollView, Image, StyleSheet } from "react-native";
-import { router } from "expo-router";
 import CustomButton from "@components/ui/CustomButton";
-import { useAppDispatch } from "@redux/hooks";
-import { resetClickedWords } from "@redux/slices/clickedWordsSlice";
 import { SectionText, SectionTitle } from "@components/typography";
+import { useChallenge } from "@hooks/useChallenge";
 
-const LEARNING_OPTIONS = [
+const learningOptions = [
   {
     title: "Practice Flashcards",
     route: "/learning/flashcards",
@@ -18,12 +16,7 @@ const LEARNING_OPTIONS = [
 ] as const;
 
 export default function LearnScreen() {
-  const dispatch = useAppDispatch();
-
-  const handleNavigation = (route: string) => {
-    dispatch(resetClickedWords());
-    router.push(route);
-  };
+  const { handleNavigation } = useChallenge();
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -37,7 +30,7 @@ export default function LearnScreen() {
         your knowledge with a quiz to check your progress.
       </SectionText>
 
-      {LEARNING_OPTIONS.map((option, index) => (
+      {learningOptions.map((option, index) => (
         <CustomButton
           key={option.route}
           title={option.title}
