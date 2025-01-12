@@ -83,6 +83,7 @@ class ApiClient {
       method?: string;
       data?: any;
       params?: any;
+      headers?: Record<string, string>;
     }
   ): Promise<T> {
     try {
@@ -91,6 +92,7 @@ class ApiClient {
         method: options?.method || "GET",
         data: options?.data,
         params: options?.params,
+        headers: options?.headers,
       });
       return data;
     } catch (error) {
@@ -382,6 +384,19 @@ class ApiClient {
   async getPracticeHistory(userId: string) {
     return this.request<PracticeStats[]>(
       `/deck/user/${userId}/practice-history`
+    );
+  }
+
+  async uploadFlashcardFiles(formData: FormData) {
+    return this.request<{ imageUrl?: string; audioUrl?: string }>(
+      "/flashcard/upload",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+        data: formData,
+      }
     );
   }
 }

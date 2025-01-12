@@ -1,5 +1,7 @@
 using Google.Cloud.Firestore;
 using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,18 +12,19 @@ namespace Lithuaningo.API.Services
     public class FlashcardService : IFlashcardService
     {
         private readonly FirestoreDb _db;
-        private const string COLLECTION_NAME = "flashcards";
+        private readonly string _collectionName;
 
-        public FlashcardService(FirestoreDb db)
+        public FlashcardService(FirestoreDb db, IOptions<FirestoreCollectionSettings> collectionSettings)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _collectionName = collectionSettings.Value.Flashcards;
         }
 
         public async Task<Flashcard?> GetFlashcardByIdAsync(string id)
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+                var docRef = _db.Collection(_collectionName).Document(id);
                 var snapshot = await docRef.GetSnapshotAsync();
 
                 if (!snapshot.Exists)
@@ -40,7 +43,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var snapshot = await _db.Collection(COLLECTION_NAME)
+                var snapshot = await _db.Collection(_collectionName)
                     .WhereEqualTo("createdBy", userId)
                     .Limit(50)
                     .GetSnapshotAsync();
@@ -58,7 +61,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document();
+                var docRef = _db.Collection(_collectionName).Document();
                 flashcard.Id = docRef.Id;
                 flashcard.CreatedAt = DateTime.UtcNow;
 
@@ -76,7 +79,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+                var docRef = _db.Collection(_collectionName).Document(id);
                 await docRef.SetAsync(flashcard);
             }
             catch (Exception ex)
@@ -90,7 +93,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                await _db.Collection(COLLECTION_NAME).Document(id).DeleteAsync();
+                await _db.Collection(_collectionName).Document(id).DeleteAsync();
             }
             catch (Exception ex)
             {
@@ -103,7 +106,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var snapshot = await _db.Collection(COLLECTION_NAME)
+                var snapshot = await _db.Collection(_collectionName)
                     .WhereEqualTo("createdBy", userId)
                     .OrderBy("createdAt")
                     .Limit(limit)
@@ -122,7 +125,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+                var docRef = _db.Collection(_collectionName).Document(id);
                 var snapshot = await docRef.GetSnapshotAsync();
 
                 if (!snapshot.Exists)
@@ -139,7 +142,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var snapshot = await _db.Collection(COLLECTION_NAME)
+                var snapshot = await _db.Collection(_collectionName)
                     .OrderByDescending("createdAt")
                     .Limit(limit)
                     .GetSnapshotAsync();
@@ -160,7 +163,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var snapshot = await _db.Collection(COLLECTION_NAME)
+                var snapshot = await _db.Collection(_collectionName)
                     .Limit(20)
                     .GetSnapshotAsync();
                 

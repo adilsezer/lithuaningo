@@ -17,8 +17,23 @@ class FlashcardService {
     return apiClient.removeFlashcardFromDeck(deckId, flashcardId);
   }
 
-  async createFlashcard(flashcard: Omit<Flashcard, "id" | "createdAt">) {
-    return apiClient.createFlashcard(flashcard as Flashcard);
+  async createFlashcard(
+    flashcard: Omit<Flashcard, "id" | "createdAt">,
+    image?: File,
+    audio?: File
+  ): Promise<string> {
+    let uploadedUrls = {};
+
+    if (image || audio) {
+      uploadedUrls = await this.uploadFiles(image, audio);
+    }
+
+    const flashcardWithUrls = {
+      ...flashcard,
+      ...uploadedUrls,
+    };
+
+    return apiClient.createFlashcard(flashcardWithUrls as Flashcard);
   }
 
   async updateFlashcard(id: string, flashcard: Partial<Flashcard>) {
@@ -31,6 +46,13 @@ class FlashcardService {
 
   async getFlashcardById(id: string) {
     return apiClient.getFlashcardById(id);
+  }
+
+  async uploadFiles(image?: File, audio?: File) {
+    const formData = new FormData();
+    if (image) formData.append("image", image);
+    if (audio) formData.append("audio", audio);
+    return apiClient.uploadFlashcardFiles(formData);
   }
 }
 

@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { AlertDialog } from "@components/ui/AlertDialog";
-import type { Flashcard } from "@src/types";
+import type { FlashcardFormData } from "@src/types";
 import flashcardService from "@services/data/flashcardService";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
@@ -63,29 +63,24 @@ export default function NewFlashcardScreen() {
     },
   ];
 
-  const handleSubmit = async (data: Partial<Flashcard>) => {
+  const handleSubmit = async (data: FlashcardFormData) => {
     try {
-      if (!deckId) {
-        AlertDialog.error("No deck selected");
+      if (!deckId || !userData?.id) {
+        AlertDialog.error("Missing required data");
         return;
       }
 
-      if (!userData?.id) {
-        AlertDialog.error("Please login to create flashcards");
-        return;
-      }
+      const { imageFile, audioFile, ...flashcardData } = data;
 
-      const newFlashcard: Omit<Flashcard, "id" | "createdAt"> = {
-        front: data.front || "",
-        back: data.back || "",
-        exampleSentence: data.exampleSentence,
-        audioUrl: data.audioUrl,
-        imageUrl: data.imageUrl,
-        deckId: deckId,
-        createdBy: userData.id,
-      };
-
-      await flashcardService.createFlashcard(newFlashcard as Flashcard);
+      await flashcardService.createFlashcard(
+        {
+          ...flashcardData,
+          deckId,
+          createdBy: userData.id,
+        },
+        imageFile,
+        audioFile
+      );
       AlertDialog.success("Flashcard created successfully");
 
       // Create another flashcard for the same deck

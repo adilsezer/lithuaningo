@@ -8,10 +8,12 @@ namespace Lithuaningo.API.Controllers
     public class FlashcardController : ControllerBase
     {
         private readonly IFlashcardService _flashcardService;
+        private readonly IStorageService _storageService;
 
-        public FlashcardController(IFlashcardService flashcardService)
+        public FlashcardController(IFlashcardService flashcardService, IStorageService storageService)
         {
             _flashcardService = flashcardService;
+            _storageService = storageService;
         }
 
         [HttpGet("{id}")]
@@ -78,6 +80,33 @@ namespace Lithuaningo.API.Controllers
         {
             var flashcards = await _flashcardService.SearchFlashcardsAsync(query);
             return Ok(flashcards);
+        }
+
+        [HttpPost("upload")]
+        public async Task<ActionResult<Dictionary<string, string>>> UploadFiles(
+            [FromForm] IFormFile? image,
+            [FromForm] IFormFile? audio)
+        {
+            var urls = new Dictionary<string, string>();
+            
+            try
+            {
+                if (image != null)
+                {
+                    urls["imageUrl"] = await _storageService.UploadFileAsync(image, "flashcard-images");
+                }
+                
+                if (audio != null)
+                {
+                    urls["audioUrl"] = await _storageService.UploadFileAsync(audio, "flashcard-audio");
+                }
+                
+                return Ok(urls);
+            }
+            catch (Exception)
+            {
+                return StatusCode(500, "Error uploading files");
+            }
         }
     }
 } 

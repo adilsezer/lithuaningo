@@ -1,6 +1,8 @@
 using Google.Cloud.Firestore;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
 
 namespace Lithuaningo.API.Services
 {
@@ -8,13 +10,14 @@ namespace Lithuaningo.API.Services
     {
         private readonly FirestoreDb _db;
         private readonly IDeckService _deckService;
-        private const string COLLECTION_NAME = "practiceStats";
+        private readonly string _collectionName;
         private const int MASTERY_THRESHOLD = 3; // Number of correct attempts needed for mastery
 
-        public PracticeService(FirestoreDb db, IDeckService deckService)
+        public PracticeService(FirestoreDb db, IDeckService deckService, IOptions<FirestoreCollectionSettings> collectionSettings)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
             _deckService = deckService ?? throw new ArgumentNullException(nameof(deckService));
+            _collectionName = collectionSettings.Value.Practices;
         }
 
         public async Task<PracticeStats> GetPracticeStatsAsync(string deckId, string userId)
@@ -22,7 +25,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var docId = $"{userId}_{deckId}";
-                var docRef = _db.Collection(COLLECTION_NAME).Document(docId);
+                var docRef = _db.Collection(_collectionName).Document(docId);
                 var snapshot = await docRef.GetSnapshotAsync();
 
                 if (!snapshot.Exists)
@@ -68,7 +71,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var docId = $"{userId}_{deckId}";
-                var docRef = _db.Collection(COLLECTION_NAME).Document(docId);
+                var docRef = _db.Collection(_collectionName).Document(docId);
 
                 await _db.RunTransactionAsync(async transaction =>
                 {
@@ -123,7 +126,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var snapshot = await _db.Collection(COLLECTION_NAME)
+                var snapshot = await _db.Collection(_collectionName)
                     .WhereEqualTo("userId", userId)
                     .OrderByDescending("lastPracticed")
                     .Limit(50)

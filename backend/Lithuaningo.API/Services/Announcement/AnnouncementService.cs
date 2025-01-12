@@ -4,24 +4,27 @@ using Lithuaningo.API.Services.Interfaces;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
 
 namespace Lithuaningo.API.Services;
 
 public class AnnouncementService : IAnnouncementService
 {
     private readonly FirestoreDb _db;
-    private const string COLLECTION_NAME = "announcements";
+    private readonly string _collectionName;
 
-    public AnnouncementService(FirestoreDb db)
+    public AnnouncementService(FirestoreDb db, IOptions<FirestoreCollectionSettings> collectionSettings)
     {
         _db = db ?? throw new ArgumentNullException(nameof(db));
+        _collectionName = collectionSettings.Value.Announcements;
     }
 
     public async Task<IEnumerable<Announcement>> GetAnnouncementsAsync()
     {
         try
         {
-            var snapshot = await _db.Collection(COLLECTION_NAME)
+            var snapshot = await _db.Collection(_collectionName)
                 .OrderByDescending("createdAt")
                 .Limit(10)
                 .GetSnapshotAsync();
@@ -41,7 +44,7 @@ public class AnnouncementService : IAnnouncementService
 
         try
         {
-            var docRef = _db.Collection(COLLECTION_NAME).Document();
+            var docRef = _db.Collection(_collectionName).Document();
             announcement.Id = docRef.Id;
             await docRef.SetAsync(announcement);
         }
@@ -59,7 +62,7 @@ public class AnnouncementService : IAnnouncementService
 
         try
         {
-            await _db.Collection(COLLECTION_NAME).Document(id).DeleteAsync();
+            await _db.Collection(_collectionName).Document(id).DeleteAsync();
         }
         catch (Exception ex)
         {

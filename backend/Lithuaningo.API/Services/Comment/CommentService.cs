@@ -1,6 +1,8 @@
 using Google.Cloud.Firestore;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,18 +13,19 @@ namespace Lithuaningo.API.Services
     public class CommentService : ICommentService
     {
         private readonly FirestoreDb _db;
-        private const string COLLECTION_NAME = "comments";
+        private readonly string _collectionName;
 
-        public CommentService(FirestoreDb db)
+        public CommentService(FirestoreDb db, IOptions<FirestoreCollectionSettings> collectionSettings)
         {
             _db = db ?? throw new ArgumentNullException(nameof(db));
+            _collectionName = collectionSettings.Value.Comments;
         }
 
         public async Task<List<Comment>> GetDeckCommentsAsync(string deckId)
         {
             try
             {
-                var snapshot = await _db.Collection(COLLECTION_NAME)
+                var snapshot = await _db.Collection(_collectionName)
                     .WhereEqualTo("deckId", deckId)
                     .OrderByDescending("createdAt")
                     .Limit(20)
@@ -43,7 +46,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+                var docRef = _db.Collection(_collectionName).Document(id);
                 var snapshot = await docRef.GetSnapshotAsync();
 
                 if (!snapshot.Exists)
@@ -62,7 +65,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document();
+                var docRef = _db.Collection(_collectionName).Document();
                 comment.Id = docRef.Id;
                 comment.CreatedAt = DateTime.UtcNow;
                 comment.Likes = 0;
@@ -81,7 +84,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+                var docRef = _db.Collection(_collectionName).Document(id);
                 comment.UpdatedAt = DateTime.UtcNow;
                 await docRef.SetAsync(comment);
             }
@@ -96,7 +99,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                await _db.Collection(COLLECTION_NAME).Document(id).DeleteAsync();
+                await _db.Collection(_collectionName).Document(id).DeleteAsync();
             }
             catch (Exception ex)
             {
@@ -109,7 +112,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+                var docRef = _db.Collection(_collectionName).Document(id);
                 var snapshot = await docRef.GetSnapshotAsync();
 
                 if (!snapshot.Exists)
@@ -129,7 +132,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+                var docRef = _db.Collection(_collectionName).Document(id);
                 var snapshot = await docRef.GetSnapshotAsync();
 
                 if (!snapshot.Exists)

@@ -4,6 +4,8 @@ using System.Threading.Tasks;
 using Google.Cloud.Firestore;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
 
 namespace Lithuaningo.API.Services;
 
@@ -11,20 +13,26 @@ public class DeckService : IDeckService
 {
     private readonly FirestoreDb _db;
     private readonly IUserService _userService;
-    private const string COLLECTION_NAME = "decks";
-    private const string VOTES_COLLECTION = "deckVotes";
+    private readonly string _collectionName;
+    private readonly string _votesCollection;
+    private readonly string _flashcardsCollection;
+    private readonly string _reportsCollection;
 
-    public DeckService(FirestoreDb db, IUserService userService)
+    public DeckService(FirestoreDb db, IUserService userService, IOptions<FirestoreCollectionSettings> collectionSettings)
     {
-        _db = db;
+        _db = db ?? throw new ArgumentNullException(nameof(db));
         _userService = userService;
+        _collectionName = collectionSettings.Value.Decks;
+        _votesCollection = collectionSettings.Value.DeckVotes;
+        _flashcardsCollection = collectionSettings.Value.Flashcards;
+        _reportsCollection = collectionSettings.Value.Reports;
     }
 
     public async Task<List<Models.Deck>> GetDecksAsync(string? category = null, int? limit = 20)
     {
         try
         {
-            Query query = _db.Collection(COLLECTION_NAME);
+            Query query = _db.Collection(_collectionName);
 
             if (!string.IsNullOrEmpty(category))
             {
@@ -48,7 +56,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+            var docRef = _db.Collection(_collectionName).Document(id);
             var snapshot = await docRef.GetSnapshotAsync();
 
             if (!snapshot.Exists)
@@ -67,7 +75,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var snapshot = await _db.Collection(COLLECTION_NAME)
+            var snapshot = await _db.Collection(_collectionName)
                 .WhereEqualTo("createdBy", userId)
                 .GetSnapshotAsync();
 
@@ -85,7 +93,7 @@ public class DeckService : IDeckService
         try
         {
             // Get decks with limit * 2 to have enough after filtering
-            Query query = _db.Collection(COLLECTION_NAME)
+            Query query = _db.Collection(_collectionName)
                 .Limit(limit * 2);
 
             var decksSnapshot = await query.GetSnapshotAsync();
@@ -119,7 +127,7 @@ public class DeckService : IDeckService
             var user = await _userService.GetUserProfileAsync(deck.CreatedBy);
             deck.CreatedByUsername = user?.Name ?? "Unknown User";
             
-            var docRef = _db.Collection(COLLECTION_NAME).Document();
+            var docRef = _db.Collection(_collectionName).Document();
             deck.Id = docRef.Id;
             await docRef.SetAsync(deck);
             return deck.Id;
@@ -135,7 +143,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var docRef = _db.Collection(COLLECTION_NAME).Document(id);
+            var docRef = _db.Collection(_collectionName).Document(id);
             await docRef.SetAsync(deck);
         }
         catch (Exception ex)
@@ -159,7 +167,7 @@ public class DeckService : IDeckService
                 batch.Delete(doc.Reference);
             }
 
-            batch.Delete(_db.Collection(COLLECTION_NAME).Document(id));
+            batch.Delete(_db.Collection(_collectionName).Document(id));
             await batch.CommitAsync();
         }
         catch (Exception ex)
@@ -174,13 +182,13 @@ public class DeckService : IDeckService
         try
         {
             // Check if deck exists
-            var deckRef = _db.Collection(COLLECTION_NAME).Document(id);
+            var deckRef = _db.Collection(_collectionName).Document(id);
             var deckSnapshot = await deckRef.GetSnapshotAsync();
             if (!deckSnapshot.Exists)
                 return false;
 
             // Check for existing vote
-            var voteQuery = _db.Collection(VOTES_COLLECTION)
+            var voteQuery = _db.Collection(_votesCollection)
                 .WhereEqualTo("deckId", id)
                 .WhereEqualTo("userId", userId);
             var voteSnapshot = await voteQuery.GetSnapshotAsync();
@@ -205,7 +213,7 @@ public class DeckService : IDeckService
                     IsUpvote = isUpvote,
                     CreatedAt = DateTime.UtcNow
                 };
-                await _db.Collection(VOTES_COLLECTION).AddAsync(vote);
+                await _db.Collection(_votesCollection).AddAsync(vote);
             }
 
             return true;
@@ -221,7 +229,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            Query baseQuery = _db.Collection(COLLECTION_NAME);
+            Query baseQuery = _db.Collection(_collectionName);
 
             if (!string.IsNullOrEmpty(category))
             {
@@ -249,7 +257,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var snapshot = await _db.Collection("flashcards")
+            var snapshot = await _db.Collection(_flashcardsCollection)
                 .WhereEqualTo("deckId", deckId)
                 .GetSnapshotAsync();
 
@@ -266,7 +274,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var docRef = _db.Collection("flashcards").Document();
+            var docRef = _db.Collection(_flashcardsCollection).Document();
             flashcard.Id = docRef.Id;
             flashcard.DeckId = deckId;
             flashcard.CreatedAt = DateTime.UtcNow;
@@ -285,7 +293,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            await _db.Collection("flashcards").Document(flashcardId).DeleteAsync();
+            await _db.Collection(_flashcardsCollection).Document(flashcardId).DeleteAsync();
         }
         catch (Exception ex)
         {
@@ -298,7 +306,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var reportRef = _db.Collection("reports").Document();
+            var reportRef = _db.Collection(_reportsCollection).Document();
             var report = new Dictionary<string, object>
             {
                 { "deckId", id },
@@ -321,7 +329,7 @@ public class DeckService : IDeckService
     {
         try
         {
-            var votesSnapshot = await _db.Collection(VOTES_COLLECTION)
+            var votesSnapshot = await _db.Collection(_votesCollection)
                 .WhereEqualTo("deckId", deckId)
                 .GetSnapshotAsync();
 
@@ -332,7 +340,6 @@ public class DeckService : IDeckService
             var upvotes = votes.Count(v => v.IsUpvote);
             var totalVotes = votesSnapshot.Count;
 
-            // Calculate rating as percentage of upvotes (0 to 1)
             return (double)upvotes / totalVotes;
         }
         catch (Exception ex)

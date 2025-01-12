@@ -3,17 +3,20 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using System;
 using System.Threading.Tasks;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
 
 namespace Lithuaningo.API.Services;
 
 public class AppInfoService : IAppInfoService
 {
     private readonly FirestoreDb _db;
-    private const string COLLECTION_NAME = "appInfo";
+    private readonly string _collectionName;
 
-    public AppInfoService(FirestoreDb db)
+    public AppInfoService(FirestoreDb db, IOptions<FirestoreCollectionSettings> collectionSettings)
     {
         _db = db ?? throw new ArgumentNullException(nameof(db));
+        _collectionName = collectionSettings.Value.AppInfo;
     }
 
     public async Task<AppInfo> GetAppInfoAsync(string platform)
@@ -27,7 +30,7 @@ public class AppInfoService : IAppInfoService
 
         try
         {
-            var docRef = _db.Collection(COLLECTION_NAME).Document(platform);
+            var docRef = _db.Collection(_collectionName).Document(platform);
             var snapshot = await docRef.GetSnapshotAsync();
             return snapshot.ConvertTo<AppInfo>();
         }
@@ -52,7 +55,7 @@ public class AppInfoService : IAppInfoService
 
         try
         {
-            var docRef = _db.Collection(COLLECTION_NAME).Document(platform);
+            var docRef = _db.Collection(_collectionName).Document(platform);
             appInfo.Id = platform;
             await docRef.SetAsync(appInfo);
         }

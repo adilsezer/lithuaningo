@@ -5,23 +5,33 @@ using Lithuaningo.API.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Options;
 
 namespace Lithuaningo.API.Services;
 
 public class WordService : IWordService
 {
     private readonly FirestoreDb _db;
+    private readonly string _wordsCollection;
+    private readonly string _wordFormsCollection;
+    private readonly string _lemmasCollection;
+    private readonly string _sentencesCollection;
     private readonly IRandomGenerator _randomGenerator;
 
-    public WordService(FirestoreDb db, IRandomGenerator randomGenerator)
+    public WordService(FirestoreDb db, IOptions<FirestoreCollectionSettings> collectionSettings, IRandomGenerator randomGenerator)
     {
         _db = db ?? throw new ArgumentNullException(nameof(db));
+        _wordsCollection = collectionSettings.Value.Words;
+        _wordFormsCollection = collectionSettings.Value.WordForms;
+        _lemmasCollection = collectionSettings.Value.Lemmas;
+        _sentencesCollection = collectionSettings.Value.Sentences;
         _randomGenerator = randomGenerator ?? throw new ArgumentNullException(nameof(randomGenerator));
     }
 
     public async Task<WordForm?> GetWordForm(string word)
     {
-        var snapshot = await _db.Collection("wordForms")
+        var snapshot = await _db.Collection(_wordFormsCollection)
                               .WhereIn("word", new[] {
                                   word.ToLower(),
                                   word.ToUpper(),
@@ -40,7 +50,7 @@ public class WordService : IWordService
             char.ToUpper(lemma[0]) + lemma.Substring(1).ToLower()
         })
         {
-            var snapshot = await _db.Collection("lemmas").Document(variant).GetSnapshotAsync();
+            var snapshot = await _db.Collection(_lemmasCollection).Document(variant).GetSnapshotAsync();
             if (snapshot.Exists)
             {
                 return snapshot.ConvertTo<Lemma>();
@@ -54,7 +64,7 @@ public class WordService : IWordService
         var words = new List<DashboardWord>();
         var usedLemmaIds = new HashSet<string>();
 
-        var sentenceSnapshot = await _db.Collection("sentences")
+        var sentenceSnapshot = await _db.Collection(_sentencesCollection)
             .OrderBy("__name__")
             .StartAt(_randomGenerator.Next(0, 1000000).ToString())
             .Limit(count * 2)

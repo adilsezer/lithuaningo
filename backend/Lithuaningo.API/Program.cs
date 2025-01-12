@@ -78,6 +78,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 
     // Firebase Configuration
     services.Configure<FirestoreSettings>(configuration.GetSection("FirestoreSettings"));
+    services.Configure<FirestoreCollectionSettings>(configuration.GetSection("FirestoreCollectionSettings"));
     var firestoreSettings = configuration.GetSection("FirestoreSettings").Get<FirestoreSettings>();
     services.AddSingleton(FirestoreDb.Create(firestoreSettings?.ProjectId));
 
@@ -90,7 +91,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<IDeckService, DeckService>();
     services.AddScoped<IFlashcardService, FlashcardService>();
     services.AddScoped<IPracticeService, PracticeService>();
-    
+    services.AddScoped<IStorageService, StorageService>();
 
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
@@ -120,7 +121,11 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
             .AddApplicationPart(typeof(AppInfoController).Assembly)
             .AddApplicationPart(typeof(DeckController).Assembly)
             .AddApplicationPart(typeof(FlashcardController).Assembly)
-            .AddApplicationPart(typeof(PracticeController).Assembly);
+            .AddApplicationPart(typeof(PracticeController).Assembly)
+            .AddApplicationPart(typeof(StorageService).Assembly);
+
+    builder.Services.Configure<StorageSettings>(
+        builder.Configuration.GetSection("StorageSettings"));
 }
 
 void ConfigureMiddleware(WebApplication app)

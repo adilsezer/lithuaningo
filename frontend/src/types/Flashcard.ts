@@ -9,3 +9,8 @@ export interface Flashcard {
   createdBy: string;
   createdAt: string;
 }
+
+export interface FlashcardFormData extends Omit<Flashcard, "id" | "createdAt"> {
+  imageFile?: File;
+  audioFile?: File;
+}
