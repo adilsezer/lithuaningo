@@ -3,6 +3,7 @@ import { View, StyleSheet, TextStyle, ViewStyle } from "react-native";
 import { SectionText } from "@components/typography";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
+import BackButton from "@components/layout/BackButton";
 
 interface ErrorMessageProps {
   message: string;
@@ -17,30 +18,25 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   message,
   onRetry,
   textStyle,
-  containerStyle,
-  fullScreen,
   buttonText = "Retry",
 }) => {
   const { colors } = useThemeStyles();
 
   return (
-    <View
-      style={[
-        styles.container,
-        fullScreen && styles.fullScreen,
-        containerStyle,
-      ]}
-    >
-      <SectionText style={[styles.text, { color: colors.error }, textStyle]}>
-        {message}
-      </SectionText>
-      {onRetry && (
-        <CustomButton
-          title={buttonText}
-          onPress={onRetry}
-          style={[styles.button, { backgroundColor: colors.primary }]}
-        />
-      )}
+    <View>
+      <BackButton />
+      <View style={styles.container}>
+        <SectionText style={[styles.text, { color: colors.error }, textStyle]}>
+          {message}
+        </SectionText>
+        {onRetry && (
+          <CustomButton
+            title={buttonText}
+            onPress={onRetry}
+            style={[styles.button, { backgroundColor: colors.primary }]}
+          />
+        )}
+      </View>
     </View>
   );
 };
@@ -49,10 +45,6 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     alignItems: "center",
-  },
-  fullScreen: {
-    flex: 1,
-    justifyContent: "center",
   },
   text: {
     fontSize: 14,

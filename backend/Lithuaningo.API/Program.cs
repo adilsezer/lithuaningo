@@ -110,7 +110,8 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<IFlashcardService, FlashcardService>();
     services.AddScoped<IPracticeService, PracticeService>();
     services.AddScoped<IStorageService, StorageService>();
-
+    services.AddScoped<ICommentService, CommentService>();
+    
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
     services.AddScoped<IQuestionGeneratorFactory, QuestionGeneratorFactory>();

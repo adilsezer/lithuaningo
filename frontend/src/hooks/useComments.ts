@@ -43,50 +43,199 @@ export const useComments = (deckId: string) => {
   }, [dispatch, deckId, handleError, clearError]);
 
   const addComment = useCallback(
-    async (userId: string, content: string) => {
+    async (userId: string, content: string, username: string) => {
       if (!userId) {
         AlertDialog.error("Please login to comment");
         return false;
       }
 
+      const optimisticComment: Comment = {
+        id: `temp-${Date.now()}`,
+        deckId,
+        userId,
+        content,
+        createdBy: username,
+        createdAt: new Date().toISOString(),
+        likes: 0,
+        isEdited: false,
+      };
+
       try {
         setIsSubmitting(true);
         clearError();
-        await commentService.addComment({
+
+        // Optimistic update
+        setComments((prev) => [optimisticComment, ...prev]);
+
+        const commentId = await commentService.addComment({
           deckId,
           userId,
           content,
+          createdBy: username,
         });
+
+        // Update with real ID
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === optimisticComment.id
+              ? { ...optimisticComment, id: commentId }
+              : comment
+          )
+        );
+
         AlertDialog.success("Comment added successfully");
-        await fetchComments();
         return true;
       } catch (err) {
+        // Rollback on error
+        setComments((prev) =>
+          prev.filter((comment) => comment.id !== optimisticComment.id)
+        );
         handleError(err, "Failed to add comment");
         return false;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [deckId, fetchComments, handleError, clearError]
+    [deckId, handleError, clearError]
   );
 
   const deleteComment = useCallback(
-    async (commentId: string) => {
+    async (commentId: string, userId: string) => {
+      if (!userId) {
+        AlertDialog.error("Please login to delete comments");
+        return false;
+      }
+
+      let deletedComment: Comment | undefined;
+
       try {
         setIsSubmitting(true);
         clearError();
-        await commentService.deleteComment(commentId);
+
+        // Optimistic update
+        deletedComment = comments.find((c) => c.id === commentId);
+        if (!deletedComment) {
+          throw new Error("Comment not found");
+        }
+        setComments((prev) =>
+          prev.filter((comment) => comment.id !== commentId)
+        );
+
+        await commentService.deleteComment(commentId, userId);
         AlertDialog.success("Comment deleted successfully");
-        await fetchComments();
         return true;
       } catch (err) {
+        // Rollback on error
+        if (deletedComment) {
+          setComments((prev) => [...prev, deletedComment as Comment]);
+        }
         handleError(err, "Failed to delete comment");
         return false;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [fetchComments, handleError, clearError]
+    [comments, handleError, clearError]
+  );
+
+  const likeComment = useCallback(
+    async (commentId: string, userId: string) => {
+      if (!userId) {
+        AlertDialog.error("Please login to like comments");
+        return false;
+      }
+
+      try {
+        setIsSubmitting(true);
+        clearError();
+
+        // Optimistic update
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, likes: comment.likes + 1 }
+              : comment
+          )
+        );
+
+        const success = await commentService.likeComment(commentId, userId);
+        if (!success) {
+          // Rollback if server returns false
+          setComments((prev) =>
+            prev.map((comment) =>
+              comment.id === commentId
+                ? { ...comment, likes: comment.likes - 1 }
+                : comment
+            )
+          );
+        }
+        return success;
+      } catch (err) {
+        // Rollback on error
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, likes: comment.likes - 1 }
+              : comment
+          )
+        );
+        handleError(err, "Failed to like comment");
+        return false;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [handleError, clearError]
+  );
+
+  const unlikeComment = useCallback(
+    async (commentId: string, userId: string) => {
+      if (!userId) {
+        AlertDialog.error("Please login to unlike comments");
+        return false;
+      }
+
+      try {
+        setIsSubmitting(true);
+        clearError();
+
+        // Optimistic update
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, likes: comment.likes - 1 }
+              : comment
+          )
+        );
+
+        const success = await commentService.unlikeComment(commentId, userId);
+        if (!success) {
+          // Rollback if server returns false
+          setComments((prev) =>
+            prev.map((comment) =>
+              comment.id === commentId
+                ? { ...comment, likes: comment.likes + 1 }
+                : comment
+            )
+          );
+        }
+        return success;
+      } catch (err) {
+        // Rollback on error
+        setComments((prev) =>
+          prev.map((comment) =>
+            comment.id === commentId
+              ? { ...comment, likes: comment.likes + 1 }
+              : comment
+          )
+        );
+        handleError(err, "Failed to unlike comment");
+        return false;
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [handleError, clearError]
   );
 
   return {
@@ -102,5 +251,7 @@ export const useComments = (deckId: string) => {
     fetchComments,
     addComment,
     deleteComment,
+    likeComment,
+    unlikeComment,
   };
 };

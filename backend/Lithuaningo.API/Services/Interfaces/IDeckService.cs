@@ -16,8 +16,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<bool> VoteDeckAsync(string id, string userId, bool isUpvote);
         Task<List<Deck>> SearchDecksAsync(string query, string? category = null);
         Task<List<Flashcard>> GetDeckFlashcardsAsync(string deckId);
-        Task<string> AddFlashcardToDeckAsync(string deckId, Flashcard flashcard);
-        Task RemoveFlashcardFromDeckAsync(string deckId, string flashcardId);
         Task ReportDeckAsync(string id, string userId, string reason);
         Task<double> GetDeckRatingAsync(string deckId);
     }

@@ -333,19 +333,80 @@ class ApiClient {
   }
 
   async getDeckComments(deckId: string) {
-    return this.request<Comment[]>(`/deck/${deckId}/comments`);
+    return this.request<Comment[]>(`/comment/deck/${deckId}`);
   }
 
-  async addDeckComment(comment: Omit<Comment, "id" | "createdAt">) {
-    return this.request<string>(`/deck/${comment.deckId}/comments`, {
+  async addDeckComment(
+    comment: Pick<Comment, "deckId" | "content" | "createdBy" | "userId">
+  ) {
+    console.log("comment", comment);
+    if (
+      !comment.deckId ||
+      !comment.content ||
+      !comment.createdBy ||
+      !comment.userId
+    ) {
+      throw new ApiError(
+        400,
+        { message: "Missing required fields" },
+        "Invalid comment data"
+      );
+    }
+
+    return this.request<string>("/comment", {
       method: "POST",
-      data: comment,
+      data: {
+        deckId: comment.deckId,
+        content: comment.content,
+        createdBy: comment.createdBy,
+        userId: comment.userId,
+      },
+      params: { userId: comment.userId },
     });
   }
 
-  async deleteDeckComment(commentId: string) {
-    return this.request(`/deck/comments/${commentId}`, {
+  async deleteDeckComment(commentId: string, userId: string) {
+    if (!commentId || !userId) {
+      throw new ApiError(
+        400,
+        { message: "Comment ID and User ID are required" },
+        "Invalid parameters"
+      );
+    }
+
+    return this.request<void>(`/comment/${commentId}`, {
       method: "DELETE",
+      params: { userId },
+    });
+  }
+
+  async likeDeckComment(commentId: string, userId: string) {
+    if (!commentId || !userId) {
+      throw new ApiError(
+        400,
+        { message: "Comment ID and User ID are required" },
+        "Invalid parameters"
+      );
+    }
+
+    return this.request<boolean>(`/comment/${commentId}/like`, {
+      method: "POST",
+      params: { userId },
+    });
+  }
+
+  async unlikeDeckComment(commentId: string, userId: string) {
+    if (!commentId || !userId) {
+      throw new ApiError(
+        400,
+        { message: "Comment ID and User ID are required" },
+        "Invalid parameters"
+      );
+    }
+
+    return this.request<boolean>(`/comment/${commentId}/unlike`, {
+      method: "POST",
+      params: { userId },
     });
   }
 

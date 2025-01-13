@@ -121,11 +121,10 @@ public class DeckService : IDeckService
     {
         try
         {
-            var user = await _userService.GetUserProfileAsync(deck.CreatedBy);
-            deck.CreatedByUsername = user?.Name ?? "Unknown User";
-            
             var docRef = _db.Collection(_collectionName).Document();
             deck.Id = docRef.Id;
+            deck.CreatedAt = DateTime.UtcNow;
+            deck.FlashcardCount = 0;
             await docRef.SetAsync(deck);
             return deck.Id;
         }
@@ -263,38 +262,6 @@ public class DeckService : IDeckService
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error getting deck flashcards: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task<string> AddFlashcardToDeckAsync(string deckId, Flashcard flashcard)
-    {
-        try
-        {
-            var docRef = _db.Collection(_flashcardsCollection).Document();
-            flashcard.Id = docRef.Id;
-            flashcard.DeckId = deckId;
-            flashcard.CreatedAt = DateTime.UtcNow;
-
-            await docRef.SetAsync(flashcard);
-            return flashcard.Id;
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error adding flashcard to deck: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task RemoveFlashcardFromDeckAsync(string deckId, string flashcardId)
-    {
-        try
-        {
-            await _db.Collection(_flashcardsCollection).Document(flashcardId).DeleteAsync();
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error removing flashcard from deck: {ex.Message}");
             throw;
         }
     }

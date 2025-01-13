@@ -12,6 +12,9 @@ namespace Lithuaningo.API.Models
         [FirestoreProperty("deckId")]
         public string DeckId { get; set; } = string.Empty;
 
+        [FirestoreProperty("userId")]
+        public string UserId { get; set; } = string.Empty;
+
         [FirestoreProperty("content")]
         public string Content { get; set; } = string.Empty;
 

@@ -70,11 +70,23 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
             {deck.createdByUsername}
           </Text>
         </View>
-        <View style={styles.rating}>
-          <FontAwesome5 name="star" size={12} color={colors.secondary} />
-          <Text style={[styles.metaText, { color: colors.cardText }]}>
-            {(rating * 100).toFixed(0)}%
-          </Text>
+        <View style={styles.metaStats}>
+          <View style={styles.flashcardCount}>
+            <FontAwesome5
+              name="layer-group"
+              size={12}
+              color={colors.cardText}
+            />
+            <Text style={[styles.metaText, { color: colors.cardText }]}>
+              {deck.flashcardCount} cards
+            </Text>
+          </View>
+          <View style={styles.rating}>
+            <FontAwesome5 name="star" size={12} color={colors.secondary} />
+            <Text style={[styles.metaText, { color: colors.cardText }]}>
+              {(rating * 100).toFixed(0)}%
+            </Text>
+          </View>
         </View>
       </View>
 
@@ -211,5 +223,15 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 8,
+  },
+  metaStats: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+  },
+  flashcardCount: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
   },
 });

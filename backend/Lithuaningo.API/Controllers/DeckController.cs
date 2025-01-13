@@ -97,20 +97,6 @@ namespace Lithuaningo.API.Controllers
             return Ok(flashcards);
         }
 
-        [HttpPost("{deckId}/flashcards")]
-        public async Task<ActionResult<string>> AddFlashcardToDeck(string deckId, [FromBody] Flashcard flashcard)
-        {
-            var flashcardId = await _deckService.AddFlashcardToDeckAsync(deckId, flashcard);
-            return Ok(flashcardId);
-        }
-
-        [HttpDelete("{deckId}/flashcards/{flashcardId}")]
-        public async Task<ActionResult> RemoveFlashcardFromDeck(string deckId, string flashcardId)
-        {
-            await _deckService.RemoveFlashcardFromDeckAsync(deckId, flashcardId);
-            return NoContent();
-        }
-
         [HttpGet("{id}/rating")]
         public async Task<ActionResult<double>> GetDeckRating(string id)
         {

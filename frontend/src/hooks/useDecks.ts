@@ -194,6 +194,7 @@ export const useDecks = (currentUserId?: string) => {
                   .split(",")
                   .map((tag: string) => tag.trim())
               : (data.tags as string[]) || [],
+          flashcardCount: 0,
         };
 
         const deckId = await deckService.createDeck(newDeck as Deck);

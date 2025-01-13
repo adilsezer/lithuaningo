@@ -68,7 +68,9 @@ namespace Lithuaningo.API.Services
                 var docRef = _db.Collection(_collectionName).Document();
                 comment.Id = docRef.Id;
                 comment.CreatedAt = DateTime.UtcNow;
+                comment.UpdatedAt = DateTime.UtcNow;
                 comment.Likes = 0;
+                comment.IsEdited = false;
 
                 await docRef.SetAsync(comment);
                 return comment.Id;

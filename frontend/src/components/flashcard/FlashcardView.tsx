@@ -11,7 +11,7 @@ import { Flashcard } from "@src/types";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { FontAwesome5 } from "@expo/vector-icons";
 import CustomButton from "@components/ui/CustomButton";
-import { Audio } from "expo-av";
+import { useFlashcards } from "@hooks/useFlashcards";
 
 interface FlashcardViewProps {
   flashcard: Flashcard;
@@ -22,51 +22,12 @@ const AudioButton: React.FC<{ url: string; colors: any }> = ({
   url,
   colors,
 }) => {
-  const [sound, setSound] = useState<Audio.Sound>();
-  const [isPlaying, setIsPlaying] = useState(false);
-
-  React.useEffect(() => {
-    return sound
-      ? () => {
-          sound.unloadAsync();
-        }
-      : undefined;
-  }, [sound]);
-
-  const playSound = async () => {
-    try {
-      if (isPlaying && sound) {
-        await sound.pauseAsync();
-        setIsPlaying(false);
-        return;
-      }
-
-      if (sound) {
-        await sound.playAsync();
-        setIsPlaying(true);
-      } else {
-        const { sound: newSound } = await Audio.Sound.createAsync({ uri: url });
-        setSound(newSound);
-        await newSound.playAsync();
-        setIsPlaying(true);
-
-        // Handle sound completion
-        newSound.setOnPlaybackStatusUpdate(async (status) => {
-          if ("didJustFinish" in status && status.didJustFinish) {
-            setIsPlaying(false);
-          }
-        });
-      }
-    } catch (error) {
-      console.error("Error playing sound:", error);
-      setIsPlaying(false);
-    }
-  };
+  const { handlePlaySound, isPlaying } = useFlashcards();
 
   return (
     <View style={styles.audioWrapper}>
       <TouchableOpacity
-        onPress={playSound}
+        onPress={() => handlePlaySound(url)}
         style={[styles.audioButton, { backgroundColor: colors.primary }]}
       >
         <FontAwesome5

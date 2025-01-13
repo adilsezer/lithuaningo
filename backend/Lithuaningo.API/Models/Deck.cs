@@ -30,4 +30,7 @@ public class Deck
 
     [FirestoreProperty("tags")]
     public List<string> Tags { get; set; } = new();
+
+    [FirestoreProperty("flashcardCount")]
+    public int FlashcardCount { get; set; }
 }

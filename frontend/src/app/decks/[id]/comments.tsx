@@ -32,8 +32,8 @@ export default function CommentsScreen() {
   }, [fetchComments]);
 
   const handleAddComment = async (data: { content: string }) => {
-    if (!userData?.id) return;
-    await addComment(userData.id, data.content);
+    if (!userData?.id || !userData?.name) return;
+    await addComment(userData.id, data.content, userData.name);
   };
 
   const commentFields: FormField[] = [
@@ -87,7 +87,7 @@ export default function CommentsScreen() {
             {userData && userData.id === item.userId && (
               <CustomButton
                 title="Delete"
-                onPress={() => item.id && deleteComment(item.id)}
+                onPress={() => item.id && deleteComment(item.id, userData.id)}
                 style={[styles.deleteButton, { backgroundColor: colors.error }]}
                 disabled={isSubmitting}
               />
