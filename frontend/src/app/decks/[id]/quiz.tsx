@@ -1,113 +1,58 @@
-import React, { useEffect, useState } from "react";
-import {
-  View,
-  StyleSheet,
-  Text,
-  ActivityIndicator,
-  ScrollView,
-} from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import React, { useEffect } from "react";
+import { View, StyleSheet, Text, ScrollView } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { QuizQuestion } from "@src/types";
-import { AlertDialog } from "@components/ui/AlertDialog";
-import { SectionTitle } from "@components/typography";
-import CustomButton from "@components/ui/CustomButton";
-import quizService from "@services/data/quizService";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import BackButton from "@components/layout/BackButton";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { SectionTitle } from "@components/typography";
+import CustomButton from "@components/ui/CustomButton";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
+import { useQuiz } from "@hooks/useQuiz";
 
 export default function QuizScreen() {
   const { id } = useLocalSearchParams();
-  const router = useRouter();
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [answers, setAnswers] = useState<boolean[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
+  const {
+    currentQuestion,
+    totalQuestions,
+    currentIndex,
+    isEmpty,
+    isLoading,
+    isSubmitting,
+    error,
+    clearError,
+    startQuiz,
+    handleAnswer,
+    submitQuizResult,
+  } = useQuiz(id as string, userData?.id);
 
   useEffect(() => {
-    const startQuiz = async () => {
-      try {
-        dispatch(setLoading(true));
-        const data = await quizService.startQuiz(id as string);
-        setQuestions(data);
-        setAnswers(new Array(data.length).fill(false));
-      } catch (err) {
-        setError("Failed to start quiz. Please try again.");
-        console.error("Error starting quiz:", err);
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
     startQuiz();
-  }, [dispatch, id]);
+  }, [startQuiz]);
 
-  const handleAnswer = (isCorrect: boolean) => {
-    const newAnswers = [...answers];
-    newAnswers[currentIndex] = isCorrect;
-    setAnswers(newAnswers);
-
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-    } else {
-      handleQuizComplete(newAnswers);
+  const onAnswer = async (isCorrect: boolean) => {
+    const isComplete = handleAnswer(isCorrect);
+    if (isComplete) {
+      await submitQuizResult();
     }
   };
-
-  const handleQuizComplete = async (finalAnswers: boolean[]) => {
-    if (!userData) {
-      AlertDialog.error("Please login to save quiz results");
-      return;
-    }
-
-    try {
-      setIsSubmitting(true);
-      const correctAnswers = finalAnswers.filter(Boolean).length;
-      await quizService.submitQuizResult({
-        deckId: id as string,
-        userId: userData.id,
-        score: correctAnswers,
-        totalQuestions: questions.length,
-      });
-
-      AlertDialog.success(
-        `Quiz completed! Score: ${correctAnswers}/${questions.length}`
-      );
-      router.back();
-    } catch (err) {
-      AlertDialog.error("Failed to save quiz results");
-      console.error("Error submitting quiz results:", err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (isLoading || isSubmitting) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.active} />
-      </View>
-    );
-  }
 
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <BackButton />
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
-        <CustomButton title="Retry" onPress={startQuiz} />
-      </View>
+      <ErrorMessage
+        message={error}
+        onRetry={() => {
+          clearError();
+          startQuiz();
+        }}
+        fullScreen
+      />
     );
   }
 
-  if (questions.length === 0) {
+  if (isEmpty) {
     return (
       <View style={styles.centerContainer}>
         <Text style={[styles.emptyText, { color: colors.text }]}>
@@ -117,14 +62,12 @@ export default function QuizScreen() {
     );
   }
 
-  const currentQuestion = questions[currentIndex];
-
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <BackButton />
       <SectionTitle>Quiz</SectionTitle>
       <Text style={[styles.progress, { color: colors.text }]}>
-        Question {currentIndex + 1} of {questions.length}
+        Question {currentIndex + 1} of {totalQuestions}
       </Text>
       <ScrollView
         style={styles.questionContainer}
@@ -138,9 +81,7 @@ export default function QuizScreen() {
             <CustomButton
               key={index}
               title={option}
-              onPress={() =>
-                handleAnswer(index === currentQuestion.correctIndex)
-              }
+              onPress={() => onAnswer(index === currentQuestion.correctIndex)}
               style={[styles.optionButton, { backgroundColor: colors.card }]}
               textStyle={{ color: colors.text }}
             />

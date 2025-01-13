@@ -1,7 +1,6 @@
 import React from "react";
 import { Linking } from "react-native";
 import { useAppInfo } from "@context/AppInfoContext";
-import LoadingIndicator from "@components/ui/LoadingIndicator";
 import NotificationDisplay from "@components/ui/NotificationDisplay";
 import ErrorMessage from "@components/ui/ErrorMessage";
 
@@ -18,11 +17,7 @@ const NOTIFICATION_CONFIGS = {
 } as const;
 
 const NotificationScreen: React.FC = () => {
-  const { appInfo, loading, error, isUnderMaintenance } = useAppInfo();
-
-  if (loading) {
-    return <LoadingIndicator />;
-  }
+  const { appInfo, error, isUnderMaintenance } = useAppInfo();
 
   if (error) {
     return <ErrorMessage message={error} />;

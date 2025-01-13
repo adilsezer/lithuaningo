@@ -1,29 +1,24 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { View, StyleSheet, Text, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { AlertDialog } from "@components/ui/AlertDialog";
 import { SectionTitle } from "@components/typography";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
 import { PracticeStats } from "@components/flashcard/PracticeStats";
-import practiceService from "@services/data/practiceService";
 import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
-import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
+import { usePracticeStats } from "@hooks/usePracticeStats";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
   const { fetchDeckFlashcards, flashcards, isLoading, error } = useFlashcards();
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [stats, setStats] = useState<{ correct: number; total: number }>({
-    correct: 0,
-    total: 0,
-  });
+  const { currentIndex, setCurrentIndex, handleAnswer, completeSession } =
+    usePracticeStats(id as string, userData?.id);
 
   useEffect(() => {
     if (id) {
@@ -31,47 +26,16 @@ export default function PracticeScreen() {
     }
   }, [id, fetchDeckFlashcards]);
 
-  const handleAnswer = async (isCorrect: boolean) => {
-    if (!userData) {
-      AlertDialog.error("Please login to track progress");
-      return;
-    }
-
-    try {
-      await practiceService.trackProgress({
-        userId: userData.id,
-        deckId: id as string,
-        flashcardId: flashcards[currentIndex].id!,
-        isCorrect,
-      });
-
-      const newStats = {
-        correct: stats.correct + (isCorrect ? 1 : 0),
-        total: stats.total + 1,
-      };
-      setStats(newStats);
-
+  const onAnswer = async (isCorrect: boolean) => {
+    const success = await handleAnswer(flashcards[currentIndex].id!, isCorrect);
+    if (success) {
       if (currentIndex < flashcards.length - 1) {
         setCurrentIndex(currentIndex + 1);
       } else {
-        const percentage = Math.round(
-          (newStats.correct / newStats.total) * 100
-        );
-        AlertDialog.success(
-          `Practice completed! Score: ${newStats.correct}/${newStats.total} (${percentage}%)`
-        );
-        setCurrentIndex(0);
-        setStats({ correct: 0, total: 0 });
+        completeSession();
       }
-    } catch (err) {
-      AlertDialog.error("Failed to track progress");
-      console.error("Error tracking progress:", err);
     }
   };
-
-  if (isLoading) {
-    return <LoadingIndicator modal={false} style={styles.centerContainer} />;
-  }
 
   if (error) {
     return (
@@ -111,7 +75,7 @@ export default function PracticeScreen() {
         <View style={styles.flashcardContainer}>
           <FlashcardView
             flashcard={flashcards[currentIndex]}
-            onAnswer={handleAnswer}
+            onAnswer={onAnswer}
           />
         </View>
       </ScrollView>

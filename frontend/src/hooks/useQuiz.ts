@@ -1,63 +1,121 @@
-import { useState, useCallback } from "react";
-import { QuizQuestion } from "@src/types";
-import quizService from "@services/data/quizService";
+import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { selectUserData } from "@redux/slices/userSlice";
+import { setLoading } from "@redux/slices/uiSlice";
+import { storeData, retrieveData, resetAllQuizKeys } from "@utils/storageUtils";
+import { getCurrentDateKey } from "@utils/dateUtils";
+import { QUIZ_KEYS } from "@config/constants";
+import { QuizQuestion } from "@src/types";
+import { useQuizQuestions } from "@hooks/useQuizQuestions";
+import { useUserProfile } from "@hooks/useUserProfile";
+import { router } from "expo-router";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
-export const useQuiz = (deckId: string) => {
-  const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+export const useQuiz = () => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [showContinueButton, setShowContinueButton] = useState(false);
+  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
 
-  const startQuiz = useCallback(async () => {
+  const { questions, loading, error, refetchQuestions } = useQuizQuestions();
+  const userData = useAppSelector(selectUserData);
+  const dispatch = useAppDispatch();
+  const { updateAnswerStats } = useUserProfile();
+
+  const getStorageKey = (
+    keyFunc: (userId: string, dateKey: string) => string
+  ) => (userData ? keyFunc(userData.id, getCurrentDateKey()) : "");
+
+  const QUIZ_QUESTIONS_KEY = getStorageKey(QUIZ_KEYS.QUIZ_QUESTIONS_KEY);
+  const QUIZ_PROGRESS_KEY = getStorageKey(QUIZ_KEYS.QUIZ_PROGRESS_KEY);
+
+  useEffect(() => {
+    const initializeQuiz = async () => {
+      if (!userData) return;
+
+      dispatch(setLoading(true));
+      try {
+        const savedProgress = await retrieveData<{ progress: number }>(
+          QUIZ_PROGRESS_KEY
+        );
+        const savedQuestions = await retrieveData<QuizQuestion[]>(
+          QUIZ_QUESTIONS_KEY
+        );
+
+        if (savedQuestions?.length) {
+          refetchQuestions(savedQuestions);
+          setCurrentQuestionIndex(savedProgress?.progress ?? 0);
+        } else {
+          await refetchQuestions();
+          await storeData(QUIZ_QUESTIONS_KEY, questions);
+        }
+      } catch (error) {
+        console.error("Error initializing quiz:", error);
+      } finally {
+        dispatch(setLoading(false));
+      }
+    };
+
+    initializeQuiz();
+  }, [userData]);
+
+  useEffect(() => {
+    if (questions.length && currentQuestionIndex >= questions.length) {
+      setIsQuizCompleted(true);
+    }
+  }, [currentQuestionIndex, questions]);
+
+  const handleAnswer = async (isCorrect: boolean) => {
+    try {
+      await storeData(QUIZ_PROGRESS_KEY, {
+        progress: currentQuestionIndex + 1,
+      });
+      await updateAnswerStats(isCorrect);
+      setShowContinueButton(true);
+    } catch (error) {
+      console.error("Error handling answer:", error);
+    }
+  };
+
+  const handleNextQuestion = () => {
+    setCurrentQuestionIndex((prev) => prev + 1);
+    setShowContinueButton(false);
+  };
+
+  const handleRegenerateContent = async () => {
+    if (!userData) {
+      AlertDialog.error("No user data available");
+      return;
+    }
+
     try {
       dispatch(setLoading(true));
-      const data = await quizService.startQuiz(deckId);
-      setQuestions(data);
-      setError(null);
-      return data;
-    } catch (err) {
-      setError("Failed to start quiz. Please try again.");
-      console.error("Error starting quiz:", err);
-      throw err;
+      await resetAllQuizKeys(userData.id);
+      AlertDialog.show({
+        title: "Success",
+        message:
+          "Content reset. Redirecting to the learn tab to start a new challenge.",
+        buttons: [
+          { text: "OK", onPress: () => router.push("/dashboard/learn") },
+        ],
+      });
+    } catch (error) {
+      AlertDialog.error(
+        error instanceof Error ? error.message : "Error resetting content"
+      );
     } finally {
       dispatch(setLoading(false));
     }
-  }, [dispatch, deckId]);
-
-  const submitQuizResult = useCallback(
-    async (userId: string, score: number, totalQuestions: number) => {
-      try {
-        setIsSubmitting(true);
-        await quizService.submitQuizResult({
-          deckId,
-          userId,
-          score,
-          totalQuestions,
-        });
-        AlertDialog.success(
-          `Quiz completed! Score: ${score}/${totalQuestions}`
-        );
-      } catch (err) {
-        AlertDialog.error("Failed to save quiz results");
-        console.error("Error submitting quiz results:", err);
-        throw err;
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [deckId]
-  );
+  };
 
   return {
+    currentQuestionIndex,
+    showContinueButton,
+    isQuizCompleted,
     questions,
-    isLoading,
+    loading,
     error,
-    isSubmitting,
-    startQuiz,
-    submitQuizResult,
+    handleAnswer,
+    handleNextQuestion,
+    handleRegenerateContent,
   };
 };

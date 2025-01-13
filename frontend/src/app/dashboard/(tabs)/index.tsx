@@ -8,6 +8,7 @@ import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
 import { ExpandYourVocabularyCard } from "@components/dashboard/ExpandYourVocabularyCard";
 import { useDashboard } from "@hooks/useDashboard";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
 
 const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
@@ -18,7 +19,23 @@ const DashboardScreen: React.FC = () => {
     isDarkMode,
     wordsData,
     isLoading,
+    error,
+    clearError,
+    fetchDashboardData,
   } = useDashboard();
+
+  if (error) {
+    return (
+      <ErrorMessage
+        message={error}
+        onRetry={() => {
+          clearError();
+          fetchDashboardData();
+        }}
+        fullScreen
+      />
+    );
+  }
 
   return (
     <ScrollView>

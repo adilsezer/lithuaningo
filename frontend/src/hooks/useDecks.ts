@@ -17,10 +17,13 @@ interface DeckRatings {
 }
 
 export const useDecks = (currentUserId?: string) => {
+  // Redux state
   const router = useRouter();
   const dispatch = useAppDispatch();
   const userData = useAppSelector(selectUserData);
   const isLoading = useAppSelector(selectIsLoading);
+
+  // Local state
   const [decks, setDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,10 +31,11 @@ export const useDecks = (currentUserId?: string) => {
   const [viewMode, setViewMode] = useState<ViewMode>("all");
   const [deckRatings, setDeckRatings] = useState<Record<string, number>>({});
 
-  // Cache deck ratings with a 5-minute expiry
+  // Cache
   const ratingsCache = useRef<DeckRatings>({});
   const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
+  // Error handling
   const handleError = useCallback((error: any, message: string) => {
     console.error(message, error);
     setError(message);
@@ -43,6 +47,16 @@ export const useDecks = (currentUserId?: string) => {
     setError(null);
   }, []);
 
+  // Auth check
+  const checkAuth = useCallback(() => {
+    if (!userData?.id) {
+      AlertDialog.error("Please login to continue");
+      return false;
+    }
+    return true;
+  }, [userData?.id]);
+
+  // Data fetching
   const fetchDecks = useCallback(async () => {
     try {
       dispatch(setLoading(true));
@@ -60,8 +74,10 @@ export const useDecks = (currentUserId?: string) => {
       }
 
       setDecks(data);
+      return true;
     } catch (error) {
       handleError(error, "Failed to load decks");
+      return false;
     } finally {
       dispatch(setLoading(false));
     }
@@ -75,6 +91,7 @@ export const useDecks = (currentUserId?: string) => {
     dispatch,
   ]);
 
+  // Rating management
   const getDeckRating = useCallback(
     async (id: string) => {
       const now = Date.now();
@@ -100,99 +117,6 @@ export const useDecks = (currentUserId?: string) => {
     delete ratingsCache.current[deckId];
   }, []);
 
-  const voteDeck = useCallback(
-    async (deckId: string, userId: string, isUpvote: boolean) => {
-      if (!userId) {
-        AlertDialog.error("Please login to vote");
-        return;
-      }
-      try {
-        await deckService.voteDeck(deckId, userId, isUpvote);
-        invalidateRatingCache(deckId);
-        await fetchDecks();
-      } catch (error) {
-        handleError(error, "Failed to vote");
-      }
-    },
-    [fetchDecks, handleError, invalidateRatingCache]
-  );
-
-  const reportDeck = useCallback(
-    async (deckId: string, userId: string) => {
-      if (!userId) {
-        AlertDialog.error("Please login to report");
-        return;
-      }
-      AlertDialog.confirm({
-        title: "Report Deck",
-        message: "Are you sure you want to report this deck?",
-        onConfirm: async () => {
-          try {
-            await deckService.reportDeck(
-              deckId,
-              userId,
-              "Inappropriate content"
-            );
-            AlertDialog.success("Report submitted successfully");
-          } catch (error) {
-            handleError(error, "Failed to submit report");
-          }
-        },
-      });
-    },
-    [handleError]
-  );
-
-  const createDeck = async (data: Partial<Deck>) => {
-    try {
-      if (!userData?.id) {
-        AlertDialog.error("Please login to create decks");
-        return;
-      }
-
-      const newDeck: Omit<Deck, "id"> = {
-        title: data.title || "",
-        description: data.description || "",
-        category: data.category || "",
-        createdBy: userData.id,
-        createdByUsername: userData.name || "",
-        createdAt: new Date().toISOString(),
-        tags:
-          typeof data.tags === "string"
-            ? (data.tags as string).split(",").map((tag: string) => tag.trim())
-            : (data.tags as string[]) || [],
-      };
-
-      const deckId = await deckService.createDeck(newDeck as Deck);
-      AlertDialog.success(
-        "Deck created successfully. Please add flashcards to your deck."
-      );
-      router.push(`/flashcards/new?deckId=${deckId}`);
-      await fetchDecks(); // Refresh the decks list
-    } catch (error) {
-      handleError(error, "Failed to create deck");
-    }
-  };
-
-  // Derived states with memoization
-  const filteredDecks = useMemo(() => {
-    if (!decks) return [];
-    return decks;
-  }, [decks]);
-
-  const isEmpty = useMemo(() => decks.length === 0, [decks]);
-
-  const emptyMessage = useMemo(() => {
-    if (searchQuery.trim()) return "No results found";
-    if (viewMode === "my") return "You haven't created any decks yet";
-    return "No decks found";
-  }, [searchQuery, viewMode]);
-
-  // Clear search when changing view mode
-  useEffect(() => {
-    setSearchQuery("");
-  }, [viewMode]);
-
   const loadDeckRatings = useCallback(async () => {
     const ratings: Record<string, number> = {};
     for (const deck of decks) {
@@ -201,7 +125,108 @@ export const useDecks = (currentUserId?: string) => {
     setDeckRatings(ratings);
   }, [decks, getDeckRating]);
 
-  // Add useEffect to load ratings when decks change
+  // Deck actions
+  const voteDeck = useCallback(
+    async (deckId: string, userId: string, isUpvote: boolean) => {
+      if (!checkAuth()) return;
+
+      try {
+        dispatch(setLoading(true));
+        await deckService.voteDeck(deckId, userId, isUpvote);
+        invalidateRatingCache(deckId);
+        await fetchDecks();
+        return true;
+      } catch (error) {
+        handleError(error, "Failed to vote");
+        return false;
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+    [fetchDecks, handleError, invalidateRatingCache, checkAuth, dispatch]
+  );
+
+  const reportDeck = useCallback(
+    async (deckId: string, userId: string) => {
+      if (!checkAuth()) return;
+
+      AlertDialog.confirm({
+        title: "Report Deck",
+        message: "Are you sure you want to report this deck?",
+        onConfirm: async () => {
+          try {
+            dispatch(setLoading(true));
+            await deckService.reportDeck(
+              deckId,
+              userId,
+              "Inappropriate content"
+            );
+            AlertDialog.success("Report submitted successfully");
+          } catch (error) {
+            handleError(error, "Failed to submit report");
+          } finally {
+            dispatch(setLoading(false));
+          }
+        },
+      });
+    },
+    [handleError, checkAuth, dispatch]
+  );
+
+  const createDeck = useCallback(
+    async (data: Partial<Deck>) => {
+      if (!checkAuth()) return;
+
+      try {
+        dispatch(setLoading(true));
+        clearError();
+
+        const newDeck: Omit<Deck, "id"> = {
+          title: data.title || "",
+          description: data.description || "",
+          category: data.category || "",
+          createdBy: userData!.id,
+          createdByUsername: userData!.name || "",
+          createdAt: new Date().toISOString(),
+          tags:
+            typeof data.tags === "string"
+              ? (data.tags as string)
+                  .split(",")
+                  .map((tag: string) => tag.trim())
+              : (data.tags as string[]) || [],
+        };
+
+        const deckId = await deckService.createDeck(newDeck as Deck);
+        AlertDialog.success(
+          "Deck created successfully. Please add flashcards to your deck."
+        );
+        router.push(`/flashcards/new?deckId=${deckId}`);
+        await fetchDecks();
+        return true;
+      } catch (error) {
+        handleError(error, "Failed to create deck");
+        return false;
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+    [userData, router, fetchDecks, handleError, clearError, checkAuth, dispatch]
+  );
+
+  // Derived states
+  const filteredDecks = useMemo(() => decks || [], [decks]);
+  const isEmpty = useMemo(() => decks.length === 0, [decks]);
+  const emptyMessage = useMemo(() => {
+    if (searchQuery.trim()) return "No results found";
+    if (viewMode === "my") return "You haven't created any decks yet";
+    return "No decks found";
+  }, [searchQuery, viewMode]);
+
+  // Effects
+  useEffect(() => {
+    setSearchQuery("");
+  }, [viewMode]);
+
   useEffect(() => {
     loadDeckRatings();
   }, [loadDeckRatings]);
@@ -217,6 +242,7 @@ export const useDecks = (currentUserId?: string) => {
     isEmpty,
     emptyMessage,
     deckRatings,
+    isAuthenticated: !!userData?.id,
 
     // Actions
     setSearchQuery,
@@ -226,8 +252,6 @@ export const useDecks = (currentUserId?: string) => {
     fetchDecks,
     voteDeck,
     reportDeck,
-    getDeckRating,
     createDeck,
-    isAuthenticated: !!userData?.id,
   };
 };

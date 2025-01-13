@@ -2,7 +2,9 @@ import React from "react";
 import { ScrollView, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { SectionText, SectionTitle } from "@components/typography";
-import { useChallenge } from "@hooks/useChallenge";
+import { useAppDispatch } from "@redux/hooks";
+import { resetClickedWords } from "@redux/slices/clickedWordsSlice";
+import { router } from "expo-router";
 
 const learningOptions = [
   {
@@ -16,7 +18,12 @@ const learningOptions = [
 ] as const;
 
 export default function LearnScreen() {
-  const { handleNavigation } = useChallenge();
+  const dispatch = useAppDispatch();
+
+  const handleNavigation = (route: string) => {
+    dispatch(resetClickedWords());
+    router.push(route);
+  };
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>

@@ -19,15 +19,34 @@ interface LoadingIndicatorProps {
   size?: "small" | "large";
   // Optional minimum display time in ms (for modal only)
   minimumDisplayTime?: number;
+  // Optional color override (useful before theme is available)
+  color?: string;
+  // Whether to use theme context (defaults to true)
+  useTheme?: boolean;
 }
+
+const DEFAULT_COLOR = "#66BB6A";
 
 export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   modal = true,
   style,
   size = "large",
   minimumDisplayTime = 200,
+  color,
+  useTheme = true,
 }) => {
-  const { colors } = useThemeStyles();
+  let themeColors;
+  try {
+    const { colors } = useThemeStyles();
+    themeColors = colors;
+  } catch {
+    themeColors = null;
+  }
+
+  const indicatorColor =
+    color || (useTheme && themeColors?.active) || DEFAULT_COLOR;
+  const backgroundColor = (useTheme && themeColors?.background) || "#FFFFFF";
+
   const globalIsLoading = useAppSelector(selectIsLoading);
   const [showLoading, setShowLoading] = useState(false);
   const [delayedIsLoading, setDelayedIsLoading] = useState(false);
@@ -65,7 +84,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
       <View style={[styles.inlineContainer, style]}>
         <ActivityIndicator
           size={size}
-          color={colors.active}
+          color={indicatorColor}
           accessibilityLabel="Loading content"
         />
       </View>
@@ -80,15 +99,10 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
       onRequestClose={() => {}}
     >
       <View style={styles.modalBackground}>
-        <View
-          style={[
-            styles.activityIndicatorWrapper,
-            { backgroundColor: colors.background },
-          ]}
-        >
+        <View style={[styles.activityIndicatorWrapper, { backgroundColor }]}>
           <ActivityIndicator
             size="large"
-            color={colors.active}
+            color={indicatorColor}
             animating={showLoading}
             accessibilityLabel="Loading content"
           />

@@ -1,127 +1,29 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useRef } from "react";
 import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
-import { setLoading } from "@redux/slices/uiSlice";
 import MultipleChoiceQuestion from "@components/learning/MultipleChoiceQuestion";
 import FillInTheBlankQuiz from "@components/learning/FillInTheBlank";
 import CustomButton from "@components/ui/CustomButton";
 import CompletedLayout from "@components/learning/CompletedLayout";
-import { storeData, retrieveData, resetAllQuizKeys } from "@utils/storageUtils";
-import { getCurrentDateKey } from "@utils/dateUtils";
 import BackButton from "@components/layout/BackButton";
-import { QUIZ_KEYS } from "@config/constants";
-import { router } from "expo-router";
-import { QuizQuestion } from "@src/types";
-import { useQuizQuestions } from "@hooks/useQuizQuestions";
-import { useUserProfile } from "@hooks/useUserProfile";
 import { SectionText } from "@components/typography";
-import { AlertDialog } from "@components/ui/AlertDialog";
-import LoadingIndicator from "@components/ui/LoadingIndicator";
 import ErrorMessage from "@components/ui/ErrorMessage";
+import { useQuiz } from "@hooks/useQuiz";
 
 const QuizScreen: React.FC = () => {
-  const { questions, loading, error, refetchQuestions } = useQuizQuestions();
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [showContinueButton, setShowContinueButton] = useState(false);
-  const [isQuizCompleted, setIsQuizCompleted] = useState(false);
+  const {
+    currentQuestionIndex,
+    showContinueButton,
+    isQuizCompleted,
+    questions,
+    loading,
+    error,
+    handleAnswer,
+    handleNextQuestion,
+  } = useQuiz();
 
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
-  const dispatch = useAppDispatch();
   const scrollViewRef = useRef<ScrollView>(null);
-  const { updateAnswerStats } = useUserProfile();
-
-  const getStorageKey = (
-    keyFunc: (userId: string, dateKey: string) => string
-  ) => (userData ? keyFunc(userData.id, getCurrentDateKey()) : "");
-
-  const QUIZ_QUESTIONS_KEY = getStorageKey(QUIZ_KEYS.QUIZ_QUESTIONS_KEY);
-  const QUIZ_PROGRESS_KEY = getStorageKey(QUIZ_KEYS.QUIZ_PROGRESS_KEY);
-
-  useEffect(() => {
-    const initializeQuiz = async () => {
-      if (!userData) return;
-
-      dispatch(setLoading(true));
-      try {
-        const savedProgress = await retrieveData<{ progress: number }>(
-          QUIZ_PROGRESS_KEY
-        );
-        const savedQuestions = await retrieveData<QuizQuestion[]>(
-          QUIZ_QUESTIONS_KEY
-        );
-
-        if (savedQuestions?.length) {
-          refetchQuestions(savedQuestions);
-          setCurrentQuestionIndex(savedProgress?.progress ?? 0);
-        } else {
-          await refetchQuestions();
-          await storeData(QUIZ_QUESTIONS_KEY, questions);
-        }
-      } catch (error) {
-        console.error("Error initializing quiz:", error);
-      } finally {
-        dispatch(setLoading(false));
-      }
-    };
-
-    initializeQuiz();
-  }, [userData]);
-
-  useEffect(() => {
-    if (questions.length && currentQuestionIndex >= questions.length) {
-      setIsQuizCompleted(true);
-    }
-  }, [currentQuestionIndex, questions]);
-
-  const handleAnswer = async (isCorrect: boolean) => {
-    try {
-      await storeData(QUIZ_PROGRESS_KEY, {
-        progress: currentQuestionIndex + 1,
-      });
-      await updateAnswerStats(isCorrect);
-      setShowContinueButton(true);
-    } catch (error) {
-      console.error("Error handling answer:", error);
-    }
-  };
-
-  const handleNextQuestion = () => {
-    setCurrentQuestionIndex((prev) => prev + 1);
-    setShowContinueButton(false);
-  };
-
-  const handleRegenerateContent = async () => {
-    if (!userData) {
-      AlertDialog.error("No user data available");
-      return;
-    }
-
-    try {
-      dispatch(setLoading(true));
-      await resetAllQuizKeys(userData.id);
-      AlertDialog.show({
-        title: "Success",
-        message:
-          "Content reset. Redirecting to the learn tab to start a new challenge.",
-        buttons: [
-          { text: "OK", onPress: () => router.push("/dashboard/learn") },
-        ],
-      });
-    } catch (error) {
-      AlertDialog.error(
-        error instanceof Error ? error.message : "Error resetting content"
-      );
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
-
-  if (loading) {
-    return <LoadingIndicator />;
-  }
 
   if (error) {
     return <ErrorMessage message={error} />;
@@ -141,6 +43,18 @@ const QuizScreen: React.FC = () => {
     );
   }
 
+  const currentQuestion = questions[currentQuestionIndex];
+  if (!currentQuestion) return null;
+
+  const commonProps = {
+    questionIndex: currentQuestionIndex,
+    onAnswer: handleAnswer,
+    sentenceText: currentQuestion.question,
+    questionText: "Choose the correct translation:",
+    questionWord: currentQuestion.options[currentQuestion.correctIndex],
+    correctAnswerText: currentQuestion.options[currentQuestion.correctIndex],
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -155,29 +69,13 @@ const QuizScreen: React.FC = () => {
             } Questions Complete`}
           </SectionText>
 
-          {questions.length > 0 &&
-            currentQuestionIndex < questions.length &&
-            (questions[currentQuestionIndex].questionType ===
-            "MultipleChoice" ? (
-              <MultipleChoiceQuestion
-                questionWord={""}
-                correctAnswerText={""}
-                {...questions[currentQuestionIndex]}
-                questionIndex={currentQuestionIndex}
-                onAnswer={handleAnswer}
-                image={questions[currentQuestionIndex].image || ""}
-              />
-            ) : (
-              <FillInTheBlankQuiz
-                questionWord={""}
-                translation={""}
-                correctAnswerText={""}
-                {...questions[currentQuestionIndex]}
-                questionIndex={currentQuestionIndex}
-                onAnswer={handleAnswer}
-                image={questions[currentQuestionIndex].image || ""}
-              />
-            ))}
+          {questions.length > 0 && currentQuestionIndex < questions.length && (
+            <MultipleChoiceQuestion
+              {...commonProps}
+              options={currentQuestion.options}
+              image=""
+            />
+          )}
         </View>
       </ScrollView>
       {showContinueButton && (

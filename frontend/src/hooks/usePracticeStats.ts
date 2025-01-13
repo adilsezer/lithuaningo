@@ -1,29 +1,70 @@
 import { useState, useCallback } from "react";
-import { PracticeStats } from "@src/types";
-import apiClient from "@services/api/apiClient";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { useAppDispatch } from "@redux/hooks";
+import { setLoading } from "@redux/slices/uiSlice";
+import { AlertDialog } from "@components/ui/AlertDialog";
+import practiceService from "@services/data/practiceService";
 
-export const usePracticeStats = (deckId: string, userId: string) => {
+export const usePracticeStats = (deckId: string, userId?: string) => {
   const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
-  const [stats, setStats] = useState<PracticeStats | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [stats, setStats] = useState<{ correct: number; total: number }>({
+    correct: 0,
+    total: 0,
+  });
 
-  const fetchStats = useCallback(async () => {
-    try {
-      dispatch(setLoading(true));
-      const data = await apiClient.getPracticeStats(deckId, userId);
-      setStats(data);
-    } catch (err) {
-      console.error("Error loading practice stats:", err);
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }, [dispatch, deckId, userId]);
+  const handleAnswer = useCallback(
+    async (flashcardId: string, isCorrect: boolean) => {
+      if (!userId) {
+        AlertDialog.error("Please login to track progress");
+        return false;
+      }
+
+      try {
+        dispatch(setLoading(true));
+        await practiceService.trackProgress({
+          userId,
+          deckId,
+          flashcardId,
+          isCorrect,
+        });
+
+        const newStats = {
+          correct: stats.correct + (isCorrect ? 1 : 0),
+          total: stats.total + 1,
+        };
+        setStats(newStats);
+
+        return true;
+      } catch (err) {
+        AlertDialog.error("Failed to track progress");
+        console.error("Error tracking progress:", err);
+        return false;
+      } finally {
+        dispatch(setLoading(false));
+      }
+    },
+    [userId, deckId, stats, dispatch]
+  );
+
+  const resetSession = useCallback(() => {
+    setCurrentIndex(0);
+    setStats({ correct: 0, total: 0 });
+  }, []);
+
+  const completeSession = useCallback(() => {
+    const percentage = Math.round((stats.correct / stats.total) * 100);
+    AlertDialog.success(
+      `Practice completed! Score: ${stats.correct}/${stats.total} (${percentage}%)`
+    );
+    resetSession();
+  }, [stats, resetSession]);
 
   return {
+    currentIndex,
     stats,
-    isLoading,
-    fetchStats,
+    setCurrentIndex,
+    handleAnswer,
+    resetSession,
+    completeSession,
   };
 };

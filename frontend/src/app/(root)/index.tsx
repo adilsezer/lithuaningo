@@ -1,17 +1,12 @@
 import React from "react";
 import { ScrollView, View, Image, StyleSheet } from "react-native";
-import { router } from "expo-router";
 import CustomButton from "@components/ui/CustomButton";
 import { SectionText, SectionTitle } from "@components/typography";
 import ThemeSwitch from "@components/ui/ThemeSwitch";
-import { useTheme } from "@src/context/ThemeContext";
+import { useWelcome } from "@hooks/useWelcome";
 
 const WelcomeScreen = () => {
-  const navigateToAuth = (route: "login" | "signup") => {
-    router.push(`/auth/${route}`);
-  };
-
-  const { isDarkMode, toggleTheme } = useTheme();
+  const { isDarkMode, toggleTheme, navigateToAuth } = useWelcome();
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
@@ -30,6 +25,7 @@ const WelcomeImage = () => (
     <Image
       source={require("assets/images/welcome-image.png")}
       style={styles.image}
+      accessibilityLabel="Welcome to Lithuaningo"
     />
   </View>
 );
@@ -53,14 +49,24 @@ const AuthButtons = ({
   onNavigate: (route: "login" | "signup") => void;
 }) => (
   <View style={styles.buttonContainer}>
-    <CustomButton onPress={() => onNavigate("login")} title="Log In" />
-    <CustomButton onPress={() => onNavigate("signup")} title="Create Account" />
+    <CustomButton
+      onPress={() => onNavigate("login")}
+      title="Log In"
+      accessibilityLabel="Log in to your account"
+      accessibilityHint="Navigate to the login screen"
+    />
+    <CustomButton
+      onPress={() => onNavigate("signup")}
+      title="Create Account"
+      accessibilityLabel="Create a new account"
+      accessibilityHint="Navigate to the sign up screen"
+    />
   </View>
 );
 
 export default WelcomeScreen;
 
-export const styles = StyleSheet.create({
+const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
     justifyContent: "space-between",

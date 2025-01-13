@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useCallback } from "react";
 import { View, ScrollView } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
@@ -8,6 +8,7 @@ import { SectionTitle } from "@components/typography";
 import { useDecks } from "@hooks/useDecks";
 import { FormField } from "@components/form/form.types";
 import { deckCategories, DeckCategory } from "@src/types/DeckCategory";
+import type { Deck } from "@src/types";
 
 export default function NewDeckScreen() {
   const { colors } = useThemeStyles();
@@ -88,6 +89,13 @@ export default function NewDeckScreen() {
     [router]
   );
 
+  const handleSubmit = useCallback(
+    async (data: Partial<Deck>) => {
+      await createDeck(data);
+    },
+    [createDeck]
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <BackButton />
@@ -95,7 +103,7 @@ export default function NewDeckScreen() {
         <SectionTitle>Create New Deck</SectionTitle>
         <Form
           fields={fields}
-          onSubmit={createDeck}
+          onSubmit={handleSubmit}
           submitButtonText="Create Deck"
         />
       </ScrollView>

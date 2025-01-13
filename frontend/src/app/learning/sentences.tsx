@@ -1,81 +1,25 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { useRouter } from "expo-router";
-import { useAppSelector, useAppDispatch } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
-import { getCurrentDateKey } from "@utils/dateUtils";
-import { retrieveData, storeData } from "@utils/storageUtils";
 import CompletedLayout from "@components/learning/CompletedLayout";
-import { cleanWord } from "@utils/stringUtils";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
-import { useReminderSettings } from "@hooks/useReminderSettings";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { SENTENCE_KEYS } from "@config/constants";
 import { Sentence } from "@src/types";
-import { useSentences } from "@hooks/useSentences";
 import { SectionTitle, Subtitle, SectionText } from "@components/typography";
-import LoadingIndicator from "@components/ui/LoadingIndicator";
+import { useSentencesScreen } from "@hooks/useSentencesScreen";
 
 const SentencesScreen: React.FC = () => {
-  const { sentences, loading, error } = useSentences();
-  const [wordsCompleted, setWordsCompleted] = useState(false);
-  const [sentencesCompleted, setSentencesCompleted] = useState(false);
-  const router = useRouter();
+  const {
+    sentences,
+    error,
+    wordsCompleted,
+    sentencesCompleted,
+    handleProceedToQuiz,
+    handleNavigateToDashboard,
+  } = useSentencesScreen();
+
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
-  const clickedWords = useAppSelector((state) => state.clickedWords);
-  const dispatch = useAppDispatch();
-  const { reminderTime, setReminderTime } = useReminderSettings(userData?.id);
-
-  const getKey = (keyFunc: (userId: string, dateKey: string) => string) =>
-    userData ? keyFunc(userData.id, getCurrentDateKey()) : "";
-
-  const COMPLETION_STATUS_KEY = getKey(SENTENCE_KEYS.COMPLETION_STATUS_KEY);
-  const SENTENCES_KEY = getKey(SENTENCE_KEYS.SENTENCES_KEY);
-
-  useEffect(() => {
-    const checkCompletionStatus = async () => {
-      const completionStatus = await retrieveData<boolean>(
-        COMPLETION_STATUS_KEY
-      );
-      setSentencesCompleted(completionStatus ?? false);
-    };
-    checkCompletionStatus();
-  }, []);
-
-  useEffect(() => {
-    if (sentences.length > 0) {
-      const allWords = sentences.flatMap((sentence: Sentence) =>
-        sentence.text.split(" ").map(cleanWord)
-      );
-      const allClicked = allWords.every((word: string) =>
-        clickedWords.includes(word)
-      );
-      if (allClicked) {
-        setWordsCompleted(true);
-      }
-      if (__DEV__) {
-        setWordsCompleted(true);
-      }
-    }
-  }, [sentences, clickedWords]);
-
-  const handleProceedToQuiz = async () => {
-    await storeData(COMPLETION_STATUS_KEY, true);
-    setSentencesCompleted(true);
-
-    if (reminderTime) {
-      setReminderTime(reminderTime);
-    }
-
-    router.push("/learning/quiz");
-  };
-
-  if (loading) {
-    return <LoadingIndicator />;
-  }
 
   if (error) {
     return (
@@ -98,7 +42,7 @@ const SentencesScreen: React.FC = () => {
         />
         <CustomButton
           title="Go to Dashboard"
-          onPress={() => router.push("/dashboard")}
+          onPress={handleNavigateToDashboard}
         />
       </ScrollView>
     );

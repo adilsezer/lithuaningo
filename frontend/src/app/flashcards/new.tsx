@@ -4,12 +4,11 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import type { FlashcardFormData } from "@src/types";
-import flashcardService from "@services/data/flashcardService";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import { SectionTitle } from "@components/typography";
 import { FormField } from "@components/form/form.types";
-import { useAppSelector, useAppDispatch } from "@redux/hooks";
+import { useAppSelector } from "@redux/hooks";
 import { selectUserData } from "@redux/slices/userSlice";
 import CustomButton from "@components/ui/CustomButton";
 import { useFlashcards } from "@hooks/useFlashcards";
@@ -19,7 +18,7 @@ export default function NewFlashcardScreen() {
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
-  const { createFlashcard } = useFlashcards();
+  const { handleCreateFlashcard } = useFlashcards();
 
   const fields: FormField[] = [
     {
@@ -82,30 +81,15 @@ export default function NewFlashcardScreen() {
   ];
 
   const handleSubmit = async (data: FlashcardFormData) => {
-    try {
-      if (!deckId || !userData?.id) {
-        AlertDialog.error("Missing required data");
-        return;
-      }
+    if (!deckId || !userData?.id) {
+      AlertDialog.error("Missing required data");
+      return;
+    }
 
-      const { imageFile, audioFile, ...flashcardData } = data;
-
-      await createFlashcard(
-        {
-          ...flashcardData,
-          deckId,
-          createdBy: userData.id,
-        },
-        imageFile,
-        audioFile
-      );
-      AlertDialog.success("Flashcard created successfully");
-
+    const success = await handleCreateFlashcard(data, deckId, userData.id);
+    if (success) {
       // Create another flashcard for the same deck
       router.push(`/flashcards/new?deckId=${deckId}`);
-    } catch (error) {
-      AlertDialog.error("Failed to create flashcard");
-      console.error("Error creating flashcard:", error);
     }
   };
 

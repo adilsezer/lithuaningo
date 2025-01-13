@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useAppSelector } from "@redux/hooks";
@@ -12,8 +12,8 @@ import Divider from "@components/ui/Divider";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { FORM_RULES } from "@utils/formValidation";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useNavigation } from "@react-navigation/native";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
+import type { SocialProvider } from "@hooks/useAuth";
 
 const loginFields: FormField[] = [
   {
@@ -36,24 +36,39 @@ const loginFields: FormField[] = [
 
 const LoginScreen: React.FC = () => {
   const loading = useAppSelector(selectIsLoading);
-  const { colors } = useThemeStyles();
-  const { signIn, signInWithSocial } = useAuth();
-  const navigation = useNavigation();
+  const { signIn, signInWithSocial, error, clearError } = useAuth();
 
+  // Log screen load for analytics
   useEffect(() => {
     crashlytics().log("Login screen loaded.");
   }, []);
+
+  // Form submission handler
+  const handleSubmit = useCallback(
+    async (data: { email: string; password: string }) => {
+      await signIn(data.email, data.password);
+    },
+    [signIn]
+  );
+
+  // Social auth handler
+  const handleSocialAuth = useCallback(
+    (provider: SocialProvider) => {
+      signInWithSocial(provider);
+    },
+    [signInWithSocial]
+  );
 
   return (
     <ScrollView>
       <BackButton />
       <SectionTitle>Welcome Back</SectionTitle>
 
+      {error && <ErrorMessage message={error} onRetry={clearError} />}
+
       <Form
         fields={loginFields}
-        onSubmit={async (data) => {
-          await signIn(data.email, data.password);
-        }}
+        onSubmit={handleSubmit}
         submitButtonText="Sign In"
         isLoading={loading}
         options={{ mode: "onBlur" }}
@@ -64,8 +79,8 @@ const LoginScreen: React.FC = () => {
       <Divider content="Or" />
 
       <SocialAuthButtons
-        onGooglePress={() => signInWithSocial("google")}
-        onApplePress={() => signInWithSocial("apple")}
+        onGooglePress={() => handleSocialAuth("google")}
+        onApplePress={() => handleSocialAuth("apple")}
         disabled={loading}
       />
 

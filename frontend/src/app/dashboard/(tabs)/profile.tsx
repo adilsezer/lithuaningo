@@ -21,6 +21,35 @@ const PROFILE_ACTIONS = [
   { title: "About the App", path: "/about" },
 ] as const;
 
+const ProfileActions = ({
+  onNavigate,
+}: {
+  onNavigate: (path: string) => void;
+}) => (
+  <View>
+    {PROFILE_ACTIONS.map(({ title, path }) => (
+      <CustomButton
+        key={title}
+        title={title}
+        onPress={() => onNavigate(path)}
+      />
+    ))}
+  </View>
+);
+
+const ProfileHeader = ({
+  name,
+  email,
+}: {
+  name: string | null;
+  email: string;
+}) => (
+  <>
+    <SectionTitle>{name || "User"}</SectionTitle>
+    <Subtitle>{email}</Subtitle>
+  </>
+);
+
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const { isDarkMode, toggleTheme } = useTheme();
@@ -33,7 +62,12 @@ export default function ProfileScreen() {
     router.push(path);
   };
 
-  const handleClearProgress = () => {
+  const handleClearProgress = async () => {
+    if (!userData) {
+      AlertDialog.error("No user data available");
+      return;
+    }
+
     AlertDialog.confirm({
       title: "Clear Progress",
       message:
@@ -41,11 +75,6 @@ export default function ProfileScreen() {
       confirmText: "Clear",
       confirmStyle: "destructive",
       onConfirm: async () => {
-        if (!userData) {
-          AlertDialog.error("No user data available");
-          return;
-        }
-
         const currentDateKey = getCurrentDateKey();
         const keysToClear = [
           SENTENCE_KEYS.COMPLETION_STATUS_KEY(userData.id, currentDateKey),
@@ -57,15 +86,19 @@ export default function ProfileScreen() {
           QUIZ_KEYS.SESSION_STATE_KEY(userData.id, currentDateKey),
         ];
 
-        await Promise.all(keysToClear.map(clearData));
-        AlertDialog.success("Progress data cleared successfully");
+        try {
+          await Promise.all(keysToClear.map(clearData));
+          AlertDialog.success("Progress data cleared successfully");
+        } catch (error) {
+          AlertDialog.error("Failed to clear progress data");
+        }
       },
     });
   };
 
   if (!isLoggedIn || !userData) {
     return (
-      <View style={styles.container}>
+      <View style={[styles.container]}>
         <SectionTitle>No user data available</SectionTitle>
       </View>
     );
@@ -74,19 +107,12 @@ export default function ProfileScreen() {
   return (
     <ScrollView style={styles.container}>
       <ThemeSwitch onToggle={toggleTheme} isDarkMode={isDarkMode} />
-      <SectionTitle>{userData.name || "User"}</SectionTitle>
-      <Subtitle>{userData.email}</Subtitle>
 
-      <View>
-        {PROFILE_ACTIONS.map(({ title, path }) => (
-          <CustomButton
-            key={title}
-            title={title}
-            onPress={() => handleNavigation(path)}
-          />
-        ))}
-        <CustomButton title="Logout" onPress={signOut} />
-      </View>
+      <ProfileHeader name={userData.name} email={userData.email} />
+
+      <ProfileActions onNavigate={handleNavigation} />
+
+      <CustomButton title="Logout" onPress={signOut} />
     </ScrollView>
   );
 }

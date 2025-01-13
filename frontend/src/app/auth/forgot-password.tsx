@@ -1,14 +1,19 @@
 import React, { useEffect } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, View } from "react-native";
+import BackButton from "@components/layout/BackButton";
+import { SectionTitle, Instruction } from "@components/typography";
+import { Form } from "@components/form/Form";
+import { FormField } from "@components/form/form.types";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useAuth } from "@hooks/useAuth";
 import { useAppSelector } from "@redux/hooks";
 import { selectIsLoading } from "@redux/slices/uiSlice";
-import BackButton from "@components/layout/BackButton";
-import crashlytics from "@react-native-firebase/crashlytics";
-import { SectionTitle, Instruction } from "@components/typography";
-import { Form } from "@components/form/Form";
-import type { FormField } from "@components/form/form.types";
 import { FORM_RULES } from "@utils/formValidation";
+import crashlytics from "@react-native-firebase/crashlytics";
+
+type ForgotPasswordData = {
+  email: string;
+};
 
 const forgotPasswordFields: FormField[] = [
   {
@@ -16,14 +21,16 @@ const forgotPasswordFields: FormField[] = [
     label: "Email",
     category: "text-input",
     type: "email",
-    placeholder: "Email",
+    placeholder: "Enter your email address",
+    keyboardType: "email-address",
+    autoCapitalize: "none",
     validation: FORM_RULES.email,
   },
 ];
 
 const ForgotPasswordScreen: React.FC = () => {
-  const loading = useAppSelector(selectIsLoading);
-  const { resetPassword } = useAuth();
+  const isLoading = useAppSelector(selectIsLoading);
+  const { resetPassword, error, clearError } = useAuth();
 
   useEffect(() => {
     crashlytics().log("Forgot password screen loaded.");
@@ -32,18 +39,23 @@ const ForgotPasswordScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <SectionTitle>Reset Password</SectionTitle>
-      <Instruction>
-        Enter your email and we will send you a link to reset your password.
-      </Instruction>
 
-      <Form
+      <View>
+        <SectionTitle>Reset Password</SectionTitle>
+        <Instruction>
+          Enter your email and we will send you a link to reset your password.
+        </Instruction>
+      </View>
+
+      {error && <ErrorMessage message={error} onRetry={clearError} />}
+
+      <Form<ForgotPasswordData>
         fields={forgotPasswordFields}
         onSubmit={async (data) => {
           await resetPassword(data.email);
         }}
         submitButtonText="Reset Password"
-        isLoading={loading}
+        isLoading={isLoading}
         options={{ mode: "onBlur" }}
       />
     </ScrollView>

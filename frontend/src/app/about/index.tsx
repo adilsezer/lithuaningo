@@ -9,14 +9,21 @@ import {
 } from "@components/typography";
 import { useAbout } from "@hooks/useAbout";
 
-export default function AboutScreen() {
-  const { appVersion, handleLinkPress, navigateToPrivacyPolicy } = useAbout();
+const AboutScreen = () => {
+  const {
+    appVersion,
+    links,
+    handleLinkPress,
+    navigateToPrivacyPolicy,
+    navigateToTermsOfService,
+  } = useAbout();
 
   return (
     <ScrollView>
       <BackButton />
+
       <SectionTitle>About Lithuaningo</SectionTitle>
-      <Paragraph style={styles.justifiedText}>
+      <Paragraph style={[styles.justifiedText]}>
         Lithuaningo is your gateway to mastering Lithuanian! Dive into learning
         with ease and fun. Our app provides a comprehensive learning experience
         with various features and tools to help you become proficient in
@@ -26,26 +33,34 @@ export default function AboutScreen() {
       <SectionTitle>Contact Us</SectionTitle>
       <SectionText>
         Email:{" "}
-        <LinkText
-          onPress={() => handleLinkPress("mailto:lithuaningo@gmail.com")}
-        >
-          lithuaningo@gmail.com
+        <LinkText onPress={() => handleLinkPress(links.email)}>
+          {links.email.value}
         </LinkText>
       </SectionText>
+
+      <SectionTitle>Open Source</SectionTitle>
+      <LinkText onPress={() => handleLinkPress(links.github)}>
+        {links.github.label}
+      </LinkText>
+
+      <SectionTitle>Legal</SectionTitle>
+      <LinkText onPress={navigateToPrivacyPolicy}>
+        {links.privacyPolicy.label}
+      </LinkText>
+      <LinkText onPress={navigateToTermsOfService}>
+        {links.termsOfService.label}
+      </LinkText>
 
       <SectionTitle>License</SectionTitle>
       <SectionText>This app is licensed under the MIT License.</SectionText>
 
       <SectionTitle>Version</SectionTitle>
       <SectionText>{appVersion}</SectionText>
-
-      <SectionTitle>Privacy Policy</SectionTitle>
-      <LinkText onPress={navigateToPrivacyPolicy}>
-        View our Privacy Policy
-      </LinkText>
     </ScrollView>
   );
-}
+};
+
+export default AboutScreen;
 
 const styles = StyleSheet.create({
   justifiedText: {

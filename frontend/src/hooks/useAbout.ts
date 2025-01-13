@@ -1,38 +1,100 @@
+import { useCallback } from "react";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
+export type AboutLink = {
+  type: "email" | "url" | "internal";
+  value: string;
+  label: string;
+};
+
+export const ABOUT_LINKS = {
+  email: {
+    type: "email" as const,
+    value: "lithuaningo@gmail.com",
+    label: "Contact us via email",
+  },
+  privacyPolicy: {
+    type: "internal" as const,
+    value: "/privacy-policy",
+    label: "View our Privacy Policy",
+  },
+  termsOfService: {
+    type: "internal" as const,
+    value: "/terms-of-service",
+    label: "View our Terms of Service",
+  },
+  github: {
+    type: "url" as const,
+    value: "https://github.com/lithuaningo",
+    label: "View our GitHub repository",
+  },
+} as const;
+
 export const useAbout = () => {
   const router = useRouter();
   const appVersion = Constants.expoConfig?.version || "Unknown";
 
-  const handleLinkPress = async (url: string) => {
-    try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
-        await Linking.openURL(url);
-      } else {
-        AlertDialog.error(
-          "Unable to open the link. Please check if the app to handle the URL is installed and configured."
-        );
-        console.error("Unsupported URL: ", url);
-      }
-    } catch (err) {
-      AlertDialog.error(
-        "An error occurred while trying to open the URL. Please try again later."
-      );
-      console.error("Failed to open URL:", err);
-    }
-  };
+  const handleLinkPress = useCallback(
+    async (link: AboutLink) => {
+      try {
+        switch (link.type) {
+          case "email":
+            const emailUrl = `mailto:${link.value}`;
+            const canOpenEmail = await Linking.canOpenURL(emailUrl);
+            if (canOpenEmail) {
+              await Linking.openURL(emailUrl);
+            } else {
+              throw new Error("No email app configured");
+            }
+            break;
 
-  const navigateToPrivacyPolicy = () => {
-    router.push("/privacy-policy");
-  };
+          case "url":
+            const canOpenUrl = await Linking.canOpenURL(link.value);
+            if (canOpenUrl) {
+              await Linking.openURL(link.value);
+            } else {
+              throw new Error("Cannot open URL");
+            }
+            break;
+
+          case "internal":
+            router.push(link.value);
+            break;
+
+          default:
+            throw new Error("Unsupported link type");
+        }
+      } catch (error) {
+        console.error("Failed to handle link:", error);
+        AlertDialog.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to open link. Please try again later."
+        );
+      }
+    },
+    [router]
+  );
+
+  const navigateToPrivacyPolicy = useCallback(() => {
+    handleLinkPress(ABOUT_LINKS.privacyPolicy);
+  }, [handleLinkPress]);
+
+  const navigateToTermsOfService = useCallback(() => {
+    handleLinkPress(ABOUT_LINKS.termsOfService);
+  }, [handleLinkPress]);
 
   return {
+    // App Info
     appVersion,
+    links: ABOUT_LINKS,
+
+    // Actions
     handleLinkPress,
     navigateToPrivacyPolicy,
+    navigateToTermsOfService,
   };
 };

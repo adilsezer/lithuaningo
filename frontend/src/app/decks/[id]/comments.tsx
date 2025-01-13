@@ -1,77 +1,39 @@
-import React, { useEffect, useState, useCallback } from "react";
-import {
-  View,
-  StyleSheet,
-  FlatList,
-  ActivityIndicator,
-  Text,
-} from "react-native";
+import React, { useEffect } from "react";
+import { View, StyleSheet, FlatList, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { Comment } from "@src/types";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAppSelector } from "@redux/hooks";
+import { selectUserData } from "@redux/slices/userSlice";
 import { SectionTitle } from "@components/typography";
 import CustomButton from "@components/ui/CustomButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import commentService from "@services/data/commentService";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
+import BackButton from "@components/layout/BackButton";
+import { useComments } from "@hooks/useComments";
 
 export default function CommentsScreen() {
   const { id } = useLocalSearchParams();
   const { colors } = useThemeStyles();
   const userData = useAppSelector(selectUserData);
-  const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
-  const [comments, setComments] = useState<Comment[]>([]);
-
-  const fetchComments = useCallback(async () => {
-    try {
-      dispatch(setLoading(true));
-      const data = await commentService.getComments(id as string);
-      setComments(data);
-    } catch (err) {
-      console.error("Error loading comments:", err);
-    } finally {
-      dispatch(setLoading(false));
-    }
-  }, [dispatch, id]);
+  const {
+    comments,
+    isSubmitting,
+    error,
+    isEmpty,
+    clearError,
+    fetchComments,
+    addComment,
+    deleteComment,
+  } = useComments(id as string);
 
   useEffect(() => {
     fetchComments();
   }, [fetchComments]);
 
   const handleAddComment = async (data: { content: string }) => {
-    if (!userData) {
-      AlertDialog.error("Please login to comment");
-      return;
-    }
-
-    try {
-      await commentService.addComment({
-        deckId: id as string,
-        userId: userData.id,
-        content: data.content,
-      });
-      AlertDialog.success("Comment added successfully");
-      fetchComments();
-    } catch (err) {
-      AlertDialog.error("Failed to add comment");
-      console.error("Error adding comment:", err);
-    }
-  };
-
-  const handleDeleteComment = async (commentId: string) => {
-    try {
-      await commentService.deleteComment(commentId);
-      AlertDialog.success("Comment deleted successfully");
-      fetchComments();
-    } catch (err) {
-      AlertDialog.error("Failed to delete comment");
-      console.error("Error deleting comment:", err);
-    }
+    if (!userData?.id) return;
+    await addComment(userData.id, data.content);
   };
 
   const commentFields: FormField[] = [
@@ -80,30 +42,40 @@ export default function CommentsScreen() {
       label: "Comment",
       category: "text-input",
       type: "text",
-      placeholder: "Write your comment...",
+      placeholder: userData
+        ? "Write your comment..."
+        : "Please login to comment",
       validation: {
         required: true,
         message: "Comment cannot be empty",
       },
+      editable: !!userData,
     },
   ];
 
-  if (isLoading) {
+  if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={colors.active} />
-      </View>
+      <ErrorMessage
+        message={error}
+        onRetry={() => {
+          clearError();
+          fetchComments();
+        }}
+        fullScreen
+      />
     );
   }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <BackButton />
       <SectionTitle>Comments</SectionTitle>
       <Form
         fields={commentFields}
         onSubmit={handleAddComment}
         submitButtonText="Add Comment"
         style={styles.form}
+        isLoading={isSubmitting}
       />
       <FlatList
         data={comments}
@@ -115,8 +87,9 @@ export default function CommentsScreen() {
             {userData && userData.id === item.userId && (
               <CustomButton
                 title="Delete"
-                onPress={() => item.id && handleDeleteComment(item.id)}
+                onPress={() => item.id && deleteComment(item.id)}
                 style={[styles.deleteButton, { backgroundColor: colors.error }]}
+                disabled={isSubmitting}
               />
             )}
           </View>
@@ -125,7 +98,7 @@ export default function CommentsScreen() {
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <Text style={[styles.emptyText, { color: colors.text }]}>
-            No comments yet
+            {isEmpty ? "No comments yet" : ""}
           </Text>
         }
       />

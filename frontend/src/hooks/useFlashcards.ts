@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Flashcard } from "@src/types";
+import { Flashcard, FlashcardFormData } from "@src/types";
 import flashcardService from "@services/data/flashcardService";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import { useAppDispatch, useAppSelector } from "@redux/hooks";
@@ -70,23 +70,29 @@ export const useFlashcards = () => {
     [fetchDeckFlashcards, handleError, clearError, dispatch]
   );
 
-  const createFlashcard = useCallback(
-    async (
-      flashcardData: Omit<Flashcard, "id" | "createdAt">,
-      imageFile?: File,
-      audioFile?: File
-    ) => {
+  const handleCreateFlashcard = useCallback(
+    async (formData: FlashcardFormData, deckId: string, userId: string) => {
       try {
         dispatch(setLoading(true));
         clearError();
+
+        const { imageFile, audioFile, ...flashcardData } = formData;
+
         await flashcardService.createFlashcard(
-          flashcardData,
+          {
+            ...flashcardData,
+            deckId,
+            createdBy: userId,
+          },
           imageFile,
           audioFile
         );
+
+        AlertDialog.success("Flashcard created successfully");
+        return true;
       } catch (error) {
         handleError(error, "Failed to create flashcard");
-        throw error;
+        return false;
       } finally {
         dispatch(setLoading(false));
       }
@@ -105,6 +111,6 @@ export const useFlashcards = () => {
     fetchDeckFlashcards,
     addFlashcardToDeck,
     removeFlashcardFromDeck,
-    createFlashcard,
+    handleCreateFlashcard,
   };
 };

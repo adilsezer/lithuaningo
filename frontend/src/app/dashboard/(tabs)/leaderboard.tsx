@@ -5,9 +5,11 @@ import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useLeaderboard } from "@hooks/useLeaderboard";
 import { SectionTitle, Subtitle, SectionText } from "@components/typography";
 import { LeaderboardEntry } from "@src/types/LeaderboardEntry";
+import type { ThemeColors } from "@src/styles/colors";
+
 type TrophyPosition = 0 | 1 | 2;
 
-const TROPHY_COLORS: Record<TrophyPosition, string> = {
+const TROPHY_COLORS: Record<TrophyPosition, keyof ThemeColors> = {
   0: "secondary", // Gold
   1: "primary", // Silver
   2: "tertiary", // Bronze
@@ -15,13 +17,12 @@ const TROPHY_COLORS: Record<TrophyPosition, string> = {
 
 const TABLE_HEADERS = ["Rank", "Name", "Score"] as const;
 
-const TrophyIcon = ({
-  position,
-  colors,
-}: {
+type TrophyIconProps = {
   position: number;
-  colors: any;
-}) => {
+  colors: ThemeColors;
+};
+
+const TrophyIcon = ({ position, colors }: TrophyIconProps) => {
   if (position > 2) return null;
 
   return (
@@ -34,7 +35,11 @@ const TrophyIcon = ({
   );
 };
 
-const TableHeader = ({ colors }: { colors: any }) => (
+type TableHeaderProps = {
+  colors: ThemeColors;
+};
+
+const TableHeader = ({ colors }: TableHeaderProps) => (
   <View style={[styles.header, { backgroundColor: colors.primary }]}>
     {TABLE_HEADERS.map((title) => (
       <SectionText
@@ -51,15 +56,13 @@ const TableHeader = ({ colors }: { colors: any }) => (
   </View>
 );
 
-const LeaderRow = ({
-  entry,
-  position,
-  colors,
-}: {
+type LeaderRowProps = {
   entry: LeaderboardEntry;
   position: number;
-  colors: any;
-}) => (
+  colors: ThemeColors;
+};
+
+const LeaderRow = ({ entry, position, colors }: LeaderRowProps) => (
   <View style={[styles.row, { borderBottomColor: colors.primary }]}>
     <SectionText style={[styles.cell, styles.rank]}>{position + 1}</SectionText>
     <View style={[styles.cell, styles.nameContainer]}>
