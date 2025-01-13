@@ -32,7 +32,6 @@ export default function DecksScreen() {
     clearError,
     fetchDecks,
     voteDeck,
-    reportDeck,
   } = useDecks(userData?.id);
 
   useEffect(() => {
@@ -53,12 +52,12 @@ export default function DecksScreen() {
     (deckId: string) => ({
       onVote: (isUpvote: boolean) =>
         userData?.id && voteDeck(deckId, userData.id, isUpvote),
-      onReport: () => userData?.id && reportDeck(deckId, userData.id),
+      onReport: () => handleNavigation(`/decks/${deckId}/report`),
       onComment: () => handleNavigation(`/decks/${deckId}/comments`),
       onQuiz: () => handleNavigation(`/decks/${deckId}/quiz`),
       onPractice: () => handleNavigation(`/decks/${deckId}`),
     }),
-    [userData?.id, voteDeck, reportDeck, handleNavigation]
+    [userData?.id, voteDeck, handleNavigation]
   );
 
   const renderHeader = useCallback(

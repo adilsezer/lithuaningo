@@ -17,6 +17,7 @@ import {
   QuizResult,
   PracticeProgress,
   PracticeStats,
+  Report,
 } from "@src/types";
 
 export class ApiError extends Error {
@@ -455,6 +456,51 @@ class ApiClient {
         "Content-Type": "multipart/form-data",
       },
       data: formData,
+    });
+  }
+
+  async createReport(report: Partial<Report>) {
+    return this.request<string>("/report", {
+      method: "POST",
+      data: {
+        ...report,
+        contentType: "deck",
+        contentId: report.contentId,
+        status: "pending",
+      },
+    });
+  }
+
+  async getReports(status: Report["status"] = "pending", limit: number = 50) {
+    return this.request<Report[]>("/report", {
+      params: { status, limit },
+    });
+  }
+
+  async getReport(id: string) {
+    return this.request<Report>(`/report/${id}`);
+  }
+
+  async getContentReports(contentType: string, contentId: string) {
+    return this.request<Report[]>(
+      `/report/content/${contentType}/${contentId}`
+    );
+  }
+
+  async updateReportStatus(
+    id: string,
+    status: Report["status"],
+    reviewedBy: string,
+    resolution?: string
+  ) {
+    return this.request<void>(`/report/${id}/status`, {
+      method: "PUT",
+      data: {
+        status,
+        reviewedBy,
+        resolution,
+        reviewedAt: new Date().toISOString(),
+      },
     });
   }
 }

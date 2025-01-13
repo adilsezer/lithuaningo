@@ -146,33 +146,6 @@ export const useDecks = (currentUserId?: string) => {
     [fetchDecks, handleError, invalidateRatingCache, checkAuth, dispatch]
   );
 
-  const reportDeck = useCallback(
-    async (deckId: string, userId: string) => {
-      if (!checkAuth()) return;
-
-      AlertDialog.confirm({
-        title: "Report Deck",
-        message: "Are you sure you want to report this deck?",
-        onConfirm: async () => {
-          try {
-            dispatch(setLoading(true));
-            await deckService.reportDeck(
-              deckId,
-              userId,
-              "Inappropriate content"
-            );
-            AlertDialog.success("Report submitted successfully");
-          } catch (error) {
-            handleError(error, "Failed to submit report");
-          } finally {
-            dispatch(setLoading(false));
-          }
-        },
-      });
-    },
-    [handleError, checkAuth, dispatch]
-  );
-
   const createDeck = useCallback(
     async (data: Partial<Deck>) => {
       if (!checkAuth()) return;
@@ -252,7 +225,6 @@ export const useDecks = (currentUserId?: string) => {
     clearError,
     fetchDecks,
     voteDeck,
-    reportDeck,
     createDeck,
   };
 };
