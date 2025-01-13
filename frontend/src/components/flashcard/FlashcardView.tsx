@@ -23,6 +23,7 @@ const AudioButton: React.FC<{ url: string; colors: any }> = ({
   colors,
 }) => {
   const [sound, setSound] = useState<Audio.Sound>();
+  const [isPlaying, setIsPlaying] = useState(false);
 
   React.useEffect(() => {
     return sound
@@ -34,14 +35,31 @@ const AudioButton: React.FC<{ url: string; colors: any }> = ({
 
   const playSound = async () => {
     try {
-      if (sound) {
-        await sound.unloadAsync();
+      if (isPlaying && sound) {
+        await sound.pauseAsync();
+        setIsPlaying(false);
+        return;
       }
-      const { sound: newSound } = await Audio.Sound.createAsync({ uri: url });
-      setSound(newSound);
-      await newSound.playAsync();
+
+      if (sound) {
+        await sound.playAsync();
+        setIsPlaying(true);
+      } else {
+        const { sound: newSound } = await Audio.Sound.createAsync({ uri: url });
+        setSound(newSound);
+        await newSound.playAsync();
+        setIsPlaying(true);
+
+        // Handle sound completion
+        newSound.setOnPlaybackStatusUpdate(async (status) => {
+          if ("didJustFinish" in status && status.didJustFinish) {
+            setIsPlaying(false);
+          }
+        });
+      }
     } catch (error) {
       console.error("Error playing sound:", error);
+      setIsPlaying(false);
     }
   };
 
@@ -51,7 +69,11 @@ const AudioButton: React.FC<{ url: string; colors: any }> = ({
         onPress={playSound}
         style={[styles.audioButton, { backgroundColor: colors.primary }]}
       >
-        <FontAwesome5 name="volume-up" size={20} color={colors.buttonText} />
+        <FontAwesome5
+          name={isPlaying ? "pause" : "volume-up"}
+          size={20}
+          color={colors.buttonText}
+        />
       </TouchableOpacity>
     </View>
   );
@@ -64,11 +86,11 @@ const CardContent: React.FC<{
 }> = ({ isBack, flashcard, colors }) => (
   <View style={styles.content} pointerEvents="box-none">
     {!isBack && flashcard.imageUrl && (
-      <View style={styles.imageContainer}>
+      <View style={styles.imageWrapper}>
         <Image
           source={{ uri: flashcard.imageUrl }}
           style={styles.image}
-          resizeMode="contain"
+          resizeMode="cover"
         />
       </View>
     )}
@@ -229,8 +251,8 @@ const styles = StyleSheet.create({
   card: {
     flex: 1,
     borderRadius: 20,
-    padding: 16,
-    justifyContent: "center",
+    padding: 24,
+    justifyContent: "flex-start",
     alignItems: "center",
     elevation: 2,
     shadowColor: "#000",
@@ -252,18 +274,23 @@ const styles = StyleSheet.create({
   content: {
     alignItems: "center",
     width: "100%",
+    paddingVertical: 16,
   },
   mainText: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: "600",
     textAlign: "center",
-    marginBottom: 16,
+    marginBottom: 24,
+    paddingHorizontal: 16,
   },
   exampleText: {
     fontSize: 16,
     fontStyle: "italic",
     textAlign: "center",
-    marginTop: 16,
+    marginTop: 24,
+    marginBottom: 32,
+    paddingHorizontal: 24,
+    opacity: 0.8,
   },
   flipIcon: {
     position: "absolute",
@@ -287,12 +314,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     minWidth: 150,
   },
-  imageContainer: {
+  imageWrapper: {
     width: "100%",
-    aspectRatio: 1,
-    marginBottom: 20,
+    aspectRatio: 16 / 9,
     borderRadius: 10,
     overflow: "hidden",
+    marginBottom: 32,
   },
   image: {
     width: "100%",
@@ -303,8 +330,8 @@ const styles = StyleSheet.create({
     zIndex: 2,
   },
   audioButton: {
-    padding: 12,
-    borderRadius: 30,
-    marginTop: 16,
+    padding: 16,
+    borderRadius: 40,
+    marginTop: 24,
   },
 });

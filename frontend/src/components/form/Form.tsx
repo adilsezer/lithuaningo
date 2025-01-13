@@ -11,7 +11,6 @@ import CustomButton from "@components/ui/CustomButton";
 import { FormProps, FormField as FormFieldType } from "./form.types";
 import { FormField } from "./FormField";
 import { AlertDialog } from "@components/ui/AlertDialog";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
 
 const getDefaultValueByCategory = (field: FormFieldType): any => {
   switch (field.category) {
@@ -39,8 +38,6 @@ export function Form<T extends FieldValues>({
   style,
   submitButtonStyle,
 }: FormProps<T>) {
-  const { colors } = useThemeStyles();
-
   const form = useForm<T>({
     mode: "onSubmit",
     reValidateMode: "onChange",
