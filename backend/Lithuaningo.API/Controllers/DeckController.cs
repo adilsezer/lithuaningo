@@ -42,9 +42,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         [HttpGet("top-rated")]
-        public async Task<ActionResult<List<Deck>>> GetTopRatedDecks([FromQuery] int limit = 10)
+        public async Task<ActionResult<List<Deck>>> GetTopRatedDecks(
+            [FromQuery] int limit = 10,
+            [FromQuery] string timeRange = "all")
         {
-            var decks = await _deckService.GetTopRatedDecksAsync(limit);
+            var decks = await _deckService.GetTopRatedDecksAsync(limit, timeRange);
             return Ok(decks);
         }
 
@@ -98,9 +100,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         [HttpGet("{id}/rating")]
-        public async Task<ActionResult<double>> GetDeckRating(string id)
+        public async Task<ActionResult<double>> GetDeckRating(
+            string id,
+            [FromQuery] string timeRange = "all")
         {
-            var rating = await _deckService.GetDeckRatingAsync(id);
+            var rating = await _deckService.GetDeckRatingAsync(id, timeRange);
             return Ok(rating);
         }
     }

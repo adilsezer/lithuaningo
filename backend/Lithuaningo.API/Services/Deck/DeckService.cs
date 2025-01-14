@@ -9,16 +9,14 @@ namespace Lithuaningo.API.Services;
 public class DeckService : IDeckService
 {
     private readonly FirestoreDb _db;
-    private readonly IUserService _userService;
     private readonly string _collectionName;
     private readonly string _votesCollection;
     private readonly string _flashcardsCollection;
     private readonly string _reportsCollection;
 
-    public DeckService(FirestoreDb db, IUserService userService, IOptions<FirestoreCollectionSettings> collectionSettings)
+    public DeckService(FirestoreDb db, IOptions<FirestoreCollectionSettings> collectionSettings)
     {
         _db = db ?? throw new ArgumentNullException(nameof(db));
-        _userService = userService;
         _collectionName = collectionSettings.Value.Decks;
         _votesCollection = collectionSettings.Value.DeckVotes;
         _flashcardsCollection = collectionSettings.Value.Flashcards;
@@ -85,34 +83,102 @@ public class DeckService : IDeckService
         }
     }
 
-    public async Task<List<Models.Deck>> GetTopRatedDecksAsync(int limit = 10)
+    public async Task<List<Models.Deck>> GetTopRatedDecksAsync(int limit = 10, string timeRange = "all")
     {
         try
         {
-            // Get decks with limit * 2 to have enough after filtering
-            Query query = _db.Collection(_collectionName)
-                .Limit(limit * 2);
-
-            var decksSnapshot = await query.GetSnapshotAsync();
-            var decks = decksSnapshot.Documents.Select(d => d.ConvertTo<Models.Deck>()).ToList();
-            var decksWithRatings = new List<(Models.Deck Deck, double Rating)>();
+            // Get votes within the time range
+            Query votesQuery = _db.Collection(_votesCollection);
             
-            foreach (var deck in decks)
+            // Add time range filter if specified
+            var startDate = timeRange switch
             {
-                if (deck.Id == null) continue;
-                var rating = await GetDeckRatingAsync(deck.Id);
-                decksWithRatings.Add((deck, rating));
+                "week" => DateTime.UtcNow.AddDays(-7),
+                "month" => DateTime.UtcNow.AddMonths(-1),
+                _ => DateTime.MinValue
+            };
+
+            if (timeRange != "all")
+            {
+                votesQuery = votesQuery.WhereGreaterThanOrEqualTo("createdAt", startDate);
             }
 
-            return decksWithRatings
+            var votesSnapshot = await votesQuery.GetSnapshotAsync();
+            
+            // Group votes by deckId and calculate ratings
+            var deckRatings = votesSnapshot.Documents
+                .Select(d => d.ConvertTo<DeckVote>())
+                .GroupBy(v => v.DeckId)
+                .Select(g => new
+                {
+                    DeckId = g.Key,
+                    Rating = (double)g.Count(v => v.IsUpvote) / g.Count()
+                })
                 .OrderByDescending(d => d.Rating)
                 .Take(limit)
-                .Select(d => d.Deck)
+                .ToList();
+
+            if (!deckRatings.Any())
+                return new List<Models.Deck>();
+
+            // Fetch only the top rated decks
+            var tasks = deckRatings.Select(r => GetDeckByIdAsync(r.DeckId));
+            var decks = await Task.WhenAll(tasks);
+
+            // Filter out any null decks and maintain the rating order
+            return decks
+                .Where(d => d != null)
+                .OrderBy(d => deckRatings.FindIndex(r => r.DeckId == d!.Id))
+                .Select(d => d!)
                 .ToList();
         }
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error getting top rated decks: {ex.Message}");
+            throw;
+        }
+    }
+
+    public async Task<double> GetDeckRatingAsync(string deckId, string timeRange = "all")
+    {
+        try
+        {
+            // Create base queries for both upvotes and total votes
+            var upvoteQuery = _db.Collection(_votesCollection)
+                .WhereEqualTo("deckId", deckId)
+                .WhereEqualTo("isUpvote", true);
+
+            var totalVotesQuery = _db.Collection(_votesCollection)
+                .WhereEqualTo("deckId", deckId);
+
+            // Add time range filter if specified
+            var startDate = timeRange switch
+            {
+                "week" => DateTime.UtcNow.AddDays(-7),
+                "month" => DateTime.UtcNow.AddMonths(-1),
+                _ => DateTime.MinValue
+            };
+
+            if (timeRange != "all")
+            {
+                upvoteQuery = upvoteQuery.WhereGreaterThanOrEqualTo("createdAt", startDate);
+                totalVotesQuery = totalVotesQuery.WhereGreaterThanOrEqualTo("createdAt", startDate);
+            }
+
+            // Execute both queries in parallel
+            var upvotesTask = upvoteQuery.Count().GetSnapshotAsync();
+            var totalVotesTask = totalVotesQuery.Count().GetSnapshotAsync();
+
+            await Task.WhenAll(upvotesTask, totalVotesTask);
+
+            double upvotes = (double)(upvotesTask.Result.Count ?? 0);
+            double totalVotes = (double)(totalVotesTask.Result.Count ?? 0);
+
+            return totalVotes == 0 ? 0.0 : upvotes / totalVotes;
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Error getting deck rating: {ex.Message}");
             throw;
         }
     }
@@ -285,30 +351,6 @@ public class DeckService : IDeckService
         catch (Exception ex)
         {
             Console.Error.WriteLine($"Error reporting deck {id}: {ex.Message}");
-            throw;
-        }
-    }
-
-    public async Task<double> GetDeckRatingAsync(string deckId)
-    {
-        try
-        {
-            var votesSnapshot = await _db.Collection(_votesCollection)
-                .WhereEqualTo("deckId", deckId)
-                .GetSnapshotAsync();
-
-            if (votesSnapshot.Count == 0)
-                return 0;
-
-            var votes = votesSnapshot.Documents.Select(d => d.ConvertTo<DeckVote>());
-            var upvotes = votes.Count(v => v.IsUpvote);
-            var totalVotes = votesSnapshot.Count;
-
-            return (double)upvotes / totalVotes;
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error getting deck rating: {ex.Message}");
             throw;
         }
     }

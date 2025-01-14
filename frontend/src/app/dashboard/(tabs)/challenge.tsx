@@ -6,17 +6,6 @@ import { useAppDispatch } from "@redux/hooks";
 import { resetClickedWords } from "@redux/slices/clickedWordsSlice";
 import { router } from "expo-router";
 
-const learningOptions = [
-  {
-    title: "Practice Flashcards",
-    route: "/learning/flashcards",
-  },
-  {
-    title: "Take Quiz",
-    route: "/learning/quiz",
-  },
-] as const;
-
 export default function LearnScreen() {
   const dispatch = useAppDispatch();
 
@@ -31,20 +20,16 @@ export default function LearnScreen() {
         source={require("assets/images/learn_screen.png")}
         style={styles.image}
       />
-      <SectionTitle>Review Your Progress</SectionTitle>
+      <SectionTitle>Daily Challenge</SectionTitle>
       <SectionText style={styles.sectionSpacing}>
-        Choose how you want to practice: use flashcards to review words or test
-        your knowledge with a quiz to check your progress.
+        Ready for today's Lithuaningo challenge? Test your skills with a daily
+        quiz or warm up with flashcards.
       </SectionText>
 
-      {learningOptions.map((option, index) => (
-        <CustomButton
-          key={option.route}
-          title={option.title}
-          onPress={() => handleNavigation(option.route)}
-          style={index > 0 && styles.buttonSpacing}
-        />
-      ))}
+      <CustomButton
+        title="Start Daily Challenge"
+        onPress={() => handleNavigation("/learning/quiz")}
+      />
     </ScrollView>
   );
 }

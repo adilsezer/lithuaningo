@@ -11,6 +11,7 @@ import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomButton from "@components/ui/CustomButton";
+import { DeckCategory } from "@src/types/DeckCategory";
 
 export default function DecksScreen() {
   const userData = useAppSelector(selectUserData);
@@ -22,13 +23,11 @@ export default function DecksScreen() {
     error,
     searchQuery,
     selectedCategory,
-    viewMode,
     emptyMessage,
     deckRatings,
     isAuthenticated,
     setSearchQuery,
     setSelectedCategory,
-    setViewMode,
     clearError,
     fetchDecks,
     voteDeck,
@@ -80,19 +79,17 @@ export default function DecksScreen() {
         />
         <CustomCategoryPicker
           selectedCategory={selectedCategory}
-          onSelectCategory={setSelectedCategory}
-          viewMode={viewMode}
-          onViewModeChange={setViewMode}
+          onSelectCategory={(category: DeckCategory) =>
+            setSelectedCategory(category)
+          }
         />
       </>
     ),
     [
       searchQuery,
       selectedCategory,
-      viewMode,
       setSearchQuery,
       setSelectedCategory,
-      setViewMode,
       handleNavigation,
     ]
   );

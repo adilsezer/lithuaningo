@@ -38,8 +38,8 @@ class DeckService {
     return apiClient.searchDecks(query);
   }
 
-  async getTopRatedDecks(limit?: number) {
-    return apiClient.getTopRatedDecks(limit);
+  async getTopRatedDecks(limit?: number, timeRange?: "week" | "month" | "all") {
+    return apiClient.getTopRatedDecks(limit, timeRange);
   }
 
   async getDeckRating(id: string) {

@@ -9,7 +9,7 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<List<Deck>> GetDecksAsync(string? category = null, int? limit = null);
         Task<Deck?> GetDeckByIdAsync(string id);
         Task<List<Deck>> GetUserDecksAsync(string userId);
-        Task<List<Deck>> GetTopRatedDecksAsync(int limit = 10);
+        Task<List<Deck>> GetTopRatedDecksAsync(int limit = 10, string timeRange = "all");
         Task<string> CreateDeckAsync(Deck deck);
         Task UpdateDeckAsync(string id, Deck deck);
         Task DeleteDeckAsync(string id);
@@ -17,6 +17,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<List<Deck>> SearchDecksAsync(string query, string? category = null);
         Task<List<Flashcard>> GetDeckFlashcardsAsync(string deckId);
         Task ReportDeckAsync(string id, string userId, string reason);
-        Task<double> GetDeckRatingAsync(string deckId);
+        Task<double> GetDeckRatingAsync(string deckId, string timeRange = "all");
     }
 } 

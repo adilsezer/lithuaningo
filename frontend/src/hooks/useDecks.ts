@@ -6,8 +6,11 @@ import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import type { Deck } from "@src/types";
 import deckService from "@services/data/deckService";
+import { DeckCategory } from "@src/types/DeckCategory";
 
-export type ViewMode = "all" | "top" | "my";
+interface UseDecksOptions {
+  initialCategory?: DeckCategory;
+}
 
 interface DeckRatings {
   [deckId: string]: {
@@ -16,7 +19,7 @@ interface DeckRatings {
   };
 }
 
-export const useDecks = (currentUserId?: string) => {
+export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   // Redux state
   const router = useRouter();
   const dispatch = useAppDispatch();
@@ -27,8 +30,9 @@ export const useDecks = (currentUserId?: string) => {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("");
-  const [viewMode, setViewMode] = useState<ViewMode>("all");
+  const [selectedCategory, setSelectedCategory] = useState<DeckCategory>(
+    options?.initialCategory || "All"
+  );
   const [deckRatings, setDeckRatings] = useState<Record<string, number>>({});
 
   // Cache
@@ -65,12 +69,14 @@ export const useDecks = (currentUserId?: string) => {
 
       if (searchQuery.trim()) {
         data = await deckService.searchDecks(searchQuery);
-      } else if (viewMode === "top") {
-        data = await deckService.getTopRatedDecks();
-      } else if (viewMode === "my" && currentUserId) {
+      } else if (selectedCategory === "Top") {
+        data = await deckService.getTopRatedDecks(1, "week");
+      } else if (selectedCategory === "My" && currentUserId) {
         data = await deckService.getUserDecks(currentUserId);
+      } else if (selectedCategory === "All") {
+        data = await deckService.getDecks();
       } else {
-        data = await deckService.getDecks(selectedCategory || undefined);
+        data = await deckService.getDecks(selectedCategory);
       }
 
       setDecks(data);
@@ -83,7 +89,6 @@ export const useDecks = (currentUserId?: string) => {
     }
   }, [
     searchQuery,
-    viewMode,
     selectedCategory,
     currentUserId,
     handleError,
@@ -192,14 +197,14 @@ export const useDecks = (currentUserId?: string) => {
   const isEmpty = useMemo(() => decks.length === 0, [decks]);
   const emptyMessage = useMemo(() => {
     if (searchQuery.trim()) return "No results found";
-    if (viewMode === "my") return "You haven't created any decks yet";
+    if (selectedCategory === "My") return "You haven't created any decks yet";
     return "No decks found";
-  }, [searchQuery, viewMode]);
+  }, [searchQuery, selectedCategory]);
 
   // Effects
   useEffect(() => {
     setSearchQuery("");
-  }, [viewMode]);
+  }, [selectedCategory]);
 
   useEffect(() => {
     loadDeckRatings();
@@ -212,7 +217,6 @@ export const useDecks = (currentUserId?: string) => {
     error,
     searchQuery,
     selectedCategory,
-    viewMode,
     isEmpty,
     emptyMessage,
     deckRatings,
@@ -221,7 +225,6 @@ export const useDecks = (currentUserId?: string) => {
     // Actions
     setSearchQuery,
     setSelectedCategory,
-    setViewMode,
     clearError,
     fetchDecks,
     voteDeck,

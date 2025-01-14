@@ -3,26 +3,50 @@ import { ScrollView, View, StyleSheet } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
-import { SectionTitle } from "@components/typography";
+import { SectionTitle, Subtitle } from "@components/typography";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
-import { ExpandYourVocabularyCard } from "@components/dashboard/ExpandYourVocabularyCard";
 import { useDashboard } from "@hooks/useDashboard";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
+import { useDecks } from "@hooks/useDecks";
+import { DeckCard } from "@components/deck/DeckCard";
+import { useAppSelector } from "@redux/hooks";
+import { selectUserData } from "@redux/slices/userSlice";
 
 const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
+  const userData = useAppSelector(selectUserData);
   const {
-    userData,
+    userData: dashboardUser,
     validAnnouncements,
     profile,
-    isDarkMode,
-    wordsData,
-    isLoading,
     error,
     clearError,
     fetchDashboardData,
   } = useDashboard();
+
+  const {
+    decks: topRatedDecks,
+    deckRatings,
+    voteDeck,
+    fetchDecks,
+  } = useDecks(userData?.id, { initialCategory: "Top" });
+
+  React.useEffect(() => {
+    fetchDecks();
+  }, [fetchDecks]);
+
+  const handleDeckActions = React.useCallback(
+    (deckId: string) => ({
+      onVote: (isUpvote: boolean) =>
+        userData?.id && voteDeck(deckId, userData.id, isUpvote),
+      onReport: () => router.push(`/decks/${deckId}/report`),
+      onComment: () => router.push(`/decks/${deckId}/comments`),
+      onQuiz: () => router.push(`/decks/${deckId}/quiz`),
+      onPractice: () => router.push(`/decks/${deckId}`),
+    }),
+    [userData?.id, voteDeck]
+  );
 
   if (error) {
     return (
@@ -37,10 +61,28 @@ const DashboardScreen: React.FC = () => {
     );
   }
 
+  const renderTopRatedDeck = () => {
+    if (topRatedDecks.length === 0) {
+      return (
+        <View style={styles.emptyState}>
+          <Subtitle>No top rated decks this week</Subtitle>
+        </View>
+      );
+    }
+
+    return (
+      <DeckCard
+        deck={topRatedDecks[0]}
+        rating={deckRatings[topRatedDecks[0].id] || 0}
+        actions={handleDeckActions(topRatedDecks[0].id)}
+      />
+    );
+  };
+
   return (
     <ScrollView>
       <View style={styles.container}>
-        <SectionTitle>Hi, {userData?.name || "there"}!</SectionTitle>
+        <SectionTitle>Hi, {dashboardUser?.name || "there"}!</SectionTitle>
 
         {validAnnouncements.length > 0 && (
           <AnnouncementsCard
@@ -59,15 +101,10 @@ const DashboardScreen: React.FC = () => {
           onPress={() => router.push("/dashboard/challenge")}
         />
 
-        <ExpandYourVocabularyCard
-          words={wordsData}
-          loading={isLoading}
-          isDarkMode={isDarkMode}
-        />
-        <CustomButton
-          title="Expand Your Vocabulary"
-          onPress={() => router.push("/dashboard/decks")}
-        />
+        <View>
+          <Subtitle>Top Rated Deck of the Week</Subtitle>
+          {renderTopRatedDeck()}
+        </View>
       </View>
     </ScrollView>
   );
@@ -77,6 +114,12 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     flex: 1,
+    gap: 16,
+  },
+  emptyState: {
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
 

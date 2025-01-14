@@ -253,9 +253,12 @@ class ApiClient {
     });
   }
 
-  async getTopRatedDecks(limit: number = 10) {
+  async getTopRatedDecks(
+    limit: number = 10,
+    timeRange: "week" | "month" | "all" = "all"
+  ) {
     return this.request<Deck[]>(`/deck/top-rated`, {
-      params: { limit },
+      params: { limit, timeRange },
     });
   }
 
