@@ -1,4 +1,11 @@
-import moment from "moment";
+import {
+  format,
+  startOfDay,
+  addDays,
+  subDays,
+  parseISO,
+  isValid,
+} from "date-fns";
 
 export const formatTime = (minutes: number): string => {
   if (minutes === 0) {
@@ -14,26 +21,62 @@ export const formatTime = (minutes: number): string => {
 };
 
 export const getStartOfToday = (): Date => {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  return today;
+  return startOfDay(new Date());
 };
 
 export const getStartOfYesterday = (): Date => {
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  yesterday.setHours(0, 0, 0, 0);
-  return yesterday;
+  return startOfDay(subDays(new Date(), 1));
 };
 
-export const getCurrentDateKey = () => {
+export const getCurrentDateKey = (): string => {
   const resetHourUTC = 2;
-  const now = moment.utc();
-  const todayDateKey = now.format("YYYY-MM-DD");
+  const now = new Date();
+  const utcHour = now.getUTCHours();
 
-  if (now.hour() < resetHourUTC) {
-    return moment.utc().subtract(1, "day").format("YYYY-MM-DD");
+  if (utcHour < resetHourUTC) {
+    return format(subDays(now, 1), "yyyy-MM-dd");
   }
 
-  return todayDateKey;
+  return format(now, "yyyy-MM-dd");
+};
+
+// New utility functions for standardized date handling
+export const formatDate = (
+  date: string | Date,
+  formatStr: string = "yyyy-MM-dd"
+): string => {
+  if (typeof date === "string") {
+    const parsedDate = parseISO(date);
+    if (!isValid(parsedDate)) return "";
+    return format(parsedDate, formatStr);
+  }
+  return format(date, formatStr);
+};
+
+export const parseDate = (dateStr: string): Date | null => {
+  const parsedDate = parseISO(dateStr);
+  return isValid(parsedDate) ? parsedDate : null;
+};
+
+export const toISOString = (date: Date): string => {
+  return date.toISOString();
+};
+
+export const fromISOString = (dateStr: string): Date | null => {
+  return parseDate(dateStr);
+};
+
+export const formatRelative = (date: string | Date): string => {
+  const parsedDate = typeof date === "string" ? parseISO(date) : date;
+  if (!isValid(parsedDate)) return "";
+
+  const now = new Date();
+  const diffInDays = Math.floor(
+    (now.getTime() - parsedDate.getTime()) / (1000 * 60 * 60 * 24)
+  );
+
+  if (diffInDays === 0) return "Today";
+  if (diffInDays === 1) return "Yesterday";
+  if (diffInDays < 7) return format(parsedDate, "EEEE");
+  return format(parsedDate, "dd MMM yyyy");
 };

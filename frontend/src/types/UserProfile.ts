@@ -6,7 +6,7 @@ export interface UserProfile {
   learnedSentences: string[];
   todayAnsweredQuestions: number;
   todayCorrectAnsweredQuestions: number;
-  lastCompleted: Date;
+  lastCompleted: string;
   isAdmin: boolean;
   hasPurchasedExtraContent: boolean;
 }

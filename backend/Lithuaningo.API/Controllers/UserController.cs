@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
 
 [ApiController]
 [Route("api/[controller]")]
@@ -58,31 +59,5 @@ public class UserController : ControllerBase
     {
         await _userService.DeleteUserProfileAsync(userId);
         return NoContent();
-    }
-
-    [HttpGet("leaderboard/daily")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<LeaderboardEntry>))]
-    public async Task<ActionResult<List<LeaderboardEntry>>> GetDailyLeaderboard([FromQuery] int limit = 10)
-    {
-        try
-        {
-            var userProfiles = await _userService.GetDailyLeaderboardAsync(limit);
-            var leaderboard = userProfiles
-                .Where(u => u.TodayAnsweredQuestions > 0)
-                .Select(u => new LeaderboardEntry
-                {
-                    Id = u.Id,
-                    Name = u.Name ?? "Anonymous",
-                    Score = u.TodayCorrectAnsweredQuestions,
-                })
-                .OrderByDescending(e => e.Score)
-                .ToList();
-
-            return Ok(leaderboard);
-        }
-        catch (Exception ex)
-        {
-            return StatusCode(500, $"Error fetching leaderboard: {ex.Message}");
-        }
     }
 }

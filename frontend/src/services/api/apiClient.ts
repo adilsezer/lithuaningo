@@ -18,6 +18,7 @@ import {
   PracticeProgress,
   PracticeStats,
   Report,
+  LeaderboardWeek,
 } from "@src/types";
 
 export class ApiError extends Error {
@@ -504,6 +505,22 @@ class ApiClient {
         resolution,
         reviewedAt: new Date().toISOString(),
       },
+    });
+  }
+
+  // Leaderboard
+  async getCurrentWeekLeaderboard() {
+    return this.request<LeaderboardWeek>("/leaderboard/current");
+  }
+
+  async getWeekLeaderboard(weekId: string) {
+    return this.request<LeaderboardWeek>(`/leaderboard/${weekId}`);
+  }
+
+  async updateLeaderboardScore(userId: string, name: string, score: number) {
+    return this.request(`/leaderboard/entry`, {
+      method: "POST",
+      data: { userId, name, score },
     });
   }
 }

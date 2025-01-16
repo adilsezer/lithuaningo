@@ -1,7 +1,6 @@
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import BackButton from "@components/layout/BackButton";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import {
   SectionTitle,
   Subtitle,

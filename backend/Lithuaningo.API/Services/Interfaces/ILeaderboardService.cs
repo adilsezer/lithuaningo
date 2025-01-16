@@ -6,8 +6,8 @@ namespace Lithuaningo.API.Services.Interfaces
 {
     public interface ILeaderboardService
     {
-        Task<List<LeaderboardEntry>> GetLeaderboardAsync(int? limit = null);
-        Task AddLeaderboardEntryAsync(LeaderboardEntry entry);
-        Task ResetLeaderboardAsync();
+        Task<LeaderboardWeek> GetCurrentWeekLeaderboardAsync();
+        Task<LeaderboardWeek> GetWeekLeaderboardAsync(string weekId);
+        Task UpdateLeaderboardEntryAsync(string userId, string name, int score);
     }
 } 

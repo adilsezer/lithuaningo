@@ -8,5 +8,4 @@ public interface IUserService
     Task<Sentence> GetRandomLearnedSentenceAsync(string userId);
     Task CreateUserProfileAsync(string userId);
     Task DeleteUserProfileAsync(string userId);
-    Task<List<UserProfile>> GetDailyLeaderboardAsync(int limit = 10);
 }

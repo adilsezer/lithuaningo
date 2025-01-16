@@ -15,4 +15,5 @@ public class FirestoreCollectionSettings
     public string Reports { get; set; } = string.Empty;
     public string DeckVotes { get; set; } = string.Empty;
     public string Comments { get; set; } = string.Empty;
+    public string Leaderboards { get; set; } = string.Empty;
 } 

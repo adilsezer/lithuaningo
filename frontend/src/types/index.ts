@@ -1,7 +1,7 @@
 export type { Announcement } from "./Announcement";
 export type { AppInfo } from "./AppInfo";
 export type { Comment } from "./Comment";
-export type { LeaderboardEntry } from "./LeaderboardEntry";
+export * from "./LeaderboardModels";
 export type { Lemma } from "./Lemma";
 export { QuestionType } from "./QuestionType";
 export type { QuizQuestion } from "./QuizQuestion";

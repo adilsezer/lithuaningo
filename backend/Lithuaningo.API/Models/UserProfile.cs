@@ -1,4 +1,5 @@
 using Google.Cloud.Firestore;
+using Lithuaningo.API.Models;
 
 [FirestoreData]
 public class UserProfile
@@ -21,8 +22,8 @@ public class UserProfile
     [FirestoreProperty("todayCorrectAnsweredQuestions")]
     public int TodayCorrectAnsweredQuestions { get; set; } = 0;
 
-    [FirestoreProperty("lastCompleted")]
-    public Timestamp LastCompleted { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
+    [FirestoreProperty("lastCompleted", ConverterType = typeof(TimestampConverter))]
+    public DateTime LastCompleted { get; set; } = DateTime.UtcNow;
 
     [FirestoreProperty("isAdmin")]
     public bool IsAdmin { get; set; } = false;

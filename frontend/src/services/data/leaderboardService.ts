@@ -1,26 +1,49 @@
 import apiClient, { ApiError } from "@services/api/apiClient";
-import { LeaderboardEntry } from "@src/types";
+import { LeaderboardWeek } from "@src/types";
 import crashlytics from "@react-native-firebase/crashlytics";
 
-const getLeaderboardEntries = async (): Promise<LeaderboardEntry[]> => {
+const getCurrentWeekLeaderboard = async (): Promise<LeaderboardWeek | null> => {
   try {
-    return await apiClient.getLeaderboardEntries();
+    return await apiClient.getCurrentWeekLeaderboard();
   } catch (error) {
     if (error instanceof ApiError) {
       crashlytics().recordError(error);
       console.error(`API Error ${error.status}:`, error.data);
     } else {
-      console.error("Error fetching leaderboard:", error);
+      console.error("Error fetching current week leaderboard:", error);
     }
-    return [];
+    return null;
+  }
+};
+
+const getWeekLeaderboard = async (
+  weekId: string
+): Promise<LeaderboardWeek | null> => {
+  try {
+    if (!weekId) {
+      console.error("Week ID is required");
+      return null;
+    }
+    return await apiClient.getWeekLeaderboard(weekId);
+  } catch (error) {
+    if (error instanceof ApiError) {
+      crashlytics().recordError(error);
+      console.error(`API Error ${error.status}:`, error.data);
+    } else {
+      console.error("Error fetching week leaderboard:", error);
+    }
+    return null;
   }
 };
 
 const updateLeaderboardEntry = async (
-  entry: LeaderboardEntry
-): Promise<LeaderboardEntry | undefined> => {
+  userId: string,
+  name: string,
+  score: number
+): Promise<boolean> => {
   try {
-    return (await apiClient.updateLeaderboardEntry(entry)) as LeaderboardEntry;
+    await apiClient.updateLeaderboardScore(userId, name, score);
+    return true;
   } catch (error) {
     if (error instanceof ApiError) {
       crashlytics().recordError(error);
@@ -28,11 +51,12 @@ const updateLeaderboardEntry = async (
     } else {
       console.error("Error updating leaderboard entry:", error);
     }
-    return undefined;
+    return false;
   }
 };
 
 export default {
-  getLeaderboardEntries,
+  getCurrentWeekLeaderboard,
+  getWeekLeaderboard,
   updateLeaderboardEntry,
 };

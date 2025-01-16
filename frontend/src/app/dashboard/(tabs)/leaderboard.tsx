@@ -4,8 +4,8 @@ import FontAwesome from "@expo/vector-icons/FontAwesome";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useLeaderboard } from "@hooks/useLeaderboard";
 import { SectionTitle, Subtitle, SectionText } from "@components/typography";
-import { LeaderboardEntry } from "@src/types/LeaderboardEntry";
 import type { ThemeColors } from "@src/styles/colors";
+import { format } from "date-fns";
 
 type TrophyPosition = 0 | 1 | 2;
 
@@ -57,19 +57,22 @@ const TableHeader = ({ colors }: TableHeaderProps) => (
 );
 
 type LeaderRowProps = {
-  entry: LeaderboardEntry;
+  userId: string;
+  name: string;
+  score: number;
+  rank: number;
   position: number;
   colors: ThemeColors;
 };
 
-const LeaderRow = ({ entry, position, colors }: LeaderRowProps) => (
+const LeaderRow = ({ name, score, rank, position, colors }: LeaderRowProps) => (
   <View style={[styles.row, { borderBottomColor: colors.primary }]}>
-    <SectionText style={[styles.cell, styles.rank]}>{position + 1}</SectionText>
+    <SectionText style={[styles.cell, styles.rank]}>{rank}</SectionText>
     <View style={[styles.cell, styles.nameContainer]}>
-      <SectionText>{entry.name}</SectionText>
+      <SectionText>{name}</SectionText>
       <TrophyIcon position={position} colors={colors} />
     </View>
-    <SectionText style={[styles.cell, styles.score]}>{entry.score}</SectionText>
+    <SectionText style={[styles.cell, styles.score]}>{score}</SectionText>
   </View>
 );
 
@@ -84,20 +87,28 @@ const EmptyState = () => (
 
 const LeaderboardScreen = () => {
   const { colors } = useThemeStyles();
-  const { entries } = useLeaderboard();
+  const { entries, weekId, startDate, endDate } = useLeaderboard();
+
+  const dateRange =
+    startDate && endDate
+      ? `${format(new Date(startDate), "MMM d")} - ${format(
+          new Date(endDate),
+          "MMM d, yyyy"
+        )}`
+      : "This Week";
 
   return (
     <ScrollView style={styles.container}>
       <SectionTitle>Leaderboard</SectionTitle>
-      <Subtitle>Top Correct Answers This Week</Subtitle>
+      <Subtitle>{dateRange}</Subtitle>
 
       <TableHeader colors={colors} />
 
       {entries.length > 0 ? (
         entries.map((entry, index) => (
           <LeaderRow
-            key={entry.id}
-            entry={entry}
+            key={entry.userId}
+            {...entry}
             position={index}
             colors={colors}
           />

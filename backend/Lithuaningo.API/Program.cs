@@ -112,6 +112,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<IStorageService, StorageService>();
     services.AddScoped<ICommentService, CommentService>();
     services.AddScoped<IReportService, ReportService>();
+    services.AddScoped<ILeaderboardService, LeaderboardService>();
     
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();

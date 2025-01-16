@@ -93,28 +93,14 @@ namespace Lithuaningo.API.Services
 
         public async Task DeleteUserProfileAsync(string userId)
         {
-            await _db.Collection(_collectionName)
-                .Document(userId)
-                .DeleteAsync();
-        }
-
-        public async Task<List<UserProfile>> GetDailyLeaderboardAsync(int limit = 10)
-        {
             try
             {
-                var snapshot = await _db.Collection(_collectionName)
-                    .WhereGreaterThan("TodayAnsweredQuestions", 0)
-                    .OrderByDescending("TodayCorrectAnsweredQuestions")
-                    .Limit(limit)
-                    .GetSnapshotAsync();
-
-                return snapshot.Documents
-                    .Select(d => d.ConvertTo<UserProfile>())
-                    .ToList();
+                var docRef = _db.Collection(_collectionName).Document(userId);
+                await docRef.DeleteAsync();
             }
             catch (Exception ex)
             {
-                Console.Error.WriteLine($"Error getting daily leaderboard: {ex.Message}");
+                Console.Error.WriteLine($"Error deleting user profile: {ex.Message}");
                 throw;
             }
         }
