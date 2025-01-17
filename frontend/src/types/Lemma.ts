@@ -1,6 +1,6 @@
 export interface Lemma {
   id: string;
-  lemma_text: string;
+  lemmaText: string;
   partOfSpeech: string;
   translation: string;
   definitions: string[];

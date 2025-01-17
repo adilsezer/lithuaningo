@@ -7,7 +7,7 @@ namespace Lithuaningo.API.Models
     public class Comment
     {
         [FirestoreDocumentId]
-        public string? Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [FirestoreProperty("deckId")]
         public string DeckId { get; set; } = string.Empty;
@@ -25,7 +25,7 @@ namespace Lithuaningo.API.Models
         public DateTime CreatedAt { get; set; }
 
         [FirestoreProperty("updatedAt")]
-        public DateTime? UpdatedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
 
         [FirestoreProperty("likes")]
         public int Likes { get; set; }

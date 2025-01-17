@@ -102,7 +102,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 
     // Core Services
     services.AddScoped<IUserService, UserService>();
-    services.AddScoped<ISentenceService, SentenceService>();
+    services.AddScoped<IUserStatsService, UserStatsService>();
     services.AddScoped<IWordService, WordService>();
     services.AddScoped<IAnnouncementService, AnnouncementService>();
     services.AddScoped<IAppInfoService, AppInfoService>();
@@ -136,7 +136,6 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddControllers()
             .AddApplicationPart(typeof(UserController).Assembly)
             .AddApplicationPart(typeof(WordController).Assembly)
-            .AddApplicationPart(typeof(SentenceController).Assembly)
             .AddApplicationPart(typeof(QuizController).Assembly)
             .AddApplicationPart(typeof(AnnouncementController).Assembly)
             .AddApplicationPart(typeof(AppInfoController).Assembly)

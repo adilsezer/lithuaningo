@@ -7,7 +7,7 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { QUIZ_KEYS } from "@config/constants";
 import { QuizQuestion } from "@src/types";
 import { useQuizQuestions } from "@hooks/useQuizQuestions";
-import { useUserProfile } from "@hooks/useUserProfile";
+import { useUserStats } from "@hooks/useUserStats";
 import { router } from "expo-router";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
@@ -19,7 +19,7 @@ export const useQuiz = () => {
   const { questions, loading, error, refetchQuestions } = useQuizQuestions();
   const userData = useAppSelector(selectUserData);
   const dispatch = useAppDispatch();
-  const { updateAnswerStats } = useUserProfile();
+  const { updateAnswerStats } = useUserStats();
 
   const getStorageKey = (
     keyFunc: (userId: string, dateKey: string) => string

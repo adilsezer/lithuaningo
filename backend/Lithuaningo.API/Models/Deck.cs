@@ -8,7 +8,7 @@ namespace Lithuaningo.API.Models;
 public class Deck
 {
     [FirestoreDocumentId]
-    public string? Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [FirestoreProperty("title")]
     public string Title { get; set; } = string.Empty;

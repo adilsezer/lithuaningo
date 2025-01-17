@@ -19,18 +19,7 @@ export const useUserProfile = () => {
     fetchProfile();
   }, [userId]);
 
-  const updateAnswerStats = async (isCorrect: boolean) => {
-    if (!userId || __DEV__) return;
-
-    try {
-      await userProfileService.updateUserStats(userId, isCorrect);
-    } catch (error) {
-      console.error("Error updating user stats:", error);
-    }
-  };
-
   return {
     profile,
-    updateAnswerStats,
   };
 };

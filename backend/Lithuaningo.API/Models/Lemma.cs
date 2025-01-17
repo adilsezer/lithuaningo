@@ -10,9 +10,9 @@ public class Lemma
     public string Id { get; set; } = string.Empty;
 
     [FirestoreProperty("lemma")]
-    public string Lemma_Text { get; set; } = string.Empty;
+    public string LemmaText { get; set; } = string.Empty;
 
-    [FirestoreProperty("part_of_speech")]
+    [FirestoreProperty("partOfSpeech")]
     public string PartOfSpeech { get; set; } = string.Empty;
 
     [FirestoreProperty("translation")]
@@ -26,11 +26,11 @@ public class Lemma
 
     [FirestoreProperty("examples")]
     public List<string> Examples { get; set; } = new List<string>();
-    
-    [FirestoreProperty("image_url")]
+
+    [FirestoreProperty("imageUrl")]
     public string ImageUrl { get; set; } = string.Empty;
 
-    [FirestoreProperty("audio_url")]
+    [FirestoreProperty("audioUrl")]
     public string AudioUrl { get; set; } = string.Empty;
 
     [FirestoreProperty("notes")]

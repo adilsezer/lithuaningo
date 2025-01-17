@@ -5,12 +5,10 @@ import {
   Lemma,
   WordForm,
   QuizQuestion,
-  Sentence,
   UserProfile,
   Announcement,
   AppInfo,
   LeaderboardEntry,
-  DashboardWord,
   Deck,
   Flashcard,
   Comment,
@@ -19,6 +17,7 @@ import {
   PracticeStats,
   Report,
   LeaderboardWeek,
+  UserStats,
 } from "@src/types";
 
 export class ApiError extends Error {
@@ -123,31 +122,6 @@ class ApiClient {
     return this.request<UserProfile>(`/user/${userId}`);
   }
 
-  async getSentences(userId: string) {
-    return this.request<Sentence[]>(`/user/sentences`, {
-      params: { userId },
-    });
-  }
-
-  async getLearnedSentences(userId: string) {
-    return this.request<Sentence[]>(`/user/learned-sentences`, {
-      params: { userId },
-    });
-  }
-
-  async addLearnedSentences(userId: string, sentenceIds: string[]) {
-    return this.request(`/user/learned-sentences`, {
-      method: "POST",
-      data: { userId, sentenceIds },
-    });
-  }
-
-  async getLastNLearnedSentences(userId: string, count: number) {
-    return this.request<Sentence[]>(`/user/last-n-learned-sentences`, {
-      params: { userId, count },
-    });
-  }
-
   async createUserProfile(userId: string) {
     return this.request(`/user/create-user-profile`, {
       method: "POST",
@@ -185,18 +159,6 @@ class ApiClient {
     return this.request(`/leaderboard`, {
       method: "PUT",
       data: entry,
-    });
-  }
-
-  async getRandomSentence(limit: number = 1) {
-    return this.request<Sentence>(`/sentence/random`, {
-      params: { limit },
-    });
-  }
-
-  async getRandomWords(count: number = 5) {
-    return this.request<DashboardWord[]>(`/word/random`, {
-      params: { count },
     });
   }
 
@@ -521,6 +483,18 @@ class ApiClient {
     return this.request(`/leaderboard/entry`, {
       method: "POST",
       data: { userId, name, score },
+    });
+  }
+
+  // User Stats
+  async getUserStats(userId: string) {
+    return this.request<UserStats>(`/user/${userId}/stats`);
+  }
+
+  async updateUserStats(stats: UserStats) {
+    return this.request<void>(`/user/${stats.userId}/stats`, {
+      method: "PUT",
+      data: stats,
     });
   }
 }

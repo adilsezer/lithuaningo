@@ -1,5 +1,5 @@
 export interface Flashcard {
-  id?: string;
+  id: string;
   deckId: string;
   front: string;
   back: string;
@@ -7,7 +7,7 @@ export interface Flashcard {
   imageUrl?: string;
   exampleSentence?: string;
   createdBy: string;
-  createdAt: string;
+  createdAt: Date;
 }
 
 export interface FlashcardFormData extends Omit<Flashcard, "id" | "createdAt"> {

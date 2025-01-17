@@ -10,10 +10,9 @@ export type {
   PracticeProgress,
   PracticeStats,
 } from "@services/data/practiceService";
-export type { Sentence } from "./Sentence";
 export type { UserProfile } from "./UserProfile";
+export type { UserStats } from "./UserStats";
 export type { WordForm } from "./WordForm";
-export type { DashboardWord } from "./DashboardWord";
 export type { Deck } from "./Deck";
 export * from "./Flashcard";
 export type { Report } from "./Report";

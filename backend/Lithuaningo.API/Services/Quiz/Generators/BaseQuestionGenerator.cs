@@ -20,7 +20,7 @@ public abstract class BaseQuestionGenerator : IQuestionGenerator
         RandomGenerator = randomGenerator;
     }
 
-    public abstract Task<QuizQuestion> GenerateQuestion(Sentence sentence, string userId, Dictionary<string, WordForm> wordFormsCache);
+    public abstract Task<QuizQuestion> GenerateQuestion(string userId, Dictionary<string, WordForm> wordFormsCache);
 
     protected WordForm GetRandomValidWord(string sentence, Dictionary<string, WordForm> wordFormsCache, string? excludeWord = null)
     {

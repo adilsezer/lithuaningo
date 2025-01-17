@@ -7,7 +7,7 @@ namespace Lithuaningo.API.Models;
 public class DeckVote
 {
     [FirestoreDocumentId]
-    public string? Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [FirestoreProperty("userId")]
     public string UserId { get; set; } = string.Empty;

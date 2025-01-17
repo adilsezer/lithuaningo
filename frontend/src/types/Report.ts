@@ -1,13 +1,13 @@
 export interface Report {
-  id?: string;
+  id: string;
   contentType: string;
   contentId: string;
   reason: string;
   details: string;
   reportedBy: string;
-  createdAt?: string;
+  createdAt: Date;
   status: "pending" | "reviewed" | "resolved" | "rejected";
-  reviewedBy?: string;
-  reviewedAt?: string;
-  resolution?: string;
+  reviewedBy?: string | null;
+  reviewedAt?: Date | null;
+  resolution?: string | null;
 }

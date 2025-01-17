@@ -1,5 +1,4 @@
 using Google.Cloud.Firestore;
-using Lithuaningo.API.Models;
 
 [FirestoreData]
 public class UserProfile
@@ -13,17 +12,8 @@ public class UserProfile
     [FirestoreProperty("email")]
     public string Email { get; set; } = string.Empty;
 
-    [FirestoreProperty("learnedSentences")]
-    public List<string> LearnedSentences { get; set; } = new();
-
-    [FirestoreProperty("todayAnsweredQuestions")]
-    public int TodayAnsweredQuestions { get; set; } = 0;
-
-    [FirestoreProperty("todayCorrectAnsweredQuestions")]
-    public int TodayCorrectAnsweredQuestions { get; set; } = 0;
-
-    [FirestoreProperty("lastCompleted", ConverterType = typeof(TimestampConverter))]
-    public DateTime LastCompleted { get; set; } = DateTime.UtcNow;
+    [FirestoreProperty("emailVerified")]
+    public bool EmailVerified { get; set; } = false;
 
     [FirestoreProperty("isAdmin")]
     public bool IsAdmin { get; set; } = false;

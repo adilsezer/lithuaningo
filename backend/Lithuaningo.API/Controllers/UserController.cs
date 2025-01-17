@@ -25,15 +25,6 @@ public class UserController : ControllerBase
         return userProfile != null ? Ok(userProfile) : NotFound();
     }
 
-    [HttpPost("learned-sentences")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult> AddUserLearnedSentences(string userId, [FromBody] List<string> sentenceIds)
-    {
-        await _userService.AddUserLearnedSentencesAsync(userId, sentenceIds);
-        return NoContent();
-    }
-
     [HttpPost("create-user-profile")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

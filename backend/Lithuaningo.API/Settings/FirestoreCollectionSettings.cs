@@ -4,8 +4,8 @@ public class FirestoreCollectionSettings
 {
     public string Flashcards { get; set; } = string.Empty;
     public string Users { get; set; } = string.Empty;
+    public string UserStats { get; set; } = string.Empty;
     public string Words { get; set; } = string.Empty;
-    public string Sentences { get; set; } = string.Empty;
     public string Decks { get; set; } = string.Empty;
     public string Practices { get; set; } = string.Empty;
     public string Announcements { get; set; } = string.Empty;

@@ -11,22 +11,11 @@ public class FillInBlankQuestionGenerator : BaseQuestionGenerator
         : base(wordService, randomGenerator) { }
 
     public override Task<QuizQuestion> GenerateQuestion(
-        Sentence sentence,
         string userId,
         Dictionary<string, WordForm> wordFormsCache)
     {
-        var missingWord = GetRandomValidWord(sentence.Text, wordFormsCache);
-
-        var question = new QuizQuestion
-        {
-            QuestionType = QuestionType.FillInTheBlank,
-            QuestionText = "Fill in the blank in the following sentence:",
-            SentenceText = ReplaceWholeWord(sentence.Text, missingWord.Word, "_____"),
-            CorrectAnswer = missingWord.Word,
-            Options = []
-        };
-
-        return Task.FromResult(question);
+        // to be implemented
+        return Task.FromResult(new QuizQuestion());
     }
 
     private static string ReplaceWholeWord(string text, string wordToReplace, string replacement)

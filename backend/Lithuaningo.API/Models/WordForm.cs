@@ -12,13 +12,13 @@ public class WordForm
     [FirestoreProperty("word")]
     public string Word { get; set; } = string.Empty;
 
-    [FirestoreProperty("lemma_id")]
+    [FirestoreProperty("lemmaId")]
     public string LemmaId { get; set; } = string.Empty;
 
-    [FirestoreProperty("lt_attributes")]
+    [FirestoreProperty("ltAttributes")]
     public string LtAttributes { get; set; } = string.Empty;
 
-    [FirestoreProperty("en_attributes")]
+    [FirestoreProperty("enAttributes")]
     public string EnAttributes { get; set; } = string.Empty;
 
     [FirestoreProperty("notes")]

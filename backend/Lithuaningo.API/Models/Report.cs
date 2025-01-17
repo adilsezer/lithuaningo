@@ -7,7 +7,7 @@ namespace Lithuaningo.API.Models
     public class Report
     {
         [FirestoreDocumentId]
-        public string? Id { get; set; }
+        public string Id { get; set; } = string.Empty;
 
         [FirestoreProperty("contentType")]
         public string ContentType { get; set; } = string.Empty; // "deck" or "flashcard"

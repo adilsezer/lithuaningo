@@ -14,7 +14,6 @@ public interface IQuestionGenerator
     /// <param name="wordFormsCache">Pre-cached word forms to avoid duplicate service calls</param>
     /// <returns>A generated quiz question</returns>
     Task<QuizQuestion> GenerateQuestion(
-        Sentence sentence,
         string userId,
         Dictionary<string, WordForm> wordFormsCache);
 } 

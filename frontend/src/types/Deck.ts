@@ -5,7 +5,7 @@ export interface Deck {
   category: string;
   createdBy: string;
   createdByUsername: string;
-  createdAt: string;
+  createdAt: Date;
   tags: string[];
   flashcardCount: number;
 }

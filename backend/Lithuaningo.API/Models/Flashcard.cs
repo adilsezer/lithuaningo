@@ -5,7 +5,7 @@ using System;
 public class Flashcard
 {
     [FirestoreDocumentId]
-    public string? Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [FirestoreProperty("deckId")]
     public string DeckId { get; set; } = string.Empty;

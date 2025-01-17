@@ -23,33 +23,11 @@ public class TrueFalseQuestionGenerator : BaseQuestionGenerator
         : base(wordService, randomGenerator) { }
 
     public override async Task<QuizQuestion> GenerateQuestion(
-        Sentence sentence,
         string userId,
         Dictionary<string, WordForm> wordFormsCache)
     {
-        var isTrue = RandomGenerator.Next(2) == 0;
-        var (word, translation, enAttributes, partOfSpeech, differentProperties) =
-            await GetWordAndTranslation(sentence.Text, isTrue, wordFormsCache);
-
-        var availableTemplates = isTrue
-            ? QuestionTemplates
-            : QuestionTemplates.Where((t, index) =>
-                (index == 0 && differentProperties.HasFlag(DifferentProperties.Translation)) ||
-                (index == 1 && differentProperties.HasFlag(DifferentProperties.Attributes)) ||
-                (index == 2 && differentProperties.HasFlag(DifferentProperties.PartOfSpeech)))
-                .ToArray();
-
-        var templateIndex = RandomGenerator.Next(availableTemplates.Length);
-        var (_, formatFunc) = availableTemplates[templateIndex];
-
-        return new QuizQuestion
-        {
-            QuestionType = QuestionType.TrueFalse,
-            QuestionText = formatFunc(word, translation, enAttributes, partOfSpeech),
-            SentenceText = sentence.Text,
-            CorrectAnswer = isTrue ? "True" : "False",
-            Options = ["True", "False"]
-        };
+        // to be implemented
+        return await Task.FromResult(new QuizQuestion());
     }
 
     [Flags]

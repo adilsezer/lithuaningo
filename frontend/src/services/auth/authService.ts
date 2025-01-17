@@ -43,7 +43,26 @@ const handleAuthError = (error: any): AuthResponse => {
   };
 };
 
-const updateUserState = async (
+const updateEmailVerificationStatus = async (user: FirebaseAuthTypes.User) => {
+  try {
+    const userProfile = await apiClient.getUserProfile(user.uid);
+    if (userProfile && userProfile.emailVerified !== user.emailVerified) {
+      await apiClient.updateUserProfile({
+        ...userProfile,
+        emailVerified: user.emailVerified,
+      });
+    }
+  } catch (error) {
+    console.error("Error updating email verification status:", error);
+    if (error instanceof Error) {
+      crashlytics().recordError(error);
+    } else {
+      crashlytics().recordError(new Error(String(error)));
+    }
+  }
+};
+
+export const updateUserState = async (
   user: FirebaseAuthTypes.User,
   dispatch: AppDispatch
 ) => {
@@ -51,16 +70,17 @@ const updateUserState = async (
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  if (user.emailVerified) {
-    dispatch(
-      logIn({
-        id: user.uid,
-        name: user.displayName || null,
-        email: user.email,
-        emailVerified: user.emailVerified,
-      })
-    );
-  }
+  dispatch(
+    logIn({
+      id: user.uid,
+      name: user.displayName || "No Name",
+      email: user.email,
+      emailVerified: user.emailVerified,
+    })
+  );
+
+  // Update email verification status in Firestore
+  await updateEmailVerificationStatus(user);
 };
 
 const ensureUserProfile = async (user: FirebaseAuthTypes.User) => {
@@ -70,6 +90,7 @@ const ensureUserProfile = async (user: FirebaseAuthTypes.User) => {
     const newUserProfile = await apiClient.getUserProfile(user.uid);
     newUserProfile.name = user.displayName || "No Name";
     newUserProfile.email = user.email || "";
+    newUserProfile.emailVerified = user.emailVerified;
     await apiClient.updateUserProfile(newUserProfile);
   }
 };
@@ -129,8 +150,14 @@ export const signInWithEmail = async (
   try {
     const { user } = await auth().signInWithEmailAndPassword(email, password);
     if (!user.emailVerified) {
+      // Sign out immediately if email is not verified
+      await auth().signOut();
       await sendEmailVerification(dispatch);
-      throw new Error("Please verify your email before logging in.");
+      return {
+        success: false,
+        message:
+          "Please verify your email before logging in. A new verification email has been sent.",
+      };
     }
     await ensureUserProfile(user);
     await updateUserState(user, dispatch);
