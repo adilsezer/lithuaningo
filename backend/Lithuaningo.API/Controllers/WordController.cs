@@ -41,13 +41,5 @@ namespace Lithuaningo.API.Controllers
 
             return Ok(result);
         }
-
-        [HttpGet("random")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(List<DashboardWord>))]
-        public async Task<ActionResult<List<DashboardWord>>> GetRandomWordsOfTheDay([FromQuery] int count = 5)
-        {
-            var result = await _wordService.GetRandomWordsOfTheDay(count);
-            return Ok(result);
-        }
     }
 }
