@@ -34,7 +34,26 @@ namespace Lithuaningo.API.Services
                 .GetSnapshotAsync();
 
             if (!doc.Exists)
-                throw new Exception("User stats not found");
+            {
+                // Create default stats if they don't exist
+                var defaultStats = new UserStats
+                {
+                    UserId = userId,
+                    Level = 1,
+                    ExperiencePoints = 0,
+                    DailyStreak = 0,
+                    LastStreakUpdate = DateTime.UtcNow,
+                    TotalWordsLearned = 0,
+                    LearnedWordIds = new List<string>(),
+                    TotalQuizzesCompleted = 0,
+                    TodayAnsweredQuestions = 0,
+                    TodayCorrectAnsweredQuestions = 0,
+                    LastActivityTime = DateTime.UtcNow
+                };
+
+                await UpdateUserStatsAsync(defaultStats);
+                return defaultStats;
+            }
 
             return doc.ConvertTo<UserStats>();
         }
@@ -50,15 +69,6 @@ namespace Lithuaningo.API.Services
             await _db.Collection(_collectionName)
                 .Document(userStats.UserId)
                 .SetAsync(userStats);
-        }
-
-        public async Task CreateUserStatsAsync(string userId)
-        {
-            if (string.IsNullOrEmpty(userId))
-                throw new ArgumentNullException(nameof(userId));
-
-            var userStats = new UserStats { UserId = userId };
-            await UpdateUserStatsAsync(userStats);
         }
 
         public async Task UpdateDailyStreakAsync(string userId)

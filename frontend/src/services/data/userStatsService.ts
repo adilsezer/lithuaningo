@@ -1,12 +1,33 @@
 import apiClient from "@services/api/apiClient";
 import { UserStats } from "@src/types";
 
-const fetchUserStats = async (userId: string): Promise<UserStats | null> => {
+const createDefaultStats = (userId: string): UserStats => ({
+  userId,
+  level: 1,
+  experiencePoints: 0,
+  dailyStreak: 0,
+  lastStreakUpdate: new Date(),
+  totalWordsLearned: 0,
+  learnedWordIds: [],
+  totalQuizzesCompleted: 0,
+  todayAnsweredQuestions: 0,
+  todayCorrectAnsweredQuestions: 0,
+  lastActivityTime: new Date(),
+});
+
+const fetchUserStats = async (userId: string): Promise<UserStats> => {
   try {
-    return await apiClient.getUserStats(userId);
-  } catch (error) {
+    const stats = await apiClient.getUserStats(userId);
+    return stats;
+  } catch (error: any) {
+    if (error?.status === 404) {
+      // If stats don't exist, create them
+      const defaultStats = createDefaultStats(userId);
+      await apiClient.createUserStats(defaultStats);
+      return defaultStats;
+    }
     console.error("Error fetching user stats:", error);
-    return null;
+    throw error;
   }
 };
 

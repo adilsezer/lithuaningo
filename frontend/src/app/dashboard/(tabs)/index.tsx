@@ -6,7 +6,9 @@ import { router } from "expo-router";
 import { SectionTitle, Subtitle } from "@components/typography";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
+import { UserStatsCard } from "@components/dashboard/UserStatsCard";
 import { useDashboard } from "@hooks/useDashboard";
+import { useUserStats } from "@hooks/useUserStats";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useDecks } from "@hooks/useDecks";
 import { DeckCard } from "@components/deck/DeckCard";
@@ -19,11 +21,11 @@ const DashboardScreen: React.FC = () => {
   const {
     userData: dashboardUser,
     validAnnouncements,
-    profile,
-    error,
+    error: dashboardError,
     clearError,
-    fetchDashboardData,
   } = useDashboard();
+
+  const { stats, error: statsError } = useUserStats();
 
   const {
     decks: topRatedDecks,
@@ -48,13 +50,12 @@ const DashboardScreen: React.FC = () => {
     [userData?.id, voteDeck]
   );
 
-  if (error) {
+  if (dashboardError || statsError) {
     return (
       <ErrorMessage
-        message={error}
+        message={dashboardError || statsError || "An error occurred"}
         onRetry={() => {
           clearError();
-          fetchDashboardData();
         }}
         fullScreen
       />
@@ -84,6 +85,8 @@ const DashboardScreen: React.FC = () => {
       <View style={styles.container}>
         <SectionTitle>Hi, {dashboardUser?.name || "there"}!</SectionTitle>
 
+        {stats && <UserStatsCard stats={stats} />}
+
         {validAnnouncements.length > 0 && (
           <AnnouncementsCard
             announcements={validAnnouncements}
@@ -92,8 +95,8 @@ const DashboardScreen: React.FC = () => {
         )}
 
         <DailyChallengeCard
-          answeredQuestions={profile?.todayAnsweredQuestions ?? 0}
-          correctAnswers={profile?.todayCorrectAnsweredQuestions ?? 0}
+          answeredQuestions={stats?.todayAnsweredQuestions ?? 0}
+          correctAnswers={stats?.todayCorrectAnsweredQuestions ?? 0}
           colors={colors}
         />
         <CustomButton

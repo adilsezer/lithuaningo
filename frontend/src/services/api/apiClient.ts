@@ -491,6 +491,13 @@ class ApiClient {
     return this.request<UserStats>(`/user/${userId}/stats`);
   }
 
+  async createUserStats(stats: UserStats) {
+    return this.request<UserStats>(`/user/${stats.userId}/stats`, {
+      method: "POST",
+      data: stats,
+    });
+  }
+
   async updateUserStats(stats: UserStats) {
     return this.request<void>(`/user/${stats.userId}/stats`, {
       method: "PUT",
