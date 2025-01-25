@@ -6,8 +6,7 @@ import { useThemeStyles } from "@hooks/useThemeStyles";
 import { SectionTitle } from "@components/typography";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
 import { PracticeStats } from "@components/flashcard/PracticeStats";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserData } from "@stores/useUserStore";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
 import { usePracticeStats } from "@hooks/usePracticeStats";
@@ -16,7 +15,7 @@ export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
   const { fetchDeckFlashcards, flashcards, isLoading, error } = useFlashcards();
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
   const { currentIndex, setCurrentIndex, handleAnswer, completeSession } =
     usePracticeStats(id as string, userData?.id);
 

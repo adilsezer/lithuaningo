@@ -14,8 +14,8 @@ class DeckService {
     return apiClient.getUserDecks(userId);
   }
 
-  async createDeck(deck: Deck) {
-    return apiClient.createDeck(deck);
+  async createDeck(deck: Omit<Deck, "id">) {
+    return apiClient.createDeck(deck as Deck);
   }
 
   async updateDeck(id: string, deck: Deck) {

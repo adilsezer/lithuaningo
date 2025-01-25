@@ -1,19 +1,27 @@
-import { useState, useEffect } from "react";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useState, useCallback, useEffect } from "react";
+import { useUserData } from "@stores/useUserStore";
+import {
+  useIsLoading,
+  useSetLoading,
+  useError,
+  useSetError,
+} from "@stores/useUIStore";
 import { UserStats } from "@src/types";
 import { userStatsService } from "@services/data/userStatsService";
 
 export const useUserStats = () => {
-  const { id: userId } = useAppSelector(selectUserData) ?? {};
+  const userData = useUserData();
+  const userId = userData?.id;
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
+  const setError = useSetError();
+  const error = useError();
   const [stats, setStats] = useState<UserStats | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     if (!userId) return;
 
-    setIsLoading(true);
+    setLoading(true);
     setError(null);
     try {
       const userStats = await userStatsService.fetchUserStats(userId);
@@ -22,25 +30,25 @@ export const useUserStats = () => {
       setError("Failed to fetch user stats");
       console.error("Error fetching user stats:", err);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
-  };
+  }, [userId, setLoading, setError]);
 
-  const incrementQuizzesCompleted = async () => {
+  const incrementQuizzesCompleted = useCallback(async () => {
     if (!userId) return;
 
     try {
       await userStatsService.incrementQuizzesCompleted(userId);
       await fetchStats(); // Refresh stats after update
     } catch (err) {
+      setError("Failed to increment quizzes");
       console.error("Error incrementing quizzes completed:", err);
-      throw err;
     }
-  };
+  }, [userId, fetchStats, setError]);
 
   useEffect(() => {
     fetchStats();
-  }, [userId]);
+  }, [fetchStats]);
 
   return {
     stats,

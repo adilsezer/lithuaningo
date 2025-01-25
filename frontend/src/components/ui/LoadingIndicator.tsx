@@ -6,8 +6,7 @@ import {
   Modal,
   ViewStyle,
 } from "react-native";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsLoading } from "@redux/slices/uiSlice";
+import { useIsLoading } from "@stores/useUIStore";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 
 interface LoadingIndicatorProps {
@@ -47,7 +46,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
     color || (useTheme && themeColors?.active) || DEFAULT_COLOR;
   const backgroundColor = (useTheme && themeColors?.background) || "#FFFFFF";
 
-  const globalIsLoading = useAppSelector(selectIsLoading);
+  const globalIsLoading = useIsLoading();
   const [showLoading, setShowLoading] = useState(false);
   const [delayedIsLoading, setDelayedIsLoading] = useState(false);
 

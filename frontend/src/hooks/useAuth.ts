@@ -1,4 +1,4 @@
-import { useAppDispatch } from "@redux/hooks";
+import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
 import {
   signUpWithEmail,
@@ -22,7 +22,6 @@ import { useCallback } from "react";
 export type SocialProvider = "google" | "apple";
 
 export const useAuth = () => {
-  const dispatch = useAppDispatch();
   const router = useRouter();
   const { performAuthOperation, error, clearError } = useAuthOperation();
 
@@ -38,7 +37,7 @@ export const useAuth = () => {
   const signUp = useCallback(
     async (email: string, password: string, name: string) => {
       const result = await performAuthOperation(async () => {
-        const response = await signUpWithEmail(email, password, name, dispatch);
+        const response = await signUpWithEmail(email, password, name);
         if (response.success) {
           crashlytics().log("User signed up successfully");
           AlertDialog.show({
@@ -54,13 +53,13 @@ export const useAuth = () => {
       }, "Sign Up Failed");
       return result;
     },
-    [dispatch, performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth]
   );
 
   const signIn = useCallback(
     async (email: string, password: string) => {
       const result = await performAuthOperation(async () => {
-        const response = await signInWithEmail(email, password, dispatch);
+        const response = await signInWithEmail(email, password);
         if (response.success) {
           crashlytics().log("User signed in with email");
           navigateAfterAuth("/dashboard");
@@ -69,13 +68,13 @@ export const useAuth = () => {
       }, "Login Failed");
       return result;
     },
-    [dispatch, performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth]
   );
 
   const signInWithSocial = useCallback(
     async (provider: SocialProvider) => {
       const result = await performAuthOperation(async () => {
-        const response = await signInWithSocialProvider(provider, dispatch);
+        const response = await signInWithSocialProvider(provider);
         if (response.success) {
           crashlytics().log(`User signed in with ${provider}`);
           navigateAfterAuth("/dashboard");
@@ -84,12 +83,12 @@ export const useAuth = () => {
       }, `${provider} Login Failed`);
       return result;
     },
-    [dispatch, performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth]
   );
 
   const handleSignOut = useCallback(async () => {
     const result = await performAuthOperation(async () => {
-      const response = await signOut(dispatch);
+      const response = await signOut();
       if (response.success) {
         crashlytics().log("User signed out");
         navigateAfterAuth("/");
@@ -97,17 +96,13 @@ export const useAuth = () => {
       return response;
     }, "Sign Out Failed");
     return result;
-  }, [dispatch, performAuthOperation, navigateAfterAuth]);
+  }, [performAuthOperation, navigateAfterAuth]);
 
   // Profile management
   const handleUpdateProfile = useCallback(
     async (currentPassword: string, updates: any) => {
       const result = await performAuthOperation(async () => {
-        const response = await updateProfile(
-          currentPassword,
-          updates,
-          dispatch
-        );
+        const response = await updateProfile(currentPassword, updates);
         if (response.success) {
           crashlytics().log("User profile updated");
           navigateAfterAuth("/dashboard/profile");
@@ -116,17 +111,13 @@ export const useAuth = () => {
       }, "Profile Update Failed");
       return result;
     },
-    [dispatch, performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth]
   );
 
   const handleUpdatePassword = useCallback(
     async (currentPassword: string, newPassword: string) => {
       const result = await performAuthOperation(async () => {
-        const response = await updatePassword(
-          currentPassword,
-          newPassword,
-          dispatch
-        );
+        const response = await updatePassword(currentPassword, newPassword);
         if (response.success) {
           crashlytics().log("User password updated");
           navigateAfterAuth("/dashboard/profile");
@@ -135,7 +126,7 @@ export const useAuth = () => {
       }, "Password Update Failed");
       return result;
     },
-    [dispatch, performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth]
   );
 
   const handleResetPassword = useCallback(
@@ -157,7 +148,7 @@ export const useAuth = () => {
   const handleDeleteAccount = useCallback(
     async (currentPassword?: string) => {
       const result = await performAuthOperation(async () => {
-        const response = await deleteAccount(currentPassword, dispatch);
+        const response = await deleteAccount(currentPassword);
         if (response.success) {
           const user = auth().currentUser;
           if (user) {
@@ -170,20 +161,20 @@ export const useAuth = () => {
       }, "Account Deletion Failed");
       return result;
     },
-    [dispatch, performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth]
   );
 
   const handleReauthenticate = useCallback(
     async (credential: FirebaseAuthTypes.AuthCredential) => {
       return await performAuthOperation(async () => {
-        const response = await reauthenticateUser(credential, dispatch);
+        const response = await reauthenticateUser(credential);
         if (response.success) {
           crashlytics().log("User reauthenticated");
         }
         return response;
       }, "Reauthentication Failed");
     },
-    [dispatch, performAuthOperation]
+    [performAuthOperation]
   );
 
   return {

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "@components/ui/CustomButton";
@@ -12,16 +12,19 @@ import { useUserStats } from "@hooks/useUserStats";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useDecks } from "@hooks/useDecks";
 import { DeckCard } from "@components/deck/DeckCard";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserData } from "@stores/useUserStore";
+import { useError, useSetError, useIsLoading } from "@stores/useUIStore";
 
 const DashboardScreen: React.FC = () => {
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
+  const error = useError();
+  const setError = useSetError();
+  const isLoading = useIsLoading();
+  
   const {
     userData: dashboardUser,
     validAnnouncements,
-    error: dashboardError,
     clearError,
   } = useDashboard();
 
@@ -34,27 +37,34 @@ const DashboardScreen: React.FC = () => {
     fetchDecks,
   } = useDecks(userData?.id, { initialCategory: "Top" });
 
+  // Set global error state when component-specific errors occur
+  useEffect(() => {
+    if (statsError) {
+      setError(statsError);
+    }
+  }, [statsError, setError]);
+
   React.useEffect(() => {
     fetchDecks();
   }, [fetchDecks]);
 
   const handleDeckActions = React.useCallback(
     (deckId: string) => ({
-      onVote: (isUpvote: boolean) =>
-        userData?.id && voteDeck(deckId, userData.id, isUpvote),
+      onVote: (isUpvote: boolean) => voteDeck(deckId, isUpvote),
       onReport: () => router.push(`/decks/${deckId}/report`),
       onComment: () => router.push(`/decks/${deckId}/comments`),
       onQuiz: () => router.push(`/decks/${deckId}/quiz`),
       onPractice: () => router.push(`/decks/${deckId}`),
     }),
-    [userData?.id, voteDeck]
+    [voteDeck, router]
   );
 
-  if (dashboardError || statsError) {
+  if (error) {
     return (
       <ErrorMessage
-        message={dashboardError || statsError || "An error occurred"}
+        message={error}
         onRetry={() => {
+          setError(null);
           clearError();
         }}
         fullScreen
@@ -62,7 +72,7 @@ const DashboardScreen: React.FC = () => {
     );
   }
 
-  const renderTopRatedDeck = () => {
+  const renderTopRatedDeck = React.useCallback(() => {
     if (topRatedDecks.length === 0) {
       return (
         <View style={styles.emptyState}>
@@ -78,7 +88,7 @@ const DashboardScreen: React.FC = () => {
         actions={handleDeckActions(topRatedDecks[0].id)}
       />
     );
-  };
+  }, [topRatedDecks, deckRatings, handleDeckActions]);
 
   return (
     <ScrollView>

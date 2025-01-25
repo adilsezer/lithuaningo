@@ -1,22 +1,25 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserData } from "@stores/useUserStore";
+import { useReport } from "@hooks/useReport";
 import { SectionTitle } from "@components/typography";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
-import { useReport } from "@hooks/useReport";
 
 export default function ReportScreen() {
   const { id } = useLocalSearchParams();
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
-  const { isSubmitting, error, submitReport, clearError } = useReport();
+  const userData = useUserData();
+  const { isLoading, error, submitReport, clearError } = useReport();
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const navigateToDecks = useCallback(() => {
+    router.push("/dashboard/decks");
+  }, [router]);
 
   const handleSubmitReport = async (data: {
     reason: string;
@@ -24,20 +27,16 @@ export default function ReportScreen() {
   }) => {
     if (!userData?.id || !id) return;
 
-    try {
-      await submitReport({
-        contentId: id as string,
-        reportedBy: userData.id,
-        reason: data.reason,
-        details: data.details,
-      });
-      setIsSuccess(true);
-      // Navigate to decks dashboard after a short delay
-      setTimeout(() => router.push("/dashboard/decks"), 1500);
-    } catch (err) {
-      // Error is handled by the hook
-      console.error("Failed to submit report:", err);
-    }
+    await submitReport({
+      contentId: id as string,
+      reportedBy: userData.id,
+      reason: data.reason,
+      details: data.details,
+    });
+
+    setIsSuccess(true);
+    // Navigate to decks dashboard after a short delay
+    setTimeout(navigateToDecks, 1500);
   };
 
   const reportFields: FormField[] = [
@@ -118,7 +117,7 @@ export default function ReportScreen() {
         onSubmit={handleSubmitReport}
         submitButtonText="Submit Report"
         style={styles.form}
-        isLoading={isSubmitting}
+        isLoading={isLoading}
       />
     </View>
   );

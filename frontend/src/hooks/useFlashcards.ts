@@ -2,15 +2,20 @@ import { useState, useCallback, useEffect } from "react";
 import { Flashcard, FlashcardFormData } from "@src/types";
 import flashcardService from "@services/data/flashcardService";
 import { AlertDialog } from "@components/ui/AlertDialog";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import {
+  useIsLoading,
+  useSetLoading,
+  useError,
+  useSetError,
+} from "@stores/useUIStore";
 import { Audio } from "expo-av";
 
 export const useFlashcards = () => {
-  const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
+  const setError = useSetError();
+  const error = useError();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
-  const [error, setError] = useState<string | null>(null);
   const [sound, setSound] = useState<Audio.Sound>();
   const [isPlaying, setIsPlaying] = useState(false);
 
@@ -22,6 +27,20 @@ export const useFlashcards = () => {
         }
       : undefined;
   }, [sound]);
+
+  const handleError = useCallback(
+    (error: any, message: string) => {
+      console.error(message, error);
+      setError(message);
+      AlertDialog.error(message);
+      return null;
+    },
+    [setError]
+  );
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, [setError]);
 
   const handlePlaySound = useCallback(
     async (url: string) => {
@@ -50,76 +69,65 @@ export const useFlashcards = () => {
           });
         }
       } catch (error) {
-        console.error("Error playing sound:", error);
+        handleError(error, "Error playing sound");
         setIsPlaying(false);
       }
     },
-    [sound, isPlaying]
+    [sound, isPlaying, handleError]
   );
-
-  const handleError = useCallback((error: any, message: string) => {
-    console.error(message, error);
-    setError(message);
-    AlertDialog.error(message);
-    return null;
-  }, []);
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, []);
 
   const fetchDeckFlashcards = useCallback(
     async (deckId: string) => {
       try {
-        dispatch(setLoading(true));
+        setLoading(true);
         clearError();
         const data = await flashcardService.getDeckFlashcards(deckId);
         setFlashcards(data);
       } catch (error) {
         handleError(error, "Failed to load flashcards");
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     },
-    [handleError, clearError, dispatch]
+    [handleError, clearError, setLoading]
   );
 
   const addFlashcardToDeck = useCallback(
     async (deckId: string, flashcard: Omit<Flashcard, "id" | "createdAt">) => {
       try {
-        dispatch(setLoading(true));
+        setLoading(true);
         clearError();
         await flashcardService.addFlashcardToDeck(deckId, flashcard);
         await fetchDeckFlashcards(deckId);
       } catch (error) {
         handleError(error, "Failed to add flashcard");
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     },
-    [fetchDeckFlashcards, handleError, clearError, dispatch]
+    [fetchDeckFlashcards, handleError, clearError, setLoading]
   );
 
   const removeFlashcardFromDeck = useCallback(
     async (deckId: string, flashcardId: string) => {
       try {
-        dispatch(setLoading(true));
+        setLoading(true);
         clearError();
         await flashcardService.removeFlashcardFromDeck(deckId, flashcardId);
         await fetchDeckFlashcards(deckId);
       } catch (error) {
         handleError(error, "Failed to remove flashcard");
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     },
-    [fetchDeckFlashcards, handleError, clearError, dispatch]
+    [fetchDeckFlashcards, handleError, clearError, setLoading]
   );
 
   const handleCreateFlashcard = useCallback(
     async (formData: FlashcardFormData, deckId: string, userId: string) => {
       try {
-        dispatch(setLoading(true));
+        setLoading(true);
         clearError();
 
         const { imageFile, audioFile, ...flashcardData } = formData;
@@ -140,25 +148,25 @@ export const useFlashcards = () => {
         handleError(error, "Failed to create flashcard");
         return false;
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     },
-    [dispatch, handleError, clearError]
+    [setLoading, handleError, clearError]
   );
 
   return {
-    // States
+    // State
     flashcards,
     isLoading,
     error,
     isPlaying,
 
     // Actions
-    clearError,
+    handlePlaySound,
     fetchDeckFlashcards,
     addFlashcardToDeck,
     removeFlashcardFromDeck,
     handleCreateFlashcard,
-    handlePlaySound,
+    clearError,
   };
 };

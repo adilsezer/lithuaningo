@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import auth from "@react-native-firebase/auth";
-import { logIn, logOut } from "@redux/slices/userSlice";
-import { useAppDispatch } from "@redux/hooks";
+import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
 import {
   updateUserState,
@@ -10,7 +9,7 @@ import {
 import { AlertDialog } from "@components/ui/AlertDialog";
 
 const AuthStateListener: React.FC = () => {
-  const dispatch = useAppDispatch();
+  const { logOut } = useUserStore();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,7 +18,7 @@ const AuthStateListener: React.FC = () => {
         if (!user.emailVerified) {
           // If email is not verified, sign out and show message
           await auth().signOut();
-          dispatch(logOut());
+          logOut();
           AlertDialog.show({
             title: "Email Not Verified",
             message:
@@ -28,7 +27,7 @@ const AuthStateListener: React.FC = () => {
               {
                 text: "Send Email",
                 onPress: async () => {
-                  await sendEmailVerification(dispatch);
+                  await sendEmailVerification();
                 },
               },
               { text: "Cancel", style: "cancel" },
@@ -37,15 +36,15 @@ const AuthStateListener: React.FC = () => {
           router.replace("/auth/login");
           return;
         }
-        await updateUserState(user, dispatch);
+        await updateUserState(user);
       } else {
-        dispatch(logOut());
+        logOut();
         router.replace("/");
       }
     });
 
     return () => unsubscribe();
-  }, [dispatch, router]);
+  }, [logOut, router]);
 
   return null;
 };

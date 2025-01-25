@@ -3,8 +3,8 @@ import { View, StyleSheet, FlatList, Text } from "react-native";
 import { SectionTitle } from "@components/typography";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useDecks } from "@hooks/useDecks";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserStore } from "@stores/useUserStore";
+import { useUserData } from "@stores/useUserStore";
 import { CustomCategoryPicker } from "@components/ui/CustomCategoryPicker";
 import { SearchBar } from "@components/ui/SearchBar";
 import { useThemeStyles } from "@hooks/useThemeStyles";
@@ -14,7 +14,7 @@ import CustomButton from "@components/ui/CustomButton";
 import { DeckCategory } from "@src/types/DeckCategory";
 
 export default function DecksScreen() {
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
   const { colors } = useThemeStyles();
   const router = useRouter();
 
@@ -49,14 +49,13 @@ export default function DecksScreen() {
 
   const handleDeckActions = useCallback(
     (deckId: string) => ({
-      onVote: (isUpvote: boolean) =>
-        userData?.id && voteDeck(deckId, userData.id, isUpvote),
+      onVote: (isUpvote: boolean) => voteDeck(deckId, isUpvote),
       onReport: () => handleNavigation(`/decks/${deckId}/report`),
       onComment: () => handleNavigation(`/decks/${deckId}/comments`),
       onQuiz: () => handleNavigation(`/decks/${deckId}/quiz`),
       onPractice: () => handleNavigation(`/decks/${deckId}`),
     }),
-    [userData?.id, voteDeck, handleNavigation]
+    [voteDeck, handleNavigation]
   );
 
   const renderHeader = useCallback(
@@ -98,10 +97,10 @@ export default function DecksScreen() {
     return (
       <ErrorMessage
         message={error}
-        onRetry={() => {
+        onRetry={useCallback(() => {
           clearError();
           fetchDecks();
-        }}
+        }, [clearError, fetchDecks])}
         fullScreen
       />
     );

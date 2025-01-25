@@ -8,13 +8,13 @@
       "@app/*": ["src/app/*"],
       "@utils/*": ["src/utils/*"],
       "@src/*": ["src/*"],
-      "@redux/*": ["src/redux/*"],
       "@services/*": ["src/services/*"],
       "@hooks/*": ["src/hooks/*"],
       "@context/*": ["src/context/*"],
       "@styles/*": ["src/styles/*"],
       "@config/*": ["config/*"],
-      "@providers/*": ["src/providers/*"]
+      "@providers/*": ["src/providers/*"],
+      "@stores/*": ["src/stores/*"]
     }
   },
   "extends": "expo/tsconfig.base",

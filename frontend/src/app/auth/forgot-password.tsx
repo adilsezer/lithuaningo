@@ -6,8 +6,7 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useAuth } from "@hooks/useAuth";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsLoading } from "@redux/slices/uiSlice";
+import { useIsLoading } from "@stores/useUIStore";
 import { FORM_RULES } from "@utils/formValidation";
 import crashlytics from "@react-native-firebase/crashlytics";
 
@@ -29,7 +28,7 @@ const forgotPasswordFields: FormField[] = [
 ];
 
 const ForgotPasswordScreen: React.FC = () => {
-  const isLoading = useAppSelector(selectIsLoading);
+  const isLoading = useIsLoading();
   const { resetPassword, error, clearError } = useAuth();
 
   useEffect(() => {

@@ -2,8 +2,7 @@ import React, { useEffect } from "react";
 import { View, StyleSheet, FlatList, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserData } from "@stores/useUserStore";
 import { SectionTitle } from "@components/typography";
 import CustomButton from "@components/ui/CustomButton";
 import { Form } from "@components/form/Form";
@@ -15,7 +14,7 @@ import { useComments } from "@hooks/useComments";
 export default function CommentsScreen() {
   const { id } = useLocalSearchParams();
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
   const {
     comments,
     isSubmitting,

@@ -10,8 +10,7 @@ import { Form } from "@components/form/Form";
 import { FORM_RULES } from "@utils/formValidation";
 import { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsLoading } from "@redux/slices/uiSlice";
+import { useIsLoading } from "@stores/useUIStore";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import crashlytics from "@react-native-firebase/crashlytics";
 
@@ -67,7 +66,7 @@ const signupFields: FormField[] = [
 
 const SignUpScreen: React.FC = () => {
   const { colors } = useThemeStyles();
-  const isLoading = useAppSelector(selectIsLoading);
+  const isLoading = useIsLoading();
   const { signUp, signInWithSocial, error, clearError } = useAuth();
 
   useEffect(() => {

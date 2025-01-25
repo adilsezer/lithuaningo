@@ -1,8 +1,12 @@
 import { useState, useCallback } from "react";
+import {
+  useIsLoading,
+  useSetLoading,
+  useError,
+  useSetError,
+} from "@stores/useUIStore";
 import { WordForm, Lemma } from "@src/types";
 import apiClient from "@services/api/apiClient";
-import { useAppDispatch } from "@redux/hooks";
-import { setLoading } from "@redux/slices/uiSlice";
 import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { AlertDialog } from "@components/ui/AlertDialog";
@@ -11,27 +15,30 @@ const WORD_OF_THE_DAY_KEY = (dateKey: string) =>
   `WORD_OF_THE_DAY_ID_${dateKey}`;
 
 export const useWordData = (wordId?: string, isRandom: boolean = false) => {
-  const dispatch = useAppDispatch();
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
+  const setError = useSetError();
+  const error = useError();
   const [word, setWord] = useState<WordForm | null>(null);
   const [lemma, setLemma] = useState<Lemma | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
 
-  const handleError = useCallback((error: any, message: string) => {
-    console.error(message, error);
-    setError(message);
-    AlertDialog.error(message);
-  }, []);
+  const handleError = useCallback(
+    (error: any, message: string) => {
+      console.error(message, error);
+      setError(message);
+      AlertDialog.error(message);
+    },
+    [setError]
+  );
 
   const clearError = useCallback(() => {
     setError(null);
-  }, []);
+  }, [setError]);
 
   const fetchWordForm = useCallback(
     async (wordId: string) => {
       try {
-        setIsLoading(true);
-        dispatch(setLoading(true));
+        setLoading(true);
         clearError();
 
         const wordForm = await apiClient.getWordForm(wordId);
@@ -39,22 +46,20 @@ export const useWordData = (wordId?: string, isRandom: boolean = false) => {
 
         setWord(wordForm);
         setLemma(lemmaData);
+        return true;
       } catch (error) {
         handleError(error, "Failed to load word");
         return false;
       } finally {
-        setIsLoading(false);
-        dispatch(setLoading(false));
+        setLoading(false);
       }
-      return true;
     },
-    [dispatch, handleError, clearError]
+    [setLoading, handleError, clearError]
   );
 
   const fetchRandomWord = useCallback(async () => {
     try {
-      setIsLoading(true);
-      dispatch(setLoading(true));
+      setLoading(true);
       clearError();
 
       const dateKey = getCurrentDateKey();
@@ -72,10 +77,9 @@ export const useWordData = (wordId?: string, isRandom: boolean = false) => {
       handleError(error, "Failed to load random word");
       return false;
     } finally {
-      setIsLoading(false);
-      dispatch(setLoading(false));
+      setLoading(false);
     }
-  }, [dispatch, fetchWordForm, handleError, clearError]);
+  }, [setLoading, fetchWordForm, handleError, clearError]);
 
   return {
     // State

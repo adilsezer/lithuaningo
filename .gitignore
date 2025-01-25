@@ -137,3 +137,8 @@ logs/
 # HTTP request files
 *.http
 !*.template.http
+
+# IDE rules
+.windsurfrules
+.cursorrules
+CHANGELOG.md

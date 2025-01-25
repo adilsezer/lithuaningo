@@ -1,8 +1,7 @@
-import { useAppSelector } from "@redux/hooks";
-import { selectIsAuthenticated } from "@redux/slices/userSlice";
+import { useIsAuthenticated } from "@stores/useUserStore";
 
 export const useRootLayout = () => {
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const isAuthenticated = useIsAuthenticated();
 
   return {
     isAuthenticated,

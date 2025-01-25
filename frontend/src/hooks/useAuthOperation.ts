@@ -1,8 +1,12 @@
-import { useAppDispatch } from "@redux/hooks";
-import { setLoading } from "@redux/slices/uiSlice";
+import {
+  useIsLoading,
+  useSetLoading,
+  useError,
+  useSetError,
+} from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { AlertDialog } from "@components/ui/AlertDialog";
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 
 interface AuthResponse {
   success: boolean;
@@ -10,21 +14,26 @@ interface AuthResponse {
 }
 
 export const useAuthOperation = () => {
-  const dispatch = useAppDispatch();
-  const [error, setError] = useState<string | null>(null);
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
+  const error = useError();
+  const setError = useSetError();
 
-  const handleError = useCallback((error: any, title: string) => {
-    const message = error.message || "An error occurred";
-    console.error(`${title}:`, error);
-    setError(message);
-    crashlytics().recordError(error);
-    AlertDialog.error(message, title);
-    return { success: false, message };
-  }, []);
+  const handleError = useCallback(
+    (error: any, title: string) => {
+      const message = error.message || "An error occurred";
+      console.error(`${title}:`, error);
+      setError(message);
+      crashlytics().recordError(error);
+      AlertDialog.error(message, title);
+      return { success: false, message };
+    },
+    [setError]
+  );
 
   const clearError = useCallback(() => {
     setError(null);
-  }, []);
+  }, [setError]);
 
   const performAuthOperation = useCallback(
     async (
@@ -32,7 +41,7 @@ export const useAuthOperation = () => {
       errorTitle: string,
       successMessage?: string
     ) => {
-      dispatch(setLoading(true));
+      setLoading(true);
       clearError();
 
       try {
@@ -51,15 +60,16 @@ export const useAuthOperation = () => {
       } catch (error: any) {
         return handleError(error, errorTitle);
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     },
-    [dispatch, handleError, clearError]
+    [handleError, clearError, setLoading]
   );
 
   return {
     // State
     error,
+    isLoading,
 
     // Actions
     clearError,

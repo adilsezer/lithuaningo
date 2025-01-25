@@ -15,12 +15,11 @@ import Animated, {
   Easing,
 } from "react-native-reanimated";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
+import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
-import { selectUserData } from "@redux/slices/userSlice";
 import { SENTENCE_KEYS } from "@config/constants";
 import { SectionTitle, Instruction } from "@components/typography";
 import { useWordData } from "@hooks/useWordData";
@@ -32,9 +31,8 @@ interface FlashcardProps {
 const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
   const { word, lemma } = useWordData(wordId);
   const { colors } = useThemeStyles();
-  const dispatch = useAppDispatch();
   const router = useRouter();
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
   const [sentenceReviewCompleted, setSentenceReviewCompleted] = useState<
     boolean | null
   >(null);

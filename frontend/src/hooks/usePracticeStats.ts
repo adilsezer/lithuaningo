@@ -1,11 +1,10 @@
 import { useState, useCallback } from "react";
-import { useAppDispatch } from "@redux/hooks";
-import { setLoading } from "@redux/slices/uiSlice";
+import { useSetLoading } from "@stores/useUIStore";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import practiceService from "@services/data/practiceService";
 
 export const usePracticeStats = (deckId: string, userId?: string) => {
-  const dispatch = useAppDispatch();
+  const setLoading = useSetLoading();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [stats, setStats] = useState<{ correct: number; total: number }>({
     correct: 0,
@@ -20,7 +19,7 @@ export const usePracticeStats = (deckId: string, userId?: string) => {
       }
 
       try {
-        dispatch(setLoading(true));
+        setLoading(true);
         await practiceService.trackProgress({
           userId,
           deckId,
@@ -40,10 +39,10 @@ export const usePracticeStats = (deckId: string, userId?: string) => {
         console.error("Error tracking progress:", err);
         return false;
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     },
-    [userId, deckId, stats, dispatch]
+    [userId, deckId, stats, setLoading]
   );
 
   const resetSession = useCallback(() => {

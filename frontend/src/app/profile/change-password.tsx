@@ -2,8 +2,7 @@ import React, { useEffect } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import BackButton from "@components/layout/BackButton";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsLoading } from "@redux/slices/uiSlice";
+import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import { Form } from "@components/form/Form";
@@ -42,7 +41,7 @@ const changePasswordFields: FormField[] = [
 ];
 
 const ChangePasswordScreen: React.FC = () => {
-  const loading = useAppSelector(selectIsLoading);
+  const loading = useIsLoading();
   const { updatePassword } = useAuth();
 
   useEffect(() => {

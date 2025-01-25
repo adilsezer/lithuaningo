@@ -1,8 +1,7 @@
 import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData, selectIsLoggedIn } from "@redux/slices/userSlice";
+import { useUserData, useIsLoggedIn } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { getCurrentDateKey } from "@utils/dateUtils";
@@ -55,8 +54,8 @@ export default function ProfileScreen() {
   const { isDarkMode, toggleTheme } = useTheme();
   const router = useRouter();
 
-  const userData = useAppSelector(selectUserData);
-  const isLoggedIn = useAppSelector(selectIsLoggedIn);
+  const userData = useUserData();
+  const isLoggedIn = useIsLoggedIn();
 
   const handleNavigation = (path: string) => {
     router.push(path);

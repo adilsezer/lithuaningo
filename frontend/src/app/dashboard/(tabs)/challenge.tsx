@@ -2,7 +2,6 @@ import React from "react";
 import { ScrollView, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { SectionText, SectionTitle } from "@components/typography";
-import { useAppDispatch } from "@redux/hooks";
 import { router } from "expo-router";
 
 export default function LearnScreen() {

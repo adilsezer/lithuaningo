@@ -1,14 +1,13 @@
 import { useState, useCallback } from "react";
 import { Comment } from "@src/types";
 import commentService from "@services/data/commentService";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { useIsLoading, useSetLoading } from "@stores/useUIStore";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
 export const useComments = (deckId: string) => {
-  // Redux state
-  const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
+  // Zustand state
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
 
   // Local state
   const [comments, setComments] = useState<Comment[]>([]);
@@ -29,7 +28,7 @@ export const useComments = (deckId: string) => {
   // Comments actions
   const fetchComments = useCallback(async () => {
     try {
-      dispatch(setLoading(true));
+      setLoading(true);
       clearError();
       const data = await commentService.getComments(deckId);
       setComments(data);
@@ -38,9 +37,9 @@ export const useComments = (deckId: string) => {
       handleError(err, "Failed to load comments");
       return false;
     } finally {
-      dispatch(setLoading(false));
+      setLoading(false);
     }
-  }, [dispatch, deckId, handleError, clearError]);
+  }, [setLoading, deckId, handleError, clearError]);
 
   const addComment = useCallback(
     async (userId: string, content: string, username: string) => {
@@ -55,7 +54,8 @@ export const useComments = (deckId: string) => {
         userId,
         content,
         createdBy: username,
-        createdAt: new Date().toISOString(),
+        createdAt: new Date(),
+        updatedAt: new Date(),
         likes: 0,
         isEdited: false,
       };

@@ -1,25 +1,39 @@
-import { useState, useEffect } from "react";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useState, useCallback, useEffect } from "react";
+import { useUserData } from "@stores/useUserStore";
+import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
 import { UserProfile } from "@src/types";
 import userProfileService from "@services/data/userProfileService";
 
 export const useUserProfile = () => {
-  const { id: userId } = useAppSelector(selectUserData) ?? {};
+  const userData = useUserData();
+  const userId = userData?.id;
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
+  const setError = useSetError();
   const [profile, setProfile] = useState<UserProfile | null>(null);
 
-  useEffect(() => {
+  const fetchProfile = useCallback(async () => {
     if (!userId) return;
 
-    const fetchProfile = async () => {
-      const profile = await userProfileService.fetchUserProfile(userId);
-      setProfile(profile);
-    };
+    try {
+      setLoading(true);
+      const userProfile = await userProfileService.fetchUserProfile(userId);
+      setProfile(userProfile);
+    } catch (err) {
+      setError("Failed to fetch user profile");
+      console.error("Error fetching user profile:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, setLoading, setError]);
 
+  useEffect(() => {
     fetchProfile();
-  }, [userId]);
+  }, [fetchProfile]);
 
   return {
     profile,
+    isLoading,
+    fetchProfile,
   };
 };

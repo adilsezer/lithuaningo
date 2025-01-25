@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserData } from "@stores/useUserStore";
 import { LeaderboardWeek } from "@src/types";
 import leaderboardService from "@services/data/leaderboardService";
 import { startOfWeek, addDays } from "date-fns";
@@ -55,7 +54,7 @@ const convertToValidDate = (timestamp: any): Date | null => {
 };
 
 export const useLeaderboard = () => {
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
   const [leaderboard, setLeaderboard] = useState<LeaderboardWeek | null>(null);
 
   useEffect(() => {

@@ -1,13 +1,6 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { AppDispatch } from "@redux/store";
-import {
-  logIn,
-  logOut,
-  requireReauthentication,
-  clearReauthenticationRequirement,
-  deleteUserAccount,
-} from "@redux/slices/userSlice";
+import { useUserStore } from "@stores/useUserStore";
 import * as AppleAuthentication from "expo-apple-authentication";
 import apiClient from "@services/api/apiClient";
 import crashlytics from "@react-native-firebase/crashlytics";
@@ -62,24 +55,18 @@ const updateEmailVerificationStatus = async (user: FirebaseAuthTypes.User) => {
   }
 };
 
-export const updateUserState = async (
-  user: FirebaseAuthTypes.User,
-  dispatch: AppDispatch
-) => {
+export const updateUserState = async (user: FirebaseAuthTypes.User) => {
   if (!user.email) {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  dispatch(
-    logIn({
-      id: user.uid,
-      name: user.displayName || "No Name",
-      email: user.email,
-      emailVerified: user.emailVerified,
-    })
-  );
+  useUserStore.getState().logIn({
+    id: user.uid,
+    name: user.displayName || "No Name",
+    email: user.email,
+    emailVerified: user.emailVerified,
+  });
 
-  // Update email verification status in Firestore
   await updateEmailVerificationStatus(user);
 };
 
@@ -121,8 +108,7 @@ const getAppleCredential =
 export const signUpWithEmail = async (
   email: string,
   password: string,
-  name: string,
-  dispatch: AppDispatch
+  name: string
 ): Promise<AuthResponse> => {
   try {
     const { user } = await auth().createUserWithEmailAndPassword(
@@ -130,7 +116,7 @@ export const signUpWithEmail = async (
       password
     );
     await user.updateProfile({ displayName: name });
-    await sendEmailVerification(dispatch);
+    await sendEmailVerification();
     await ensureUserProfile(user);
     crashlytics().setUserId(user.uid);
     return {
@@ -144,15 +130,13 @@ export const signUpWithEmail = async (
 
 export const signInWithEmail = async (
   email: string,
-  password: string,
-  dispatch: AppDispatch
+  password: string
 ): Promise<AuthResponse> => {
   try {
     const { user } = await auth().signInWithEmailAndPassword(email, password);
     if (!user.emailVerified) {
-      // Sign out immediately if email is not verified
       await auth().signOut();
-      await sendEmailVerification(dispatch);
+      await sendEmailVerification();
       return {
         success: false,
         message:
@@ -160,7 +144,7 @@ export const signInWithEmail = async (
       };
     }
     await ensureUserProfile(user);
-    await updateUserState(user, dispatch);
+    await updateUserState(user);
     crashlytics().setUserId(user.uid);
     return { success: true };
   } catch (error) {
@@ -169,8 +153,7 @@ export const signInWithEmail = async (
 };
 
 export const signInWithSocialProvider = async (
-  provider: "google" | "apple",
-  dispatch: AppDispatch
+  provider: "google" | "apple"
 ): Promise<AuthResponse> => {
   try {
     const credential = await (provider === "google"
@@ -179,7 +162,7 @@ export const signInWithSocialProvider = async (
 
     const userCredential = await auth().signInWithCredential(credential);
     await ensureUserProfile(userCredential.user);
-    await updateUserState(userCredential.user, dispatch);
+    await updateUserState(userCredential.user);
     crashlytics().setUserId(userCredential.user.uid);
     return { success: true };
   } catch (error) {
@@ -187,7 +170,7 @@ export const signInWithSocialProvider = async (
   }
 };
 
-export const signOut = async (dispatch: AppDispatch): Promise<AuthResponse> => {
+export const signOut = async (): Promise<AuthResponse> => {
   try {
     const user = auth().currentUser;
     if (
@@ -207,7 +190,7 @@ export const signOut = async (dispatch: AppDispatch): Promise<AuthResponse> => {
       }
     }
     await auth().signOut();
-    dispatch(logOut());
+    useUserStore.getState().logOut();
     return { success: true };
   } catch (error) {
     return handleAuthError(error);
@@ -216,8 +199,7 @@ export const signOut = async (dispatch: AppDispatch): Promise<AuthResponse> => {
 
 export const updateProfile = async (
   currentPassword: string,
-  updates: ProfileUpdateData,
-  dispatch: AppDispatch
+  updates: ProfileUpdateData
 ): Promise<AuthResponse> => {
   try {
     const user = auth().currentUser;
@@ -245,16 +227,16 @@ export const updateProfile = async (
     }
 
     if (credential) {
-      await reauthenticateUser(credential, dispatch);
+      await reauthenticateUser(credential);
     }
 
     await user.updateProfile(updates);
     if (updates.email) {
       await user.updateEmail(updates.email);
-      await sendEmailVerification(dispatch);
+      await sendEmailVerification();
     }
 
-    await updateUserState(user, dispatch);
+    await updateUserState(user);
     return {
       success: true,
       message: updates.email
@@ -268,8 +250,7 @@ export const updateProfile = async (
 
 export const updatePassword = async (
   currentPassword: string,
-  newPassword: string,
-  dispatch: AppDispatch
+  newPassword: string
 ): Promise<AuthResponse> => {
   try {
     const user = auth().currentUser;
@@ -280,11 +261,11 @@ export const updatePassword = async (
         user.email!,
         currentPassword
       );
-      await reauthenticateUser(credential, dispatch);
+      await reauthenticateUser(credential);
       await user.updatePassword(newPassword);
     } catch (error: any) {
       if (error.code === "auth/requires-recent-login") {
-        dispatch(requireReauthentication());
+        useUserStore.getState().requireReauthentication();
       }
       throw error;
     }
@@ -308,8 +289,7 @@ export const resetPassword = async (email: string): Promise<AuthResponse> => {
 };
 
 export const deleteAccount = async (
-  currentPassword: string | undefined,
-  dispatch: AppDispatch
+  currentPassword: string | undefined
 ): Promise<AuthResponse> => {
   try {
     const user = auth().currentUser;
@@ -320,21 +300,20 @@ export const deleteAccount = async (
         user.email!,
         currentPassword
       );
-      await reauthenticateUser(credential, dispatch);
+      await reauthenticateUser(credential);
     }
 
     await user.delete();
-    dispatch(deleteUserAccount());
-    dispatch(logOut());
+    const store = useUserStore.getState();
+    store.deleteAccount();
+    store.logOut();
     return { success: true, message: "Account deleted successfully." };
   } catch (error) {
     return handleAuthError(error);
   }
 };
 
-export const sendEmailVerification = async (
-  dispatch: AppDispatch
-): Promise<AuthResponse> => {
+export const sendEmailVerification = async (): Promise<AuthResponse> => {
   try {
     const user = auth().currentUser;
     if (!user) throw new Error("No user is currently signed in.");
@@ -355,15 +334,14 @@ export const sendEmailVerification = async (
 };
 
 export const reauthenticateUser = async (
-  credential: FirebaseAuthTypes.AuthCredential,
-  dispatch: AppDispatch
+  credential: FirebaseAuthTypes.AuthCredential
 ): Promise<AuthResponse> => {
   try {
     const user = auth().currentUser;
     if (!user) throw new Error("No user is currently signed in.");
 
     await user.reauthenticateWithCredential(credential);
-    dispatch(clearReauthenticationRequirement());
+    useUserStore.getState().clearReauthentication();
     return { success: true, message: "Reauthentication successful" };
   } catch (error) {
     return handleAuthError(error);

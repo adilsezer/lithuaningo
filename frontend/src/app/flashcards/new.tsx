@@ -8,8 +8,7 @@ import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import { SectionTitle } from "@components/typography";
 import { FormField } from "@components/form/form.types";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useFlashcards } from "@hooks/useFlashcards";
 
@@ -17,7 +16,7 @@ export default function NewFlashcardScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const { colors } = useThemeStyles();
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
   const { handleCreateFlashcard } = useFlashcards();
 
   const fields: FormField[] = [

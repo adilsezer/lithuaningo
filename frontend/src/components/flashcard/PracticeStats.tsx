@@ -4,8 +4,7 @@ import { useThemeStyles } from "@hooks/useThemeStyles";
 import { PracticeStats as IPracticeStats } from "@src/types";
 import { FontAwesome5 } from "@expo/vector-icons";
 import apiClient from "@services/api/apiClient";
-import { useAppDispatch, useAppSelector } from "@redux/hooks";
-import { setLoading, selectIsLoading } from "@redux/slices/uiSlice";
+import { useIsLoading, useSetLoading } from "@stores/useUIStore";
 
 interface PracticeStatsProps {
   deckId: string;
@@ -41,24 +40,24 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
 }) => {
   const { colors } = useThemeStyles();
   const [stats, setStats] = useState<IPracticeStats | null>(null);
-  const dispatch = useAppDispatch();
-  const isLoading = useAppSelector(selectIsLoading);
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        dispatch(setLoading(true));
+        setLoading(true);
         const data = await apiClient.getPracticeStats(deckId, userId);
         setStats(data);
       } catch (err) {
         console.error("Error loading practice stats:", err);
       } finally {
-        dispatch(setLoading(false));
+        setLoading(false);
       }
     };
 
     fetchStats();
-  }, [dispatch, deckId]);
+  }, [deckId]);
 
   if (isLoading || !stats) return null;
 

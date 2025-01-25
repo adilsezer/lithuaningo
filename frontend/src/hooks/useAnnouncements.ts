@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsAuthenticated } from "@redux/slices/userSlice";
+import { useIsAuthenticated } from "@stores/useUserStore";
 import apiClient from "@services/api/apiClient";
 import { Announcement } from "@src/types";
 
 const useAnnouncements = () => {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const isAuthenticated = useAppSelector(selectIsAuthenticated);
+  const isAuthenticated = useIsAuthenticated();
 
   useEffect(() => {
     const fetchAnnouncements = async () => {

@@ -1,8 +1,9 @@
 import React, { useEffect, useCallback } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsLoading } from "@redux/slices/uiSlice";
+import useUIStore from "@stores/useUIStore";
+import { useIsLoading } from "@stores/useUIStore";
+import type { UIState } from "@stores/useUIStore";
 import NavigationLink from "@components/layout/NavigationLink";
 import BackButton from "@components/layout/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
@@ -35,7 +36,7 @@ const loginFields: FormField[] = [
 ];
 
 const LoginScreen: React.FC = () => {
-  const loading = useAppSelector(selectIsLoading);
+  const loading = useIsLoading();
   const { signIn, signInWithSocial, error, clearError } = useAuth();
 
   // Log screen load for analytics

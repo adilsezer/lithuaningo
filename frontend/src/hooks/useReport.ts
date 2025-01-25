@@ -1,30 +1,46 @@
-import { useState } from "react";
+import { useCallback } from "react";
 import { reportService } from "@services/data/reportService";
 import { Report } from "@src/types/Report";
+import {
+  useIsLoading,
+  useSetLoading,
+  useError,
+  useSetError,
+} from "@stores/useUIStore";
 
 export const useReport = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
+  const setError = useSetError();
+  const error = useError();
 
-  const submitReport = async (
-    report: Pick<Report, "contentId" | "reportedBy" | "reason" | "details">
-  ) => {
-    try {
-      setIsSubmitting(true);
-      setError(null);
-      await reportService.submitReport(report);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to submit report");
-      throw err;
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  const submitReport = useCallback(
+    async (
+      report: Pick<Report, "contentId" | "reportedBy" | "reason" | "details">
+    ) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await reportService.submitReport(report);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : "Failed to submit report"
+        );
+        console.error("Error submitting report:", err);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError]
+  );
 
-  const clearError = () => setError(null);
+  const clearError = useCallback(() => {
+    setError(null);
+  }, [setError]);
 
   return {
-    isSubmitting,
+    isLoading,
     error,
     submitReport,
     clearError,

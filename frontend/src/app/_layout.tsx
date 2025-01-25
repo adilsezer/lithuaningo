@@ -1,7 +1,4 @@
 import React from "react";
-import { Provider } from "react-redux";
-import { PersistGate } from "redux-persist/integration/react";
-import { store, persistor } from "@redux/store";
 import { Slot } from "expo-router";
 import { ThemeProvider } from "@context/ThemeContext";
 import { View } from "react-native";
@@ -36,20 +33,13 @@ const InnerRootLayout: React.FC = () => {
 
 const RootLayout: React.FC = () => {
   return (
-    <Provider store={store}>
-      <PersistGate
-        loading={<LoadingIndicator modal={false} useTheme={false} />}
-        persistor={persistor}
-      >
-        <AppInfoProvider>
-          <ThemeProvider>
-            <ErrorBoundary>
-              <InnerRootLayout />
-            </ErrorBoundary>
-          </ThemeProvider>
-        </AppInfoProvider>
-      </PersistGate>
-    </Provider>
+    <AppInfoProvider>
+      <ThemeProvider>
+        <ErrorBoundary>
+          <InnerRootLayout />
+        </ErrorBoundary>
+      </ThemeProvider>
+    </AppInfoProvider>
   );
 };
 

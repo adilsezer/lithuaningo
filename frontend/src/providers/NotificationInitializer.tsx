@@ -1,23 +1,30 @@
-import React, { useEffect, useState } from "react";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import React, { useEffect, useCallback } from "react";
+import { useUserData } from "@stores/useUserStore";
+import { useSetLoading, useSetError } from "@stores/useUIStore";
 import { initializeNotifications } from "@services/notification/notificationService";
 
 const NotificationInitializer: React.FC = () => {
-  const userData = useAppSelector(selectUserData);
-  const [isInitializing, setIsInitializing] = useState(false);
+  const userData = useUserData();
+  const setLoading = useSetLoading();
+  const setError = useSetError();
 
   useEffect(() => {
     const initNotifications = async () => {
-      if (userData?.id && !isInitializing) {
-        setIsInitializing(true);
+      if (!userData?.id) return;
+
+      try {
+        setLoading(true);
         await initializeNotifications(userData.id);
-        setIsInitializing(false);
+      } catch (error) {
+        setError("Failed to initialize notifications");
+        console.error("Error initializing notifications:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     initNotifications();
-  }, [userData]);
+  }, [userData, setLoading, setError]);
 
   return null;
 };

@@ -1,7 +1,6 @@
 import React from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { useAppSelector } from "@redux/hooks";
-import { selectUserData } from "@redux/slices/userSlice";
+import { useUserData } from "@stores/useUserStore";
 import { useReminderSettings } from "@hooks/useReminderSettings";
 import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
@@ -9,7 +8,7 @@ import { SectionTitle } from "@components/typography";
 import { ReminderSettings } from "@components/settings/ReminderSettings";
 
 const SettingsScreen: React.FC = () => {
-  const userData = useAppSelector(selectUserData);
+  const userData = useUserData();
   const {
     reminderEnabled,
     setReminderEnabled,

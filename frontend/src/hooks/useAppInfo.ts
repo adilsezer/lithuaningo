@@ -1,5 +1,11 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { AppInfo } from "@src/types";
+import {
+  useIsLoading,
+  useSetLoading,
+  useError,
+  useSetError,
+} from "@stores/useUIStore";
 import {
   getLatestAppInfo,
   getCurrentVersion,
@@ -7,8 +13,10 @@ import {
 
 export const useAppInfo = () => {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const setLoading = useSetLoading();
+  const isLoading = useIsLoading();
+  const setError = useSetError();
+  const error = useError();
   const currentVersion = useMemo(() => getCurrentVersion(), []);
 
   const { needsUpdate, isUnderMaintenance } = useMemo(
@@ -20,9 +28,10 @@ export const useAppInfo = () => {
     [appInfo, currentVersion]
   );
 
-  const fetchAppInfo = async () => {
+  const fetchAppInfo = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const latestAppInfo = await getLatestAppInfo();
       setAppInfo(latestAppInfo);
     } catch (err) {
@@ -31,11 +40,11 @@ export const useAppInfo = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setLoading, setError]);
 
   return {
     appInfo,
-    loading,
+    isLoading,
     error,
     needsUpdate,
     isUnderMaintenance,
