@@ -3,14 +3,10 @@ import { ScrollView, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { SectionText, SectionTitle } from "@components/typography";
 import { useAppDispatch } from "@redux/hooks";
-import { resetClickedWords } from "@redux/slices/clickedWordsSlice";
 import { router } from "expo-router";
 
 export default function LearnScreen() {
-  const dispatch = useAppDispatch();
-
   const handleNavigation = (route: string) => {
-    dispatch(resetClickedWords());
     router.push(route);
   };
 

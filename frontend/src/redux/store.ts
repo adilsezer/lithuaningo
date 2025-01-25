@@ -13,12 +13,10 @@ import {
 
 import userReducer from "./slices/userSlice";
 import uiReducer from "./slices/uiSlice";
-import clickedWordsReducer from "./slices/clickedWordsSlice";
 
 const rootReducer = combineReducers({
   user: userReducer,
   ui: uiReducer,
-  clickedWords: clickedWordsReducer,
 });
 
 const persistConfig = {

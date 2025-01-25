@@ -9,7 +9,6 @@ import {
 import { useRouter } from "expo-router";
 import { cleanWord } from "@utils/stringUtils";
 import { useThemeStyles } from "@hooks/useThemeStyles";
-import { useAppSelector } from "@redux/hooks";
 import { SectionText } from "@components/typography";
 
 const { width } = Dimensions.get("window");
@@ -18,13 +17,11 @@ const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 interface RenderClickableWordsProps {
   sentenceText: string;
   answerText: string;
-  useClickedWordsColor: boolean;
 }
 
 const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   sentenceText,
   answerText,
-  useClickedWordsColor,
 }) => {
   const router = useRouter();
   const { colors } = useThemeStyles();
@@ -32,7 +29,6 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   const handleWordClick = (word: string) => {
     router.push(`/learning/${cleanWord(word)}`);
   };
-  const clickedWords = useAppSelector((state) => state.clickedWords);
 
   return (
     <View style={styles.sentenceContainer}>
@@ -41,13 +37,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
         const isPlaceholder =
           answerText.toLowerCase() === cleanedWord.toLowerCase() ||
           cleanedWord === "[]";
-        const backgroundColor =
-          useClickedWordsColor &&
-          clickedWords
-            .map((word) => word.toLowerCase())
-            .includes(cleanedWord.toLowerCase())
-            ? colors.wordHighlightBackground
-            : colors.wordBackground;
+        const backgroundColor = colors.wordBackground;
         const containerStyle = [
           styles.commonContainer,
           isPlaceholder && {

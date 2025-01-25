@@ -18,10 +18,6 @@ import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useAppDispatch, useAppSelector } from "@redux/hooks";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
-import {
-  addClickedWord,
-  removeClickedWord,
-} from "@redux/slices/clickedWordsSlice";
 import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { selectUserData } from "@redux/slices/userSlice";
@@ -63,12 +59,6 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
   };
 
   useEffect(() => {
-    if (!word) {
-      dispatch(addClickedWord(wordId));
-    }
-  }, [word, wordId, dispatch]);
-
-  useEffect(() => {
     const fetchCompletionStatus = async () => {
       try {
         if (userData?.id) {
@@ -88,12 +78,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
     fetchCompletionStatus();
   }, [userData]);
 
-  const handleMarkButtonClick = (addWord: boolean) => {
-    if (addWord) {
-      dispatch(addClickedWord(wordId));
-    } else {
-      dispatch(removeClickedWord(wordId));
-    }
+  const handleMarkButtonClick = () => {
     router.back();
   };
 
@@ -156,11 +141,11 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
             <CustomButton
               title="Review Later"
               style={[styles.button, { backgroundColor: colors.secondary }]}
-              onPress={() => handleMarkButtonClick(false)}
+              onPress={() => handleMarkButtonClick()}
             />
             <CustomButton
               title="Mark as Known"
-              onPress={() => handleMarkButtonClick(true)}
+              onPress={() => handleMarkButtonClick()}
             />
           </View>
         ) : (

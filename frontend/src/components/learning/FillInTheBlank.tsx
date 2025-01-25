@@ -102,7 +102,6 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
             <RenderClickableWords
               sentenceText={sentenceText}
               answerText={questionWord}
-              useClickedWordsColor={false}
             />
           </View>
           <Instruction>

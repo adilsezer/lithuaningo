@@ -70,7 +70,6 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
         <RenderClickableWords
           sentenceText={sentenceText}
           answerText={questionWord}
-          useClickedWordsColor={false}
         />
       </View>
       <Instruction>Click on each word to find out what it means.</Instruction>
