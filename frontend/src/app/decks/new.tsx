@@ -9,6 +9,7 @@ import { useDecks } from "@hooks/useDecks";
 import { FormField } from "@components/form/form.types";
 import { deckCategories, DeckCategory } from "@src/types/DeckCategory";
 import type { Deck } from "@src/types";
+import { deckFormSchema } from "@utils/zodSchemas";
 
 export default function NewDeckScreen() {
   const { colors } = useThemeStyles();
@@ -23,10 +24,6 @@ export default function NewDeckScreen() {
         category: "text-input",
         type: "text",
         placeholder: "Enter deck title",
-        validation: {
-          required: true,
-          message: "Title is required",
-        },
       },
       {
         name: "description",
@@ -34,10 +31,6 @@ export default function NewDeckScreen() {
         category: "text-input",
         type: "text",
         placeholder: "Enter deck description",
-        validation: {
-          required: true,
-          message: "Description is required",
-        },
       },
       {
         name: "category",
@@ -51,10 +44,6 @@ export default function NewDeckScreen() {
             value: cat,
           })),
         ],
-        validation: {
-          required: true,
-          message: "Category is required",
-        },
       },
       {
         name: "tags",
@@ -62,9 +51,6 @@ export default function NewDeckScreen() {
         category: "text-input",
         type: "text",
         placeholder: "Enter tags",
-        validation: {
-          required: false,
-        },
       },
       {
         name: "consent",
@@ -72,10 +58,6 @@ export default function NewDeckScreen() {
           "By creating a deck, you confirm it's original, public, and compliant.",
         category: "toggle",
         type: "switch",
-        validation: {
-          required: true,
-          message: "You must agree to the terms before creating a deck",
-        },
       },
       {
         name: "terms-link",
@@ -91,7 +73,7 @@ export default function NewDeckScreen() {
 
   const handleSubmit = useCallback(
     async (data: Partial<Deck>) => {
-      await createDeck(data);
+      await createDeck(data.title || '', data.description || '');
     },
     [createDeck]
   );
@@ -105,6 +87,7 @@ export default function NewDeckScreen() {
           fields={fields}
           onSubmit={handleSubmit}
           submitButtonText="Create Deck"
+          zodSchema={deckFormSchema}
         />
       </ScrollView>
     </View>

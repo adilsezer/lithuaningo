@@ -1,9 +1,7 @@
 import React, { useEffect, useCallback } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import useUIStore from "@stores/useUIStore";
 import { useIsLoading } from "@stores/useUIStore";
-import type { UIState } from "@stores/useUIStore";
 import NavigationLink from "@components/layout/NavigationLink";
 import BackButton from "@components/layout/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
@@ -12,9 +10,9 @@ import { SectionTitle } from "@components/typography";
 import Divider from "@components/ui/Divider";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
-import { FORM_RULES } from "@utils/formValidation";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import type { SocialProvider } from "@hooks/useAuth";
+import { loginFormSchema } from "@utils/zodSchemas";
 
 const loginFields: FormField[] = [
   {
@@ -23,7 +21,6 @@ const loginFields: FormField[] = [
     category: "text-input",
     type: "email",
     placeholder: "Email",
-    validation: FORM_RULES.email,
   },
   {
     name: "password",
@@ -31,7 +28,6 @@ const loginFields: FormField[] = [
     category: "text-input",
     type: "password",
     placeholder: "Password",
-    validation: { required: true, message: "Password is required" },
   },
 ];
 
@@ -44,15 +40,6 @@ const LoginScreen: React.FC = () => {
     crashlytics().log("Login screen loaded.");
   }, []);
 
-  // Form submission handler
-  const handleSubmit = useCallback(
-    async (data: { email: string; password: string }) => {
-      await signIn(data.email, data.password);
-    },
-    [signIn]
-  );
-
-  // Social auth handler
   const handleSocialAuth = useCallback(
     (provider: SocialProvider) => {
       signInWithSocial(provider);
@@ -63,18 +50,21 @@ const LoginScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
+
       <SectionTitle>Welcome Back</SectionTitle>
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}
 
       <Form
         fields={loginFields}
-        onSubmit={handleSubmit}
+        onSubmit={async (data) => {
+          await signIn(data.email, data.password);
+        }}
         submitButtonText="Sign In"
         isLoading={loading}
         options={{ mode: "onBlur" }}
+        zodSchema={loginFormSchema}
       />
-
       <NavigationLink text="Forgot Password?" path="/auth/forgot-password" />
 
       <Divider content="Or" />

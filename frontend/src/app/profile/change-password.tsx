@@ -6,8 +6,8 @@ import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import { Form } from "@components/form/Form";
-import { FORM_RULES } from "@utils/formValidation";
 import type { FormField } from "@components/form/form.types";
+import { changePasswordFormSchema } from "@utils/zodSchemas";
 
 const changePasswordFields: FormField[] = [
   {
@@ -16,7 +16,6 @@ const changePasswordFields: FormField[] = [
     category: "text-input",
     type: "password",
     placeholder: "Current Password",
-    validation: { required: true, message: "Current password is required" },
   },
   {
     name: "newPassword",
@@ -24,7 +23,6 @@ const changePasswordFields: FormField[] = [
     category: "text-input",
     type: "password",
     placeholder: "New Password",
-    validation: FORM_RULES.password,
   },
   {
     name: "confirmPassword",
@@ -32,11 +30,6 @@ const changePasswordFields: FormField[] = [
     category: "text-input",
     type: "password",
     placeholder: "Confirm New Password",
-    validation: {
-      required: true,
-      validate: (value, formValues) =>
-        value === formValues.newPassword || "Passwords don't match",
-    },
   },
 ];
 
@@ -61,6 +54,7 @@ const ChangePasswordScreen: React.FC = () => {
         submitButtonText="Change Password"
         isLoading={loading}
         options={{ mode: "onBlur" }}
+        zodSchema={changePasswordFormSchema}
       />
     </ScrollView>
   );

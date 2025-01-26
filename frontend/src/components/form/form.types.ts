@@ -1,5 +1,6 @@
 import { UseFormProps, FieldValues } from "react-hook-form";
 import { KeyboardType, ViewStyle } from "react-native";
+import { z } from "zod";
 
 export type FieldCategory =
   | "text-input"
@@ -24,21 +25,11 @@ export type FieldType =
   | "image"
   | "link";
 
-export type ValidationRule = {
-  required?: boolean;
-  pattern?: RegExp;
-  message?: string;
-  minLength?: number;
-  maxLength?: number;
-  validate?: (value: any, formValues?: any) => string | boolean;
-};
-
 export type FormField = {
   name: string;
   label: string;
   category: FieldCategory;
   type: FieldType;
-  validation?: ValidationRule;
   defaultValue?: any;
 
   // Text inputs
@@ -78,8 +69,9 @@ export interface FormProps<T extends FieldValues> {
   onSubmit: (data: T) => Promise<void> | void;
   submitButtonText: string;
   isLoading?: boolean;
-  options?: Omit<UseFormProps<T>, "defaultValues">;
+  options?: Omit<UseFormProps<T>, "defaultValues" | "resolver">;
   defaultValues?: T;
   style?: ViewStyle;
   submitButtonStyle?: ViewStyle;
+  zodSchema?: z.ZodType<T>;
 }

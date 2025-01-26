@@ -7,12 +7,8 @@ import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import { FORM_RULES } from "@utils/formValidation";
 import crashlytics from "@react-native-firebase/crashlytics";
-
-type ForgotPasswordData = {
-  email: string;
-};
+import { forgotPasswordFormSchema } from "@utils/zodSchemas";
 
 const forgotPasswordFields: FormField[] = [
   {
@@ -23,7 +19,6 @@ const forgotPasswordFields: FormField[] = [
     placeholder: "Enter your email address",
     keyboardType: "email-address",
     autoCapitalize: "none",
-    validation: FORM_RULES.email,
   },
 ];
 
@@ -48,7 +43,7 @@ const ForgotPasswordScreen: React.FC = () => {
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}
 
-      <Form<ForgotPasswordData>
+      <Form
         fields={forgotPasswordFields}
         onSubmit={async (data) => {
           await resetPassword(data.email);
@@ -56,6 +51,7 @@ const ForgotPasswordScreen: React.FC = () => {
         submitButtonText="Reset Password"
         isLoading={isLoading}
         options={{ mode: "onBlur" }}
+        zodSchema={forgotPasswordFormSchema}
       />
     </ScrollView>
   );

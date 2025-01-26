@@ -10,6 +10,7 @@ import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
 import { useComments } from "@hooks/useComments";
+import { commentFormSchema } from "@utils/zodSchemas";
 
 export default function CommentsScreen() {
   const { id } = useLocalSearchParams();
@@ -44,10 +45,6 @@ export default function CommentsScreen() {
       placeholder: userData
         ? "Write your comment..."
         : "Please login to comment",
-      validation: {
-        required: true,
-        message: "Comment cannot be empty",
-      },
       editable: !!userData,
     },
   ];
@@ -75,6 +72,7 @@ export default function CommentsScreen() {
         submitButtonText="Add Comment"
         style={styles.form}
         isLoading={isSubmitting}
+        zodSchema={commentFormSchema}
       />
       <FlatList
         data={comments}

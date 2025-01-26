@@ -7,7 +7,7 @@ import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle } from "@components/typography";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
-import { FORM_RULES } from "@utils/formValidation";
+import { editProfileFormSchema } from "@utils/zodSchemas";
 import auth from "@react-native-firebase/auth";
 
 const getEditProfileFields = (
@@ -19,7 +19,7 @@ const getEditProfileFields = (
     category: "text-input",
     type: "text",
     placeholder: "Display Name",
-    validation: FORM_RULES.name,
+    defaultValue: user?.displayName || "",
   },
   {
     name: "currentPassword",
@@ -27,10 +27,6 @@ const getEditProfileFields = (
     category: "text-input",
     type: "password",
     placeholder: "Password",
-    validation: {
-      required: true,
-      message: "Current password is required",
-    },
   },
 ];
 
@@ -53,12 +49,12 @@ const EditProfileScreen: React.FC = () => {
         onSubmit={async (data) => {
           await updateProfile(data.currentPassword, {
             displayName: data.displayName,
-            email: data.email,
           });
         }}
         submitButtonText="Save Changes"
         isLoading={loading}
         options={{ mode: "onBlur" }}
+        zodSchema={editProfileFormSchema}
       />
     </ScrollView>
   );

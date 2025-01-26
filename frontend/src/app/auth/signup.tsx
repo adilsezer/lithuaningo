@@ -7,19 +7,12 @@ import AppleSignInButton from "@components/auth/AppleSignInButton";
 import { SectionTitle } from "@components/typography";
 import { useThemeStyles } from "@hooks/useThemeStyles";
 import { Form } from "@components/form/Form";
-import { FORM_RULES } from "@utils/formValidation";
-import { FormField } from "@components/form/form.types";
+import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import crashlytics from "@react-native-firebase/crashlytics";
-
-type SignUpData = {
-  email: string;
-  password: string;
-  displayName: string;
-  confirmPassword: string;
-};
+import { signupFormSchema } from "@utils/zodSchemas";
 
 const signupFields: FormField[] = [
   {
@@ -28,7 +21,6 @@ const signupFields: FormField[] = [
     category: "text-input",
     type: "text",
     placeholder: "Name",
-    validation: FORM_RULES.name,
   },
   {
     name: "email",
@@ -38,7 +30,6 @@ const signupFields: FormField[] = [
     placeholder: "Email",
     keyboardType: "email-address",
     autoCapitalize: "none",
-    validation: FORM_RULES.email,
   },
   {
     name: "password",
@@ -47,7 +38,6 @@ const signupFields: FormField[] = [
     type: "password",
     placeholder: "Password",
     secureTextEntry: true,
-    validation: FORM_RULES.password,
   },
   {
     name: "confirmPassword",
@@ -56,17 +46,12 @@ const signupFields: FormField[] = [
     type: "password",
     placeholder: "Confirm Password",
     secureTextEntry: true,
-    validation: {
-      required: true,
-      validate: (value, formValues) =>
-        value === formValues.password || "Passwords don't match",
-    },
   },
 ];
 
 const SignUpScreen: React.FC = () => {
   const { colors } = useThemeStyles();
-  const isLoading = useIsLoading();
+  const loading = useIsLoading();
   const { signUp, signInWithSocial, error, clearError } = useAuth();
 
   useEffect(() => {
@@ -80,14 +65,15 @@ const SignUpScreen: React.FC = () => {
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}
 
-      <Form<SignUpData>
+      <Form
         fields={signupFields}
         onSubmit={async (data) => {
           await signUp(data.email, data.password, data.displayName);
         }}
         submitButtonText="Sign Up"
-        isLoading={isLoading}
+        isLoading={loading}
         options={{ mode: "onBlur" }}
+        zodSchema={signupFormSchema}
       />
 
       <Divider content="Or" />
@@ -98,13 +84,13 @@ const SignUpScreen: React.FC = () => {
         icon={require("assets/images/google-logo.png")}
         style={{ backgroundColor: colors.card, paddingVertical: 18 }}
         textStyle={{ color: colors.cardText }}
-        disabled={isLoading}
+        disabled={loading}
       />
 
       {Platform.OS === "ios" && (
         <AppleSignInButton
           onPress={() => signInWithSocial("apple")}
-          disabled={isLoading}
+          disabled={loading}
         />
       )}
     </ScrollView>

@@ -9,6 +9,7 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
+import { reportFormSchema } from "@utils/zodSchemas";
 
 export default function ReportScreen() {
   const { id } = useLocalSearchParams();
@@ -51,10 +52,6 @@ export default function ReportScreen() {
         { label: "Spam", value: "spam" },
         { label: "Other", value: "other" },
       ],
-      validation: {
-        required: true,
-        message: "Please select a reason",
-      },
       editable: !!userData,
     },
     {
@@ -65,11 +62,6 @@ export default function ReportScreen() {
       placeholder: userData
         ? "Please provide more details about your report..."
         : "Please login to submit a report",
-      validation: {
-        required: true,
-        message: "Details cannot be empty",
-        minLength: 10,
-      },
       editable: !!userData,
     },
   ];
@@ -118,6 +110,7 @@ export default function ReportScreen() {
         submitButtonText="Submit Report"
         style={styles.form}
         isLoading={isLoading}
+        zodSchema={reportFormSchema}
       />
     </View>
   );

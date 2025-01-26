@@ -5,6 +5,7 @@ import RenderClickableWords from "@components/learning/RenderClickableWords";
 import { SectionTitle, Subtitle, Instruction } from "@components/typography";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
+import { quizFormSchema } from "@utils/zodSchemas";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -89,7 +90,6 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       category: "text-input",
       type: "text",
       placeholder: "Type your answer here",
-      validation: { required: true, message: "Please enter your answer" },
     },
   ];
 
@@ -168,6 +168,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
           onSubmit={handleFormSubmit}
           submitButtonText="Submit"
           style={styles.form}
+          zodSchema={quizFormSchema}
         />
       )}
     </View>
@@ -175,17 +176,6 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
 };
 
 const styles = StyleSheet.create({
-  image: {
-    width: 250,
-    height: 250,
-    marginBottom: 10,
-    alignSelf: "center",
-    borderRadius: 10,
-  },
-  imageTablet: {
-    width: 500,
-    height: 500,
-  },
   sentenceContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -201,6 +191,17 @@ const styles = StyleSheet.create({
     shadowRadius: 1,
     elevation: 2,
     marginVertical: 14,
+  },
+  image: {
+    width: 250,
+    height: 250,
+    marginBottom: 10,
+    alignSelf: "center",
+    borderRadius: 10,
+  },
+  imageTablet: {
+    width: 500,
+    height: 500,
   },
   form: {
     paddingHorizontal: 0,

@@ -7,6 +7,7 @@ import crashlytics from "@react-native-firebase/crashlytics";
 import { SectionTitle, Instruction } from "@components/typography";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
+import { deleteAccountFormSchema } from "@utils/zodSchemas";
 import auth from "@react-native-firebase/auth";
 import { AlertDialog } from "@components/ui/AlertDialog";
 
@@ -17,10 +18,6 @@ const deleteAccountFields: FormField[] = [
     category: "text-input",
     type: "password",
     placeholder: "Password",
-    validation: {
-      required: true,
-      message: "Please enter your password to confirm deletion",
-    },
   },
 ];
 
@@ -31,6 +28,10 @@ const DeleteAccountScreen: React.FC = () => {
   const isPasswordProvider = user?.providerData.some(
     (provider) => provider.providerId === "password"
   );
+
+  useEffect(() => {
+    crashlytics().log("Delete account screen loaded.");
+  }, []);
 
   const handleDeleteAccount = async (values: { password: string }) => {
     AlertDialog.confirm({
@@ -51,10 +52,6 @@ const DeleteAccountScreen: React.FC = () => {
     });
   };
 
-  useEffect(() => {
-    crashlytics().log("Delete account screen loaded.");
-  }, []);
-
   return (
     <ScrollView>
       <BackButton />
@@ -70,6 +67,7 @@ const DeleteAccountScreen: React.FC = () => {
           submitButtonText="Delete Account"
           isLoading={loading}
           options={{ mode: "onBlur" }}
+          zodSchema={deleteAccountFormSchema}
         />
       ) : (
         <Instruction>

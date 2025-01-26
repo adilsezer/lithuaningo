@@ -1,12 +1,14 @@
 import React from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
 import {
   useForm,
   Controller,
   FieldValues,
   Path,
   DefaultValues,
+  FieldError,
 } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import CustomButton from "@components/ui/CustomButton";
 import { FormProps, FormField as FormFieldType } from "./form.types";
 import { FormField } from "./FormField";
@@ -37,11 +39,13 @@ export function Form<T extends FieldValues>({
   defaultValues,
   style,
   submitButtonStyle,
+  zodSchema,
 }: FormProps<T>) {
   const form = useForm<T>({
     mode: "onSubmit",
     reValidateMode: "onChange",
     ...options,
+    ...(zodSchema && { resolver: zodResolver(zodSchema) }),
     defaultValues: {
       ...fields.reduce(
         (acc, field) => ({
@@ -72,14 +76,15 @@ export function Form<T extends FieldValues>({
     const errorMessages = Object.entries(errors)
       .map(([field, error]: [string, any]) => {
         const fieldConfig = fields.find((f) => f.name === field);
-        return (
-          error.message ||
-          fieldConfig?.validation?.message ||
-          `${fieldConfig?.label || field} is required`
-        );
+        return error.message || `${fieldConfig?.label || field} is required`;
       })
       .join("\n");
     AlertDialog.error(errorMessages);
+  };
+
+  const getFieldError = (fieldName: string): string | undefined => {
+    const error = formErrors[fieldName];
+    return error ? (error as FieldError).message : undefined;
   };
 
   return (
@@ -89,7 +94,6 @@ export function Form<T extends FieldValues>({
           key={field.name}
           control={control}
           name={field.name as Path<T>}
-          rules={field.validation}
           render={({ field: fieldProps }) => (
             <View style={styles.fieldContainer}>
               <FormField
@@ -97,6 +101,7 @@ export function Form<T extends FieldValues>({
                 onChange={fieldProps.onChange}
                 onBlur={fieldProps.onBlur}
                 value={fieldProps.value}
+                error={getFieldError(field.name)}
               />
             </View>
           )}

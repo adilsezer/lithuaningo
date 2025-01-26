@@ -11,6 +11,7 @@ import { FormField } from "@components/form/form.types";
 import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useFlashcards } from "@hooks/useFlashcards";
+import { flashcardFormSchema } from "@utils/zodSchemas";
 
 export default function NewFlashcardScreen() {
   const router = useRouter();
@@ -26,10 +27,6 @@ export default function NewFlashcardScreen() {
       category: "text-input",
       type: "text",
       placeholder: "Enter front side text",
-      validation: {
-        required: true,
-        message: "Front side is required",
-      },
     },
     {
       name: "back",
@@ -37,10 +34,6 @@ export default function NewFlashcardScreen() {
       category: "text-input",
       type: "text",
       placeholder: "Enter back side text",
-      validation: {
-        required: true,
-        message: "Back side is required",
-      },
     },
     {
       name: "exampleSentence",
@@ -54,38 +47,34 @@ export default function NewFlashcardScreen() {
       label: "Audio",
       category: "audio-input",
       type: "audio",
-      validation: {
-        validate: (value: File | undefined) => {
-          if (!value) return true;
-          return (
-            value.type.startsWith("audio/") || "Please upload an audio file"
-          );
-        },
-      },
     },
     {
       name: "imageFile",
       label: "Image",
       category: "image-input",
       type: "image",
-      validation: {
-        validate: (value: File | undefined) => {
-          if (!value) return true;
-          return (
-            value.type.startsWith("image/") || "Please upload an image file"
-          );
-        },
-      },
     },
   ];
 
-  const handleSubmit = async (data: FlashcardFormData) => {
+  const handleSubmit = async (
+    formData: Omit<FlashcardFormData, "deckId" | "createdBy">
+  ) => {
     if (!deckId || !userData?.id) {
       AlertDialog.error("Missing required data");
       return;
     }
 
-    const success = await handleCreateFlashcard(data, deckId, userData.id);
+    const flashcardData = {
+      ...formData,
+      deckId,
+      createdBy: userData.id,
+    };
+
+    const success = await handleCreateFlashcard(
+      flashcardData,
+      deckId,
+      userData.id
+    );
     if (success) {
       // Create another flashcard for the same deck
       router.push(`/flashcards/new?deckId=${deckId}`);
@@ -101,6 +90,7 @@ export default function NewFlashcardScreen() {
           fields={fields}
           onSubmit={handleSubmit}
           submitButtonText="Create Flashcard"
+          zodSchema={flashcardFormSchema}
         />
         <CustomButton
           title="Complete Deck"
