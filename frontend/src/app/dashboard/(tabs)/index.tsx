@@ -109,7 +109,6 @@ const DashboardScreen: React.FC = () => {
         <DailyChallengeCard
           answeredQuestions={stats?.todayAnsweredQuestions ?? 0}
           correctAnswers={stats?.todayCorrectAnsweredQuestions ?? 0}
-          colors={theme.colors.secondary}
         />
         <CustomButton
           title="Start Daily Challenge"

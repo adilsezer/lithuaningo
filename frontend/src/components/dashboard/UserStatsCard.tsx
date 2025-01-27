@@ -23,7 +23,7 @@ export const UserStatsCard: React.FC<UserStatsCardProps> = ({
       label: "Level",
       value: stats.level,
       icon: "star" as keyof typeof MaterialCommunityIcons.glyphMap,
-      iconColor: theme.colors.secondary,
+      iconColor: theme.colors.primary,
     },
     {
       label: "XP",
@@ -41,7 +41,7 @@ export const UserStatsCard: React.FC<UserStatsCardProps> = ({
       label: "Words",
       value: stats.totalWordsLearned,
       icon: "book" as keyof typeof MaterialCommunityIcons.glyphMap,
-      iconColor: theme.colors.primary,
+      iconColor: theme.colors.secondary,
     },
     {
       label: "Quizzes",
