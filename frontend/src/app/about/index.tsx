@@ -3,7 +3,6 @@ import { StyleSheet, ScrollView } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import { useAbout } from "@hooks/useAbout";
 import CustomText from "@components/ui/CustomText";
-import { LinkText } from "@components/typography";
 
 const AboutScreen = () => {
   const {
@@ -29,23 +28,23 @@ const AboutScreen = () => {
       <CustomText>Contact Us</CustomText>
       <CustomText>
         Email:{" "}
-        <LinkText onPress={() => handleLinkPress(links.email)}>
+        <CustomText onPress={() => handleLinkPress(links.email)}>
           {links.email.value}
-        </LinkText>
+        </CustomText>
       </CustomText>
 
       <CustomText>Open Source</CustomText>
-      <LinkText onPress={() => handleLinkPress(links.github)}>
+      <CustomText onPress={() => handleLinkPress(links.github)}>
         {links.github.label}
-      </LinkText>
+      </CustomText>
 
       <CustomText>Legal</CustomText>
-      <LinkText onPress={navigateToPrivacyPolicy}>
+      <CustomText onPress={navigateToPrivacyPolicy}>
         {links.privacyPolicy.label}
-      </LinkText>
-      <LinkText onPress={navigateToTermsOfService}>
+      </CustomText>
+      <CustomText onPress={navigateToTermsOfService}>
         {links.termsOfService.label}
-      </LinkText>
+      </CustomText>
 
       <CustomText>License</CustomText>
       <CustomText>This app is licensed under the MIT License.</CustomText>

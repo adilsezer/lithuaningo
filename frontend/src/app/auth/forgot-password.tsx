@@ -35,7 +35,9 @@ const ForgotPasswordScreen: React.FC = () => {
       <BackButton />
 
       <View>
-        <CustomText>Reset Password</CustomText>
+        <CustomText variant="titleLarge" bold>
+          Reset Password
+        </CustomText>
         <CustomText>
           Enter your email and we will send you a link to reset your password.
         </CustomText>

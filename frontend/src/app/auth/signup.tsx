@@ -1,6 +1,5 @@
 import React, { useEffect } from "react";
 import { Platform, ScrollView } from "react-native";
-import Divider from "@components/ui/Divider";
 import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
@@ -10,10 +9,10 @@ import { useIsLoading } from "@stores/useUIStore";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { signupFormSchema } from "@utils/zodSchemas";
-import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
-import NavigationLink from "@components/layout/NavigationLink";
+import { router } from "expo-router";
+import CustomDivider from "@components/ui/CustomDivider";
 
 const signupFields: FormField[] = [
   {
@@ -61,7 +60,9 @@ const SignUpScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <CustomText>Create Account</CustomText>
+      <CustomText variant="titleLarge" bold>
+        Create Account
+      </CustomText>
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}
 
@@ -76,7 +77,7 @@ const SignUpScreen: React.FC = () => {
         zodSchema={signupFormSchema}
       />
 
-      <Divider content="Or" />
+      <CustomDivider content="Or" />
 
       <SocialAuthButtons
         onGooglePress={() => signInWithSocial("google")}
@@ -84,10 +85,15 @@ const SignUpScreen: React.FC = () => {
         disabled={loading}
       />
 
-      <NavigationLink
-        text="Already have an account? Sign In"
-        path="/auth/login"
-      />
+      <CustomText
+        variant="bodyMedium"
+        onPress={() => {
+          router.push("/auth/login");
+        }}
+        style={{ textDecorationLine: "underline" }}
+      >
+        Already have an account? Sign In
+      </CustomText>
     </ScrollView>
   );
 };

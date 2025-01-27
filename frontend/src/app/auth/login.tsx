@@ -2,17 +2,17 @@ import React, { useEffect, useCallback } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import NavigationLink from "@components/layout/NavigationLink";
 import BackButton from "@components/layout/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import crashlytics from "@react-native-firebase/crashlytics";
-import Divider from "@components/ui/Divider";
+import CustomDivider from "@components/ui/CustomDivider";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import type { SocialProvider } from "@hooks/useAuth";
 import { loginFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
+import { router } from "expo-router";
 
 const loginFields: FormField[] = [
   {
@@ -67,9 +67,18 @@ const LoginScreen: React.FC = () => {
         options={{ mode: "onBlur" }}
         zodSchema={loginFormSchema}
       />
-      <NavigationLink text="Forgot Password?" path="/auth/forgot-password" />
 
-      <Divider content="Or" />
+      <CustomText
+        variant="bodyMedium"
+        onPress={() => {
+          router.push("/auth/forgot-password");
+        }}
+        style={{ textDecorationLine: "underline" }}
+      >
+        Forgot Password?
+      </CustomText>
+
+      <CustomDivider content="Or" />
 
       <SocialAuthButtons
         onGooglePress={() => handleSocialAuth("google")}
@@ -77,10 +86,15 @@ const LoginScreen: React.FC = () => {
         disabled={loading}
       />
 
-      <NavigationLink
-        text="Don't have an account? Sign Up"
-        path="/auth/signup"
-      />
+      <CustomText
+        variant="bodyMedium"
+        onPress={() => {
+          router.push("/auth/signup");
+        }}
+        style={{ textDecorationLine: "underline" }}
+      >
+        Don't have an account? Sign Up
+      </CustomText>
     </ScrollView>
   );
 };

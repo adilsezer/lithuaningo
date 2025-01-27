@@ -3,8 +3,6 @@ import { ScrollView } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import * as Linking from "expo-linking";
 import CustomText from "@components/ui/CustomText";
-import { LinkText } from "@components/typography/LinkText";
-import { Paragraph } from "react-native-paper";
 
 const TermsOfService = () => {
   return (
@@ -146,11 +144,11 @@ const TermsOfService = () => {
       </CustomText>
       <CustomText>
         By email:{" "}
-        <LinkText
+        <CustomText
           onPress={() => Linking.openURL("mailto:lithuaningo@gmail.com")}
         >
           lithuaningo@gmail.com
-        </LinkText>
+        </CustomText>
       </CustomText>
     </ScrollView>
   );

@@ -7,8 +7,8 @@ import { CustomSlider } from "@components/ui/CustomSlider";
 import { CustomDatePicker } from "@components/ui/CustomDatePicker";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";
 import { CustomAudioPicker } from "@components/ui/CustomAudioPicker";
-import { LinkText } from "@components/typography";
 import CustomTextInput from "@components/ui/CustomTextInput";
+import CustomText from "@components/ui/CustomText";
 
 interface FormFieldProps {
   field: FormFieldType;
@@ -98,9 +98,9 @@ export const FormField: React.FC<FormFieldProps> = ({
 
     case "link":
       return (
-        <LinkText onPress={field.onPress}>
+        <CustomText onPress={field.onPress}>
           {field.linkText || field.label}
-        </LinkText>
+        </CustomText>
       );
   }
 };
