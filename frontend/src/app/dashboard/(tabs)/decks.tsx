@@ -2,16 +2,15 @@ import React, { useEffect, useCallback } from "react";
 import { View, StyleSheet, FlatList, Text } from "react-native";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useDecks } from "@hooks/useDecks";
-import { useUserStore } from "@stores/useUserStore";
 import { useUserData } from "@stores/useUserStore";
-import { CustomCategoryPicker } from "@components/ui/CustomCategoryPicker";
 import { SearchBar } from "@components/ui/SearchBar";
 import { useRouter } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomButton from "@components/ui/CustomButton";
-import { DeckCategory } from "@src/types/DeckCategory";
+import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
+import { CustomPicker } from "@components/ui/CustomPicker";
 
 export default function DecksScreen() {
   const userData = useUserData();
@@ -61,10 +60,10 @@ export default function DecksScreen() {
   const renderHeader = useCallback(
     () => (
       <>
-        <View style={styles.headerContainer}>
-          <View style={styles.titleRow}>
-            <CustomText>Decks</CustomText>
-          </View>
+        <View>
+          <CustomText variant="titleLarge" bold>
+            Decks
+          </CustomText>
           <CustomButton
             title="Add New Deck"
             onPress={() => handleNavigation("/decks/new")}
@@ -75,11 +74,15 @@ export default function DecksScreen() {
           placeholder="Search decks and flashcards..."
           initialValue={searchQuery}
         />
-        <CustomCategoryPicker
-          selectedCategory={selectedCategory}
-          onSelectCategory={(category: DeckCategory) =>
-            setSelectedCategory(category)
+        <CustomPicker
+          value={selectedCategory}
+          onValueChange={(category) =>
+            setSelectedCategory(category as DeckCategory)
           }
+          options={deckCategories.map((category) => ({
+            label: category,
+            value: category,
+          }))}
         />
       </>
     ),
@@ -134,23 +137,8 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-  },
   list: {
     flexGrow: 1,
-  },
-  headerContainer: {
-    flexDirection: "column",
-    gap: 12,
-    marginBottom: 16,
-  },
-  titleRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
   },
   emptyText: {
     fontSize: 16,

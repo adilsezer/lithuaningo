@@ -53,7 +53,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       placeholder={placeholder}
       onChangeText={handleChangeText}
       value={value}
-      style={[style, { backgroundColor: theme.colors.surface }]}
+      style={[
+        style,
+        {
+          backgroundColor: theme.colors.surface,
+          marginVertical: 12,
+          borderWidth: 1,
+          borderColor: theme.colors.primary,
+        },
+      ]}
       inputStyle={{ color: theme.colors.onSurface }}
       placeholderTextColor={theme.colors.onSurfaceVariant}
     />

@@ -1,7 +1,7 @@
 export const deckCategories = [
-  "All",
-  "My",
-  "Top",
+  "All Decks",
+  "My Decks",
+  "Top Rated",
   "Beginner",
   "Advanced",
   "Grammar",
@@ -19,18 +19,18 @@ export type DeckCategory = (typeof deckCategories)[number];
 
 export const deckCategoryMetadata: Record<DeckCategory, DeckCategoryMetadata> =
   {
-    All: {
-      id: "All",
+    "All Decks": {
+      id: "All Decks",
       label: "All Decks",
       description: "View all available decks",
     },
-    My: {
-      id: "My",
+    "My Decks": {
+      id: "My Decks",
       label: "My Decks",
       description: "View your created decks",
     },
-    Top: {
-      id: "Top",
+    "Top Rated": {
+      id: "Top Rated",
       label: "Top Rated",
       description: "View top rated decks",
     },

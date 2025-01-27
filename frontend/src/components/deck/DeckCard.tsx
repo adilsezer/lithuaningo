@@ -8,7 +8,6 @@ import {
   Button,
   IconButton,
   Avatar,
-  Surface,
   useTheme,
 } from "react-native-paper";
 
@@ -16,153 +15,148 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
   const theme = useTheme();
 
   return (
-    <Surface
-      elevation={1}
+    <Card
+      mode="elevated"
       style={{
-        marginHorizontal: 8,
+        backgroundColor: theme.colors.surface,
+        borderWidth: 1,
+        borderColor: theme.colors.primary,
         marginVertical: 8,
-        borderRadius: 16,
       }}
     >
-      <Card mode="elevated" style={{ backgroundColor: theme.colors.surface }}>
-        <Card.Title
-          title={deck.title}
-          titleVariant="titleLarge"
-          subtitle={deck.category}
-          style={{ paddingBottom: 0 }}
-          titleStyle={{ color: theme.colors.onSurface }}
-          subtitleStyle={{ color: theme.colors.onSurface }}
-        />
+      <Card.Title
+        title={deck.title}
+        titleVariant="titleLarge"
+        subtitle={deck.category}
+        style={{ paddingBottom: 0 }}
+        titleStyle={{ color: theme.colors.onSurface }}
+        subtitleStyle={{ color: theme.colors.onSurface }}
+      />
 
-        <Card.Content>
-          <Text
-            variant="bodyMedium"
-            numberOfLines={2}
-            style={{ marginBottom: 12 }}
-          >
-            {deck.description}
-          </Text>
+      <Card.Content>
+        <Text
+          variant="bodyMedium"
+          numberOfLines={2}
+          style={{ marginBottom: 12 }}
+        >
+          {deck.description}
+        </Text>
 
-          {deck.tags.length > 0 && (
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: 8,
-                marginBottom: 12,
-              }}
-            >
-              {deck.tags.map((tag, index) => (
-                <Chip
-                  key={index}
-                  compact
-                  mode="flat"
-                  style={{ backgroundColor: theme.colors.secondaryContainer }}
-                >
-                  <Text style={{ color: theme.colors.onSecondaryContainer }}>
-                    {tag}
-                  </Text>
-                </Chip>
-              ))}
-            </View>
-          )}
-
+        {deck.tags.length > 0 && (
           <View
             style={{
               flexDirection: "row",
-              alignItems: "center",
-              marginBottom: 16,
+              flexWrap: "wrap",
+              gap: 8,
+              marginBottom: 12,
             }}
           >
-            <Avatar.Text
-              label={deck.createdByUsername[0]}
-              size={24}
-              style={{ marginRight: 8 }}
-            />
-            <Text variant="bodySmall" style={{ flex: 1 }}>
-              By {deck.createdByUsername}
-            </Text>
-            <View style={{ flexDirection: "row", alignItems: "center" }}>
-              <IconButton
-                icon="cards-outline"
-                size={16}
-                style={{ margin: 0 }}
-              />
-              <Text variant="bodySmall" style={{ marginRight: 12 }}>
-                {deck.flashcardCount} cards
-              </Text>
-              <IconButton
-                icon="star-outline"
-                size={16}
-                style={{ margin: 0 }}
-                iconColor={theme.colors.secondary}
-              />
-              <Text variant="bodySmall">{(rating * 100).toFixed(0)}%</Text>
-            </View>
+            {deck.tags.map((tag, index) => (
+              <Chip
+                key={index}
+                compact
+                mode="flat"
+                style={{ backgroundColor: theme.colors.secondaryContainer }}
+              >
+                <Text style={{ color: theme.colors.onSecondaryContainer }}>
+                  {tag}
+                </Text>
+              </Chip>
+            ))}
           </View>
+        )}
 
-          <View style={{ flexDirection: "row", gap: 8 }}>
-            <Button
-              mode="contained"
-              onPress={() => actions.onPractice(deck.id)}
-              style={{ flex: 1 }}
-              contentStyle={{ height: 40 }}
-              icon="lightbulb-outline"
-              buttonColor={theme.colors.primary}
-            >
-              Practice
-            </Button>
-            <Button
-              mode="contained"
-              onPress={() => actions.onQuiz(deck.id)}
-              style={{ flex: 1 }}
-              contentStyle={{ height: 40 }}
-              icon="lightbulb-outline"
-              buttonColor={theme.colors.secondary}
-            >
-              Quiz
-            </Button>
-          </View>
-        </Card.Content>
-
-        <Card.Actions
+        <View
           style={{
-            justifyContent: "space-around",
-            paddingTop: 4,
-            marginTop: 20,
-            alignSelf: "center",
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 16,
           }}
         >
-          <IconButton
-            icon="thumb-up-outline"
+          <Avatar.Text
+            label={deck.createdByUsername[0]}
             size={24}
-            onPress={() => actions.onVote(true)}
-            iconColor={theme.colors.primary}
-            mode="outlined"
+            style={{ marginRight: 8 }}
           />
-          <IconButton
-            icon="thumb-down-outline"
-            size={24}
-            onPress={() => actions.onVote(false)}
-            iconColor={theme.colors.primary}
-            mode="outlined"
-          />
-          <IconButton
-            icon="comment-outline"
-            size={24}
-            onPress={() => actions.onComment(deck.id)}
-            iconColor={theme.colors.primary}
-            mode="outlined"
-          />
-          <IconButton
-            icon="flag-outline"
-            size={24}
-            onPress={actions.onReport}
-            iconColor={theme.colors.primary}
-            mode="outlined"
-          />
-        </Card.Actions>
-      </Card>
-    </Surface>
+          <Text variant="bodySmall" style={{ flex: 1 }}>
+            By {deck.createdByUsername}
+          </Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <IconButton icon="cards-outline" size={16} style={{ margin: 0 }} />
+            <Text variant="bodySmall" style={{ marginRight: 12 }}>
+              {deck.flashcardCount} cards
+            </Text>
+            <IconButton
+              icon="star-outline"
+              size={16}
+              style={{ margin: 0 }}
+              iconColor={theme.colors.secondary}
+            />
+            <Text variant="bodySmall">{(rating * 100).toFixed(0)}%</Text>
+          </View>
+        </View>
+
+        <View style={{ flexDirection: "row", gap: 8 }}>
+          <Button
+            mode="contained"
+            onPress={() => actions.onPractice(deck.id)}
+            style={{ flex: 1 }}
+            contentStyle={{ height: 40 }}
+            icon="lightbulb-outline"
+            buttonColor={theme.colors.primary}
+          >
+            Practice
+          </Button>
+          <Button
+            mode="contained"
+            onPress={() => actions.onQuiz(deck.id)}
+            style={{ flex: 1 }}
+            contentStyle={{ height: 40 }}
+            icon="lightbulb-outline"
+            buttonColor={theme.colors.secondary}
+          >
+            Quiz
+          </Button>
+        </View>
+      </Card.Content>
+
+      <Card.Actions
+        style={{
+          justifyContent: "space-around",
+          paddingTop: 4,
+          marginTop: 20,
+          alignSelf: "center",
+        }}
+      >
+        <IconButton
+          icon="thumb-up-outline"
+          size={24}
+          onPress={() => actions.onVote(true)}
+          iconColor={theme.colors.primary}
+          mode="outlined"
+        />
+        <IconButton
+          icon="thumb-down-outline"
+          size={24}
+          onPress={() => actions.onVote(false)}
+          iconColor={theme.colors.primary}
+          mode="outlined"
+        />
+        <IconButton
+          icon="comment-outline"
+          size={24}
+          onPress={() => actions.onComment(deck.id)}
+          iconColor={theme.colors.primary}
+          mode="outlined"
+        />
+        <IconButton
+          icon="flag-outline"
+          size={24}
+          onPress={actions.onReport}
+          iconColor={theme.colors.primary}
+          mode="outlined"
+        />
+      </Card.Actions>
+    </Card>
   );
 });

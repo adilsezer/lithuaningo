@@ -6,10 +6,12 @@ import {
   Modal,
   Pressable,
   Platform,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import { FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
+
 interface Option {
   label: string;
   value: string;
@@ -20,6 +22,7 @@ interface CustomPickerProps {
   onValueChange: (value: string) => void;
   options: Option[];
   error?: string;
+  placeholder?: string; // New prop
 }
 
 export const CustomPicker: React.FC<CustomPickerProps> = ({
@@ -27,31 +30,46 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
   onValueChange,
   options,
   error,
+  placeholder = "Select an option", // Default placeholder text
 }) => {
   const theme = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
-  const selectedOption = options.find((opt) => opt.value === value);
-
   const handleValueChange = (newValue: string) => {
+    if (newValue === "") {
+      // Handle placeholder selection if needed
+      return;
+    }
     onValueChange(newValue);
     setModalVisible(false);
   };
 
+  const displayValue = value || placeholder; // Show placeholder if no value is selected
+
   return (
     <View style={styles.container}>
+      {/* The button that toggles the modal */}
       <Pressable
         style={[
           styles.pickerButton,
           {
             borderColor: error ? theme.colors.error : theme.colors.primary,
-            backgroundColor: theme.colors.primaryContainer,
+            backgroundColor: theme.colors.surface,
           },
         ]}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={[styles.valueText, { color: theme.colors.onBackground }]}>
-          {selectedOption?.label || "Select an option"}
+        <Text
+          style={[
+            styles.valueText,
+            {
+              color: value
+                ? theme.colors.onBackground
+                : theme.colors.onSurfaceVariant, // Dim color for placeholder
+            },
+          ]}
+        >
+          {displayValue}
         </Text>
         <FontAwesome
           name="chevron-down"
@@ -60,46 +78,56 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
           style={styles.icon}
         />
       </Pressable>
+
+      {/* The modal with bottom‐sheet style */}
       <Modal
         animationType="slide"
-        transparent={true}
+        transparent
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setModalVisible(false)}
+        {/* Overlay to close the modal when tapped outside */}
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalOverlay} />
+        </TouchableWithoutFeedback>
+
+        {/* Actual bottom‐sheet content */}
+        <View
+          style={[
+            styles.modalContent,
+            { backgroundColor: theme.colors.surface },
+          ]}
         >
-          <Pressable
-            style={[
-              styles.modalContent,
-              { backgroundColor: theme.colors.surface },
-            ]}
+          <View
+            style={[styles.handle, { backgroundColor: theme.colors.primary }]}
+          />
+          <Picker
+            selectedValue={value}
+            onValueChange={handleValueChange}
+            style={[styles.picker, { color: theme.colors.onBackground }]}
           >
-            <View
-              style={[styles.handle, { backgroundColor: theme.colors.primary }]}
+            {/* Placeholder as the first option */}
+            <Picker.Item
+              label={placeholder}
+              value=""
+              color={theme.colors.onSurfaceVariant}
+              enabled={false} // Make it unselectable
             />
-            <Picker
-              selectedValue={value}
-              onValueChange={handleValueChange}
-              style={[styles.picker, { color: theme.colors.onBackground }]}
-            >
-              {options.map((option) => (
-                <Picker.Item
-                  key={option.value}
-                  label={option.label}
-                  value={option.value}
-                  color={
-                    Platform.OS === "ios"
-                      ? theme.colors.onBackground
-                      : undefined
-                  }
-                />
-              ))}
-            </Picker>
-          </Pressable>
-        </Pressable>
+            {options.map((option) => (
+              <Picker.Item
+                key={option.value}
+                label={option.label}
+                value={option.value}
+                color={
+                  Platform.OS === "ios" ? theme.colors.onBackground : undefined
+                }
+              />
+            ))}
+          </Picker>
+        </View>
       </Modal>
+
+      {/* Error message */}
       {error && (
         <Text style={[styles.errorText, { color: theme.colors.error }]}>
           {error}
@@ -112,13 +140,14 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    marginBottom: 16,
+    marginVertical: 12,
   },
   pickerButton: {
     borderWidth: 1,
     borderRadius: 12,
-    padding: 16,
-    height: 60,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    height: 48,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
@@ -133,10 +162,13 @@ const styles = StyleSheet.create({
   },
   modalOverlay: {
     flex: 1,
-    justifyContent: "flex-end",
     backgroundColor: "rgba(0, 0, 0, 0.3)",
   },
   modalContent: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     paddingTop: 12,

@@ -35,7 +35,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   const [decks, setDecks] = useState<Deck[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<DeckCategory>(
-    options?.initialCategory || "All"
+    options?.initialCategory || "All Decks"
   );
   const [deckRatings, setDeckRatings] = useState<Record<string, number>>({});
 
@@ -120,14 +120,14 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
 
       let fetchedDecks: Deck[] = [];
 
-      if (selectedCategory === "My" && userData?.id) {
+      if (selectedCategory === "My Decks" && userData?.id) {
         fetchedDecks = await deckService.getUserDecks(userData.id);
-      } else if (selectedCategory === "Top") {
+      } else if (selectedCategory === "Top Rated") {
         fetchedDecks = await deckService.getTopRatedDecks();
       } else {
         // Use getDecks with category (or undefined for "All")
         const category =
-          selectedCategory === "All" ? undefined : selectedCategory;
+          selectedCategory === "All Decks" ? undefined : selectedCategory;
         fetchedDecks = await deckService.getDecks(category);
       }
 
@@ -229,7 +229,8 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   const isEmpty = useMemo(() => decks.length === 0, [decks]);
   const emptyMessage = useMemo(() => {
     if (searchQuery.trim()) return "No results found";
-    if (selectedCategory === "My") return "You haven't created any decks yet";
+    if (selectedCategory === "My Decks")
+      return "You haven't created any decks yet";
     return "No decks found";
   }, [searchQuery, selectedCategory]);
 
