@@ -5,7 +5,7 @@ import {
   useSetError,
 } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@components/ui/AlertDialog";
 import { useCallback } from "react";
 
 interface AuthResponse {
@@ -18,6 +18,7 @@ export const useAuthOperation = () => {
   const isLoading = useIsLoading();
   const error = useError();
   const setError = useSetError();
+  const alertDialog = useAlertDialog();
 
   const handleError = useCallback(
     (error: any, title: string) => {
@@ -25,7 +26,7 @@ export const useAuthOperation = () => {
       console.error(`${title}:`, error);
       setError(message);
       crashlytics().recordError(error);
-      AlertDialog.error(message, title);
+      alertDialog.error(message, title);
       return { success: false, message };
     },
     [setError]
@@ -53,7 +54,7 @@ export const useAuthOperation = () => {
         }
 
         if (successMessage) {
-          AlertDialog.success(successMessage);
+          alertDialog.success(successMessage);
         }
 
         return result;

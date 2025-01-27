@@ -1,7 +1,7 @@
 import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@components/ui/AlertDialog";
 import type { FlashcardFormData } from "@src/types";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
@@ -17,6 +17,7 @@ export default function NewFlashcardScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const theme = useTheme();
+  const alertDialog = useAlertDialog();
   const userData = useUserData();
   const { handleCreateFlashcard } = useFlashcards();
 
@@ -60,7 +61,7 @@ export default function NewFlashcardScreen() {
     formData: Omit<FlashcardFormData, "deckId" | "createdBy">
   ) => {
     if (!deckId || !userData?.id) {
-      AlertDialog.error("Missing required data");
+      alertDialog.error("Missing required data");
       return;
     }
 

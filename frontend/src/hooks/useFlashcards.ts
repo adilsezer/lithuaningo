@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Flashcard, FlashcardFormData } from "@src/types";
 import flashcardService from "@services/data/flashcardService";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@components/ui/AlertDialog";
 import {
   useIsLoading,
   useSetLoading,
@@ -15,6 +15,7 @@ export const useFlashcards = () => {
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
+  const alertDialog = useAlertDialog();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
   const [sound, setSound] = useState<Audio.Sound>();
   const [isPlaying, setIsPlaying] = useState(false);
@@ -32,7 +33,7 @@ export const useFlashcards = () => {
     (error: any, message: string) => {
       console.error(message, error);
       setError(message);
-      AlertDialog.error(message);
+      alertDialog.error(message);
       return null;
     },
     [setError]
@@ -142,7 +143,7 @@ export const useFlashcards = () => {
           audioFile
         );
 
-        AlertDialog.success("Flashcard created successfully");
+        alertDialog.success("Flashcard created successfully");
         return true;
       } catch (error) {
         handleError(error, "Failed to create flashcard");

@@ -54,23 +54,25 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
         multiline={multiline}
         numberOfLines={numberOfLines}
         mode={mode}
-        style={[{ backgroundColor: theme.colors.surface }, style]}
-        contentStyle={{ paddingHorizontal: 16 }}
+        style={[
+          {
+            backgroundColor: theme.colors.background,
+            marginVertical: 6,
+          },
+          style,
+        ]}
         left={left}
         right={right}
         keyboardType={keyboardType}
         autoCapitalize={autoCapitalize}
         autoCorrect={autoCorrect}
-        theme={{
-          colors: {
-            primary: theme.colors.primary,
-            error: theme.colors.error,
-            onSurfaceVariant: theme.colors.onSurfaceVariant,
-          },
-        }}
       />
       {error && (
-        <HelperText type="error" visible={!!error}>
+        <HelperText
+          type="error"
+          visible={!!error}
+          style={{ marginHorizontal: 16 }}
+        >
           {error}
         </HelperText>
       )}

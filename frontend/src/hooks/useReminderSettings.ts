@@ -5,9 +5,10 @@ import {
   cancelAllScheduledNotifications,
   scheduleDailyReviewReminder,
 } from "@services/notification/notificationService";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@components/ui/AlertDialog";
 
 export const useReminderSettings = (userId?: string) => {
+  const alertDialog = useAlertDialog();
   const [reminderEnabled, setReminderEnabled] = useState(false);
   const [reminderTime, setReminderTime] = useState<Date | null>(null);
 
@@ -41,9 +42,9 @@ export const useReminderSettings = (userId?: string) => {
         await cancelAllScheduledNotifications();
       }
 
-      AlertDialog.success("Your settings have been successfully saved");
+      alertDialog.success("Your settings have been successfully saved");
     } catch (error) {
-      AlertDialog.error(
+      alertDialog.error(
         error instanceof Error ? error.message : "Failed to save settings"
       );
     }

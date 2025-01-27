@@ -75,49 +75,40 @@ export const darkThemeColors: ThemeColors = {
   onSecondaryContainer: "#263238",
 };
 
-export const createTheme = () => {
-  const themeContext = useContext(ThemeContext);
+export const createTheme = (isDarkMode: boolean) => {
+  const colors = isDarkMode ? darkThemeColors : lightThemeColors;
+  const paperTheme = {
+    ...MD3LightTheme,
+    version: 3 as const,
+  };
+  const navigationTheme = isDarkMode ? DarkTheme : LightTheme;
 
-  return useMemo(() => {
-    if (!themeContext) {
-      throw new Error("useThemeStyles must be used within a ThemeProvider");
-    }
-
-    const { isDarkMode } = themeContext;
-    const colors = isDarkMode ? darkThemeColors : lightThemeColors;
-    const paperTheme = {
-      ...MD3LightTheme,
-      version: 3 as const,
-    };
-    const navigationTheme = isDarkMode ? DarkTheme : LightTheme;
-
-    return {
-      ...paperTheme,
-      ...navigationTheme,
-      colors: {
-        ...paperTheme.colors,
-        ...navigationTheme.colors,
-        primary: colors.primary,
-        primaryContainer: colors.primaryContainer,
-        secondaryContainer: colors.secondaryContainer,
-        onPrimaryContainer: colors.onPrimaryContainer,
-        onSecondaryContainer: colors.onSecondaryContainer,
-        secondary: colors.secondary,
-        tertiary: colors.tertiary,
-        error: colors.error,
-        background: colors.background,
-        onBackground: colors.onBackground,
-        surface: colors.surface,
-        onSurface: colors.onSurface,
-        onSurfaceVariant: colors.onSurfaceVariant,
-        placeholder: colors.placeholder,
-        backdrop: colors.background,
-      },
-      fonts: {
-        ...MD3LightTheme.fonts,
-      },
-    };
-  }, [themeContext?.isDarkMode]);
+  return {
+    ...paperTheme,
+    ...navigationTheme,
+    colors: {
+      ...paperTheme.colors,
+      ...navigationTheme.colors,
+      primary: colors.primary,
+      primaryContainer: colors.primaryContainer,
+      secondaryContainer: colors.secondaryContainer,
+      onPrimaryContainer: colors.onPrimaryContainer,
+      onSecondaryContainer: colors.onSecondaryContainer,
+      secondary: colors.secondary,
+      tertiary: colors.tertiary,
+      error: colors.error,
+      background: colors.background,
+      onBackground: colors.onBackground,
+      surface: colors.surface,
+      onSurface: colors.onSurface,
+      onSurfaceVariant: colors.onSurfaceVariant,
+      placeholder: colors.placeholder,
+      backdrop: colors.background,
+    },
+    fonts: {
+      ...MD3LightTheme.fonts,
+    },
+  };
 };
 
 export default {

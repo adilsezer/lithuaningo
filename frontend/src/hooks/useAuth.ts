@@ -16,7 +16,7 @@ import { FirebaseAuthTypes } from "@react-native-firebase/auth";
 import crashlytics from "@react-native-firebase/crashlytics";
 import auth from "@react-native-firebase/auth";
 import apiClient from "@src/services/api/apiClient";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@components/ui/AlertDialog";
 import { useCallback } from "react";
 
 export type SocialProvider = "google" | "apple";
@@ -24,7 +24,7 @@ export type SocialProvider = "google" | "apple";
 export const useAuth = () => {
   const router = useRouter();
   const { performAuthOperation, error, clearError } = useAuthOperation();
-
+  const alertDialog = useAlertDialog();
   // Navigation helpers
   const navigateAfterAuth = useCallback(
     (route: string) => {
@@ -40,7 +40,7 @@ export const useAuth = () => {
         const response = await signUpWithEmail(email, password, name);
         if (response.success) {
           crashlytics().log("User signed up successfully");
-          AlertDialog.show({
+          alertDialog.show({
             title: "Verification Email Sent",
             message:
               "Please check your email to verify your account before logging in.",

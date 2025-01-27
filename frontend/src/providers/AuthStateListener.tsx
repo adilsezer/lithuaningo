@@ -6,10 +6,11 @@ import {
   updateUserState,
   sendEmailVerification,
 } from "@services/auth/authService";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@components/ui/AlertDialog";
 
 const AuthStateListener: React.FC = () => {
   const { logOut } = useUserStore();
+  const alertDialog = useAlertDialog();
   const router = useRouter();
 
   useEffect(() => {
@@ -19,7 +20,7 @@ const AuthStateListener: React.FC = () => {
           // If email is not verified, sign out and show message
           await auth().signOut();
           logOut();
-          AlertDialog.show({
+          alertDialog.show({
             title: "Email Not Verified",
             message:
               "Please verify your email before logging in. Need a new verification email?",
@@ -30,7 +31,7 @@ const AuthStateListener: React.FC = () => {
                   await sendEmailVerification();
                 },
               },
-              { text: "Cancel", style: "cancel" },
+              { text: "Cancel", onPress: () => {} },
             ],
           });
           router.replace("/auth/login");

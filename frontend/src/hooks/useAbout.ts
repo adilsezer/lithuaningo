@@ -2,7 +2,7 @@ import { useCallback } from "react";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import Constants from "expo-constants";
-import { AlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@components/ui/AlertDialog";
 
 export type AboutLink = {
   type: "email" | "url" | "internal";
@@ -36,6 +36,7 @@ export const ABOUT_LINKS = {
 export const useAbout = () => {
   const router = useRouter();
   const appVersion = Constants.expoConfig?.version || "Unknown";
+  const alertDialog = useAlertDialog();
 
   const handleLinkPress = useCallback(
     async (link: AboutLink) => {
@@ -69,7 +70,7 @@ export const useAbout = () => {
         }
       } catch (error) {
         console.error("Failed to handle link:", error);
-        AlertDialog.error(
+        alertDialog.error(
           error instanceof Error
             ? error.message
             : "Failed to open link. Please try again later."

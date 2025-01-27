@@ -12,8 +12,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import CustomButton from "@components/ui/CustomButton";
 import { FormProps, FormField as FormFieldType } from "./form.types";
 import { FormField } from "./FormField";
-import { AlertDialog } from "@components/ui/AlertDialog";
-
+import { useAlertDialog } from "@components/ui/AlertDialog";
 const getDefaultValueByCategory = (field: FormFieldType): any => {
   switch (field.category) {
     case "toggle":
@@ -58,6 +57,8 @@ export function Form<T extends FieldValues>({
     } as DefaultValues<T>,
   });
 
+  const alertDialog = useAlertDialog();
+
   const {
     control,
     handleSubmit: formHandleSubmit,
@@ -68,7 +69,7 @@ export function Form<T extends FieldValues>({
     try {
       await onSubmit(data);
     } catch (error) {
-      AlertDialog.error("An error occurred while submitting the form");
+      alertDialog.error("An error occurred while submitting the form");
     }
   };
 
@@ -79,7 +80,7 @@ export function Form<T extends FieldValues>({
         return error.message || `${fieldConfig?.label || field} is required`;
       })
       .join("\n");
-    AlertDialog.error(errorMessages);
+    alertDialog.error(errorMessages);
   };
 
   const getFieldError = (fieldName: string): string | undefined => {
