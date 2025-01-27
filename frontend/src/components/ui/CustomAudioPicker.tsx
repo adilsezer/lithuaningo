@@ -4,7 +4,7 @@ import { Audio, AVPlaybackStatus } from "expo-av";
 import { FontAwesome } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 import CustomButton from "@components/ui/CustomButton";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 interface AudioFile {
   uri: string;

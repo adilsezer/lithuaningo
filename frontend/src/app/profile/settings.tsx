@@ -5,7 +5,7 @@ import { useReminderSettings } from "@hooks/useReminderSettings";
 import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
 import { ReminderSettings } from "@components/settings/ReminderSettings";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 const SettingsScreen: React.FC = () => {
   const userData = useUserData();
   const {

@@ -1,7 +1,7 @@
 import React from "react";
 import { View } from "react-native";
 import BackButton from "@components/layout/BackButton";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 export default function QuizScreen() {
   return (

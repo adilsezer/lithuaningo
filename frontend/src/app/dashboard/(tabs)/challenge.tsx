@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 export default function LearnScreen() {
   const handleNavigation = (route: string) => {
     router.push(route);

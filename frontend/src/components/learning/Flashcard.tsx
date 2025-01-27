@@ -22,7 +22,7 @@ import { getCurrentDateKey } from "@utils/dateUtils";
 import { SENTENCE_KEYS } from "@config/constants";
 import { useWordData } from "@hooks/useWordData";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 interface FlashcardProps {
   wordId: string;

@@ -1,4 +1,4 @@
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import React from "react";
 import { View, StyleSheet } from "react-native";
 

@@ -3,7 +3,7 @@ import { ScrollView, View, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { CustomSwitch } from "@components/ui/CustomSwitch";
 import { useWelcome } from "@hooks/useWelcome";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 const WelcomeScreen = () => {
   const { isDarkMode, toggleTheme, navigateToAuth } = useWelcome();

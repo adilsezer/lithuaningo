@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { cleanWord } from "@utils/stringUtils";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;

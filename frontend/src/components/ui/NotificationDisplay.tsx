@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Image } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 interface NotificationDisplayProps {
   title: string;

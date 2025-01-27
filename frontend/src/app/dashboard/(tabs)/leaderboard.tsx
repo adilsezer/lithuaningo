@@ -5,7 +5,7 @@ import { useLeaderboard } from "@hooks/useLeaderboard";
 import { format } from "date-fns";
 import { useTheme } from "react-native-paper";
 import { ThemeColors } from "@src/styles/theme";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 type TrophyPosition = 0 | 1 | 2;
 

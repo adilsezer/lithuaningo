@@ -3,7 +3,7 @@ import { View, StyleSheet, Image, Dimensions, Platform } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;

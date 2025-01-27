@@ -4,7 +4,7 @@ import RenderClickableWords from "@components/learning/RenderClickableWords";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { quizFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -131,16 +131,10 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
       {isSubmitPressed && (
         <View>
           <CustomText>
-            You answered:{" "}
-            <CustomText>
-              {submittedAnswer}
-            </CustomText>
+            You answered: <CustomText>{submittedAnswer}</CustomText>
           </CustomText>
           <CustomText>
-            Correct answer:{" "}
-            <CustomText>
-              {correctAnswerText}
-            </CustomText>
+            Correct answer: <CustomText>{correctAnswerText}</CustomText>
           </CustomText>
         </View>
       )}

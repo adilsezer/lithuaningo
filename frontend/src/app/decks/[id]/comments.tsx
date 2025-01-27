@@ -10,7 +10,7 @@ import BackButton from "@components/layout/BackButton";
 import { useComments } from "@hooks/useComments";
 import { commentFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 export default function CommentsScreen() {
   const { id } = useLocalSearchParams();

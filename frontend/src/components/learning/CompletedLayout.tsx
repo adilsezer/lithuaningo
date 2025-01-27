@@ -5,7 +5,7 @@ import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useUserStats } from "@hooks/useUserStats";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 interface CompletedLayoutProps {
   title: string;

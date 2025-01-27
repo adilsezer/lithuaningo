@@ -2,7 +2,7 @@ import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, StyleSheet, Linking, Image } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
 import CustomButton from "@components/ui/CustomButton";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { useAlertDialog } from "@components/ui/AlertDialog";
 interface Props {
   children: ReactNode;

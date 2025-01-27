@@ -3,7 +3,6 @@ import { Platform, ScrollView } from "react-native";
 import Divider from "@components/ui/Divider";
 import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
-import AppleSignInButton from "@components/auth/AppleSignInButton";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
@@ -12,7 +11,9 @@ import { ErrorMessage } from "@components/ui/ErrorMessage";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { signupFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
+import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
+import NavigationLink from "@components/layout/NavigationLink";
 
 const signupFields: FormField[] = [
   {
@@ -77,15 +78,16 @@ const SignUpScreen: React.FC = () => {
 
       <Divider content="Or" />
 
-      <CustomButton
-        onPress={() => signInWithSocial("google")}
-        title="Continue with Google"
-        icon={require("assets/images/google-logo.png")}
+      <SocialAuthButtons
+        onGooglePress={() => signInWithSocial("google")}
+        onApplePress={() => signInWithSocial("apple")}
+        disabled={loading}
       />
 
-      {Platform.OS === "ios" && (
-        <AppleSignInButton onPress={() => signInWithSocial("apple")} />
-      )}
+      <NavigationLink
+        text="Already have an account? Sign In"
+        path="/auth/login"
+      />
     </ScrollView>
   );
 };

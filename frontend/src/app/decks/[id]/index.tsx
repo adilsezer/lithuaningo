@@ -9,7 +9,7 @@ import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
 import { usePracticeStats } from "@hooks/usePracticeStats";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();

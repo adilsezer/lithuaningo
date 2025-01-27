@@ -2,7 +2,7 @@ import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import * as Linking from "expo-linking";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { Paragraph } from "react-native-paper";
 
 const PrivacyPolicy = () => {

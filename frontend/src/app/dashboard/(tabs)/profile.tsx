@@ -9,7 +9,7 @@ import { clearData } from "@utils/storageUtils";
 import { CustomSwitch } from "@components/ui/CustomSwitch";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { useTheme as useThemeContext } from "@context/ThemeContext";
 import { useAlertDialog } from "@components/ui/AlertDialog";
 const PROFILE_ACTIONS = [

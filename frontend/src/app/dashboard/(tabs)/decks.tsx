@@ -11,7 +11,7 @@ import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomButton from "@components/ui/CustomButton";
 import { DeckCategory } from "@src/types/DeckCategory";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 export default function DecksScreen() {
   const userData = useUserData();

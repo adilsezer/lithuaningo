@@ -8,7 +8,7 @@ import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { editProfileFormSchema } from "@utils/zodSchemas";
 import auth from "@react-native-firebase/auth";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 const getEditProfileFields = (
   user: ReturnType<typeof auth>["currentUser"]

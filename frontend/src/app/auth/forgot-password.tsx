@@ -8,7 +8,7 @@ import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 const forgotPasswordFields: FormField[] = [
   {

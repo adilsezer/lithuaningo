@@ -7,7 +7,7 @@ import crashlytics from "@react-native-firebase/crashlytics";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { changePasswordFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 const changePasswordFields: FormField[] = [
   {
     name: "currentPassword",

@@ -13,7 +13,7 @@ import { DeckCard } from "@components/deck/DeckCard";
 import { useUserData } from "@stores/useUserStore";
 import { useError, useSetError, useIsLoading } from "@stores/useUIStore";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 const DashboardScreen: React.FC = () => {
   const theme = useTheme();

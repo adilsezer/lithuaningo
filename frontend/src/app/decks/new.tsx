@@ -9,7 +9,7 @@ import { deckCategories, DeckCategory } from "@src/types/DeckCategory";
 import type { Deck } from "@src/types";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 export default function NewDeckScreen() {
   const theme = useTheme();

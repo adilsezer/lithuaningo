@@ -1,6 +1,6 @@
 import { ReactNode } from "react";
 import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 
 interface DividerProps {

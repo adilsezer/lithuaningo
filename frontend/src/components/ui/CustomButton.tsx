@@ -28,11 +28,10 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       mode={mode}
       onPress={onPress}
       icon={icon}
-      style={[style, { marginVertical: 12, borderRadius: 12 }]}
+      style={[style, { marginVertical: 12, borderRadius: 8 }]}
       loading={loading}
       disabled={disabled}
       contentStyle={{ height: 60 }}
-      buttonColor={theme.colors.primary}
     >
       {title}
     </Button>

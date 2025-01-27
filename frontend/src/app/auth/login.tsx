@@ -12,7 +12,7 @@ import type { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import type { SocialProvider } from "@hooks/useAuth";
 import { loginFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 const loginFields: FormField[] = [
   {
@@ -51,7 +51,9 @@ const LoginScreen: React.FC = () => {
     <ScrollView>
       <BackButton />
 
-      <CustomText>Welcome Back</CustomText>
+      <CustomText variant="titleLarge" bold>
+        Welcome Back
+      </CustomText>
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}
 

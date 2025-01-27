@@ -2,7 +2,7 @@ import React from "react";
 import { StyleSheet, ScrollView } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import { useAbout } from "@hooks/useAbout";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { LinkText } from "@components/typography";
 
 const AboutScreen = () => {

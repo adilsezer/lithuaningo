@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, Text, Image, Pressable } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { useTheme } from "react-native-paper";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 type ImageFile = {
   uri: string;
   type: string;

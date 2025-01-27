@@ -9,7 +9,7 @@ import {
 import { StyleSheet } from "react-native";
 import { CustomDatePicker } from "@components/ui/CustomDatePicker";
 import { CustomSwitch } from "@components/ui/CustomSwitch";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 // Enable LayoutAnimation for Android
 if (Platform.OS === "android") {

@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, TextStyle, ViewStyle } from "react-native";
 import CustomButton from "./CustomButton";
 import BackButton from "@components/layout/BackButton";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 
 interface ErrorMessageProps {

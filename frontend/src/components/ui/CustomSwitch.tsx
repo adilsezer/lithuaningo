@@ -1,4 +1,4 @@
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 import React from "react";
 import { View, StyleProp, ViewStyle } from "react-native";
 import { Switch, Text, useTheme } from "react-native-paper";

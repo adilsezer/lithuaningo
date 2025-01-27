@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import BackButton from "@components/layout/BackButton";
-import CustomText from "@components/typography/CustomText";
+import CustomText from "@components/ui/CustomText";
 
 const QuizScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
