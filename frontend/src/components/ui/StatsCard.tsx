@@ -33,16 +33,11 @@ const StatItem: React.FC<StatItemProps> = ({
       <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
         <CustomText
           variant={isLarge ? "headlineMedium" : "titleMedium"}
-          style={{ color: theme.colors.onSurface, textAlign: "center" }}
+          style={{ textAlign: "center" }}
         >
           {value}
         </CustomText>
-        <CustomText
-          variant="bodyMedium"
-          style={{ color: theme.colors.onSurfaceVariant }}
-        >
-          {label}
-        </CustomText>
+        <CustomText variant="bodyMedium">{label}</CustomText>
       </View>
     </View>
   );
@@ -79,17 +74,15 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           padding: 16,
           borderRadius: 16,
           backgroundColor: theme.colors.surface,
+          borderWidth: 1,
+          borderColor: theme.colors.primary,
         },
         style,
       ]}
     >
       <CustomText style={{ marginBottom: 8 }}>{title}</CustomText>
       {subtitle && (
-        <CustomText
-          style={{ color: theme.colors.onSurfaceVariant, marginBottom: 16 }}
-        >
-          {subtitle}
-        </CustomText>
+        <CustomText style={{ marginBottom: 16 }}>{subtitle}</CustomText>
       )}
       <View
         style={{

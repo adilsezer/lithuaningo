@@ -6,13 +6,9 @@ import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
 interface UserStatsCardProps {
   stats: UserStats;
-  backgroundColor?: string;
 }
 
-export const UserStatsCard: React.FC<UserStatsCardProps> = ({
-  stats,
-  backgroundColor,
-}) => {
+export const UserStatsCard: React.FC<UserStatsCardProps> = ({ stats }) => {
   const theme = useTheme();
   const lastActive = formatDistanceToNow(new Date(stats.lastActivityTime), {
     addSuffix: true,
