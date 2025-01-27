@@ -3,7 +3,6 @@ import { FormField as FormFieldType } from "./form.types";
 import { CustomPicker } from "@components/ui/CustomPicker";
 import { CustomSwitch } from "@components/ui/CustomSwitch";
 import { CustomCheckbox } from "@components/ui/CustomCheckbox";
-import { CustomSlider } from "@components/ui/CustomSlider";
 import { CustomDatePicker } from "@components/ui/CustomDatePicker";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";
 import { CustomAudioPicker } from "@components/ui/CustomAudioPicker";
@@ -60,17 +59,6 @@ export const FormField: React.FC<FormFieldProps> = ({
         <CustomSwitch {...props} onValueChange={onChange} />
       ) : (
         <CustomCheckbox {...props} onValueChange={onChange} />
-      );
-
-    case "range":
-      return (
-        <CustomSlider
-          {...props}
-          onValueChange={onChange}
-          minimumValue={field.min || 0}
-          maximumValue={field.max || 100}
-          step={field.step}
-        />
       );
 
     case "datetime":

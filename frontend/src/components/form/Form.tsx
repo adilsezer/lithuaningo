@@ -17,8 +17,6 @@ const getDefaultValueByCategory = (field: FormFieldType): any => {
   switch (field.category) {
     case "toggle":
       return false;
-    case "range":
-      return field.min || 0;
     case "datetime":
       return new Date();
     case "audio-input":

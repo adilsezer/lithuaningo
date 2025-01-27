@@ -17,9 +17,6 @@ interface LoadingIndicatorProps {
   color?: string;
   useTheme?: boolean;
 }
-
-const DEFAULT_COLOR = "#66BB6A";
-
 export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   modal = true,
   style,
@@ -28,7 +25,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   color,
 }) => {
   const theme = useTheme();
-  const indicatorColor = color || theme.colors.primary || DEFAULT_COLOR;
+  const indicatorColor = color || theme.colors.primary;
 
   const globalIsLoading = useIsLoading();
   const [showLoading, setShowLoading] = useState(false);
@@ -72,15 +69,6 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   return (
     <Portal>
       <Modal visible={showLoading} dismissable={false}>
-        <Text
-          style={{
-            color: theme.colors.primary,
-            alignSelf: "center",
-            marginBottom: 20,
-          }}
-        >
-          Loading...
-        </Text>
         <ActivityIndicator
           size="large"
           color={indicatorColor}

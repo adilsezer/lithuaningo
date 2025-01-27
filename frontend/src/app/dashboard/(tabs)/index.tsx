@@ -93,18 +93,18 @@ const DashboardScreen: React.FC = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-        <CustomText variant="titleLarge" bold>
-          Hi, {dashboardUser?.name || "there"}!
-        </CustomText>
-
-        {stats && <UserStatsCard stats={stats} />}
-
         {validAnnouncements.length > 0 && (
           <AnnouncementsCard
             announcements={validAnnouncements}
             backgroundColor={theme.colors.secondary}
           />
         )}
+
+        <CustomText variant="titleLarge" bold>
+          Hi, {dashboardUser?.name || "there"}!
+        </CustomText>
+
+        {stats && <UserStatsCard stats={stats} />}
 
         <DailyChallengeCard
           answeredQuestions={stats?.todayAnsweredQuestions ?? 0}

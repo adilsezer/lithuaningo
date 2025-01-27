@@ -6,7 +6,6 @@ export type FieldCategory =
   | "text-input"
   | "toggle"
   | "selection"
-  | "range"
   | "datetime"
   | "audio-input"
   | "image-input"
@@ -41,11 +40,6 @@ export type FormField = {
 
   // Selection/Toggle
   options?: Array<{ label: string; value: any }>;
-
-  // Range
-  min?: number;
-  max?: number;
-  step?: number;
 
   // DateTime
   mode?: "date" | "time";
