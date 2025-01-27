@@ -1,7 +1,6 @@
 import React, { useEffect } from "react";
 import { ScrollView, View } from "react-native";
 import BackButton from "@components/layout/BackButton";
-import { SectionTitle, Instruction } from "@components/typography";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
@@ -9,6 +8,7 @@ import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";
+import CustomText from "@components/typography/CustomText";
 
 const forgotPasswordFields: FormField[] = [
   {
@@ -35,10 +35,10 @@ const ForgotPasswordScreen: React.FC = () => {
       <BackButton />
 
       <View>
-        <SectionTitle>Reset Password</SectionTitle>
-        <Instruction>
+        <CustomText>Reset Password</CustomText>
+        <CustomText>
           Enter your email and we will send you a link to reset your password.
-        </Instruction>
+        </CustomText>
       </View>
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}

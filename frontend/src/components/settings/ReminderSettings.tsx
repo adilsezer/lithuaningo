@@ -6,12 +6,11 @@ import {
   Platform,
   UIManager,
 } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { Subtitle } from "@components/typography";
 import { StyleSheet } from "react-native";
 import { CustomDatePicker } from "@components/ui/CustomDatePicker";
 import { CustomSwitch } from "@components/ui/CustomSwitch";
-
+import CustomText from "@components/typography/CustomText";
+import { useTheme } from "react-native-paper";
 // Enable LayoutAnimation for Android
 if (Platform.OS === "android") {
   if (UIManager.setLayoutAnimationEnabledExperimental) {
@@ -32,7 +31,7 @@ export const ReminderSettings: React.FC<ReminderSettingsProps> = ({
   onToggleReminder,
   onTimeChange,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   useEffect(() => {
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -40,7 +39,7 @@ export const ReminderSettings: React.FC<ReminderSettingsProps> = ({
 
   return (
     <View style={styles.section}>
-      <Subtitle>Daily Reminder</Subtitle>
+      <CustomText>Daily Reminder</CustomText>
 
       <View style={styles.setting}>
         <CustomSwitch
@@ -57,7 +56,10 @@ export const ReminderSettings: React.FC<ReminderSettingsProps> = ({
 
       {reminderEnabled && (
         <Animated.View
-          style={[styles.timeContainer, { backgroundColor: colors.card }]}
+          style={[
+            styles.timeContainer,
+            { backgroundColor: theme.colors.primaryContainer },
+          ]}
         >
           <CustomDatePicker
             value={reminderTime || new Date()}

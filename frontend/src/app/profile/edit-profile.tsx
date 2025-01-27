@@ -4,11 +4,11 @@ import { useAuth } from "@hooks/useAuth";
 import BackButton from "@components/layout/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { SectionTitle } from "@components/typography";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { editProfileFormSchema } from "@utils/zodSchemas";
 import auth from "@react-native-firebase/auth";
+import CustomText from "@components/typography/CustomText";
 
 const getEditProfileFields = (
   user: ReturnType<typeof auth>["currentUser"]
@@ -42,7 +42,7 @@ const EditProfileScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <SectionTitle>Edit Profile</SectionTitle>
+      <CustomText>Edit Profile</CustomText>
 
       <Form
         fields={getEditProfileFields(user)}

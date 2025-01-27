@@ -4,9 +4,8 @@ import { useUserData } from "@stores/useUserStore";
 import { useReminderSettings } from "@hooks/useReminderSettings";
 import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
-import { SectionTitle } from "@components/typography";
 import { ReminderSettings } from "@components/settings/ReminderSettings";
-
+import CustomText from "@components/typography/CustomText";
 const SettingsScreen: React.FC = () => {
   const userData = useUserData();
   const {
@@ -20,7 +19,7 @@ const SettingsScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <SectionTitle>Settings</SectionTitle>
+      <CustomText>Settings</CustomText>
 
       <ReminderSettings
         reminderEnabled={reminderEnabled}
@@ -29,19 +28,9 @@ const SettingsScreen: React.FC = () => {
         onTimeChange={setReminderTime}
       />
 
-      <CustomButton
-        title="Save Settings"
-        onPress={saveSettings}
-        style={styles.saveButton}
-      />
+      <CustomButton title="Save Settings" onPress={saveSettings} />
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  saveButton: {
-    marginTop: 20,
-  },
-});
 
 export default SettingsScreen;

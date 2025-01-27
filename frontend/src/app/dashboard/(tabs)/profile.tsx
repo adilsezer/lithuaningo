@@ -6,11 +6,12 @@ import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
-import ThemeSwitch from "@components/ui/ThemeSwitch";
-import { useTheme } from "@context/ThemeContext";
+import { CustomSwitch } from "@components/ui/CustomSwitch";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
-import { SectionTitle, Subtitle } from "@components/typography";
 import { AlertDialog } from "@components/ui/AlertDialog";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
+import { useTheme as useThemeContext } from "@context/ThemeContext";
 
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
@@ -44,14 +45,16 @@ const ProfileHeader = ({
   email: string;
 }) => (
   <>
-    <SectionTitle>{name || "User"}</SectionTitle>
-    <Subtitle>{email}</Subtitle>
+    <CustomText>{name || "User"}</CustomText>
+    <CustomText>{email}</CustomText>
   </>
 );
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
-  const { isDarkMode, toggleTheme } = useTheme();
+  const theme = useTheme();
+  const { toggleTheme } = useThemeContext();
+  const darkMode = theme.dark;
   const router = useRouter();
 
   const userData = useUserData();
@@ -98,14 +101,18 @@ export default function ProfileScreen() {
   if (!isLoggedIn || !userData) {
     return (
       <View style={[styles.container]}>
-        <SectionTitle>No user data available</SectionTitle>
+        <CustomText>No user data available</CustomText>
       </View>
     );
   }
 
   return (
     <ScrollView style={styles.container}>
-      <ThemeSwitch onToggle={toggleTheme} isDarkMode={isDarkMode} />
+      <CustomSwitch
+        onValueChange={toggleTheme}
+        value={darkMode}
+        label="Dark Mode"
+      />
 
       <ProfileHeader name={userData.name} email={userData.email} />
 

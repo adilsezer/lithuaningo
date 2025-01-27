@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from "react";
 import { View, StyleSheet, Animated, StyleProp, ViewStyle } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-
+import { useTheme } from "react-native-paper";
 interface ProgressBarProps {
   progress: number;
   height?: number;
@@ -13,7 +12,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
   height = 8,
   style,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   const widthAnim = useRef(new Animated.Value(0)).current;
 
@@ -34,7 +33,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
     <View
       style={[
         styles.progressBarContainer,
-        { backgroundColor: colors.border },
+        { backgroundColor: theme.colors.primary },
         { height },
         style,
       ]}
@@ -42,7 +41,7 @@ const ProgressBar: React.FC<ProgressBarProps> = ({
       <Animated.View
         style={[
           styles.progressBar,
-          { width: widthInterpolated, backgroundColor: colors.secondary },
+          { width: widthInterpolated, backgroundColor: theme.colors.secondary },
         ]}
       ></Animated.View>
     </View>

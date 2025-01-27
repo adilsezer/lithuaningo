@@ -8,9 +8,8 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { cleanWord } from "@utils/stringUtils";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { SectionText } from "@components/typography";
-
+import CustomText from "@components/typography/CustomText";
+import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
@@ -24,7 +23,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   answerText,
 }) => {
   const router = useRouter();
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   const handleWordClick = (word: string) => {
     router.push(`/learning/${cleanWord(word)}`);
@@ -37,12 +36,12 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
         const isPlaceholder =
           answerText.toLowerCase() === cleanedWord.toLowerCase() ||
           cleanedWord === "[]";
-        const backgroundColor = colors.wordBackground;
+        const backgroundColor = theme.colors.primaryContainer;
         const containerStyle = [
           styles.commonContainer,
           isPlaceholder && {
-            backgroundColor: colors.background,
-            borderColor: colors.secondary,
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.secondary,
             borderWidth: 2,
           },
           !isPlaceholder && { backgroundColor },
@@ -56,7 +55,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
         if (isPlaceholder) {
           return (
             <View key={`${word}-${index}`} style={containerStyle}>
-              <SectionText style={textStyle}>{word}</SectionText>
+              <CustomText style={textStyle}>{word}</CustomText>
             </View>
           );
         }
@@ -67,7 +66,7 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
             style={containerStyle}
             activeOpacity={0.7}
           >
-            <SectionText style={textStyle}>{word}</SectionText>
+            <CustomText style={textStyle}>{word}</CustomText>
           </TouchableOpacity>
         );
       })}

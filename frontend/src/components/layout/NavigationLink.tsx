@@ -1,9 +1,7 @@
 import React from "react";
 import { TouchableOpacity, StyleSheet, TextStyle } from "react-native";
 import { router } from "expo-router";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { LinkText } from "@components/typography";
-
 interface NavigationLinkProps {
   text: string;
   path: string;

@@ -1,11 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, Text } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { PracticeStats as IPracticeStats } from "@src/types";
 import { FontAwesome5 } from "@expo/vector-icons";
 import apiClient from "@services/api/apiClient";
-import { useIsLoading, useSetLoading } from "@stores/useUIStore";
-
+import useUIStore from "@stores/useUIStore";
+import { useTheme } from "react-native-paper";
 interface PracticeStatsProps {
   deckId: string;
   userId: string;
@@ -22,12 +21,14 @@ const StatItem = ({
   label: string;
   color: string;
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   return (
     <View style={styles.statItem}>
       <FontAwesome5 name={icon} size={20} color={color} />
-      <Text style={[styles.statValue, { color: colors.text }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.cardText }]}>
+      <Text style={[styles.statValue, { color: theme.colors.onBackground }]}>
+        {value}
+      </Text>
+      <Text style={[styles.statLabel, { color: theme.colors.onSurface }]}>
         {label}
       </Text>
     </View>
@@ -38,10 +39,9 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
   deckId,
   userId,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const [stats, setStats] = useState<IPracticeStats | null>(null);
-  const setLoading = useSetLoading();
-  const isLoading = useIsLoading();
+  const { setLoading, isLoading } = useUIStore();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -95,35 +95,40 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
           icon="book"
           value={stats.totalCards}
           label="Total Cards"
-          color={colors.primary}
+          color={theme.colors.primary}
         />
         <StatItem
           icon="check-circle"
           value={stats.masteredCards}
           label="Mastered"
-          color={colors.success}
+          color={theme.colors.primary}
         />
         <StatItem
           icon="sync"
           value={stats.needsPractice}
           label="Need Practice"
-          color={colors.error}
+          color={theme.colors.error}
         />
       </View>
 
-      <View style={[styles.progressBar, { backgroundColor: colors.border }]}>
+      <View
+        style={[styles.progressBar, { backgroundColor: theme.colors.surface }]}
+      >
         <View
           style={[
             styles.progressFill,
-            { backgroundColor: colors.success, width: `${masteryPercentage}%` },
+            {
+              backgroundColor: theme.colors.primary,
+              width: `${masteryPercentage}%`,
+            },
           ]}
         />
       </View>
 
-      <Text style={[styles.progressText, { color: colors.cardText }]}>
+      <Text style={[styles.progressText, { color: theme.colors.onSurface }]}>
         {masteryPercentage}% Mastered
       </Text>
-      <Text style={[styles.lastPracticed, { color: colors.cardText }]}>
+      <Text style={[styles.lastPracticed, { color: theme.colors.onSurface }]}>
         Last practiced: {getTimeAgo(stats.lastPracticed)}
       </Text>
     </View>

@@ -1,9 +1,9 @@
 import React from "react";
 import { View, StyleSheet, TextStyle, ViewStyle } from "react-native";
-import { SectionText } from "@components/typography";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
 import BackButton from "@components/layout/BackButton";
+import CustomText from "@components/typography/CustomText";
+import { useTheme } from "react-native-paper";
 
 interface ErrorMessageProps {
   message: string;
@@ -20,22 +20,18 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   textStyle,
   buttonText = "Retry",
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   return (
     <View>
       <BackButton />
       <View style={styles.container}>
-        <SectionText style={[styles.text, { color: colors.error }, textStyle]}>
+        <CustomText
+          style={[styles.text, { color: theme.colors.error }, textStyle]}
+        >
           {message}
-        </SectionText>
-        {onRetry && (
-          <CustomButton
-            title={buttonText}
-            onPress={onRetry}
-            style={[styles.button, { backgroundColor: colors.primary }]}
-          />
-        )}
+        </CustomText>
+        {onRetry && <CustomButton title={buttonText} onPress={onRetry} />}
       </View>
     </View>
   );
@@ -50,12 +46,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     textAlign: "center",
     marginBottom: 16,
-  },
-  button: {
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-    minWidth: 120,
   },
 });
 

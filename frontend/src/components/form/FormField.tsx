@@ -25,7 +25,7 @@ export const FormField: React.FC<FormFieldProps> = ({
   value,
   error,
 }) => {
-  const { label, category, type, defaultValue, ...inputProps } = field;
+  const { label, category, type, defaultValue, mode, ...inputProps } = field;
   const props = {
     label,
     error,

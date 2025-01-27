@@ -1,56 +1,52 @@
+import CustomText from "@components/typography/CustomText";
 import React from "react";
-import { View, StyleSheet, ViewStyle } from "react-native";
-import { SectionText, Subtitle } from "@components/typography";
-import ProgressBar from "@components/ui/ProgressBar";
-import { ThemeColors } from "@src/styles/colors";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { View, StyleProp, ViewStyle } from "react-native";
+import { Card, ProgressBar, useTheme, IconButton } from "react-native-paper";
 
 interface StatItemProps {
   label: string;
   value: string | number;
-  colors: ThemeColors;
-  isLarge?: boolean;
-  icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+  icon?: string;
   iconColor?: string;
+  isLarge?: boolean;
 }
 
 const StatItem: React.FC<StatItemProps> = ({
   label,
   value,
-  colors,
-  isLarge,
   icon,
   iconColor,
-}) => (
-  <View style={[styles.centered, isLarge && styles.largeStat]}>
-    <SectionText
-      style={[
-        styles.statValue,
-        { color: colors.cardText },
-        isLarge && styles.largeStatValue,
-      ]}
-    >
-      {value}
-    </SectionText>
-    <View style={styles.labelContainer}>
+  isLarge,
+}) => {
+  const theme = useTheme();
+
+  return (
+    <View style={{ alignItems: "center", flex: 1, minWidth: 80 }}>
       {icon && (
-        <View
-          style={[styles.iconContainer, { backgroundColor: iconColor + "20" }]}
-        >
-          <MaterialCommunityIcons
-            name={icon}
-            size={isLarge ? 16 : 14}
-            color={iconColor}
-            style={styles.icon}
-          />
-        </View>
+        <IconButton
+          icon={icon}
+          size={isLarge ? 24 : 20}
+          iconColor={iconColor || theme.colors.primary}
+          style={{ marginBottom: 0 }}
+        />
       )}
-      <SectionText style={[styles.statLabel, { color: colors.cardText }]}>
-        {label}
-      </SectionText>
+      <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
+        <CustomText
+          variant={isLarge ? "headlineMedium" : "titleMedium"}
+          style={{ color: theme.colors.onSurface, textAlign: "center" }}
+        >
+          {value}
+        </CustomText>
+        <CustomText
+          variant="bodyMedium"
+          style={{ color: theme.colors.onSurfaceVariant }}
+        >
+          {label}
+        </CustomText>
+      </View>
     </View>
-  </View>
-);
+  );
+};
 
 interface StatsCardProps {
   title: string;
@@ -58,12 +54,11 @@ interface StatsCardProps {
   stats: Array<{
     label: string;
     value: string | number;
-    icon?: keyof typeof MaterialCommunityIcons.glyphMap;
+    icon?: string;
     iconColor?: string;
   }>;
-  colors: ThemeColors;
   progress?: number;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   largeStats?: boolean;
 }
 
@@ -71,105 +66,58 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   title,
   subtitle,
   stats,
-  colors,
   progress,
   style,
   largeStats,
 }) => {
+  const theme = useTheme();
+
   return (
-    <View style={style}>
-      <Subtitle style={styles.title}>{title}</Subtitle>
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        {subtitle && (
-          <SectionText style={[styles.subtitle, { color: colors.cardText }]}>
-            {subtitle}
-          </SectionText>
-        )}
-        <View style={[styles.row, stats.length > 3 && styles.wrap]}>
-          {stats.map((stat, index) => (
-            <StatItem
-              key={index}
-              label={stat.label}
-              value={stat.value}
-              colors={colors}
-              isLarge={largeStats}
-              icon={stat.icon}
-              iconColor={stat.iconColor}
-            />
-          ))}
-        </View>
-        {progress !== undefined && (
-          <ProgressBar progress={progress} style={styles.progressBar} />
-        )}
+    <Card
+      style={[
+        {
+          padding: 16,
+          borderRadius: 16,
+          backgroundColor: theme.colors.surface,
+        },
+        style,
+      ]}
+    >
+      <CustomText style={{ marginBottom: 8 }}>{title}</CustomText>
+      {subtitle && (
+        <CustomText
+          style={{ color: theme.colors.onSurfaceVariant, marginBottom: 16 }}
+        >
+          {subtitle}
+        </CustomText>
+      )}
+      <View
+        style={{
+          flexDirection: "row",
+          flexWrap: "wrap",
+          justifyContent: "space-between",
+        }}
+      >
+        {stats.map((stat, index) => (
+          <StatItem
+            key={index}
+            label={stat.label}
+            value={stat.value}
+            icon={stat.icon}
+            iconColor={stat.iconColor}
+            isLarge={largeStats}
+          />
+        ))}
       </View>
-    </View>
+      {progress !== undefined && (
+        <ProgressBar
+          progress={progress}
+          color={theme.colors.primary}
+          style={{ marginTop: 16 }}
+        />
+      )}
+    </Card>
   );
 };
 
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 8,
-    borderWidth: 0.2,
-  },
-  title: {
-    fontSize: 20,
-  },
-  statValue: {
-    fontSize: 20,
-    fontWeight: "600",
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  largeStatValue: {
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-  statLabel: {
-    fontSize: 14,
-    opacity: 0.6,
-    textAlign: "center",
-    marginTop: 4,
-  },
-  subtitle: {
-    fontSize: 16,
-    opacity: 0.7,
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  row: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    alignItems: "flex-start",
-    flexWrap: "wrap",
-  },
-  wrap: {
-    marginHorizontal: -8,
-  },
-  centered: {
-    alignItems: "center",
-    marginVertical: 4,
-    flex: 1,
-    paddingHorizontal: 8,
-    minWidth: 80,
-  },
-  largeStat: {
-    marginVertical: 8,
-  },
-  progressBar: {
-    marginTop: 20,
-  },
-  labelContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 4,
-  },
-  iconContainer: {
-    padding: 6,
-    borderRadius: 8,
-  },
-  icon: {
-    opacity: 1,
-  },
-});
+export default StatsCard;

@@ -1,8 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Text, Pressable } from "react-native";
 import Checkbox from "expo-checkbox";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-
+import { useTheme } from "react-native-paper";
 interface CustomCheckboxProps {
   value: boolean;
   onValueChange: (value: boolean) => void;
@@ -16,7 +15,7 @@ export const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
   label,
   error,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   return (
     <View style={styles.container}>
@@ -27,13 +26,17 @@ export const CustomCheckbox: React.FC<CustomCheckboxProps> = ({
         <Checkbox
           value={value}
           onValueChange={onValueChange}
-          color={value ? colors.primary : undefined}
+          color={value ? theme.colors.primary : undefined}
           style={styles.checkbox}
         />
-        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+        <Text style={[styles.label, { color: theme.colors.onBackground }]}>
+          {label}
+        </Text>
       </Pressable>
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+          {error}
+        </Text>
       )}
     </View>
   );

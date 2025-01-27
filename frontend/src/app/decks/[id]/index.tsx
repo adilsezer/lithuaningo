@@ -2,19 +2,19 @@ import React, { useEffect } from "react";
 import { View, StyleSheet, Text, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { SectionTitle } from "@components/typography";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
 import { PracticeStats } from "@components/flashcard/PracticeStats";
 import { useUserData } from "@stores/useUserStore";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
 import { usePracticeStats } from "@hooks/usePracticeStats";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
   const { fetchDeckFlashcards, flashcards, isLoading, error } = useFlashcards();
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const userData = useUserData();
   const { currentIndex, setCurrentIndex, handleAnswer, completeSession } =
     usePracticeStats(id as string, userData?.id);
@@ -50,27 +50,33 @@ export default function PracticeScreen() {
     return (
       <View>
         <BackButton />
-        <Text style={[styles.emptyText, { color: colors.text }]}>
+        <CustomText
+          style={[styles.emptyText, { color: theme.colors.onSurface }]}
+        >
           No flashcards found in this deck
-        </Text>
+        </CustomText>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <BackButton />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <SectionTitle>Practice</SectionTitle>
+        <CustomText>Practice</CustomText>
         {userData && (
           <PracticeStats deckId={id as string} userId={userData.id} />
         )}
-        <Text style={[styles.progress, { color: colors.text }]}>
+        <CustomText
+          style={[styles.progress, { color: theme.colors.onSurface }]}
+        >
           {currentIndex + 1} / {flashcards.length}
-        </Text>
+        </CustomText>
         <View style={styles.flashcardContainer}>
           <FlashcardView
             flashcard={flashcards[currentIndex]}

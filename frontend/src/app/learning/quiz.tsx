@@ -1,7 +1,7 @@
 import React, { useRef } from "react";
 import { View, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 import BackButton from "@components/layout/BackButton";
-import { SectionText } from "@components/typography";
+import CustomText from "@components/typography/CustomText";
 
 const QuizScreen: React.FC = () => {
   const scrollViewRef = useRef<ScrollView>(null);
@@ -14,7 +14,7 @@ const QuizScreen: React.FC = () => {
       <ScrollView ref={scrollViewRef}>
         <View style={{ flex: 1 }}>
           <BackButton />
-          <SectionText>Quiz (To be implemented)</SectionText>
+          <CustomText>Quiz (To be implemented)</CustomText>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

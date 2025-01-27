@@ -1,6 +1,6 @@
 import { useMemo } from "react";
 import { Dimensions, Platform } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useTheme } from "react-native-paper";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -14,11 +14,11 @@ export const TAB_ITEMS = [
 ] as const;
 
 export const useTabLayout = () => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   const screenOptions = useMemo(
     () => ({
-      tabBarActiveTintColor: colors.active,
+      tabBarActiveTintColor: theme.colors.primary,
       tabBarStyle: {
         height: 60,
         paddingTop: 10,
@@ -35,7 +35,7 @@ export const useTabLayout = () => {
         flex: 1,
       },
     }),
-    [colors.active]
+    [theme.colors.primary]
   );
 
   return {

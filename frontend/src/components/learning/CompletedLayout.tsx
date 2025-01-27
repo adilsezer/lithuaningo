@@ -4,8 +4,8 @@ import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useUserStats } from "@hooks/useUserStats";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { SectionTitle, Subtitle, SectionText } from "@components/typography";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 interface CompletedLayoutProps {
   title: string;
@@ -22,7 +22,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
   navigationRoute,
   showStats,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const router = useRouter();
   const { stats } = useUserStats();
   const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining());
@@ -51,8 +51,8 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 
   return (
     <ScrollView>
-      <SectionTitle style={{ marginTop: 40 }}>{title}</SectionTitle>
-      <Subtitle style={{ marginTop: 20 }}>{subtitle}</Subtitle>
+      <CustomText style={{ marginTop: 40 }}>{title}</CustomText>
+      <CustomText style={{ marginTop: 20 }}>{subtitle}</CustomText>
 
       {showStats && (
         <View style={styles.statsContainer}>
@@ -61,12 +61,12 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
               <Ionicons
                 name="help-circle-outline"
                 size={24}
-                color={colors.primary}
+                color={theme.colors.primary}
               />
-              <SectionText style={styles.statText}>
+              <CustomText style={styles.statText}>
                 {stats?.todayAnsweredQuestions}
-              </SectionText>
-              <SectionText>Total Questions</SectionText>
+              </CustomText>
+              <CustomText>Total Questions</CustomText>
             </View>
           )}
 
@@ -77,10 +77,10 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 size={24}
                 color="green"
               />
-              <SectionText style={styles.statText}>
+              <CustomText style={styles.statText}>
                 {stats?.todayCorrectAnsweredQuestions}
-              </SectionText>
-              <SectionText>Correct Answers</SectionText>
+              </CustomText>
+              <CustomText>Correct Answers</CustomText>
             </View>
           )}
 
@@ -88,11 +88,11 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
             stats?.todayCorrectAnsweredQuestions !== undefined && (
               <View style={styles.statItem}>
                 <Ionicons name="close-circle-outline" size={24} color="red" />
-                <SectionText style={styles.statText}>
+                <CustomText style={styles.statText}>
                   {stats.todayAnsweredQuestions -
                     stats.todayCorrectAnsweredQuestions}
-                </SectionText>
-                <SectionText>Wrong Answers</SectionText>
+                </CustomText>
+                <CustomText>Wrong Answers</CustomText>
               </View>
             )}
         </View>
@@ -100,20 +100,16 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 
       {showStats && (
         <View style={styles.timerContainer}>
-          <Subtitle>Next challenge available in:</Subtitle>
-          <SectionTitle>
+          <CustomText>Next challenge available in:</CustomText>
+          <CustomText>
             {`${timeRemaining.hours}h ${timeRemaining.minutes}m ${timeRemaining.seconds}s`}
-          </SectionTitle>
+          </CustomText>
         </View>
       )}
 
       <CustomButton
         title={buttonText}
         onPress={() => router.push(navigationRoute)}
-        style={{
-          backgroundColor: colors.primary,
-          marginTop: 20,
-        }}
       />
     </ScrollView>
   );

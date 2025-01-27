@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Image } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
-import { SectionTitle, Subtitle } from "@components/typography";
+import CustomText from "@components/typography/CustomText";
 
 interface NotificationDisplayProps {
   title: string;
@@ -19,8 +19,8 @@ const NotificationDisplay: React.FC<NotificationDisplayProps> = ({
   return (
     <View style={styles.container}>
       <Image source={require("assets/images/icon.png")} style={styles.logo} />
-      <SectionTitle>{title}</SectionTitle>
-      <Subtitle>{subtitle}</Subtitle>
+      <CustomText>{title}</CustomText>
+      <CustomText>{subtitle}</CustomText>
       {buttonText && buttonAction && (
         <CustomButton onPress={buttonAction} title={buttonText} />
       )}

@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Image, Dimensions, Platform } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "@components/ui/CustomButton";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
-import { SectionTitle, Subtitle, Instruction } from "@components/typography";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -29,7 +29,7 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
   questionWord,
   onAnswer,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const [selectedOption, setSelectedOption] = useState<string | null>(null);
   const [optionSelected, setOptionSelected] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
@@ -52,27 +52,29 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 
   const getOptionBackgroundColor = (option: string) => {
     if (!selectedOption) {
-      return colors.inactive;
+      return theme.colors.primaryContainer;
     }
     if (selectedOption === option) {
-      return option === correctAnswerText ? colors.active : colors.error;
+      return option === correctAnswerText
+        ? theme.colors.primary
+        : theme.colors.error;
     }
     if (option === correctAnswerText) {
-      return colors.active;
+      return theme.colors.primary;
     }
-    return colors.inactive;
+    return theme.colors.primaryContainer;
   };
 
   return (
     <View>
-      <Subtitle>{questionText}</Subtitle>
+      <CustomText>{questionText}</CustomText>
       <View style={styles.sentenceContainer}>
         <RenderClickableWords
           sentenceText={sentenceText}
           answerText={questionWord}
         />
       </View>
-      <Instruction>Click on each word to find out what it means.</Instruction>
+      <CustomText>Click on each word to find out what it means.</CustomText>
       {image && (
         <Image
           source={{ uri: image }}
@@ -85,40 +87,28 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
             <CustomButton
               title={option}
               onPress={() => handleOptionPress(option)}
-              style={[
-                styles.button,
-                {
-                  backgroundColor: getOptionBackgroundColor(option),
-                },
-              ]}
             />
           </View>
         ))}
       {optionSelected && (
         <View>
-          <Subtitle>
-            You answered:{" "}
-            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
-              {selectedOption}
-            </Subtitle>
-          </Subtitle>
-          <Subtitle>
-            Correct answer:{" "}
-            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
-              {correctAnswerText}
-            </Subtitle>
-          </Subtitle>
+          <CustomText>
+            You answered: <CustomText>{selectedOption}</CustomText>
+          </CustomText>
+          <CustomText>
+            Correct answer: <CustomText>{correctAnswerText}</CustomText>
+          </CustomText>
         </View>
       )}
       {isCorrect !== null && (
         <View>
-          <SectionTitle
+          <CustomText
             style={{
-              color: isCorrect ? colors.active : colors.error,
+              color: isCorrect ? theme.colors.primary : theme.colors.error,
             }}
           >
             {isCorrect ? "Correct" : "Incorrect"}
-          </SectionTitle>
+          </CustomText>
         </View>
       )}
     </View>
@@ -128,10 +118,6 @@ const MultipleChoiceQuestion: React.FC<MultipleChoiceQuestionProps> = ({
 const styles = StyleSheet.create({
   optionContainer: {
     marginVertical: 5,
-  },
-  button: {
-    paddingVertical: 14,
-    marginVertical: 6,
   },
   image: {
     width: 250,

@@ -1,8 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Text } from "react-native";
 import Slider from "@react-native-community/slider";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-
+import { useTheme } from "react-native-paper";
 interface CustomSliderProps {
   value: number;
   onValueChange: (value: number) => void;
@@ -22,13 +21,17 @@ export const CustomSlider: React.FC<CustomSliderProps> = ({
   label,
   error,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   return (
     <View style={styles.container}>
       <View style={styles.labelRow}>
-        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
-        <Text style={[styles.value, { color: colors.text }]}>{value}</Text>
+        <Text style={[styles.label, { color: theme.colors.onBackground }]}>
+          {label}
+        </Text>
+        <Text style={[styles.value, { color: theme.colors.onBackground }]}>
+          {value}
+        </Text>
       </View>
       <Slider
         value={value}
@@ -36,13 +39,15 @@ export const CustomSlider: React.FC<CustomSliderProps> = ({
         minimumValue={minimumValue}
         maximumValue={maximumValue}
         step={step}
-        minimumTrackTintColor={colors.primary}
-        maximumTrackTintColor={colors.border}
-        thumbTintColor={colors.primary}
+        minimumTrackTintColor={theme.colors.primary}
+        maximumTrackTintColor={theme.colors.primary}
+        thumbTintColor={theme.colors.primary}
         style={styles.slider}
       />
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+          {error}
+        </Text>
       )}
     </View>
   );

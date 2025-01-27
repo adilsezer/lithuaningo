@@ -1,9 +1,8 @@
 import React from "react";
 import { ScrollView, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
-import { SectionText, SectionTitle } from "@components/typography";
 import { router } from "expo-router";
-
+import CustomText from "@components/typography/CustomText";
 export default function LearnScreen() {
   const handleNavigation = (route: string) => {
     router.push(route);
@@ -15,11 +14,11 @@ export default function LearnScreen() {
         source={require("assets/images/learn_screen.png")}
         style={styles.image}
       />
-      <SectionTitle>Daily Challenge</SectionTitle>
-      <SectionText style={styles.sectionSpacing}>
+      <CustomText>Daily Challenge</CustomText>
+      <CustomText style={styles.sectionSpacing}>
         Ready for today's Lithuaningo challenge? Test your skills with a daily
         quiz or warm up with flashcards.
-      </SectionText>
+      </CustomText>
 
       <CustomButton
         title="Start Daily Challenge"

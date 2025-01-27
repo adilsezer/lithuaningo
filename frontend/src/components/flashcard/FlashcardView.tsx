@@ -8,11 +8,10 @@ import {
   Image,
 } from "react-native";
 import { Flashcard } from "@src/types";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { FontAwesome5 } from "@expo/vector-icons";
 import CustomButton from "@components/ui/CustomButton";
 import { useFlashcards } from "@hooks/useFlashcards";
-
+import { useTheme } from "react-native-paper";
 interface FlashcardViewProps {
   flashcard: Flashcard;
   onAnswer: (isCorrect: boolean) => void;
@@ -81,7 +80,6 @@ const AnswerButtons: React.FC<{
         onAnswer(false);
         onAnswered();
       }}
-      style={[styles.button, { backgroundColor: colors.error }]}
     />
     <CustomButton
       title="Correct"
@@ -89,7 +87,6 @@ const AnswerButtons: React.FC<{
         onAnswer(true);
         onAnswered();
       }}
-      style={[styles.button, { backgroundColor: colors.success }]}
     />
   </View>
 );
@@ -99,7 +96,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   onAnswer,
 }) => {
   const [isFlipped, setIsFlipped] = useState(false);
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const flipAnim = useRef(new Animated.Value(0)).current;
 
   const handleFlip = () => {
@@ -151,35 +148,43 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
           <Animated.View
             style={[
               styles.card,
-              { backgroundColor: colors.card },
+              { backgroundColor: theme.colors.surface },
               styles.cardFace,
               frontAnimatedStyle,
             ]}
             pointerEvents="box-none"
           >
-            <CardContent isBack={false} flashcard={flashcard} colors={colors} />
+            <CardContent
+              isBack={false}
+              flashcard={flashcard}
+              colors={theme.colors}
+            />
             <FontAwesome5
               name="undo"
               size={16}
-              color={colors.cardText}
+              color={theme.colors.onSurface}
               style={styles.flipIcon}
             />
           </Animated.View>
           <Animated.View
             style={[
               styles.card,
-              { backgroundColor: colors.card },
+              { backgroundColor: theme.colors.surface },
               styles.cardFace,
               styles.cardBack,
               backAnimatedStyle,
             ]}
             pointerEvents="box-none"
           >
-            <CardContent isBack={true} flashcard={flashcard} colors={colors} />
+            <CardContent
+              isBack={true}
+              flashcard={flashcard}
+              colors={theme.colors}
+            />
             <FontAwesome5
               name="undo"
               size={16}
-              color={colors.cardText}
+              color={theme.colors.onSurface}
               style={styles.flipIcon}
             />
           </Animated.View>
@@ -190,7 +195,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
           <AnswerButtons
             onAnswer={onAnswer}
             onAnswered={resetCard}
-            colors={colors}
+            colors={theme.colors}
           />
         </View>
       )}
@@ -268,12 +273,6 @@ const styles = StyleSheet.create({
     gap: 12,
     paddingHorizontal: 16,
     paddingBottom: 16,
-  },
-  button: {
-    borderRadius: 12,
-    paddingVertical: 20,
-    paddingHorizontal: 24,
-    minWidth: 150,
   },
   imageWrapper: {
     width: "100%",

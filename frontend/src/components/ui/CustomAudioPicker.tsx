@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Text, Pressable } from "react-native";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import { FontAwesome } from "@expo/vector-icons";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useTheme } from "react-native-paper";
 import CustomButton from "@components/ui/CustomButton";
+import CustomText from "@components/typography/CustomText";
 
 interface AudioFile {
   uri: string;
@@ -22,7 +23,7 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
   onChange,
   error,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
   const [sound, setSound] = useState<Audio.Sound | null>(null);
@@ -121,7 +122,7 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
   if (!permissionResponse?.granted) {
     return (
       <View style={styles.container}>
-        <Text style={[styles.errorText, { color: colors.error }]}>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
           No permission to record audio
         </Text>
       </View>
@@ -133,12 +134,15 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
       <Pressable
         style={[
           styles.audioContainer,
-          { borderColor: error ? colors.error : colors.border },
+          { borderColor: error ? theme.colors.error : theme.colors.primary },
         ]}
         onPress={value ? playSound : startRecording}
       >
         <View
-          style={[styles.placeholder, { backgroundColor: colors.secondary }]}
+          style={[
+            styles.placeholder,
+            { backgroundColor: theme.colors.primaryContainer },
+          ]}
         >
           <FontAwesome
             name={
@@ -151,9 +155,14 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
                 : "microphone"
             }
             size={40}
-            color={isRecording ? colors.error : colors.text}
+            color={isRecording ? theme.colors.error : theme.colors.onBackground}
           />
-          <Text style={[styles.placeholderText, { color: colors.text }]}>
+          <CustomText
+            style={[
+              styles.placeholderText,
+              { color: theme.colors.onBackground },
+            ]}
+          >
             {isRecording
               ? "Recording... Tap to stop"
               : value
@@ -161,7 +170,7 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
                 ? "Playing... Tap to pause"
                 : "Tap to play"
               : "Tap to start recording"}
-          </Text>
+          </CustomText>
         </View>
       </Pressable>
       {value ? (
@@ -174,17 +183,14 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
             }
             onChange(null);
           }}
-          style={styles.button}
         />
       ) : isRecording ? (
-        <CustomButton
-          title="Stop Recording"
-          onPress={stopRecording}
-          style={styles.button}
-        />
+        <CustomButton title="Stop Recording" onPress={stopRecording} />
       ) : null}
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+          {error}
+        </Text>
       )}
     </View>
   );
@@ -217,9 +223,6 @@ const styles = StyleSheet.create({
   },
   placeholderText: {
     fontSize: 16,
-  },
-  button: {
-    marginTop: 8,
   },
   errorText: {
     fontSize: 12,

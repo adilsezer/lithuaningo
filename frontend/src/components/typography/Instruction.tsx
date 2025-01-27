@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, StyleProp, TextStyle } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import CustomText from "./CustomText";
 
 interface InstructionProps {
   children?: React.ReactNode;
@@ -13,15 +13,10 @@ export const Instruction: React.FC<InstructionProps> = ({
   contrast,
   style,
 }) => {
-  const { colors } = useThemeStyles();
-
   return (
-    <Text
+    <CustomText
       style={[
         {
-          fontFamily: "Roboto-Regular",
-          fontSize: 14,
-          color: contrast ? colors.background : colors.text,
           textAlign: "center",
           marginVertical: 10,
           opacity: 0.8,
@@ -30,6 +25,6 @@ export const Instruction: React.FC<InstructionProps> = ({
       ]}
     >
       {children}
-    </Text>
+    </CustomText>
   );
 };

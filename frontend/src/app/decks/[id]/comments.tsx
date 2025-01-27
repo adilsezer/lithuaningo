@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
 import { View, StyleSheet, FlatList, Text } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useUserData } from "@stores/useUserStore";
-import { SectionTitle } from "@components/typography";
 import CustomButton from "@components/ui/CustomButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
@@ -11,10 +9,12 @@ import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
 import { useComments } from "@hooks/useComments";
 import { commentFormSchema } from "@utils/zodSchemas";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 export default function CommentsScreen() {
   const { id } = useLocalSearchParams();
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const userData = useUserData();
   const {
     comments,
@@ -63,9 +63,11 @@ export default function CommentsScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <BackButton />
-      <SectionTitle>Comments</SectionTitle>
+      <CustomText>Comments</CustomText>
       <Form
         fields={commentFields}
         onSubmit={handleAddComment}
@@ -77,15 +79,21 @@ export default function CommentsScreen() {
       <FlatList
         data={comments}
         renderItem={({ item }) => (
-          <View style={[styles.commentItem, { backgroundColor: colors.card }]}>
-            <Text style={[styles.commentText, { color: colors.text }]}>
+          <View
+            style={[
+              styles.commentItem,
+              { backgroundColor: theme.colors.surface },
+            ]}
+          >
+            <CustomText
+              style={[styles.commentText, { color: theme.colors.onSurface }]}
+            >
               {item.content}
-            </Text>
+            </CustomText>
             {userData && userData.id === item.userId && (
               <CustomButton
                 title="Delete"
                 onPress={() => item.id && deleteComment(item.id, userData.id)}
-                style={[styles.deleteButton, { backgroundColor: colors.error }]}
                 disabled={isSubmitting}
               />
             )}
@@ -94,9 +102,11 @@ export default function CommentsScreen() {
         keyExtractor={(item) => item.id || ""}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: colors.text }]}>
+          <CustomText
+            style={[styles.emptyText, { color: theme.colors.onSurface }]}
+          >
             {isEmpty ? "No comments yet" : ""}
-          </Text>
+          </CustomText>
         }
       />
     </View>
@@ -142,8 +152,5 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 14,
     marginRight: 8,
-  },
-  deleteButton: {
-    minWidth: 80,
   },
 });

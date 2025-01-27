@@ -1,8 +1,7 @@
 import React from "react";
 import { Dimensions, Platform, StyleSheet, View } from "react-native";
 import * as AppleAuthentication from "expo-apple-authentication";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-
+import { useTheme } from "react-native-paper";
 interface AppleSignInButtonProps {
   onPress: () => void;
   disabled?: boolean;
@@ -29,7 +28,7 @@ const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
   onPress,
   disabled,
 }) => {
-  const { components } = useThemeStyles();
+  const theme = useTheme();
   const { width } = Dimensions.get("window");
   const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
   const componentStyles = styles(isTablet);
@@ -46,7 +45,6 @@ const AppleSignInButton: React.FC<AppleSignInButtonProps> = ({
         buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
         onPress={disabled ? () => {} : onPress}
         style={[
-          components.button,
           { width: "100%", paddingVertical: 22 },
           isTablet && { height: 65 },
         ]}

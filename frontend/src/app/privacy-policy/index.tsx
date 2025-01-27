@@ -1,39 +1,35 @@
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import BackButton from "@components/layout/BackButton";
-import {
-  SectionTitle,
-  Subtitle,
-  Paragraph,
-  LinkText,
-} from "@components/typography";
 import * as Linking from "expo-linking";
+import CustomText from "@components/typography/CustomText";
+import { Paragraph } from "react-native-paper";
 
 const PrivacyPolicy = () => {
   return (
     <ScrollView>
       <BackButton />
-      <SectionTitle>Privacy Policy</SectionTitle>
-      <Subtitle>Last updated: June 10, 2024</Subtitle>
+      <CustomText>Privacy Policy</CustomText>
+      <CustomText>Last updated: June 10, 2024</CustomText>
 
-      <Paragraph>
+      <CustomText>
         Thank you for choosing Lithuaningo ("us", "we", or "our"). This Privacy
         Policy explains how we collect, use, and disclose information about you
         when you use our mobile application ("App").
-      </Paragraph>
+      </CustomText>
 
-      <Paragraph>
+      <CustomText>
         By using the App, you agree to the collection and use of information in
         accordance with this Privacy Policy.
-      </Paragraph>
+      </CustomText>
 
-      <Subtitle>1. Information We Collect</Subtitle>
-      <Paragraph>We collect the following types of information:</Paragraph>
-      <Paragraph>
+      <CustomText>1. Information We Collect</CustomText>
+      <CustomText>We collect the following types of information:</CustomText>
+      <CustomText>
         • Personal Information: When you register for an account, we may collect
         personal information such as your name, email address, and profile
         picture.
-      </Paragraph>
+      </CustomText>
       <Paragraph>
         • Authentication Data: Information related to your authentication method
         (Email, Google Sign-In, or Apple Sign-In).
@@ -83,87 +79,97 @@ const PrivacyPolicy = () => {
         and other notifications.
       </Paragraph>
 
-      <Subtitle>2. How We Use Your Information</Subtitle>
-      <Paragraph>We use the collected information for:</Paragraph>
-      <Paragraph>• Providing and maintaining our App</Paragraph>
-      <Paragraph>• Personalizing your learning experience</Paragraph>
-      <Paragraph>• Tracking your progress and generating statistics</Paragraph>
-      <Paragraph>• Managing user authentication and account security</Paragraph>
-      <Paragraph>• Sending daily review reminders and notifications</Paragraph>
-      <Paragraph>• Analyzing app performance and user behavior</Paragraph>
-      <Paragraph>• Detecting and addressing technical issues</Paragraph>
-      <Paragraph>• Improving our educational content and features</Paragraph>
+      <CustomText>2. How We Use Your Information</CustomText>
+      <CustomText>We use the collected information for:</CustomText>
+      <CustomText>• Providing and maintaining our App</CustomText>
+      <CustomText>• Personalizing your learning experience</CustomText>
+      <CustomText>
+        • Tracking your progress and generating statistics
+      </CustomText>
+      <CustomText>
+        • Managing user authentication and account security
+      </CustomText>
+      <CustomText>
+        • Sending daily review reminders and notifications
+      </CustomText>
+      <CustomText>• Analyzing app performance and user behavior</CustomText>
+      <CustomText>• Detecting and addressing technical issues</CustomText>
+      <CustomText>• Improving our educational content and features</CustomText>
 
-      <Subtitle>3. Data Storage and Security</Subtitle>
-      <Paragraph>
+      <CustomText>3. Data Storage and Security</CustomText>
+      <CustomText>
         • We use Firebase Authentication for secure user management
-      </Paragraph>
-      <Paragraph>• Local data is stored securely using AsyncStorage</Paragraph>
-      <Paragraph>
+      </CustomText>
+      <CustomText>
+        • Local data is stored securely using AsyncStorage
+      </CustomText>
+      <CustomText>
         • Crash reports and analytics are handled through Firebase Crashlytics
-      </Paragraph>
-      <Paragraph>
+      </CustomText>
+      <CustomText>
         • We implement industry-standard security measures to protect your data
-      </Paragraph>
+      </CustomText>
 
-      <Subtitle>4. Third-Party Services</Subtitle>
-      <Paragraph>We use the following third-party services:</Paragraph>
-      <Paragraph>• Google Sign-In for authentication</Paragraph>
-      <Paragraph>• Apple Sign-In for authentication</Paragraph>
-      <Paragraph>• Firebase for backend services</Paragraph>
-      <Paragraph>• Expo for app functionality</Paragraph>
-      <Paragraph>• Firebase Crashlytics for crash reporting</Paragraph>
-      <Paragraph>
+      <CustomText>4. Third-Party Services</CustomText>
+      <CustomText>We use the following third-party services:</CustomText>
+      <CustomText>• Google Sign-In for authentication</CustomText>
+      <CustomText>• Apple Sign-In for authentication</CustomText>
+      <CustomText>• Firebase for backend services</CustomText>
+      <CustomText>• Expo for app functionality</CustomText>
+      <CustomText>• Firebase Crashlytics for crash reporting</CustomText>
+      <CustomText>
         Each third-party service has its own privacy policy and data handling
         practices.
-      </Paragraph>
+      </CustomText>
 
-      <Subtitle>5. Data Deletion</Subtitle>
-      <Paragraph>
+      <CustomText>5. Data Deletion</CustomText>
+      <CustomText>
         You can request account deletion through the app's profile settings.
         When you delete your account:
-      </Paragraph>
-      <Paragraph>
+      </CustomText>
+      <CustomText>
         • All personal information will be permanently removed
-      </Paragraph>
-      <Paragraph>• Learning progress and statistics will be deleted</Paragraph>
-      <Paragraph>
+      </CustomText>
+      <CustomText>
+        • Learning progress and statistics will be deleted
+      </CustomText>
+      <CustomText>
         • User-generated content will be removed from our systems
-      </Paragraph>
+      </CustomText>
 
-      <Subtitle>6. Updates and Notifications</Subtitle>
-      <Paragraph>
+      <CustomText>6. Updates and Notifications</CustomText>
+      <CustomText>
         • You can manage notification preferences in the app settings
-      </Paragraph>
-      <Paragraph>
+      </CustomText>
+      <CustomText>
         • Daily review reminders can be customized or disabled
-      </Paragraph>
-      <Paragraph>
+      </CustomText>
+      <CustomText>
         • App updates and maintenance notifications may be sent when necessary
-      </Paragraph>
+      </CustomText>
 
-      <Subtitle>7. Children's Privacy</Subtitle>
-      <Paragraph>
+      <CustomText>7. Children's Privacy</CustomText>
+      <CustomText>
         Our App is suitable for ages 4 and up. We do not knowingly collect
         personally identifiable information from children under 13 without
         parental consent.
-      </Paragraph>
+      </CustomText>
 
-      <Subtitle>8. Contact Us</Subtitle>
-      <Paragraph>
+      <CustomText>8. Contact Us</CustomText>
+      <CustomText>
         If you have questions about this Privacy Policy, please contact us:
-      </Paragraph>
-      <Paragraph>
+      </CustomText>
+      <CustomText>
         By email:{" "}
-        <LinkText
+        <CustomText
           onPress={() => Linking.openURL("mailto:lithuaningo@gmail.com")}
         >
           lithuaningo@gmail.com
-        </LinkText>
-      </Paragraph>
-      <Paragraph>
+        </CustomText>
+      </CustomText>
+      <CustomText>
         By visiting this page on our website:{" "}
-        <LinkText
+        <CustomText
           onPress={() =>
             Linking.openURL(
               "https://adilsezer.github.io/lithuaningo/privacy-policy"
@@ -171,15 +177,15 @@ const PrivacyPolicy = () => {
           }
         >
           Privacy Policy URL
-        </LinkText>
-      </Paragraph>
+        </CustomText>
+      </CustomText>
 
-      <Subtitle>9. Changes to This Policy</Subtitle>
-      <Paragraph>
+      <CustomText>9. Changes to This Policy</CustomText>
+      <CustomText>
         We may update this Privacy Policy periodically. We will notify you of
         any changes by posting the new Privacy Policy on this page and updating
         the "Last updated" date.
-      </Paragraph>
+      </CustomText>
     </ScrollView>
   );
 };

@@ -1,6 +1,6 @@
+import CustomText from "@components/typography/CustomText";
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { SectionText } from "@components/typography";
 
 interface AnnouncementsCardProps {
   announcements: Array<{ id: string; title: string; content: string }>;
@@ -14,8 +14,8 @@ export const AnnouncementsCard: React.FC<AnnouncementsCardProps> = ({
   <View style={[styles.card, { backgroundColor }]}>
     {announcements.map((a) => (
       <View key={a.id}>
-        <SectionText contrast>{a.title}</SectionText>
-        <SectionText contrast>{a.content}</SectionText>
+        <CustomText>{a.title}</CustomText>
+        <CustomText>{a.content}</CustomText>
       </View>
     ))}
   </View>

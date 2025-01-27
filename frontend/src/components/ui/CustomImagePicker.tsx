@@ -1,8 +1,8 @@
 import React from "react";
 import { View, StyleSheet, Text, Image, Pressable } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 type ImageFile = {
   uri: string;
   type: string;
@@ -22,7 +22,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
   error,
   maxSize,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   const handleImagePick = async () => {
     const { granted } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -64,7 +64,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
       <Pressable
         style={[
           styles.imageContainer,
-          { borderColor: error ? colors.error : colors.border },
+          { borderColor: error ? theme.colors.error : theme.colors.primary },
         ]}
         onPress={handleImagePick}
       >
@@ -72,16 +72,26 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
           <Image source={{ uri: value.uri }} style={styles.image} />
         ) : (
           <View
-            style={[styles.placeholder, { backgroundColor: colors.secondary }]}
+            style={[
+              styles.placeholder,
+              { backgroundColor: theme.colors.primaryContainer },
+            ]}
           >
-            <Text style={[styles.placeholderText, { color: colors.text }]}>
+            <CustomText
+              style={[
+                styles.placeholderText,
+                { color: theme.colors.onBackground },
+              ]}
+            >
               Tap to select image
-            </Text>
+            </CustomText>
           </View>
         )}
       </Pressable>
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+          {error}
+        </Text>
       )}
     </View>
   );

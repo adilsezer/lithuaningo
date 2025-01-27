@@ -1,11 +1,11 @@
 import React from "react";
 import { StyleSheet, View, ScrollView } from "react-native";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useLeaderboard } from "@hooks/useLeaderboard";
-import { SectionTitle, Subtitle, SectionText } from "@components/typography";
-import type { ThemeColors } from "@src/styles/colors";
 import { format } from "date-fns";
+import { useTheme } from "react-native-paper";
+import { ThemeColors } from "@src/styles/theme";
+import CustomText from "@components/typography/CustomText";
 
 type TrophyPosition = 0 | 1 | 2;
 
@@ -19,39 +19,33 @@ const TABLE_HEADERS = ["Rank", "Name", "Score"] as const;
 
 type TrophyIconProps = {
   position: number;
-  colors: ThemeColors;
+  color: string;
 };
 
-const TrophyIcon = ({ position, colors }: TrophyIconProps) => {
+const TrophyIcon = ({ position, color }: TrophyIconProps) => {
   if (position > 2) return null;
 
   return (
-    <FontAwesome
-      name="trophy"
-      size={20}
-      color={colors[TROPHY_COLORS[position as TrophyPosition]]}
-      style={styles.trophy}
-    />
+    <FontAwesome name="trophy" size={20} color={color} style={styles.trophy} />
   );
 };
 
 type TableHeaderProps = {
-  colors: ThemeColors;
+  color: string;
 };
 
-const TableHeader = ({ colors }: TableHeaderProps) => (
-  <View style={[styles.header, { backgroundColor: colors.primary }]}>
+const TableHeader = ({ color }: TableHeaderProps) => (
+  <View style={[styles.header, { backgroundColor: color }]}>
     {TABLE_HEADERS.map((title) => (
-      <SectionText
+      <CustomText
         key={title}
-        contrast
         style={[
           styles.headerCell,
           styles[title.toLowerCase() as keyof typeof styles],
         ]}
       >
         {title}
-      </SectionText>
+      </CustomText>
     ))}
   </View>
 );
@@ -62,31 +56,29 @@ type LeaderRowProps = {
   score: number;
   rank: number;
   position: number;
-  colors: ThemeColors;
+  color: string;
 };
 
-const LeaderRow = ({ name, score, rank, position, colors }: LeaderRowProps) => (
-  <View style={[styles.row, { borderBottomColor: colors.primary }]}>
-    <SectionText style={[styles.cell, styles.rank]}>{rank}</SectionText>
+const LeaderRow = ({ name, score, rank, position, color }: LeaderRowProps) => (
+  <View style={[styles.row, { borderBottomColor: color }]}>
+    <CustomText style={[styles.cell, styles.rank]}>{rank}</CustomText>
     <View style={[styles.cell, styles.nameContainer]}>
-      <SectionText>{name}</SectionText>
-      <TrophyIcon position={position} colors={colors} />
+      <CustomText>{name}</CustomText>
+      <TrophyIcon position={position} color={color} />
     </View>
-    <SectionText style={[styles.cell, styles.score]}>{score}</SectionText>
+    <CustomText style={[styles.cell, styles.score]}>{score}</CustomText>
   </View>
 );
 
 const EmptyState = () => (
   <View style={styles.noDataContainer}>
-    <SectionText>Be the first to make it to the leaderboard!</SectionText>
-    <SectionText>
-      We're currently waiting for new leaders to emerge.
-    </SectionText>
+    <CustomText>Be the first to make it to the leaderboard!</CustomText>
+    <CustomText>We're currently waiting for new leaders to emerge.</CustomText>
   </View>
 );
 
 const LeaderboardScreen = () => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const { entries, weekId, startDate, endDate } = useLeaderboard();
 
   const dateRange =
@@ -99,10 +91,10 @@ const LeaderboardScreen = () => {
 
   return (
     <ScrollView style={styles.container}>
-      <SectionTitle>Leaderboard</SectionTitle>
-      <Subtitle>{dateRange}</Subtitle>
+      <CustomText>Leaderboard</CustomText>
+      <CustomText>{dateRange}</CustomText>
 
-      <TableHeader colors={colors} />
+      <TableHeader color={theme.colors.primary} />
 
       {entries.length > 0 ? (
         entries.map((entry, index) => (
@@ -110,7 +102,7 @@ const LeaderboardScreen = () => {
             key={entry.userId}
             {...entry}
             position={index}
-            colors={colors}
+            color={theme.colors.primary}
           />
         ))
       ) : (

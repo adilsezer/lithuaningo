@@ -1,12 +1,14 @@
+import CustomText from "@components/typography/CustomText";
 import React from "react";
-import { View, StyleSheet, Switch, Text } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { View, StyleProp, ViewStyle } from "react-native";
+import { Switch, Text, useTheme } from "react-native-paper";
 
 interface CustomSwitchProps {
   value: boolean;
   onValueChange: (value: boolean) => void;
   label: string;
   error?: string;
+  style?: StyleProp<ViewStyle>;
 }
 
 export const CustomSwitch: React.FC<CustomSwitchProps> = ({
@@ -14,42 +16,37 @@ export const CustomSwitch: React.FC<CustomSwitchProps> = ({
   onValueChange,
   label,
   error,
+  style,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   return (
-    <View style={styles.container}>
-      <View style={styles.switchRow}>
-        <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+    <View style={[{ width: "100%" }, style]}>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "center",
+          alignItems: "center",
+          gap: 16,
+        }}
+      >
+        <CustomText variant="bodyLarge">{label}</CustomText>
         <Switch
           value={value}
           onValueChange={onValueChange}
-          trackColor={{ false: colors.border, true: colors.primary }}
-          thumbColor={value ? colors.background : colors.text}
+          color={theme.colors.primary}
         />
       </View>
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <Text
+          variant="bodySmall"
+          style={{ color: theme.colors.error, marginTop: 4 }}
+        >
+          {error}
+        </Text>
       )}
     </View>
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    width: "100%",
-  },
-  switchRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  label: {
-    fontSize: 16,
-    fontWeight: "500",
-  },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
-  },
-});
+export default CustomSwitch;

@@ -1,9 +1,8 @@
 import React, { useState } from "react";
 import { View, StyleSheet, Text, Platform, Pressable } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { format } from "date-fns";
-
+import { useTheme } from "react-native-paper";
 type DatePickerMode = "date" | "time";
 
 interface CustomDatePickerProps {
@@ -25,7 +24,7 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
   minimumDate,
   maximumDate,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const [show, setShow] = useState(false);
 
   const formatDate = (date: Date) => {
@@ -50,18 +49,24 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
 
   return (
     <View style={styles.container}>
-      <Text style={[styles.label, { color: colors.text }]}>{label}</Text>
+      <Text style={[styles.label, { color: theme.colors.onBackground }]}>
+        {label}
+      </Text>
       <Pressable
         onPress={() => setShow(true)}
         style={[
           styles.input,
-          { borderColor: error ? colors.error : colors.border },
+          { borderColor: error ? theme.colors.error : theme.colors.primary },
         ]}
       >
         <Text
           style={[
             styles.value,
-            { color: colors.primary, textAlign: "center", fontSize: 24 },
+            {
+              color: theme.colors.onBackground,
+              textAlign: "center",
+              fontSize: 24,
+            },
           ]}
         >
           {formatDate(value)}
@@ -79,7 +84,9 @@ export const CustomDatePicker: React.FC<CustomDatePickerProps> = ({
         />
       )}
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+          {error}
+        </Text>
       )}
     </View>
   );

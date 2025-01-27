@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { View, StyleSheet, Image, Dimensions, Platform } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
-import { SectionTitle, Subtitle, Instruction } from "@components/typography";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { quizFormSchema } from "@utils/zodSchemas";
-
+import CustomText from "@components/typography/CustomText";
+import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
@@ -31,7 +30,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   questionWord,
   onAnswer,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const [isSubmitPressed, setIsSubmitPressed] = useState<boolean>(false);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
   const [submittedAnswer, setSubmittedAnswer] = useState<string>("");
@@ -97,34 +96,30 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
     <View>
       {!isSubmitPressed && (
         <>
-          <Subtitle>{questionText}</Subtitle>
+          <CustomText>{questionText}</CustomText>
           <View style={styles.sentenceContainer}>
             <RenderClickableWords
               sentenceText={sentenceText}
               answerText={questionWord}
             />
           </View>
-          <Instruction>
-            Click on each word to find out what it means.
-          </Instruction>
+          <CustomText>Click on each word to find out what it means.</CustomText>
         </>
       )}
 
-      {isSubmitPressed && (
-        <SectionTitle>{getQuestionWithAnswer()}</SectionTitle>
-      )}
+      {isSubmitPressed && <CustomText>{getQuestionWithAnswer()}</CustomText>}
 
-      <Subtitle
+      <CustomText
         style={[
           styles.translation,
           {
-            backgroundColor: colors.wordBackground,
-            borderColor: colors.border,
+            backgroundColor: theme.colors.primaryContainer,
+            borderColor: theme.colors.surface,
           },
         ]}
       >
         Translation: {translation}
-      </Subtitle>
+      </CustomText>
 
       {image && (
         <Image
@@ -135,30 +130,30 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
 
       {isSubmitPressed && (
         <View>
-          <Subtitle>
+          <CustomText>
             You answered:{" "}
-            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
+            <CustomText>
               {submittedAnswer}
-            </Subtitle>
-          </Subtitle>
-          <Subtitle>
+            </CustomText>
+          </CustomText>
+          <CustomText>
             Correct answer:{" "}
-            <Subtitle style={{ fontFamily: "Roboto-Bold" }}>
+            <CustomText>
               {correctAnswerText}
-            </Subtitle>
-          </Subtitle>
+            </CustomText>
+          </CustomText>
         </View>
       )}
 
       {isCorrect !== null && (
         <View>
-          <SectionTitle
+          <CustomText
             style={{
-              color: isCorrect ? colors.active : colors.error,
+              color: isCorrect ? theme.colors.primary : theme.colors.error,
             }}
           >
             {isCorrect ? "Correct" : "Incorrect"}
-          </SectionTitle>
+          </CustomText>
         </View>
       )}
 

@@ -1,7 +1,7 @@
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "./CustomButton";
+import { useTheme } from "react-native-paper";
 import {
   DeckCategory,
   deckCategories,
@@ -17,7 +17,7 @@ export const CustomCategoryPicker = ({
   selectedCategory,
   onSelectCategory,
 }: Props) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   const isSelected = (category: DeckCategory) => {
     return selectedCategory === category;
@@ -39,20 +39,13 @@ export const CustomCategoryPicker = ({
               styles.chip,
               {
                 backgroundColor: isSelected(category)
-                  ? colors.primary
+                  ? theme.colors.primary
                   : "transparent",
                 borderColor: isSelected(category)
-                  ? colors.primary
-                  : colors.border,
+                  ? theme.colors.primary
+                  : theme.colors.primaryContainer,
               },
             ]}
-            textStyle={[
-              styles.chipText,
-              {
-                color: isSelected(category) ? colors.background : colors.text,
-              },
-            ]}
-            width="auto"
           />
         ))}
       </ScrollView>

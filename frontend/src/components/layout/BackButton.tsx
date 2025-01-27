@@ -7,8 +7,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-
+import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
@@ -20,11 +19,10 @@ const TAB_ROUTES = {
   "/leaderboard/": "/dashboard/(tabs)/leaderboard",
   "/about/": "/dashboard/(tabs)/index",
   "/flashcards/": "/dashboard/(tabs)/decks",
-  "/auth/": "/dashboard/(tabs)/profile",
 } as const;
 
 const BackButton: React.FC = () => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const pathname = usePathname();
   const iconSize = isTablet ? 36 : 24;
 
@@ -47,7 +45,11 @@ const BackButton: React.FC = () => {
       style={styles.button}
       activeOpacity={0.6}
     >
-      <Ionicons name="arrow-back" size={iconSize} color={colors.text} />
+      <Ionicons
+        name="arrow-back"
+        size={iconSize}
+        color={theme.colors.onBackground}
+      />
     </TouchableOpacity>
   );
 };

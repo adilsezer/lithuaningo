@@ -1,6 +1,6 @@
 import React from "react";
 import { Text, StyleProp, TextStyle } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import CustomText from "./CustomText";
 
 interface LinkTextProps {
   children?: React.ReactNode;
@@ -14,13 +14,10 @@ export const LinkText: React.FC<LinkTextProps> = ({
   onPress,
   ...props
 }) => {
-  const { colors } = useThemeStyles();
-
   return (
-    <Text
+    <CustomText
       style={[
         {
-          color: colors.link,
           textDecorationLine: "underline",
           textAlign: "center",
         },
@@ -30,6 +27,6 @@ export const LinkText: React.FC<LinkTextProps> = ({
       {...props}
     >
       {children}
-    </Text>
+    </CustomText>
   );
 };

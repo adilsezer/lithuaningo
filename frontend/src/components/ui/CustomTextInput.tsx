@@ -1,68 +1,81 @@
 import React from "react";
-import {
-  TextInput,
-  TextInputProps,
-  StyleSheet,
-  View,
-  Text,
-} from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { StyleProp, ViewStyle } from "react-native";
+import { TextInput, HelperText, useTheme } from "react-native-paper";
 
-export interface CustomTextInputProps extends TextInputProps {
+export interface CustomTextInputProps {
+  value: string;
+  onChangeText: (text: string) => void;
+  label?: string;
+  placeholder?: string;
   error?: string;
+  secureTextEntry?: boolean;
+  disabled?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  style?: StyleProp<ViewStyle>;
+  left?: React.ReactNode;
+  right?: React.ReactNode;
+  mode?: "flat" | "outlined";
+  keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  autoCorrect?: boolean;
 }
 
 const CustomTextInput: React.FC<CustomTextInputProps> = ({
-  style,
+  value,
+  onChangeText,
+  label,
+  placeholder,
   error,
-  ...props
+  secureTextEntry = false,
+  disabled = false,
+  multiline = false,
+  numberOfLines = 1,
+  style,
+  left,
+  right,
+  mode = "outlined",
+  keyboardType = "default",
+  autoCapitalize = "none",
+  autoCorrect = false,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
 
   return (
-    <View style={styles.container}>
+    <>
       <TextInput
-        style={[
-          styles.input,
-          {
-            backgroundColor: colors.inputBackground,
-            borderColor: colors.border,
-            color: colors.text,
+        value={value}
+        onChangeText={onChangeText}
+        label={label}
+        placeholder={placeholder}
+        error={!!error}
+        secureTextEntry={secureTextEntry}
+        disabled={disabled}
+        multiline={multiline}
+        numberOfLines={numberOfLines}
+        mode={mode}
+        style={[{ backgroundColor: theme.colors.surface }, style]}
+        contentStyle={{ paddingHorizontal: 16 }}
+        left={left}
+        right={right}
+        keyboardType={keyboardType}
+        autoCapitalize={autoCapitalize}
+        autoCorrect={autoCorrect}
+        theme={{
+          colors: {
+            primary: theme.colors.primary,
+            error: theme.colors.error,
+            onSurfaceVariant: theme.colors.onSurfaceVariant,
           },
-          error && styles.inputError,
-          style,
-        ]}
-        placeholderTextColor={colors.placeholder}
-        {...props}
+        }}
       />
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <HelperText type="error" visible={!!error}>
+          {error}
+        </HelperText>
       )}
-    </View>
+    </>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 16,
-  },
-  input: {
-    height: 60,
-    borderWidth: 0.5,
-    borderRadius: 8,
-    paddingHorizontal: 16,
-    fontSize: 18,
-    textAlign: "center",
-  },
-  inputError: {
-    borderWidth: 1,
-    borderColor: "red",
-  },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
-    marginLeft: 16,
-  },
-});
 
 export default CustomTextInput;

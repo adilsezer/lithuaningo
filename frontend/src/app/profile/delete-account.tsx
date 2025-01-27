@@ -4,13 +4,12 @@ import { useAuth } from "@hooks/useAuth";
 import BackButton from "@components/layout/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { SectionTitle, Instruction } from "@components/typography";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { deleteAccountFormSchema } from "@utils/zodSchemas";
 import auth from "@react-native-firebase/auth";
 import { AlertDialog } from "@components/ui/AlertDialog";
-
+import CustomText from "@components/typography/CustomText";
 const deleteAccountFields: FormField[] = [
   {
     name: "password",
@@ -55,10 +54,10 @@ const DeleteAccountScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <SectionTitle>Delete Account</SectionTitle>
-      <Instruction>
+      <CustomText>Delete Account</CustomText>
+      <CustomText>
         This action cannot be undone. All your data will be permanently deleted.
-      </Instruction>
+      </CustomText>
 
       {isPasswordProvider ? (
         <Form
@@ -70,9 +69,9 @@ const DeleteAccountScreen: React.FC = () => {
           zodSchema={deleteAccountFormSchema}
         />
       ) : (
-        <Instruction>
+        <CustomText>
           Account deletion is only available for email/password accounts.
-        </Instruction>
+        </CustomText>
       )}
     </ScrollView>
   );

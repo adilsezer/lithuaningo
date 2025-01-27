@@ -1,13 +1,13 @@
 import React from "react";
 import { View } from "react-native";
 import BackButton from "@components/layout/BackButton";
-import { SectionTitle } from "@components/typography";
+import CustomText from "@components/typography/CustomText";
 
 export default function QuizScreen() {
   return (
     <View>
       <BackButton />
-      <SectionTitle>Quiz (To be implemented)</SectionTitle>
+      <CustomText>Quiz (To be implemented)</CustomText>
     </View>
   );
 }

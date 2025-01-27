@@ -1,237 +1,168 @@
 import React, { memo } from "react";
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ScrollView,
-} from "react-native";
-import { FontAwesome5 } from "@expo/vector-icons";
 import { DeckCardProps } from "./deck.types";
-import CustomButton from "@components/ui/CustomButton";
-import { useThemeStyles } from "@src/hooks/useThemeStyles";
+import { View } from "react-native";
+import {
+  Card,
+  Text,
+  Chip,
+  Button,
+  IconButton,
+  Avatar,
+  Surface,
+  useTheme,
+} from "react-native-paper";
 
 export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
+
   return (
-    <View
-      style={[
-        styles.card,
-        { backgroundColor: colors.card, borderColor: colors.border },
-      ]}
+    <Surface
+      elevation={1}
+      style={{
+        marginHorizontal: 8,
+        marginVertical: 8,
+        borderRadius: 16,
+      }}
     >
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={[styles.title, { color: colors.text }]} numberOfLines={2}>
-          {deck.title}
-        </Text>
-        <View
-          style={[
-            styles.categoryTag,
-            { backgroundColor: colors.success + "50" },
-          ]}
-        >
-          <Text style={[styles.categoryText, { color: colors.text }]}>
-            {deck.category}
-          </Text>
-        </View>
-      </View>
+      <Card mode="elevated" style={{ backgroundColor: theme.colors.surface }}>
+        <Card.Title
+          title={deck.title}
+          titleVariant="titleLarge"
+          subtitle={deck.category}
+          style={{ paddingBottom: 0 }}
+          titleStyle={{ color: theme.colors.onSurface }}
+          subtitleStyle={{ color: theme.colors.onSurface }}
+        />
 
-      {/* Content */}
-      <Text
-        style={[styles.description, { color: colors.cardText }]}
-        numberOfLines={2}
-      >
-        {deck.description}
-      </Text>
-
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tagsContainer}
-      >
-        {deck.tags.map((tag, index) => (
-          <View
-            key={index}
-            style={[
-              styles.tagChip,
-              { backgroundColor: colors.secondary + "50" },
-            ]}
+        <Card.Content>
+          <Text
+            variant="bodyMedium"
+            numberOfLines={2}
+            style={{ marginBottom: 12 }}
           >
-            <Text style={[styles.tagText, { color: colors.text }]}>{tag}</Text>
-          </View>
-        ))}
-      </ScrollView>
-
-      <View style={styles.metaInfo}>
-        <View style={styles.creator}>
-          <FontAwesome5 name="user" size={12} color={colors.cardText} />
-          <Text style={[styles.metaText, { color: colors.cardText }]}>
-            {deck.createdByUsername}
+            {deck.description}
           </Text>
-        </View>
-        <View style={styles.metaStats}>
-          <View style={styles.flashcardCount}>
-            <FontAwesome5
-              name="layer-group"
-              size={12}
-              color={colors.cardText}
+
+          {deck.tags.length > 0 && (
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 12,
+              }}
+            >
+              {deck.tags.map((tag, index) => (
+                <Chip
+                  key={index}
+                  compact
+                  mode="flat"
+                  style={{ backgroundColor: theme.colors.secondaryContainer }}
+                >
+                  <Text style={{ color: theme.colors.onSecondaryContainer }}>
+                    {tag}
+                  </Text>
+                </Chip>
+              ))}
+            </View>
+          )}
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              marginBottom: 16,
+            }}
+          >
+            <Avatar.Text
+              label={deck.createdByUsername[0]}
+              size={24}
+              style={{ marginRight: 8 }}
             />
-            <Text style={[styles.metaText, { color: colors.cardText }]}>
-              {deck.flashcardCount} cards
+            <Text variant="bodySmall" style={{ flex: 1 }}>
+              By {deck.createdByUsername}
             </Text>
+            <View style={{ flexDirection: "row", alignItems: "center" }}>
+              <IconButton
+                icon="cards-outline"
+                size={16}
+                style={{ margin: 0 }}
+              />
+              <Text variant="bodySmall" style={{ marginRight: 12 }}>
+                {deck.flashcardCount} cards
+              </Text>
+              <IconButton
+                icon="star-outline"
+                size={16}
+                style={{ margin: 0 }}
+                iconColor={theme.colors.secondary}
+              />
+              <Text variant="bodySmall">{(rating * 100).toFixed(0)}%</Text>
+            </View>
           </View>
-          <View style={styles.rating}>
-            <FontAwesome5 name="star" size={12} color={colors.secondary} />
-            <Text style={[styles.metaText, { color: colors.cardText }]}>
-              {(rating * 100).toFixed(0)}%
-            </Text>
+
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Button
+              mode="contained"
+              onPress={() => actions.onPractice(deck.id)}
+              style={{ flex: 1 }}
+              contentStyle={{ height: 40 }}
+              icon="lightbulb-outline"
+              buttonColor={theme.colors.primary}
+            >
+              Practice
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => actions.onQuiz(deck.id)}
+              style={{ flex: 1 }}
+              contentStyle={{ height: 40 }}
+              icon="lightbulb-outline"
+              buttonColor={theme.colors.secondary}
+            >
+              Quiz
+            </Button>
           </View>
-        </View>
-      </View>
+        </Card.Content>
 
-      {/* Actions */}
-      <View style={styles.buttonContainer}>
-        <CustomButton
-          title="Practice"
-          onPress={() => actions.onPractice(deck.id)}
-          style={[styles.actionButton, { backgroundColor: colors.success }]}
-          width="auto"
-        />
-        <CustomButton
-          title="Quiz"
-          onPress={() => actions.onQuiz(deck.id)}
-          style={[styles.actionButton, { backgroundColor: colors.secondary }]}
-          width="auto"
-        />
-      </View>
-
-      {/* Interactions */}
-      <View style={styles.interactions}>
-        <TouchableOpacity
-          onPress={() => actions.onVote(true)}
-          style={styles.iconButton}
+        <Card.Actions
+          style={{
+            justifyContent: "space-around",
+            paddingTop: 4,
+            marginTop: 20,
+            alignSelf: "center",
+          }}
         >
-          <FontAwesome5 name="thumbs-up" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => actions.onVote(false)}
-          style={styles.iconButton}
-        >
-          <FontAwesome5 name="thumbs-down" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-        <TouchableOpacity
-          onPress={() => actions.onComment(deck.id)}
-          style={styles.iconButton}
-        >
-          <FontAwesome5 name="comment" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-        <TouchableOpacity onPress={actions.onReport} style={styles.iconButton}>
-          <FontAwesome5 name="flag" size={20} color={colors.cardText} />
-        </TouchableOpacity>
-      </View>
-    </View>
+          <IconButton
+            icon="thumb-up-outline"
+            size={24}
+            onPress={() => actions.onVote(true)}
+            iconColor={theme.colors.primary}
+            mode="outlined"
+          />
+          <IconButton
+            icon="thumb-down-outline"
+            size={24}
+            onPress={() => actions.onVote(false)}
+            iconColor={theme.colors.primary}
+            mode="outlined"
+          />
+          <IconButton
+            icon="comment-outline"
+            size={24}
+            onPress={() => actions.onComment(deck.id)}
+            iconColor={theme.colors.primary}
+            mode="outlined"
+          />
+          <IconButton
+            icon="flag-outline"
+            size={24}
+            onPress={actions.onReport}
+            iconColor={theme.colors.primary}
+            mode="outlined"
+          />
+        </Card.Actions>
+      </Card>
+    </Surface>
   );
-});
-
-const styles = StyleSheet.create({
-  card: {
-    borderRadius: 16,
-    padding: 16,
-    marginTop: 12,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
-    borderWidth: 1,
-  },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 8,
-  },
-  title: {
-    fontSize: 20,
-    flex: 1,
-    marginRight: 8,
-    fontWeight: "600",
-  },
-  categoryTag: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  categoryText: {
-    fontSize: 14,
-    fontWeight: "500",
-  },
-  description: {
-    fontSize: 14,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  tagsContainer: {
-    flexDirection: "row",
-    marginBottom: 12,
-  },
-  tagChip: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    marginRight: 8,
-  },
-  tagText: {
-    fontSize: 12,
-  },
-  metaInfo: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 12,
-  },
-  creator: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  rating: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  metaText: {
-    fontSize: 12,
-  },
-  buttonContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    marginBottom: 16,
-  },
-  actionButton: {
-    flex: 0,
-    minWidth: 125,
-    borderRadius: 20,
-    paddingHorizontal: 32,
-    paddingVertical: 12,
-  },
-  interactions: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 20,
-  },
-  iconButton: {
-    padding: 8,
-  },
-  metaStats: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-  flashcardCount: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
 });

@@ -1,19 +1,19 @@
 import React, { useState, useCallback } from "react";
 import { View, StyleSheet, Text } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useUserData } from "@stores/useUserStore";
 import { useReport } from "@hooks/useReport";
-import { SectionTitle } from "@components/typography";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
 import { reportFormSchema } from "@utils/zodSchemas";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 export default function ReportScreen() {
   const { id } = useLocalSearchParams();
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const userData = useUserData();
   const { isLoading, error, submitReport, clearError } = useReport();
   const [isSuccess, setIsSuccess] = useState(false);
@@ -68,7 +68,9 @@ export default function ReportScreen() {
 
   if (!userData) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <BackButton />
         <ErrorMessage message="Please login to submit a report" fullScreen />
       </View>
@@ -77,7 +79,9 @@ export default function ReportScreen() {
 
   if (error) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <ErrorMessage message={error} onRetry={clearError} fullScreen />
       </View>
     );
@@ -85,25 +89,33 @@ export default function ReportScreen() {
 
   if (isSuccess) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <BackButton />
         <View style={styles.centerContainer}>
-          <Text style={[styles.successText, { color: colors.success }]}>
+          <CustomText
+            style={[styles.successText, { color: theme.colors.primary }]}
+          >
             Report submitted successfully!
-          </Text>
+          </CustomText>
         </View>
       </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <BackButton />
-      <SectionTitle>Submit Report</SectionTitle>
-      <Text style={[styles.description, { color: colors.text }]}>
+      <CustomText>Submit Report</CustomText>
+      <CustomText
+        style={[styles.description, { color: theme.colors.onSurface }]}
+      >
         If you've found inappropriate content or have concerns about this deck,
         please submit a report below.
-      </Text>
+      </CustomText>
       <Form
         fields={reportFields}
         onSubmit={handleSubmitReport}

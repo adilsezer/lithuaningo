@@ -1,9 +1,9 @@
 import React from "react";
 import { ScrollView, View, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
-import { SectionText, SectionTitle } from "@components/typography";
-import ThemeSwitch from "@components/ui/ThemeSwitch";
+import { CustomSwitch } from "@components/ui/CustomSwitch";
 import { useWelcome } from "@hooks/useWelcome";
+import CustomText from "@components/typography/CustomText";
 
 const WelcomeScreen = () => {
   const { isDarkMode, toggleTheme, navigateToAuth } = useWelcome();
@@ -11,7 +11,11 @@ const WelcomeScreen = () => {
   return (
     <ScrollView contentContainerStyle={styles.scrollContainer}>
       <View style={styles.container}>
-        <ThemeSwitch onToggle={toggleTheme} isDarkMode={isDarkMode} />
+        <CustomSwitch
+          onValueChange={toggleTheme}
+          value={isDarkMode}
+          label="Dark Mode"
+        />
         <WelcomeImage />
         <WelcomeText />
         <AuthButtons onNavigate={navigateToAuth} />
@@ -32,14 +36,16 @@ const WelcomeImage = () => (
 
 const WelcomeText = () => (
   <View style={styles.textContainer}>
-    <SectionTitle>Welcome to Lithuaningo</SectionTitle>
-    <SectionText>
+    <CustomText variant="headlineMedium" bold>
+      Welcome to Lithuaningo
+    </CustomText>
+    <CustomText variant="bodyLarge">
       Learn Lithuanian with daily sentences, flashcards, and reinforcing
       quizzes.
-    </SectionText>
-    <SectionText style={styles.sectionSpacing}>
+    </CustomText>
+    <CustomText variant="bodyLarge">
       Join now and compete on our leaderboard!
-    </SectionText>
+    </CustomText>
   </View>
 );
 
@@ -49,18 +55,8 @@ const AuthButtons = ({
   onNavigate: (route: "login" | "signup") => void;
 }) => (
   <View style={styles.buttonContainer}>
-    <CustomButton
-      onPress={() => onNavigate("login")}
-      title="Log In"
-      accessibilityLabel="Log in to your account"
-      accessibilityHint="Navigate to the login screen"
-    />
-    <CustomButton
-      onPress={() => onNavigate("signup")}
-      title="Create Account"
-      accessibilityLabel="Create a new account"
-      accessibilityHint="Navigate to the sign up screen"
-    />
+    <CustomButton onPress={() => onNavigate("login")} title="Log In" />
+    <CustomButton onPress={() => onNavigate("signup")} title="Create Account" />
   </View>
 );
 

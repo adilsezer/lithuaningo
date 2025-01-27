@@ -2,9 +2,8 @@ import React, { Component, ErrorInfo, ReactNode } from "react";
 import { View, StyleSheet, Linking, Image } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
 import CustomButton from "@components/ui/CustomButton";
-import { SectionTitle, Subtitle } from "@components/typography";
 import { AlertDialog } from "@components/ui/AlertDialog";
-
+import CustomText from "@components/typography/CustomText";
 interface Props {
   children: ReactNode;
 }
@@ -49,10 +48,10 @@ class ErrorBoundary extends Component<Props, State> {
             source={require("assets/images/icon.png")}
             style={styles.logo}
           />
-          <SectionTitle>Oops! Something went wrong.</SectionTitle>
-          <Subtitle>
+          <CustomText>Oops! Something went wrong.</CustomText>
+          <CustomText>
             Please try again or contact support if the issue persists.
-          </Subtitle>
+          </CustomText>
           <CustomButton title="Try Again" onPress={this.handleRetry} />
           <CustomButton
             title="Contact Support"

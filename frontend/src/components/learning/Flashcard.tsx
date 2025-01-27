@@ -14,15 +14,15 @@ import Animated, {
   interpolate,
   Easing,
 } from "react-native-reanimated";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { SENTENCE_KEYS } from "@config/constants";
-import { SectionTitle, Instruction } from "@components/typography";
 import { useWordData } from "@hooks/useWordData";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 interface FlashcardProps {
   wordId: string;
@@ -30,7 +30,7 @@ interface FlashcardProps {
 
 const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
   const { word, lemma } = useWordData(wordId);
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const router = useRouter();
   const userData = useUserData();
   const [sentenceReviewCompleted, setSentenceReviewCompleted] = useState<
@@ -91,7 +91,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
             style={[
               styles.card,
               frontAnimatedStyle,
-              { backgroundColor: colors.card },
+              { backgroundColor: theme.colors.surface },
             ]}
           >
             {lemma?.imageUrl && (
@@ -100,11 +100,11 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
                 style={[styles.image, isSmallScreen && styles.smallImage]}
               />
             )}
-            <SectionTitle>{wordId}</SectionTitle>
+            <CustomText>{wordId}</CustomText>
             <View
               style={[
                 styles.horizontalRule,
-                { borderBottomColor: colors.border },
+                { borderBottomColor: theme.colors.surface },
               ]}
             />
           </Animated.View>
@@ -113,7 +113,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
               styles.card,
               backAnimatedStyle,
               styles.cardBack,
-              { backgroundColor: colors.card },
+              { backgroundColor: theme.colors.surface },
             ]}
           >
             {lemma?.imageUrl && (
@@ -122,23 +122,22 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
                 style={[styles.image, isSmallScreen && styles.smallImage]}
               />
             )}
-            <SectionTitle>{word?.word}</SectionTitle>
+            <CustomText>{word?.word}</CustomText>
             <View
               style={[
                 styles.horizontalRule,
-                { borderBottomColor: colors.border },
+                { borderBottomColor: theme.colors.surface },
               ]}
             />
           </Animated.View>
         </View>
       </TouchableWithoutFeedback>
-      <Instruction>Tap the card to flip and see the translation</Instruction>
+      <CustomText>Tap the card to flip and see the translation</CustomText>
       <View style={styles.buttonContainer}>
         {!sentenceReviewCompleted ? (
           <View>
             <CustomButton
               title="Review Later"
-              style={[styles.button, { backgroundColor: colors.secondary }]}
               onPress={() => handleMarkButtonClick()}
             />
             <CustomButton
@@ -147,11 +146,7 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
             />
           </View>
         ) : (
-          <CustomButton
-            title="Go Back"
-            style={[styles.button, { backgroundColor: colors.secondary }]}
-            onPress={() => router.back()}
-          />
+          <CustomButton title="Go Back" onPress={() => router.back()} />
         )}
       </View>
     </ScrollView>
@@ -196,9 +191,6 @@ const styles = StyleSheet.create({
   smallImage: {
     width: 250,
     height: 250,
-  },
-  button: {
-    marginVertical: 10,
   },
   buttonContainer: {
     width: "100%",

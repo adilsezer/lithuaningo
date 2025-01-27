@@ -1,18 +1,18 @@
 import React, { useMemo, useCallback } from "react";
 import { View, ScrollView } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
-import { SectionTitle } from "@components/typography";
 import { useDecks } from "@hooks/useDecks";
 import { FormField } from "@components/form/form.types";
 import { deckCategories, DeckCategory } from "@src/types/DeckCategory";
 import type { Deck } from "@src/types";
 import { deckFormSchema } from "@utils/zodSchemas";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 export default function NewDeckScreen() {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const router = useRouter();
   const { createDeck } = useDecks();
 
@@ -73,16 +73,16 @@ export default function NewDeckScreen() {
 
   const handleSubmit = useCallback(
     async (data: Partial<Deck>) => {
-      await createDeck(data.title || '', data.description || '');
+      await createDeck(data.title || "", data.description || "");
     },
     [createDeck]
   );
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <BackButton />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <SectionTitle>Create New Deck</SectionTitle>
+        <CustomText>Create New Deck</CustomText>
         <Form
           fields={fields}
           onSubmit={handleSubmit}

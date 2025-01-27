@@ -1,24 +1,22 @@
 import React, { useEffect, useRef } from "react";
-import { TextInput, StyleSheet, ViewStyle, View } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { Ionicons } from "@expo/vector-icons";
+import { StyleProp, ViewStyle } from "react-native";
+import { Searchbar, useTheme } from "react-native-paper";
 
 interface SearchBarProps {
   onSearch: (query: string) => void;
   placeholder?: string;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
   initialValue?: string;
   debounceTime?: number;
 }
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   onSearch,
-  placeholder = "Search decks...",
+  placeholder = "Search...",
   style,
   initialValue = "",
   debounceTime = 300,
 }) => {
-  const { colors } = useThemeStyles();
   const [value, setValue] = React.useState(initialValue);
   const timeoutRef = useRef<NodeJS.Timeout>();
 
@@ -48,26 +46,18 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     };
   }, []);
 
+  const theme = useTheme();
+
   return (
-    <View style={[styles.container, style, { backgroundColor: colors.card }]}>
-      <Ionicons name="search" size={20} color={colors.text} />
-      <TextInput
-        style={{ color: colors.text }}
-        value={value}
-        onChangeText={handleChangeText}
-        placeholder={placeholder}
-        placeholderTextColor={colors.text}
-      />
-    </View>
+    <Searchbar
+      placeholder={placeholder}
+      onChangeText={handleChangeText}
+      value={value}
+      style={[style, { backgroundColor: theme.colors.surface }]}
+      inputStyle={{ color: theme.colors.onSurface }}
+      placeholderTextColor={theme.colors.onSurfaceVariant}
+    />
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-    gap: 8,
-  },
-});
+export default SearchBar;

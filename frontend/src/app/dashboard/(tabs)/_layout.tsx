@@ -1,8 +1,8 @@
 import React from "react";
 import FontAwesome5 from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { Dimensions, Platform, StyleSheet } from "react-native";
+import { useTheme } from "react-native-paper";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -16,12 +16,11 @@ const TAB_ITEMS = [
 ] as const;
 
 export default function TabLayout() {
-  const { colors } = useThemeStyles();
-
+  const theme = useTheme();
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: colors.active,
+        tabBarActiveTintColor: theme.colors.primary,
         tabBarStyle: styles.tabBarStyle,
         headerShown: false,
         tabBarLabelStyle: {

@@ -6,13 +6,13 @@ import NavigationLink from "@components/layout/NavigationLink";
 import BackButton from "@components/layout/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { SectionTitle } from "@components/typography";
 import Divider from "@components/ui/Divider";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import type { SocialProvider } from "@hooks/useAuth";
 import { loginFormSchema } from "@utils/zodSchemas";
+import CustomText from "@components/typography/CustomText";
 
 const loginFields: FormField[] = [
   {
@@ -51,7 +51,7 @@ const LoginScreen: React.FC = () => {
     <ScrollView>
       <BackButton />
 
-      <SectionTitle>Welcome Back</SectionTitle>
+      <CustomText>Welcome Back</CustomText>
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}
 

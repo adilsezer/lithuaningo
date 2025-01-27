@@ -7,7 +7,7 @@ import {
   ViewStyle,
 } from "react-native";
 import { useIsLoading } from "@stores/useUIStore";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { useTheme } from "react-native-paper";
 
 interface LoadingIndicatorProps {
   // If true, shows as modal overlay. If false, shows inline
@@ -32,19 +32,10 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   size = "large",
   minimumDisplayTime = 200,
   color,
-  useTheme = true,
 }) => {
-  let themeColors;
-  try {
-    const { colors } = useThemeStyles();
-    themeColors = colors;
-  } catch {
-    themeColors = null;
-  }
-
-  const indicatorColor =
-    color || (useTheme && themeColors?.active) || DEFAULT_COLOR;
-  const backgroundColor = (useTheme && themeColors?.background) || "#FFFFFF";
+  const theme = useTheme();
+  const indicatorColor = color || theme.colors.primary || DEFAULT_COLOR;
+  const backgroundColor = theme.colors.background;
 
   const globalIsLoading = useIsLoading();
   const [showLoading, setShowLoading] = useState(false);

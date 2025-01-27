@@ -1,22 +1,22 @@
 import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { AlertDialog } from "@components/ui/AlertDialog";
 import type { FlashcardFormData } from "@src/types";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
-import { SectionTitle } from "@components/typography";
 import { FormField } from "@components/form/form.types";
 import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { flashcardFormSchema } from "@utils/zodSchemas";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 export default function NewFlashcardScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const userData = useUserData();
   const { handleCreateFlashcard } = useFlashcards();
 
@@ -82,10 +82,10 @@ export default function NewFlashcardScreen() {
   };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.background }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <BackButton />
       <ScrollView contentContainerStyle={styles.container}>
-        <SectionTitle>Create New Flashcard</SectionTitle>
+        <CustomText>Create New Flashcard</CustomText>
         <Form
           fields={fields}
           onSubmit={handleSubmit}
@@ -95,8 +95,6 @@ export default function NewFlashcardScreen() {
         <CustomButton
           title="Complete Deck"
           onPress={() => router.push(`/decks/${deckId}`)}
-          style={{ marginTop: 12 }}
-          variant="secondary"
         />
       </ScrollView>
     </View>

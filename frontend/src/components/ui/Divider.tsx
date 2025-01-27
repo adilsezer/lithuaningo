@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { View, StyleSheet, StyleProp, ViewStyle } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import { SectionText } from "@components/typography";
+import CustomText from "@components/typography/CustomText";
+import { useTheme } from "react-native-paper";
 
 interface DividerProps {
   content?: ReactNode;
@@ -9,15 +9,13 @@ interface DividerProps {
 }
 
 export default function Divider({ content, style }: DividerProps) {
-  const { colors, layout } = useThemeStyles();
+  const theme = useTheme();
 
   return (
-    <View style={[layout.center, styles.separator, style]}>
-      <View style={[styles.line, { backgroundColor: colors.border }]} />
-      {content && (
-        <SectionText style={styles.dividerText}>{content}</SectionText>
-      )}
-      <View style={[styles.line, { backgroundColor: colors.border }]} />
+    <View style={[styles.separator, style]}>
+      <View style={[styles.line, { backgroundColor: theme.colors.primary }]} />
+      {content && <CustomText style={styles.dividerText}>{content}</CustomText>}
+      <View style={[styles.line, { backgroundColor: theme.colors.primary }]} />
     </View>
   );
 }

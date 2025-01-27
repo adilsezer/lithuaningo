@@ -4,11 +4,10 @@ import { useAuth } from "@hooks/useAuth";
 import BackButton from "@components/layout/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { SectionTitle } from "@components/typography";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { changePasswordFormSchema } from "@utils/zodSchemas";
-
+import CustomText from "@components/typography/CustomText";
 const changePasswordFields: FormField[] = [
   {
     name: "currentPassword",
@@ -44,7 +43,7 @@ const ChangePasswordScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <SectionTitle>Change Password</SectionTitle>
+      <CustomText>Change Password</CustomText>
 
       <Form
         fields={changePasswordFields}

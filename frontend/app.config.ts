@@ -28,10 +28,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           NSExceptionDomains: {
             localhost: {
               NSExceptionAllowsInsecureHTTPLoads: true,
-              NSIncludesSubdomains: true
-            }
-          }
-        }
+              NSIncludesSubdomains: true,
+            },
+          },
+        },
       },
       usesAppleSignIn: true,
     },

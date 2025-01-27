@@ -8,9 +8,8 @@ import {
   Platform,
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { FontAwesome } from "@expo/vector-icons";
-
+import { useTheme } from "react-native-paper";
 interface Option {
   label: string;
   value: string;
@@ -29,7 +28,7 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
   options,
   error,
 }) => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const [modalVisible, setModalVisible] = useState(false);
 
   const selectedOption = options.find((opt) => opt.value === value);
@@ -45,19 +44,19 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
         style={[
           styles.pickerButton,
           {
-            borderColor: error ? colors.error : colors.border,
-            backgroundColor: colors.inputBackground,
+            borderColor: error ? theme.colors.error : theme.colors.primary,
+            backgroundColor: theme.colors.primaryContainer,
           },
         ]}
         onPress={() => setModalVisible(true)}
       >
-        <Text style={[styles.valueText, { color: colors.text }]}>
+        <Text style={[styles.valueText, { color: theme.colors.onBackground }]}>
           {selectedOption?.label || "Select an option"}
         </Text>
         <FontAwesome
           name="chevron-down"
           size={14}
-          color={colors.text}
+          color={theme.colors.onBackground}
           style={styles.icon}
         />
       </Pressable>
@@ -72,20 +71,29 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
           onPress={() => setModalVisible(false)}
         >
           <Pressable
-            style={[styles.modalContent, { backgroundColor: colors.card }]}
+            style={[
+              styles.modalContent,
+              { backgroundColor: theme.colors.surface },
+            ]}
           >
-            <View style={[styles.handle, { backgroundColor: colors.border }]} />
+            <View
+              style={[styles.handle, { backgroundColor: theme.colors.primary }]}
+            />
             <Picker
               selectedValue={value}
               onValueChange={handleValueChange}
-              style={[styles.picker, { color: colors.text }]}
+              style={[styles.picker, { color: theme.colors.onBackground }]}
             >
               {options.map((option) => (
                 <Picker.Item
                   key={option.value}
                   label={option.label}
                   value={option.value}
-                  color={Platform.OS === "ios" ? colors.text : undefined}
+                  color={
+                    Platform.OS === "ios"
+                      ? theme.colors.onBackground
+                      : undefined
+                  }
                 />
               ))}
             </Picker>
@@ -93,7 +101,9 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
         </Pressable>
       </Modal>
       {error && (
-        <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+          {error}
+        </Text>
       )}
     </View>
   );

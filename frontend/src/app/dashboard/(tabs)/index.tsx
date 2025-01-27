@@ -1,9 +1,7 @@
 import React, { useEffect } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
-import { SectionTitle, Subtitle } from "@components/typography";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
 import { UserStatsCard } from "@components/dashboard/UserStatsCard";
@@ -14,14 +12,16 @@ import { useDecks } from "@hooks/useDecks";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useUserData } from "@stores/useUserStore";
 import { useError, useSetError, useIsLoading } from "@stores/useUIStore";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 const DashboardScreen: React.FC = () => {
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const userData = useUserData();
   const error = useError();
   const setError = useSetError();
   const isLoading = useIsLoading();
-  
+
   const {
     userData: dashboardUser,
     validAnnouncements,
@@ -76,7 +76,7 @@ const DashboardScreen: React.FC = () => {
     if (topRatedDecks.length === 0) {
       return (
         <View style={styles.emptyState}>
-          <Subtitle>No top rated decks this week</Subtitle>
+          <CustomText>No top rated decks this week</CustomText>
         </View>
       );
     }
@@ -93,21 +93,21 @@ const DashboardScreen: React.FC = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-        <SectionTitle>Hi, {dashboardUser?.name || "there"}!</SectionTitle>
+        <CustomText>Hi, {dashboardUser?.name || "there"}!</CustomText>
 
         {stats && <UserStatsCard stats={stats} />}
 
         {validAnnouncements.length > 0 && (
           <AnnouncementsCard
             announcements={validAnnouncements}
-            backgroundColor={colors.secondary}
+            backgroundColor={theme.colors.secondary}
           />
         )}
 
         <DailyChallengeCard
           answeredQuestions={stats?.todayAnsweredQuestions ?? 0}
           correctAnswers={stats?.todayCorrectAnsweredQuestions ?? 0}
-          colors={colors}
+          colors={theme.colors.secondary}
         />
         <CustomButton
           title="Start Daily Challenge"
@@ -115,7 +115,7 @@ const DashboardScreen: React.FC = () => {
         />
 
         <View>
-          <Subtitle>Top Rated Deck of the Week</Subtitle>
+          <CustomText>Top Rated Deck of the Week</CustomText>
           {renderTopRatedDeck()}
         </View>
       </View>

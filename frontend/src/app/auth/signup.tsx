@@ -4,8 +4,6 @@ import Divider from "@components/ui/Divider";
 import CustomButton from "@components/ui/CustomButton";
 import BackButton from "@components/layout/BackButton";
 import AppleSignInButton from "@components/auth/AppleSignInButton";
-import { SectionTitle } from "@components/typography";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
@@ -13,6 +11,8 @@ import { useIsLoading } from "@stores/useUIStore";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { signupFormSchema } from "@utils/zodSchemas";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 const signupFields: FormField[] = [
   {
@@ -50,7 +50,6 @@ const signupFields: FormField[] = [
 ];
 
 const SignUpScreen: React.FC = () => {
-  const { colors } = useThemeStyles();
   const loading = useIsLoading();
   const { signUp, signInWithSocial, error, clearError } = useAuth();
 
@@ -61,7 +60,7 @@ const SignUpScreen: React.FC = () => {
   return (
     <ScrollView>
       <BackButton />
-      <SectionTitle>Create Account</SectionTitle>
+      <CustomText>Create Account</CustomText>
 
       {error && <ErrorMessage message={error} onRetry={clearError} />}
 
@@ -82,16 +81,10 @@ const SignUpScreen: React.FC = () => {
         onPress={() => signInWithSocial("google")}
         title="Continue with Google"
         icon={require("assets/images/google-logo.png")}
-        style={{ backgroundColor: colors.card, paddingVertical: 18 }}
-        textStyle={{ color: colors.cardText }}
-        disabled={loading}
       />
 
       {Platform.OS === "ios" && (
-        <AppleSignInButton
-          onPress={() => signInWithSocial("apple")}
-          disabled={loading}
-        />
+        <AppleSignInButton onPress={() => signInWithSocial("apple")} />
       )}
     </ScrollView>
   );

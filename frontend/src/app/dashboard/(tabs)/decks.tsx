@@ -1,21 +1,21 @@
 import React, { useEffect, useCallback } from "react";
 import { View, StyleSheet, FlatList, Text } from "react-native";
-import { SectionTitle } from "@components/typography";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useDecks } from "@hooks/useDecks";
 import { useUserStore } from "@stores/useUserStore";
 import { useUserData } from "@stores/useUserStore";
 import { CustomCategoryPicker } from "@components/ui/CustomCategoryPicker";
 import { SearchBar } from "@components/ui/SearchBar";
-import { useThemeStyles } from "@hooks/useThemeStyles";
 import { useRouter } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomButton from "@components/ui/CustomButton";
 import { DeckCategory } from "@src/types/DeckCategory";
+import { useTheme } from "react-native-paper";
+import CustomText from "@components/typography/CustomText";
 
 export default function DecksScreen() {
   const userData = useUserData();
-  const { colors } = useThemeStyles();
+  const theme = useTheme();
   const router = useRouter();
 
   const {
@@ -63,12 +63,11 @@ export default function DecksScreen() {
       <>
         <View style={styles.headerContainer}>
           <View style={styles.titleRow}>
-            <SectionTitle>Decks</SectionTitle>
+            <CustomText>Decks</CustomText>
           </View>
           <CustomButton
             title="Add New Deck"
             onPress={() => handleNavigation("/decks/new")}
-            variant="primary"
           />
         </View>
         <SearchBar
@@ -107,7 +106,9 @@ export default function DecksScreen() {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <FlatList
         data={decks}
         renderItem={({ item }) => (
@@ -121,9 +122,7 @@ export default function DecksScreen() {
         contentContainerStyle={styles.list}
         ListHeaderComponent={renderHeader}
         ListEmptyComponent={
-          <Text style={[styles.emptyText, { color: colors.text }]}>
-            {emptyMessage}
-          </Text>
+          <CustomText style={[styles.emptyText]}>{emptyMessage}</CustomText>
         }
       />
     </View>
