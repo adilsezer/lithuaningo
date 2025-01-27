@@ -38,7 +38,6 @@ export default function NewDeckScreen() {
         category: "selection",
         type: "picker",
         options: [
-          { label: "Select a category", value: "" },
           ...deckCategories.map((cat: DeckCategory) => ({
             label: cat,
             value: cat,
@@ -82,7 +81,9 @@ export default function NewDeckScreen() {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <BackButton />
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <CustomText>Create New Deck</CustomText>
+        <CustomText variant="titleLarge" bold>
+          Create New Deck
+        </CustomText>
         <Form
           fields={fields}
           onSubmit={handleSubmit}

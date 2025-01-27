@@ -61,6 +61,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
           },
           style,
         ]}
+        outlineColor={theme.colors.primary}
         left={left}
         right={right}
         keyboardType={keyboardType}

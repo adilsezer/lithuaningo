@@ -1,26 +1,20 @@
 import React, { useState, useEffect } from "react";
-import {
-  View,
-  ActivityIndicator,
-  StyleSheet,
-  Modal,
-  ViewStyle,
-} from "react-native";
+import { ViewStyle } from "react-native";
 import { useIsLoading } from "@stores/useUIStore";
-import { useTheme } from "react-native-paper";
+import {
+  useTheme,
+  ActivityIndicator,
+  Portal,
+  Modal,
+  Text,
+} from "react-native-paper";
 
 interface LoadingIndicatorProps {
-  // If true, shows as modal overlay. If false, shows inline
   modal?: boolean;
-  // For inline mode only
   style?: ViewStyle;
-  // For inline mode only
   size?: "small" | "large";
-  // Optional minimum display time in ms (for modal only)
   minimumDisplayTime?: number;
-  // Optional color override (useful before theme is available)
   color?: string;
-  // Whether to use theme context (defaults to true)
   useTheme?: boolean;
 }
 
@@ -35,7 +29,6 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
 }) => {
   const theme = useTheme();
   const indicatorColor = color || theme.colors.primary || DEFAULT_COLOR;
-  const backgroundColor = theme.colors.background;
 
   const globalIsLoading = useIsLoading();
   const [showLoading, setShowLoading] = useState(false);
@@ -62,65 +55,41 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   }, [globalIsLoading, delayedIsLoading, modal, minimumDisplayTime]);
 
   useEffect(() => {
-    if (delayedIsLoading) {
-      setShowLoading(true);
-    } else {
-      setShowLoading(false);
-    }
+    setShowLoading(delayedIsLoading);
   }, [delayedIsLoading]);
 
   if (!modal) {
     return (
-      <View style={[styles.inlineContainer, style]}>
-        <ActivityIndicator
-          size={size}
-          color={indicatorColor}
-          accessibilityLabel="Loading content"
-        />
-      </View>
+      <ActivityIndicator
+        size={size}
+        color={indicatorColor}
+        style={style}
+        accessibilityLabel="Loading content"
+      />
     );
   }
 
   return (
-    <Modal
-      transparent={true}
-      animationType="none"
-      visible={showLoading}
-      onRequestClose={() => {}}
-    >
-      <View style={styles.modalBackground}>
-        <View style={[styles.activityIndicatorWrapper, { backgroundColor }]}>
-          <ActivityIndicator
-            size="large"
-            color={indicatorColor}
-            animating={showLoading}
-            accessibilityLabel="Loading content"
-          />
-        </View>
-      </View>
-    </Modal>
+    <Portal>
+      <Modal visible={showLoading} dismissable={false}>
+        <Text
+          style={{
+            color: theme.colors.primary,
+            alignSelf: "center",
+            marginBottom: 20,
+          }}
+        >
+          Loading...
+        </Text>
+        <ActivityIndicator
+          size="large"
+          color={indicatorColor}
+          animating={showLoading}
+          accessibilityLabel="Loading content"
+        />
+      </Modal>
+    </Portal>
   );
 };
-
-const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
-  activityIndicatorWrapper: {
-    height: 100,
-    width: 100,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  inlineContainer: {
-    padding: 16,
-    justifyContent: "center",
-    alignItems: "center",
-  },
-});
 
 export default LoadingIndicator;
