@@ -9,8 +9,7 @@ import {
 export const SocialAuthButtons: React.FC<{
   onGooglePress: () => void;
   onApplePress: () => void;
-  disabled: boolean;
-}> = ({ onGooglePress, onApplePress, disabled }) => {
+}> = ({ onGooglePress, onApplePress }) => {
   const theme = useTheme();
 
   const buttonStyles = {

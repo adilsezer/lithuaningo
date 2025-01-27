@@ -93,7 +93,9 @@ const DashboardScreen: React.FC = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-        <CustomText>Hi, {dashboardUser?.name || "there"}!</CustomText>
+        <CustomText variant="titleLarge" bold>
+          Hi, {dashboardUser?.name || "there"}!
+        </CustomText>
 
         {stats && <UserStatsCard stats={stats} />}
 

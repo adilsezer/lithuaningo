@@ -12,6 +12,7 @@ import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useTheme as useThemeContext } from "@context/ThemeContext";
 import { useAlertDialog } from "@components/ui/AlertDialog";
+import CustomDivider from "@components/ui/CustomDivider";
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
   { title: "Change Password", path: "/profile/change-password" },
@@ -44,8 +45,10 @@ const ProfileHeader = ({
   email: string;
 }) => (
   <>
-    <CustomText>{name || "User"}</CustomText>
-    <CustomText>{email}</CustomText>
+    <CustomText variant="titleLarge" bold>
+      {name || "User"}
+    </CustomText>
+    <CustomText variant="bodyLarge">{email}</CustomText>
   </>
 );
 
@@ -113,6 +116,8 @@ export default function ProfileScreen() {
         value={darkMode}
         label="Dark Mode"
       />
+
+      <CustomDivider />
 
       <ProfileHeader name={userData.name} email={userData.email} />
 

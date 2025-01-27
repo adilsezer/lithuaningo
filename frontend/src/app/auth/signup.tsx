@@ -82,7 +82,6 @@ const SignUpScreen: React.FC = () => {
       <SocialAuthButtons
         onGooglePress={() => signInWithSocial("google")}
         onApplePress={() => signInWithSocial("apple")}
-        disabled={loading}
       />
 
       <CustomText

@@ -83,7 +83,6 @@ const LoginScreen: React.FC = () => {
       <SocialAuthButtons
         onGooglePress={() => handleSocialAuth("google")}
         onApplePress={() => handleSocialAuth("apple")}
-        disabled={loading}
       />
 
       <CustomText
