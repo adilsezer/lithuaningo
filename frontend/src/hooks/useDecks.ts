@@ -215,6 +215,36 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     [checkAuth, userData, router, setLoading, clearError, handleError]
   );
 
+  const getDeckById = useCallback(
+    async (id: string) => {
+      try {
+        const deck = await deckService.getDeckById(id);
+        return deck;
+      } catch (error) {
+        handleError(error, "Failed to fetch deck");
+        return null;
+      }
+    },
+    [handleError]
+  );
+
+  const updateDeck = useCallback(
+    async (id: string, deck: Deck) => {
+      if (!checkAuth()) return;
+
+      try {
+        setLoading(true);
+        clearError();
+        await deckService.updateDeck(id, deck);
+      } catch (error) {
+        handleError(error, "Failed to update deck");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [checkAuth, setLoading, clearError, handleError]
+  );
+
   // Effects
   useEffect(() => {
     setSearchQuery("");
@@ -253,5 +283,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     fetchDecks,
     voteDeck,
     createDeck,
+    getDeckById,
+    updateDeck,
   };
 };

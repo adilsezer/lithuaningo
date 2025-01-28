@@ -15,8 +15,6 @@ interface AuthResponse {
 
 export const useAuthOperation = () => {
   const setLoading = useSetLoading();
-  const isLoading = useIsLoading();
-  const error = useError();
   const setError = useSetError();
   const alertDialog = useAlertDialog();
 
@@ -68,12 +66,6 @@ export const useAuthOperation = () => {
   );
 
   return {
-    // State
-    error,
-    isLoading,
-
-    // Actions
-    clearError,
     performAuthOperation,
   };
 };

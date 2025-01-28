@@ -8,7 +8,6 @@ import crashlytics from "@react-native-firebase/crashlytics";
 import CustomDivider from "@components/ui/CustomDivider";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
-import { ErrorMessage } from "@components/ui/ErrorMessage";
 import type { SocialProvider } from "@hooks/useAuth";
 import { loginFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
@@ -33,7 +32,7 @@ const loginFields: FormField[] = [
 
 const LoginScreen: React.FC = () => {
   const loading = useIsLoading();
-  const { signIn, signInWithSocial, error, clearError } = useAuth();
+  const { signIn, signInWithSocial } = useAuth();
 
   // Log screen load for analytics
   useEffect(() => {
@@ -54,8 +53,6 @@ const LoginScreen: React.FC = () => {
       <CustomText variant="titleLarge" bold>
         Welcome Back
       </CustomText>
-
-      {error && <ErrorMessage message={error} onRetry={clearError} />}
 
       <Form
         fields={loginFields}

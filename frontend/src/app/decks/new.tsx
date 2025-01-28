@@ -72,9 +72,37 @@ export default function NewDeckScreen() {
 
   const handleSubmit = useCallback(
     async (data: Partial<Deck>) => {
-      await createDeck(data.title || "", data.description || "");
+      if (!data.title || !data.description) {
+        return;
+      }
+
+      const newDeck: Omit<Deck, "id"> = {
+        title: data.title,
+        description: data.description,
+        category: data.category || "Other",
+        tags:
+          typeof data.tags === "string"
+            ? (data.tags as string)
+                .split(",")
+                .map((tag: string) => tag.trim())
+                .filter(Boolean)
+            : [],
+        flashcardCount: 0,
+        createdAt: new Date(),
+        createdBy: "", // Will be set by the backend
+        createdByUsername: "", // Will be set by the backend
+      };
+
+      try {
+        const deckId = await createDeck(newDeck.title, newDeck.description);
+        if (typeof deckId === "string") {
+          router.push(`/flashcards/new?deckId=${deckId}`);
+        }
+      } catch (error) {
+        console.error("Failed to create deck:", error);
+      }
     },
-    [createDeck]
+    [createDeck, router]
   );
 
   return (

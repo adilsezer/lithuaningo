@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet } from "react-native";
 import { View } from "react-native";
-import { Button, Text, Avatar } from "react-native-paper";
+import { Button, Avatar } from "react-native-paper";
 import CustomText from "./CustomText";
 
 interface NotificationDisplayProps {

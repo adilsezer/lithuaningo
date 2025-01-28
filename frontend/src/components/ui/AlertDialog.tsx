@@ -63,9 +63,11 @@ export const AlertDialogProvider: React.FC<{ children: React.ReactNode }> = ({
                 : theme.colors.primary
             }
           />
-          {title && <Dialog.Title>{title}</Dialog.Title>}
+          {title && (
+            <Dialog.Title style={{ textAlign: "center" }}>{title}</Dialog.Title>
+          )}
           <Dialog.Content>
-            <Text>{message}</Text>
+            <Text style={{ textAlign: "center" }}>{message}</Text>
           </Dialog.Content>
           <Dialog.Actions>
             <Button
@@ -117,9 +119,11 @@ export const AlertDialogProvider: React.FC<{ children: React.ReactNode }> = ({
       showDialog(
         <Dialog visible onDismiss={hideDialog}>
           <Dialog.Icon icon="information" color={theme.colors.primary} />
-          {title && <Dialog.Title>{title}</Dialog.Title>}
+          {title && (
+            <Dialog.Title style={{ textAlign: "center" }}>{title}</Dialog.Title>
+          )}
           <Dialog.Content>
-            <Text>{message}</Text>
+            <Text style={{ textAlign: "center" }}>{message}</Text>
           </Dialog.Content>
           <Dialog.Actions>
             {buttons.map((button, index) => (

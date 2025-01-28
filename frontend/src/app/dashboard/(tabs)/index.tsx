@@ -55,6 +55,7 @@ const DashboardScreen: React.FC = () => {
       onComment: () => router.push(`/decks/${deckId}/comments`),
       onQuiz: () => router.push(`/decks/${deckId}/quiz`),
       onPractice: () => router.push(`/decks/${deckId}`),
+      onEdit: () => router.push(`/decks/${deckId}/edit`),
     }),
     [voteDeck, router]
   );

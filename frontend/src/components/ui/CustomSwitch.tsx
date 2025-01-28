@@ -21,7 +21,7 @@ export const CustomSwitch: React.FC<CustomSwitchProps> = ({
   const theme = useTheme();
 
   return (
-    <View style={[{ width: "100%" }, style]}>
+    <View style={[{ marginVertical: 12 }, style]}>
       <View
         style={{
           flexDirection: "row",

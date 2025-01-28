@@ -6,6 +6,7 @@ export interface DeckActions {
   onComment: (deckId: string) => void;
   onQuiz: (deckId: string) => void;
   onPractice: (deckId: string) => void;
+  onEdit: (deckId: string) => void;
 }
 
 export interface DeckCardProps {

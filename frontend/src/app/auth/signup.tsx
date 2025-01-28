@@ -6,7 +6,6 @@ import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import { ErrorMessage } from "@components/ui/ErrorMessage";
 import crashlytics from "@react-native-firebase/crashlytics";
 import { signupFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
@@ -51,7 +50,7 @@ const signupFields: FormField[] = [
 
 const SignUpScreen: React.FC = () => {
   const loading = useIsLoading();
-  const { signUp, signInWithSocial, error, clearError } = useAuth();
+  const { signUp, signInWithSocial } = useAuth();
 
   useEffect(() => {
     crashlytics().log("Sign up screen loaded.");
@@ -63,8 +62,6 @@ const SignUpScreen: React.FC = () => {
       <CustomText variant="titleLarge" bold>
         Create Account
       </CustomText>
-
-      {error && <ErrorMessage message={error} onRetry={clearError} />}
 
       <Form
         fields={signupFields}

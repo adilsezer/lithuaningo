@@ -156,6 +156,13 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
           iconColor={theme.colors.primary}
           mode="outlined"
         />
+        <IconButton
+          icon="pencil-outline"
+          size={24}
+          onPress={() => actions.onEdit(deck.id)}
+          iconColor={theme.colors.primary}
+          mode="outlined"
+        />
       </Card.Actions>
     </Card>
   );

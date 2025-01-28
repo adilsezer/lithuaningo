@@ -1,13 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ViewStyle } from "react-native";
 import { useIsLoading } from "@stores/useUIStore";
-import {
-  useTheme,
-  ActivityIndicator,
-  Portal,
-  Modal,
-  Text,
-} from "react-native-paper";
+import { useTheme, ActivityIndicator, Portal, Modal } from "react-native-paper";
 
 interface LoadingIndicatorProps {
   modal?: boolean;

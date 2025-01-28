@@ -1,10 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, Text, Pressable } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { Audio, AVPlaybackStatus } from "expo-av";
-import { FontAwesome } from "@expo/vector-icons";
-import { useTheme } from "react-native-paper";
-import CustomButton from "@components/ui/CustomButton";
-import CustomText from "@components/ui/CustomText";
+import { IconButton, Button, Text, useTheme, Card } from "react-native-paper";
 
 interface AudioFile {
   uri: string;
@@ -122,7 +119,7 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
   if (!permissionResponse?.granted) {
     return (
       <View style={styles.container}>
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+        <Text style={{ color: theme.colors.error, textAlign: "center" }}>
           No permission to record audio
         </Text>
       </View>
@@ -131,38 +128,25 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
 
   return (
     <View style={styles.container}>
-      <Pressable
-        style={[
-          styles.audioContainer,
-          { borderColor: error ? theme.colors.error : theme.colors.primary },
-        ]}
-        onPress={value ? playSound : startRecording}
-      >
-        <View
-          style={[
-            styles.placeholder,
-            { backgroundColor: theme.colors.primaryContainer },
-          ]}
-        >
-          <FontAwesome
-            name={
+      <Card mode="outlined" style={styles.card}>
+        <Card.Content style={styles.cardContent}>
+          <IconButton
+            icon={
               isRecording
-                ? "stop-circle"
+                ? "stop"
                 : value
                 ? isPlaying
-                  ? "pause-circle"
-                  : "play-circle"
+                  ? "pause"
+                  : "play"
                 : "microphone"
             }
-            size={40}
-            color={isRecording ? theme.colors.error : theme.colors.onBackground}
+            size={48}
+            onPress={
+              isRecording ? stopRecording : value ? playSound : startRecording
+            }
+            iconColor={isRecording ? theme.colors.error : theme.colors.primary}
           />
-          <CustomText
-            style={[
-              styles.placeholderText,
-              { color: theme.colors.onBackground },
-            ]}
-          >
+          <Text style={styles.statusText}>
             {isRecording
               ? "Recording... Tap to stop"
               : value
@@ -170,12 +154,12 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
                 ? "Playing... Tap to pause"
                 : "Tap to play"
               : "Tap to start recording"}
-          </CustomText>
-        </View>
-      </Pressable>
-      {value ? (
-        <CustomButton
-          title="Record New Audio"
+          </Text>
+        </Card.Content>
+      </Card>
+      {value && (
+        <Button
+          mode="contained-tonal"
           onPress={() => {
             if (sound) {
               sound.unloadAsync();
@@ -183,12 +167,19 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
             }
             onChange(null);
           }}
-        />
-      ) : isRecording ? (
-        <CustomButton title="Stop Recording" onPress={stopRecording} />
-      ) : null}
+          style={styles.actionButton}
+        >
+          Record New Audio
+        </Button>
+      )}
       {error && (
-        <Text style={[styles.errorText, { color: theme.colors.error }]}>
+        <Text
+          style={{
+            color: theme.colors.error,
+            marginTop: 8,
+            textAlign: "center",
+          }}
+        >
           {error}
         </Text>
       )}
@@ -199,33 +190,21 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
+    padding: 16,
+  },
+  card: {
     marginBottom: 16,
   },
-  label: {
-    fontSize: 16,
-    marginBottom: 8,
-    fontWeight: "500",
-  },
-  audioContainer: {
-    width: "100%",
-    height: 120,
-    borderWidth: 1,
-    borderRadius: 8,
-    overflow: "hidden",
-    marginBottom: 8,
-  },
-  placeholder: {
-    width: "100%",
-    height: "100%",
-    justifyContent: "center",
+  cardContent: {
     alignItems: "center",
-    gap: 8,
+    justifyContent: "center",
   },
-  placeholderText: {
+  statusText: {
+    marginTop: 8,
+    textAlign: "center",
     fontSize: 16,
   },
-  errorText: {
-    fontSize: 12,
-    marginTop: 4,
+  actionButton: {
+    marginTop: 8,
   },
 });

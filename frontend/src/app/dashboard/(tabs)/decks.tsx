@@ -53,6 +53,7 @@ export default function DecksScreen() {
       onComment: () => handleNavigation(`/decks/${deckId}/comments`),
       onQuiz: () => handleNavigation(`/decks/${deckId}/quiz`),
       onPractice: () => handleNavigation(`/decks/${deckId}`),
+      onEdit: () => handleNavigation(`/decks/${deckId}/edit`),
     }),
     [voteDeck, handleNavigation]
   );

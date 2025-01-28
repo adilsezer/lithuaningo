@@ -3,7 +3,6 @@ import { ScrollView, View } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
 import crashlytics from "@react-native-firebase/crashlytics";
@@ -24,7 +23,7 @@ const forgotPasswordFields: FormField[] = [
 
 const ForgotPasswordScreen: React.FC = () => {
   const isLoading = useIsLoading();
-  const { resetPassword, error, clearError } = useAuth();
+  const { resetPassword } = useAuth();
 
   useEffect(() => {
     crashlytics().log("Forgot password screen loaded.");
@@ -42,8 +41,6 @@ const ForgotPasswordScreen: React.FC = () => {
           Enter your email and we will send you a link to reset your password.
         </CustomText>
       </View>
-
-      {error && <ErrorMessage message={error} onRetry={clearError} />}
 
       <Form
         fields={forgotPasswordFields}

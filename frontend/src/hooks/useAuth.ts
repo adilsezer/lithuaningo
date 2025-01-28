@@ -23,7 +23,7 @@ export type SocialProvider = "google" | "apple";
 
 export const useAuth = () => {
   const router = useRouter();
-  const { performAuthOperation, error, clearError } = useAuthOperation();
+  const { performAuthOperation } = useAuthOperation();
   const alertDialog = useAlertDialog();
   // Navigation helpers
   const navigateAfterAuth = useCallback(
@@ -178,11 +178,6 @@ export const useAuth = () => {
   );
 
   return {
-    // State
-    error,
-
-    // Actions
-    clearError,
     signUp,
     signIn,
     signInWithSocial,
