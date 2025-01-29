@@ -1,9 +1,9 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
-import { View, StyleSheet, Linking, Image } from "react-native";
+import { StyleSheet, Image, Linking, View } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
-import CustomButton from "@components/ui/CustomButton";
-import CustomText from "@components/ui/CustomText";
+import { Card, Button, Text, useTheme } from "react-native-paper";
 import { useAlertDialog } from "@components/ui/AlertDialog";
+
 interface Props {
   children: ReactNode;
 }
@@ -45,19 +45,34 @@ class ErrorBoundary extends Component<Props, State> {
     if (this.state.hasError) {
       return (
         <View style={styles.container}>
-          <Image
-            source={require("assets/images/icon.png")}
-            style={styles.logo}
-          />
-          <CustomText>Oops! Something went wrong.</CustomText>
-          <CustomText>
-            Please try again or contact support if the issue persists.
-          </CustomText>
-          <CustomButton title="Try Again" onPress={this.handleRetry} />
-          <CustomButton
-            title="Contact Support"
-            onPress={this.handleContactSupport}
-          />
+          <Card style={styles.card} mode="elevated">
+            <Card.Content style={styles.content}>
+              <Image
+                source={require("assets/images/icon.png")}
+                style={styles.logo}
+              />
+              <Text variant="titleLarge" style={styles.title}>
+                Oops! Something went wrong.
+              </Text>
+              <Text variant="bodyMedium" style={styles.description}>
+                Please try again or contact support if the issue persists.
+              </Text>
+              <Button
+                mode="contained"
+                onPress={this.handleRetry}
+                style={styles.button}
+              >
+                Try Again
+              </Button>
+              <Button
+                mode="outlined"
+                onPress={this.handleContactSupport}
+                style={styles.outlinedButton}
+              >
+                Contact Support
+              </Button>
+            </Card.Content>
+          </Card>
         </View>
       );
     }
@@ -71,13 +86,41 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "#F4EFF7", // Slightly tinted background to match the card
     padding: 20,
   },
+  card: {
+    width: "90%",
+    maxWidth: 400,
+    padding: 20,
+    borderRadius: 16, // Rounded corners
+    elevation: 5, // Adds subtle shadow
+  },
+  content: {
+    alignItems: "center",
+  },
   logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 20,
-    borderRadius: 20,
+    width: 80,
+    height: 80,
+    marginBottom: 15,
+    borderRadius: 12,
+  },
+  title: {
+    fontWeight: "bold",
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  description: {
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  button: {
+    width: "100%",
+    marginBottom: 10,
+  },
+  outlinedButton: {
+    width: "100%",
+    borderWidth: 1.5,
   },
 });
 

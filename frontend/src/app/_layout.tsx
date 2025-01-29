@@ -6,27 +6,37 @@ import AuthStateListener from "@providers/AuthStateListener";
 import NotificationInitializer from "@providers/NotificationInitializer";
 import ErrorBoundary from "@components/error/ErrorBoundary";
 import { AppInfoProvider } from "@context/AppInfoContext";
-import { PaperProvider, MD3DarkTheme, MD3LightTheme } from "react-native-paper";
+import { PaperProvider } from "react-native-paper";
 import { ThemeProvider, useTheme } from "@context/ThemeContext";
 import { StyleSheet } from "react-native";
 import { AlertDialogProvider } from "@components/ui/AlertDialog";
 import { createTheme } from "@src/styles/theme";
+import { ThemeProp } from "react-native-paper/lib/typescript/types";
 
 // Separate component for theme-dependent content
-const ThemedContent: React.FC = () => {
+const ThemedContent = () => {
   const { isDarkMode } = useTheme();
   const theme = createTheme(isDarkMode);
 
   return (
     <PaperProvider theme={theme}>
-      <SafeAreaView
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
-      >
-        <LoadingIndicator />
-        <AuthStateListener />
-        <NotificationInitializer />
-        <Slot />
-      </SafeAreaView>
+      <ErrorBoundary>
+        <AppInfoProvider>
+          <AlertDialogProvider>
+            <SafeAreaView
+              style={[
+                styles.container,
+                { backgroundColor: theme.colors.background },
+              ]}
+            >
+              <LoadingIndicator />
+              <AuthStateListener />
+              <NotificationInitializer />
+              <Slot />
+            </SafeAreaView>
+          </AlertDialogProvider>
+        </AppInfoProvider>
+      </ErrorBoundary>
     </PaperProvider>
   );
 };
@@ -34,15 +44,9 @@ const ThemedContent: React.FC = () => {
 // Root layout without any hooks
 const RootLayout = () => {
   return (
-    <ErrorBoundary>
-      <ThemeProvider>
-        <AppInfoProvider>
-          <AlertDialogProvider>
-            <ThemedContent />
-          </AlertDialogProvider>
-        </AppInfoProvider>
-      </ThemeProvider>
-    </ErrorBoundary>
+    <ThemeProvider>
+      <ThemedContent />
+    </ThemeProvider>
   );
 };
 
