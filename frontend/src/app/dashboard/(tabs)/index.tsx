@@ -116,10 +116,12 @@ const DashboardScreen: React.FC = () => {
           onPress={() => router.push("/dashboard/challenge")}
         />
 
-        <View>
-          <CustomText>Top Rated Deck of the Week</CustomText>
-          {renderTopRatedDeck()}
-        </View>
+        <CustomText variant="titleLarge">Top Rated Deck of the Week</CustomText>
+        {renderTopRatedDeck()}
+        <CustomButton
+          title="View All Decks"
+          onPress={() => router.push("/dashboard/decks")}
+        />
       </View>
     </ScrollView>
   );
@@ -129,7 +131,6 @@ const styles = StyleSheet.create({
   container: {
     padding: 16,
     flex: 1,
-    gap: 16,
   },
   emptyState: {
     padding: 16,

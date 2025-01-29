@@ -1,13 +1,9 @@
 import React from "react";
-import {
-  TouchableOpacity,
-  Dimensions,
-  Platform,
-  StyleSheet,
-} from "react-native";
+import { Dimensions, Platform } from "react-native";
+import { useTheme, IconButton } from "react-native-paper";
 import { Ionicons } from "@expo/vector-icons";
 import { router, usePathname } from "expo-router";
-import { useTheme } from "react-native-paper";
+
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
@@ -40,27 +36,20 @@ const BackButton: React.FC = () => {
   };
 
   return (
-    <TouchableOpacity
+    <IconButton
+      icon={({ size, color }) => (
+        <Ionicons
+          name="arrow-back"
+          size={iconSize}
+          color={theme.colors.onBackground}
+        />
+      )}
       onPress={handleBack}
-      style={styles.button}
-      activeOpacity={0.6}
-    >
-      <Ionicons
-        name="arrow-back"
-        size={iconSize}
-        color={theme.colors.onBackground}
-      />
-    </TouchableOpacity>
+      style={{ margin: 10 }}
+      size={iconSize}
+      animated
+    />
   );
 };
-
-const styles = StyleSheet.create({
-  button: {
-    alignSelf: "flex-start",
-    margin: 10,
-    minWidth: 50,
-    minHeight: 30,
-  },
-});
 
 export default BackButton;

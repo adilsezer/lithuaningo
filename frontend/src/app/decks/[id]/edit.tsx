@@ -7,11 +7,11 @@ import { useFlashcards } from "@hooks/useFlashcards";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { useTheme, Card, IconButton, Button } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
-import { FormField } from "@components/form/form.types";
 import { deckCategories } from "@src/types/DeckCategory";
-import type { Deck, Flashcard } from "@src/types";
+import type { Deck } from "@src/types";
 import BackButton from "@components/layout/BackButton";
 import { useAlertDialog } from "@components/ui/AlertDialog";
+import { useIsLoading, useSetLoading } from "@stores/useUIStore";
 
 export default function EditDeckScreen() {
   const theme = useTheme();
@@ -23,18 +23,19 @@ export default function EditDeckScreen() {
     flashcards,
     fetchDeckFlashcards,
     removeFlashcardFromDeck,
-    isLoading,
+    isLoading: flashcardsLoading,
   } = useFlashcards();
   const [deck, setDeck] = useState<Deck | null>(null);
-  const [loading, setLoading] = useState(true);
+  const setLoading = useSetLoading();
 
   const fetchDeck = useCallback(async () => {
+    setLoading(true);
     if (id) {
       const fetchedDeck = await getDeckById(id);
       setDeck(fetchedDeck);
-      setLoading(false);
     }
-  }, [id, getDeckById]);
+    setLoading(false);
+  }, [id, getDeckById, setLoading]);
 
   useEffect(() => {
     fetchDeck();
@@ -72,54 +73,54 @@ export default function EditDeckScreen() {
     router.push(`/flashcards/${flashcardId}/edit`);
   };
 
-  if (loading || !deck) {
-    return <CustomText>Loading...</CustomText>;
-  }
-
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <BackButton />
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView>
         <CustomText variant="titleLarge" bold>
           Edit Deck
         </CustomText>
 
-        <Form
-          fields={[
-            {
-              name: "title",
-              label: "Title",
-              category: "text-input",
-              type: "text",
-              placeholder: "Enter deck title",
-              defaultValue: deck.title,
-            },
-            {
-              name: "description",
-              label: "Description",
-              category: "text-input",
-              type: "text",
-              placeholder: "Enter deck description",
-              defaultValue: deck.description,
-            },
-            {
-              name: "category",
-              label: "Category",
-              category: "selection",
-              type: "picker",
-              options: deckCategories.map((cat) => ({
-                label: cat,
-                value: cat,
-              })),
-              defaultValue: deck.category,
-            },
-          ]}
-          onSubmit={handleSubmit}
-          submitButtonText="Update Deck"
-          zodSchema={deckFormSchema}
-        />
+        {deck ? (
+          <Form
+            fields={[
+              {
+                name: "title",
+                label: "Title",
+                category: "text-input",
+                type: "text",
+                placeholder: "Enter deck title",
+                defaultValue: deck.title || "",
+              },
+              {
+                name: "description",
+                label: "Description",
+                category: "text-input",
+                type: "text",
+                placeholder: "Enter deck description",
+                defaultValue: deck.description || "",
+              },
+              {
+                name: "category",
+                label: "Category",
+                category: "selection",
+                type: "picker",
+                options: deckCategories.map((cat) => ({
+                  label: cat,
+                  value: cat,
+                })),
+                defaultValue: deck.category || "",
+              },
+            ]}
+            onSubmit={handleSubmit}
+            submitButtonText="Update Deck"
+            zodSchema={deckFormSchema}
+          />
+        ) : (
+          <CustomText>Loading deck...</CustomText>
+        )}
 
         <View style={styles.flashcardsSection}>
           <View style={styles.sectionHeader}>
@@ -135,7 +136,7 @@ export default function EditDeckScreen() {
             </Button>
           </View>
 
-          {isLoading ? (
+          {flashcardsLoading ? (
             <CustomText>Loading flashcards...</CustomText>
           ) : flashcards.length === 0 ? (
             <CustomText style={styles.emptyText}>
@@ -178,9 +179,6 @@ export default function EditDeckScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
   },
   flashcardsSection: {
     marginTop: 24,

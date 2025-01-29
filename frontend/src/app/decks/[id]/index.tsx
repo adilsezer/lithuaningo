@@ -13,7 +13,7 @@ import CustomText from "@components/ui/CustomText";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
-  const { fetchDeckFlashcards, flashcards, isLoading, error } = useFlashcards();
+  const { fetchDeckFlashcards, flashcards, error } = useFlashcards();
   const theme = useTheme();
   const userData = useUserData();
   const { currentIndex, setCurrentIndex, handleAnswer, completeSession } =
