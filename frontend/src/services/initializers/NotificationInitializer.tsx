@@ -1,8 +1,12 @@
-import React, { useEffect, useCallback } from "react";
+import React, { useEffect } from "react";
 import { useUserData } from "@stores/useUserStore";
 import { useSetLoading, useSetError } from "@stores/useUIStore";
 import { initializeNotifications } from "@services/notification/notificationService";
 
+/**
+ * Service component that initializes push notifications
+ * when a user is logged in.
+ */
 const NotificationInitializer: React.FC = () => {
   const userData = useUserData();
   const setLoading = useSetLoading();

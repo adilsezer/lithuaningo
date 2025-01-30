@@ -1,5 +1,3 @@
-// src/providers/ErrorBoundary.tsx
-
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { StyleSheet, Image, Linking, View } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
@@ -7,7 +5,7 @@ import { Card, Button, Text } from "react-native-paper";
 
 interface Props {
   children: ReactNode;
-  showError: (message: string) => void; // <-- Added prop
+  showError: (message: string) => void;
 }
 
 interface State {
@@ -34,12 +32,12 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   handleContactSupport = async () => {
-    const { showError } = this.props; // Access showError from props
+    const { showError } = this.props;
     try {
       await Linking.openURL("mailto:Lithuaningo@gmail.com");
     } catch (error) {
       console.error("Failed to open URL:", error);
-      showError("Failed to open email client"); // Use showError from props
+      showError("Failed to open email client");
     }
   };
 
@@ -50,7 +48,7 @@ class ErrorBoundary extends Component<Props, State> {
           <Card style={styles.card} mode="elevated">
             <Card.Content style={styles.content}>
               <Image
-                source={require("assets/images/icon.png")}
+                source={require("@assets/images/icon.png")}
                 style={styles.logo}
               />
               <Text variant="titleLarge" style={styles.title}>
@@ -88,15 +86,15 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F4EFF7", // Slightly tinted background to match the card
+    backgroundColor: "#F4EFF7",
     padding: 20,
   },
   card: {
     width: "90%",
     maxWidth: 400,
     padding: 20,
-    borderRadius: 16, // Rounded corners
-    elevation: 5, // Adds subtle shadow
+    borderRadius: 16,
+    elevation: 5,
   },
   content: {
     alignItems: "center",

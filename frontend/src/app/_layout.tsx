@@ -4,48 +4,52 @@ import React from "react";
 import { Slot } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
-import AuthStateListener from "@providers/AuthStateListener";
-import NotificationInitializer from "@providers/NotificationInitializer";
-import ErrorBoundaryWithAlert from "@providers/ErrorBoundaryWithAlert";
-import { AppInfoProvider } from "@providers/AppInfoProvider";
+import AuthInitializer from "@services/initializers/AuthInitializer";
+import NotificationInitializer from "@services/initializers/NotificationInitializer";
+import ErrorBoundaryProvider from "@providers/ErrorBoundaryProvider";
 import { PaperProvider } from "react-native-paper";
-import { ThemeProvider } from "@providers/ThemeProvider";
 import { StyleSheet } from "react-native";
 import { AlertDialog } from "@components/AlertDialog";
 import { createTheme } from "@src/styles/theme";
 import { useIsDarkMode } from "@stores/useThemeStore";
+import InitializationProvider from "@providers/InitializationProvider";
 
-const ThemedContent = () => {
+/**
+ * Root layout component that sets up the app's providers and core UI structure.
+ * Provider order is important for proper functionality:
+ * 1. ErrorBoundaryProvider - Catches all errors
+ * 2. PaperProvider - Theme provider for UI components
+ * 3. InitializationProvider - Initializes theme and app info
+ * 4. Core functionality components (Auth, Notifications)
+ */
+const RootLayout = () => {
   const isDarkMode = useIsDarkMode();
   const theme = createTheme(isDarkMode);
 
   return (
-    <PaperProvider theme={theme}>
-      <ErrorBoundaryWithAlert>
-        <AppInfoProvider>
+    <ErrorBoundaryProvider>
+      <PaperProvider theme={theme}>
+        <InitializationProvider>
           <SafeAreaView
             style={[
               styles.container,
               { backgroundColor: theme.colors.background },
             ]}
           >
+            {/* Core functionality components */}
             <LoadingIndicator />
-            <AuthStateListener />
+            <AuthInitializer />
             <NotificationInitializer />
+
+            {/* Main app content */}
             <Slot />
+
+            {/* Global UI components */}
             <AlertDialog />
           </SafeAreaView>
-        </AppInfoProvider>
-      </ErrorBoundaryWithAlert>
-    </PaperProvider>
-  );
-};
-
-const RootLayout = () => {
-  return (
-    <ThemeProvider>
-      <ThemedContent />
-    </ThemeProvider>
+        </InitializationProvider>
+      </PaperProvider>
+    </ErrorBoundaryProvider>
   );
 };
 

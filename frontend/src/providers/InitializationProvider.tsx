@@ -1,16 +1,24 @@
 import React, { useEffect } from "react";
 import { Appearance } from "react-native";
 import useThemeStore from "@stores/useThemeStore";
+import { useAppInfoActions } from "@stores/useAppInfoStore";
 
-export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
+/**
+ * Provider component that handles core app initialization:
+ * - Theme initialization and system theme changes
+ * - App info and version checks
+ */
+const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { initializeTheme, setManualMode } = useThemeStore();
+  const { checkAppStatus } = useAppInfoActions();
 
-  // Initialize theme on mount
+  // Initialize theme and app info on mount
   useEffect(() => {
     initializeTheme();
-  }, [initializeTheme]);
+    checkAppStatus();
+  }, [initializeTheme, checkAppStatus]);
 
   // Listen for system theme changes when not in manual mode
   useEffect(() => {
@@ -26,4 +34,4 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({
   return <>{children}</>;
 };
 
-export default ThemeProvider;
+export default InitializationProvider;

@@ -6,11 +6,15 @@ import {
   updateUserState,
   sendEmailVerification,
 } from "@services/auth/authService";
-import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useAlertActions } from "@stores/useAlertStore";
 
-const AuthStateListener: React.FC = () => {
+/**
+ * Service component that listens to Firebase authentication state changes
+ * and updates the app state accordingly.
+ */
+const AuthInitializer: React.FC = () => {
   const { logOut } = useUserStore();
-  const { showAlert } = useAlertDialog();
+  const { showAlert } = useAlertActions();
   const router = useRouter();
   const isProcessing = useRef(false);
   const isMounted = useRef(true);
@@ -96,4 +100,4 @@ const AuthStateListener: React.FC = () => {
   return null;
 };
 
-export default AuthStateListener;
+export default AuthInitializer;
