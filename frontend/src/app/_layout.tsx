@@ -7,15 +7,16 @@ import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import AuthStateListener from "@providers/AuthStateListener";
 import NotificationInitializer from "@providers/NotificationInitializer";
 import ErrorBoundaryWithAlert from "@providers/ErrorBoundaryWithAlert";
-import { AppInfoProvider } from "@context/AppInfoContext";
+import { AppInfoProvider } from "@providers/AppInfoProvider";
 import { PaperProvider } from "react-native-paper";
-import { ThemeProvider, useTheme } from "@context/ThemeContext";
+import { ThemeProvider } from "@providers/ThemeProvider";
 import { StyleSheet } from "react-native";
 import { AlertDialog } from "@components/AlertDialog";
 import { createTheme } from "@src/styles/theme";
+import { useIsDarkMode } from "@stores/useThemeStore";
 
 const ThemedContent = () => {
-  const { isDarkMode } = useTheme();
+  const isDarkMode = useIsDarkMode();
   const theme = createTheme(isDarkMode);
 
   return (

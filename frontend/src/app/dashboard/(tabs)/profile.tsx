@@ -10,9 +10,10 @@ import CustomSwitch from "@components/ui/CustomSwitch";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
-import { useTheme as useThemeContext } from "@context/ThemeContext";
+import { useIsDarkMode, useThemeActions } from "@stores/useThemeStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import CustomDivider from "@components/ui/CustomDivider";
+
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
   { title: "Change Password", path: "/profile/change-password" },
@@ -55,8 +56,8 @@ const ProfileHeader = ({
 export default function ProfileScreen() {
   const { signOut } = useAuth();
   const theme = useTheme();
-  const { toggleTheme } = useThemeContext();
-  const darkMode = theme.dark;
+  const { toggleTheme } = useThemeActions();
+  const isDarkMode = useIsDarkMode();
   const router = useRouter();
 
   const userData = useUserData();
@@ -113,7 +114,7 @@ export default function ProfileScreen() {
     <ScrollView style={styles.container}>
       <CustomSwitch
         onValueChange={toggleTheme}
-        value={darkMode}
+        value={isDarkMode}
         label="Dark Mode"
       />
 
