@@ -1,101 +1,57 @@
-import React, { useEffect, useCallback, useRef } from "react";
+import React, { useEffect } from "react";
 import auth from "@react-native-firebase/auth";
 import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
-import {
-  updateUserState,
-  sendEmailVerification,
-} from "@services/auth/authService";
+import { updateUserState } from "@services/auth/authService";
 import { useAlertActions } from "@stores/useAlertStore";
+import crashlytics from "@react-native-firebase/crashlytics";
 
 /**
  * Service component that listens to Firebase authentication state changes
- * and updates the app state accordingly.
+ * and updates the app state accordingly. Auth business logic (like email verification)
+ * is handled by the auth service, this component only syncs the state.
  */
 const AuthInitializer: React.FC = () => {
   const { logOut } = useUserStore();
   const { showAlert } = useAlertActions();
   const router = useRouter();
-  const isProcessing = useRef(false);
-  const isMounted = useRef(true);
 
   useEffect(() => {
-    return () => {
-      isMounted.current = false;
-    };
-  }, []);
+    const unsubscribe = auth().onAuthStateChanged(async (user) => {
+      try {
+        if (user) {
+          // Set user ID in Crashlytics for better error tracking
+          crashlytics().setUserId(user.uid);
 
-  const handleUnverifiedEmail = useCallback(async () => {
-    if (isProcessing.current || !isMounted.current) return;
-    isProcessing.current = true;
-
-    try {
-      await auth().signOut();
-      if (!isMounted.current) return;
-
-      logOut();
-      showAlert({
-        title: "Email Not Verified",
-        message:
-          "Please verify your email before logging in. Need a new verification email?",
-        buttons: [
-          {
-            text: "Send Email",
-            onPress: async () => {
-              if (!isMounted.current) return;
-              await sendEmailVerification();
-            },
-          },
-          { text: "Cancel", onPress: () => {} },
-        ],
-      });
-      if (isMounted.current) {
-        router.replace("/auth/login");
-      }
-    } finally {
-      if (isMounted.current) {
-        isProcessing.current = false;
-      }
-    }
-  }, [logOut, showAlert, router]);
-
-  useEffect(() => {
-    let unsubscribe: (() => void) | undefined;
-
-    const setupAuthListener = async () => {
-      if (!isMounted.current) return;
-
-      unsubscribe = auth().onAuthStateChanged(async (user) => {
-        if (!isMounted.current || isProcessing.current) return;
-
-        try {
-          if (user && user.email) {
-            if (!user.emailVerified) {
-              await handleUnverifiedEmail();
-              return;
-            }
-            if (isMounted.current) {
-              await updateUserState(user);
-            }
-          } else if (isMounted.current) {
-            logOut();
-            router.replace("/");
-          }
-        } catch (error) {
-          console.error("Auth state change error:", error);
+          // Let updateUserState handle the state update and verification logic
+          await updateUserState(user);
+          crashlytics().log("User state updated successfully");
+        } else {
+          crashlytics().log("No authenticated user found");
+          logOut();
+          router.replace("/");
         }
-      });
-    };
+      } catch (error) {
+        console.error("Auth state change error:", error);
+        if (error instanceof Error) {
+          crashlytics().recordError(error);
+        } else {
+          crashlytics().recordError(new Error(String(error)));
+        }
 
-    setupAuthListener();
-
-    return () => {
-      isMounted.current = false;
-      if (unsubscribe) {
-        unsubscribe();
+        showAlert({
+          title: "Authentication Error",
+          message:
+            "There was a problem with your authentication. Please try again.",
+          buttons: [
+            { text: "OK", onPress: () => router.replace("/auth/login") },
+          ],
+        });
       }
-    };
-  }, [logOut, router, handleUnverifiedEmail]);
+    });
+
+    return () => unsubscribe();
+  }, [logOut, router, showAlert]);
 
   return null;
 };

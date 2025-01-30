@@ -60,6 +60,14 @@ export const updateUserState = async (user: FirebaseAuthTypes.User) => {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
+  // Handle email verification
+  if (!user.emailVerified) {
+    await auth().signOut();
+    useUserStore.getState().logOut();
+    throw new Error("Email verification required");
+  }
+
+  // Update user state only if email is verified
   useUserStore.getState().logIn({
     id: user.uid,
     name: user.displayName || "No Name",

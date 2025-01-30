@@ -48,7 +48,7 @@ class ErrorBoundary extends Component<Props, State> {
           <Card style={styles.card} mode="elevated">
             <Card.Content style={styles.content}>
               <Image
-                source={require("@assets/images/icon.png")}
+                source={require("assets/images/icon.png")}
                 style={styles.logo}
               />
               <Text variant="titleLarge" style={styles.title}>

@@ -27,8 +27,8 @@ const RootLayout = () => {
   const theme = createTheme(isDarkMode);
 
   return (
-    <ErrorBoundaryProvider>
-      <PaperProvider theme={theme}>
+    <PaperProvider theme={theme}>
+      <ErrorBoundaryProvider>
         <InitializationProvider>
           <SafeAreaView
             style={[
@@ -48,8 +48,8 @@ const RootLayout = () => {
             <AlertDialog />
           </SafeAreaView>
         </InitializationProvider>
-      </PaperProvider>
-    </ErrorBoundaryProvider>
+      </ErrorBoundaryProvider>
+    </PaperProvider>
   );
 };
 
