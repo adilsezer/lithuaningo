@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { useSetLoading } from "@stores/useUIStore";
-import { useAlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 import practiceService from "@services/data/practiceService";
 
 export const usePracticeStats = (deckId: string, userId?: string) => {
@@ -11,12 +11,12 @@ export const usePracticeStats = (deckId: string, userId?: string) => {
     total: 0,
   });
 
-  const alertDialog = useAlertDialog();
+  const { showError, showSuccess } = useAlertDialog();
 
   const handleAnswer = useCallback(
     async (flashcardId: string, isCorrect: boolean) => {
       if (!userId) {
-        alertDialog.error("Please login to track progress");
+        showError("Please login to track progress");
         return false;
       }
 
@@ -37,7 +37,7 @@ export const usePracticeStats = (deckId: string, userId?: string) => {
 
         return true;
       } catch (err) {
-        alertDialog.error("Failed to track progress");
+        showError("Failed to track progress");
         console.error("Error tracking progress:", err);
         return false;
       } finally {
@@ -54,7 +54,7 @@ export const usePracticeStats = (deckId: string, userId?: string) => {
 
   const completeSession = useCallback(() => {
     const percentage = Math.round((stats.correct / stats.total) * 100);
-    alertDialog.success(
+    showSuccess(
       `Practice completed! Score: ${stats.correct}/${stats.total} (${percentage}%)`
     );
     resetSession();

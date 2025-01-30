@@ -1,9 +1,9 @@
 import React from "react";
 import { ScrollView, View, Image, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
-import { CustomSwitch } from "@components/ui/CustomSwitch";
-import { useWelcome } from "@hooks/useWelcome";
+import CustomSwitch from "@components/ui/CustomSwitch";
 import CustomText from "@components/ui/CustomText";
+import { useWelcome } from "@hooks/useWelcome";
 
 const WelcomeScreen = () => {
   const { isDarkMode, toggleTheme, navigateToAuth } = useWelcome();

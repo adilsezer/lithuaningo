@@ -15,11 +15,11 @@ interface CustomAudioPickerProps {
   error?: string;
 }
 
-export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
+export default function CustomAudioPicker({
   value,
   onChange,
   error,
-}) => {
+}: CustomAudioPickerProps) {
   const theme = useTheme();
   const [recording, setRecording] = useState<Audio.Recording | null>(null);
   const [isRecording, setIsRecording] = useState(false);
@@ -185,7 +185,7 @@ export const CustomAudioPicker: React.FC<CustomAudioPickerProps> = ({
       )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {

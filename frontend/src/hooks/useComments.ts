@@ -2,10 +2,10 @@ import { useState, useCallback } from "react";
 import { Comment } from "@src/types";
 import commentService from "@services/data/commentService";
 import { useIsLoading, useSetLoading } from "@stores/useUIStore";
-import { useAlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 
 export const useComments = (deckId: string) => {
-  const alertDialog = useAlertDialog();
+  const { showError, showSuccess } = useAlertDialog();
   // Zustand state
   const setLoading = useSetLoading();
   const isLoading = useIsLoading();
@@ -19,7 +19,7 @@ export const useComments = (deckId: string) => {
   const handleError = useCallback((error: any, message: string) => {
     console.error(message, error);
     setError(message);
-    alertDialog.error(message);
+    showError(message);
   }, []);
 
   const clearError = useCallback(() => {
@@ -45,7 +45,7 @@ export const useComments = (deckId: string) => {
   const addComment = useCallback(
     async (userId: string, content: string, username: string) => {
       if (!userId) {
-        alertDialog.error("Please login to comment");
+        showError("Please login to comment");
         return false;
       }
 
@@ -84,7 +84,7 @@ export const useComments = (deckId: string) => {
           )
         );
 
-        alertDialog.success("Comment added successfully");
+        showSuccess("Comment added successfully");
         return true;
       } catch (err) {
         // Rollback on error
@@ -103,7 +103,7 @@ export const useComments = (deckId: string) => {
   const deleteComment = useCallback(
     async (commentId: string, userId: string) => {
       if (!userId) {
-        alertDialog.error("Please login to delete comments");
+        showError("Please login to delete comments");
         return false;
       }
 
@@ -123,7 +123,7 @@ export const useComments = (deckId: string) => {
         );
 
         await commentService.deleteComment(commentId, userId);
-        alertDialog.success("Comment deleted successfully");
+        showSuccess("Comment deleted successfully");
         return true;
       } catch (err) {
         // Rollback on error
@@ -142,7 +142,7 @@ export const useComments = (deckId: string) => {
   const likeComment = useCallback(
     async (commentId: string, userId: string) => {
       if (!userId) {
-        alertDialog.error("Please login to like comments");
+        showError("Please login to like comments");
         return false;
       }
 
@@ -192,7 +192,7 @@ export const useComments = (deckId: string) => {
   const unlikeComment = useCallback(
     async (commentId: string, userId: string) => {
       if (!userId) {
-        alertDialog.error("Please login to unlike comments");
+        showError("Please login to unlike comments");
         return false;
       }
 

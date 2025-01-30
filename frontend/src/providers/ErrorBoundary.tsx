@@ -1,11 +1,13 @@
+// src/providers/ErrorBoundary.tsx
+
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { StyleSheet, Image, Linking, View } from "react-native";
 import crashlytics from "@react-native-firebase/crashlytics";
-import { Card, Button, Text, useTheme } from "react-native-paper";
-import { useAlertDialog } from "@components/ui/AlertDialog";
+import { Card, Button, Text } from "react-native-paper";
 
 interface Props {
   children: ReactNode;
+  showError: (message: string) => void; // <-- Added prop
 }
 
 interface State {
@@ -18,7 +20,7 @@ class ErrorBoundary extends Component<Props, State> {
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(_: Error): State {
     return { hasError: true };
   }
 
@@ -32,12 +34,12 @@ class ErrorBoundary extends Component<Props, State> {
   };
 
   handleContactSupport = async () => {
+    const { showError } = this.props; // Access showError from props
     try {
       await Linking.openURL("mailto:Lithuaningo@gmail.com");
     } catch (error) {
       console.error("Failed to open URL:", error);
-      const alertDialog = useAlertDialog();
-      alertDialog.error("Failed to open email client");
+      showError("Failed to open email client"); // Use showError from props
     }
   };
 

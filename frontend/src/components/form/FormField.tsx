@@ -1,11 +1,11 @@
 import React from "react";
 import { FormField as FormFieldType } from "./form.types";
 import { CustomPicker } from "@components/ui/CustomPicker";
-import { CustomSwitch } from "@components/ui/CustomSwitch";
+import CustomSwitch from "@components/ui/CustomSwitch";
 import { CustomCheckbox } from "@components/ui/CustomCheckbox";
 import { CustomDatePicker } from "@components/ui/CustomDatePicker";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";
-import { CustomAudioPicker } from "@components/ui/CustomAudioPicker";
+import CustomAudioPicker from "@components/ui/CustomAudioPicker";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import CustomText from "@components/ui/CustomText";
 

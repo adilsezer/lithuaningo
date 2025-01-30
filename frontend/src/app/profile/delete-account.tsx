@@ -9,7 +9,7 @@ import type { FormField } from "@components/form/form.types";
 import { deleteAccountFormSchema } from "@utils/zodSchemas";
 import auth from "@react-native-firebase/auth";
 import CustomText from "@components/ui/CustomText";
-import { useAlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 const deleteAccountFields: FormField[] = [
   {
     name: "password",
@@ -27,24 +27,23 @@ const DeleteAccountScreen: React.FC = () => {
   const isPasswordProvider = user?.providerData.some(
     (provider) => provider.providerId === "password"
   );
-  const alertDialog = useAlertDialog();
+  const { showConfirm, showError } = useAlertDialog();
 
   useEffect(() => {
     crashlytics().log("Delete account screen loaded.");
   }, []);
 
   const handleDeleteAccount = async (values: { password: string }) => {
-    alertDialog.confirm({
+    showConfirm({
       title: "Confirm Deletion",
       message:
         "Are you sure you want to delete your account? This action cannot be undone.",
       confirmText: "Delete",
-      confirmStyle: "destructive",
       onConfirm: async () => {
         try {
           await deleteAccount(values.password);
         } catch (error) {
-          alertDialog.error(
+          showError(
             error instanceof Error ? error.message : "Failed to delete account"
           );
         }

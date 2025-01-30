@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { StyleSheet } from "react-native";
 import { CustomDatePicker } from "@components/ui/CustomDatePicker";
-import { CustomSwitch } from "@components/ui/CustomSwitch";
+import CustomSwitch from "@components/ui/CustomSwitch";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 // Enable LayoutAnimation for Android

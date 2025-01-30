@@ -11,13 +11,13 @@ interface CustomSwitchProps {
   style?: StyleProp<ViewStyle>;
 }
 
-export const CustomSwitch: React.FC<CustomSwitchProps> = ({
+export default function CustomSwitch({
   value,
   onValueChange,
   label,
   error,
   style,
-}) => {
+}: CustomSwitchProps) {
   const theme = useTheme();
 
   return (
@@ -47,6 +47,4 @@ export const CustomSwitch: React.FC<CustomSwitchProps> = ({
       )}
     </View>
   );
-};
-
-export default CustomSwitch;
+}

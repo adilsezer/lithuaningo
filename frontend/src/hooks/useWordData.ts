@@ -9,7 +9,7 @@ import { WordForm, Lemma } from "@src/types";
 import apiClient from "@services/api/apiClient";
 import { retrieveData } from "@utils/storageUtils";
 import { getCurrentDateKey } from "@utils/dateUtils";
-import { useAlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 
 const WORD_OF_THE_DAY_KEY = (dateKey: string) =>
   `WORD_OF_THE_DAY_ID_${dateKey}`;
@@ -19,7 +19,7 @@ export const useWordData = (wordId?: string, isRandom: boolean = false) => {
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
-  const alertDialog = useAlertDialog();
+  const { showError } = useAlertDialog();
   const [word, setWord] = useState<WordForm | null>(null);
   const [lemma, setLemma] = useState<Lemma | null>(null);
 
@@ -27,7 +27,7 @@ export const useWordData = (wordId?: string, isRandom: boolean = false) => {
     (error: any, message: string) => {
       console.error(message, error);
       setError(message);
-      alertDialog.error(message);
+      showError(message);
     },
     [setError]
   );

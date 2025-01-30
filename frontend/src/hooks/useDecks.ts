@@ -7,7 +7,7 @@ import {
   useSetError,
 } from "@stores/useUIStore";
 import { useUserData } from "@stores/useUserStore";
-import { useAlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 import type { Deck } from "@src/types";
 import deckService from "@services/data/deckService";
 import { DeckCategory } from "@src/types/DeckCategory";
@@ -30,7 +30,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
-  const alertDialog = useAlertDialog();
+  const { showError } = useAlertDialog();
   // Local state
   const [decks, setDecks] = useState<Deck[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,7 +48,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     (error: any, message: string) => {
       console.error(message, error);
       setError(message);
-      alertDialog.error(message);
+      showError(message);
       return null;
     },
     [setError]
@@ -61,7 +61,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   // Auth check
   const checkAuth = useCallback(() => {
     if (!userData?.id) {
-      alertDialog.error("Please login to continue");
+      showError("Please login to continue");
       return false;
     }
     return true;

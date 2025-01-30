@@ -10,13 +10,13 @@ import CustomText from "@components/ui/CustomText";
 import { deckCategories } from "@src/types/DeckCategory";
 import type { Deck } from "@src/types";
 import BackButton from "@components/layout/BackButton";
-import { useAlertDialog } from "@components/ui/AlertDialog";
-import { useIsLoading, useSetLoading } from "@stores/useUIStore";
+import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useSetLoading } from "@stores/useUIStore";
 
 export default function EditDeckScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const alertDialog = useAlertDialog();
+  const { showConfirm } = useAlertDialog();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getDeckById, updateDeck } = useDecks();
   const {
@@ -57,11 +57,10 @@ export default function EditDeckScreen() {
   const handleDeleteFlashcard = async (flashcardId: string) => {
     if (!id) return;
 
-    alertDialog.confirm({
+    showConfirm({
       title: "Delete Flashcard",
       message: "Are you sure you want to delete this flashcard?",
       confirmText: "Delete",
-      confirmStyle: "destructive",
       cancelText: "Cancel",
       onConfirm: async () => {
         await removeFlashcardFromDeck(id, flashcardId);

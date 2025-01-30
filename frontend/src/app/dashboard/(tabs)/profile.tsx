@@ -6,12 +6,12 @@ import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
-import { CustomSwitch } from "@components/ui/CustomSwitch";
+import CustomSwitch from "@components/ui/CustomSwitch";
 import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useTheme as useThemeContext } from "@context/ThemeContext";
-import { useAlertDialog } from "@components/ui/AlertDialog";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 import CustomDivider from "@components/ui/CustomDivider";
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
@@ -66,15 +66,15 @@ export default function ProfileScreen() {
     router.push(path);
   };
 
-  const alertDialog = useAlertDialog();
+  const { showConfirm, showError, showSuccess } = useAlertDialog();
 
   const handleClearProgress = async () => {
     if (!userData) {
-      alertDialog.error("No user data available");
+      showError("No user data available");
       return;
     }
 
-    alertDialog.confirm({
+    showConfirm({
       title: "Clear Progress",
       message:
         "Are you sure you want to clear today's progress? This action cannot be undone.",
@@ -93,9 +93,9 @@ export default function ProfileScreen() {
 
         try {
           await Promise.all(keysToClear.map(clearData));
-          alertDialog.success("Progress data cleared successfully");
+          showSuccess("Progress data cleared successfully");
         } catch (error) {
-          alertDialog.error("Failed to clear progress data");
+          showError("Failed to clear progress data");
         }
       },
     });
