@@ -1,5 +1,4 @@
 import React, { memo } from "react";
-import { DeckCardProps } from "./deck.types";
 import { View } from "react-native";
 import {
   Card,
@@ -10,13 +9,27 @@ import {
   Avatar,
   useTheme,
 } from "react-native-paper";
+import { Deck } from "@src/types";
 
+export interface DeckActions {
+  onVote: (isUpvote: boolean) => void;
+  onReport: () => void;
+  onComment: (deckId: string) => void;
+  onQuiz: (deckId: string) => void;
+  onPractice: (deckId: string) => void;
+  onEdit: (deckId: string) => void;
+}
+
+export interface DeckCardProps {
+  deck: Deck;
+  rating: number;
+  actions: DeckActions;
+}
 export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
   const theme = useTheme();
 
   return (
     <Card
-      mode="elevated"
       style={{
         backgroundColor: theme.colors.surface,
         borderWidth: 1,

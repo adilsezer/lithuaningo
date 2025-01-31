@@ -3,14 +3,15 @@ import { useSetLoading } from "@stores/useUIStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import practiceService from "@services/data/practiceService";
 
+interface Stats {
+  correct: number;
+  total: number;
+}
+
 export const usePracticeStats = (deckId: string, userId?: string) => {
   const setLoading = useSetLoading();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [stats, setStats] = useState<{ correct: number; total: number }>({
-    correct: 0,
-    total: 0,
-  });
-
+  const [stats, setStats] = useState<Stats>({ correct: 0, total: 0 });
   const { showError, showSuccess } = useAlertDialog();
 
   const handleAnswer = useCallback(
@@ -28,23 +29,20 @@ export const usePracticeStats = (deckId: string, userId?: string) => {
           flashcardId,
           isCorrect,
         });
-
-        const newStats = {
-          correct: stats.correct + (isCorrect ? 1 : 0),
-          total: stats.total + 1,
-        };
-        setStats(newStats);
-
+        setStats((prevStats) => ({
+          correct: prevStats.correct + (isCorrect ? 1 : 0),
+          total: prevStats.total + 1,
+        }));
         return true;
-      } catch (err) {
+      } catch (error) {
+        console.error("Error tracking progress:", error);
         showError("Failed to track progress");
-        console.error("Error tracking progress:", err);
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [userId, deckId, stats, setLoading]
+    [userId, deckId, setLoading, showError]
   );
 
   const resetSession = useCallback(() => {
@@ -53,12 +51,14 @@ export const usePracticeStats = (deckId: string, userId?: string) => {
   }, []);
 
   const completeSession = useCallback(() => {
-    const percentage = Math.round((stats.correct / stats.total) * 100);
+    const percentage = stats.total
+      ? Math.round((stats.correct / stats.total) * 100)
+      : 0;
     showSuccess(
       `Practice completed! Score: ${stats.correct}/${stats.total} (${percentage}%)`
     );
     resetSession();
-  }, [stats, resetSession]);
+  }, [stats, resetSession, showSuccess]);
 
   return {
     currentIndex,

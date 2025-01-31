@@ -1,26 +1,25 @@
 import React, { useEffect, useState } from "react";
-import { View, StyleSheet, Text } from "react-native";
-import { PracticeStats as IPracticeStats } from "@src/types";
+import { View, StyleSheet } from "react-native";
+import { Card, ProgressBar, Text, useTheme } from "react-native-paper";
 import { FontAwesome5 } from "@expo/vector-icons";
+import { PracticeStats as IPracticeStats } from "@src/types";
 import apiClient from "@services/api/apiClient";
 import useUIStore from "@stores/useUIStore";
-import { useTheme } from "react-native-paper";
+import theme from "@src/styles/theme";
+
 interface PracticeStatsProps {
   deckId: string;
   userId: string;
 }
 
-const StatItem = ({
-  icon,
-  value,
-  label,
-  color,
-}: {
+interface StatItemProps {
   icon: string;
   value: number;
   label: string;
   color: string;
-}) => {
+}
+
+const StatItem: React.FC<StatItemProps> = ({ icon, value, label, color }) => {
   const theme = useTheme();
   return (
     <View style={styles.statItem}>
@@ -45,19 +44,19 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
 
   useEffect(() => {
     const fetchStats = async () => {
+      setLoading(true);
       try {
-        setLoading(true);
         const data = await apiClient.getPracticeStats(deckId, userId);
         setStats(data);
-      } catch (err) {
-        console.error("Error loading practice stats:", err);
+      } catch (error) {
+        console.error("Error loading practice stats:", error);
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, [deckId]);
+  }, [deckId, userId, setLoading]);
 
   if (isLoading || !stats) return null;
 
@@ -65,83 +64,47 @@ export const PracticeStats: React.FC<PracticeStatsProps> = ({
     (stats.masteredCards / stats.totalCards) * 100
   );
 
-  const getTimeAgo = (date: string | Date) => {
-    try {
-      const lastPracticedDate = new Date(date);
-      if (isNaN(lastPracticedDate.getTime())) return "Just now";
-
-      const minutes = Math.floor(
-        (Date.now() - lastPracticedDate.getTime()) / 60000
-      );
-      if (minutes < 1) return "Just now";
-      if (minutes < 60) return `${minutes}m ago`;
-      if (minutes < 1440) return `${Math.floor(minutes / 60)}h ago`;
-      if (minutes < 10080) return `${Math.floor(minutes / 1440)}d ago`;
-
-      return lastPracticedDate.toLocaleDateString(undefined, {
-        month: "long",
-        day: "numeric",
-        year: "numeric",
-      });
-    } catch {
-      return "Just now";
-    }
-  };
-
   return (
-    <View style={styles.container}>
-      <View style={styles.statsContainer}>
-        <StatItem
-          icon="book"
-          value={stats.totalCards}
-          label="Total Cards"
+    <Card style={[styles.container, { borderColor: theme.colors.primary }]}>
+      <Card.Content>
+        <View style={styles.statsContainer}>
+          <StatItem
+            icon="book"
+            value={stats.totalCards}
+            label="Total Cards"
+            color={theme.colors.primary}
+          />
+          <StatItem
+            icon="check-circle"
+            value={stats.masteredCards}
+            label="Mastered"
+            color={theme.colors.primary}
+          />
+          <StatItem
+            icon="sync"
+            value={stats.needsPractice}
+            label="Need Practice"
+            color={theme.colors.error}
+          />
+        </View>
+        <ProgressBar
+          progress={masteryPercentage / 100}
           color={theme.colors.primary}
+          style={styles.progressBar}
         />
-        <StatItem
-          icon="check-circle"
-          value={stats.masteredCards}
-          label="Mastered"
-          color={theme.colors.primary}
-        />
-        <StatItem
-          icon="sync"
-          value={stats.needsPractice}
-          label="Need Practice"
-          color={theme.colors.error}
-        />
-      </View>
-
-      <View
-        style={[styles.progressBar, { backgroundColor: theme.colors.surface }]}
-      >
-        <View
-          style={[
-            styles.progressFill,
-            {
-              backgroundColor: theme.colors.primary,
-              width: `${masteryPercentage}%`,
-            },
-          ]}
-        />
-      </View>
-
-      <Text style={[styles.progressText, { color: theme.colors.onSurface }]}>
-        {masteryPercentage}% Mastered
-      </Text>
-      <Text style={[styles.lastPracticed, { color: theme.colors.onSurface }]}>
-        Last practiced: {getTimeAgo(stats.lastPracticed)}
-      </Text>
-    </View>
+        <Text style={[styles.progressText, { color: theme.colors.onSurface }]}>
+          {masteryPercentage}% Mastered
+        </Text>
+      </Card.Content>
+    </Card>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    margin: 16,
     borderRadius: 12,
-  },
-  title: {
-    marginBottom: 16,
+    borderWidth: 1,
   },
   statsContainer: {
     flexDirection: "row",
@@ -166,18 +129,8 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     marginBottom: 8,
   },
-  progressFill: {
-    height: "100%",
-    borderRadius: 4,
-  },
   progressText: {
     fontSize: 14,
     textAlign: "center",
-    marginBottom: 8,
-  },
-  lastPracticed: {
-    fontSize: 12,
-    textAlign: "center",
-    marginBottom: 8,
   },
 });
