@@ -37,10 +37,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 }) => {
   const [flipped, setFlipped] = useState(false);
   const theme = useTheme();
-  // Animated value for controlling the opacity during flip.
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  // When the card is tapped, fade out, toggle the content, then fade in.
   const flipCard = () => {
     Animated.timing(fadeAnim, {
       toValue: 0,
@@ -64,10 +62,9 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
   return (
     <View style={styles.container}>
-      {/* The entire Card is clickable for flip; AudioControl stops propagation */}
       <Card style={styles.card} onPress={flipCard}>
         <Animated.View style={{ opacity: fadeAnim }}>
-          <Card.Content>
+          <Card.Content style={styles.cardContent}>
             {!flipped ? (
               <>
                 <Text variant="bodyLarge" style={styles.text}>
@@ -101,6 +98,16 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
             )}
           </Card.Content>
         </Animated.View>
+        <View style={styles.flipIndicator}>
+          <IconButton
+            icon="rotate-3d"
+            size={20}
+            onPress={(e) => {
+              e.stopPropagation();
+              flipCard();
+            }}
+          />
+        </View>
       </Card>
       {flipped && (
         <Card.Actions style={styles.actions}>
@@ -124,6 +131,11 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 4,
   },
+  // New style ensuring both sides have the same minimum height.
+  cardContent: {
+    minHeight: 200, // adjust this value as needed
+    justifyContent: "center",
+  },
   cover: {
     borderRadius: 8,
     marginVertical: 12,
@@ -144,6 +156,11 @@ const styles = StyleSheet.create({
   audioButton: {
     alignSelf: "center",
     marginTop: 12,
+  },
+  flipIndicator: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
   },
 });
 
