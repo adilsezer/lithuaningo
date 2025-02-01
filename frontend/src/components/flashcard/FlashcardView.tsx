@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { StyleSheet, View } from "react-native";
+import React, { useRef, useState } from "react";
+import { StyleSheet, View, Animated } from "react-native";
 import { Card, Text, IconButton, useTheme, Button } from "react-native-paper";
 import { Flashcard } from "@src/types";
 import { useFlashcards } from "@hooks/useFlashcards";
@@ -37,49 +37,70 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 }) => {
   const [flipped, setFlipped] = useState(false);
   const theme = useTheme();
+  // Animated value for controlling the opacity during flip.
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  const handleFlip = () => setFlipped((prev) => !prev);
+  // When the card is tapped, fade out, toggle the content, then fade in.
+  const flipCard = () => {
+    Animated.timing(fadeAnim, {
+      toValue: 0,
+      duration: 200,
+      useNativeDriver: true,
+    }).start(() => {
+      setFlipped((prev) => !prev);
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
+    });
+  };
 
   const handleAnswer = (isCorrect: boolean) => {
     onAnswer(isCorrect);
     setFlipped(false);
+    fadeAnim.setValue(1);
   };
 
   return (
     <View style={styles.container}>
-      {/* The entire card is clickable to flip */}
-      <Card style={styles.card} onPress={handleFlip}>
-        <Card.Content>
-          {!flipped ? (
-            <>
-              <Text variant="bodyLarge" style={styles.text}>
-                {flashcard.front}
-              </Text>
-              {flashcard.imageUrl && (
-                <Card.Cover
-                  source={{ uri: flashcard.imageUrl }}
-                  style={styles.cover}
-                />
-              )}
-              {flashcard.exampleSentence && (
-                <Text
-                  variant="bodyMedium"
-                  style={[
-                    styles.example,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
-                >
-                  Example: {flashcard.exampleSentence}
+      {/* The entire Card is clickable for flip; AudioControl stops propagation */}
+      <Card style={styles.card} onPress={flipCard}>
+        <Animated.View style={{ opacity: fadeAnim }}>
+          <Card.Content>
+            {!flipped ? (
+              <>
+                <Text variant="bodyLarge" style={styles.text}>
+                  {flashcard.front}
                 </Text>
-              )}
-              {flashcard.audioUrl && <AudioControl url={flashcard.audioUrl} />}
-            </>
-          ) : (
-            <Text variant="bodyLarge" style={styles.text}>
-              {flashcard.back}
-            </Text>
-          )}
-        </Card.Content>
+                {flashcard.imageUrl && (
+                  <Card.Cover
+                    source={{ uri: flashcard.imageUrl }}
+                    style={styles.cover}
+                  />
+                )}
+                {flashcard.exampleSentence && (
+                  <Text
+                    variant="bodyMedium"
+                    style={[
+                      styles.example,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    Example: {flashcard.exampleSentence}
+                  </Text>
+                )}
+                {flashcard.audioUrl && (
+                  <AudioControl url={flashcard.audioUrl} />
+                )}
+              </>
+            ) : (
+              <Text variant="bodyLarge" style={styles.text}>
+                {flashcard.back}
+              </Text>
+            )}
+          </Card.Content>
+        </Animated.View>
       </Card>
       {flipped && (
         <Card.Actions style={styles.actions}>
