@@ -17,119 +17,166 @@ export const useFlashcards = () => {
   const error = useError();
   const { showError, showSuccess } = useAlertDialog();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
-  const [sound, setSound] = useState<Audio.Sound>();
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [sound, setSound] = useState<Audio.Sound | null>(null);
+  const [playingUrl, setPlayingUrl] = useState<string | null>(null);
 
-  // Cleanup sound on unmount
+  // Cleanup effect
   useEffect(() => {
-    return sound
-      ? () => {
-          sound.unloadAsync();
-        }
-      : undefined;
+    return () => {
+      if (sound) {
+        console.log("Unloading Sound");
+        sound.unloadAsync();
+      }
+    };
   }, [sound]);
 
   const handleError = useCallback(
-    (error: any, message: string) => {
+    (error: Error, message: string) => {
       console.error(message, error);
       setError(message);
       showError(message);
       return null;
     },
-    [setError]
+    [setError, showError]
   );
-
-  const clearError = useCallback(() => {
-    setError(null);
-  }, [setError]);
 
   const handlePlaySound = useCallback(
     async (url: string) => {
       try {
-        if (isPlaying && sound) {
+        // First, set up the audio mode
+        await Audio.setAudioModeAsync({
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: false,
+          shouldDuckAndroid: true,
+        });
+
+        // If we're already playing this URL, stop it
+        if (playingUrl === url && sound) {
+          console.log("Pausing Sound");
           await sound.pauseAsync();
-          setIsPlaying(false);
+          setPlayingUrl(null);
           return;
         }
 
+        // Always unload the previous sound before creating a new one
         if (sound) {
-          await sound.playAsync();
-          setIsPlaying(true);
-        } else {
-          const { sound: newSound } = await Audio.Sound.createAsync({
-            uri: url,
-          });
-          setSound(newSound);
-          await newSound.playAsync();
-          setIsPlaying(true);
-
-          newSound.setOnPlaybackStatusUpdate(async (status) => {
-            if ("didJustFinish" in status && status.didJustFinish) {
-              setIsPlaying(false);
-            }
-          });
+          console.log("Unloading previous sound");
+          try {
+            await sound.pauseAsync();
+            await sound.unloadAsync();
+          } catch (error) {
+            console.log("Error cleaning up previous sound:", error);
+          }
+          setSound(null);
         }
+
+        console.log("Loading Sound");
+        const { sound: newSound } = await Audio.Sound.createAsync(
+          { uri: url },
+          { shouldPlay: true },
+          async (status) => {
+            if (!status.isLoaded) {
+              if (status.error) {
+                console.log(
+                  `Encountered a fatal error during playback: ${status.error}`
+                );
+                setPlayingUrl(null);
+                if (sound) {
+                  try {
+                    await sound.unloadAsync();
+                  } catch (error) {
+                    console.log("Error unloading sound:", error);
+                  }
+                }
+                setSound(null);
+                return;
+              }
+            }
+
+            // Handle playback finished
+            if (status.isLoaded && status.didJustFinish) {
+              console.log("Playback finished");
+              setPlayingUrl(null);
+            }
+          },
+          true
+        );
+
+        setSound(newSound);
+        setPlayingUrl(url);
+        console.log("Sound is now playing");
       } catch (error) {
-        handleError(error, "Error playing sound");
-        setIsPlaying(false);
+        handleError(error as Error, "Error playing audio");
+        if (sound) {
+          try {
+            await sound.pauseAsync();
+            await sound.unloadAsync();
+          } catch (unloadError) {
+            console.log("Error unloading sound:", unloadError);
+          }
+        }
+        setSound(null);
+        setPlayingUrl(null);
       }
     },
-    [sound, isPlaying, handleError]
+    [sound, playingUrl, handleError]
   );
 
   const fetchDeckFlashcards = useCallback(
     async (deckId: string) => {
       try {
         setLoading(true);
-        clearError();
+        setError(null);
         const data = await flashcardService.getDeckFlashcards(deckId);
         setFlashcards(data);
       } catch (error) {
-        handleError(error, "Failed to load flashcards");
+        handleError(error as Error, "Failed to load flashcards");
       } finally {
         setLoading(false);
       }
     },
-    [handleError, clearError, setLoading]
+    [handleError, setError, setLoading]
   );
 
   const addFlashcardToDeck = useCallback(
     async (deckId: string, flashcard: Omit<Flashcard, "id" | "createdAt">) => {
       try {
         setLoading(true);
-        clearError();
+        setError(null);
         await flashcardService.addFlashcardToDeck(deckId, flashcard);
         await fetchDeckFlashcards(deckId);
+        showSuccess("Flashcard added successfully");
       } catch (error) {
-        handleError(error, "Failed to add flashcard");
+        handleError(error as Error, "Failed to add flashcard");
       } finally {
         setLoading(false);
       }
     },
-    [fetchDeckFlashcards, handleError, clearError, setLoading]
+    [fetchDeckFlashcards, handleError, setError, setLoading, showSuccess]
   );
 
   const removeFlashcardFromDeck = useCallback(
     async (deckId: string, flashcardId: string) => {
       try {
         setLoading(true);
-        clearError();
+        setError(null);
         await flashcardService.removeFlashcardFromDeck(deckId, flashcardId);
         await fetchDeckFlashcards(deckId);
+        showSuccess("Flashcard removed successfully");
       } catch (error) {
-        handleError(error, "Failed to remove flashcard");
+        handleError(error as Error, "Failed to remove flashcard");
       } finally {
         setLoading(false);
       }
     },
-    [fetchDeckFlashcards, handleError, clearError, setLoading]
+    [fetchDeckFlashcards, handleError, setError, setLoading, showSuccess]
   );
 
   const handleCreateFlashcard = useCallback(
     async (formData: FlashcardFormData, deckId: string, userId: string) => {
       try {
         setLoading(true);
-        clearError();
+        setError(null);
 
         const { imageFile, audioFile, ...flashcardData } = formData;
 
@@ -146,28 +193,24 @@ export const useFlashcards = () => {
         showSuccess("Flashcard created successfully");
         return true;
       } catch (error) {
-        handleError(error, "Failed to create flashcard");
+        handleError(error as Error, "Failed to create flashcard");
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [setLoading, handleError, clearError]
+    [setLoading, handleError, setError, showSuccess]
   );
 
   return {
-    // State
     flashcards,
     isLoading,
     error,
-    isPlaying,
-
-    // Actions
+    isPlaying: (url: string) => playingUrl === url,
     handlePlaySound,
     fetchDeckFlashcards,
     addFlashcardToDeck,
     removeFlashcardFromDeck,
     handleCreateFlashcard,
-    clearError,
   };
 };

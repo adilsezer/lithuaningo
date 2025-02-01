@@ -68,7 +68,9 @@ export default function PracticeScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <CustomText>Practice</CustomText>
+        <CustomText variant="titleLarge" bold>
+          Practice
+        </CustomText>
         {userData && (
           <PracticeStats deckId={id as string} userId={userData.id} />
         )}

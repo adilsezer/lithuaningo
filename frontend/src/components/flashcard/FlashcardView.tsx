@@ -2,39 +2,41 @@ import React, { useState, useRef } from "react";
 import {
   View,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   Animated,
   Image,
+  TouchableWithoutFeedback,
+  GestureResponderEvent,
 } from "react-native";
+import { Card, Text, IconButton, useTheme } from "react-native-paper";
 import { Flashcard } from "@src/types";
-import { FontAwesome5 } from "@expo/vector-icons";
 import CustomButton from "@components/ui/CustomButton";
 import { useFlashcards } from "@hooks/useFlashcards";
-import { useTheme } from "react-native-paper";
+
 interface FlashcardViewProps {
   flashcard: Flashcard;
   onAnswer: (isCorrect: boolean) => void;
 }
 
-const AudioButton: React.FC<{ url: string; colors: any }> = ({
-  url,
-  colors,
-}) => {
+const AudioControl: React.FC<{ url: string }> = ({ url }) => {
   const { handlePlaySound, isPlaying } = useFlashcards();
+  const theme = useTheme();
+
+  const handlePress = (event: GestureResponderEvent) => {
+    event.stopPropagation();
+    handlePlaySound(url);
+  };
 
   return (
     <View style={styles.audioWrapper}>
-      <TouchableOpacity
-        onPress={() => handlePlaySound(url)}
-        style={[styles.audioButton, { backgroundColor: colors.primary }]}
-      >
-        <FontAwesome5
-          name={isPlaying ? "pause" : "volume-up"}
-          size={20}
-          color={colors.buttonText}
-        />
-      </TouchableOpacity>
+      <IconButton
+        icon={isPlaying(url) ? "pause" : "volume-high"}
+        size={32}
+        onPress={handlePress}
+        mode="contained"
+        containerColor={theme.colors.primary}
+        iconColor={theme.colors.onPrimary}
+        style={styles.audioButton}
+      />
     </View>
   );
 };
@@ -42,37 +44,48 @@ const AudioButton: React.FC<{ url: string; colors: any }> = ({
 const CardContent: React.FC<{
   isBack: boolean;
   flashcard: Flashcard;
-  colors: any;
-}> = ({ isBack, flashcard, colors }) => (
-  <View style={styles.content} pointerEvents="box-none">
-    {!isBack && flashcard.imageUrl && (
-      <View style={styles.imageWrapper}>
+  onFlipPress: (event: GestureResponderEvent) => void;
+}> = ({ isBack, flashcard, onFlipPress }) => {
+  const theme = useTheme();
+
+  return (
+    <View style={styles.content}>
+      {!isBack && flashcard.imageUrl && (
         <Image
           source={{ uri: flashcard.imageUrl }}
           style={styles.image}
           resizeMode="cover"
         />
-      </View>
-    )}
-    <Text style={[styles.mainText, { color: colors.text }]}>
-      {isBack ? flashcard.back : flashcard.front}
-    </Text>
-    {flashcard.exampleSentence && !isBack && (
-      <Text style={[styles.exampleText, { color: colors.cardText }]}>
-        Example: {flashcard.exampleSentence}
+      )}
+      <Text variant="headlineMedium" style={styles.mainText}>
+        {isBack ? flashcard.back : flashcard.front}
       </Text>
-    )}
-    {!isBack && flashcard.audioUrl && (
-      <AudioButton url={flashcard.audioUrl} colors={colors} />
-    )}
-  </View>
-);
+      {flashcard.exampleSentence && !isBack && (
+        <Text
+          variant="bodyLarge"
+          style={[styles.exampleText, { color: theme.colors.onSurfaceVariant }]}
+        >
+          Example: {flashcard.exampleSentence}
+        </Text>
+      )}
+      {!isBack && flashcard.audioUrl && (
+        <AudioControl url={flashcard.audioUrl} />
+      )}
+      <IconButton
+        icon="rotate-3d"
+        size={20}
+        onPress={onFlipPress}
+        style={styles.flipIcon}
+        iconColor={theme.colors.onSurfaceVariant}
+      />
+    </View>
+  );
+};
 
 const AnswerButtons: React.FC<{
   onAnswer: (isCorrect: boolean) => void;
   onAnswered: () => void;
-  colors: any;
-}> = ({ onAnswer, onAnswered, colors }) => (
+}> = ({ onAnswer, onAnswered }) => (
   <View style={styles.answerButtons}>
     <CustomButton
       title="Incorrect"
@@ -80,6 +93,7 @@ const AnswerButtons: React.FC<{
         onAnswer(false);
         onAnswered();
       }}
+      mode="outlined"
     />
     <CustomButton
       title="Correct"
@@ -87,6 +101,7 @@ const AnswerButtons: React.FC<{
         onAnswer(true);
         onAnswered();
       }}
+      mode="contained"
     />
   </View>
 );
@@ -108,6 +123,11 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       useNativeDriver: true,
     }).start();
     setIsFlipped(!isFlipped);
+  };
+
+  const handleFlipButtonPress = (event: GestureResponderEvent) => {
+    event.stopPropagation();
+    handleFlip();
   };
 
   const resetCard = () => {
@@ -139,64 +159,42 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
   return (
     <View style={styles.container}>
-      <View style={styles.cardWrapper}>
-        <TouchableOpacity
-          onPress={handleFlip}
-          activeOpacity={0.8}
-          style={styles.cardContainer}
-        >
-          <Animated.View
-            style={[
-              styles.card,
-              { backgroundColor: theme.colors.surface },
-              styles.cardFace,
-              frontAnimatedStyle,
-            ]}
-            pointerEvents="box-none"
-          >
-            <CardContent
-              isBack={false}
-              flashcard={flashcard}
-              colors={theme.colors}
-            />
-            <FontAwesome5
-              name="undo"
-              size={16}
-              color={theme.colors.onSurface}
-              style={styles.flipIcon}
-            />
-          </Animated.View>
-          <Animated.View
-            style={[
-              styles.card,
-              { backgroundColor: theme.colors.surface },
-              styles.cardFace,
-              styles.cardBack,
-              backAnimatedStyle,
-            ]}
-            pointerEvents="box-none"
-          >
-            <CardContent
-              isBack={true}
-              flashcard={flashcard}
-              colors={theme.colors}
-            />
-            <FontAwesome5
-              name="undo"
-              size={16}
-              color={theme.colors.onSurface}
-              style={styles.flipIcon}
-            />
-          </Animated.View>
-        </TouchableOpacity>
-      </View>
+      <TouchableWithoutFeedback onPress={handleFlip}>
+        <Card style={styles.cardWrapper}>
+          <Card.Content style={styles.cardContainer}>
+            <Animated.View
+              style={[
+                styles.cardFace,
+                frontAnimatedStyle,
+                { backgroundColor: theme.colors.surface },
+              ]}
+            >
+              <CardContent
+                isBack={false}
+                flashcard={flashcard}
+                onFlipPress={handleFlipButtonPress}
+              />
+            </Animated.View>
+            <Animated.View
+              style={[
+                styles.cardFace,
+                styles.cardBack,
+                backAnimatedStyle,
+                { backgroundColor: theme.colors.surface },
+              ]}
+            >
+              <CardContent
+                isBack={true}
+                flashcard={flashcard}
+                onFlipPress={handleFlipButtonPress}
+              />
+            </Animated.View>
+          </Card.Content>
+        </Card>
+      </TouchableWithoutFeedback>
       {isFlipped && (
         <View style={styles.buttonsWrapper}>
-          <AnswerButtons
-            onAnswer={onAnswer}
-            onAnswered={resetCard}
-            colors={theme.colors}
-          />
+          <AnswerButtons onAnswer={onAnswer} onAnswered={resetCard} />
         </View>
       )}
     </View>
@@ -210,29 +208,22 @@ const styles = StyleSheet.create({
   cardWrapper: {
     flex: 1,
     minHeight: 400,
+    elevation: 2,
   },
   cardContainer: {
     flex: 1,
-  },
-  card: {
-    flex: 1,
-    borderRadius: 20,
-    padding: 24,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    minHeight: 400,
   },
   cardFace: {
+    flex: 1,
     backfaceVisibility: "hidden",
     position: "absolute",
     top: 0,
     left: 0,
     right: 0,
     bottom: 0,
+    borderRadius: 12,
+    padding: 16,
   },
   cardBack: {
     transform: [{ rotateY: "180deg" }],
@@ -243,26 +234,21 @@ const styles = StyleSheet.create({
     paddingVertical: 16,
   },
   mainText: {
-    fontSize: 28,
-    fontWeight: "600",
     textAlign: "center",
     marginBottom: 24,
     paddingHorizontal: 16,
   },
   exampleText: {
-    fontSize: 16,
     fontStyle: "italic",
     textAlign: "center",
     marginTop: 24,
     marginBottom: 32,
     paddingHorizontal: 24,
-    opacity: 0.8,
   },
   flipIcon: {
     position: "absolute",
-    bottom: 20,
-    right: 20,
-    opacity: 0.5,
+    bottom: 12,
+    right: 12,
   },
   buttonsWrapper: {
     marginTop: 24,
@@ -274,24 +260,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
-  imageWrapper: {
+  image: {
     width: "100%",
     aspectRatio: 16 / 9,
     borderRadius: 10,
-    overflow: "hidden",
     marginBottom: 32,
   },
-  image: {
-    width: "100%",
-    height: "100%",
-  },
   audioWrapper: {
-    position: "relative",
-    zIndex: 2,
+    padding: 8,
+    marginTop: 16,
   },
   audioButton: {
-    padding: 16,
-    borderRadius: 40,
-    marginTop: 24,
+    width: 64,
+    height: 64,
+    borderRadius: 32,
   },
 });
