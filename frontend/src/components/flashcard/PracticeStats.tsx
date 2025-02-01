@@ -5,7 +5,6 @@ import { FontAwesome5 } from "@expo/vector-icons";
 import { PracticeStats as IPracticeStats } from "@src/types";
 import apiClient from "@services/api/apiClient";
 import useUIStore from "@stores/useUIStore";
-import theme from "@src/styles/theme";
 
 interface PracticeStatsProps {
   deckId: string;

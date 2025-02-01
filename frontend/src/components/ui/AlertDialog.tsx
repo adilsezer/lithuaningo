@@ -6,7 +6,7 @@ import useAlertStore, {
   useAlertDetails,
   useAlertCallbacks,
   useAlertActions,
-} from "../stores/useAlertStore";
+} from "@stores/useAlertStore";
 
 export const AlertDialog: React.FC = () => {
   const theme = useTheme();

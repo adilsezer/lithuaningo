@@ -101,7 +101,6 @@ export const createTheme = (isDarkMode: boolean) => {
       onSurface: colors.onSurface,
       onSurfaceVariant: colors.onSurfaceVariant,
       placeholder: colors.placeholder,
-      backdrop: colors.background,
     },
     fonts: {
       ...MD3LightTheme.fonts,

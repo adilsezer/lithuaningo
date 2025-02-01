@@ -9,7 +9,7 @@ import NotificationInitializer from "@services/initializers/NotificationInitiali
 import ErrorBoundaryProvider from "@providers/ErrorBoundaryProvider";
 import { PaperProvider } from "react-native-paper";
 import { StyleSheet } from "react-native";
-import { AlertDialog } from "@components/AlertDialog";
+import { AlertDialog } from "@components/ui/AlertDialog";
 import { createTheme } from "@src/styles/theme";
 import { useIsDarkMode } from "@stores/useThemeStore";
 import InitializationProvider from "@providers/InitializationProvider";
