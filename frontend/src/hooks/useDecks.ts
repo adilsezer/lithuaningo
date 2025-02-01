@@ -204,15 +204,16 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
           flashcardCount: 0,
         };
 
-        await deckService.createDeck(newDeck);
-        router.push("/decks/my");
+        const deckId = await deckService.createDeck(newDeck);
+        return deckId;
       } catch (error) {
         handleError(error, "Failed to create deck");
+        return undefined;
       } finally {
         setLoading(false);
       }
     },
-    [checkAuth, userData, router, setLoading, clearError, handleError]
+    [checkAuth, userData, setLoading, clearError, handleError]
   );
 
   const getDeckById = useCallback(

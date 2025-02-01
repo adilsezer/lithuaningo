@@ -54,6 +54,13 @@ namespace Lithuaningo.API.Controllers
         public async Task<ActionResult<string>> CreateDeck([FromBody] Deck deck)
         {
             var deckId = await _deckService.CreateDeckAsync(deck);
+            
+            if (string.IsNullOrEmpty(deckId))
+            {
+                return BadRequest("Failed to create deck - no ID generated");
+            }
+            
+            Console.WriteLine($"Controller: Successfully created deck with ID: {deckId}");
             return Ok(deckId);
         }
 

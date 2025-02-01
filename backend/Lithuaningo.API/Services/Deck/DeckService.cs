@@ -187,11 +187,24 @@ public class DeckService : IDeckService
     {
         try
         {
+            // Generate a new document reference with auto-generated ID
             var docRef = _db.Collection(_collectionName).Document();
+            
+            // Set the ID explicitly
             deck.Id = docRef.Id;
+            
+            if (string.IsNullOrEmpty(deck.Id))
+            {
+                throw new InvalidOperationException("Failed to generate document ID");
+            }
+            
             deck.CreatedAt = DateTime.UtcNow;
             deck.FlashcardCount = 0;
-            await docRef.SetAsync(deck);
+            
+            // Create the document with the deck data
+            await docRef.CreateAsync(deck);
+            
+            Console.WriteLine($"Created deck with ID: {deck.Id}");
             return deck.Id;
         }
         catch (Exception ex)
