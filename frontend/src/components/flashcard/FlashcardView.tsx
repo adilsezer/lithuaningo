@@ -110,14 +110,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         </View>
       </Card>
       {flipped && (
-        <Card.Actions style={styles.actions}>
+        <View style={styles.actions}>
           <Button mode="outlined" onPress={() => handleAnswer(false)}>
             Incorrect
           </Button>
           <Button mode="contained" onPress={() => handleAnswer(true)}>
             Correct
           </Button>
-        </Card.Actions>
+        </View>
       )}
     </View>
   );
@@ -131,9 +131,9 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 4,
   },
-  // New style ensuring both sides have the same minimum height.
+  // Ensures both sides have the same minimum height.
   cardContent: {
-    minHeight: 200, // adjust this value as needed
+    minHeight: 400, // Adjust this value to the desired height.
     justifyContent: "center",
   },
   cover: {
@@ -150,6 +150,7 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   actions: {
+    flexDirection: "row",
     justifyContent: "space-around",
     padding: 16,
   },
