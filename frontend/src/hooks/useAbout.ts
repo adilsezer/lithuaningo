@@ -26,11 +26,6 @@ export const ABOUT_LINKS = {
     value: "/terms-of-service",
     label: "View our Terms of Service",
   },
-  github: {
-    type: "url" as const,
-    value: "https://github.com/lithuaningo",
-    label: "View our GitHub repository",
-  },
 } as const;
 
 export const useAbout = () => {
