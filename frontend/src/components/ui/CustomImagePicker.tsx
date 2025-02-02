@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, Text, Image, Pressable } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { useTheme } from "react-native-paper";
+import { IconButton, useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 type ImageFile = {
   uri: string;
@@ -74,9 +74,14 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
           <View
             style={[
               styles.placeholder,
-              { backgroundColor: theme.colors.primaryContainer },
+              { backgroundColor: theme.colors.surface },
             ]}
           >
+            <IconButton
+              icon="image"
+              size={48}
+              iconColor={theme.colors.primary}
+            />
             <CustomText
               style={[
                 styles.placeholderText,
@@ -100,7 +105,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    marginBottom: 16,
+    marginTop: 16,
   },
   imageContainer: {
     width: "100%",

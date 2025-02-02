@@ -2,34 +2,12 @@ import React, { useRef, useState } from "react";
 import { StyleSheet, View, Animated } from "react-native";
 import { Card, Text, IconButton, useTheme, Button } from "react-native-paper";
 import { Flashcard } from "@src/types";
-import { useFlashcards } from "@hooks/useFlashcards";
+import AudioControl from "@components/ui/AudioControl";
 
 interface FlashcardViewProps {
   flashcard: Flashcard;
   onAnswer: (isCorrect: boolean) => void;
 }
-
-const AudioControl: React.FC<{ url: string }> = ({ url }) => {
-  const { handlePlaySound, isPlaying } = useFlashcards();
-  const theme = useTheme();
-
-  const handlePress = (e: any) => {
-    // Prevent the card's onPress (flip) from firing.
-    e.stopPropagation();
-    handlePlaySound(url);
-  };
-
-  return (
-    <IconButton
-      icon={isPlaying(url) ? "pause" : "volume-high"}
-      size={28}
-      onPress={handlePress}
-      containerColor={theme.colors.primary}
-      iconColor={theme.colors.onPrimary}
-      style={styles.audioButton}
-    />
-  );
-};
 
 export const FlashcardView: React.FC<FlashcardViewProps> = ({
   flashcard,
@@ -88,7 +66,10 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                   </Text>
                 )}
                 {flashcard.audioUrl && (
-                  <AudioControl url={flashcard.audioUrl} />
+                  <AudioControl
+                    url={flashcard.audioUrl}
+                    onPress={(e) => e.stopPropagation()} // Prevent card flip
+                  />
                 )}
               </>
             ) : (
@@ -131,9 +112,8 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     elevation: 4,
   },
-  // Ensures both sides have the same minimum height.
   cardContent: {
-    minHeight: 400, // Adjust this value to the desired height.
+    minHeight: 400,
     justifyContent: "center",
   },
   cover: {
@@ -153,10 +133,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-around",
     padding: 16,
-  },
-  audioButton: {
-    alignSelf: "center",
-    marginTop: 12,
   },
   flipIndicator: {
     position: "absolute",

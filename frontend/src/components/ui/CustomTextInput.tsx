@@ -57,7 +57,7 @@ const CustomTextInput: React.FC<CustomTextInputProps> = ({
         style={[
           {
             backgroundColor: theme.colors.background,
-            marginVertical: 6,
+            marginTop: 12,
           },
           style,
         ]}
