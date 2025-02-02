@@ -15,7 +15,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
   placeholder = "Search...",
   style,
   initialValue = "",
-  debounceTime = 300,
+  debounceTime = 1500,
 }) => {
   const [value, setValue] = React.useState(initialValue);
   const timeoutRef = useRef<NodeJS.Timeout>();

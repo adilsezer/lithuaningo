@@ -1,19 +1,18 @@
 import React from "react";
-import FontAwesome5 from "@expo/vector-icons/FontAwesome";
+import MaterialCommunityIcons from "@expo/vector-icons/MaterialCommunityIcons";
 import { Tabs } from "expo-router";
 import { Dimensions, Platform, StyleSheet } from "react-native";
 import { useTheme } from "react-native-paper";
-import BackButton from "@components/layout/BackButton";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
 const TAB_ITEMS = [
   { name: "index", title: "Home", icon: "home" },
-  { name: "decks", title: "Decks", icon: "book" },
+  { name: "decks", title: "Decks", icon: "cards" },
   { name: "challenge", title: "Challenge", icon: "pencil" },
-  { name: "leaderboard", title: "Leaders", icon: "trophy" },
-  { name: "profile", title: "Profile", icon: "user" },
+  { name: "chat", title: "Chat", icon: "robot" },
+  { name: "profile", title: "Profile", icon: "account" },
 ] as const;
 
 export default function TabLayout() {
@@ -42,7 +41,7 @@ export default function TabLayout() {
           options={{
             title,
             tabBarIcon: ({ color }) => (
-              <FontAwesome5 size={28} name={icon} color={color} />
+              <MaterialCommunityIcons size={28} name={icon} color={color} />
             ),
           }}
         />
