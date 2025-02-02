@@ -98,21 +98,11 @@ export const flashcardFormSchema = z.object({
   front: z.string().min(1, "Front side is required"),
   back: z.string().min(1, "Back side is required"),
   exampleSentence: z.string().optional(),
-  audioFile: z
-    .any()
-    .optional()
-    .refine(
-      (file) => !file || file.type.startsWith("audio/"),
-      "Please upload an audio file"
-    ),
-  imageFile: z
-    .any()
-    .optional()
-    .refine(
-      (file) => !file || file.type.startsWith("image/"),
-      "Please upload an image file"
-    ),
+  audioFile: z.any().optional(),
+  imageFile: z.any().optional(),
 });
+
+export const flashcardEditSchema = flashcardFormSchema.partial();
 
 export const reportFormSchema = z.object({
   reason: z.string().min(1, "Please select a reason"),

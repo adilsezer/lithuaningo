@@ -334,6 +334,8 @@ public class DeckService : IDeckService
         {
             var snapshot = await _db.Collection(_flashcardsCollection)
                 .WhereEqualTo("deckId", deckId)
+                .OrderBy("createdAt")
+                .Limit(100)
                 .GetSnapshotAsync();
 
             return snapshot.Documents.Select(d => d.ConvertTo<Flashcard>()).ToList();

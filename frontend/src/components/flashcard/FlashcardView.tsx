@@ -40,7 +40,16 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
   return (
     <View style={styles.container}>
-      <Card style={styles.card} onPress={flipCard}>
+      <Card
+        style={[
+          styles.card,
+          {
+            borderColor: theme.colors.primary,
+            borderWidth: 1,
+          },
+        ]}
+        onPress={flipCard}
+      >
         <Animated.View style={{ opacity: fadeAnim }}>
           <Card.Content style={styles.cardContent}>
             {!flipped ? (
@@ -73,9 +82,34 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                 )}
               </>
             ) : (
-              <Text variant="bodyLarge" style={styles.text}>
-                {flashcard.back}
-              </Text>
+              <>
+                <Text variant="bodyLarge" style={styles.text}>
+                  {flashcard.back}
+                </Text>
+                {flashcard.imageUrl && (
+                  <Card.Cover
+                    source={{ uri: flashcard.imageUrl }}
+                    style={styles.cover}
+                  />
+                )}
+                {flashcard.exampleSentence && (
+                  <Text
+                    variant="bodyMedium"
+                    style={[
+                      styles.example,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    Example: {flashcard.exampleSentence}
+                  </Text>
+                )}
+                {flashcard.audioUrl && (
+                  <AudioControl
+                    url={flashcard.audioUrl}
+                    onPress={(e) => e.stopPropagation()} // Prevent card flip
+                  />
+                )}
+              </>
             )}
           </Card.Content>
         </Animated.View>
