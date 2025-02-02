@@ -1,7 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { ViewStyle } from "react-native";
+import { ViewStyle, StyleSheet } from "react-native";
 import { useIsLoading } from "@stores/useUIStore";
-import { useTheme, ActivityIndicator, Portal, Modal } from "react-native-paper";
+import {
+  useTheme,
+  ActivityIndicator,
+  Portal,
+  Modal,
+  Surface,
+} from "react-native-paper";
 
 interface LoadingIndicatorProps {
   modal?: boolean;
@@ -11,6 +17,22 @@ interface LoadingIndicatorProps {
   color?: string;
   useTheme?: boolean;
 }
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    borderRadius: 12,
+  },
+  surface: {
+    padding: 24,
+    borderRadius: 12,
+  },
+});
+
 export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   modal = true,
   style,
@@ -62,13 +84,23 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
 
   return (
     <Portal>
-      <Modal visible={showLoading} dismissable={false}>
-        <ActivityIndicator
-          size="large"
-          color={indicatorColor}
-          animating={showLoading}
-          accessibilityLabel="Loading content"
-        />
+      <Modal
+        visible={showLoading}
+        dismissable={false}
+        contentContainerStyle={[
+          styles.modalContent,
+          { backgroundColor: theme.colors.background },
+        ]}
+        style={styles.modalContainer}
+      >
+        <Surface style={styles.surface} elevation={4}>
+          <ActivityIndicator
+            size="large"
+            color={indicatorColor}
+            animating={showLoading}
+            accessibilityLabel="Loading content"
+          />
+        </Surface>
       </Modal>
     </Portal>
   );
