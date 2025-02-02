@@ -3,6 +3,7 @@ import FontAwesome5 from "@expo/vector-icons/FontAwesome";
 import { Tabs } from "expo-router";
 import { Dimensions, Platform, StyleSheet } from "react-native";
 import { useTheme } from "react-native-paper";
+import BackButton from "@components/layout/BackButton";
 
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
@@ -31,6 +32,7 @@ export default function TabLayout() {
           flex: 1,
         },
       }}
+      initialRouteName="index"
       backBehavior="history"
     >
       {TAB_ITEMS.map(({ name, title, icon }) => (

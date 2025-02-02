@@ -1,7 +1,7 @@
 // src/RootLayout.tsx
 
 import React from "react";
-import { Slot } from "expo-router";
+import { Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import AuthInitializer from "@services/initializers/AuthInitializer";
@@ -13,6 +13,21 @@ import { AlertDialog } from "@components/ui/AlertDialog";
 import { createTheme } from "@src/styles/theme";
 import { useIsDarkMode } from "@stores/useThemeStore";
 import InitializationProvider from "@providers/InitializationProvider";
+
+// Define all app routes
+const APP_ROUTES = [
+  "(root)",
+  "dashboard",
+  "decks",
+  "flashcards",
+  "learning",
+  "auth",
+  "profile",
+  "about",
+  "privacy-policy",
+  "terms-of-service",
+  "notification",
+] as const;
 
 /**
  * Root layout component that sets up the app's providers and core UI structure.
@@ -41,8 +56,26 @@ const RootLayout = () => {
             <AuthInitializer />
             <NotificationInitializer />
 
-            {/* Main app content */}
-            <Slot />
+            {/* Main app content with Stack navigation */}
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: {
+                  backgroundColor: theme.colors.background,
+                },
+                animation: "none",
+              }}
+            >
+              {APP_ROUTES.map((route) => (
+                <Stack.Screen
+                  key={route}
+                  name={route}
+                  options={{
+                    headerShown: false,
+                  }}
+                />
+              ))}
+            </Stack>
 
             {/* Global UI components */}
             <AlertDialog />
