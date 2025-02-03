@@ -26,9 +26,7 @@ public class StorageConfiguration : IStorageConfiguration
     public string GetPublicBucketUrl(StorageSettings settings)
     {
         ValidateSettings(settings);
-        return !string.IsNullOrEmpty(settings.CustomDomain)
-            ? $"https://{settings.CustomDomain}"
-            : $"https://{settings.R2AccountId}.r2.cloudflarestorage.com/{settings.BucketName}";
+        return $"https://{settings.CustomDomain}";
     }
 
     public IAmazonS3 CreateS3Client(StorageSettings settings)
@@ -59,5 +57,7 @@ public class StorageConfiguration : IStorageConfiguration
             throw new InvalidOperationException("R2AccessKeySecret is required");
         if (string.IsNullOrEmpty(settings.BucketName))
             throw new InvalidOperationException("BucketName is required");
+        if (string.IsNullOrEmpty(settings.CustomDomain))
+            throw new InvalidOperationException("CustomDomain is required");
     }
 } 
