@@ -10,6 +10,7 @@ using Lithuaningo.API.Services.Quiz.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Features;
+using Lithuaningo.API.Services.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -100,6 +101,11 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     var firestoreSettings = configuration.GetSection("FirestoreSettings").Get<FirestoreSettings>();
     services.AddSingleton(FirestoreDb.Create(firestoreSettings?.ProjectId));
 
+    // Storage Configuration
+    services.Configure<StorageSettings>(configuration.GetSection("StorageSettings"));
+    services.AddScoped<IStorageConfiguration, StorageConfiguration>();
+    services.AddScoped<IStorageService, StorageService>();
+
     // Core Services
     services.AddScoped<IUserService, UserService>();
     services.AddScoped<IUserStatsService, UserStatsService>();
@@ -109,7 +115,6 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddScoped<IDeckService, DeckService>();
     services.AddScoped<IFlashcardService, FlashcardService>();
     services.AddScoped<IPracticeService, PracticeService>();
-    services.AddScoped<IStorageService, StorageService>();
     services.AddScoped<ICommentService, CommentService>();
     services.AddScoped<IReportService, ReportService>();
     services.AddScoped<ILeaderboardService, LeaderboardService>();
@@ -143,9 +148,6 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
             .AddApplicationPart(typeof(FlashcardController).Assembly)
             .AddApplicationPart(typeof(PracticeController).Assembly)
             .AddApplicationPart(typeof(StorageService).Assembly);
-
-    builder.Services.Configure<StorageSettings>(
-        builder.Configuration.GetSection("StorageSettings"));
 }
 
 void ConfigureMiddleware(WebApplication app)

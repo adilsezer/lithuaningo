@@ -140,7 +140,7 @@ export const CustomPicker: React.FC<CustomPickerProps> = ({
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    marginVertical: 12,
+    marginTop: 12,
   },
   pickerButton: {
     borderWidth: 1,
