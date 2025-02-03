@@ -1,13 +1,12 @@
 import apiClient, { ApiError } from "@services/api/apiClient";
 import { LeaderboardWeek } from "@src/types";
-import crashlytics from "@react-native-firebase/crashlytics";
 
 const getCurrentWeekLeaderboard = async (): Promise<LeaderboardWeek | null> => {
   try {
     return await apiClient.getCurrentWeekLeaderboard();
   } catch (error) {
     if (error instanceof ApiError) {
-      crashlytics().recordError(error);
+      //crashlytics().recordError(error);
       console.error(`API Error ${error.status}:`, error.data);
     } else {
       console.error("Error fetching current week leaderboard:", error);
@@ -27,7 +26,7 @@ const getWeekLeaderboard = async (
     return await apiClient.getWeekLeaderboard(weekId);
   } catch (error) {
     if (error instanceof ApiError) {
-      crashlytics().recordError(error);
+      //crashlytics().recordError(error);
       console.error(`API Error ${error.status}:`, error.data);
     } else {
       console.error("Error fetching week leaderboard:", error);
@@ -46,7 +45,7 @@ const updateLeaderboardEntry = async (
     return true;
   } catch (error) {
     if (error instanceof ApiError) {
-      crashlytics().recordError(error);
+      //crashlytics().recordError(error);
       console.error(`API Error ${error.status}:`, error.data);
     } else {
       console.error("Error updating leaderboard entry:", error);

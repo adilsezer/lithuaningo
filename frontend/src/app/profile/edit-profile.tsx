@@ -1,25 +1,24 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import BackButton from "@components/layout/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
-import crashlytics from "@react-native-firebase/crashlytics";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { editProfileFormSchema } from "@utils/zodSchemas";
-import auth from "@react-native-firebase/auth";
 import CustomText from "@components/ui/CustomText";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "@services/supabase/supabaseClient";
+import { useRouter } from "expo-router";
 
-const getEditProfileFields = (
-  user: ReturnType<typeof auth>["currentUser"]
-): FormField[] => [
+const getEditProfileFields = (user: User | null): FormField[] => [
   {
     name: "displayName",
     label: "Display Name",
     category: "text-input",
     type: "text",
     placeholder: "Display Name",
-    defaultValue: user?.displayName || "",
+    defaultValue: user?.user_metadata?.name || "",
   },
   {
     name: "currentPassword",
@@ -33,11 +32,27 @@ const getEditProfileFields = (
 const EditProfileScreen: React.FC = () => {
   const loading = useIsLoading();
   const { updateProfile } = useAuth();
-  const user = auth().currentUser;
+  const router = useRouter();
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
-    crashlytics().log("Edit profile screen loaded.");
-  }, []);
+    const getUser = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (!user) {
+        router.replace("/auth/login");
+        return;
+      }
+      setUser(user);
+    };
+
+    getUser();
+  }, [router]);
+
+  if (!user) {
+    return null;
+  }
 
   return (
     <ScrollView>

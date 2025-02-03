@@ -6,7 +6,6 @@ import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import crashlytics from "@react-native-firebase/crashlytics";
 import { signupFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
@@ -51,10 +50,6 @@ const signupFields: FormField[] = [
 const SignUpScreen: React.FC = () => {
   const loading = useIsLoading();
   const { signUp, signInWithSocial } = useAuth();
-
-  useEffect(() => {
-    crashlytics().log("Sign up screen loaded.");
-  }, []);
 
   return (
     <ScrollView>

@@ -17,7 +17,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     assetBundlePatterns: ["**/*"],
     ios: {
-      googleServicesFile: "./GoogleService-Info.plist",
       supportsTablet: true,
       bundleIdentifier: "com.adilsezer.lithuaningo",
       infoPlist: {
@@ -36,7 +35,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       usesAppleSignIn: true,
     },
     android: {
-      googleServicesFile: "./google-services.json",
       icon: "./assets/icons/android/xxxhdpi/icon.png",
       adaptiveIcon: {
         foregroundImage: "./assets/icons/android/foreground.png",
@@ -60,8 +58,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-router",
-      "@react-native-firebase/app",
-      "@react-native-firebase/crashlytics",
       [
         "expo-build-properties",
         {
@@ -92,10 +88,11 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       },
       easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
       googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      androidGoogleServicesBase64: process.env.ANDROID_GOOGLE_SERVICES_BASE64,
-      iosGoogleServicesBase64: process.env.IOS_GOOGLE_SERVICES_BASE64,
+      googleIosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
       iosProductId: process.env.IOS_PRODUCT_ID,
       androidProductId: process.env.ANDROID_PRODUCT_ID,
+      supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+      supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
       privacyPolicyUrl:
         "https://adilsezer.github.io/lithuaningo/privacy-policy",
       keywords:

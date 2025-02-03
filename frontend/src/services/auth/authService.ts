@@ -1,14 +1,17 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
-import auth, { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import { useUserStore } from "@stores/useUserStore";
 import * as AppleAuthentication from "expo-apple-authentication";
+import { useUserStore } from "@stores/useUserStore";
 import apiClient from "@services/api/apiClient";
-import crashlytics from "@react-native-firebase/crashlytics";
 import Constants from "expo-constants";
 import { getErrorMessage } from "@utils/errorMessages";
+import { supabase } from "@services/supabase/supabaseClient";
+import { User } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
+// Configure Google Sign-In
 GoogleSignin.configure({
   webClientId: Constants.expoConfig?.extra?.googleWebClientId,
+  iosClientId: Constants.expoConfig?.extra?.googleIosClientId,
   offlineAccess: true,
 });
 
@@ -22,95 +25,83 @@ interface ProfileUpdateData {
   email?: string;
 }
 
-// State
-let lastEmailVerificationTime = 0;
-const verificationCooldown = 300000; // 5 minutes
-
 // Helper Functions
 const handleAuthError = (error: any): AuthResponse => {
-  console.error("Auth operation failed:", error.message);
-  crashlytics().recordError(error);
+  console.error("Auth operation failed:", error);
+
+  // Handle specific Supabase error codes
+  if (error.message?.includes("Email not confirmed")) {
+    return {
+      success: false,
+      message: "Please verify your email address before signing in.",
+    };
+  }
+
   return {
     success: false,
-    message: error.code ? getErrorMessage(error.code) : error.message,
+    message: getErrorMessage(error) || "Authentication failed",
   };
 };
 
-const updateEmailVerificationStatus = async (user: FirebaseAuthTypes.User) => {
+const updateEmailVerificationStatus = async (
+  userId: string,
+  email: string,
+  emailVerified: boolean
+) => {
   try {
-    const userProfile = await apiClient.getUserProfile(user.uid);
-    if (userProfile && userProfile.emailVerified !== user.emailVerified) {
+    const userProfile = await apiClient.getUserProfile(userId);
+    if (userProfile && userProfile.emailVerified !== emailVerified) {
       await apiClient.updateUserProfile({
         ...userProfile,
-        emailVerified: user.emailVerified,
+        emailVerified,
       });
     }
   } catch (error) {
     console.error("Error updating email verification status:", error);
-    if (error instanceof Error) {
-      crashlytics().recordError(error);
-    } else {
-      crashlytics().recordError(new Error(String(error)));
-    }
   }
 };
 
-export const updateUserState = async (user: FirebaseAuthTypes.User) => {
-  if (!user.email) {
+export const updateUserState = async (session: { user: User } | null) => {
+  if (!session?.user?.email) {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
+  const { user } = session;
+  const emailVerified = user.email_confirmed_at != null;
+
   // Handle email verification
-  if (!user.emailVerified) {
-    await auth().signOut();
+  if (!user.email || !emailVerified) {
+    await supabase.auth.signOut();
     useUserStore.getState().logOut();
-    throw new Error("Email verification required");
+    throw new Error("Email does not exist or is not verified");
   }
 
   // Update user state only if email is verified
   useUserStore.getState().logIn({
-    id: user.uid,
-    name: user.displayName || "No Name",
+    id: user.id,
+    name: user.user_metadata?.name || "No Name",
     email: user.email,
-    emailVerified: user.emailVerified,
+    emailVerified,
   });
 
-  await updateEmailVerificationStatus(user);
+  await updateEmailVerificationStatus(user.id, user.email, emailVerified);
 };
 
-const ensureUserProfile = async (user: FirebaseAuthTypes.User) => {
-  const userProfile = await apiClient.getUserProfile(user.uid);
+const ensureUserProfile = async (
+  userId: string,
+  email: string,
+  name: string
+) => {
+  const userProfile = await apiClient.getUserProfile(userId);
   if (!userProfile) {
-    await apiClient.createUserProfile(user.uid);
-    const newUserProfile = await apiClient.getUserProfile(user.uid);
-    newUserProfile.name = user.displayName || "No Name";
-    newUserProfile.email = user.email || "";
-    newUserProfile.emailVerified = user.emailVerified;
+    await apiClient.createUserProfile(userId);
+    const newUserProfile = await apiClient.getUserProfile(userId);
+    newUserProfile.name = name || "No Name";
+    newUserProfile.email = email;
+    newUserProfile.emailVerified = true;
     await apiClient.updateUserProfile(newUserProfile);
   }
 };
-
-const getGoogleCredential =
-  async (): Promise<FirebaseAuthTypes.AuthCredential> => {
-    await GoogleSignin.hasPlayServices();
-    const userInfo = await GoogleSignin.signIn();
-    return auth.GoogleAuthProvider.credential(userInfo.idToken);
-  };
-
-const getAppleCredential =
-  async (): Promise<FirebaseAuthTypes.AuthCredential> => {
-    const appleAuthResponse = await AppleAuthentication.signInAsync({
-      requestedScopes: [
-        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-        AppleAuthentication.AppleAuthenticationScope.EMAIL,
-      ],
-    });
-
-    return auth.AppleAuthProvider.credential(
-      appleAuthResponse.identityToken!,
-      appleAuthResponse.authorizationCode!
-    );
-  };
 
 // Auth Functions
 export const signUpWithEmail = async (
@@ -119,14 +110,22 @@ export const signUpWithEmail = async (
   name: string
 ): Promise<AuthResponse> => {
   try {
-    const { user } = await auth().createUserWithEmailAndPassword(
+    const { data, error } = await supabase.auth.signUp({
       email,
-      password
-    );
-    await user.updateProfile({ displayName: name });
-    await sendEmailVerification();
-    await ensureUserProfile(user);
-    crashlytics().setUserId(user.uid);
+      password,
+      options: {
+        data: {
+          name,
+        },
+      },
+    });
+
+    if (error) throw error;
+
+    if (data.user) {
+      await ensureUserProfile(data.user.id, email, name);
+    }
+
     return {
       success: true,
       message: "Registration successful! Please verify your email to continue.",
@@ -136,42 +135,157 @@ export const signUpWithEmail = async (
   }
 };
 
+const AUTH_ATTEMPT_KEY = "auth_attempts";
+const MAX_AUTH_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
+
+const checkAuthAttempts = async () => {
+  const attempts = await AsyncStorage.getItem(AUTH_ATTEMPT_KEY);
+  const attemptsData = attempts
+    ? JSON.parse(attempts)
+    : { count: 0, timestamp: 0 };
+
+  if (attemptsData.count >= MAX_AUTH_ATTEMPTS) {
+    const timePassed = Date.now() - attemptsData.timestamp;
+    if (timePassed < LOCKOUT_DURATION) {
+      throw new Error("Too many login attempts. Please try again later.");
+    }
+    // Reset attempts after lockout period
+    await AsyncStorage.setItem(
+      AUTH_ATTEMPT_KEY,
+      JSON.stringify({ count: 0, timestamp: 0 })
+    );
+  }
+};
+
+const incrementAuthAttempts = async () => {
+  const attempts = await AsyncStorage.getItem(AUTH_ATTEMPT_KEY);
+  const attemptsData = attempts
+    ? JSON.parse(attempts)
+    : { count: 0, timestamp: 0 };
+
+  const newData = {
+    count: attemptsData.count + 1,
+    timestamp: Date.now(),
+  };
+
+  await AsyncStorage.setItem(AUTH_ATTEMPT_KEY, JSON.stringify(newData));
+};
+
+const resetAuthAttempts = async () => {
+  await AsyncStorage.setItem(
+    AUTH_ATTEMPT_KEY,
+    JSON.stringify({ count: 0, timestamp: 0 })
+  );
+};
+
 export const signInWithEmail = async (
   email: string,
   password: string
 ): Promise<AuthResponse> => {
   try {
-    const { user } = await auth().signInWithEmailAndPassword(email, password);
-    if (!user.emailVerified) {
-      await auth().signOut();
-      await sendEmailVerification();
+    await checkAuthAttempts(); // Check attempts before sign in
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    if (error) {
+      await incrementAuthAttempts(); // Increment on failure
+      throw error;
+    }
+
+    if (!data.user.email_confirmed_at) {
+      await incrementAuthAttempts(); // Increment on unverified email
+      await supabase.auth.signOut();
       return {
         success: false,
-        message:
-          "Please verify your email before logging in. A new verification email has been sent.",
+        message: "Please verify your email before logging in.",
       };
     }
-    await ensureUserProfile(user);
-    await updateUserState(user);
-    crashlytics().setUserId(user.uid);
+
+    await resetAuthAttempts(); // Reset on successful login
+    await ensureUserProfile(
+      data.user.id,
+      data.user.email || "",
+      data.user.user_metadata?.name || ""
+    );
+    await updateUserState(data.session);
     return { success: true };
   } catch (error) {
     return handleAuthError(error);
   }
 };
 
-export const signInWithSocialProvider = async (
-  provider: "google" | "apple"
-): Promise<AuthResponse> => {
+export const signInWithGoogle = async (): Promise<AuthResponse> => {
   try {
-    const credential = await (provider === "google"
-      ? getGoogleCredential()
-      : getAppleCredential());
+    await checkAuthAttempts(); // Check attempts before sign in
 
-    const userCredential = await auth().signInWithCredential(credential);
-    await ensureUserProfile(userCredential.user);
-    await updateUserState(userCredential.user);
-    crashlytics().setUserId(userCredential.user.uid);
+    await GoogleSignin.hasPlayServices();
+    const { idToken } = await GoogleSignin.signIn();
+
+    if (!idToken) {
+      await incrementAuthAttempts(); // Increment on failure
+      throw new Error("Failed to get ID token from Google Sign-In");
+    }
+
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "google",
+      token: idToken,
+    });
+
+    if (error) {
+      await incrementAuthAttempts(); // Increment on failure
+      throw error;
+    }
+
+    await resetAuthAttempts(); // Reset on successful login
+    await ensureUserProfile(
+      data.user.id,
+      data.user.email || "",
+      data.user.user_metadata?.name || ""
+    );
+    await updateUserState(data.session);
+    return { success: true };
+  } catch (error) {
+    return handleAuthError(error);
+  }
+};
+
+export const signInWithApple = async (): Promise<AuthResponse> => {
+  try {
+    await checkAuthAttempts(); // Check attempts before sign in
+
+    const credential = await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+
+    if (!credential.identityToken) {
+      await incrementAuthAttempts(); // Increment on failure
+      throw new Error("No identity token");
+    }
+
+    const { data, error } = await supabase.auth.signInWithIdToken({
+      provider: "apple",
+      token: credential.identityToken,
+    });
+
+    if (error) {
+      await incrementAuthAttempts(); // Increment on failure
+      throw error;
+    }
+
+    await resetAuthAttempts(); // Reset on successful login
+    await ensureUserProfile(
+      data.user.id,
+      data.user.email || "",
+      data.user.user_metadata?.name || credential.fullName?.givenName || ""
+    );
+    await updateUserState(data.session);
     return { success: true };
   } catch (error) {
     return handleAuthError(error);
@@ -180,24 +294,19 @@ export const signInWithSocialProvider = async (
 
 export const signOut = async (): Promise<AuthResponse> => {
   try {
-    const user = auth().currentUser;
-    if (
-      user?.providerData.some(
-        (provider) => provider.providerId === "google.com"
-      )
-    ) {
-      try {
-        const isSignedIn = await GoogleSignin.isSignedIn();
-        if (isSignedIn) {
-          await GoogleSignin.revokeAccess();
-          await GoogleSignin.signOut();
-        }
-      } catch (googleError) {
-        console.error("Google sign out error:", googleError);
-        // Continue with Firebase sign out even if Google sign out fails
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+
+    try {
+      const isSignedIn = await GoogleSignin.isSignedIn();
+      if (isSignedIn) {
+        await GoogleSignin.revokeAccess();
+        await GoogleSignin.signOut();
       }
+    } catch (googleError) {
+      console.error("Google sign out error:", googleError);
     }
-    await auth().signOut();
+
     useUserStore.getState().logOut();
     return { success: true };
   } catch (error) {
@@ -210,41 +319,25 @@ export const updateProfile = async (
   updates: ProfileUpdateData
 ): Promise<AuthResponse> => {
   try {
-    const user = auth().currentUser;
-    if (!user) throw new Error("No user is currently signed in.");
-
-    let credential: FirebaseAuthTypes.AuthCredential | undefined;
-
-    if (
-      user.providerData.some((provider) => provider.providerId === "password")
-    ) {
-      if (!currentPassword)
-        throw new Error("Password is required for reauthentication.");
-      credential = auth.EmailAuthProvider.credential(
-        user.email!,
-        currentPassword
-      );
-    } else if (
-      user.providerData.some((provider) => provider.providerId === "google.com")
-    ) {
-      credential = await getGoogleCredential();
-    } else if (
-      user.providerData.some((provider) => provider.providerId === "apple.com")
-    ) {
-      credential = await getAppleCredential();
-    }
-
-    if (credential) {
-      await reauthenticateUser(credential);
-    }
-
-    await user.updateProfile(updates);
     if (updates.email) {
-      await user.updateEmail(updates.email);
-      await sendEmailVerification();
+      const { error } = await supabase.auth.updateUser({
+        email: updates.email,
+      });
+      if (error) throw error;
     }
 
-    await updateUserState(user);
+    if (updates.displayName) {
+      const { error } = await supabase.auth.updateUser({
+        data: { name: updates.displayName },
+      });
+      if (error) throw error;
+    }
+
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+
+    await updateUserState(sessionData.session);
     return {
       success: true,
       message: updates.email
@@ -261,22 +354,8 @@ export const updatePassword = async (
   newPassword: string
 ): Promise<AuthResponse> => {
   try {
-    const user = auth().currentUser;
-    if (!user) throw new Error("No user is currently signed in.");
-
-    try {
-      const credential = auth.EmailAuthProvider.credential(
-        user.email!,
-        currentPassword
-      );
-      await reauthenticateUser(credential);
-      await user.updatePassword(newPassword);
-    } catch (error: any) {
-      if (error.code === "auth/requires-recent-login") {
-        useUserStore.getState().requireReauthentication();
-      }
-      throw error;
-    }
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    if (error) throw error;
 
     return { success: true, message: "Password updated successfully." };
   } catch (error) {
@@ -286,7 +365,11 @@ export const updatePassword = async (
 
 export const resetPassword = async (email: string): Promise<AuthResponse> => {
   try {
-    await auth().sendPasswordResetEmail(email);
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${Constants.expoConfig?.scheme}://auth-callback`,
+    });
+    if (error) throw error;
+
     return {
       success: true,
       message: "Password reset email sent. Please check your inbox.",
@@ -296,61 +379,27 @@ export const resetPassword = async (email: string): Promise<AuthResponse> => {
   }
 };
 
-export const deleteAccount = async (
-  currentPassword: string | undefined
-): Promise<AuthResponse> => {
+export const deleteAccount = async (): Promise<AuthResponse> => {
   try {
-    const user = auth().currentUser;
-    if (!user) throw new Error("No user is currently signed in.");
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
 
-    if (currentPassword) {
-      const credential = auth.EmailAuthProvider.credential(
-        user.email!,
-        currentPassword
-      );
-      await reauthenticateUser(credential);
+    if (!sessionData.session?.user) {
+      throw new Error("No active session");
     }
 
-    await user.delete();
+    // Note: This requires admin privileges and should be done through your backend
+    await apiClient.deleteUserProfile(sessionData.session.user.id);
+
+    const { error } = await supabase.auth.signOut();
+    if (error) throw error;
+
     const store = useUserStore.getState();
     store.deleteAccount();
     store.logOut();
+
     return { success: true, message: "Account deleted successfully." };
-  } catch (error) {
-    return handleAuthError(error);
-  }
-};
-
-export const sendEmailVerification = async (): Promise<AuthResponse> => {
-  try {
-    const user = auth().currentUser;
-    if (!user) throw new Error("No user is currently signed in.");
-
-    const currentTime = Date.now();
-    if (currentTime - lastEmailVerificationTime < verificationCooldown) {
-      throw new Error(
-        "Please wait before requesting another verification email."
-      );
-    }
-
-    await user.sendEmailVerification();
-    lastEmailVerificationTime = currentTime;
-    return { success: true, message: "Verification email sent." };
-  } catch (error) {
-    return handleAuthError(error);
-  }
-};
-
-export const reauthenticateUser = async (
-  credential: FirebaseAuthTypes.AuthCredential
-): Promise<AuthResponse> => {
-  try {
-    const user = auth().currentUser;
-    if (!user) throw new Error("No user is currently signed in.");
-
-    await user.reauthenticateWithCredential(credential);
-    useUserStore.getState().clearReauthentication();
-    return { success: true, message: "Reauthentication successful" };
   } catch (error) {
     return handleAuthError(error);
   }

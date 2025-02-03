@@ -3,21 +3,18 @@ import { useRouter } from "expo-router";
 import {
   signUpWithEmail,
   signInWithEmail,
-  signInWithSocialProvider,
+  signInWithGoogle,
+  signInWithApple,
   signOut,
   updateProfile,
   updatePassword,
   resetPassword,
   deleteAccount,
-  reauthenticateUser,
 } from "@services/auth/authService";
 import { useAuthOperation } from "./useAuthOperation";
-import { FirebaseAuthTypes } from "@react-native-firebase/auth";
-import crashlytics from "@react-native-firebase/crashlytics";
-import auth from "@react-native-firebase/auth";
-import apiClient from "@src/services/api/apiClient";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useCallback } from "react";
+import { Platform } from "react-native";
 
 export type SocialProvider = "google" | "apple";
 
@@ -25,6 +22,7 @@ export const useAuth = () => {
   const router = useRouter();
   const { performAuthOperation } = useAuthOperation();
   const { showAlert } = useAlertDialog();
+
   // Navigation helpers
   const navigateAfterAuth = useCallback(
     (route: string) => {
@@ -39,7 +37,7 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await signUpWithEmail(email, password, name);
         if (response.success) {
-          crashlytics().log("User signed up successfully");
+          // crashlytics().log("User signed up successfully");
           showAlert({
             title: "Verification Email Sent",
             message:
@@ -61,7 +59,7 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await signInWithEmail(email, password);
         if (response.success) {
-          crashlytics().log("User signed in with email");
+          // crashlytics().log("User signed in with email");
           navigateAfterAuth("/dashboard");
         }
         return response;
@@ -74,9 +72,17 @@ export const useAuth = () => {
   const signInWithSocial = useCallback(
     async (provider: SocialProvider) => {
       const result = await performAuthOperation(async () => {
-        const response = await signInWithSocialProvider(provider);
+        let response;
+        if (provider === "google") {
+          response = await signInWithGoogle();
+        } else if (provider === "apple" && Platform.OS === "ios") {
+          response = await signInWithApple();
+        } else {
+          throw new Error(`Unsupported provider: ${provider}`);
+        }
+
         if (response.success) {
-          crashlytics().log(`User signed in with ${provider}`);
+          // crashlytics().log(`User signed in with ${provider}`);
           navigateAfterAuth("/dashboard");
         }
         return response;
@@ -90,7 +96,7 @@ export const useAuth = () => {
     const result = await performAuthOperation(async () => {
       const response = await signOut();
       if (response.success) {
-        crashlytics().log("User signed out");
+        // crashlytics().log("User signed out");
         navigateAfterAuth("/");
       }
       return response;
@@ -104,7 +110,7 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await updateProfile(currentPassword, updates);
         if (response.success) {
-          crashlytics().log("User profile updated");
+          // crashlytics().log("User profile updated");
           navigateAfterAuth("/dashboard/profile");
         }
         return response;
@@ -119,7 +125,7 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await updatePassword(currentPassword, newPassword);
         if (response.success) {
-          crashlytics().log("User password updated");
+          // crashlytics().log("User password updated");
           navigateAfterAuth("/dashboard/profile");
         }
         return response;
@@ -134,7 +140,7 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await resetPassword(email);
         if (response.success) {
-          crashlytics().log("Password reset email sent");
+          // crashlytics().log("Password reset email sent");
           navigateAfterAuth("/auth/login");
         }
         return response;
@@ -145,37 +151,17 @@ export const useAuth = () => {
   );
 
   // Account management
-  const handleDeleteAccount = useCallback(
-    async (currentPassword?: string) => {
-      const result = await performAuthOperation(async () => {
-        const response = await deleteAccount(currentPassword);
-        if (response.success) {
-          const user = auth().currentUser;
-          if (user) {
-            crashlytics().log("User account deleted");
-            await apiClient.deleteUserProfile(user.uid);
-            navigateAfterAuth("/");
-          }
-        }
-        return response;
-      }, "Account Deletion Failed");
-      return result;
-    },
-    [performAuthOperation, navigateAfterAuth]
-  );
-
-  const handleReauthenticate = useCallback(
-    async (credential: FirebaseAuthTypes.AuthCredential) => {
-      return await performAuthOperation(async () => {
-        const response = await reauthenticateUser(credential);
-        if (response.success) {
-          crashlytics().log("User reauthenticated");
-        }
-        return response;
-      }, "Reauthentication Failed");
-    },
-    [performAuthOperation]
-  );
+  const handleDeleteAccount = useCallback(async () => {
+    const result = await performAuthOperation(async () => {
+      const response = await deleteAccount();
+      if (response.success) {
+        // crashlytics().log("User account deleted");
+        navigateAfterAuth("/");
+      }
+      return response;
+    }, "Account Deletion Failed");
+    return result;
+  }, [performAuthOperation, navigateAfterAuth]);
 
   return {
     signUp,
@@ -186,6 +172,5 @@ export const useAuth = () => {
     updatePassword: handleUpdatePassword,
     resetPassword: handleResetPassword,
     deleteAccount: handleDeleteAccount,
-    reauthenticate: handleReauthenticate,
   };
 };

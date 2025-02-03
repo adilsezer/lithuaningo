@@ -4,7 +4,6 @@ import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
 import BackButton from "@components/layout/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
-import crashlytics from "@react-native-firebase/crashlytics";
 import CustomDivider from "@components/ui/CustomDivider";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
@@ -33,11 +32,6 @@ const loginFields: FormField[] = [
 const LoginScreen: React.FC = () => {
   const loading = useIsLoading();
   const { signIn, signInWithSocial } = useAuth();
-
-  // Log screen load for analytics
-  useEffect(() => {
-    crashlytics().log("Login screen loaded.");
-  }, []);
 
   const handleSocialAuth = useCallback(
     (provider: SocialProvider) => {

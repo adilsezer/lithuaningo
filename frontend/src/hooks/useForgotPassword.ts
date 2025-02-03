@@ -6,7 +6,6 @@ import {
   useError,
   useSetError,
 } from "@stores/useUIStore";
-import crashlytics from "@react-native-firebase/crashlytics";
 
 export type ForgotPasswordData = {
   email: string;
@@ -21,7 +20,7 @@ export const useForgotPassword = () => {
 
   // Log screen load for analytics
   useEffect(() => {
-    crashlytics().log("Forgot password screen loaded.");
+    // crashlytics().log("Forgot password screen loaded.");
   }, []);
 
   const clearError = useCallback(() => {

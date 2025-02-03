@@ -5,7 +5,6 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import crashlytics from "@react-native-firebase/crashlytics";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 
@@ -24,10 +23,6 @@ const forgotPasswordFields: FormField[] = [
 const ForgotPasswordScreen: React.FC = () => {
   const isLoading = useIsLoading();
   const { resetPassword } = useAuth();
-
-  useEffect(() => {
-    crashlytics().log("Forgot password screen loaded.");
-  }, []);
 
   return (
     <ScrollView>

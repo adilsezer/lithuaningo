@@ -4,7 +4,6 @@ import {
   useError,
   useSetError,
 } from "@stores/useUIStore";
-import crashlytics from "@react-native-firebase/crashlytics";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useCallback } from "react";
 
@@ -23,7 +22,7 @@ export const useAuthOperation = () => {
       const message = error.message || "An error occurred";
       console.error(`${title}:`, error);
       setError(message);
-      crashlytics().recordError(error);
+      //crashlytics().recordError(error);
       showError(message, title);
       return { success: false, message };
     },

@@ -3,7 +3,6 @@ import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import BackButton from "@components/layout/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
-import crashlytics from "@react-native-firebase/crashlytics";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { changePasswordFormSchema } from "@utils/zodSchemas";
@@ -35,10 +34,6 @@ const changePasswordFields: FormField[] = [
 const ChangePasswordScreen: React.FC = () => {
   const loading = useIsLoading();
   const { updatePassword } = useAuth();
-
-  useEffect(() => {
-    crashlytics().log("Change password screen loaded.");
-  }, []);
 
   return (
     <ScrollView>

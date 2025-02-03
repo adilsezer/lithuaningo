@@ -1,14 +1,13 @@
 import Constants from "expo-constants";
 import apiClient, { ApiError } from "@services/api/apiClient";
 import { AppInfo } from "@src/types";
-import crashlytics from "@react-native-firebase/crashlytics";
 
 export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
   try {
     return await apiClient.getAppInfo();
   } catch (error) {
     if (error instanceof ApiError) {
-      crashlytics().recordError(error);
+      //crashlytics().recordError(error);
       console.error(`API Error ${error.status}:`, error.data);
     } else {
       console.error("Error fetching latest version:", error);

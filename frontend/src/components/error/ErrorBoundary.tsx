@@ -1,6 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { StyleSheet, Image, Linking, View } from "react-native";
-import crashlytics from "@react-native-firebase/crashlytics";
 import { Card, Button, Text } from "react-native-paper";
 
 interface Props {
@@ -23,7 +22,7 @@ class ErrorBoundary extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    crashlytics().recordError(error);
+    // crashlytics().recordError(error);
     console.error("ErrorBoundary caught an error", error, errorInfo);
   }
 
