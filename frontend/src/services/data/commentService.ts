@@ -37,28 +37,6 @@ class CommentService {
       throw error;
     }
   }
-
-  async likeComment(commentId: string, userId: string): Promise<boolean> {
-    try {
-      return await apiClient.likeDeckComment(commentId, userId);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to like comment: ${error.message}`);
-      }
-      throw error;
-    }
-  }
-
-  async unlikeComment(commentId: string, userId: string): Promise<boolean> {
-    try {
-      return await apiClient.unlikeDeckComment(commentId, userId);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to unlike comment: ${error.message}`);
-      }
-      throw error;
-    }
-  }
 }
 
 export default new CommentService();

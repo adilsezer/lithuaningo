@@ -1,33 +1,38 @@
-using Google.Cloud.Firestore;
 using System;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
-[FirestoreData]
-public class Flashcard
+namespace Lithuaningo.API.Models
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [Table("flashcards")]
+    public class Flashcard : BaseModel
+    {
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-    [FirestoreProperty("deckId")]
-    public string DeckId { get; set; } = string.Empty;
+        [Column("deck_id")]
+        public Guid DeckId { get; set; }
 
-    [FirestoreProperty("front")]
-    public string Front { get; set; } = string.Empty;
+        [Column("front_text")]
+        public string FrontText { get; set; } = string.Empty;
 
-    [FirestoreProperty("back")]
-    public string Back { get; set; } = string.Empty;
+        [Column("back_text")]
+        public string BackText { get; set; } = string.Empty;
 
-    [FirestoreProperty("audioUrl")]
-    public string? AudioUrl { get; set; }
+        [Column("review_count")]
+        public int ReviewCount { get; set; }
 
-    [FirestoreProperty("imageUrl")]
-    public string? ImageUrl { get; set; }
+        [Column("last_reviewed_at")]
+        public DateTime? LastReviewedAt { get; set; }
 
-    [FirestoreProperty("exampleSentence")]
-    public string? ExampleSentence { get; set; }
+        [Column("correct_rate")]
+        public double? CorrectRate { get; set; }
 
-    [FirestoreProperty("createdBy")]
-    public string CreatedBy { get; set; } = string.Empty;
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
 
-    [FirestoreProperty("createdAt")]
-    public DateTime CreatedAt { get; set; }
-} 
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+    }
+}

@@ -347,36 +347,6 @@ class ApiClient {
     });
   }
 
-  async likeDeckComment(commentId: string, userId: string) {
-    if (!commentId || !userId) {
-      throw new ApiError(
-        400,
-        { message: "Comment ID and User ID are required" },
-        "Invalid parameters"
-      );
-    }
-
-    return this.request<boolean>(`/comment/${commentId}/like`, {
-      method: "POST",
-      params: { userId },
-    });
-  }
-
-  async unlikeDeckComment(commentId: string, userId: string) {
-    if (!commentId || !userId) {
-      throw new ApiError(
-        400,
-        { message: "Comment ID and User ID are required" },
-        "Invalid parameters"
-      );
-    }
-
-    return this.request<boolean>(`/comment/${commentId}/unlike`, {
-      method: "POST",
-      params: { userId },
-    });
-  }
-
   async startDeckQuiz(deckId: string) {
     return this.request<QuizQuestion[]>(`/deck/${deckId}/quiz/start`);
   }

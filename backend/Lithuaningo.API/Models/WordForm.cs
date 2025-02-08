@@ -1,26 +1,27 @@
-using Google.Cloud.Firestore;
-using System.Collections.Generic;
-
+using System.Text.Json;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 namespace Lithuaningo.API.Models;
 
-[FirestoreData]
-public class WordForm
+[Table("word_forms")]
+public class WordForm : BaseModel
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [PrimaryKey("id")]
+    [Column("id")]
+    public Guid Id { get; set; }
 
-    [FirestoreProperty("word")]
+    [Column("word")]
     public string Word { get; set; } = string.Empty;
 
-    [FirestoreProperty("lemmaId")]
-    public string LemmaId { get; set; } = string.Empty;
+    [Column("lemma_id")]
+    public Guid LemmaId { get; set; }
 
-    [FirestoreProperty("ltAttributes")]
-    public string LtAttributes { get; set; } = string.Empty;
+    [Column("attributes")]
+    public JsonDocument Attributes { get; set; } = JsonDocument.Parse("{}");
 
-    [FirestoreProperty("enAttributes")]
-    public string EnAttributes { get; set; } = string.Empty;
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
 
-    [FirestoreProperty("notes")]
-    public List<string> Notes { get; set; } = new List<string>();
-}
+    [Column("updated_at")]
+    public DateTime UpdatedAt { get; set; }
+} 

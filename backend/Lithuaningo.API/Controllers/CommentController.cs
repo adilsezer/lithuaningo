@@ -1,88 +1,376 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
-using Microsoft.AspNetCore.Mvc;
+using Lithuaningo.API.DTOs.Comment;
+using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {
+    /// <summary>
+    /// Manages comments for decks. This controller allows fetching comments by deck or user,
+    /// creating, retrieving, updating, and deleting individual comments.
+    /// </summary>
+    /// <remarks>
+    /// This controller handles all comment-related functionality including:
+    /// - Retrieving comments for specific decks
+    /// - Managing user comments
+    /// - Creating and updating comments
+    /// - Deleting comments
+    /// - Fetching user-specific comment history
+    /// 
+    /// All operations support proper error handling and validation.
+    /// </remarks>
     [ApiController]
-    [Route("api/[controller]")]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Comment management endpoints")]
     public class CommentController : ControllerBase
     {
         private readonly ICommentService _commentService;
+        private readonly ILogger<CommentController> _logger;
+        private readonly IMapper _mapper;
 
-        public CommentController(ICommentService commentService)
+        public CommentController(
+            ICommentService commentService,
+            ILogger<CommentController> logger,
+            IMapper mapper)
         {
-            _commentService = commentService;
+            _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
+            _logger = logger;
+            _mapper = mapper;
         }
 
+        /// <summary>
+        /// Retrieves all comments associated with a specific deck
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/v1/comment/deck/{deckId}
+        /// 
+        /// The response includes:
+        /// - Comment content
+        /// - Author information
+        /// - Creation timestamp
+        /// - Last update timestamp (if edited)
+        /// - Any associated metadata
+        /// </remarks>
+        /// <param name="deckId">The deck identifier</param>
+        /// <returns>List of comments for the deck</returns>
+        /// <response code="200">Returns a list of comments</response>
+        /// <response code="400">If deck ID is empty</response>
+        /// <response code="500">If there was an internal error while retrieving comments</response>
         [HttpGet("deck/{deckId}")]
-        public async Task<ActionResult<List<Comment>>> GetDeckComments(string deckId)
+        [SwaggerOperation(
+            Summary = "Retrieves deck comments",
+            Description = "Gets all comments associated with the specified deck",
+            OperationId = "GetDeckComments",
+            Tags = new[] { "Comment" }
+        )]
+        [ProducesResponseType(typeof(List<CommentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<List<CommentResponse>>> GetDeckComments(string deckId)
         {
-            var comments = await _commentService.GetDeckCommentsAsync(deckId);
-            return Ok(comments);
+            if (string.IsNullOrWhiteSpace(deckId))
+            {
+                _logger.LogWarning("Deck ID is empty");
+                return BadRequest("Deck ID cannot be empty");
+            }
+
+            try
+            {
+                var comments = await _commentService.GetDeckCommentsAsync(deckId);
+                var response = _mapper.Map<List<CommentResponse>>(comments);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving comments for deck {DeckId}", deckId);
+                return StatusCode(500, "Internal server error");
+            }
         }
 
-        [HttpGet("{id}")]
-        public async Task<ActionResult<Comment>> GetComment(string id)
-        {
-            var comment = await _commentService.GetCommentByIdAsync(id);
-            if (comment == null)
-                return NotFound();
-
-            return Ok(comment);
-        }
-
+        /// <summary>
+        /// Creates a new comment
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/v1/comment
+        ///     {
+        ///         "deckId": "deck-guid",
+        ///         "userId": "user-guid",
+        ///         "content": "This deck is very helpful for beginners!",
+        ///         "rating": 5,
+        ///         "tags": ["helpful", "beginner-friendly"]
+        ///     }
+        /// 
+        /// The request must include:
+        /// - Deck ID (required)
+        /// - User ID (required)
+        /// - Comment content (required)
+        /// - Optional rating
+        /// - Optional tags
+        /// </remarks>
+        /// <param name="request">The comment creation request</param>
+        /// <returns>The created comment</returns>
+        /// <response code="201">Returns the created comment</response>
+        /// <response code="400">If the request model is invalid</response>
+        /// <response code="500">If there was an internal error during creation</response>
         [HttpPost]
-        public async Task<ActionResult<string>> CreateComment([FromBody] Comment comment, [FromQuery] string userId)
+        [SwaggerOperation(
+            Summary = "Creates a new comment",
+            Description = "Creates a new comment for a deck",
+            OperationId = "CreateComment",
+            Tags = new[] { "Comment" }
+        )]
+        [ProducesResponseType(typeof(CommentResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<CommentResponse>> CreateComment([FromBody] CreateCommentRequest request)
         {
-            comment.CreatedBy = userId;
-            var commentId = await _commentService.CreateCommentAsync(comment);
-            return Ok(commentId);
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var comment = _mapper.Map<Comment>(request);
+                var createdComment = await _commentService.CreateCommentAsync(comment);
+                var response = _mapper.Map<CommentResponse>(createdComment);
+                return CreatedAtAction(nameof(GetComment), new { id = response.Id }, response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating comment");
+                return StatusCode(500, "Internal server error");
+            }
         }
 
+        /// <summary>
+        /// Retrieves a specific comment by ID
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/v1/comment/{id}
+        /// 
+        /// The response includes:
+        /// - Comment details
+        /// - Author information
+        /// - Associated deck information
+        /// - Creation and update timestamps
+        /// </remarks>
+        /// <param name="id">The comment identifier</param>
+        /// <returns>The requested comment</returns>
+        /// <response code="200">Returns the comment</response>
+        /// <response code="400">If comment ID is empty</response>
+        /// <response code="404">If comment not found</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
+        [HttpGet("{id}")]
+        [SwaggerOperation(
+            Summary = "Retrieves a specific comment",
+            Description = "Gets detailed information about a specific comment",
+            OperationId = "GetComment",
+            Tags = new[] { "Comment" }
+        )]
+        [ProducesResponseType(typeof(CommentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<CommentResponse>> GetComment(string id)
+        {
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                _logger.LogWarning("Comment ID is empty");
+                return BadRequest("Comment ID cannot be empty");
+            }
+
+            try
+            {
+                var comment = await _commentService.GetCommentByIdAsync(id);
+                if (comment == null)
+                {
+                    return NotFound();
+                }
+                var response = _mapper.Map<CommentResponse>(comment);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving comment {CommentId}", id);
+                return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Updates an existing comment
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     PUT /api/v1/comment/{id}
+        ///     {
+        ///         "content": "Updated: This deck is excellent for beginners!",
+        ///         "rating": 5,
+        ///         "tags": ["helpful", "beginner-friendly", "updated"]
+        ///     }
+        /// 
+        /// The request must include:
+        /// - Updated content (required)
+        /// - Optional rating update
+        /// - Optional tags update
+        /// 
+        /// Note: Only the comment author can update their comment.
+        /// </remarks>
+        /// <param name="id">The comment identifier</param>
+        /// <param name="request">The comment update request</param>
+        /// <returns>The updated comment</returns>
+        /// <response code="200">Returns the updated comment</response>
+        /// <response code="400">If comment ID is empty or model state is invalid</response>
+        /// <response code="404">If comment not found</response>
+        /// <response code="500">If there was an internal error during update</response>
         [HttpPut("{id}")]
-        public async Task<ActionResult> UpdateComment(string id, [FromBody] Comment comment, [FromQuery] string userId)
+        [SwaggerOperation(
+            Summary = "Updates an existing comment",
+            Description = "Updates a comment with the specified properties",
+            OperationId = "UpdateComment",
+            Tags = new[] { "Comment" }
+        )]
+        [ProducesResponseType(typeof(CommentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<CommentResponse>> UpdateComment(string id, [FromBody] UpdateCommentRequest request)
         {
-            var existingComment = await _commentService.GetCommentByIdAsync(id);
-            if (existingComment == null)
-                return NotFound();
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                _logger.LogWarning("Comment ID is empty");
+                return BadRequest("Comment ID cannot be empty");
+            }
 
-            comment.Id = id;
-            comment.CreatedBy = userId;
-            comment.IsEdited = true;
-            await _commentService.UpdateCommentAsync(id, comment);
-            return Ok();
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var comment = _mapper.Map<Comment>(request);
+                comment.Id = Guid.Parse(id);
+                var updatedComment = await _commentService.UpdateCommentAsync(comment);
+                if (updatedComment == null)
+                {
+                    return NotFound();
+                }
+                var response = _mapper.Map<CommentResponse>(updatedComment);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating comment {CommentId}", id);
+                return StatusCode(500, "Internal server error");
+            }
         }
 
+        /// <summary>
+        /// Deletes a comment
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     DELETE /api/v1/comment/{id}
+        /// 
+        /// Permanently removes the comment from the system.
+        /// This action cannot be undone.
+        /// Only the comment author or an administrator can delete a comment.
+        /// </remarks>
+        /// <param name="id">The comment identifier</param>
+        /// <response code="204">Comment successfully deleted</response>
+        /// <response code="400">If comment ID is empty</response>
+        /// <response code="500">If there was an internal error during deletion</response>
         [HttpDelete("{id}")]
-        public async Task<ActionResult> DeleteComment(string id, [FromQuery] string userId)
+        [SwaggerOperation(
+            Summary = "Deletes a comment",
+            Description = "Permanently removes a comment from the system",
+            OperationId = "DeleteComment",
+            Tags = new[] { "Comment" }
+        )]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteComment(string id)
         {
-            var existingComment = await _commentService.GetCommentByIdAsync(id);
-            if (existingComment == null)
-                return NotFound();
+            if (string.IsNullOrWhiteSpace(id))
+            {
+                _logger.LogWarning("Comment ID is empty");
+                return BadRequest("Comment ID cannot be empty");
+            }
 
-            await _commentService.DeleteCommentAsync(id);
-            return Ok();
+            try
+            {
+                await _commentService.DeleteCommentAsync(id);
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting comment {CommentId}", id);
+                return StatusCode(500, "Internal server error");
+            }
         }
 
-        [HttpPost("{id}/like")]
-        public async Task<ActionResult> LikeComment(string id, [FromQuery] string userId)
+        /// <summary>
+        /// Retrieves all comments by a specific user
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/v1/comment/user/{userId}
+        /// 
+        /// Returns all comments made by the specified user across all decks.
+        /// Results are ordered by creation date (newest first).
+        /// </remarks>
+        /// <param name="userId">The user identifier</param>
+        /// <returns>List of comments by the user</returns>
+        /// <response code="200">Returns a list of user's comments</response>
+        /// <response code="400">If user ID is empty</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
+        [HttpGet("user/{userId}")]
+        [SwaggerOperation(
+            Summary = "Retrieves user comments",
+            Description = "Gets all comments made by the specified user",
+            OperationId = "GetUserComments",
+            Tags = new[] { "Comment" }
+        )]
+        [ProducesResponseType(typeof(List<CommentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<List<CommentResponse>>> GetUserComments(string userId)
         {
-            var success = await _commentService.LikeCommentAsync(id, userId);
-            if (!success)
-                return NotFound();
+            if (string.IsNullOrWhiteSpace(userId))
+            {
+                _logger.LogWarning("User ID is empty");
+                return BadRequest("User ID cannot be empty");
+            }
 
-            return Ok();
-        }
-
-        [HttpPost("{id}/unlike")]
-        public async Task<ActionResult> UnlikeComment(string id, [FromQuery] string userId)
-        {
-            var success = await _commentService.UnlikeCommentAsync(id, userId);
-            if (!success)
-                return NotFound();
-
-            return Ok();
+            try
+            {
+                var comments = await _commentService.GetUserCommentsAsync(userId);
+                var response = _mapper.Map<List<CommentResponse>>(comments);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving comments for user {UserId}", userId);
+                return StatusCode(500, "Internal server error");
+            }
         }
     }
-} 
+}

@@ -1,23 +1,29 @@
-using Google.Cloud.Firestore;
 using System;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
-namespace Lithuaningo.API.Models;
-
-[FirestoreData]
-public class DeckVote
+namespace Lithuaningo.API.Models
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [Table("deck_votes")]
+    public class DeckVote : BaseModel
+    {
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-    [FirestoreProperty("userId")]
-    public string UserId { get; set; } = string.Empty;
+        [Column("deck_id")]
+        public Guid DeckId { get; set; }
 
-    [FirestoreProperty("deckId")]
-    public string DeckId { get; set; } = string.Empty;
+        [Column("user_id")]
+        public Guid UserId { get; set; }
 
-    [FirestoreProperty("isUpvote")]
-    public bool IsUpvote { get; set; }
+        [Column("is_upvote")]
+        public bool IsUpvote { get; set; }
 
-    [FirestoreProperty("createdAt")]
-    public DateTime CreatedAt { get; set; }
-} 
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+    }
+}

@@ -1,11 +1,23 @@
-namespace Services.Quiz.Interfaces;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using Lithuaningo.API.Models.Quiz;
 
-public interface IQuizService
+namespace Lithuaningo.API.Services.Interfaces
 {
     /// <summary>
-    /// Generates a quiz with mixed question types based on user's learned sentences
+    /// Provides functionality for generating and retrieving daily quiz questions.
     /// </summary>
-    /// <param name="userId">The user to generate the quiz for</param>
-    /// <returns>A list of quiz questions</returns>
-    Task<List<QuizQuestion>> GenerateQuizAsync(string userId);
+    public interface IQuizService
+    {
+        /// <summary>
+        /// Retrieves the quiz questions for the current day. If none exist, they are automatically created.
+        /// </summary>
+        /// <returns>A list of quiz questions.</returns>
+        Task<IEnumerable<QuizQuestion>> GetDailyQuizQuestionsAsync();
+
+        /// <summary>
+        /// Generates new quiz questions for the day using the ChatGPT 4o mini API and stores them in Supabase.
+        /// </summary>
+        Task CreateDailyQuizQuestionsAsync(IEnumerable<QuizQuestion> questions);
+    }
 }

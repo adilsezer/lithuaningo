@@ -1,0 +1,57 @@
+using AutoMapper;
+using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.Comment;
+using Lithuaningo.API.DTOs.DeckReport;
+using Lithuaningo.API.Services.Interfaces;
+
+namespace Lithuaningo.API.Mappings.Resolvers
+{
+    public class CommentUserNameResolver : IValueResolver<Comment, CommentResponse, string>
+    {
+        private readonly IUserProfileService _userProfileService;
+        
+        public CommentUserNameResolver(IUserProfileService userProfileService)
+        {
+            _userProfileService = userProfileService;
+        }
+        
+        public string Resolve(Comment source, CommentResponse destination, string destMember, ResolutionContext context)
+        {
+            var profile = _userProfileService.GetUserProfileAsync(source.UserId.ToString()).Result;
+            return profile?.FullName ?? "Unknown User";
+        }
+    }
+
+    public class ReportedByUserNameResolver : IValueResolver<DeckReport, DeckReportResponse, string>
+    {
+        private readonly IUserProfileService _userProfileService;
+        
+        public ReportedByUserNameResolver(IUserProfileService userProfileService)
+        {
+            _userProfileService = userProfileService;
+        }
+        
+        public string Resolve(DeckReport source, DeckReportResponse destination, string destMember, ResolutionContext context)
+        {
+            var profile = _userProfileService.GetUserProfileAsync(source.ReportedBy.ToString()).Result;
+            return profile?.FullName ?? "Unknown User";
+        }
+    }
+
+    public class ReviewedByUserNameResolver : IValueResolver<DeckReport, DeckReportResponse, string?>
+    {
+        private readonly IUserProfileService _userProfileService;
+        
+        public ReviewedByUserNameResolver(IUserProfileService userProfileService)
+        {
+            _userProfileService = userProfileService;
+        }
+        
+        public string? Resolve(DeckReport source, DeckReportResponse destination, string? destMember, ResolutionContext context)
+        {
+            if (!source.ReviewedBy.HasValue) return null;
+            var profile = _userProfileService.GetUserProfileAsync(source.ReviewedBy.Value.ToString()).Result;
+            return profile?.FullName;
+        }
+    }
+} 

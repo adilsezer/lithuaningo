@@ -1,38 +1,28 @@
-using Google.Cloud.Firestore;
-using System.Collections.Generic;
+using System.Text.Json;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
 namespace Lithuaningo.API.Models;
 
-[FirestoreData]
-public class Lemma
+[Table("lemmas")]
+public class Lemma : BaseModel
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [PrimaryKey("id")]
+    [Column("id")]
+    public Guid Id { get; set; }
 
-    [FirestoreProperty("lemma")]
-    public string LemmaText { get; set; } = string.Empty;
+    [Column("word")]
+    public string Word { get; set; } = string.Empty;
 
-    [FirestoreProperty("partOfSpeech")]
+    [Column("part_of_speech")]
     public string PartOfSpeech { get; set; } = string.Empty;
 
-    [FirestoreProperty("translation")]
-    public string Translation { get; set; } = string.Empty;
+    [Column("definitions")]
+    public JsonDocument Definitions { get; set; } = JsonDocument.Parse("{}");
 
-    [FirestoreProperty("definitions")]
-    public List<string> Definitions { get; set; } = new List<string>();
+    [Column("examples")]
+    public JsonDocument? Examples { get; set; }
 
-    [FirestoreProperty("ipa")]
-    public string Ipa { get; set; } = string.Empty;
-
-    [FirestoreProperty("examples")]
-    public List<string> Examples { get; set; } = new List<string>();
-
-    [FirestoreProperty("imageUrl")]
-    public string ImageUrl { get; set; } = string.Empty;
-
-    [FirestoreProperty("audioUrl")]
-    public string AudioUrl { get; set; } = string.Empty;
-
-    [FirestoreProperty("notes")]
-    public List<string> Notes { get; set; } = new List<string>();
-}
+    [Column("created_at")]
+    public DateTime CreatedAt { get; set; }
+} 

@@ -1,22 +1,45 @@
-using Google.Cloud.Firestore;
+using System;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
-namespace Lithuaningo.API.Models;
-
-[FirestoreData]
-public class AppInfo
+namespace Lithuaningo.API.Models
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [Table("app_info")]
+    public class AppInfo : BaseModel
+    {
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-    [FirestoreProperty("latestVersion")]
-    public string LatestVersion { get; set; } = string.Empty;
+        [Column("platform")]
+        public string Platform { get; set; } = string.Empty;
 
-    [FirestoreProperty("mandatoryUpdate")]
-    public bool MandatoryUpdate { get; set; }
+        [Column("latest_version")]
+        public string LatestVersion { get; set; } = string.Empty;
 
-    [FirestoreProperty("updateUrl")]
-    public string UpdateUrl { get; set; } = string.Empty;
+        [Column("minimum_version")]
+        public string MinimumVersion { get; set; } = string.Empty;
 
-    [FirestoreProperty("isUnderMaintenance")]
-    public bool IsUnderMaintenance { get; set; }
+        [Column("is_maintenance")]
+        public bool IsMaintenance { get; set; }
+
+        [Column("maintenance_message")]
+        public string? MaintenanceMessage { get; set; }
+
+        // Additional properties for future app needs
+        [Column("force_update")]
+        public bool ForceUpdate { get; set; } = false;
+
+        [Column("update_url")]
+        public string? UpdateUrl { get; set; }
+
+        [Column("release_notes")]
+        public string? ReleaseNotes { get; set; }
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+    }
 }

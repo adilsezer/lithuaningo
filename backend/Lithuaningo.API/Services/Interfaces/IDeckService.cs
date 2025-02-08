@@ -19,4 +19,4 @@ namespace Lithuaningo.API.Services.Interfaces
         Task ReportDeckAsync(string id, string userId, string reason);
         Task<double> GetDeckRatingAsync(string deckId, string timeRange = "all");
     }
-} 
+}

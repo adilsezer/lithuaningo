@@ -1,16 +1,32 @@
-using Google.Cloud.Firestore;
+using System;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
-namespace Lithuaningo.API.Models;
-
-[FirestoreData]
-public class Announcement
+namespace Lithuaningo.API.Models
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [Table("announcements")]
+    public class Announcement : BaseModel
+    {
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-    [FirestoreProperty("title")]
-    public string Title { get; set; } = string.Empty;
+        [Column("title")]
+        public string Title { get; set; } = string.Empty;
 
-    [FirestoreProperty("content")]
-    public string Content { get; set; } = string.Empty;
+        [Column("content")]
+        public string Content { get; set; } = string.Empty;
+
+        [Column("is_active")]
+        public bool IsActive { get; set; }
+
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+
+        [Column("valid_until")]
+        public DateTime? ValidUntil { get; set; }
+    }
 }

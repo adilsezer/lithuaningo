@@ -6,6 +6,5 @@ export interface Comment {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
-  likes: number;
   isEdited: boolean;
 }

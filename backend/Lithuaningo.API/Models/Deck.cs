@@ -1,36 +1,42 @@
-using Google.Cloud.Firestore;
 using System;
-using System.Collections.Generic;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
-namespace Lithuaningo.API.Models;
-
-[FirestoreData]
-public class Deck
+namespace Lithuaningo.API.Models
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [Table("decks")]
+    public class Deck : BaseModel
+    {
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-    [FirestoreProperty("title")]
-    public string Title { get; set; } = string.Empty;
+        [Column("title")]
+        public string Title { get; set; } = string.Empty;
 
-    [FirestoreProperty("description")]
-    public string Description { get; set; } = string.Empty;
+        [Column("description")]
+        public string Description { get; set; } = string.Empty;
 
-    [FirestoreProperty("category")]
-    public string Category { get; set; } = string.Empty;
+        [Column("category")]
+        public string Category { get; set; } = string.Empty;
 
-    [FirestoreProperty("createdBy")]
-    public string CreatedBy { get; set; } = string.Empty;
+        [Column("tags")]
+        public string[] Tags { get; set; } = Array.Empty<string>();
 
-    [FirestoreProperty("createdByUsername")]
-    public string CreatedByUsername { get; set; } = string.Empty;
+        [Column("created_by")]
+        public Guid CreatedBy { get; set; }
 
-    [FirestoreProperty("createdAt")]
-    public DateTime CreatedAt { get; set; }
+        [Column("image_url")]
+        public string? ImageUrl { get; set; }
 
-    [FirestoreProperty("tags")]
-    public List<string> Tags { get; set; } = new();
+        [Column("is_public")]
+        public bool IsPublic { get; set; }
+        
 
-    [FirestoreProperty("flashcardCount")]
-    public int FlashcardCount { get; set; }
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
+
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+    }
 }

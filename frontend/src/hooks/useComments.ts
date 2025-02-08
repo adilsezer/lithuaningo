@@ -57,7 +57,6 @@ export const useComments = (deckId: string) => {
         createdBy: username,
         createdAt: new Date(),
         updatedAt: new Date(),
-        likes: 0,
         isEdited: false,
       };
 
@@ -139,106 +138,6 @@ export const useComments = (deckId: string) => {
     [comments, handleError, clearError]
   );
 
-  const likeComment = useCallback(
-    async (commentId: string, userId: string) => {
-      if (!userId) {
-        showError("Please login to like comments");
-        return false;
-      }
-
-      try {
-        setIsSubmitting(true);
-        clearError();
-
-        // Optimistic update
-        setComments((prev) =>
-          prev.map((comment) =>
-            comment.id === commentId
-              ? { ...comment, likes: comment.likes + 1 }
-              : comment
-          )
-        );
-
-        const success = await commentService.likeComment(commentId, userId);
-        if (!success) {
-          // Rollback if server returns false
-          setComments((prev) =>
-            prev.map((comment) =>
-              comment.id === commentId
-                ? { ...comment, likes: comment.likes - 1 }
-                : comment
-            )
-          );
-        }
-        return success;
-      } catch (err) {
-        // Rollback on error
-        setComments((prev) =>
-          prev.map((comment) =>
-            comment.id === commentId
-              ? { ...comment, likes: comment.likes - 1 }
-              : comment
-          )
-        );
-        handleError(err, "Failed to like comment");
-        return false;
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [handleError, clearError]
-  );
-
-  const unlikeComment = useCallback(
-    async (commentId: string, userId: string) => {
-      if (!userId) {
-        showError("Please login to unlike comments");
-        return false;
-      }
-
-      try {
-        setIsSubmitting(true);
-        clearError();
-
-        // Optimistic update
-        setComments((prev) =>
-          prev.map((comment) =>
-            comment.id === commentId
-              ? { ...comment, likes: comment.likes - 1 }
-              : comment
-          )
-        );
-
-        const success = await commentService.unlikeComment(commentId, userId);
-        if (!success) {
-          // Rollback if server returns false
-          setComments((prev) =>
-            prev.map((comment) =>
-              comment.id === commentId
-                ? { ...comment, likes: comment.likes + 1 }
-                : comment
-            )
-          );
-        }
-        return success;
-      } catch (err) {
-        // Rollback on error
-        setComments((prev) =>
-          prev.map((comment) =>
-            comment.id === commentId
-              ? { ...comment, likes: comment.likes + 1 }
-              : comment
-          )
-        );
-        handleError(err, "Failed to unlike comment");
-        return false;
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [handleError, clearError]
-  );
-
   return {
     // State
     comments,
@@ -252,7 +151,5 @@ export const useComments = (deckId: string) => {
     fetchComments,
     addComment,
     deleteComment,
-    likeComment,
-    unlikeComment,
   };
 };

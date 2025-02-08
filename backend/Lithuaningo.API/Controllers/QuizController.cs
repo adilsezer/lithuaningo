@@ -1,41 +1,159 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Services.Quiz.Interfaces;
+using Microsoft.Extensions.Logging;
+using Lithuaningo.API.Models.Quiz;
+using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.DTOs.Quiz;
+using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
 
-[ApiController]
-[Route("api/[controller]")]
-public class QuizController : ControllerBase
+namespace Lithuaningo.API.Controllers
 {
-    private readonly IQuizService _quizService;
-
-    public QuizController(IQuizService quizService)
-    {
-        _quizService = quizService ?? throw new ArgumentNullException(nameof(quizService));
-    }
-
     /// <summary>
-    /// Generates a new quiz based on the user's learned words.
+    /// Manages quiz-related operations in the Lithuaningo application
     /// </summary>
-    /// <param name="userId">The ID of the user.</param>
-    /// <returns>A set of quiz questions.</returns>
-    [HttpGet("generate")]
-    [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(IEnumerable<QuizQuestion>))]
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<QuizQuestion>>> GenerateQuiz([FromQuery] string userId)
+    /// <remarks>
+    /// This controller handles all quiz-related functionality including:
+    /// - Retrieving daily quiz questions
+    /// - Creating new quiz questions
+    /// - Managing quiz responses and scoring
+    /// 
+    /// All dates are handled in UTC timezone.
+    /// </remarks>
+    [ApiController]
+    [ApiVersion("1.0")]
+    [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Quiz management endpoints")]
+    public class QuizController : ControllerBase
     {
-        if (string.IsNullOrEmpty(userId))
-            return BadRequest("UserId is required.");
+        private readonly IQuizService _quizService;
+        private readonly ILogger<QuizController> _logger;
+        private readonly IMapper _mapper;
 
-        try
+        public QuizController(
+            IQuizService quizService,
+            ILogger<QuizController> logger,
+            IMapper mapper)
         {
-            var quizData = await _quizService.GenerateQuizAsync(userId);
-            return Ok(quizData);
+            _quizService = quizService ?? throw new ArgumentNullException(nameof(quizService));
+            _logger = logger;
+            _mapper = mapper;
         }
-        catch (Exception ex)
+
+        /// <summary>
+        /// Retrieves the daily quiz questions for the current date
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     GET /api/v1/quiz/daily
+        /// 
+        /// The response includes:
+        /// - Question text in both Lithuanian and English
+        /// - Multiple choice options
+        /// - Correct answer indicator
+        /// - Question difficulty level
+        /// 
+        /// Questions are automatically generated if none exist for the current date.
+        /// </remarks>
+        /// <returns>A collection of quiz questions for the current day</returns>
+        /// <response code="200">Returns the list of daily quiz questions</response>
+        /// <response code="500">If there was an internal error while retrieving the questions</response>
+        [HttpGet("daily")]
+        [SwaggerOperation(
+            Summary = "Get daily quiz questions",
+            Description = "Retrieves or generates the quiz questions for the current date",
+            OperationId = "GetDailyQuiz",
+            Tags = new[] { "Quiz" }
+        )]
+        [ProducesResponseType(typeof(IEnumerable<QuizQuestionResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<IEnumerable<QuizQuestionResponse>>> GetDailyQuiz()
         {
-            // Log the exception (implementation depends on your logging setup)
-            Console.Error.WriteLine(ex.Message);
-            return StatusCode(500, "An error occurred while generating the quiz.");
+            try
+            {
+                var questions = await _quizService.GetDailyQuizQuestionsAsync();
+                var response = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving daily quiz questions.");
+                return StatusCode(500, "An error occurred while retrieving the daily quiz questions.");
+            }
+        }
+
+        /// <summary>
+        /// Creates new daily quiz questions for the current date
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/v1/quiz/daily
+        ///     [
+        ///       {
+        ///         "questionText": "Kaip sekasi?",
+        ///         "englishTranslation": "How are you?",
+        ///         "options": ["Gerai", "Blogai", "Normaliai", "Puikiai"],
+        ///         "correctAnswerIndex": 0,
+        ///         "difficulty": "Beginner"
+        ///       }
+        ///     ]
+        /// 
+        /// Notes:
+        /// - Questions are set for the current UTC date
+        /// - Existing questions for the date will be replaced
+        /// - All questions are set as multiple choice type
+        /// </remarks>
+        /// <param name="requests">The list of quiz questions to create</param>
+        /// <returns>The created quiz questions with their assigned IDs</returns>
+        /// <response code="200">Returns the created quiz questions</response>
+        /// <response code="400">If the request model is invalid</response>
+        /// <response code="501">If the quiz creation feature is not implemented</response>
+        /// <response code="500">If there was an internal error while creating the questions</response>
+        [HttpPost("daily")]
+        [SwaggerOperation(
+            Summary = "Create daily quiz questions",
+            Description = "Creates new quiz questions for the current date",
+            OperationId = "CreateDailyQuiz",
+            Tags = new[] { "Quiz" }
+        )]
+        [ProducesResponseType(typeof(IEnumerable<QuizQuestionResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status501NotImplemented)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<IEnumerable<QuizQuestionResponse>>> CreateDailyQuiz([FromBody] List<CreateQuizQuestionRequest> requests)
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            try
+            {
+                var questions = _mapper.Map<List<QuizQuestion>>(requests);
+                foreach (var question in questions)
+                {
+                    question.QuizDate = DateTime.UtcNow.Date;
+                    question.Type = "multiple_choice";
+                }
+
+                await _quizService.CreateDailyQuizQuestionsAsync(questions);
+                var response = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
+                return Ok(response);
+            }
+            catch (NotImplementedException nie)
+            {
+                _logger.LogWarning(nie, "Quiz creation not implemented.");
+                return StatusCode(501, "Quiz creation functionality is not implemented yet.");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating daily quiz questions.");
+                return StatusCode(500, "An error occurred while creating the daily quiz questions.");
+            }
         }
     }
 }

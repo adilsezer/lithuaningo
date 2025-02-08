@@ -1,6 +1,5 @@
-using Lithuaningo.API.Models;
-using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
@@ -10,4 +9,4 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<LeaderboardWeek> GetWeekLeaderboardAsync(string weekId);
         Task UpdateLeaderboardEntryAsync(string userId, string name, int score);
     }
-} 
+}

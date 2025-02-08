@@ -1,23 +1,32 @@
-using Google.Cloud.Firestore;
+using System;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
-[FirestoreData]
-public class UserProfile
+namespace Lithuaningo.API.Models
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [Table("user_profiles")]
+    public class UserProfile : BaseModel
+    {
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-    [FirestoreProperty("name")]
-    public string Name { get; set; } = string.Empty;
+        [Column("email")]
+        public string Email { get; set; } = string.Empty;
 
-    [FirestoreProperty("email")]
-    public string Email { get; set; } = string.Empty;
+        [Column("full_name")]
+        public string FullName { get; set; } = string.Empty;
 
-    [FirestoreProperty("emailVerified")]
-    public bool EmailVerified { get; set; } = false;
+        [Column("avatar_url")]
+        public string? AvatarUrl { get; set; }
 
-    [FirestoreProperty("isAdmin")]
-    public bool IsAdmin { get; set; } = false;
+        [Column("created_at")]
+        public DateTime CreatedAt { get; set; }
 
-    [FirestoreProperty("hasPurchasedExtraContent")]
-    public bool HasPurchasedExtraContent { get; set; } = false;
+        [Column("updated_at")]
+        public DateTime UpdatedAt { get; set; }
+
+        [Column("last_login_at")]
+        public DateTime LastLoginAt { get; set; }
+    }
 }

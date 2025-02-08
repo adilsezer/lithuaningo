@@ -1,36 +1,35 @@
-using Google.Cloud.Firestore;
 using System;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
 namespace Lithuaningo.API.Models
 {
-    [FirestoreData]
-    public class Comment
+    [Table("comments")]
+    public class Comment : BaseModel
     {
-        [FirestoreDocumentId]
-        public string Id { get; set; } = string.Empty;
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-        [FirestoreProperty("deckId")]
-        public string DeckId { get; set; } = string.Empty;
+        [Column("deck_id")]
+        public Guid DeckId { get; set; }
 
-        [FirestoreProperty("userId")]
-        public string UserId { get; set; } = string.Empty;
+        [Column("user_id")]
+        public Guid UserId { get; set; }
 
-        [FirestoreProperty("content")]
+        [Column("content")]
         public string Content { get; set; } = string.Empty;
 
-        [FirestoreProperty("createdBy")]
-        public string CreatedBy { get; set; } = string.Empty;
+        [Column("is_edited")]
+        public bool IsEdited { get; set; }
 
-        [FirestoreProperty("createdAt")]
+        [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
-        [FirestoreProperty("updatedAt")]
+        [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
-        [FirestoreProperty("likes")]
-        public int Likes { get; set; }
-
-        [FirestoreProperty("isEdited")]
-        public bool IsEdited { get; set; }
+        [Column("edited_at")]
+        public DateTime? EditedAt { get; set; }
     }
-} 
+}

@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
@@ -15,4 +16,4 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<List<Flashcard>> GetRandomFlashcardsAsync(int limit = 10);
         Task<List<Flashcard>> SearchFlashcardsAsync(string query);
     }
-} 
+}
