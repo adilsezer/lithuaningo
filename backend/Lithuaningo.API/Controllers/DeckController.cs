@@ -7,15 +7,28 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Deck;
 using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
-    /// Controller for managing decks
+    /// Manages deck operations including creation, retrieval, update, and deletion of flashcard decks.
+    /// Also handles deck-related operations such as ratings, reports, and user-specific deck management.
     /// </summary>
+    /// <remarks>
+    /// This controller handles all deck-related functionality including:
+    /// - Managing public and private decks
+    /// - User-specific deck operations
+    /// - Deck rating and reporting system
+    /// - Deck search and filtering
+    /// - Associated flashcard management
+    /// 
+    /// All operations support proper error handling and validation.
+    /// </remarks>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Deck management endpoints")]
     public class DeckController : ControllerBase
     {
         private readonly IDeckService _deckService;
@@ -28,17 +41,35 @@ namespace Lithuaningo.API.Controllers
             IMapper mapper)
         {
             _deckService = deckService ?? throw new ArgumentNullException(nameof(deckService));
-            _logger = logger;
-            _mapper = mapper;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
-        /// Gets all public decks
+        /// Retrieves all public decks.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Deck
+        /// 
+        /// Returns a list of all public decks, including:
+        /// - Basic deck information
+        /// - Creator details
+        /// - Rating statistics
+        /// - Flashcard count
+        /// </remarks>
         /// <returns>List of public decks</returns>
+        /// <response code="200">Returns the list of public decks</response>
+        /// <response code="500">If there was an internal error while retrieving decks</response>
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves all public decks",
+            Description = "Gets a list of all publicly available decks",
+            OperationId = "GetPublicDecks",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(List<DeckResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<DeckResponse>>> GetPublicDecks()
         {
             try
@@ -55,15 +86,35 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets a specific deck by ID
+        /// Retrieves a specific deck by its ID.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Deck/{id}
+        /// 
+        /// The response includes:
+        /// - Complete deck information
+        /// - Associated flashcards
+        /// - Rating information
+        /// - Creator details
+        /// </remarks>
         /// <param name="id">The deck identifier</param>
         /// <returns>The requested deck</returns>
+        /// <response code="200">Returns the requested deck</response>
+        /// <response code="400">If deck ID is empty</response>
+        /// <response code="404">If deck not found</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Retrieves a specific deck",
+            Description = "Gets detailed information about a specific deck",
+            OperationId = "GetDeck",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(DeckResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<DeckResponse>> GetDeck(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -90,14 +141,34 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new deck
+        /// Creates a new deck.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/Deck
+        ///     {
+        ///         "title": "Lithuanian Basics",
+        ///         "description": "Essential phrases for beginners",
+        ///         "isPublic": true,
+        ///         "category": "Beginner",
+        ///         "tags": ["basics", "phrases", "beginner"]
+        ///     }
+        /// </remarks>
         /// <param name="request">The deck creation request</param>
         /// <returns>The created deck</returns>
+        /// <response code="201">Returns the newly created deck</response>
+        /// <response code="400">If the request model is invalid</response>
+        /// <response code="500">If there was an internal error during creation</response>
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Creates a new deck",
+            Description = "Creates a new flashcard deck with the specified properties",
+            OperationId = "CreateDeck",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(DeckResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<DeckResponse>> CreateDeck([FromBody] CreateDeckRequest request)
         {
             if (!ModelState.IsValid)
@@ -121,16 +192,37 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates an existing deck
+        /// Updates an existing deck.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     PUT /api/v1/Deck/{id}
+        ///     {
+        ///         "title": "Updated Lithuanian Basics",
+        ///         "description": "Updated essential phrases for beginners",
+        ///         "isPublic": true,
+        ///         "category": "Beginner",
+        ///         "tags": ["basics", "phrases", "beginner", "updated"]
+        ///     }
+        /// </remarks>
         /// <param name="id">The deck identifier</param>
         /// <param name="request">The deck update request</param>
         /// <returns>The updated deck</returns>
+        /// <response code="200">Returns the updated deck</response>
+        /// <response code="400">If deck ID is empty or model state is invalid</response>
+        /// <response code="404">If deck not found</response>
+        /// <response code="500">If there was an internal error during update</response>
         [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Updates an existing deck",
+            Description = "Updates a deck with the specified properties",
+            OperationId = "UpdateDeck",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(DeckResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<DeckResponse>> UpdateDeck(string id, [FromBody] UpdateDeckRequest request)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -165,13 +257,32 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Deletes a deck
+        /// Deletes a deck.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     DELETE /api/v1/Deck/{id}
+        /// 
+        /// This operation:
+        /// - Permanently removes the deck
+        /// - Deletes all associated flashcards
+        /// - Removes all ratings and comments
+        /// - Cannot be undone
+        /// </remarks>
         /// <param name="id">The deck identifier</param>
+        /// <response code="204">Deck successfully deleted</response>
+        /// <response code="400">If deck ID is empty</response>
+        /// <response code="500">If there was an internal error during deletion</response>
         [HttpDelete("{id}")]
+        [SwaggerOperation(
+            Summary = "Deletes a deck",
+            Description = "Permanently removes a deck and all associated data",
+            OperationId = "DeleteDeck",
+            Tags = new[] { "Deck" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteDeck(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -193,14 +304,33 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets all decks for a specific user
+        /// Retrieves all decks for a specific user.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Deck/user/{userId}
+        /// 
+        /// Returns all decks (both public and private) owned by the specified user.
+        /// Results include:
+        /// - Deck details
+        /// - Creation and update timestamps
+        /// - Associated statistics
+        /// </remarks>
         /// <param name="userId">The user identifier</param>
         /// <returns>List of decks owned by the user</returns>
+        /// <response code="200">Returns the list of user's decks</response>
+        /// <response code="400">If user ID is empty</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("user/{userId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves user decks",
+            Description = "Gets all decks owned by the specified user",
+            OperationId = "GetUserDecks",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(List<DeckResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<DeckResponse>>> GetUserDecks(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
@@ -223,15 +353,34 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets top rated decks
+        /// Retrieves top rated decks.
         /// </summary>
-        /// <param name="limit">Maximum number of decks to return</param>
-        /// <param name="timeRange">Time range for ratings (e.g., "week", "month", "all")</param>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Deck/top-rated?limit=10&amp;timeRange=month
+        /// 
+        /// Time range options:
+        /// - "week": Last 7 days
+        /// - "month": Last 30 days
+        /// - "year": Last 365 days
+        /// - "all": All time
+        /// </remarks>
+        /// <param name="limit">Maximum number of decks to return (range: 1-100)</param>
+        /// <param name="timeRange">Time range for ratings calculation</param>
         /// <returns>List of top rated decks</returns>
+        /// <response code="200">Returns the list of top rated decks</response>
+        /// <response code="400">If limit is out of range</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("top-rated")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves top rated decks",
+            Description = "Gets the highest rated decks within the specified time range",
+            OperationId = "GetTopRatedDecks",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(List<DeckResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<DeckResponse>>> GetTopRatedDecks(
             [FromQuery] int limit = 10,
             [FromQuery] string timeRange = "all")
@@ -256,16 +405,34 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Votes on a deck
+        /// Votes on a deck.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/Deck/{id}/vote?userId=user-guid&amp;isUpvote=true
+        /// 
+        /// Notes:
+        /// - Users can only vote once per deck
+        /// - Previous votes can be changed
+        /// - Votes affect deck's overall rating
+        /// </remarks>
         /// <param name="id">The deck identifier</param>
         /// <param name="userId">The user identifier</param>
         /// <param name="isUpvote">Whether the vote is positive</param>
         /// <returns>Whether the vote was successful</returns>
+        /// <response code="200">Vote successfully recorded</response>
+        /// <response code="400">If deck ID or user ID is empty</response>
+        /// <response code="500">If there was an internal error during voting</response>
         [HttpPost("{id}/vote")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Votes on a deck",
+            Description = "Records a user's vote (upvote/downvote) for a deck",
+            OperationId = "VoteDeck",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<bool>> VoteDeck(
             string id,
             [FromQuery] string userId,
@@ -296,15 +463,34 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Reports a deck for inappropriate content
+        /// Reports a deck for inappropriate content.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/Deck/{id}/report?userId=user-guid
+        ///     "Inappropriate content in deck description"
+        /// 
+        /// Report will be reviewed by moderators who can:
+        /// - Remove the deck
+        /// - Contact the deck owner
+        /// - Dismiss the report
+        /// </remarks>
         /// <param name="id">The deck identifier</param>
         /// <param name="userId">The user identifier</param>
         /// <param name="reason">The reason for reporting</param>
+        /// <response code="204">Report successfully submitted</response>
+        /// <response code="400">If any required parameter is empty</response>
+        /// <response code="500">If there was an internal error during reporting</response>
         [HttpPost("{id}/report")]
+        [SwaggerOperation(
+            Summary = "Reports a deck",
+            Description = "Submits a report for inappropriate content in a deck",
+            OperationId = "ReportDeck",
+            Tags = new[] { "Deck" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> ReportDeck(
             string id,
             [FromQuery] string userId,
@@ -340,8 +526,35 @@ namespace Lithuaningo.API.Controllers
             }
         }
 
-        // GET: api/Deck/search?query={query}&category={category}
+        /// <summary>
+        /// Searches for decks based on query and optional category.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Deck/search?query=basics&amp;category=beginner
+        /// 
+        /// Search includes:
+        /// - Deck titles
+        /// - Descriptions
+        /// - Tags
+        /// - Creator information
+        /// </remarks>
+        /// <param name="query">The search query</param>
+        /// <param name="category">Optional category filter</param>
+        /// <returns>List of matching decks</returns>
+        /// <response code="200">Returns matching decks</response>
+        /// <response code="400">If query is empty</response>
+        /// <response code="500">If there was an internal error during search</response>
         [HttpGet("search")]
+        [SwaggerOperation(
+            Summary = "Searches decks",
+            Description = "Searches for decks based on query text and optional category",
+            OperationId = "SearchDecks",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(List<DeckResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<Deck>>> SearchDecks([FromQuery] string query, [FromQuery] string? category = null)
         {
             if (string.IsNullOrWhiteSpace(query))
@@ -361,8 +574,34 @@ namespace Lithuaningo.API.Controllers
             }
         }
 
-        // GET: api/Deck/{deckId}/flashcards
+        /// <summary>
+        /// Retrieves all flashcards in a deck.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Deck/{deckId}/flashcards
+        /// 
+        /// Returns all flashcards associated with the deck, including:
+        /// - Card content
+        /// - Media attachments
+        /// - Creation dates
+        /// - Review statistics
+        /// </remarks>
+        /// <param name="deckId">The deck identifier</param>
+        /// <returns>List of flashcards in the deck</returns>
+        /// <response code="200">Returns the list of flashcards</response>
+        /// <response code="400">If deck ID format is invalid</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("{deckId}/flashcards")]
+        [SwaggerOperation(
+            Summary = "Retrieves deck flashcards",
+            Description = "Gets all flashcards associated with a specific deck",
+            OperationId = "GetDeckFlashcards",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(List<Flashcard>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<Flashcard>>> GetDeckFlashcards(string deckId)
         {
             if (!Guid.TryParse(deckId, out _))
@@ -382,8 +621,35 @@ namespace Lithuaningo.API.Controllers
             }
         }
 
-        // GET: api/Deck/{id}/rating?timeRange={timeRange}
+        /// <summary>
+        /// Retrieves the rating for a deck.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Deck/{id}/rating?timeRange=month
+        /// 
+        /// Time range options:
+        /// - "week": Last 7 days
+        /// - "month": Last 30 days
+        /// - "year": Last 365 days
+        /// - "all": All time (default)
+        /// </remarks>
+        /// <param name="id">The deck identifier</param>
+        /// <param name="timeRange">Time range for rating calculation</param>
+        /// <returns>The deck's rating</returns>
+        /// <response code="200">Returns the deck rating</response>
+        /// <response code="400">If deck ID format is invalid</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("{id}/rating")]
+        [SwaggerOperation(
+            Summary = "Retrieves deck rating",
+            Description = "Gets the rating for a deck within the specified time range",
+            OperationId = "GetDeckRating",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(double), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<double>> GetDeckRating(string id, [FromQuery] string timeRange = "all")
         {
             if (!Guid.TryParse(id, out _))

@@ -6,15 +6,17 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.AppInfo;
 using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
-    /// Controller for managing application information
+    /// Manages application information for different platforms such as iOS and Android.
     /// </summary>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Application information management endpoints")]
     public class AppInfoController : ControllerBase
     {
         private readonly IAppInfoService _appInfoService;
@@ -27,20 +29,38 @@ namespace Lithuaningo.API.Controllers
             IMapper mapper)
         {
             _appInfoService = appInfoService ?? throw new ArgumentNullException(nameof(appInfoService));
-            _logger = logger;
-            _mapper = mapper;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
-        /// Gets application information for a specific platform
+        /// Retrieves application information for a specified platform.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/AppInfo/{platform}
+        /// 
+        /// Platform values can be:
+        /// - "ios"
+        /// - "android"
+        /// </remarks>
         /// <param name="platform">The platform identifier (e.g., "ios", "android")</param>
         /// <returns>Application information for the specified platform</returns>
+        /// <response code="200">Returns app info for the requested platform</response>
+        /// <response code="400">Platform parameter is empty</response>
+        /// <response code="404">No app info available for the specified platform</response>
+        /// <response code="500">An error occurred while retrieving app information</response>
         [HttpGet("{platform}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Retrieves application information for a platform",
+            Description = "Gets application information for a specified platform (ios/android)",
+            OperationId = "GetAppInfo",
+            Tags = new[] { "AppInfo" }
+        )]
+        [ProducesResponseType(typeof(AppInfoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AppInfoResponse>> GetAppInfo(string platform)
         {
             if (string.IsNullOrWhiteSpace(platform))
@@ -67,15 +87,34 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates application information for a specific platform
+        /// Updates application information for the specified platform.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     PUT /api/v1/AppInfo/{platform}
+        ///     {
+        ///         "version": "1.2.0",
+        ///         "minVersion": "1.0.0",
+        ///         "mandatoryUpdate": false,
+        ///         "updateMessage": "New features available"
+        ///     }
+        /// </remarks>
         /// <param name="platform">The platform identifier (e.g., "ios", "android")</param>
         /// <param name="request">The updated application information</param>
         /// <returns>The updated application information</returns>
+        /// <response code="200">Returns the updated app information</response>
+        /// <response code="400">Platform parameter is empty or ModelState errors exist</response>
+        /// <response code="500">An error occurred during the update</response>
         [HttpPut("{platform}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Updates application information",
+            Description = "Updates application information for the specified platform",
+            OperationId = "UpdateAppInfo",
+            Tags = new[] { "AppInfo" }
+        )]
+        [ProducesResponseType(typeof(AppInfoResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AppInfoResponse>> UpdateAppInfo(string platform, [FromBody] UpdateAppInfoRequest request)
         {
             if (string.IsNullOrWhiteSpace(platform))
@@ -105,13 +144,26 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Deletes application information
+        /// Deletes application information specified by ID.
         /// </summary>
-        /// <param name="id">The unique identifier of the app info to delete</param>
+        /// <remarks>
+        /// Sample request:
+        ///     DELETE /api/v1/AppInfo/{id}
+        /// </remarks>
+        /// <param name="id">The unique GUID identifier of the app info</param>
+        /// <response code="204">App info successfully deleted</response>
+        /// <response code="400">Invalid id format</response>
+        /// <response code="500">An error occurred while deleting the information</response>
         [HttpDelete("{id}")]
+        [SwaggerOperation(
+            Summary = "Deletes application information",
+            Description = "Deletes application information specified by ID (GUID)",
+            OperationId = "DeleteAppInfo",
+            Tags = new[] { "AppInfo" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteAppInfo(string id)
         {
             if (!Guid.TryParse(id, out _))

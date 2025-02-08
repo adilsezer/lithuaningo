@@ -41,17 +41,16 @@ namespace Lithuaningo.API.Controllers
             IMapper mapper)
         {
             _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
-            _logger = logger;
-            _mapper = mapper;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
-        /// Retrieves all comments associated with a specific deck
+        /// Retrieves all comments associated with a specific deck.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        /// 
-        ///     GET /api/v1/comment/deck/{deckId}
+        ///     GET /api/v1/Comment/deck/{deckId}
         /// 
         /// The response includes:
         /// - Comment content
@@ -97,12 +96,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new comment
+        /// Creates a new comment.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        /// 
-        ///     POST /api/v1/comment
+        ///     POST /api/v1/Comment
         ///     {
         ///         "deckId": "deck-guid",
         ///         "userId": "user-guid",
@@ -155,12 +153,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves a specific comment by ID
+        /// Retrieves a specific comment by its ID.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        /// 
-        ///     GET /api/v1/comment/{id}
+        ///     GET /api/v1/Comment/{id}
         /// 
         /// The response includes:
         /// - Comment details
@@ -211,12 +208,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates an existing comment
+        /// Updates an existing comment.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        /// 
-        ///     PUT /api/v1/comment/{id}
+        ///     PUT /api/v1/Comment/{id}
         ///     {
         ///         "content": "Updated: This deck is excellent for beginners!",
         ///         "rating": 5,
@@ -281,12 +277,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Deletes a comment
+        /// Deletes a comment.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        /// 
-        ///     DELETE /api/v1/comment/{id}
+        ///     DELETE /api/v1/Comment/{id}
         /// 
         /// Permanently removes the comment from the system.
         /// This action cannot be undone.
@@ -327,12 +322,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all comments by a specific user
+        /// Retrieves all comments by a specific user.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        /// 
-        ///     GET /api/v1/comment/user/{userId}
+        ///     GET /api/v1/Comment/user/{userId}
         /// 
         /// Returns all comments made by the specified user across all decks.
         /// Results are ordered by creation date (newest first).

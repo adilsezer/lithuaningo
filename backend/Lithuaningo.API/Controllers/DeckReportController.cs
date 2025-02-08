@@ -8,15 +8,18 @@ using Lithuaningo.API.DTOs.DeckReport;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
-    /// Controller for managing deck reports
+    /// Handles the creation, retrieval, update, and deletion of deck reports that flag decks
+    /// for issues such as inappropriate content.
     /// </summary>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Deck report management endpoints")]
     public class DeckReportController : ControllerBase
     {
         private readonly IDeckReportService _reportService;
@@ -34,14 +37,33 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new deck report
+        /// Creates a new deck report.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/DeckReport
+        ///     {
+        ///         "deckId": "deck-guid",
+        ///         "reporterId": "user-guid",
+        ///         "reason": "Inappropriate content",
+        ///         "details": "Contains offensive language"
+        ///     }
+        /// </remarks>
         /// <param name="request">The report creation request</param>
-        /// <returns>The created report</returns>
+        /// <returns>The created deck report</returns>
+        /// <response code="201">Returns the created deck report</response>
+        /// <response code="400">Invalid request data</response>
+        /// <response code="500">Error during report creation</response>
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Creates a new deck report",
+            Description = "Creates a new report for a deck with inappropriate content",
+            OperationId = "CreateDeckReport",
+            Tags = new[] { "DeckReport" }
+        )]
+        [ProducesResponseType(typeof(DeckReportResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<DeckReportResponse>> CreateReport([FromBody] CreateDeckReportRequest request)
         {
             if (!ModelState.IsValid)
@@ -65,15 +87,28 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets all reports with optional status filter
+        /// Retrieves deck reports filtered by status.
         /// </summary>
-        /// <param name="status">The report status to filter by (default: "pending")</param>
-        /// <param name="limit">Maximum number of reports to return</param>
-        /// <returns>List of reports matching the criteria</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/DeckReport?status=pending&amp;limit=50
+        /// </remarks>
+        /// <param name="status">Filter reports by status (default: "pending")</param>
+        /// <param name="limit">Maximum number of reports to return (range: 1-100, default: 50)</param>
+        /// <returns>List of deck reports</returns>
+        /// <response code="200">Returns a list of deck reports</response>
+        /// <response code="400">Limit out of range</response>
+        /// <response code="500">Error during retrieval</response>
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves deck reports",
+            Description = "Gets a list of deck reports filtered by status",
+            OperationId = "GetDeckReports",
+            Tags = new[] { "DeckReport" }
+        )]
+        [ProducesResponseType(typeof(List<DeckReportResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<DeckReportResponse>>> GetReports(
             [FromQuery] string status = "pending",
             [FromQuery] int limit = 50)
@@ -101,15 +136,29 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets a specific report by ID
+        /// Retrieves a single deck report by its ID.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/DeckReport/{id}
+        /// </remarks>
         /// <param name="id">The report identifier</param>
         /// <returns>The requested report</returns>
+        /// <response code="200">Returns the report details</response>
+        /// <response code="400">Report ID is empty</response>
+        /// <response code="404">Report not found</response>
+        /// <response code="500">Error during retrieval</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Retrieves a specific report",
+            Description = "Gets detailed information about a specific deck report",
+            OperationId = "GetDeckReport",
+            Tags = new[] { "DeckReport" }
+        )]
+        [ProducesResponseType(typeof(DeckReportResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<DeckReportResponse>> GetReport(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -137,14 +186,27 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets all reports for a specific deck
+        /// Retrieves all deck reports for a specific deck.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/DeckReport/deck/{deckId}
+        /// </remarks>
         /// <param name="deckId">The deck identifier</param>
         /// <returns>List of reports for the deck</returns>
+        /// <response code="200">Returns a list of reports for the deck</response>
+        /// <response code="400">Deck ID is empty</response>
+        /// <response code="500">Error during retrieval</response>
         [HttpGet("deck/{deckId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves deck reports",
+            Description = "Gets all reports associated with a specific deck",
+            OperationId = "GetDeckReports",
+            Tags = new[] { "DeckReport" }
+        )]
+        [ProducesResponseType(typeof(List<DeckReportResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<DeckReportResponse>>> GetDeckReports(string deckId)
         {
             if (string.IsNullOrWhiteSpace(deckId))
@@ -167,16 +229,35 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates the status of a report
+        /// Updates the status of a specific deck report.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     PUT /api/v1/DeckReport/{id}/status
+        ///     {
+        ///         "status": "resolved",
+        ///         "reviewedBy": "admin-guid",
+        ///         "resolution": "Content removed"
+        ///     }
+        /// </remarks>
         /// <param name="id">The report identifier</param>
         /// <param name="request">The status update request</param>
         /// <returns>The updated report</returns>
+        /// <response code="200">Returns the updated report</response>
+        /// <response code="400">Report ID is empty or invalid model state</response>
+        /// <response code="404">Report not found</response>
+        /// <response code="500">Error during update</response>
         [HttpPut("{id}/status")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Updates report status",
+            Description = "Updates the status of a deck report",
+            OperationId = "UpdateReportStatus",
+            Tags = new[] { "DeckReport" }
+        )]
+        [ProducesResponseType(typeof(DeckReportResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<DeckReportResponse>> UpdateReportStatus(
             string id,
             [FromBody] UpdateDeckReportRequest request)
@@ -217,13 +298,26 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Deletes a report
+        /// Deletes a report based on its ID.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     DELETE /api/v1/DeckReport/{id}
+        /// </remarks>
         /// <param name="id">The report identifier</param>
+        /// <response code="204">Report successfully deleted</response>
+        /// <response code="400">Report ID is empty</response>
+        /// <response code="500">Error during deletion</response>
         [HttpDelete("{id}")]
+        [SwaggerOperation(
+            Summary = "Deletes a report",
+            Description = "Permanently removes a deck report from the system",
+            OperationId = "DeleteDeckReport",
+            Tags = new[] { "DeckReport" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteReport(string id)
         {
             if (string.IsNullOrWhiteSpace(id))

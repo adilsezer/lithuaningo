@@ -7,15 +7,19 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.Announcement;
 using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.OpenApi.Models;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
-    /// Controller for managing announcements
+    /// Manages announcement data in the application. Supports retrieving all announcements, retrieving a specific announcement by ID,
+    /// creating new announcements, updating an existing announcement, and deleting announcements.
     /// </summary>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Announcement management endpoints")]
     public class AnnouncementController : ControllerBase
     {
         private readonly IAnnouncementService _announcementService;
@@ -33,12 +37,24 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets all announcements
+        /// Retrieves all announcements.
         /// </summary>
-        /// <returns>List of announcements</returns>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Announcement
+        /// </remarks>
+        /// <returns>A list of announcements</returns>
+        /// <response code="200">Returns a list of announcements</response>
+        /// <response code="500">An internal error occurred while retrieving announcements</response>
         [HttpGet]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves all announcements",
+            Description = "Gets a list of all announcements in the system",
+            OperationId = "GetAnnouncements",
+            Tags = new[] { "Announcement" }
+        )]
+        [ProducesResponseType(typeof(IEnumerable<AnnouncementResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<IEnumerable<AnnouncementResponse>>> GetAnnouncements()
         {
             try
@@ -55,15 +71,29 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets a specific announcement by ID
+        /// Retrieves a specific announcement by its unique identifier.
         /// </summary>
-        /// <param name="id">The announcement identifier</param>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Announcement/{id}
+        /// </remarks>
+        /// <param name="id">The unique identifier of the announcement (Must not be empty)</param>
         /// <returns>The requested announcement</returns>
+        /// <response code="200">Returns an announcement object</response>
+        /// <response code="400">Provided announcement ID is empty</response>
+        /// <response code="404">No announcement found with the given ID</response>
+        /// <response code="500">An error occurred during retrieval</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Retrieves a specific announcement",
+            Description = "Gets an announcement by its unique identifier",
+            OperationId = "GetAnnouncementById",
+            Tags = new[] { "Announcement" }
+        )]
+        [ProducesResponseType(typeof(AnnouncementResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AnnouncementResponse>> GetAnnouncementById(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -90,14 +120,33 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new announcement
+        /// Creates a new announcement.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/Announcement
+        ///     {
+        ///         "title": "New Feature Release",
+        ///         "content": "Check out our latest features!",
+        ///         "startDate": "2024-03-15T00:00:00Z",
+        ///         "endDate": "2024-03-22T00:00:00Z"
+        ///     }
+        /// </remarks>
         /// <param name="request">The announcement creation request</param>
         /// <returns>The created announcement</returns>
+        /// <response code="201">Returns the created announcement</response>
+        /// <response code="400">Invalid request model</response>
+        /// <response code="500">An error occurred during the creation of the announcement</response>
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Creates a new announcement",
+            Description = "Creates a new announcement in the system",
+            OperationId = "CreateAnnouncement",
+            Tags = new[] { "Announcement" }
+        )]
+        [ProducesResponseType(typeof(AnnouncementResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<AnnouncementResponse>> CreateAnnouncement([FromBody] CreateAnnouncementRequest request)
         {
             if (!ModelState.IsValid)
@@ -120,15 +169,35 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates an existing announcement
+        /// Updates an existing announcement identified by its ID.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     PUT /api/v1/Announcement/{id}
+        ///     {
+        ///         "title": "Updated Feature Release",
+        ///         "content": "Updated content for our latest features!",
+        ///         "startDate": "2024-03-15T00:00:00Z",
+        ///         "endDate": "2024-03-22T00:00:00Z"
+        ///     }
+        /// </remarks>
         /// <param name="id">The announcement identifier</param>
         /// <param name="request">The announcement update request</param>
+        /// <response code="204">Announcement successfully updated</response>
+        /// <response code="400">Either the announcement ID is empty or ModelState is invalid</response>
+        /// <response code="404">No announcement found with the given ID</response>
+        /// <response code="500">An error occurred during the update</response>
         [HttpPut("{id}")]
+        [SwaggerOperation(
+            Summary = "Updates an existing announcement",
+            Description = "Updates an announcement identified by its ID",
+            OperationId = "UpdateAnnouncement",
+            Tags = new[] { "Announcement" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateAnnouncement(string id, [FromBody] UpdateAnnouncementRequest request)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -163,13 +232,26 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Deletes an announcement
+        /// Deletes an announcement based on its ID.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     DELETE /api/v1/Announcement/{id}
+        /// </remarks>
         /// <param name="id">The announcement identifier</param>
+        /// <response code="204">Announcement successfully deleted</response>
+        /// <response code="400">Announcement ID is empty</response>
+        /// <response code="500">An error occurred during deletion</response>
         [HttpDelete("{id}")]
+        [SwaggerOperation(
+            Summary = "Deletes an announcement",
+            Description = "Deletes an announcement based on its ID",
+            OperationId = "DeleteAnnouncement",
+            Tags = new[] { "Announcement" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteAnnouncement(string id)
         {
             if (string.IsNullOrWhiteSpace(id))

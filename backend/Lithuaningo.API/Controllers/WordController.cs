@@ -5,15 +5,23 @@ using Lithuaningo.API.DTOs.Word;
 using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
-    /// Controller for managing words and translations
+    /// Manages word-related operations including word forms, lemmas, and translations.
     /// </summary>
+    /// <remarks>
+    /// This controller handles:
+    /// - Word form lookups and grammatical attributes
+    /// - Lemma information and definitions
+    /// - Word translations and examples
+    /// </remarks>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Word management endpoints")]
     public class WordController : ControllerBase
     {
         private readonly IWordService _wordService;
@@ -27,19 +35,38 @@ namespace Lithuaningo.API.Controllers
         {
             _wordService = wordService ?? throw new ArgumentNullException(nameof(wordService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper;
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
-        /// Gets the word forms for a given word
+        /// Retrieves word forms and grammatical attributes for a given word.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Word/{word}
+        /// 
+        /// Returns:
+        /// - Word forms (conjugations, declensions)
+        /// - Grammatical attributes (gender, number, case, etc.)
+        /// - Part of speech information
+        /// </remarks>
         /// <param name="word">The word to look up</param>
         /// <returns>Word form information including grammatical attributes</returns>
+        /// <response code="200">Returns the word form information</response>
+        /// <response code="400">If the word parameter is empty or invalid</response>
+        /// <response code="404">If the word form is not found</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("{word}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Retrieves word forms",
+            Description = "Gets word forms and grammatical attributes for a given word",
+            OperationId = "GetWordForms",
+            Tags = new[] { "Word" }
+        )]
+        [ProducesResponseType(typeof(WordFormResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<WordFormResponse>> GetWordForms(string word)
         {
             if (string.IsNullOrWhiteSpace(word))
@@ -73,15 +100,35 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets the lemma information for a given word
+        /// Retrieves lemma information and definitions for a given word.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Word/lemma/{lemma}
+        /// 
+        /// Returns:
+        /// - Base form (lemma)
+        /// - Definitions and translations
+        /// - Usage examples
+        /// - Related words
+        /// </remarks>
         /// <param name="lemma">The lemma to look up</param>
         /// <returns>Lemma information including definitions and examples</returns>
+        /// <response code="200">Returns the lemma information</response>
+        /// <response code="400">If the lemma parameter is empty or invalid</response>
+        /// <response code="404">If the lemma is not found</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("lemma/{lemma}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Retrieves lemma information",
+            Description = "Gets lemma information and definitions for a given word",
+            OperationId = "GetLemma",
+            Tags = new[] { "Word" }
+        )]
+        [ProducesResponseType(typeof(LemmaResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<LemmaResponse>> GetLemma(string lemma)
         {
             if (string.IsNullOrWhiteSpace(lemma))

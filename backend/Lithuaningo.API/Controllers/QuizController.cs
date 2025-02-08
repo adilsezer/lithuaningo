@@ -38,8 +38,8 @@ namespace Lithuaningo.API.Controllers
             IMapper mapper)
         {
             _quizService = quizService ?? throw new ArgumentNullException(nameof(quizService));
-            _logger = logger;
-            _mapper = mapper;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace Lithuaningo.API.Controllers
         /// <remarks>
         /// Sample request:
         /// 
-        ///     GET /api/v1/quiz/daily
+        ///     GET /api/v1/Quiz/daily
         /// 
         /// The response includes:
         /// - Question text in both Lithuanian and English
@@ -63,8 +63,8 @@ namespace Lithuaningo.API.Controllers
         /// <response code="500">If there was an internal error while retrieving the questions</response>
         [HttpGet("daily")]
         [SwaggerOperation(
-            Summary = "Get daily quiz questions",
-            Description = "Retrieves or generates the quiz questions for the current date",
+            Summary = "Retrieves daily quiz questions",
+            Description = "Gets or generates the quiz questions for the current date",
             OperationId = "GetDailyQuiz",
             Tags = new[] { "Quiz" }
         )]
@@ -91,7 +91,7 @@ namespace Lithuaningo.API.Controllers
         /// <remarks>
         /// Sample request:
         /// 
-        ///     POST /api/v1/quiz/daily
+        ///     POST /api/v1/Quiz/daily
         ///     [
         ///       {
         ///         "questionText": "Kaip sekasi?",
@@ -115,7 +115,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="500">If there was an internal error while creating the questions</response>
         [HttpPost("daily")]
         [SwaggerOperation(
-            Summary = "Create daily quiz questions",
+            Summary = "Creates daily quiz questions",
             Description = "Creates new quiz questions for the current date",
             OperationId = "CreateDailyQuiz",
             Tags = new[] { "Quiz" }

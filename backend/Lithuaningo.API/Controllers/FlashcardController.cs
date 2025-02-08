@@ -10,15 +10,19 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Lithuaningo.API.DTOs.Flashcard;
 using AutoMapper;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
-    /// Controller for managing flashcards
+    /// Manages flashcard operations including creation, retrieval, update, and deletion.
+    /// Also handles flashcard-specific features like review scheduling, file attachments,
+    /// and search functionality.
     /// </summary>
     [ApiController]
     [ApiVersion("1.0")]
     [Route("api/v{version:apiVersion}/[controller]")]
+    [SwaggerTag("Flashcard management endpoints")]
     public class FlashcardController : ControllerBase
     {
         private readonly IFlashcardService _flashcardService;
@@ -42,15 +46,35 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets a specific flashcard by ID
+        /// Retrieves a specific flashcard by its ID.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Flashcard/{id}
+        /// 
+        /// The response includes:
+        /// - Front and back content
+        /// - Associated media URLs
+        /// - Creation and update timestamps
+        /// - Review statistics
+        /// </remarks>
         /// <param name="id">The flashcard identifier</param>
         /// <returns>The requested flashcard</returns>
+        /// <response code="200">Returns the flashcard</response>
+        /// <response code="400">If flashcard ID is empty</response>
+        /// <response code="404">If flashcard not found</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Retrieves a flashcard",
+            Description = "Gets detailed information about a specific flashcard",
+            OperationId = "GetFlashcard",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(FlashcardResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<FlashcardResponse>> GetFlashcard(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -78,14 +102,30 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets all flashcards for a specific user
+        /// Retrieves all flashcards for a specific user.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Flashcard/user/{userId}
+        /// 
+        /// Returns all flashcards created by or shared with the user.
+        /// Results are ordered by creation date (newest first).
+        /// </remarks>
         /// <param name="userId">The user identifier</param>
-        /// <returns>List of flashcards owned by the user</returns>
+        /// <returns>List of flashcards for the user</returns>
+        /// <response code="200">Returns the list of user's flashcards</response>
+        /// <response code="400">If user ID is empty</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("user/{userId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves user flashcards",
+            Description = "Gets all flashcards associated with a specific user",
+            OperationId = "GetUserFlashcards",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<FlashcardResponse>>> GetUserFlashcards(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
@@ -108,15 +148,33 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets flashcards due for review
+        /// Retrieves flashcards due for review.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Flashcard/review/{userId}?limit=20
+        /// 
+        /// Returns flashcards that are:
+        /// - Due for review based on spaced repetition algorithm
+        /// - Not reviewed in the last 24 hours
+        /// - Ordered by priority (most overdue first)
+        /// </remarks>
         /// <param name="userId">The user identifier</param>
-        /// <param name="limit">Maximum number of flashcards to return</param>
+        /// <param name="limit">Maximum number of flashcards (range: 1-100, default: 20)</param>
         /// <returns>List of flashcards due for review</returns>
+        /// <response code="200">Returns the list of flashcards due for review</response>
+        /// <response code="400">If user ID is empty or limit is invalid</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("review/{userId}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves review flashcards",
+            Description = "Gets flashcards that are due for review based on spaced repetition",
+            OperationId = "GetDueForReview",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<FlashcardResponse>>> GetDueForReview(
             string userId,
             [FromQuery] int limit = 20)
@@ -147,14 +205,35 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new flashcard
+        /// Creates a new flashcard.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/Flashcard
+        ///     {
+        ///         "deckId": "deck-guid",
+        ///         "front": "Labas",
+        ///         "back": "Hello",
+        ///         "frontImageUrl": "https://storage.url/image.jpg",
+        ///         "frontAudioUrl": "https://storage.url/audio.mp3",
+        ///         "tags": ["greeting", "basic"]
+        ///     }
+        /// </remarks>
         /// <param name="request">The flashcard creation request</param>
         /// <returns>The created flashcard</returns>
+        /// <response code="201">Returns the newly created flashcard</response>
+        /// <response code="400">If the request model is invalid</response>
+        /// <response code="500">If there was an internal error during creation</response>
         [HttpPost]
-        [ProducesResponseType(StatusCodes.Status201Created)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Creates a new flashcard",
+            Description = "Creates a new flashcard with the specified properties",
+            OperationId = "CreateFlashcard",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(FlashcardResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<FlashcardResponse>> CreateFlashcard([FromBody] CreateFlashcardRequest request)
         {
             if (!ModelState.IsValid)
@@ -178,16 +257,37 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates an existing flashcard
+        /// Updates an existing flashcard.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     PUT /api/v1/Flashcard/{id}
+        ///     {
+        ///         "front": "Updated Labas",
+        ///         "back": "Updated Hello",
+        ///         "frontImageUrl": "https://storage.url/new-image.jpg",
+        ///         "frontAudioUrl": "https://storage.url/new-audio.mp3",
+        ///         "tags": ["greeting", "basic", "updated"]
+        ///     }
+        /// </remarks>
         /// <param name="id">The flashcard identifier</param>
         /// <param name="request">The flashcard update request</param>
         /// <returns>The updated flashcard</returns>
+        /// <response code="200">Returns the updated flashcard</response>
+        /// <response code="400">If flashcard ID is empty or model state is invalid</response>
+        /// <response code="404">If flashcard not found</response>
+        /// <response code="500">If there was an internal error during update</response>
         [HttpPut("{id}")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [SwaggerOperation(
+            Summary = "Updates a flashcard",
+            Description = "Updates an existing flashcard with new content",
+            OperationId = "UpdateFlashcard",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(FlashcardResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<FlashcardResponse>> UpdateFlashcard(
             string id,
             [FromBody] UpdateFlashcardRequest request)
@@ -229,13 +329,32 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Deletes a flashcard
+        /// Deletes a flashcard.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     DELETE /api/v1/Flashcard/{id}
+        /// 
+        /// This operation:
+        /// - Permanently removes the flashcard
+        /// - Deletes associated media files
+        /// - Updates deck statistics
+        /// - Cannot be undone
+        /// </remarks>
         /// <param name="id">The flashcard identifier</param>
+        /// <response code="204">Flashcard successfully deleted</response>
+        /// <response code="400">If flashcard ID is empty</response>
+        /// <response code="500">If there was an internal error during deletion</response>
         [HttpDelete("{id}")]
+        [SwaggerOperation(
+            Summary = "Deletes a flashcard",
+            Description = "Permanently removes a flashcard and its associated data",
+            OperationId = "DeleteFlashcard",
+            Tags = new[] { "Flashcard" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> DeleteFlashcard(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
@@ -257,14 +376,37 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates the review status of a flashcard
+        /// Updates the review status of a flashcard.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     PUT /api/v1/Flashcard/{id}/review
+        ///     {
+        ///         "wasCorrect": true,
+        ///         "difficulty": 3,
+        ///         "timeSpentSeconds": 15
+        ///     }
+        /// 
+        /// This updates:
+        /// - Next review date
+        /// - Review history
+        /// - Success rate statistics
+        /// </remarks>
         /// <param name="id">The flashcard identifier</param>
         /// <param name="request">The review update request</param>
-        [HttpPost("{id}/review")]
+        /// <response code="204">Review status updated successfully</response>
+        /// <response code="400">If flashcard ID is empty or request is invalid</response>
+        /// <response code="500">If there was an internal error during update</response>
+        [HttpPut("{id}/review")]
+        [SwaggerOperation(
+            Summary = "Updates review status",
+            Description = "Updates the review status and statistics for a flashcard",
+            OperationId = "UpdateReviewStatus",
+            Tags = new[] { "Flashcard" }
+        )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateReviewStatus(
             string id,
             [FromBody] UpdateReviewRequest request)
@@ -293,14 +435,32 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets random flashcards
+        /// Retrieves random flashcards.
         /// </summary>
-        /// <param name="limit">Maximum number of flashcards to return</param>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Flashcard/random?limit=10
+        /// 
+        /// Returns a random selection of flashcards:
+        /// - From public decks only
+        /// - Not previously seen by the user
+        /// - Suitable for discovery and exploration
+        /// </remarks>
+        /// <param name="limit">Maximum number of flashcards (range: 1-100, default: 10)</param>
         /// <returns>List of random flashcards</returns>
+        /// <response code="200">Returns the list of random flashcards</response>
+        /// <response code="400">If limit is invalid</response>
+        /// <response code="500">If there was an internal error during retrieval</response>
         [HttpGet("random")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Retrieves random flashcards",
+            Description = "Gets a random selection of flashcards for exploration",
+            OperationId = "GetRandomFlashcards",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<FlashcardResponse>>> GetRandomFlashcards([FromQuery] int limit = 10)
         {
             if (limit <= 0 || limit > 100)
@@ -323,14 +483,33 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Searches for flashcards
+        /// Searches for flashcards.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     GET /api/v1/Flashcard/search?query=hello
+        /// 
+        /// Searches across:
+        /// - Front content
+        /// - Back content
+        /// - Tags
+        /// - Associated metadata
+        /// </remarks>
         /// <param name="query">The search query</param>
         /// <returns>List of matching flashcards</returns>
+        /// <response code="200">Returns matching flashcards</response>
+        /// <response code="400">If query is empty</response>
+        /// <response code="500">If there was an internal error during search</response>
         [HttpGet("search")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Searches flashcards",
+            Description = "Searches for flashcards based on content and metadata",
+            OperationId = "SearchFlashcards",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<List<FlashcardResponse>>> SearchFlashcards([FromQuery] string query)
         {
             if (string.IsNullOrWhiteSpace(query))
@@ -353,14 +532,36 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Uploads a file for a flashcard
+        /// Uploads a file for a flashcard.
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/Flashcard/upload
+        /// 
+        /// The request should be a multipart/form-data request with a file field.
+        /// Supported file types:
+        /// - Images (jpg, png, gif)
+        /// - Audio (mp3, wav)
+        /// 
+        /// Maximum file sizes:
+        /// - Images: 5MB
+        /// - Audio: 10MB
+        /// </remarks>
         /// <param name="file">The file to upload</param>
         /// <returns>The URL of the uploaded file</returns>
+        /// <response code="200">Returns the URL of the uploaded file</response>
+        /// <response code="400">If file is missing or invalid</response>
+        /// <response code="500">If there was an internal error during upload</response>
         [HttpPost("upload")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Uploads a file",
+            Description = "Uploads an image or audio file for a flashcard",
+            OperationId = "UploadFlashcardFile",
+            Tags = new[] { "Flashcard" }
+        )]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<string>> UploadFlashcardFile(IFormFile file)
         {
             if (file == null)

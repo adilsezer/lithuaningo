@@ -17,6 +17,8 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 
+// TODO: Add HTTPS to the API when deploying to production
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Data Protection
@@ -95,26 +97,14 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.Limits.MinRequestBodyDataRate = new Microsoft.AspNetCore.Server.Kestrel.Core.MinDataRate(
         bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
 
-    if (builder.Environment.IsDevelopment())
+    if (!builder.Environment.IsDevelopment())
     {
-        serverOptions.ListenAnyIP(7016);
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("🚀 Server successfully started at http://localhost:7016");
-        Console.ResetColor();
-    }
-    else
-    {
-        serverOptions.ListenAnyIP(7016, listenOptions =>
+        // Configure HTTPS options for production
+        serverOptions.ConfigureHttpsDefaults(httpsOptions =>
         {
-            listenOptions.UseHttps(httpsOptions =>
-            {
-                httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | 
-                                          System.Security.Authentication.SslProtocols.Tls13;
-            });
+            httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | 
+                                      System.Security.Authentication.SslProtocols.Tls13;
         });
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("🚀 Server successfully started at https://localhost:7016");
-        Console.ResetColor();
     }
 });
 
@@ -126,6 +116,7 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
+    app.UseHttpsRedirection();
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -133,7 +124,6 @@ app.UseMiddleware<RateLimitingMiddleware>();
 app.UseMiddleware<RequestSizeMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
-app.UseHttpsRedirection();
 app.UseCors("AllowFrontend");
 
 // Add authentication before authorization
@@ -147,6 +137,20 @@ using (var scope = app.Services.CreateScope())
 {
     var supabaseService = scope.ServiceProvider.GetRequiredService<ISupabaseService>();
     await supabaseService.InitializeAsync();
+}
+
+// Add startup message before RunAsync
+if (app.Environment.IsDevelopment())
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("🚀 Server successfully started at http://localhost:7016");
+    Console.ResetColor();
+}
+else
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("🚀 Server successfully started at https://localhost:7016");
+    Console.ResetColor();
 }
 
 await app.RunAsync();
