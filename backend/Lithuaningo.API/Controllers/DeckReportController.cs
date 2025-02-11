@@ -9,6 +9,7 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -16,11 +17,10 @@ namespace Lithuaningo.API.Controllers
     /// Handles the creation, retrieval, update, and deletion of deck reports that flag decks
     /// for issues such as inappropriate content.
     /// </summary>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Deck report management endpoints")]
-    public class DeckReportController : ControllerBase
+    public class DeckReportController : BaseApiController
     {
         private readonly IDeckReportService _reportService;
         private readonly ILogger<DeckReportController> _logger;
@@ -99,6 +99,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="200">Returns a list of deck reports</response>
         /// <response code="400">Limit out of range</response>
         /// <response code="500">Error during retrieval</response>
+        [Authorize(Roles = "Admin")]
         [HttpGet]
         [SwaggerOperation(
             Summary = "Retrieves deck reports",
@@ -148,6 +149,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="400">Report ID is empty</response>
         /// <response code="404">Report not found</response>
         /// <response code="500">Error during retrieval</response>
+        [Authorize(Roles = "Admin")]
         [HttpGet("{id}")]
         [SwaggerOperation(
             Summary = "Retrieves a specific report",
@@ -197,6 +199,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="200">Returns a list of reports for the deck</response>
         /// <response code="400">Deck ID is empty</response>
         /// <response code="500">Error during retrieval</response>
+        [Authorize(Roles = "Admin")]
         [HttpGet("deck/{deckId}")]
         [SwaggerOperation(
             Summary = "Retrieves deck reports",

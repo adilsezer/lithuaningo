@@ -14,8 +14,8 @@ namespace Lithuaningo.API.Models
         [Column("platform")]
         public string Platform { get; set; } = string.Empty;
 
-        [Column("latest_version")]
-        public string LatestVersion { get; set; } = string.Empty;
+        [Column("current_version")]
+        public string CurrentVersion { get; set; } = string.Empty;
 
         [Column("minimum_version")]
         public string MinimumVersion { get; set; } = string.Empty;
@@ -26,9 +26,8 @@ namespace Lithuaningo.API.Models
         [Column("maintenance_message")]
         public string? MaintenanceMessage { get; set; }
 
-        // Additional properties for future app needs
         [Column("force_update")]
-        public bool ForceUpdate { get; set; } = false;
+        public bool ForceUpdate { get; set; }
 
         [Column("update_url")]
         public string? UpdateUrl { get; set; }

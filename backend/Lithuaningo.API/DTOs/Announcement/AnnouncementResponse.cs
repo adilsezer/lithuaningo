@@ -8,11 +8,6 @@ namespace Lithuaningo.API.DTOs.Announcement
     public class AnnouncementResponse
     {
         /// <summary>
-        /// The unique identifier
-        /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
         /// The announcement title
         /// </summary>
         public string Title { get; set; } = string.Empty;
@@ -31,25 +26,5 @@ namespace Lithuaningo.API.DTOs.Announcement
         /// When the announcement expires
         /// </summary>
         public DateTime? ValidUntil { get; set; }
-
-        /// <summary>
-        /// Human-readable time remaining until expiry
-        /// </summary>
-        public string? TimeRemaining { get; set; }
-
-        /// <summary>
-        /// Current status of the announcement (active/inactive/expired)
-        /// </summary>
-        public string Status { get; set; } = string.Empty;
-
-        /// <summary>
-        /// When this announcement was created
-        /// </summary>
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// When this announcement was last updated
-        /// </summary>
-        public DateTime UpdatedAt { get; set; }
     }
 } 

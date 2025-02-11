@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, FlatList, Text } from "react-native";
+import { View, StyleSheet, FlatList } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
@@ -67,7 +67,9 @@ export default function CommentsScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <BackButton />
-      <CustomText>Comments</CustomText>
+      <CustomText variant="titleLarge" bold>
+        Comments
+      </CustomText>
       <Form
         fields={commentFields}
         onSubmit={handleAddComment}
@@ -85,21 +87,32 @@ export default function CommentsScreen() {
               { backgroundColor: theme.colors.surface },
             ]}
           >
+            <View style={styles.commentHeader}>
+              <CustomText variant="labelLarge" style={styles.userName}>
+                {item.userName}
+              </CustomText>
+              <CustomText variant="labelSmall" style={styles.timeAgo}>
+                {item.timeAgo}
+                {item.isEdited && " (edited)"}
+              </CustomText>
+            </View>
             <CustomText
               style={[styles.commentText, { color: theme.colors.onSurface }]}
             >
               {item.content}
             </CustomText>
             {userData && userData.id === item.userId && (
-              <CustomButton
-                title="Delete"
-                onPress={() => item.id && deleteComment(item.id, userData.id)}
-                disabled={isSubmitting}
-              />
+              <View style={styles.actionButtons}>
+                <CustomButton
+                  title="Delete"
+                  onPress={() => item.id && deleteComment(item.id, userData.id)}
+                  disabled={isSubmitting}
+                />
+              </View>
             )}
           </View>
         )}
-        keyExtractor={(item) => item.id || ""}
+        keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <CustomText
@@ -141,16 +154,28 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   commentItem: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
     padding: 16,
     borderRadius: 12,
     marginBottom: 8,
   },
+  commentHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  userName: {
+    fontWeight: "bold",
+  },
+  timeAgo: {
+    opacity: 0.7,
+  },
   commentText: {
-    flex: 1,
     fontSize: 14,
-    marginRight: 8,
+    marginBottom: 8,
+  },
+  actionButtons: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
   },
 });

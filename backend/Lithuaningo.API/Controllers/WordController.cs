@@ -6,6 +6,7 @@ using Microsoft.Extensions.Logging;
 using System.Threading.Tasks;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -18,11 +19,10 @@ namespace Lithuaningo.API.Controllers
     /// - Lemma information and definitions
     /// - Word translations and examples
     /// </remarks>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Word management endpoints")]
-    public class WordController : ControllerBase
+    public class WordController : BaseApiController
     {
         private readonly IWordService _wordService;
         private readonly ILogger<WordController> _logger;

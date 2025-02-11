@@ -2,9 +2,10 @@ export interface Comment {
   id: string;
   deckId: string;
   userId: string;
+  userName: string;
   content: string;
-  createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
+  timeAgo: string;
+  createdAt: string;
+  updatedAt: string;
   isEdited: boolean;
 }

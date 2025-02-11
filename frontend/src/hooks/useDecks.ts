@@ -193,15 +193,18 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
         setLoading(true);
         clearError();
 
-        const newDeck: Omit<Deck, "id"> = {
+        const newDeck: Omit<
+          Deck,
+          "id" | "cardCount" | "rating" | "timeAgo" | "updatedAt"
+        > = {
           title,
           description,
           category: "Other",
           createdBy: userData!.id,
-          createdByUsername: userData!.name || "Anonymous",
-          createdAt: new Date(),
+          createdByUserName: userData!.name || "Anonymous",
           tags: [],
-          flashcardCount: 0,
+          isPublic: true,
+          createdAt: new Date().toISOString(),
         };
 
         const deckId = await deckService.createDeck(newDeck);

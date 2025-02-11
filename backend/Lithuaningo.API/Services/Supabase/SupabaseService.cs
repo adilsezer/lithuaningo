@@ -12,14 +12,16 @@ public interface ISupabaseService
 public class SupabaseService : ISupabaseService
 {
     private readonly Client _client;
-    private readonly SupabaseSettings _settings;
+    private readonly ILogger<SupabaseService> _logger;
 
     public SupabaseService(
-        IConfiguration configuration,
-        ISupabaseConfiguration supabaseConfiguration)
+        ISupabaseConfiguration supabaseConfiguration,
+        ILogger<SupabaseService> logger)
     {
-        var credentialsPath = Path.Combine(Directory.GetCurrentDirectory(), "credentials/supabase/settings.json");
-        _settings = supabaseConfiguration.LoadConfiguration(credentialsPath);
+        _logger = logger;
+        
+        var settings = supabaseConfiguration.LoadConfiguration();
+        _logger.LogInformation("Initializing Supabase client with URL: {Url}", settings.Url);
 
         var options = new SupabaseOptions
         {
@@ -28,8 +30,8 @@ public class SupabaseService : ISupabaseService
         };
 
         _client = new Client(
-            _settings.Url,
-            _settings.ServiceKey,
+            settings.Url,
+            settings.ServiceKey,
             options
         );
     }
@@ -38,6 +40,15 @@ public class SupabaseService : ISupabaseService
 
     public async Task InitializeAsync()
     {
-        await _client.InitializeAsync();
+        try
+        {
+            await _client.InitializeAsync();
+            _logger.LogInformation("Supabase client initialized successfully");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to initialize Supabase client");
+            throw;
+        }
     }
 } 

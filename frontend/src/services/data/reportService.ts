@@ -1,50 +1,47 @@
 import apiClient from "@services/api/apiClient";
-import { Report } from "@src/types/Report";
+import { DeckReport } from "@src/types";
 
 export const reportService = {
   submitReport: async (
-    report: Pick<Report, "contentId" | "reportedBy" | "reason" | "details">
+    report: Pick<DeckReport, "deckId" | "reporterId" | "reason" | "details">
   ): Promise<void> => {
     if (
-      !report.contentId ||
-      !report.reportedBy ||
+      !report.deckId ||
+      !report.reporterId ||
       !report.reason ||
       !report.details
     ) {
       throw new Error("Missing required fields for report submission");
     }
 
-    await apiClient.createReport({
-      ...report,
-      contentType: "deck",
-      status: "pending",
-    });
+    await apiClient.createDeckReport(report);
   },
 
   getReports: async (
-    status: Report["status"] = "pending",
+    status: DeckReport["status"] = "pending",
     limit: number = 50
-  ): Promise<Report[]> => {
-    return apiClient.getReports(status, limit);
+  ): Promise<DeckReport[]> => {
+    return apiClient.getDeckReports(status, limit);
   },
 
-  getReport: async (id: string): Promise<Report> => {
-    return apiClient.getReport(id);
+  getReport: async (id: string): Promise<DeckReport> => {
+    return apiClient.getDeckReport(id);
   },
 
-  getContentReports: async (
-    contentType: string,
-    contentId: string
-  ): Promise<Report[]> => {
-    return apiClient.getContentReports(contentType, contentId);
+  getDeckReports: async (deckId: string): Promise<DeckReport[]> => {
+    return apiClient.getDeckReportsByDeckId(deckId);
   },
 
   updateReportStatus: async (
     id: string,
-    status: Report["status"],
+    status: DeckReport["status"],
     reviewedBy: string,
     resolution?: string
   ): Promise<void> => {
-    await apiClient.updateReportStatus(id, status, reviewedBy, resolution);
+    await apiClient.updateDeckReportStatus(id, {
+      status,
+      reviewedBy,
+      resolution,
+    });
   },
 };

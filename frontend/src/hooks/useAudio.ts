@@ -30,7 +30,6 @@ export const useAudio = () => {
   useEffect(() => {
     return () => {
       if (sound) {
-        console.log("Unloading Sound");
         sound.unloadAsync();
       }
     };
@@ -98,7 +97,6 @@ export const useAudio = () => {
 
         // If we're already playing this URL, stop it
         if (playingUrl === url && sound) {
-          console.log("Pausing Sound");
           await sound.pauseAsync();
           setPlayingUrl(null);
           return;
@@ -106,33 +104,24 @@ export const useAudio = () => {
 
         // Always unload the previous sound before creating a new one
         if (sound) {
-          console.log("Unloading previous sound");
           try {
             await sound.pauseAsync();
             await sound.unloadAsync();
-          } catch (error) {
-            console.log("Error cleaning up previous sound:", error);
-          }
+          } catch (error) {}
           setSound(null);
         }
 
-        console.log("Loading Sound");
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: url },
           { shouldPlay: true },
           async (status) => {
             if (!status.isLoaded) {
               if (status.error) {
-                console.log(
-                  `Encountered a fatal error during playback: ${status.error}`
-                );
                 setPlayingUrl(null);
                 if (sound) {
                   try {
                     await sound.unloadAsync();
-                  } catch (error) {
-                    console.log("Error unloading sound:", error);
-                  }
+                  } catch (error) {}
                 }
                 setSound(null);
                 return;
@@ -141,7 +130,6 @@ export const useAudio = () => {
 
             // Handle playback finished
             if (status.isLoaded && status.didJustFinish) {
-              console.log("Playback finished");
               setPlayingUrl(null);
             }
           },
@@ -150,16 +138,13 @@ export const useAudio = () => {
 
         setSound(newSound);
         setPlayingUrl(url);
-        console.log("Sound is now playing");
       } catch (error) {
         handleError(error as Error, "Error playing audio");
         if (sound) {
           try {
             await sound.pauseAsync();
             await sound.unloadAsync();
-          } catch (unloadError) {
-            console.log("Error unloading sound:", unloadError);
-          }
+          } catch (unloadError) {}
         }
         setSound(null);
         setPlayingUrl(null);

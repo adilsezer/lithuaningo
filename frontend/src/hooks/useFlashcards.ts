@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Flashcard, FlashcardFormData } from "@src/types";
-import flashcardService from "@services/data/flashcardService";
+import { Flashcard } from "@src/types";
+import flashcardService from "@src/services/data/flashcardService";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import {
   useIsLoading,
@@ -27,15 +27,17 @@ export const useFlashcards = () => {
     [setError, showError]
   );
 
-  const fetchDeckFlashcards = useCallback(
+  const getDeckFlashcards = useCallback(
     async (deckId: string) => {
       try {
         setLoading(true);
         setError(null);
         const data = await flashcardService.getDeckFlashcards(deckId);
         setFlashcards(data);
+        return data;
       } catch (error) {
         handleError(error as Error, "Failed to load flashcards");
+        throw error;
       } finally {
         setLoading(false);
       }
@@ -43,77 +45,120 @@ export const useFlashcards = () => {
     [handleError, setError, setLoading]
   );
 
-  const addFlashcardToDeck = useCallback(
-    async (deckId: string, flashcard: Omit<Flashcard, "id" | "createdAt">) => {
+  const createFlashcard = useCallback(
+    async (
+      flashcard: Pick<Flashcard, "deckId" | "frontText" | "backText">,
+      imageFile?: File,
+      audioFile?: File
+    ) => {
       try {
         setLoading(true);
         setError(null);
-        await flashcardService.addFlashcardToDeck(deckId, flashcard);
-        await fetchDeckFlashcards(deckId);
-        showSuccess("Flashcard added successfully");
-      } catch (error) {
-        handleError(error as Error, "Failed to add flashcard");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchDeckFlashcards, handleError, setError, setLoading, showSuccess]
-  );
-
-  const removeFlashcardFromDeck = useCallback(
-    async (deckId: string, flashcardId: string) => {
-      try {
-        setLoading(true);
-        setError(null);
-        await flashcardService.removeFlashcardFromDeck(deckId, flashcardId);
-        await fetchDeckFlashcards(deckId);
-        showSuccess("Flashcard removed successfully");
-      } catch (error) {
-        handleError(error as Error, "Failed to remove flashcard");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [fetchDeckFlashcards, handleError, setError, setLoading, showSuccess]
-  );
-
-  const handleCreateFlashcard = useCallback(
-    async (formData: FlashcardFormData, deckId: string, userId: string) => {
-      try {
-        setLoading(true);
-        setError(null);
-
-        const { imageFile, audioFile, ...flashcardData } = formData;
-
-        await flashcardService.createFlashcard(
-          {
-            ...flashcardData,
-            deckId,
-            createdBy: userId,
-          },
-          imageFile,
-          audioFile
-        );
-
+        await flashcardService.createFlashcard(flashcard, imageFile, audioFile);
         showSuccess("Flashcard created successfully");
         return true;
       } catch (error) {
         handleError(error as Error, "Failed to create flashcard");
-        return false;
+        throw error;
       } finally {
         setLoading(false);
       }
     },
-    [setLoading, handleError, setError, showSuccess]
+    [handleError, setError, setLoading, showSuccess]
+  );
+
+  const updateFlashcard = useCallback(
+    async (
+      id: string,
+      flashcard: Pick<Flashcard, "frontText" | "backText">,
+      imageFile?: File,
+      audioFile?: File,
+      currentImageUrl?: string,
+      currentAudioUrl?: string
+    ) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await flashcardService.updateFlashcard(
+          id,
+          flashcard,
+          imageFile,
+          audioFile,
+          currentImageUrl,
+          currentAudioUrl
+        );
+        showSuccess("Flashcard updated successfully");
+        return true;
+      } catch (error) {
+        handleError(error as Error, "Failed to update flashcard");
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [handleError, setError, setLoading, showSuccess]
+  );
+
+  const deleteFlashcard = useCallback(
+    async (id: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await flashcardService.deleteFlashcard(id);
+        showSuccess("Flashcard deleted successfully");
+        return true;
+      } catch (error) {
+        handleError(error as Error, "Failed to delete flashcard");
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [handleError, setError, setLoading, showSuccess]
+  );
+
+  const getFlashcardById = useCallback(
+    async (id: string) => {
+      try {
+        setLoading(true);
+        setError(null);
+        return await flashcardService.getFlashcardById(id);
+      } catch (error) {
+        handleError(error as Error, "Failed to fetch flashcard");
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [handleError, setError, setLoading]
+  );
+
+  const updateReviewStatus = useCallback(
+    async (id: string, wasCorrect: boolean) => {
+      try {
+        setLoading(true);
+        setError(null);
+        await flashcardService.updateReviewStatus(id, wasCorrect);
+        return true;
+      } catch (error) {
+        handleError(error as Error, "Failed to update review status");
+        throw error;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [handleError, setError, setLoading]
   );
 
   return {
     flashcards,
     isLoading,
     error,
-    fetchDeckFlashcards,
-    addFlashcardToDeck,
-    removeFlashcardFromDeck,
-    handleCreateFlashcard,
+    getDeckFlashcards,
+    createFlashcard,
+    updateFlashcard,
+    deleteFlashcard,
+    getFlashcardById,
+    updateReviewStatus,
   };
 };

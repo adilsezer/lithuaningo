@@ -5,33 +5,42 @@ namespace Lithuaningo.API.Services;
 
 public interface ISupabaseConfiguration
 {
-    SupabaseSettings LoadConfiguration(string credentialsPath);
+    SupabaseSettings LoadConfiguration();
 }
 
 public class SupabaseConfiguration : ISupabaseConfiguration
 {
-    public SupabaseSettings LoadConfiguration(string credentialsPath)
+    private readonly IConfiguration _configuration;
+    private readonly IWebHostEnvironment _environment;
+    private readonly ILogger<SupabaseConfiguration> _logger;
+
+    public SupabaseConfiguration(
+        IConfiguration configuration,
+        IWebHostEnvironment environment,
+        ILogger<SupabaseConfiguration> logger)
     {
-        if (!File.Exists(credentialsPath))
-        {
-            throw new FileNotFoundException($"Supabase credentials file not found at: {credentialsPath}");
-        }
-
-        var credentialsJson = File.ReadAllText(credentialsPath);
-        var wrapper = JsonSerializer.Deserialize<SupabaseSettingsWrapper>(credentialsJson)
-            ?? throw new InvalidOperationException("Invalid Supabase credentials format");
-
-        ValidateSettings(wrapper.Supabase);
-        return wrapper.Supabase;
+        _configuration = configuration;
+        _environment = environment;
+        _logger = logger;
     }
 
-    private static void ValidateSettings(SupabaseSettings settings)
+    public SupabaseSettings LoadConfiguration()
     {
-        if (string.IsNullOrEmpty(settings.Url))
-            throw new InvalidOperationException("Supabase URL is required");
-        if (string.IsNullOrEmpty(settings.ServiceKey))
-            throw new InvalidOperationException("Supabase Service Key is required");
-        if (string.IsNullOrEmpty(settings.AnonKey))
-            throw new InvalidOperationException("Supabase Anon Key is required");
+        var settings = _configuration.GetSection("Supabase").Get<SupabaseSettings>();
+        
+        if (settings == null)
+        {
+            throw new InvalidOperationException(
+                "Supabase settings not found in configuration. " +
+                "Please ensure the Supabase section is properly configured in appsettings.json " +
+                "or use User Secrets for local development.");
+        }
+
+        settings.Validate();
+        
+        _logger.LogInformation("Supabase configuration loaded successfully from {Environment} environment", 
+            _environment.EnvironmentName);
+            
+        return settings;
     }
 } 

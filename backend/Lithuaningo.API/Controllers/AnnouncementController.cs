@@ -9,6 +9,7 @@ using Lithuaningo.API.DTOs.Announcement;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.OpenApi.Models;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -16,11 +17,10 @@ namespace Lithuaningo.API.Controllers
     /// Manages announcement data in the application. Supports retrieving all announcements, retrieving a specific announcement by ID,
     /// creating new announcements, updating an existing announcement, and deleting announcements.
     /// </summary>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Announcement management endpoints")]
-    public class AnnouncementController : ControllerBase
+    public class AnnouncementController : BaseApiController
     {
         private readonly IAnnouncementService _announcementService;
         private readonly ILogger<AnnouncementController> _logger;
@@ -46,6 +46,7 @@ namespace Lithuaningo.API.Controllers
         /// <returns>A list of announcements</returns>
         /// <response code="200">Returns a list of announcements</response>
         /// <response code="500">An internal error occurred while retrieving announcements</response>
+        [AllowAnonymous]
         [HttpGet]
         [SwaggerOperation(
             Summary = "Retrieves all announcements",
@@ -83,6 +84,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="400">Provided announcement ID is empty</response>
         /// <response code="404">No announcement found with the given ID</response>
         /// <response code="500">An error occurred during retrieval</response>
+        [AllowAnonymous]
         [HttpGet("{id}")]
         [SwaggerOperation(
             Summary = "Retrieves a specific announcement",
@@ -137,6 +139,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="201">Returns the created announcement</response>
         /// <response code="400">Invalid request model</response>
         /// <response code="500">An error occurred during the creation of the announcement</response>
+        [Authorize(Roles = "Admin")]
         [HttpPost]
         [SwaggerOperation(
             Summary = "Creates a new announcement",
@@ -187,6 +190,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="400">Either the announcement ID is empty or ModelState is invalid</response>
         /// <response code="404">No announcement found with the given ID</response>
         /// <response code="500">An error occurred during the update</response>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{id}")]
         [SwaggerOperation(
             Summary = "Updates an existing announcement",
@@ -242,6 +246,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="204">Announcement successfully deleted</response>
         /// <response code="400">Announcement ID is empty</response>
         /// <response code="500">An error occurred during deletion</response>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         [SwaggerOperation(
             Summary = "Deletes an announcement",

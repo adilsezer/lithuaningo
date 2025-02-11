@@ -2,7 +2,7 @@ using System;
 using AutoMapper;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Flashcard;
-using Lithuaningo.API.DTOs.FlashcardStats;
+using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Utils;
 
 namespace Lithuaningo.API.Mappings
@@ -32,8 +32,8 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.LastReviewedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.ReviewCount, opt => opt.MapFrom((src, dest) => dest.ReviewCount + 1));
 
-            // FlashcardStats mappings
-            CreateMap<FlashcardStats, FlashcardStatsResponse>()
+            // UserFlashcardStats mappings
+            CreateMap<UserFlashcardStats, UserFlashcardStatsResponse>()
                 .ForMember(dest => dest.AccuracyRate, opt => opt.MapFrom(src => 
                     src.ConfidenceLevel > 0 ? src.ConfidenceLevel * 20.0 : 0))
                 .ForMember(dest => dest.LastReviewedTimeAgo, opt => opt.MapFrom(src => 
@@ -41,7 +41,7 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.NextReviewDue, opt => opt.MapFrom(src => 
                     src.NextReviewAt.HasValue ? TimeFormatUtils.GetTimeRemaining(src.NextReviewAt.Value) : null));
 
-            CreateMap<TrackProgressRequest, FlashcardStats>()
+            CreateMap<TrackProgressRequest, UserFlashcardStats>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
         }
     }

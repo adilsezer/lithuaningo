@@ -83,6 +83,14 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
   const windowWidth = Dimensions.get("window").width;
   const isSmallScreen = windowWidth < 375;
 
+  const renderAttributes = (attributes: Record<string, string>) => {
+    return Object.entries(attributes).map(([key, value]) => (
+      <CustomText key={key} style={styles.attributeText}>
+        {key}: {value}
+      </CustomText>
+    ));
+  };
+
   return (
     <ScrollView contentContainerStyle={styles.scrollViewContent}>
       <TouchableWithoutFeedback onPress={handleFlip}>
@@ -100,7 +108,11 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
                 style={[styles.image, isSmallScreen && styles.smallImage]}
               />
             )}
-            <CustomText>{wordId}</CustomText>
+            <CustomText variant="titleLarge">{word?.word}</CustomText>
+            {word?.attributes && renderAttributes(word.attributes)}
+            <CustomText variant="bodySmall" style={styles.timeText}>
+              {word?.timeAgo}
+            </CustomText>
             <View
               style={[
                 styles.horizontalRule,
@@ -122,7 +134,13 @@ const Flashcard: React.FC<FlashcardProps> = ({ wordId }) => {
                 style={[styles.image, isSmallScreen && styles.smallImage]}
               />
             )}
-            <CustomText>{word?.word}</CustomText>
+            <CustomText variant="titleLarge">{lemma?.lemmaText}</CustomText>
+            <CustomText variant="bodyMedium">{lemma?.partOfSpeech}</CustomText>
+            {lemma?.definitions?.map((def, index) => (
+              <CustomText key={index} style={styles.definitionText}>
+                • {def}
+              </CustomText>
+            ))}
             <View
               style={[
                 styles.horizontalRule,
@@ -201,6 +219,17 @@ const styles = StyleSheet.create({
     alignSelf: "center",
     borderBottomWidth: 1,
     marginVertical: 10,
+  },
+  attributeText: {
+    marginVertical: 2,
+  },
+  definitionText: {
+    marginVertical: 4,
+    paddingHorizontal: 16,
+  },
+  timeText: {
+    marginTop: 8,
+    fontStyle: "italic",
   },
 });
 

@@ -50,10 +50,10 @@ const updateEmailVerificationStatus = async (
 ) => {
   try {
     const userProfile = await apiClient.getUserProfile(userId);
-    if (userProfile && userProfile.emailVerified !== emailVerified) {
-      await apiClient.updateUserProfile({
-        ...userProfile,
-        emailVerified,
+    if (userProfile) {
+      await apiClient.updateUserProfile(userId, {
+        email,
+        fullName: userProfile.fullName,
       });
     }
   } catch (error) {
@@ -62,29 +62,27 @@ const updateEmailVerificationStatus = async (
 };
 
 export const updateUserState = async (session: { user: User } | null) => {
-  if (!session?.user?.email) {
-    throw new Error("User email is unexpectedly null or undefined.");
+  if (!session?.user) {
+    throw new Error("User is unexpectedly null or undefined.");
   }
 
   const { user } = session;
-  const emailVerified = user.email_confirmed_at != null;
-
-  // Handle email verification
-  if (!user.email || !emailVerified) {
-    await supabase.auth.signOut();
-    useUserStore.getState().logOut();
-    throw new Error("Email does not exist or is not verified");
+  if (!user.email) {
+    throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  // Update user state only if email is verified
+  const name = user.user_metadata?.name;
+  if (!name || typeof name !== "string") {
+    throw new Error("User name is required and must be a string");
+  }
+
   useUserStore.getState().logIn({
     id: user.id,
-    name: user.user_metadata?.name || "No Name",
     email: user.email,
-    emailVerified,
+    fullName: name,
   });
 
-  await updateEmailVerificationStatus(user.id, user.email, emailVerified);
+  await ensureUserProfile(user.id, user.email, name);
 };
 
 const ensureUserProfile = async (
@@ -92,14 +90,24 @@ const ensureUserProfile = async (
   email: string,
   name: string
 ) => {
-  const userProfile = await apiClient.getUserProfile(userId);
-  if (!userProfile) {
-    await apiClient.createUserProfile(userId);
-    const newUserProfile = await apiClient.getUserProfile(userId);
-    newUserProfile.name = name || "No Name";
-    newUserProfile.email = email;
-    newUserProfile.emailVerified = true;
-    await apiClient.updateUserProfile(newUserProfile);
+  if (!userId || !email || !name) {
+    throw new Error("Missing required user profile information");
+  }
+
+  try {
+    const userProfile = await apiClient.getUserProfile(userId);
+    if (!userProfile) {
+      // First create the profile with just userId
+      await apiClient.createUserProfile({ userId });
+
+      // Then update it with the additional info
+      await apiClient.updateUserProfile(userId, {
+        email,
+        fullName: name,
+      });
+    }
+  } catch (error) {
+    console.error("Error ensuring user profile:", error);
   }
 };
 
@@ -205,12 +213,17 @@ export const signInWithEmail = async (
       };
     }
 
+    if (!data.user.email) {
+      throw new Error("Email is required");
+    }
+
+    const name = data.user.user_metadata?.name;
+    if (!name) {
+      throw new Error("Name is required");
+    }
+
     await resetAuthAttempts(); // Reset on successful login
-    await ensureUserProfile(
-      data.user.id,
-      data.user.email || "",
-      data.user.user_metadata?.name || ""
-    );
+    await ensureUserProfile(data.user.id, data.user.email, name);
     await updateUserState(data.session);
     return { success: true };
   } catch (error) {
@@ -240,12 +253,17 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
       throw error;
     }
 
+    if (!data.user.email) {
+      throw new Error("Email is required from Google Sign-In");
+    }
+
+    const name = data.user.user_metadata?.name;
+    if (!name) {
+      throw new Error("Name is required from Google Sign-In");
+    }
+
     await resetAuthAttempts(); // Reset on successful login
-    await ensureUserProfile(
-      data.user.id,
-      data.user.email || "",
-      data.user.user_metadata?.name || ""
-    );
+    await ensureUserProfile(data.user.id, data.user.email, name);
     await updateUserState(data.session);
     return { success: true };
   } catch (error) {
@@ -266,7 +284,7 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
 
     if (!credential.identityToken) {
       await incrementAuthAttempts(); // Increment on failure
-      throw new Error("No identity token");
+      throw new Error("No identity token from Apple Sign-In");
     }
 
     const { data, error } = await supabase.auth.signInWithIdToken({
@@ -279,12 +297,17 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
       throw error;
     }
 
+    if (!data.user.email) {
+      throw new Error("Email is required from Apple Sign-In");
+    }
+
+    const name = data.user.user_metadata?.name;
+    if (!name) {
+      throw new Error("Name is required from Apple Sign-In");
+    }
+
     await resetAuthAttempts(); // Reset on successful login
-    await ensureUserProfile(
-      data.user.id,
-      data.user.email || "",
-      data.user.user_metadata?.name || credential.fullName?.givenName || ""
-    );
+    await ensureUserProfile(data.user.id, data.user.email, name);
     await updateUserState(data.session);
     return { success: true };
   } catch (error) {

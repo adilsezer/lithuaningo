@@ -142,7 +142,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<Deck>()
-                    .Where(d => d.CreatedBy == userGuid)
+                    .Where(d => d.UserId == userGuid)
                     .Get();
 
                 var decks = response.Models;
@@ -381,7 +381,7 @@ namespace Lithuaningo.API.Services
                 _cache.RemoveAsync($"{CacheKeyPrefix}{deck.Id}"),
                 
                 // Invalidate user's deck list cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}user:{deck.CreatedBy}"),
+                _cache.RemoveAsync($"{CacheKeyPrefix}user:{deck.UserId}"),
                 
                 // Invalidate general deck lists that might contain this deck
                 _cache.RemoveAsync($"{CacheKeyPrefix}list:all:0"),

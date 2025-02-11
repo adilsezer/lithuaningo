@@ -5,7 +5,7 @@ using Supabase.Postgrest.Attributes;
 namespace Lithuaningo.API.Models
 {
     [Table("flashcard_stats")]
-    public class FlashcardStats : BaseModel
+    public class UserFlashcardStats : BaseModel
     {
         [PrimaryKey("id")]
         [Column("id")]

@@ -38,5 +38,10 @@ namespace Lithuaningo.API.DTOs.Deck
         /// Whether the deck is public
         /// </summary>
         public bool IsPublic { get; set; }
+
+        /// <summary>
+        /// URL to the deck's image
+        /// </summary>
+        public string? ImageUrl { get; set; }
     }
 }

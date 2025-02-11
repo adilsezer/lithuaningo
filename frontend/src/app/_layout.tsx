@@ -14,19 +14,31 @@ import { createTheme } from "@src/styles/theme";
 import { useIsDarkMode } from "@stores/useThemeStore";
 import InitializationProvider from "@providers/InitializationProvider";
 
-// Define all app routes
+// Define all app routes based on the file system structure
 const APP_ROUTES = [
   "(root)",
-  "dashboard",
-  "decks",
-  "flashcards",
-  "learning",
-  "auth",
-  "profile",
-  "about",
-  "privacy-policy",
-  "terms-of-service",
-  "notification",
+  "dashboard/(tabs)",
+  "decks/new",
+  "decks/[id]/comments",
+  "decks/[id]/edit",
+  "decks/[id]/index",
+  "decks/[id]/quiz",
+  "decks/[id]/report",
+  "flashcards/new",
+  "flashcards/[id]/edit",
+  "learning/[wordId]",
+  "learning/quiz",
+  "auth/login",
+  "auth/signup",
+  "auth/forgot-password",
+  "profile/change-password",
+  "profile/delete-account",
+  "profile/edit-profile",
+  "profile/settings",
+  "about/index",
+  "privacy-policy/index",
+  "terms-of-service/index",
+  "notification/index",
 ] as const;
 
 /**

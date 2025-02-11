@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from "react";
-import { View, StyleSheet, Text } from "react-native";
+import { View, StyleSheet } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
 import { useReport } from "@hooks/useReport";
@@ -29,14 +29,13 @@ export default function ReportScreen() {
     if (!userData?.id || !id) return;
 
     await submitReport({
-      contentId: id as string,
-      reportedBy: userData.id,
+      deckId: id as string,
+      reporterId: userData.id,
       reason: data.reason,
       details: data.details,
     });
 
     setIsSuccess(true);
-    // Navigate to decks dashboard after a short delay
     setTimeout(navigateToDecks, 1500);
   };
 
@@ -109,7 +108,9 @@ export default function ReportScreen() {
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <BackButton />
-      <CustomText>Submit Report</CustomText>
+      <CustomText variant="titleLarge" bold>
+        Submit Report
+      </CustomText>
       <CustomText
         style={[styles.description, { color: theme.colors.onSurface }]}
       >

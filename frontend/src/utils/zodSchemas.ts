@@ -95,14 +95,11 @@ export const deckFormSchema = z
   .partial();
 
 export const flashcardFormSchema = z.object({
-  front: z.string().min(1, "Front side is required"),
-  back: z.string().min(1, "Back side is required"),
-  exampleSentence: z.string().optional(),
-  audioFile: z.any().optional(),
-  imageFile: z.any().optional(),
+  frontText: z.string().min(1, "Front text is required"),
+  backText: z.string().min(1, "Back text is required"),
 });
 
-export const flashcardEditSchema = flashcardFormSchema.partial();
+export const flashcardEditSchema = flashcardFormSchema;
 
 export const reportFormSchema = z.object({
   reason: z.string().min(1, "Please select a reason"),

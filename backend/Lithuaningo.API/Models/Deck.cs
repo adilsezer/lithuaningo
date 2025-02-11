@@ -11,6 +11,12 @@ namespace Lithuaningo.API.Models
         [Column("id")]
         public Guid Id { get; set; }
 
+        [Column("user_id")]
+        public Guid UserId { get; set; }
+
+        [Column("user_name")]
+        public string UserName { get; set; } = string.Empty;
+
         [Column("title")]
         public string Title { get; set; } = string.Empty;
 
@@ -23,15 +29,17 @@ namespace Lithuaningo.API.Models
         [Column("tags")]
         public string[] Tags { get; set; } = Array.Empty<string>();
 
-        [Column("created_by")]
-        public Guid CreatedBy { get; set; }
+        [Column("flashcard_count")]
+        public int FlashcardCount { get; set; }
+
+        [Column("rating")]
+        public double Rating { get; set; }
 
         [Column("image_url")]
         public string? ImageUrl { get; set; }
 
         [Column("is_public")]
         public bool IsPublic { get; set; }
-        
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }

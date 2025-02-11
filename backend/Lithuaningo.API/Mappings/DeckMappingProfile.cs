@@ -4,8 +4,6 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Deck;
 using Lithuaningo.API.DTOs.Comment;
 using Lithuaningo.API.DTOs.DeckReport;
-using Lithuaningo.API.Utils;
-using Lithuaningo.API.Mappings.Resolvers;
 
 namespace Lithuaningo.API.Mappings
 {
@@ -14,42 +12,26 @@ namespace Lithuaningo.API.Mappings
         public DeckMappingProfile()
         {
             CreateMap<Deck, DeckResponse>()
-                .ForMember(dest => dest.CardCount, opt => opt.MapFrom<CardCountResolver>())
-                .ForMember(dest => dest.Rating, opt => opt.MapFrom<DeckRatingResolver>())
-                .ForMember(dest => dest.CreatedByUserName, opt => opt.MapFrom<DeckCreatorNameResolver>())
-                .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => 
-                    TimeFormatUtils.GetTimeAgo(src.CreatedAt)));
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
+                .ForMember(dest => dest.FlashcardCount, opt => opt.MapFrom(src => src.FlashcardCount))
+                .ForMember(dest => dest.Rating, opt => opt.MapFrom(src => src.Rating))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.UserName));
 
             CreateMap<CreateDeckRequest, Deck>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.IsPublic, opt => opt.MapFrom(src => true));
+                .ForMember(dest => dest.FlashcardCount, opt => opt.MapFrom(src => 0))
+                .ForMember(dest => dest.Rating, opt => opt.MapFrom(src => 0.0));
 
             CreateMap<UpdateDeckRequest, Deck>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            // Comment mappings
-            CreateMap<Comment, CommentResponse>()
-                .ForMember(dest => dest.UserName, opt => opt.MapFrom<CommentUserNameResolver>())
-                .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => 
-                    TimeFormatUtils.GetTimeAgo(src.CreatedAt)));
-
-            CreateMap<CreateCommentRequest, Comment>()
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.IsEdited, opt => opt.MapFrom(src => false));
-
-            CreateMap<UpdateCommentRequest, Comment>()
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.IsEdited, opt => opt.MapFrom(src => true));
+            CreateMap<Comment, CommentResponse>();
 
             // DeckReport mappings
-            CreateMap<DeckReport, DeckReportResponse>()
-                .ForMember(dest => dest.ReportedByUserName, opt => opt.MapFrom<ReportedByUserNameResolver>())
-                .ForMember(dest => dest.ReviewedByUserName, opt => opt.MapFrom<ReviewedByUserNameResolver>())
-                .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => 
-                    TimeFormatUtils.GetTimeAgo(src.CreatedAt)));
-
+            CreateMap<DeckReport, DeckReportResponse>();
             CreateMap<CreateDeckReportRequest, DeckReport>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))

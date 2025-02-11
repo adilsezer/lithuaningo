@@ -1,17 +1,40 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
-import { Form } from "@components/form/Form";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useDecks } from "@hooks/useDecks";
 import { useFlashcards } from "@hooks/useFlashcards";
-import { deckFormSchema } from "@utils/zodSchemas";
-import { useTheme, Card, IconButton, Button } from "react-native-paper";
-import CustomText from "@components/ui/CustomText";
-import { deckCategories } from "@src/types/DeckCategory";
-import type { Deck } from "@src/types";
-import BackButton from "@components/layout/BackButton";
-import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useSetLoading } from "@stores/useUIStore";
+import { Deck } from "@src/types";
+import { Form } from "@components/form/Form";
+import { FormField } from "@components/form/form.types";
+import BackButton from "@components/layout/BackButton";
+import CustomText from "@components/ui/CustomText";
+import { useTheme, Card, IconButton } from "react-native-paper";
+import { deckFormSchema } from "@utils/zodSchemas";
+
+const deckFields: FormField[] = [
+  {
+    name: "title",
+    label: "Title",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter deck title",
+  },
+  {
+    name: "description",
+    label: "Description",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter deck description",
+  },
+  {
+    name: "isPublic",
+    label: "Make deck public",
+    category: "toggle",
+    type: "switch",
+  },
+];
 
 export default function EditDeckScreen() {
   const theme = useTheme();
@@ -21,20 +44,24 @@ export default function EditDeckScreen() {
   const { getDeckById, updateDeck } = useDecks();
   const {
     flashcards,
-    fetchDeckFlashcards,
-    removeFlashcardFromDeck,
+    getDeckFlashcards,
+    deleteFlashcard,
     isLoading: flashcardsLoading,
   } = useFlashcards();
   const [deck, setDeck] = useState<Deck | null>(null);
   const setLoading = useSetLoading();
 
   const fetchDeck = useCallback(async () => {
+    if (!id) return;
     setLoading(true);
-    if (id) {
+    try {
       const fetchedDeck = await getDeckById(id);
       setDeck(fetchedDeck);
+    } catch (error) {
+      console.error("Error fetching deck:", error);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   }, [id, getDeckById, setLoading]);
 
   useEffect(() => {
@@ -43,14 +70,18 @@ export default function EditDeckScreen() {
 
   useEffect(() => {
     if (id) {
-      fetchDeckFlashcards(id);
+      getDeckFlashcards(id);
     }
-  }, [id, fetchDeckFlashcards]);
+  }, [id, getDeckFlashcards]);
 
   const handleSubmit = async (data: Partial<Deck>) => {
-    if (deck && id) {
+    if (!deck || !id) return;
+
+    try {
       await updateDeck(id, { ...deck, ...data });
       router.push(`/decks/${id}`);
+    } catch (error) {
+      console.error("Error updating deck:", error);
     }
   };
 
@@ -63,14 +94,30 @@ export default function EditDeckScreen() {
       confirmText: "Delete",
       cancelText: "Cancel",
       onConfirm: async () => {
-        await removeFlashcardFromDeck(id, flashcardId);
+        try {
+          await deleteFlashcard(flashcardId);
+          await getDeckFlashcards(id);
+        } catch (error) {
+          console.error("Error deleting flashcard:", error);
+        }
       },
     });
   };
 
   const handleEditFlashcard = (flashcardId: string) => {
-    router.push(`/flashcards/${flashcardId}/edit`);
+    router.push(`/decks/${id}/flashcards/${flashcardId}/edit`);
   };
+
+  if (!deck) {
+    return (
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <BackButton />
+        <CustomText>Loading deck...</CustomText>
+      </View>
+    );
+  }
 
   return (
     <View
@@ -82,58 +129,22 @@ export default function EditDeckScreen() {
           Edit Deck
         </CustomText>
 
-        {deck ? (
-          <Form
-            fields={[
-              {
-                name: "title",
-                label: "Title",
-                category: "text-input",
-                type: "text",
-                placeholder: "Enter deck title",
-                defaultValue: deck.title || "",
-              },
-              {
-                name: "description",
-                label: "Description",
-                category: "text-input",
-                type: "text",
-                placeholder: "Enter deck description",
-                defaultValue: deck.description || "",
-              },
-              {
-                name: "category",
-                label: "Category",
-                category: "selection",
-                type: "picker",
-                options: deckCategories.map((cat) => ({
-                  label: cat,
-                  value: cat,
-                })),
-                defaultValue: deck.category || "",
-              },
-            ]}
-            onSubmit={handleSubmit}
-            submitButtonText="Update Deck"
-            zodSchema={deckFormSchema}
-          />
-        ) : (
-          <CustomText>Loading deck...</CustomText>
-        )}
+        <Form
+          fields={deckFields}
+          onSubmit={handleSubmit}
+          submitButtonText="Update Deck"
+          zodSchema={deckFormSchema}
+          defaultValues={{
+            title: deck.title,
+            description: deck.description,
+            isPublic: deck.isPublic,
+          }}
+        />
 
         <View style={styles.flashcardsSection}>
-          <View style={styles.sectionHeader}>
-            <CustomText variant="titleMedium" bold>
-              Flashcards
-            </CustomText>
-            <Button
-              mode="contained"
-              onPress={() => router.push(`/flashcards/new?deckId=${id}`)}
-              icon="plus"
-            >
-              Add Flashcard
-            </Button>
-          </View>
+          <CustomText variant="titleMedium" bold style={styles.sectionTitle}>
+            Flashcards
+          </CustomText>
 
           {flashcardsLoading ? (
             <CustomText>Loading flashcards...</CustomText>
@@ -147,10 +158,21 @@ export default function EditDeckScreen() {
                 <Card.Content>
                   <View style={styles.flashcardContent}>
                     <View style={styles.flashcardText}>
-                      <CustomText bold>{flashcard.front}</CustomText>
+                      <CustomText bold>{flashcard.frontText}</CustomText>
                       <CustomText style={styles.translationText}>
-                        {flashcard.back}
+                        {flashcard.backText}
                       </CustomText>
+                      {flashcard.reviewCount > 0 && (
+                        <CustomText
+                          variant="bodySmall"
+                          style={styles.statsText}
+                        >
+                          Reviews: {flashcard.reviewCount} | Success Rate:{" "}
+                          {flashcard.correctRate
+                            ? `${Math.round(flashcard.correctRate)}%`
+                            : "N/A"}
+                        </CustomText>
+                      )}
                     </View>
                     <View style={styles.flashcardActions}>
                       <IconButton
@@ -178,15 +200,17 @@ export default function EditDeckScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
   },
   flashcardsSection: {
     marginTop: 24,
   },
-  sectionHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  sectionTitle: {
     marginBottom: 16,
+  },
+  emptyText: {
+    textAlign: "center",
+    marginTop: 16,
   },
   flashcardItem: {
     marginBottom: 12,
@@ -198,17 +222,17 @@ const styles = StyleSheet.create({
   },
   flashcardText: {
     flex: 1,
+    marginRight: 16,
   },
   translationText: {
     marginTop: 4,
     opacity: 0.7,
   },
+  statsText: {
+    marginTop: 4,
+    fontStyle: "italic",
+  },
   flashcardActions: {
     flexDirection: "row",
-  },
-  emptyText: {
-    textAlign: "center",
-    marginTop: 16,
-    opacity: 0.7,
   },
 });

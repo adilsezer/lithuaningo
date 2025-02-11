@@ -1,5 +1,6 @@
 using FluentValidation;
 using Lithuaningo.API.DTOs.ChallengeStats;
+using System;
 
 namespace Lithuaningo.API.Validators;
 
@@ -10,24 +11,13 @@ public class CreateChallengeStatsValidator : AbstractValidator<CreateChallengeSt
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required");
 
-        RuleFor(x => x.CompletedChallenges)
-            .GreaterThanOrEqualTo(0).WithMessage("Completed challenges must be non-negative");
-
-        RuleFor(x => x.TotalAttempts)
-            .GreaterThanOrEqualTo(0).WithMessage("Total attempts must be non-negative")
-            .GreaterThanOrEqualTo(x => x.CompletedChallenges)
-            .WithMessage("Total attempts must be greater than or equal to completed challenges");
-
-        RuleFor(x => x.SuccessRate)
-            .InclusiveBetween(0, 100).WithMessage("Success rate must be between 0 and 100");
-
         RuleFor(x => x.CurrentStreak)
             .GreaterThanOrEqualTo(0).WithMessage("Current streak must be non-negative");
 
-        RuleFor(x => x.BestStreak)
-            .GreaterThanOrEqualTo(0).WithMessage("Best streak must be non-negative")
+        RuleFor(x => x.LongestStreak)
+            .GreaterThanOrEqualTo(0).WithMessage("Longest streak must be non-negative")
             .GreaterThanOrEqualTo(x => x.CurrentStreak)
-            .WithMessage("Best streak must be greater than or equal to current streak");
+            .WithMessage("Longest streak must be greater than or equal to current streak");
     }
 }
 
@@ -35,27 +25,13 @@ public class UpdateChallengeStatsValidator : AbstractValidator<UpdateChallengeSt
 {
     public UpdateChallengeStatsValidator()
     {
-        RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required");
-
-        RuleFor(x => x.CompletedChallenges)
-            .GreaterThanOrEqualTo(0).WithMessage("Completed challenges must be non-negative");
-
-        RuleFor(x => x.TotalAttempts)
-            .GreaterThanOrEqualTo(0).WithMessage("Total attempts must be non-negative")
-            .GreaterThanOrEqualTo(x => x.CompletedChallenges)
-            .WithMessage("Total attempts must be greater than or equal to completed challenges");
-
-        RuleFor(x => x.SuccessRate)
-            .InclusiveBetween(0, 100).WithMessage("Success rate must be between 0 and 100");
-
         RuleFor(x => x.CurrentStreak)
             .GreaterThanOrEqualTo(0).WithMessage("Current streak must be non-negative");
 
-        RuleFor(x => x.BestStreak)
-            .GreaterThanOrEqualTo(0).WithMessage("Best streak must be non-negative")
+        RuleFor(x => x.LongestStreak)
+            .GreaterThanOrEqualTo(0).WithMessage("Longest streak must be non-negative")
             .GreaterThanOrEqualTo(x => x.CurrentStreak)
-            .WithMessage("Best streak must be greater than or equal to current streak");
+            .WithMessage("Longest streak must be greater than or equal to current streak");
     }
 }
 

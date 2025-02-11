@@ -26,7 +26,8 @@ const RenderClickableWords: React.FC<RenderClickableWordsProps> = ({
   const theme = useTheme();
 
   const handleWordClick = (word: string) => {
-    router.push(`/learning/${cleanWord(word)}`);
+    const cleanedWord = cleanWord(word);
+    router.push(`/learning/${cleanedWord}`);
   };
 
   return (

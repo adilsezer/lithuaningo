@@ -7,17 +7,16 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.AppInfo;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
     /// Manages application information for different platforms such as iOS and Android.
     /// </summary>
-    [ApiController]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Application information management endpoints")]
-    public class AppInfoController : ControllerBase
+    public class AppInfoController : BaseApiController
     {
         private readonly IAppInfoService _appInfoService;
         private readonly ILogger<AppInfoController> _logger;
@@ -50,6 +49,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="400">Platform parameter is empty</response>
         /// <response code="404">No app info available for the specified platform</response>
         /// <response code="500">An error occurred while retrieving app information</response>
+        [AllowAnonymous]
         [HttpGet("{platform}")]
         [SwaggerOperation(
             Summary = "Retrieves application information for a platform",
@@ -105,6 +105,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="200">Returns the updated app information</response>
         /// <response code="400">Platform parameter is empty or ModelState errors exist</response>
         /// <response code="500">An error occurred during the update</response>
+        [Authorize(Roles = "Admin")]
         [HttpPut("{platform}")]
         [SwaggerOperation(
             Summary = "Updates application information",
@@ -154,6 +155,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="204">App info successfully deleted</response>
         /// <response code="400">Invalid id format</response>
         /// <response code="500">An error occurred while deleting the information</response>
+        [Authorize(Roles = "Admin")]
         [HttpDelete("{id}")]
         [SwaggerOperation(
             Summary = "Deletes application information",

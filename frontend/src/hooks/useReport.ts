@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import { reportService } from "@services/data/reportService";
-import { Report } from "@src/types/Report";
+import { DeckReport } from "@src/types";
 import {
   useIsLoading,
   useSetLoading,
@@ -16,7 +16,7 @@ export const useReport = () => {
 
   const submitReport = useCallback(
     async (
-      report: Pick<Report, "contentId" | "reportedBy" | "reason" | "details">
+      report: Pick<DeckReport, "deckId" | "reporterId" | "reason" | "details">
     ) => {
       try {
         setLoading(true);

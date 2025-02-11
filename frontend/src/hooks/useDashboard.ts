@@ -4,6 +4,7 @@ import { useIsLoading, useSetError } from "@stores/useUIStore";
 import useAnnouncements from "@hooks/useAnnouncements";
 import { useUserProfile } from "@hooks/useUserProfile";
 import { useIsDarkMode } from "@stores/useThemeStore";
+import { parseDate } from "@utils/dateUtils";
 
 export const useDashboard = () => {
   const userData = useUserData();
@@ -17,7 +18,24 @@ export const useDashboard = () => {
     setError(null);
   }, [setError]);
 
-  const validAnnouncements = announcements.filter((a) => a.title && a.content);
+  const validAnnouncements = announcements.filter((announcement) => {
+    if (
+      !announcement.title ||
+      !announcement.content ||
+      !announcement.isActive
+    ) {
+      return false;
+    }
+
+    if (announcement.validUntil) {
+      const endDate = parseDate(announcement.validUntil);
+      if (endDate && endDate < new Date()) {
+        return false;
+      }
+    }
+
+    return true;
+  });
 
   return {
     // State

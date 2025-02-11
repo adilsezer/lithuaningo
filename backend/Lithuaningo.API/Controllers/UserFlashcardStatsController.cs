@@ -5,9 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.DTOs.FlashcardStats;
+using Lithuaningo.API.DTOs.UserFlashcardStats;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -15,22 +16,21 @@ namespace Lithuaningo.API.Controllers
     /// Manages flashcard statistics including review history, success rates, and learning progress.
     /// Provides endpoints for tracking and analyzing user performance with flashcards.
     /// </summary>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Flashcard statistics management endpoints")]
-    public class FlashcardStatsController : ControllerBase
+    public class UserFlashcardStatsController : BaseApiController
     {
-        private readonly IFlashcardStatsService _flashcardStatsService;
-        private readonly ILogger<FlashcardStatsController> _logger;
+        private readonly IUserFlashcardStatsService _userFlashcardStatsService;
+        private readonly ILogger<UserFlashcardStatsController> _logger;
         private readonly IMapper _mapper;
 
-        public FlashcardStatsController(
-            IFlashcardStatsService flashcardStatsService,
-            ILogger<FlashcardStatsController> logger,
+        public UserFlashcardStatsController(
+            IUserFlashcardStatsService userFlashcardStatsService,
+            ILogger<UserFlashcardStatsController> logger,
             IMapper mapper)
         {
-            _flashcardStatsService = flashcardStatsService ?? throw new ArgumentNullException(nameof(flashcardStatsService));
+            _userFlashcardStatsService = userFlashcardStatsService ?? throw new ArgumentNullException(nameof(userFlashcardStatsService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
@@ -40,7 +40,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/FlashcardStats/{deckId}/stats?userId=user-guid
+        ///     GET /api/v1/UserFlashcardStats/{deckId}/stats?userId=user-guid
         /// 
         /// The response includes:
         /// - Total reviews count
@@ -59,13 +59,13 @@ namespace Lithuaningo.API.Controllers
         [SwaggerOperation(
             Summary = "Retrieves flashcard statistics",
             Description = "Gets detailed statistics for a specific deck and user",
-            OperationId = "GetFlashcardStats",
-            Tags = new[] { "FlashcardStats" }
+            OperationId = "GetUserFlashcardStats",
+            Tags = new[] { "UserFlashcardStats" }
         )]
-        [ProducesResponseType(typeof(FlashcardStatsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserFlashcardStatsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<FlashcardStatsResponse>> GetFlashcardStats(string deckId, [FromQuery] string userId)
+        public async Task<ActionResult<UserFlashcardStatsResponse>> GetUserFlashcardStats(string deckId, [FromQuery] string userId)
         {
             if (string.IsNullOrWhiteSpace(deckId) || string.IsNullOrWhiteSpace(userId))
             {
@@ -75,8 +75,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var stats = await _flashcardStatsService.GetFlashcardStatsAsync(deckId, userId);
-                var response = _mapper.Map<FlashcardStatsResponse>(stats);
+                var stats = await _userFlashcardStatsService.GetUserFlashcardStatsAsync(deckId, userId);
+                var response = _mapper.Map<UserFlashcardStatsResponse>(stats);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -91,7 +91,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     POST /api/v1/FlashcardStats/{deckId}/track
+        ///     POST /api/v1/UserFlashcardStats/{deckId}/track
         ///     {
         ///         "flashcardId": "flashcard-guid",
         ///         "userId": "user-guid",
@@ -109,7 +109,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Tracks flashcard progress",
             Description = "Records progress for a flashcard review session",
             OperationId = "TrackProgress",
-            Tags = new[] { "FlashcardStats" }
+            Tags = new[] { "UserFlashcardStats" }
         )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -129,8 +129,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var stats = _mapper.Map<FlashcardStats>(request);
-                await _flashcardStatsService.TrackFlashcardStatsAsync(deckId, stats.UserId.ToString(), request.FlashcardId, request.IsCorrect);
+                var stats = _mapper.Map<UserFlashcardStats>(request);
+                await _userFlashcardStatsService.TrackUserFlashcardStatsAsync(deckId, stats.UserId.ToString(), request.FlashcardId, request.IsCorrect);
                 return NoContent();
             }
             catch (Exception ex)
@@ -145,7 +145,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/FlashcardStats/user/{userId}/history
+        ///     GET /api/v1/UserFlashcardStats/user/{userId}/history
         /// 
         /// Returns a chronological list of reviews including:
         /// - Review timestamp
@@ -162,13 +162,13 @@ namespace Lithuaningo.API.Controllers
         [SwaggerOperation(
             Summary = "Retrieves user's flashcard history",
             Description = "Gets the review history for all flashcards reviewed by a user",
-            OperationId = "GetFlashcardHistory",
-            Tags = new[] { "FlashcardStats" }
+            OperationId = "GetUserFlashcardHistory",
+            Tags = new[] { "UserFlashcardStats" }
         )]
-        [ProducesResponseType(typeof(List<FlashcardStatsResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<UserFlashcardStatsResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<FlashcardStatsResponse>>> GetFlashcardHistory(string userId)
+        public async Task<ActionResult<List<UserFlashcardStatsResponse>>> GetUserFlashcardHistory(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
@@ -178,8 +178,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var history = await _flashcardStatsService.GetUserFlashcardHistoryAsync(userId);
-                var response = _mapper.Map<List<FlashcardStatsResponse>>(history);
+                var history = await _userFlashcardStatsService.GetUserFlashcardHistoryAsync(userId);
+                var response = _mapper.Map<List<UserFlashcardStatsResponse>>(history);
                 return Ok(response);
             }
             catch (Exception ex)

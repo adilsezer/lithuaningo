@@ -1,16 +1,22 @@
 export interface Flashcard {
   id: string;
   deckId: string;
-  front: string;
-  back: string;
-  audioUrl?: string;
+  frontText: string;
+  backText: string;
   imageUrl?: string;
-  exampleSentence?: string;
-  createdBy: string;
-  createdAt: Date;
+  audioUrl?: string;
+  reviewCount: number;
+  lastReviewedAt: string | null;
+  lastReviewedTimeAgo: string | null;
+  correctRate: number | null;
+  timeAgo: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export interface FlashcardFormData extends Omit<Flashcard, "id" | "createdAt"> {
+export interface FlashcardFormData {
+  frontText: string;
+  backText: string;
   imageFile?: File;
   audioFile?: File;
 }

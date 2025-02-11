@@ -128,7 +128,6 @@ namespace Lithuaningo.API.Services
                 comment.Id = Guid.NewGuid();
                 comment.CreatedAt = DateTime.UtcNow;
                 comment.UpdatedAt = DateTime.UtcNow;
-                comment.IsEdited = false;
 
                 var response = await _supabaseClient
                     .From<Comment>()
@@ -160,8 +159,6 @@ namespace Lithuaningo.API.Services
             try
             {
                 comment.UpdatedAt = DateTime.UtcNow;
-                comment.IsEdited = true;
-                comment.EditedAt = DateTime.UtcNow;
 
                 var response = await _supabaseClient
                     .From<Comment>()

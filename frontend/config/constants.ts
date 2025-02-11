@@ -5,16 +5,6 @@ export const API_KEYS = {
   API_URL: process.env.EXPO_PUBLIC_API_URL,
 };
 
-export const COLLECTIONS = {
-  USERS: "userProfiles",
-  SENTENCES: "sentences",
-  WORDS: "words",
-  PENDING_WORDS: "pendingWords",
-  MISSING_WORDS: "missingWords",
-  ANNOUNCEMENTS: "announcements",
-  APP_INFO: "appInfo",
-};
-
 export const NOTIFICATION_KEYS = {
   REMINDER_ENABLED: "reminderEnabled",
   REMINDER_TIME: "reminderTime",

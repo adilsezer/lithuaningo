@@ -1,20 +1,17 @@
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
-import { DataTable, Text, useTheme } from "react-native-paper";
+import { DataTable, useTheme } from "react-native-paper";
 import { format } from "date-fns";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import CustomText from "./CustomText";
+import { LeaderboardEntry } from "@src/types";
 
-export type LeaderboardProps = {
-  entries: Array<{
-    userId: string;
-    name: string;
-    score: number;
-  }>;
+interface LeaderboardProps {
+  entries: LeaderboardEntry[];
   weekId?: string;
-  startDate?: Date | null;
-  endDate?: Date | null;
-};
+  startDate?: string;
+  endDate?: string;
+}
 
 const TrophyIcon = ({
   position,
@@ -43,24 +40,6 @@ const Leaderboard = ({
   endDate,
 }: LeaderboardProps) => {
   const theme = useTheme();
-
-  entries = [
-    {
-      userId: "1",
-      name: "John Doe",
-      score: 100,
-    },
-    { userId: "2", name: "Jane Smith", score: 95 },
-    { userId: "3", name: "Alice Johnson", score: 90 },
-    { userId: "4", name: "Bob Johnson", score: 85 },
-    { userId: "5", name: "Charlie Johnson", score: 80 },
-    { userId: "6", name: "David Johnson", score: 75 },
-    { userId: "7", name: "Eve Johnson", score: 70 },
-    { userId: "8", name: "Frank Johnson", score: 65 },
-    { userId: "9", name: "Grace Johnson", score: 60 },
-    { userId: "10", name: "Hank Johnson", score: 55 },
-    { userId: "11", name: "Ian Johnson", score: 50 },
-  ];
 
   const dateRange =
     startDate && endDate
@@ -95,21 +74,26 @@ const Leaderboard = ({
           <DataTable.Title>Rank</DataTable.Title>
           <DataTable.Title style={{ flex: 3 }}>Name</DataTable.Title>
           <DataTable.Title numeric>Score</DataTable.Title>
+          <DataTable.Title numeric style={{ flex: 2 }}>
+            Last Active
+          </DataTable.Title>
         </DataTable.Header>
 
         {/* Data Rows */}
         {entries.length > 0 ? (
           entries.map((entry, index) => (
             <DataTable.Row key={entry.userId}>
-              <DataTable.Cell>{index + 1}</DataTable.Cell>
+              <DataTable.Cell>{entry.rank || index + 1}</DataTable.Cell>
               <DataTable.Cell style={{ flex: 3 }}>
                 <View style={styles.nameView}>
                   <TrophyIcon position={index} color={theme.colors.primary} />
                   <CustomText>{entry.name}</CustomText>
                 </View>
               </DataTable.Cell>
-
               <DataTable.Cell numeric>{entry.score}</DataTable.Cell>
+              <DataTable.Cell numeric style={{ flex: 2 }}>
+                {entry.lastUpdatedTimeAgo}
+              </DataTable.Cell>
             </DataTable.Row>
           ))
         ) : (

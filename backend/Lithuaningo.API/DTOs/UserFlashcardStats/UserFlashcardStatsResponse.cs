@@ -1,11 +1,11 @@
 using System;
 
-namespace Lithuaningo.API.DTOs.FlashcardStats
+namespace Lithuaningo.API.DTOs.UserFlashcardStats
 {
     /// <summary>
     /// Response containing flashcard statistics
     /// </summary>
-    public class FlashcardStatsResponse
+    public class UserFlashcardStatsResponse
     {
         /// <summary>
         /// The unique identifier

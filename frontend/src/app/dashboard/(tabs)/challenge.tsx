@@ -5,16 +5,27 @@ import { router } from "expo-router";
 import CustomText from "@components/ui/CustomText";
 import Leaderboard from "@components/ui/Leaderboard";
 import { useLeaderboard } from "@hooks/useLeaderboard";
+import { useUserData } from "@stores/useUserStore";
+import { ChallengeStatsCard } from "@components/challenge/ChallengeStatsCard";
 import CustomDivider from "@components/ui/CustomDivider";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
+import { useChallengeStats } from "@hooks/useChallengeStats";
+
 export default function LearnScreen() {
   const handleNavigation = (route: string) => {
     router.push(route);
   };
 
+  const userData = useUserData();
   const { entries, weekId, startDate, endDate } = useLeaderboard();
+  const { stats, error, isLoading } = useChallengeStats(userData?.id);
+
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
 
   return (
-    <ScrollView>
+    <ScrollView style={styles.container}>
       <Image
         source={require("assets/images/learn_screen.png")}
         style={styles.image}
@@ -27,6 +38,8 @@ export default function LearnScreen() {
         Ready for today's Lithuaningo challenge? Test your skills with a daily
         quiz or warm up with flashcards.
       </CustomText>
+
+      {stats && <ChallengeStatsCard stats={stats} />}
 
       <CustomButton
         title="Start Daily Challenge"
@@ -44,6 +57,10 @@ export default function LearnScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 16,
+  },
   image: {
     width: "100%",
     height: 300,

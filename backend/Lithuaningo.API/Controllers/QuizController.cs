@@ -8,6 +8,7 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Quiz;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -22,11 +23,10 @@ namespace Lithuaningo.API.Controllers
     /// 
     /// All dates are handled in UTC timezone.
     /// </remarks>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Quiz management endpoints")]
-    public class QuizController : ControllerBase
+    public class QuizController : BaseApiController
     {
         private readonly IQuizService _quizService;
         private readonly ILogger<QuizController> _logger;

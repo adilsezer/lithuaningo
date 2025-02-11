@@ -8,11 +8,6 @@ namespace Lithuaningo.API.DTOs.AppInfo
     public class AppInfoResponse
     {
         /// <summary>
-        /// The unique identifier
-        /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
         /// The platform identifier (e.g., "ios", "android")
         /// </summary>
         public string Platform { get; set; } = string.Empty;
@@ -28,18 +23,28 @@ namespace Lithuaningo.API.DTOs.AppInfo
         public string MinimumVersion { get; set; } = string.Empty;
 
         /// <summary>
-        /// Whether there's a mandatory update
+        /// Whether there's a mandatory update required
         /// </summary>
-        public bool HasMandatoryUpdate { get; set; }
+        public bool ForceUpdate { get; set; }
 
         /// <summary>
-        /// When this info was created
+        /// URL to update the application (App Store or Play Store)
         /// </summary>
-        public DateTime CreatedAt { get; set; }
+        public string? UpdateUrl { get; set; }
 
         /// <summary>
-        /// When this info was last updated
+        /// Whether the app is in maintenance mode
         /// </summary>
-        public DateTime UpdatedAt { get; set; }
+        public bool IsMaintenance { get; set; }
+
+        /// <summary>
+        /// Optional maintenance message to display to users
+        /// </summary>
+        public string? MaintenanceMessage { get; set; }
+
+        /// <summary>
+        /// Release notes for the current version
+        /// </summary>
+        public string? ReleaseNotes { get; set; }
     }
 } 

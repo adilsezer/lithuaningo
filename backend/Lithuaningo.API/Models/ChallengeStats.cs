@@ -14,26 +14,17 @@ public class ChallengeStats : BaseModel
     [Column("user_id")]
     public Guid UserId { get; set; }
 
-    [Column("cards_reviewed")]
-    public int CardsReviewed { get; set; }
-
-    [Column("cards_mastered")]
-    public int CardsMastered { get; set; }
-
     [Column("current_streak")]
     public int CurrentStreak { get; set; }
 
     [Column("longest_streak")]
     public int LongestStreak { get; set; }
 
-    [Column("last_activity_date")]
-    public DateTime LastActivityDate { get; set; }
+    [Column("last_challenge_date")]
+    public DateTime LastChallengeDate { get; set; }
 
-    [Column("weekly_goal")]
-    public int WeeklyGoal { get; set; } = 50; // Default weekly goal
-
-    [Column("weekly_progress")]
-    public int WeeklyProgress { get; set; }
+    [Column("has_completed_today_challenge")]
+    public bool HasCompletedTodayChallenge { get; set; }
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }

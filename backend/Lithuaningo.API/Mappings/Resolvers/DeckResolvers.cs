@@ -35,20 +35,4 @@ namespace Lithuaningo.API.Mappings.Resolvers
             return _deckService.GetDeckRatingAsync(source.Id.ToString()).Result;
         }
     }
-
-    public class DeckCreatorNameResolver : IValueResolver<Deck, DeckResponse, string>
-    {
-        private readonly IUserProfileService _userProfileService;
-        
-        public DeckCreatorNameResolver(IUserProfileService userProfileService)
-        {
-            _userProfileService = userProfileService;
-        }
-        
-        public string Resolve(Deck source, DeckResponse destination, string destMember, ResolutionContext context)
-        {
-            var profile = _userProfileService.GetUserProfileAsync(source.CreatedBy.ToString()).Result;
-            return profile?.FullName ?? "Unknown User";
-        }
-    }
 } 

@@ -22,9 +22,7 @@ const AuthInitializer: React.FC = () => {
         try {
           if (session) {
             await updateUserState(session);
-            console.log("User state updated successfully");
           } else {
-            console.log("No authenticated user found");
             logOut();
             router.replace("/");
           }

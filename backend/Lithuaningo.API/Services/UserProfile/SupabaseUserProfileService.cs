@@ -238,5 +238,22 @@ namespace Lithuaningo.API.Services
                 throw;
             }
         }
+
+        public async Task<IEnumerable<UserProfile>> GetUserProfilesAsync()
+        {
+            try
+            {
+                var response = await _supabaseClient
+                    .From<UserProfile>()
+                    .Get();
+
+                return response.Models;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving all user profiles");
+                throw;
+            }
+        }
     }
 }

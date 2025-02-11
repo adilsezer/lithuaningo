@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
@@ -12,7 +13,13 @@ namespace Lithuaningo.API.DTOs.Deck
         /// The user identifier who is creating the deck
         /// </summary>
         [Required(ErrorMessage = "User ID is required")]
-        public string UserId { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
+
+        /// <summary>
+        /// The user's display name
+        /// </summary>
+        [Required(ErrorMessage = "User name is required")]
+        public string UserName { get; set; } = string.Empty;
 
         /// <summary>
         /// The deck title
@@ -44,5 +51,10 @@ namespace Lithuaningo.API.DTOs.Deck
         /// Whether the deck is public
         /// </summary>
         public bool IsPublic { get; set; }
+
+        /// <summary>
+        /// URL to the deck's image
+        /// </summary>
+        public string? ImageUrl { get; set; }
     }
 }

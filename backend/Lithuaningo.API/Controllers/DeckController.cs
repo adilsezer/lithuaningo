@@ -8,6 +8,7 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Deck;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -25,11 +26,10 @@ namespace Lithuaningo.API.Controllers
     /// 
     /// All operations support proper error handling and validation.
     /// </remarks>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Deck management endpoints")]
-    public class DeckController : ControllerBase
+    public class DeckController : BaseApiController
     {
         private readonly IDeckService _deckService;
         private readonly ILogger<DeckController> _logger;
@@ -182,7 +182,9 @@ namespace Lithuaningo.API.Controllers
                 var deckId = await _deckService.CreateDeckAsync(deck);
                 var createdDeck = await _deckService.GetDeckByIdAsync(deckId);
                 var response = _mapper.Map<DeckResponse>(createdDeck);
-                return CreatedAtAction(nameof(GetDeck), new { id = response.Id }, response);
+                
+                // Use ID for routing but return response without ID
+                return CreatedAtAction(nameof(GetDeck), new { id = deckId }, response);
             }
             catch (Exception ex)
             {

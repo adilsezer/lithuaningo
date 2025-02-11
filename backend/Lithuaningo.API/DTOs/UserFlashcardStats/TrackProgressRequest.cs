@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using Lithuaningo.API.Validators;
 
-namespace Lithuaningo.API.DTOs.FlashcardStats
+namespace Lithuaningo.API.DTOs.UserFlashcardStats
 {
     /// <summary>
     /// Request to track progress for a flashcard

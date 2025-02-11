@@ -13,6 +13,7 @@ import CustomText from "@components/ui/CustomText";
 import { useIsDarkMode, useThemeActions } from "@stores/useThemeStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import CustomDivider from "@components/ui/CustomDivider";
+import { useUserProfile } from "@hooks/useUserProfile";
 
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
@@ -39,17 +40,24 @@ const ProfileActions = ({
 );
 
 const ProfileHeader = ({
-  name,
+  fullName,
   email,
+  lastLoginTimeAgo,
 }: {
-  name: string | null;
+  fullName: string;
   email: string;
+  lastLoginTimeAgo?: string;
 }) => (
   <>
     <CustomText variant="titleLarge" bold>
-      {name || "User"}
+      {fullName}
     </CustomText>
     <CustomText variant="bodyLarge">{email}</CustomText>
+    {lastLoginTimeAgo && (
+      <CustomText variant="bodySmall">
+        Last active: {lastLoginTimeAgo}
+      </CustomText>
+    )}
   </>
 );
 
@@ -62,6 +70,7 @@ export default function ProfileScreen() {
 
   const userData = useUserData();
   const isLoggedIn = useIsLoggedIn();
+  const { profile } = useUserProfile();
 
   const handleNavigation = (path: string) => {
     router.push(path);
@@ -120,7 +129,11 @@ export default function ProfileScreen() {
 
       <CustomDivider />
 
-      <ProfileHeader name={userData.name} email={userData.email} />
+      <ProfileHeader
+        fullName={profile?.fullName || userData.fullName}
+        email={profile?.email || userData.email}
+        lastLoginTimeAgo={profile?.lastLoginTimeAgo}
+      />
 
       <ProfileActions onNavigate={handleNavigation} />
 

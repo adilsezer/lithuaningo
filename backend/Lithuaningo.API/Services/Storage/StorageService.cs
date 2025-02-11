@@ -3,6 +3,7 @@ using Amazon.S3.Model;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Logging;
 
 namespace Lithuaningo.API.Services.Storage;
 
@@ -14,20 +15,11 @@ public class StorageService : IStorageService, IDisposable
     private bool _disposed;
 
     public StorageService(
-        IOptions<StorageSettings> settings,
-        IStorageConfiguration storageConfiguration)
+        IStorageConfiguration storageConfiguration,
+        ILogger<StorageService> logger)
     {
-        _settings = settings.Value;
-        
-        var credentials = storageConfiguration.LoadConfiguration(
-            Path.Combine(Directory.GetCurrentDirectory(), _settings.CredentialsPath)
-        );
-
-        // Update settings from credentials
-        _settings.R2AccountId = credentials.R2AccountId;
-        _settings.R2AccessKeyId = credentials.R2AccessKeyId;
-        _settings.R2AccessKeySecret = credentials.R2AccessKeySecret;
-        _settings.CustomDomain = credentials.CustomDomain;
+        _settings = storageConfiguration.LoadConfiguration();
+        logger.LogInformation("Initializing storage service with bucket: {BucketName}", _settings.BucketName);
 
         _publicBucketUrl = storageConfiguration.GetPublicBucketUrl(_settings);
         _s3Client = storageConfiguration.CreateS3Client(_settings);

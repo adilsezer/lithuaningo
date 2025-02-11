@@ -3,19 +3,21 @@ import { Deck } from "@src/types";
 
 class DeckService {
   async getDecks(category?: string) {
-    return apiClient.getDecks(category);
+    return apiClient.getPublicDecks();
   }
 
   async getDeckById(id: string) {
-    return apiClient.getDeckById(id);
+    return apiClient.getDeck(id);
   }
 
   async getUserDecks(userId: string) {
     return apiClient.getUserDecks(userId);
   }
 
-  async createDeck(deck: Omit<Deck, "id">) {
-    return apiClient.createDeck(deck as Deck);
+  async createDeck(
+    deck: Omit<Deck, "id" | "cardCount" | "rating" | "timeAgo" | "updatedAt">
+  ) {
+    return apiClient.createDeck(deck);
   }
 
   async updateDeck(id: string, deck: Deck) {

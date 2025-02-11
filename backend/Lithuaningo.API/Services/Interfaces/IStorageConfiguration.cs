@@ -5,7 +5,7 @@ namespace Lithuaningo.API.Services.Interfaces;
 
 public interface IStorageConfiguration
 {
-    StorageSettings LoadConfiguration(string credentialsPath);
+    StorageSettings LoadConfiguration();
     string GetPublicBucketUrl(StorageSettings settings);
     IAmazonS3 CreateS3Client(StorageSettings settings);
 } 

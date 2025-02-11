@@ -6,24 +6,63 @@ class FlashcardService {
     return apiClient.getDeckFlashcards(deckId);
   }
 
-  async addFlashcardToDeck(
-    deckId: string,
-    flashcard: Omit<Flashcard, "id" | "createdAt">
-  ) {
-    return apiClient.addFlashcardToDeck(deckId, flashcard as Flashcard);
+  async createFlashcard(
+    flashcard: Pick<Flashcard, "deckId" | "frontText" | "backText">,
+    imageFile?: File,
+    audioFile?: File
+  ): Promise<string> {
+    try {
+      const [imageUrl, audioUrl] = await Promise.all([
+        imageFile ? this.uploadFile(imageFile) : Promise.resolve(undefined),
+        audioFile ? this.uploadFile(audioFile) : Promise.resolve(undefined),
+      ]);
+
+      return apiClient.createFlashcard({
+        ...flashcard,
+        imageUrl,
+        audioUrl,
+      });
+    } catch (error) {
+      console.error("Error in createFlashcard:", error);
+      throw error;
+    }
   }
 
-  async removeFlashcardFromDeck(deckId: string, flashcardId: string) {
-    return apiClient.removeFlashcardFromDeck(deckId, flashcardId);
+  async updateFlashcard(
+    id: string,
+    flashcard: Pick<Flashcard, "frontText" | "backText">,
+    imageFile?: File,
+    audioFile?: File,
+    currentImageUrl?: string,
+    currentAudioUrl?: string
+  ) {
+    try {
+      const [imageUrl, audioUrl] = await Promise.all([
+        imageFile
+          ? this.uploadFile(imageFile)
+          : Promise.resolve(currentImageUrl),
+        audioFile
+          ? this.uploadFile(audioFile)
+          : Promise.resolve(currentAudioUrl),
+      ]);
+
+      return apiClient.updateFlashcard(id, {
+        ...flashcard,
+        imageUrl,
+        audioUrl,
+      });
+    } catch (error) {
+      console.error("Error updating flashcard:", error);
+      throw error;
+    }
   }
 
   async uploadFile(file: File): Promise<string> {
     try {
-      // Validate file type
       if (file.type.startsWith("audio/") || file.type.startsWith("image/")) {
         const formData = new FormData();
-        formData.append("File", file);
-        return apiClient.uploadFlashcardFile(formData);
+        formData.append("file", file);
+        return apiClient.uploadFile(formData);
       } else {
         throw new Error(
           "Invalid file type. Only audio and image files are allowed."
@@ -35,42 +74,16 @@ class FlashcardService {
     }
   }
 
-  async createFlashcard(
-    flashcard: Omit<Flashcard, "id" | "createdAt">,
-    image?: File,
-    audio?: File
-  ): Promise<string> {
-    try {
-      // First upload any files and get their URLs
-      const [imageUrl, audioUrl] = await Promise.all([
-        image ? this.uploadFile(image) : Promise.resolve(undefined),
-        audio ? this.uploadFile(audio) : Promise.resolve(undefined),
-      ]);
-
-      // Create flashcard with the URLs
-      const flashcardData = {
-        ...flashcard,
-        imageUrl,
-        audioUrl,
-      };
-
-      return apiClient.createFlashcard(flashcardData);
-    } catch (error) {
-      console.error("Error in createFlashcard:", error);
-      throw error;
-    }
-  }
-
-  async updateFlashcard(id: string, flashcard: Partial<Flashcard>) {
-    return apiClient.updateFlashcard(id, flashcard as Flashcard);
-  }
-
   async deleteFlashcard(id: string) {
     return apiClient.deleteFlashcard(id);
   }
 
   async getFlashcardById(id: string) {
     return apiClient.getFlashcardById(id);
+  }
+
+  async updateReviewStatus(id: string, wasCorrect: boolean) {
+    return apiClient.updateReviewStatus(id, { wasCorrect });
   }
 }
 

@@ -3,9 +3,13 @@ export interface Deck {
   title: string;
   description: string;
   category: string;
-  createdBy: string;
-  createdByUsername: string;
-  createdAt: Date;
   tags: string[];
-  flashcardCount: number;
+  createdBy: string;
+  createdByUserName: string;
+  isPublic: boolean;
+  cardCount: number;
+  rating: number;
+  timeAgo: string;
+  createdAt: string;
+  updatedAt: string;
 }

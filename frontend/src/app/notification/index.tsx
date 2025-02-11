@@ -7,11 +7,16 @@ import ErrorMessage from "@components/ui/ErrorMessage";
 const NOTIFICATION_CONFIGS = {
   maintenance: {
     title: "Under Maintenance",
-    subtitle: "We're currently performing maintenance. Please try again later.",
+    subtitle: (message?: string) =>
+      message ||
+      "We're currently performing maintenance. Please try again later.",
   },
   update: {
     title: "Update Required",
-    subtitle: "Please update to the latest version to continue using the app.",
+    subtitle: (notes?: string) =>
+      `Please update to the latest version to continue using the app.${
+        notes ? `\n\nWhat's New:\n${notes}` : ""
+      }`,
     buttonText: "Update Now",
   },
 } as const;
@@ -24,13 +29,22 @@ const NotificationScreen: React.FC = () => {
   }
 
   if (isUnderMaintenance) {
-    return <NotificationDisplay {...NOTIFICATION_CONFIGS.maintenance} />;
+    return (
+      <NotificationDisplay
+        title={NOTIFICATION_CONFIGS.maintenance.title}
+        subtitle={NOTIFICATION_CONFIGS.maintenance.subtitle(
+          appInfo?.maintenanceMessage
+        )}
+      />
+    );
   }
 
   if (appInfo?.updateUrl) {
     return (
       <NotificationDisplay
-        {...NOTIFICATION_CONFIGS.update}
+        title={NOTIFICATION_CONFIGS.update.title}
+        subtitle={NOTIFICATION_CONFIGS.update.subtitle(appInfo.releaseNotes)}
+        buttonText={NOTIFICATION_CONFIGS.update.buttonText}
         buttonAction={() => {
           Linking.openURL(appInfo.updateUrl!).catch((err) =>
             console.error("Failed to open URL:", err)

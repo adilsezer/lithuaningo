@@ -9,11 +9,6 @@ namespace Lithuaningo.API.DTOs.Deck
     public class DeckResponse
     {
         /// <summary>
-        /// The unique identifier
-        /// </summary>
-        public Guid Id { get; set; }
-
-        /// <summary>
         /// The deck title
         /// </summary>
         public string Title { get; set; } = string.Empty;
@@ -36,12 +31,12 @@ namespace Lithuaningo.API.DTOs.Deck
         /// <summary>
         /// The user identifier who created the deck
         /// </summary>
-        public Guid CreatedBy { get; set; }
+        public Guid UserId { get; set; }
 
         /// <summary>
         /// The display name of the user who created the deck
         /// </summary>
-        public string CreatedByUserName { get; set; } = string.Empty;
+        public string UserName { get; set; } = string.Empty;
 
         /// <summary>
         /// Whether the deck is public
@@ -51,7 +46,7 @@ namespace Lithuaningo.API.DTOs.Deck
         /// <summary>
         /// Total number of cards in the deck
         /// </summary>
-        public int CardCount { get; set; }
+        public int FlashcardCount { get; set; }
 
         /// <summary>
         /// Average rating of the deck
@@ -59,9 +54,9 @@ namespace Lithuaningo.API.DTOs.Deck
         public double Rating { get; set; }
 
         /// <summary>
-        /// Human-readable time elapsed since creation
+        /// URL to the deck's image
         /// </summary>
-        public string TimeAgo { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; }
 
         /// <summary>
         /// When this deck was created

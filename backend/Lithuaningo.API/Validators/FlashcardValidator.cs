@@ -1,6 +1,6 @@
 using FluentValidation;
 using Lithuaningo.API.DTOs.Flashcard;
-using Lithuaningo.API.DTOs.FlashcardStats;
+using Lithuaningo.API.DTOs.UserFlashcardStats;
 
 namespace Lithuaningo.API.Validators;
 

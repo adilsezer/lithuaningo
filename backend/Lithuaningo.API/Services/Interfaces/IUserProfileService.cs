@@ -10,5 +10,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<UserProfile> UpdateUserProfileAsync(UserProfile userProfile);
         Task<bool> DeleteUserProfileAsync(string userId);
         Task UpdateLastLoginAsync(string userId);
+        Task<IEnumerable<UserProfile>> GetUserProfilesAsync();
     }
 }

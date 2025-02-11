@@ -4,15 +4,30 @@ import { formatDistanceToNow } from "date-fns";
 import { StatsCard } from "@components/ui/StatsCard";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTheme } from "react-native-paper";
+
 interface UserStatsCardProps {
   stats: UserStats;
 }
 
 export const UserStatsCard: React.FC<UserStatsCardProps> = ({ stats }) => {
   const theme = useTheme();
-  const lastActive = formatDistanceToNow(new Date(stats.lastActivityTime), {
-    addSuffix: true,
-  });
+
+  const getLastActiveText = () => {
+    if (!stats.lastActivityTime) {
+      return "No activity yet";
+    }
+
+    try {
+      return `Last active: ${formatDistanceToNow(
+        new Date(stats.lastActivityTime),
+        {
+          addSuffix: true,
+        }
+      )}`;
+    } catch (error) {
+      return "No activity yet";
+    }
+  };
 
   const statsData = [
     {
@@ -50,7 +65,7 @@ export const UserStatsCard: React.FC<UserStatsCardProps> = ({ stats }) => {
   return (
     <StatsCard
       title="Your Stats"
-      subtitle={`Last active: ${lastActive}`}
+      subtitle={getLastActiveText()}
       stats={statsData}
       largeStats
     />

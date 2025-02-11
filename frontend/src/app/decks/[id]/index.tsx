@@ -1,46 +1,54 @@
-import React, { useEffect } from "react";
-import { View, StyleSheet, Text, ScrollView } from "react-native";
+import React, { useEffect, useState } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
-import { PracticeStats } from "@components/flashcard/PracticeStats";
+import { ChallengeStatsView } from "@components/challenge/ChallengeStats";
 import { useUserData } from "@stores/useUserStore";
-import { ErrorMessage } from "@components/ui/ErrorMessage";
-import BackButton from "@components/layout/BackButton";
-import { usePracticeStats } from "@hooks/usePracticeStats";
-import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
+import BackButton from "@components/layout/BackButton";
+import { useChallengeStats } from "@hooks/useChallengeStats";
+import { useTheme } from "react-native-paper";
+import { LoadingIndicator } from "@components/ui/LoadingIndicator";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
-  const { fetchDeckFlashcards, flashcards, error } = useFlashcards();
+  const { getDeckFlashcards, flashcards, error } = useFlashcards();
   const theme = useTheme();
   const userData = useUserData();
-  const { currentIndex, setCurrentIndex, handleAnswer, completeSession } =
-    usePracticeStats(id as string, userData?.id);
+  const { stats, isLoading, incrementCardsReviewed, incrementCardsMastered } =
+    useChallengeStats(userData?.id);
+  const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
     if (id) {
-      fetchDeckFlashcards(id as string);
+      getDeckFlashcards(id as string);
     }
-  }, [id, fetchDeckFlashcards]);
+  }, [id, getDeckFlashcards]);
 
-  const onAnswer = async (isCorrect: boolean) => {
-    const success = await handleAnswer(flashcards[currentIndex].id!, isCorrect);
-    if (success) {
-      if (currentIndex < flashcards.length - 1) {
-        setCurrentIndex(currentIndex + 1);
-      } else {
-        completeSession();
+  const handleAnswer = async (isCorrect: boolean) => {
+    if (!userData?.id) return;
+
+    try {
+      await incrementCardsReviewed();
+      if (isCorrect) {
+        await incrementCardsMastered();
       }
+    } catch (error) {
+      console.error("Error updating challenge stats:", error);
     }
   };
+
+  if (isLoading) {
+    return <LoadingIndicator />;
+  }
 
   if (error) {
     return (
       <ErrorMessage
         message={error}
-        onRetry={() => id && fetchDeckFlashcards(id as string)}
+        onRetry={() => id && getDeckFlashcards(id as string)}
         fullScreen
       />
     );
@@ -71,8 +79,8 @@ export default function PracticeScreen() {
         <CustomText variant="titleLarge" bold>
           Practice
         </CustomText>
-        {userData && (
-          <PracticeStats deckId={id as string} userId={userData.id} />
+        {stats && (
+          <ChallengeStatsView deckId={id as string} userId={userData?.id} />
         )}
         <CustomText
           style={[styles.progress, { color: theme.colors.onSurface }]}
@@ -82,7 +90,7 @@ export default function PracticeScreen() {
         <View style={styles.flashcardContainer}>
           <FlashcardView
             flashcard={flashcards[currentIndex]}
-            onAnswer={onAnswer}
+            onAnswer={handleAnswer}
           />
         </View>
       </ScrollView>

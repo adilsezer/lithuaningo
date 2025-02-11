@@ -1,5 +1,6 @@
 using FluentValidation;
 using Lithuaningo.API.DTOs.Deck;
+using System;
 
 namespace Lithuaningo.API.Validators;
 
@@ -16,8 +17,11 @@ public class CreateDeckValidator : AbstractValidator<CreateDeckRequest>
             .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
 
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required")
-            .Must(BeValidGuid).WithMessage("Invalid User ID format");
+            .NotEmpty().WithMessage("User ID is required");
+
+        RuleFor(x => x.UserName)
+            .NotEmpty().WithMessage("User name is required")
+            .MaximumLength(100).WithMessage("User name must not exceed 100 characters");
 
         RuleFor(x => x.IsPublic)
             .NotNull().WithMessage("IsPublic flag is required");
@@ -27,11 +31,6 @@ public class CreateDeckValidator : AbstractValidator<CreateDeckRequest>
             .WithMessage("Maximum 10 tags are allowed")
             .Must(tags => tags == null || tags.All(tag => tag.Length <= 30))
             .WithMessage("Tag length must not exceed 30 characters");
-    }
-
-    private bool BeValidGuid(string guid)
-    {
-        return Guid.TryParse(guid, out _);
     }
 }
 

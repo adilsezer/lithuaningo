@@ -86,6 +86,11 @@ local.settings.json
 .env*
 !.env.example
 
+# Supabase configuration
+**/credentials/supabase/*.json
+!**/credentials/supabase/settings.template.json
+.supabase/
+
 # Firebase configuration
 GoogleService-Info.plist
 google-services.json

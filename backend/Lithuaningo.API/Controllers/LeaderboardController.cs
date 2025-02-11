@@ -9,6 +9,7 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Leaderboard;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -17,11 +18,10 @@ namespace Lithuaningo.API.Controllers
     /// and user achievement tracking. Provides endpoints for retrieving various types
     /// of leaderboards and user rankings.
     /// </summary>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Leaderboard management endpoints")]
-    public class LeaderboardController : ControllerBase
+    public class LeaderboardController : BaseApiController
     {
         private readonly ILeaderboardService _leaderboardService;
         private readonly ILogger<LeaderboardController> _logger;

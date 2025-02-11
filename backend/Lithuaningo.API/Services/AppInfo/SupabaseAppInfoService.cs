@@ -63,7 +63,7 @@ namespace Lithuaningo.API.Services
                     {
                         Id = Guid.NewGuid(),
                         Platform = normalizedPlatform,
-                        LatestVersion = "1.0.0",
+                        CurrentVersion = "1.0.0",
                         MinimumVersion = "1.0.0",
                         IsMaintenance = false,
                         MaintenanceMessage = null,

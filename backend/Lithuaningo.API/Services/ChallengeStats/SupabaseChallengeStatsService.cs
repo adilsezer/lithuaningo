@@ -64,7 +64,8 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
                     UserId = userGuid,
                     CurrentStreak = 0,
                     LongestStreak = 0,
-                    LastActivityDate = DateTime.UtcNow,
+                    LastChallengeDate = DateTime.UtcNow,
+                    HasCompletedTodayChallenge = false,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
@@ -130,30 +131,35 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         try
         {
             var challengeStats = await GetChallengeStatsAsync(userId);
-            var lastActivity = challengeStats.LastActivityDate.Date;
             var today = DateTime.UtcNow.Date;
 
-            if (lastActivity < today)
+            if (!challengeStats.HasCompletedTodayChallenge)
             {
-                if (lastActivity.AddDays(1) == today)
+                challengeStats.HasCompletedTodayChallenge = true;
+                challengeStats.LastChallengeDate = DateTime.UtcNow;
+
+                // Update streak logic
+                if (challengeStats.LastChallengeDate.Date < today)
                 {
-                    // Consecutive day
-                    challengeStats.CurrentStreak++;
-                    if (challengeStats.CurrentStreak > challengeStats.LongestStreak)
+                    if (challengeStats.LastChallengeDate.Date.AddDays(1) == today)
                     {
-                        challengeStats.LongestStreak = challengeStats.CurrentStreak;
+                        // Consecutive day
+                        challengeStats.CurrentStreak++;
+                        if (challengeStats.CurrentStreak > challengeStats.LongestStreak)
+                        {
+                            challengeStats.LongestStreak = challengeStats.CurrentStreak;
+                        }
+                        _logger.LogInformation("Increased streak to {Streak} for user {UserId}", 
+                            challengeStats.CurrentStreak, userId);
                     }
-                    _logger.LogInformation("Increased streak to {Streak} for user {UserId}", 
-                        challengeStats.CurrentStreak, userId);
-                }
-                else
-                {
-                    // Streak broken
-                    challengeStats.CurrentStreak = 1;
-                    _logger.LogInformation("Reset streak for user {UserId}", userId);
+                    else
+                    {
+                        // Streak broken
+                        challengeStats.CurrentStreak = 1;
+                        _logger.LogInformation("Reset streak for user {UserId}", userId);
+                    }
                 }
 
-                challengeStats.LastActivityDate = DateTime.UtcNow;
                 await UpdateChallengeStatsAsync(challengeStats);
             }
         }
@@ -174,7 +180,6 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         try
         {
             var userStats = await GetChallengeStatsAsync(userId);
-            userStats.WeeklyProgress += amount;
             await UpdateChallengeStatsAsync(userStats);
             _logger.LogInformation("Added {Amount} experience points for user {UserId}", amount, userId);
         }
@@ -195,9 +200,8 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         try
         {
             var userStats = await GetChallengeStatsAsync(userId);
-            userStats.CardsMastered++;
             await UpdateChallengeStatsAsync(userStats);
-            _logger.LogInformation("Incremented mastered cards for user {UserId}, word {WordId}", userId, wordId);
+            _logger.LogInformation("Added learned word for user {UserId}, word {WordId}", userId, wordId);
         }
         catch (Exception ex)
         {
@@ -216,7 +220,6 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         try
         {
             var userStats = await GetChallengeStatsAsync(userId);
-            userStats.CardsReviewed++;
             await UpdateChallengeStatsAsync(userStats);
             _logger.LogInformation("Incremented total quizzes completed for user {UserId}", userId);
         }

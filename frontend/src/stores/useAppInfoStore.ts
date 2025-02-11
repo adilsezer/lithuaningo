@@ -30,18 +30,24 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
   checkAppStatus: async () => {
     try {
       const latestAppInfo = await getLatestAppInfo();
+
+      if (!latestAppInfo) {
+        throw new Error("Failed to fetch app info");
+      }
+
       const needsUpdate =
-        latestAppInfo?.latestVersion !== currentVersion &&
-        latestAppInfo?.mandatoryUpdate;
+        latestAppInfo.minimumVersion > currentVersion ||
+        (latestAppInfo.latestVersion !== currentVersion &&
+          latestAppInfo.forceUpdate);
 
       set({
         appInfo: latestAppInfo,
-        isUnderMaintenance: latestAppInfo?.isUnderMaintenance ?? false,
+        isUnderMaintenance: latestAppInfo.isMaintenance,
         needsUpdate,
         error: null,
       });
 
-      if (latestAppInfo && (needsUpdate || latestAppInfo.isUnderMaintenance)) {
+      if (latestAppInfo && (needsUpdate || latestAppInfo.isMaintenance)) {
         router.replace("/notification");
       }
     } catch (err) {

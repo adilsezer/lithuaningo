@@ -7,6 +7,7 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -20,11 +21,10 @@ namespace Lithuaningo.API.Controllers
     /// - Learning progress tracking
     /// - Login history tracking
     /// </remarks>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("User profile management endpoints")]
-    public class UserProfileController : ControllerBase
+    public class UserProfileController : BaseApiController
     {
         private readonly IUserProfileService _userProfileService;
         private readonly ILogger<UserProfileController> _logger;
@@ -106,6 +106,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="200">Returns the created user profile</response>
         /// <response code="400">If the request model is invalid</response>
         /// <response code="500">If there was an internal error during creation</response>
+        [AllowAnonymous]
         [HttpPost]
         [SwaggerOperation(
             Summary = "Creates user profile",

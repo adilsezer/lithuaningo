@@ -20,16 +20,10 @@ namespace Lithuaningo.API.Models
         [Column("content")]
         public string Content { get; set; } = string.Empty;
 
-        [Column("is_edited")]
-        public bool IsEdited { get; set; }
-
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
-
-        [Column("edited_at")]
-        public DateTime? EditedAt { get; set; }
     }
 }

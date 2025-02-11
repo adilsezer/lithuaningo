@@ -16,6 +16,9 @@ using Lithuaningo.API.Services.Cache;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Lithuaningo.API.Services.Auth;
 
 // TODO: Add HTTPS to the API when deploying to production
 
@@ -33,12 +36,8 @@ builder.Services.AddDataProtection()
 
 // Configure caching
 builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
-builder.Services.AddStackExchangeRedisCache(options =>
-{
-    options.Configuration = builder.Configuration.GetConnectionString("Redis");
-    options.InstanceName = "Lithuaningo:";
-});
-builder.Services.AddScoped<ICacheService, DistributedCacheService>();
+builder.Services.AddMemoryCache(); // Use in-memory cache instead of Redis
+builder.Services.AddScoped<ICacheService, InMemoryCacheService>();
 
 // Use NewtonsoftJson instead of the default System.Text.Json with secure settings
 builder.Services.AddControllers()
@@ -71,6 +70,8 @@ builder.Services.AddAntiforgery(options =>
     options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
     options.Cookie.HttpOnly = true; // Prevent XSS from accessing the cookie
     options.HeaderName = "X-XSRF-TOKEN";
+    // Ignore antiforgery token validation for API endpoints
+    options.SuppressXFrameOptionsHeader = true;
 });
 
 // Configure request size limits
@@ -123,8 +124,6 @@ app.UseMiddleware<SecurityHeadersMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
 app.UseMiddleware<RequestSizeMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
-
-app.UseCors("AllowFrontend");
 
 // Add authentication before authorization
 app.UseAuthentication();
@@ -183,7 +182,17 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
         { 
             Title = "Lithuaningo API v1", 
             Version = "v1",
-            Description = "Version 1 of the Lithuaningo API for the Lithuanian language learning platform",
+            Description = @"Version 1 of the Lithuaningo API for the Lithuanian language learning platform.
+
+## Authentication
+To authorize in Swagger UI:
+1. Get a JWT token from Supabase (in development):
+   ```javascript
+   const token = (await supabase.auth.getSession()).data.session?.access_token
+   ```
+2. Click 'Authorize' button at the top
+3. Enter token as: Bearer your_token_here
+4. Click 'Authorize'",
             Contact = new Microsoft.OpenApi.Models.OpenApiContact
             {
                 Name = "Lithuaningo Team",
@@ -262,7 +271,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 
     // Supabase Configuration
     services.AddSingleton<ISupabaseConfiguration, SupabaseConfiguration>();
-    services.AddSingleton<ISupabaseService, SupabaseService>();
+    services.AddScoped<ISupabaseService, SupabaseService>();
 
     // Storage Configuration with secure defaults
     services.Configure<StorageSettings>(configuration.GetSection("StorageSettings"));
@@ -271,7 +280,7 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 
     // Core Services
     services.AddScoped<IUserProfileService, SupabaseUserProfileService>();
-    services.AddScoped<IFlashcardStatsService, SupabaseFlashcardStatsService>();
+    services.AddScoped<IUserFlashcardStatsService, SupabaseUserFlashcardStatsService>();
     services.AddScoped<IWordService, SupabaseWordService>();
     services.AddScoped<IAnnouncementService, SupabaseAnnouncementService>();
     services.AddScoped<IAppInfoService, SupabaseAppInfoService>();
@@ -304,11 +313,11 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Configure MVC with security features
     services.AddControllers(options =>
     {
-        // Require HTTPS for all controllers
-        options.Filters.Add(new RequireHttpsAttribute());
-        
-        // Add automatic validation
-        options.Filters.Add(new AutoValidateAntiforgeryTokenAttribute());
+        // Require HTTPS only in production
+        if (!builder.Environment.IsDevelopment())
+        {
+            options.Filters.Add(new RequireHttpsAttribute());
+        }
         
         // Add security headers
         options.Filters.Add(new ResponseCacheAttribute { NoStore = true, Location = ResponseCacheLocation.None });
@@ -334,8 +343,41 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     .AddApplicationPart(typeof(AppInfoController).Assembly)
     .AddApplicationPart(typeof(DeckController).Assembly)
     .AddApplicationPart(typeof(FlashcardController).Assembly)
-    .AddApplicationPart(typeof(FlashcardStatsController).Assembly)
+    .AddApplicationPart(typeof(UserFlashcardStatsController).Assembly)
     .AddApplicationPart(typeof(StorageService).Assembly);
+
+    // Add Authentication Services
+    services.AddScoped<IAuthService, SupabaseAuthService>();
+
+    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuerSigningKey = true,
+                ValidateIssuer = false,
+                ValidateAudience = false,
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.Zero
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = async context =>
+                {
+                    var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
+                    if (string.IsNullOrEmpty(token)) return;
+
+                    var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
+                    var isValid = await authService.ValidateTokenAsync(token);
+                    
+                    if (!isValid)
+                    {
+                        context.Fail("Invalid token");
+                    }
+                }
+            };
+        });
 }
 
 void ConfigureMiddleware(WebApplication app)
@@ -362,6 +404,7 @@ void ConfigureMiddleware(WebApplication app)
     }
     else
     {
+        // Enforce HTTPS in production
         app.UseHttpsRedirection();
     }
 

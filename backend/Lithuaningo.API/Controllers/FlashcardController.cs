@@ -11,6 +11,7 @@ using Lithuaningo.API.Settings;
 using Lithuaningo.API.DTOs.Flashcard;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -19,11 +20,10 @@ namespace Lithuaningo.API.Controllers
     /// Also handles flashcard-specific features like review scheduling, file attachments,
     /// and search functionality.
     /// </summary>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Flashcard management endpoints")]
-    public class FlashcardController : ControllerBase
+    public class FlashcardController : BaseApiController
     {
         private readonly IFlashcardService _flashcardService;
         private readonly IStorageService _storageService;

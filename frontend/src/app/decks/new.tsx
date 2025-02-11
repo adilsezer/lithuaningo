@@ -37,12 +37,14 @@ export default function NewDeckScreen() {
         label: "Category",
         category: "selection",
         type: "picker",
-        options: [
-          ...deckCategories.map((cat: DeckCategory) => ({
+        options: deckCategories
+          .filter(
+            (cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat)
+          )
+          .map((cat) => ({
             label: cat,
             value: cat,
           })),
-        ],
       },
       {
         name: "tags",
@@ -50,6 +52,13 @@ export default function NewDeckScreen() {
         category: "text-input",
         type: "text",
         placeholder: "Enter tags",
+      },
+      {
+        name: "isPublic",
+        label: "Make deck public",
+        category: "toggle",
+        type: "switch",
+        defaultValue: true,
       },
       {
         name: "consent",
@@ -78,8 +87,6 @@ export default function NewDeckScreen() {
 
       try {
         const deckId = await createDeck(data.title, data.description);
-        console.log("New Deck ID:", deckId);
-
         if (!deckId) {
           throw new Error("Failed to create deck - no ID returned");
         }

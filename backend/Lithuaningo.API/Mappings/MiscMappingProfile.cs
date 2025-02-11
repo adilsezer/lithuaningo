@@ -9,6 +9,8 @@ using Lithuaningo.API.DTOs.Quiz;
 using Lithuaningo.API.DTOs.Word;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.DTOs.AppInfo;
+using Lithuaningo.API.DTOs.ChallengeStats;
+using Lithuaningo.API.DTOs.Comment;
 using Lithuaningo.API.Utils;
 
 namespace Lithuaningo.API.Mappings
@@ -23,17 +25,24 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             // Announcement mappings
-            CreateMap<Announcement, AnnouncementResponse>()
-                .ForMember(dest => dest.TimeRemaining, opt => opt.MapFrom(src => 
-                    src.ValidUntil.HasValue ? TimeFormatUtils.GetTimeRemaining(src.ValidUntil.Value) : null))
-                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => 
-                    AnnouncementUtils.GetAnnouncementStatus(src.IsActive, src.ValidUntil)));
+            CreateMap<Announcement, AnnouncementResponse>();
 
             CreateMap<CreateAnnouncementRequest, Announcement>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             CreateMap<UpdateAnnouncementRequest, Announcement>()
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
+            // Challenge Stats mappings
+            CreateMap<ChallengeStats, ChallengeStatsResponse>();
+
+            // Comment mappings
+            CreateMap<Comment, CommentResponse>();
+            CreateMap<CreateCommentRequest, Comment>()
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+            CreateMap<UpdateCommentRequest, Comment>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             // Quiz mappings

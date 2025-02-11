@@ -8,6 +8,7 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Comment;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -25,11 +26,10 @@ namespace Lithuaningo.API.Controllers
     /// 
     /// All operations support proper error handling and validation.
     /// </remarks>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Comment management endpoints")]
-    public class CommentController : ControllerBase
+    public class CommentController : BaseApiController
     {
         private readonly ICommentService _commentService;
         private readonly ILogger<CommentController> _logger;
@@ -143,7 +143,7 @@ namespace Lithuaningo.API.Controllers
                 var comment = _mapper.Map<Comment>(request);
                 var createdComment = await _commentService.CreateCommentAsync(comment);
                 var response = _mapper.Map<CommentResponse>(createdComment);
-                return CreatedAtAction(nameof(GetComment), new { id = response.Id }, response);
+                return CreatedAtAction(nameof(GetComment), new { id = createdComment.Id }, response);
             }
             catch (Exception ex)
             {

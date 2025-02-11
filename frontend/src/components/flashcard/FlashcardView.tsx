@@ -1,8 +1,10 @@
-import React, { useRef, useState } from "react";
-import { StyleSheet, View, Animated } from "react-native";
+import React, { useRef, useState, useEffect } from "react";
+import { StyleSheet, View, Animated, Image } from "react-native";
 import { Card, Text, IconButton, useTheme, Button } from "react-native-paper";
 import { Flashcard } from "@src/types";
 import AudioControl from "@components/ui/AudioControl";
+import { useFlashcardStats } from "@hooks/useFlashcardStats";
+import { useUserData } from "@stores/useUserStore";
 
 interface FlashcardViewProps {
   flashcard: Flashcard;
@@ -16,6 +18,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [flipped, setFlipped] = useState(false);
   const theme = useTheme();
   const fadeAnim = useRef(new Animated.Value(1)).current;
+  const { stats, getUserFlashcardStats, trackProgress } = useFlashcardStats();
+  const userData = useUserData();
+
+  useEffect(() => {
+    if (userData?.id && flashcard.deckId) {
+      getUserFlashcardStats(flashcard.deckId, userData.id);
+    }
+  }, [userData?.id, flashcard.deckId, getUserFlashcardStats]);
 
   const flipCard = () => {
     Animated.timing(fadeAnim, {
@@ -32,11 +42,54 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     });
   };
 
-  const handleAnswer = (isCorrect: boolean) => {
+  const handleAnswer = async (isCorrect: boolean) => {
+    if (userData?.id) {
+      await trackProgress(flashcard.deckId, {
+        flashcardId: flashcard.id,
+        isCorrect,
+      });
+    }
     onAnswer(isCorrect);
     setFlipped(false);
     fadeAnim.setValue(1);
   };
+
+  const renderCardContent = (isBack: boolean) => (
+    <>
+      <Text variant="bodyLarge" style={styles.text}>
+        {isBack ? flashcard.backText : flashcard.frontText}
+      </Text>
+      {flashcard.imageUrl && (
+        <Image source={{ uri: flashcard.imageUrl }} style={styles.image} />
+      )}
+      {flashcard.audioUrl && (
+        <AudioControl
+          url={flashcard.audioUrl}
+          onPress={(e) => e.stopPropagation()}
+        />
+      )}
+      <Text variant="bodyMedium" style={styles.stats}>
+        {isBack ? (
+          `Created: ${flashcard.timeAgo}`
+        ) : (
+          <>
+            Reviews: {stats?.totalReviewed || 0} | Success Rate:{" "}
+            {stats?.accuracyRate ? `${Math.round(stats.accuracyRate)}%` : "N/A"}
+          </>
+        )}
+      </Text>
+      {!isBack && stats?.lastReviewedTimeAgo && (
+        <Text variant="bodySmall" style={styles.timeAgo}>
+          Last reviewed: {stats.lastReviewedTimeAgo}
+        </Text>
+      )}
+      {!isBack && stats?.nextReviewDue && (
+        <Text variant="bodySmall" style={styles.nextReview}>
+          Next review: {stats.nextReviewDue}
+        </Text>
+      )}
+    </>
+  );
 
   return (
     <View style={styles.container}>
@@ -52,65 +105,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       >
         <Animated.View style={{ opacity: fadeAnim }}>
           <Card.Content style={styles.cardContent}>
-            {!flipped ? (
-              <>
-                <Text variant="bodyLarge" style={styles.text}>
-                  {flashcard.front}
-                </Text>
-                {flashcard.imageUrl && (
-                  <Card.Cover
-                    source={{ uri: flashcard.imageUrl }}
-                    style={styles.cover}
-                  />
-                )}
-                {flashcard.exampleSentence && (
-                  <Text
-                    variant="bodyMedium"
-                    style={[
-                      styles.example,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                  >
-                    Example: {flashcard.exampleSentence}
-                  </Text>
-                )}
-                {flashcard.audioUrl && (
-                  <AudioControl
-                    url={flashcard.audioUrl}
-                    onPress={(e) => e.stopPropagation()} // Prevent card flip
-                  />
-                )}
-              </>
-            ) : (
-              <>
-                <Text variant="bodyLarge" style={styles.text}>
-                  {flashcard.back}
-                </Text>
-                {flashcard.imageUrl && (
-                  <Card.Cover
-                    source={{ uri: flashcard.imageUrl }}
-                    style={styles.cover}
-                  />
-                )}
-                {flashcard.exampleSentence && (
-                  <Text
-                    variant="bodyMedium"
-                    style={[
-                      styles.example,
-                      { color: theme.colors.onSurfaceVariant },
-                    ]}
-                  >
-                    Example: {flashcard.exampleSentence}
-                  </Text>
-                )}
-                {flashcard.audioUrl && (
-                  <AudioControl
-                    url={flashcard.audioUrl}
-                    onPress={(e) => e.stopPropagation()} // Prevent card flip
-                  />
-                )}
-              </>
-            )}
+            {renderCardContent(flipped)}
           </Card.Content>
         </Animated.View>
         <View style={styles.flipIndicator}>
@@ -147,21 +142,28 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   cardContent: {
-    minHeight: 400,
+    minHeight: 300,
     justifyContent: "center",
-  },
-  cover: {
-    borderRadius: 8,
-    marginVertical: 12,
+    alignItems: "center",
   },
   text: {
     textAlign: "center",
     marginVertical: 12,
   },
-  example: {
+  stats: {
+    textAlign: "center",
+    marginTop: 8,
+  },
+  timeAgo: {
     textAlign: "center",
     fontStyle: "italic",
-    marginBottom: 12,
+    marginTop: 4,
+  },
+  nextReview: {
+    textAlign: "center",
+    fontStyle: "italic",
+    marginTop: 4,
+    color: "gray",
   },
   actions: {
     flexDirection: "row",
@@ -172,6 +174,12 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 0,
     right: 0,
+  },
+  image: {
+    width: 200,
+    height: 200,
+    borderRadius: 8,
+    marginVertical: 12,
   },
 });
 

@@ -1,24 +1,19 @@
 import apiClient from "../api/apiClient";
-
-export interface QuizResult {
-  deckId: string;
-  userId: string;
-  score: number;
-  totalQuestions: number;
-  completedAt: string;
-}
+import { QuizQuestion, QuizResult } from "@src/types";
 
 class QuizService {
-  async startQuiz(deckId: string) {
-    return apiClient.startDeckQuiz(deckId);
+  async startQuiz(): Promise<QuizQuestion[]> {
+    return apiClient.getDailyQuiz();
   }
 
-  async submitQuizResult(result: Omit<QuizResult, "completedAt">) {
-    return apiClient.submitDeckQuizResult(result);
+  async submitQuizResult(
+    result: Omit<QuizResult, "completedAt">
+  ): Promise<void> {
+    return apiClient.submitQuizResult(result);
   }
 
-  async getQuizHistory(userId: string) {
-    return apiClient.getDeckQuizHistory(userId);
+  async getQuizHistory(userId: string): Promise<QuizResult[]> {
+    return apiClient.getQuizHistory(userId);
   }
 }
 

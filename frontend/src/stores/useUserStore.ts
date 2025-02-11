@@ -1,22 +1,23 @@
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { persist, createJSONStorage } from "zustand/middleware";
 import { UserProfile } from "@src/types/UserProfile";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Types
-export type UserData = Pick<
-  UserProfile,
-  "id" | "name" | "email" | "emailVerified"
->;
+export type UserData = Pick<UserProfile, "id" | "email" | "fullName">;
 
 interface UserStore {
-  // State
+  // Existing state
   isLoggedIn: boolean;
   userData: UserData | null;
   needsReauthentication: boolean;
   error: string | null;
 
-  // Actions
+  // New auth-specific state
+  isAuthenticated: boolean;
+  storageInitialized: boolean;
+
+  // Existing actions
   logIn: (userData: UserData) => void;
   logOut: () => void;
   updateUserProfile: (userData: Partial<UserData>) => void;
@@ -24,22 +25,52 @@ interface UserStore {
   clearReauthentication: () => void;
   deleteAccount: () => void;
   setError: (error: string | null) => void;
+
+  // New auth-specific actions
+  setAuthenticated: (value: boolean) => void;
+  setStorageInitialized: (value: boolean) => void;
 }
 
-// Helper functions
-const isAuthenticated = (state: Pick<UserStore, "isLoggedIn" | "userData">) =>
-  state.isLoggedIn && (state.userData?.emailVerified || false);
+// Custom storage with error handling
+const customStorage = {
+  getItem: async (name: string): Promise<string | null> => {
+    try {
+      return await AsyncStorage.getItem(name);
+    } catch (err) {
+      console.warn(`Error reading from AsyncStorage: ${err}`);
+      return null;
+    }
+  },
+  setItem: async (name: string, value: string): Promise<void> => {
+    try {
+      await AsyncStorage.setItem(name, value);
+    } catch (err) {
+      console.warn(`Error writing to AsyncStorage: ${err}`);
+    }
+  },
+  removeItem: async (name: string): Promise<void> => {
+    try {
+      await AsyncStorage.removeItem(name);
+    } catch (err) {
+      console.warn(`Error removing from AsyncStorage: ${err}`);
+    }
+  },
+};
 
 export const useUserStore = create<UserStore>()(
   persist(
     (set) => ({
-      // Initial state
+      // Existing state
       isLoggedIn: false,
       userData: null,
       needsReauthentication: false,
       error: null,
 
-      // Actions
+      // New auth state
+      isAuthenticated: false,
+      storageInitialized: false,
+
+      // Existing actions
       logIn: (userData) =>
         set({
           isLoggedIn: true,
@@ -54,6 +85,7 @@ export const useUserStore = create<UserStore>()(
           userData: null,
           needsReauthentication: false,
           error: null,
+          isAuthenticated: false, // Clear auth state on logout
         }),
 
       updateUserProfile: (userData) =>
@@ -71,19 +103,33 @@ export const useUserStore = create<UserStore>()(
           userData: null,
           needsReauthentication: false,
           error: null,
+          isAuthenticated: false, // Clear auth state on account deletion
         }),
 
       setError: (error) => set({ error }),
+
+      // New auth action
+      setAuthenticated: (value) => set({ isAuthenticated: value }),
+      setStorageInitialized: (value) => set({ storageInitialized: value }),
     }),
     {
       name: "user-storage",
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => customStorage),
+      onRehydrateStorage: () => (state) => {
+        state?.setStorageInitialized(true);
+      },
     }
   )
 );
 
-// Typed hooks for common state
+// Existing hooks
 export const useUserData = () => useUserStore((state) => state.userData);
-export const useIsAuthenticated = () => useUserStore(isAuthenticated);
 export const useIsLoggedIn = () => useUserStore((state) => state.isLoggedIn);
 export const useUserError = () => useUserStore((state) => state.error);
+
+// New auth-specific hook
+export const useIsAuthenticated = () =>
+  useUserStore((state) => state.isAuthenticated);
+
+export const useIsStorageInitialized = () =>
+  useUserStore((state) => state.storageInitialized);

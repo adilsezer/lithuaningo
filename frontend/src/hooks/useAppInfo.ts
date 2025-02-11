@@ -22,8 +22,9 @@ export const useAppInfo = () => {
   const { needsUpdate, isUnderMaintenance } = useMemo(
     () => ({
       needsUpdate:
-        appInfo?.latestVersion !== currentVersion && appInfo?.mandatoryUpdate,
-      isUnderMaintenance: appInfo?.isUnderMaintenance ?? false,
+        (appInfo?.minimumVersion && appInfo.minimumVersion > currentVersion) ||
+        (appInfo?.latestVersion !== currentVersion && appInfo?.forceUpdate),
+      isUnderMaintenance: appInfo?.isMaintenance ?? false,
     }),
     [appInfo, currentVersion]
   );

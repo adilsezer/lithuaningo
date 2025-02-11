@@ -53,10 +53,11 @@ export const useComments = (deckId: string) => {
         id: `temp-${Date.now()}`,
         deckId,
         userId,
+        userName: username,
         content,
-        createdBy: username,
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        timeAgo: "Just now",
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
         isEdited: false,
       };
 
@@ -71,7 +72,7 @@ export const useComments = (deckId: string) => {
           deckId,
           userId,
           content,
-          createdBy: username,
+          userName: username,
         });
 
         // Update with real ID

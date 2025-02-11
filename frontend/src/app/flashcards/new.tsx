@@ -2,11 +2,10 @@ import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import type { FlashcardFormData } from "@src/types";
+import type { Flashcard } from "@src/types";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { flashcardFormSchema } from "@utils/zodSchemas";
@@ -18,67 +17,40 @@ export default function NewFlashcardScreen() {
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const theme = useTheme();
   const { showError } = useAlertDialog();
-  const userData = useUserData();
-  const { handleCreateFlashcard } = useFlashcards();
+  const { createFlashcard } = useFlashcards();
 
   const fields: FormField[] = [
     {
-      name: "front",
+      name: "frontText",
       label: "Front Side",
       category: "text-input",
       type: "text",
       placeholder: "Enter front side text",
     },
     {
-      name: "back",
+      name: "backText",
       label: "Back Side",
       category: "text-input",
       type: "text",
       placeholder: "Enter back side text",
     },
-    {
-      name: "exampleSentence",
-      label: "Example Sentence",
-      category: "text-input",
-      type: "text",
-      placeholder: "Enter an example sentence (optional)",
-    },
-    {
-      name: "audioFile",
-      label: "Audio",
-      category: "audio-input",
-      type: "audio",
-    },
-    {
-      name: "imageFile",
-      label: "Image",
-      category: "image-input",
-      type: "image",
-    },
   ];
 
   const handleSubmit = async (
-    formData: Omit<FlashcardFormData, "deckId" | "createdBy">
+    formData: Pick<Flashcard, "frontText" | "backText">
   ) => {
-    if (!deckId || !userData?.id) {
-      showError("Missing required data");
+    if (!deckId) {
+      showError("Missing deck ID");
       return;
     }
 
-    const flashcardData = {
+    const success = await createFlashcard({
       ...formData,
       deckId,
-      createdBy: userData.id,
-    };
+    });
 
-    const success = await handleCreateFlashcard(
-      flashcardData,
-      deckId,
-      userData.id
-    );
     if (success) {
-      // Create another flashcard for the same deck
-      router.push(`/flashcards/new?deckId=${deckId}`);
+      router.push(`/decks/${deckId}`);
     }
   };
 
@@ -86,7 +58,9 @@ export default function NewFlashcardScreen() {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <BackButton />
       <ScrollView contentContainerStyle={styles.container}>
-        <CustomText>Create New Flashcard</CustomText>
+        <CustomText variant="titleLarge" style={styles.title}>
+          Create New Flashcard
+        </CustomText>
         <Form
           fields={fields}
           onSubmit={handleSubmit}
@@ -94,7 +68,7 @@ export default function NewFlashcardScreen() {
           zodSchema={flashcardFormSchema}
         />
         <CustomButton
-          title="Complete Deck"
+          title="Back to Deck"
           onPress={() => router.push(`/decks/${deckId}`)}
         />
       </ScrollView>
@@ -105,5 +79,8 @@ export default function NewFlashcardScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
+  },
+  title: {
+    marginBottom: 24,
   },
 });

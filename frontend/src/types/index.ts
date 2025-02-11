@@ -4,15 +4,50 @@ export type { Comment } from "./Comment";
 export * from "./LeaderboardModels";
 export type { Lemma } from "./Lemma";
 export { QuestionType } from "./QuestionType";
-export type { QuizQuestion } from "./QuizQuestion";
-export type { QuizResult } from "./QuizResult";
+export * from "./QuizQuestion";
 export type {
-  PracticeProgress,
-  PracticeStats,
-} from "@services/data/practiceService";
-export type { UserProfile } from "./UserProfile";
+  QuizQuestion,
+  CreateQuizQuestionRequest,
+  QuizResult,
+} from "./QuizQuestion";
+export type {
+  UserProfile,
+  CreateUserProfileRequest,
+  UpdateUserProfileRequest,
+} from "./UserProfile";
 export type { UserStats } from "./UserStats";
 export type { WordForm } from "./WordForm";
 export type { Deck } from "./Deck";
 export * from "./Flashcard";
-export type { Report } from "./Report";
+export * from "./UserFlashcardStats";
+
+export interface ChallengeStats {
+  id: string;
+  userId: string;
+  cardsReviewed: number;
+  cardsMastered: number;
+  currentStreak: number;
+  longestStreak: number;
+  lastActivityDate: string;
+  weeklyGoal: number;
+  weeklyProgress: number;
+  createdAt: string;
+  updatedAt: string;
+  lastActivityTimeAgo?: string;
+}
+
+export interface DeckReport {
+  id: string;
+  deckId: string;
+  reporterId: string;
+  reason: string;
+  details: string;
+  status: "pending" | "resolved" | "rejected";
+  reviewedBy?: string;
+  reviewedByUserName?: string;
+  reportedByUserName: string;
+  resolution?: string;
+  timeAgo: string;
+  createdAt: string;
+  updatedAt: string;
+}

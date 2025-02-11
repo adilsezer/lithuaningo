@@ -7,6 +7,7 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.ChallengeStats;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -14,11 +15,10 @@ namespace Lithuaningo.API.Controllers
     /// Handles operations related to challenge statistics for users. These include retrieving stats,
     /// updating daily streaks, adding experience points, marking words as learned, and incrementing quiz completion counts.
     /// </summary>
-    [ApiController]
+    [Authorize]
     [ApiVersion("1.0")]
-    [Route("api/v{version:apiVersion}/[controller]")]
     [SwaggerTag("Challenge statistics management endpoints")]
-    public class ChallengeStatsController : ControllerBase
+    public class ChallengeStatsController : BaseApiController
     {
         private readonly IChallengeStatsService _challengeStatsService;
         private readonly ILogger<ChallengeStatsController> _logger;

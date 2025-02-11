@@ -1,13 +1,15 @@
 export interface LeaderboardWeek {
-  id: string; // YYYY-WW format
-  startDate: Date;
-  endDate: Date;
-  entries: Record<string, LeaderboardEntry>;
+  weekId: string; // YYYY-WW format
+  startDate: string;
+  endDate: string;
+  entries: LeaderboardEntry[];
 }
 
 export interface LeaderboardEntry {
+  userId: string;
   name: string;
   score: number;
   rank: number;
-  lastUpdated: Date;
+  lastUpdatedTimeAgo: string;
+  lastUpdated: string;
 }

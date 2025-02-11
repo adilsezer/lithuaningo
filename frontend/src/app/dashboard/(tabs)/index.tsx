@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { ScrollView, View, StyleSheet } from "react-native";
+import { ScrollView, View, StyleSheet, ActivityIndicator } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
@@ -31,8 +31,8 @@ const DashboardScreen: React.FC = () => {
   const { stats, error: statsError } = useUserStats();
 
   const {
-    decks: topRatedDecks,
-    deckRatings,
+    decks: topRatedDecks = [],
+    deckRatings = {},
     voteDeck,
     fetchDecks,
   } = useDecks(userData?.id, { initialCategory: "Top Rated" });
@@ -57,24 +57,23 @@ const DashboardScreen: React.FC = () => {
       onPractice: () => router.push(`/decks/${deckId}`),
       onEdit: () => router.push(`/decks/${deckId}/edit`),
     }),
-    [voteDeck, router]
+    [voteDeck]
   );
 
-  if (error) {
-    return (
-      <ErrorMessage
-        message={error}
-        onRetry={() => {
-          setError(null);
-          clearError();
-        }}
-        fullScreen
-      />
-    );
-  }
-
   const renderTopRatedDeck = React.useCallback(() => {
-    if (topRatedDecks.length === 0) {
+    if (isLoading) {
+      return (
+        <View style={styles.emptyState}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+        </View>
+      );
+    }
+
+    const hasTopRatedDecks =
+      Array.isArray(topRatedDecks) && topRatedDecks.length > 0;
+    const topDeck = hasTopRatedDecks ? topRatedDecks[0] : null;
+
+    if (!hasTopRatedDecks || !topDeck) {
       return (
         <View style={styles.emptyState}>
           <CustomText>No top rated decks this week</CustomText>
@@ -84,17 +83,23 @@ const DashboardScreen: React.FC = () => {
 
     return (
       <DeckCard
-        deck={topRatedDecks[0]}
-        rating={deckRatings[topRatedDecks[0].id] || 0}
-        actions={handleDeckActions(topRatedDecks[0].id)}
+        deck={topDeck}
+        rating={deckRatings?.[topDeck.id] || 0}
+        actions={handleDeckActions(topDeck.id)}
       />
     );
-  }, [topRatedDecks, deckRatings, handleDeckActions]);
+  }, [
+    topRatedDecks,
+    deckRatings,
+    handleDeckActions,
+    isLoading,
+    theme.colors.primary,
+  ]);
 
-  return (
+  const content = (
     <ScrollView>
       <View style={styles.container}>
-        {validAnnouncements.length > 0 && (
+        {validAnnouncements?.length > 0 && (
           <AnnouncementsCard
             announcements={validAnnouncements}
             backgroundColor={theme.colors.secondary}
@@ -125,6 +130,22 @@ const DashboardScreen: React.FC = () => {
       </View>
     </ScrollView>
   );
+
+  if (error) {
+    return (
+      <ErrorMessage
+        message={error}
+        onRetry={() => {
+          setError(null);
+          clearError();
+          fetchDecks();
+        }}
+        fullScreen
+      />
+    );
+  }
+
+  return content;
 };
 
 const styles = StyleSheet.create({

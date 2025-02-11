@@ -15,10 +15,11 @@ class CommentService {
   }
 
   async addComment(
-    comment: Pick<Comment, "deckId" | "content" | "createdBy" | "userId">
+    comment: Pick<Comment, "deckId" | "content" | "userId" | "userName">
   ): Promise<string> {
     try {
-      return await apiClient.addDeckComment(comment);
+      const createdComment = await apiClient.createComment(comment);
+      return createdComment.id;
     } catch (error) {
       if (error instanceof ApiError) {
         throw new Error(`Failed to add comment: ${error.message}`);
@@ -29,7 +30,7 @@ class CommentService {
 
   async deleteComment(commentId: string, userId: string): Promise<void> {
     try {
-      await apiClient.deleteDeckComment(commentId, userId);
+      await apiClient.deleteComment(commentId);
     } catch (error) {
       if (error instanceof ApiError) {
         throw new Error(`Failed to delete comment: ${error.message}`);
