@@ -110,6 +110,6 @@ export const quizFormSchema = z.object({
   answer: z.string().min(1, "Please enter your answer"),
 });
 
-export const commentFormSchema = z.object({
-  content: z.string().min(1, "Comment is required"),
+export const deckCommentFormSchema = z.object({
+  content: z.string().min(1, "Deck comment is required"),
 });

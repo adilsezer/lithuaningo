@@ -460,7 +460,7 @@ namespace Lithuaningo.API.Services
                 {
                     Id = Guid.NewGuid(),
                     DeckId = deckGuid,
-                    ReportedBy = userGuid,
+                    UserId = userGuid,
                     Reason = reason,
                     Status = "pending",
                     CreatedAt = DateTime.UtcNow,

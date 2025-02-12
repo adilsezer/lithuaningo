@@ -1,6 +1,6 @@
 export type { Announcement } from "./Announcement";
 export type { AppInfo } from "./AppInfo";
-export type { Comment } from "./Comment";
+export type { DeckComment } from "./DeckComment";
 export * from "./LeaderboardModels";
 export type { Lemma } from "./Lemma";
 export { QuestionType } from "./QuestionType";

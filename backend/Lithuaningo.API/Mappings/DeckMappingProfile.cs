@@ -2,7 +2,7 @@ using System;
 using AutoMapper;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Deck;
-using Lithuaningo.API.DTOs.Comment;
+using Lithuaningo.API.DTOs.DeckComment;
 using Lithuaningo.API.DTOs.DeckReport;
 
 namespace Lithuaningo.API.Mappings
@@ -28,7 +28,7 @@ namespace Lithuaningo.API.Mappings
             CreateMap<UpdateDeckRequest, Deck>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            CreateMap<Comment, CommentResponse>();
+            CreateMap<DeckComment, DeckCommentResponse>();
 
             // DeckReport mappings
             CreateMap<DeckReport, DeckReportResponse>();

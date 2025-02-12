@@ -10,7 +10,7 @@ using Lithuaningo.API.DTOs.Word;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.DTOs.AppInfo;
 using Lithuaningo.API.DTOs.ChallengeStats;
-using Lithuaningo.API.DTOs.Comment;
+using Lithuaningo.API.DTOs.DeckComment;
 using Lithuaningo.API.Utils;
 
 namespace Lithuaningo.API.Mappings
@@ -37,12 +37,12 @@ namespace Lithuaningo.API.Mappings
             // Challenge Stats mappings
             CreateMap<ChallengeStats, ChallengeStatsResponse>();
 
-            // Comment mappings
-            CreateMap<Comment, CommentResponse>();
-            CreateMap<CreateCommentRequest, Comment>()
+            // Deck Comment mappings
+            CreateMap<DeckComment, DeckCommentResponse>();
+            CreateMap<CreateDeckCommentRequest, DeckComment>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
-            CreateMap<UpdateCommentRequest, Comment>()
+            CreateMap<UpdateDeckCommentRequest, DeckComment>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             // Quiz mappings

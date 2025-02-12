@@ -1,12 +1,12 @@
 using System.ComponentModel.DataAnnotations;
 using Lithuaningo.API.Validators;
 
-namespace Lithuaningo.API.DTOs.Comment
+namespace Lithuaningo.API.DTOs.DeckComment
 {
     /// <summary>
-    /// Request to create a new comment
+    /// Request to create a new deck comment
     /// </summary>
-    public class CreateCommentRequest
+    public class CreateDeckCommentRequest
     {
         /// <summary>
         /// The deck identifier
@@ -23,7 +23,7 @@ namespace Lithuaningo.API.DTOs.Comment
         public string UserId { get; set; } = string.Empty;
 
         /// <summary>
-        /// The comment content
+        /// The deck comment content
         /// </summary>
         [Required(ErrorMessage = "Content is required")]
         [StringLength(1000, MinimumLength = 1, ErrorMessage = "Content must be between 1 and 1000 characters")]

@@ -1,17 +1,17 @@
 import { useState, useCallback } from "react";
-import { Comment } from "@src/types";
-import commentService from "@services/data/commentService";
+import { DeckComment } from "@src/types";
+import deckCommentService from "@src/services/data/deckCommentService";
 import { useIsLoading, useSetLoading } from "@stores/useUIStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 
-export const useComments = (deckId: string) => {
+export const useDeckComments = (deckId: string) => {
   const { showError, showSuccess } = useAlertDialog();
   // Zustand state
   const setLoading = useSetLoading();
   const isLoading = useIsLoading();
 
   // Local state
-  const [comments, setComments] = useState<Comment[]>([]);
+  const [deckComments, setDeckComments] = useState<DeckComment[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -27,12 +27,12 @@ export const useComments = (deckId: string) => {
   }, []);
 
   // Comments actions
-  const fetchComments = useCallback(async () => {
+  const fetchDeckComments = useCallback(async () => {
     try {
       setLoading(true);
       clearError();
-      const data = await commentService.getComments(deckId);
-      setComments(data);
+      const data = await deckCommentService.getDeckComments(deckId);
+      setDeckComments(data);
       return true;
     } catch (err) {
       handleError(err, "Failed to load comments");
@@ -42,14 +42,14 @@ export const useComments = (deckId: string) => {
     }
   }, [setLoading, deckId, handleError, clearError]);
 
-  const addComment = useCallback(
+  const addDeckComment = useCallback(
     async (userId: string, content: string, username: string) => {
       if (!userId) {
         showError("Please login to comment");
         return false;
       }
 
-      const optimisticComment: Comment = {
+      const optimisticComment: DeckComment = {
         id: `temp-${Date.now()}`,
         deckId,
         userId,
@@ -66,9 +66,9 @@ export const useComments = (deckId: string) => {
         clearError();
 
         // Optimistic update
-        setComments((prev) => [optimisticComment, ...prev]);
+        setDeckComments((prev) => [optimisticComment, ...prev]);
 
-        const commentId = await commentService.addComment({
+        const commentId = await deckCommentService.addDeckComment({
           deckId,
           userId,
           content,
@@ -76,7 +76,7 @@ export const useComments = (deckId: string) => {
         });
 
         // Update with real ID
-        setComments((prev) =>
+        setDeckComments((prev) =>
           prev.map((comment) =>
             comment.id === optimisticComment.id
               ? { ...optimisticComment, id: commentId }
@@ -88,7 +88,7 @@ export const useComments = (deckId: string) => {
         return true;
       } catch (err) {
         // Rollback on error
-        setComments((prev) =>
+        setDeckComments((prev) =>
           prev.filter((comment) => comment.id !== optimisticComment.id)
         );
         handleError(err, "Failed to add comment");
@@ -100,57 +100,52 @@ export const useComments = (deckId: string) => {
     [deckId, handleError, clearError]
   );
 
-  const deleteComment = useCallback(
-    async (commentId: string, userId: string) => {
-      if (!userId) {
-        showError("Please login to delete comments");
-        return false;
-      }
-
-      let deletedComment: Comment | undefined;
+  const deleteDeckComment = useCallback(
+    async (commentId: string) => {
+      let deletedComment: DeckComment | undefined;
 
       try {
         setIsSubmitting(true);
         clearError();
 
         // Optimistic update
-        deletedComment = comments.find((c) => c.id === commentId);
+        deletedComment = deckComments.find((c) => c.id === commentId);
         if (!deletedComment) {
           throw new Error("Comment not found");
         }
-        setComments((prev) =>
+        setDeckComments((prev) =>
           prev.filter((comment) => comment.id !== commentId)
         );
 
-        await commentService.deleteComment(commentId, userId);
-        showSuccess("Comment deleted successfully");
+        await deckCommentService.deleteDeckComment(commentId);
+        showSuccess("Deck comment deleted successfully");
         return true;
       } catch (err) {
         // Rollback on error
         if (deletedComment) {
-          setComments((prev) => [...prev, deletedComment as Comment]);
+          setDeckComments((prev) => [...prev, deletedComment as DeckComment]);
         }
-        handleError(err, "Failed to delete comment");
+        handleError(err, "Failed to delete deck comment");
         return false;
       } finally {
         setIsSubmitting(false);
       }
     },
-    [comments, handleError, clearError]
+    [deckComments, handleError, clearError]
   );
 
   return {
     // State
-    comments,
+    deckComments,
     isLoading,
     isSubmitting,
     error,
-    isEmpty: comments.length === 0,
+    isEmpty: deckComments.length === 0,
 
     // Actions
     clearError,
-    fetchComments,
-    addComment,
-    deleteComment,
+    fetchDeckComments,
+    addDeckComment,
+    deleteDeckComment,
   };
 };

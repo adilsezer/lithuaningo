@@ -14,15 +14,15 @@ namespace Lithuaningo.API.Models
         // The reported deck's ID.
         [Column("deck_id")]
         public Guid DeckId { get; set; }
+
+        [Column("user_id")]
+        public Guid UserId { get; set; }
         
         [Column("reason")]
         public string Reason { get; set; } = string.Empty;
         
         [Column("details")]
         public string Details { get; set; } = string.Empty;
-        
-        [Column("reported_by")]
-        public Guid ReportedBy { get; set; }
         
         // Status (e.g., "pending", "resolved", etc.)
         [Column("status")]

@@ -286,7 +286,7 @@ To authorize in Swagger UI:
     services.AddScoped<IAppInfoService, SupabaseAppInfoService>();
     services.AddScoped<IDeckService, SupabaseDeckService>();
     services.AddScoped<IFlashcardService, SupabaseFlashcardService>();
-    services.AddScoped<ICommentService, SupabaseCommentService>();
+    services.AddScoped<IDeckCommentService, SupabaseDeckCommentService>();
     services.AddScoped<IDeckReportService, SupabaseDeckReportService>();
     services.AddScoped<ILeaderboardService, SupabaseLeaderboardService>();
     

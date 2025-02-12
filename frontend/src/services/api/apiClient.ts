@@ -10,7 +10,7 @@ import {
   AppInfo,
   Deck,
   Flashcard,
-  Comment,
+  DeckComment,
   LeaderboardWeek,
   ChallengeStats,
   DeckReport,
@@ -346,43 +346,46 @@ class ApiClient {
     );
   }
 
-  // Comment Controller
-  async getDeckComments(deckId: string): Promise<Comment[]> {
-    return this.request<Comment[]>(`/api/v1/comment/deck/${deckId}`);
+  // Deck Comment Controller
+  async getDeckComments(deckId: string): Promise<DeckComment[]> {
+    return this.request<DeckComment[]>(`/api/v1/deckcomment/deck/${deckId}`);
   }
 
-  async createComment(comment: {
+  async createDeckComment(comment: {
     deckId: string;
     userId: string;
     content: string;
     rating?: number;
     tags?: string[];
-  }): Promise<Comment> {
-    return this.request<Comment>(`/api/v1/comment`, {
+  }): Promise<DeckComment> {
+    return this.request<DeckComment>(`/api/v1/deckcomment`, {
       method: "POST",
       data: comment,
     });
   }
 
-  async getComment(id: string): Promise<Comment> {
-    return this.request<Comment>(`/api/v1/comment/${id}`);
+  async getDeckComment(id: string): Promise<DeckComment> {
+    return this.request<DeckComment>(`/api/v1/deckcomment/${id}`);
   }
 
-  async updateComment(id: string, comment: Partial<Comment>): Promise<Comment> {
-    return this.request<Comment>(`/api/v1/comment/${id}`, {
+  async updateDeckComment(
+    id: string,
+    comment: Partial<DeckComment>
+  ): Promise<DeckComment> {
+    return this.request<DeckComment>(`/api/v1/deckcomment/${id}`, {
       method: "PUT",
       data: comment,
     });
   }
 
-  async deleteComment(id: string): Promise<void> {
-    return this.request(`/api/v1/comment/${id}`, {
+  async deleteDeckComment(id: string): Promise<void> {
+    return this.request(`/api/v1/deckcomment/${id}`, {
       method: "DELETE",
     });
   }
 
-  async getUserComments(userId: string): Promise<Comment[]> {
-    return this.request<Comment[]>(`/api/v1/comment/user/${userId}`);
+  async getUserDeckComments(userId: string): Promise<DeckComment[]> {
+    return this.request<DeckComment[]>(`/api/v1/deckcomment/user/${userId}`);
   }
 
   // Deck Controller

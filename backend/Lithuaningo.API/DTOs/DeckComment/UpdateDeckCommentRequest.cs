@@ -1,14 +1,14 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace Lithuaningo.API.DTOs.Comment
+namespace Lithuaningo.API.DTOs.DeckComment
 {
     /// <summary>
-    /// Request to update an existing comment
+    /// Request to update an existing deck comment
     /// </summary>
-    public class UpdateCommentRequest
+    public class UpdateDeckCommentRequest
     {
         /// <summary>
-        /// The updated comment content
+        /// The updated deck comment content
         /// </summary>
         [Required(ErrorMessage = "Content is required")]
         [StringLength(1000, MinimumLength = 1, ErrorMessage = "Content must be between 1 and 1000 characters")]

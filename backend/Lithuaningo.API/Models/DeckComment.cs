@@ -4,8 +4,8 @@ using Supabase.Postgrest.Attributes;
 
 namespace Lithuaningo.API.Models
 {
-    [Table("comments")]
-    public class Comment : BaseModel
+    [Table("deck_comments")]
+    public class DeckComment : BaseModel
     {
         [PrimaryKey("id")]
         [Column("id")]

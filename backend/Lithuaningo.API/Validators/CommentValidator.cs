@@ -1,11 +1,11 @@
 using FluentValidation;
-using Lithuaningo.API.DTOs.Comment;
+using Lithuaningo.API.DTOs.DeckComment;
 
 namespace Lithuaningo.API.Validators;
 
-public class CreateCommentValidator : AbstractValidator<CreateCommentRequest>
+public class CreateDeckCommentValidator : AbstractValidator<CreateDeckCommentRequest>
 {
-    public CreateCommentValidator()
+    public CreateDeckCommentValidator()
     {
         RuleFor(x => x.DeckId)
             .NotEmpty().WithMessage("Deck ID is required")
@@ -27,9 +27,9 @@ public class CreateCommentValidator : AbstractValidator<CreateCommentRequest>
     }
 }
 
-public class UpdateCommentValidator : AbstractValidator<UpdateCommentRequest>
+public class UpdateDeckCommentValidator : AbstractValidator<UpdateDeckCommentRequest>
 {
-    public UpdateCommentValidator()
+    public UpdateDeckCommentValidator()
     {
         RuleFor(x => x.Content)
             .NotEmpty().WithMessage("Content is required")

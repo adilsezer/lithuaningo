@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.DTOs.Comment;
+using Lithuaningo.API.DTOs.DeckComment;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
@@ -28,19 +28,19 @@ namespace Lithuaningo.API.Controllers
     /// </remarks>
     [Authorize]
     [ApiVersion("1.0")]
-    [SwaggerTag("Comment management endpoints")]
-    public class CommentController : BaseApiController
+    [SwaggerTag("Deck comment management endpoints")]
+    public class DeckCommentController : BaseApiController
     {
-        private readonly ICommentService _commentService;
-        private readonly ILogger<CommentController> _logger;
+        private readonly IDeckCommentService _deckCommentService;
+        private readonly ILogger<DeckCommentController> _logger;
         private readonly IMapper _mapper;
 
-        public CommentController(
-            ICommentService commentService,
-            ILogger<CommentController> logger,
+        public DeckCommentController(
+            IDeckCommentService deckCommentService,
+            ILogger<DeckCommentController> logger,
             IMapper mapper)
         {
-            _commentService = commentService ?? throw new ArgumentNullException(nameof(commentService));
+            _deckCommentService = deckCommentService ?? throw new ArgumentNullException(nameof(deckCommentService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
@@ -71,10 +71,10 @@ namespace Lithuaningo.API.Controllers
             OperationId = "GetDeckComments",
             Tags = new[] { "Comment" }
         )]
-        [ProducesResponseType(typeof(List<CommentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<DeckCommentResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<CommentResponse>>> GetDeckComments(string deckId)
+        public async Task<ActionResult<List<DeckCommentResponse>>> GetDeckComments(string deckId)
         {
             if (string.IsNullOrWhiteSpace(deckId))
             {
@@ -84,13 +84,13 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var comments = await _commentService.GetDeckCommentsAsync(deckId);
-                var response = _mapper.Map<List<CommentResponse>>(comments);
+                var deckComments = await _deckCommentService.GetDeckCommentsAsync(deckId);
+                var response = _mapper.Map<List<DeckCommentResponse>>(deckComments);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving comments for deck {DeckId}", deckId);
+                _logger.LogError(ex, "Error retrieving deck comments for deck {DeckId}", deckId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -112,13 +112,13 @@ namespace Lithuaningo.API.Controllers
         /// The request must include:
         /// - Deck ID (required)
         /// - User ID (required)
-        /// - Comment content (required)
+        /// - Deck comment content (required)
         /// - Optional rating
         /// - Optional tags
         /// </remarks>
-        /// <param name="request">The comment creation request</param>
-        /// <returns>The created comment</returns>
-        /// <response code="201">Returns the created comment</response>
+        /// <param name="request">The deck comment creation request</param>
+        /// <returns>The created deck comment</returns>
+        /// <response code="201">Returns the created deck comment</response>
         /// <response code="400">If the request model is invalid</response>
         /// <response code="500">If there was an internal error during creation</response>
         [HttpPost]
@@ -128,10 +128,10 @@ namespace Lithuaningo.API.Controllers
             OperationId = "CreateComment",
             Tags = new[] { "Comment" }
         )]
-        [ProducesResponseType(typeof(CommentResponse), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(DeckCommentResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<CommentResponse>> CreateComment([FromBody] CreateCommentRequest request)
+        public async Task<ActionResult<DeckCommentResponse>> CreateComment([FromBody] CreateDeckCommentRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -140,14 +140,14 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var comment = _mapper.Map<Comment>(request);
-                var createdComment = await _commentService.CreateCommentAsync(comment);
-                var response = _mapper.Map<CommentResponse>(createdComment);
-                return CreatedAtAction(nameof(GetComment), new { id = createdComment.Id }, response);
+                var deckComment = _mapper.Map<DeckComment>(request);
+                var createdDeckComment = await _deckCommentService.CreateDeckCommentAsync(deckComment);
+                var response = _mapper.Map<DeckCommentResponse>(createdDeckComment);
+                return CreatedAtAction(nameof(GetComment), new { id = createdDeckComment.Id }, response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating comment");
+                _logger.LogError(ex, "Error creating deck comment");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -178,11 +178,11 @@ namespace Lithuaningo.API.Controllers
             OperationId = "GetComment",
             Tags = new[] { "Comment" }
         )]
-        [ProducesResponseType(typeof(CommentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(DeckCommentResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<CommentResponse>> GetComment(string id)
+        public async Task<ActionResult<DeckCommentResponse>> GetComment(string id)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -192,17 +192,17 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var comment = await _commentService.GetCommentByIdAsync(id);
-                if (comment == null)
+                var deckComment = await _deckCommentService.GetDeckCommentByIdAsync(id);
+                if (deckComment == null)
                 {
                     return NotFound();
                 }
-                var response = _mapper.Map<CommentResponse>(comment);
+                var response = _mapper.Map<DeckCommentResponse>(deckComment);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving comment {CommentId}", id);
+                _logger.LogError(ex, "Error retrieving deck comment {DeckCommentId}", id);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -240,11 +240,11 @@ namespace Lithuaningo.API.Controllers
             OperationId = "UpdateComment",
             Tags = new[] { "Comment" }
         )]
-        [ProducesResponseType(typeof(CommentResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(DeckCommentResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<CommentResponse>> UpdateComment(string id, [FromBody] UpdateCommentRequest request)
+        public async Task<ActionResult<DeckCommentResponse>> UpdateComment(string id, [FromBody] UpdateDeckCommentRequest request)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -259,19 +259,19 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var comment = _mapper.Map<Comment>(request);
-                comment.Id = Guid.Parse(id);
-                var updatedComment = await _commentService.UpdateCommentAsync(comment);
-                if (updatedComment == null)
+                var deckComment = _mapper.Map<DeckComment>(request);
+                deckComment.Id = Guid.Parse(id);
+                var updatedDeckComment = await _deckCommentService.UpdateDeckCommentAsync(deckComment);
+                if (updatedDeckComment == null)
                 {
                     return NotFound();
                 }
-                var response = _mapper.Map<CommentResponse>(updatedComment);
+                var response = _mapper.Map<DeckCommentResponse>(updatedDeckComment);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating comment {CommentId}", id);
+                _logger.LogError(ex, "Error updating deck comment {DeckCommentId}", id);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -305,18 +305,18 @@ namespace Lithuaningo.API.Controllers
         {
             if (string.IsNullOrWhiteSpace(id))
             {
-                _logger.LogWarning("Comment ID is empty");
-                return BadRequest("Comment ID cannot be empty");
+                _logger.LogWarning("Deck comment ID is empty");
+                return BadRequest("Deck comment ID cannot be empty");
             }
 
             try
             {
-                await _commentService.DeleteCommentAsync(id);
+                await _deckCommentService.DeleteDeckCommentAsync(id);
                 return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting comment {CommentId}", id);
+                _logger.LogError(ex, "Error deleting deck comment {DeckCommentId}", id);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -343,10 +343,10 @@ namespace Lithuaningo.API.Controllers
             OperationId = "GetUserComments",
             Tags = new[] { "Comment" }
         )]
-        [ProducesResponseType(typeof(List<CommentResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<DeckCommentResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<CommentResponse>>> GetUserComments(string userId)
+        public async Task<ActionResult<List<DeckCommentResponse>>> GetUserComments(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
@@ -356,13 +356,13 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var comments = await _commentService.GetUserCommentsAsync(userId);
-                var response = _mapper.Map<List<CommentResponse>>(comments);
+                var userDeckComments = await _deckCommentService.GetUserDeckCommentsAsync(userId);
+                var response = _mapper.Map<List<DeckCommentResponse>>(userDeckComments);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving comments for user {UserId}", userId);
+                _logger.LogError(ex, "Error retrieving user deck comments for user {UserId}", userId);
                 return StatusCode(500, "Internal server error");
             }
         }

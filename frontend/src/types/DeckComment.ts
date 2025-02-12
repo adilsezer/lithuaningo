@@ -1,4 +1,4 @@
-export interface Comment {
+export interface DeckComment {
   id: string;
   deckId: string;
   userId: string;

@@ -7,33 +7,33 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
-import { useComments } from "@hooks/useComments";
-import { commentFormSchema } from "@utils/zodSchemas";
+import { useDeckComments } from "@hooks/useComments";
+import { deckCommentFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 
-export default function CommentsScreen() {
+export default function DeckCommentsScreen() {
   const { id } = useLocalSearchParams();
   const theme = useTheme();
   const userData = useUserData();
   const {
-    comments,
+    deckComments,
     isSubmitting,
     error,
     isEmpty,
     clearError,
-    fetchComments,
-    addComment,
-    deleteComment,
-  } = useComments(id as string);
+    fetchDeckComments,
+    addDeckComment,
+    deleteDeckComment,
+  } = useDeckComments(id as string);
 
   useEffect(() => {
-    fetchComments();
-  }, [fetchComments]);
+    fetchDeckComments();
+  }, [fetchDeckComments]);
 
   const handleAddComment = async (data: { content: string }) => {
-    if (!userData?.id || !userData?.name) return;
-    await addComment(userData.id, data.content, userData.name);
+    if (!userData?.id || !userData?.fullName) return;
+    await addDeckComment(userData.id, data.content, userData.fullName);
   };
 
   const commentFields: FormField[] = [
@@ -55,7 +55,7 @@ export default function CommentsScreen() {
         message={error}
         onRetry={() => {
           clearError();
-          fetchComments();
+          fetchDeckComments();
         }}
         fullScreen
       />
@@ -68,7 +68,7 @@ export default function CommentsScreen() {
     >
       <BackButton />
       <CustomText variant="titleLarge" bold>
-        Comments
+        Deck Comments
       </CustomText>
       <Form
         fields={commentFields}
@@ -76,10 +76,10 @@ export default function CommentsScreen() {
         submitButtonText="Add Comment"
         style={styles.form}
         isLoading={isSubmitting}
-        zodSchema={commentFormSchema}
+        zodSchema={deckCommentFormSchema}
       />
       <FlatList
-        data={comments}
+        data={deckComments}
         renderItem={({ item }) => (
           <View
             style={[
@@ -105,7 +105,7 @@ export default function CommentsScreen() {
               <View style={styles.actionButtons}>
                 <CustomButton
                   title="Delete"
-                  onPress={() => item.id && deleteComment(item.id, userData.id)}
+                  onPress={() => item.id && deleteDeckComment(item.id)}
                   disabled={isSubmitting}
                 />
               </View>

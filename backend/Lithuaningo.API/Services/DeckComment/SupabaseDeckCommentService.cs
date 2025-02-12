@@ -12,19 +12,19 @@ using Supabase;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseCommentService : ICommentService
+    public class SupabaseDeckCommentService : IDeckCommentService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
-        private const string CacheKeyPrefix = "comment:";
-        private readonly ILogger<SupabaseCommentService> _logger;
+        private const string CacheKeyPrefix = "deck_comment:";
+        private readonly ILogger<SupabaseDeckCommentService> _logger;
 
-        public SupabaseCommentService(
+        public SupabaseDeckCommentService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseCommentService> logger)
+            ILogger<SupabaseDeckCommentService> logger)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
@@ -32,7 +32,7 @@ namespace Lithuaningo.API.Services
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<List<Comment>> GetDeckCommentsAsync(string deckId)
+        public async Task<List<DeckComment>> GetDeckCommentsAsync(string deckId)
         {
             if (!Guid.TryParse(deckId, out var deckGuid))
             {
@@ -40,7 +40,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}deck:{deckGuid}";
-            var cached = await _cache.GetAsync<List<Comment>>(cacheKey);
+            var cached = await _cache.GetAsync<List<DeckComment>>(cacheKey);
 
             if (cached != null)
             {
@@ -51,171 +51,171 @@ namespace Lithuaningo.API.Services
             try
             {
                 var response = await _supabaseClient
-                    .From<Comment>()
+                    .From<DeckComment>()
                     .Filter("deck_id", Operator.Equals, deckGuid)
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
-                var comments = response.Models;
+                var deckComments = response.Models;
 
-                await _cache.SetAsync(cacheKey, comments,
+                await _cache.SetAsync(cacheKey, deckComments,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} comments for deck {DeckId}", 
-                    comments.Count, deckId);
+                _logger.LogInformation("Retrieved and cached {Count} deck comments for deck {DeckId}", 
+                    deckComments.Count, deckId);
 
-                return comments;
+                return deckComments;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving comments for deck {DeckId}", deckId);
+                _logger.LogError(ex, "Error retrieving deck comments for deck {DeckId}", deckId);
                 throw;
             }
         }
 
-        public async Task<Comment?> GetCommentByIdAsync(string id)
+        public async Task<DeckComment?> GetDeckCommentByIdAsync(string id)
         {
-            if (!Guid.TryParse(id, out var commentId))
+            if (!Guid.TryParse(id, out var deckCommentId))
             {
-                throw new ArgumentException("Invalid comment ID format", nameof(id));
+                throw new ArgumentException("Invalid deck comment ID format", nameof(id));
             }
 
-            var cacheKey = $"{CacheKeyPrefix}{commentId}";
-            var cached = await _cache.GetAsync<Comment>(cacheKey);
+            var cacheKey = $"{CacheKeyPrefix}{deckCommentId}";
+            var cached = await _cache.GetAsync<DeckComment>(cacheKey);
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved comment {Id} from cache", id);
+                _logger.LogInformation("Retrieved deck comment {Id} from cache", id);
                 return cached;
             }
 
             try
             {
                 var response = await _supabaseClient
-                    .From<Comment>()
-                    .Where(c => c.Id == commentId)
+                    .From<DeckComment>()
+                    .Where(c => c.Id == deckCommentId)
                     .Get();
 
-                var comment = response.Models.FirstOrDefault();
-                if (comment != null)
+                var deckComment = response.Models.FirstOrDefault();
+                if (deckComment != null)
                 {
-                    await _cache.SetAsync(cacheKey, comment,
+                    await _cache.SetAsync(cacheKey, deckComment,
                         TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                    _logger.LogInformation("Retrieved and cached comment {Id}", id);
+                    _logger.LogInformation("Retrieved and cached deck comment {Id}", id);
                 }
                 else
                 {
-                    _logger.LogInformation("Comment {Id} not found", id);
+                    _logger.LogInformation("Deck comment {Id} not found", id);
                 }
 
-                return comment;
+                return deckComment;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving comment {Id}", id);
+                _logger.LogError(ex, "Error retrieving deck comment {Id}", id);
                 throw;
             }
         }
 
-        public async Task<Comment> CreateCommentAsync(Comment comment)
+        public async Task<DeckComment> CreateDeckCommentAsync(DeckComment deckComment)
         {
-            if (comment == null)
+            if (deckComment == null)
             {
-                throw new ArgumentNullException(nameof(comment));
+                throw new ArgumentNullException(nameof(deckComment));
             }
 
             try
             {
-                comment.Id = Guid.NewGuid();
-                comment.CreatedAt = DateTime.UtcNow;
-                comment.UpdatedAt = DateTime.UtcNow;
+                deckComment.Id = Guid.NewGuid();
+                deckComment.CreatedAt = DateTime.UtcNow;
+                deckComment.UpdatedAt = DateTime.UtcNow;
 
                 var response = await _supabaseClient
-                    .From<Comment>()
-                    .Insert(comment);
+                    .From<DeckComment>()
+                    .Insert(deckComment);
 
                 var createdComment = response.Models.First();
 
                 // Invalidate relevant cache entries
                 await InvalidateCommentCacheAsync(createdComment);
-                _logger.LogInformation("Created new comment with ID {Id} for deck {DeckId}", 
+                _logger.LogInformation("Created new deck comment with ID {Id} for deck {DeckId}", 
                     createdComment.Id, createdComment.DeckId);
 
                 return createdComment;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating comment");
+                _logger.LogError(ex, "Error creating deck comment");
                 throw;
             }
         }
 
-        public async Task<Comment> UpdateCommentAsync(Comment comment)
+        public async Task<DeckComment> UpdateDeckCommentAsync(DeckComment deckComment)
         {
-            if (comment == null)
+            if (deckComment == null)
             {
-                throw new ArgumentNullException(nameof(comment));
+                throw new ArgumentNullException(nameof(deckComment));
             }
 
             try
             {
-                comment.UpdatedAt = DateTime.UtcNow;
+                deckComment.UpdatedAt = DateTime.UtcNow;
 
                 var response = await _supabaseClient
-                    .From<Comment>()
-                    .Where(c => c.Id == comment.Id)
-                    .Update(comment);
+                    .From<DeckComment>()
+                    .Where(c => c.Id == deckComment.Id)
+                    .Update(deckComment);
 
                 var updatedComment = response.Models.First();
 
                 // Invalidate relevant cache entries
                 await InvalidateCommentCacheAsync(updatedComment);
-                _logger.LogInformation("Updated comment {Id}", comment.Id);
+                _logger.LogInformation("Updated deck comment {Id}", deckComment.Id);
 
                 return updatedComment;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating comment {Id}", comment.Id);
+                _logger.LogError(ex, "Error updating deck comment {Id}", deckComment.Id);
                 throw;
             }
         }
 
-        public async Task<bool> DeleteCommentAsync(string id)
+        public async Task<bool> DeleteDeckCommentAsync(string id)
         {
-            if (!Guid.TryParse(id, out var commentId))
+            if (!Guid.TryParse(id, out var deckCommentId))
             {
-                throw new ArgumentException("Invalid comment ID format", nameof(id));
+                throw new ArgumentException("Invalid deck comment ID format", nameof(id));
             }
 
             try
             {
                 // Get the comment first to know which cache keys to invalidate
-                var comment = await GetCommentByIdAsync(id);
-                if (comment == null)
+                var deckComment = await GetDeckCommentByIdAsync(id);
+                if (deckComment == null)
                 {
-                    _logger.LogInformation("Comment {Id} not found for deletion", id);
+                    _logger.LogInformation("Deck comment {Id} not found for deletion", id);
                     return false;
                 }
 
                 await _supabaseClient
-                    .From<Comment>()
-                    .Where(c => c.Id == commentId)
+                    .From<DeckComment>()
+                    .Where(c => c.Id == deckCommentId)
                     .Delete();
 
                 // Invalidate relevant cache entries
-                await InvalidateCommentCacheAsync(comment);
-                _logger.LogInformation("Deleted comment {Id}", id);
+                await InvalidateCommentCacheAsync(deckComment);
+                _logger.LogInformation("Deleted deck comment {Id}", id);
 
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting comment {Id}", id);
+                _logger.LogError(ex, "Error deleting deck comment {Id}", id);
                 throw;
             }
         }
 
-        public async Task<List<Comment>> GetUserCommentsAsync(string userId)
+        public async Task<List<DeckComment>> GetUserDeckCommentsAsync(string userId)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -223,7 +223,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}user:{userGuid}";
-            var cached = await _cache.GetAsync<List<Comment>>(cacheKey);
+            var cached = await _cache.GetAsync<List<DeckComment>>(cacheKey);
 
             if (cached != null)
             {
@@ -234,7 +234,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var response = await _supabaseClient
-                    .From<Comment>()
+                    .From<DeckComment>()
                     .Filter("user_id", Operator.Equals, userGuid)
                     .Order("created_at", Ordering.Descending)
                     .Get();
@@ -255,7 +255,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private async Task InvalidateCommentCacheAsync(Comment comment)
+        private async Task InvalidateCommentCacheAsync(DeckComment comment)
         {
             var tasks = new List<Task>
             {
