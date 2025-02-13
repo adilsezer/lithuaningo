@@ -1,9 +1,7 @@
 import { Platform } from "react-native";
-import axios, { AxiosInstance, AxiosError } from "axios";
+import axios, { AxiosInstance } from "axios";
 import { API_KEYS } from "@config/constants";
 import {
-  Lemma,
-  WordForm,
   QuizQuestion,
   UserProfile,
   Announcement,
@@ -160,15 +158,6 @@ class ApiClient {
       }
       throw error;
     }
-  }
-
-  // Word Controller
-  async getWordForm(word: string): Promise<WordForm> {
-    return this.request<WordForm>(`/api/v1/word/${word}`);
-  }
-
-  async getLemma(lemma: string): Promise<Lemma> {
-    return this.request<Lemma>(`/api/v1/word/lemma/${lemma}`);
   }
 
   // Quiz Controller
