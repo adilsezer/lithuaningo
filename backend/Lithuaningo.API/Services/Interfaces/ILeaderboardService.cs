@@ -7,6 +7,6 @@ namespace Lithuaningo.API.Services.Interfaces
     {
         Task<LeaderboardWeek> GetCurrentWeekLeaderboardAsync();
         Task<LeaderboardWeek> GetWeekLeaderboardAsync(string weekId);
-        Task UpdateLeaderboardEntryAsync(string userId, string name, int score);
+        Task<LeaderboardEntry> UpdateLeaderboardEntryAsync(string userId, int score);
     }
 }

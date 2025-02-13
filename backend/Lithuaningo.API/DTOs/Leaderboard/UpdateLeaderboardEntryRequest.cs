@@ -1,18 +1,22 @@
+using System;
 using System.ComponentModel.DataAnnotations;
-using Lithuaningo.API.Validators;
 
 namespace Lithuaningo.API.DTOs.Leaderboard
 {
+    /// <summary>
+    /// Request to update a leaderboard entry
+    /// </summary>
     public class UpdateLeaderboardEntryRequest
     {
+        /// <summary>
+        /// The user identifier
+        /// </summary>
         [Required(ErrorMessage = "User ID is required")]
-        [ValidGuid(ErrorMessage = "Invalid User ID format")]
-        public string UserId { get; set; } = string.Empty;
+        public Guid UserId { get; set; }
 
-        [Required(ErrorMessage = "Name is required")]
-        [StringLength(100, MinimumLength = 2, ErrorMessage = "Name must be between 2 and 100 characters")]
-        public string Name { get; set; } = string.Empty;
-
+        /// <summary>
+        /// The user's score
+        /// </summary>
         [Range(0, int.MaxValue, ErrorMessage = "Score must be a non-negative number")]
         public int Score { get; set; }
     }

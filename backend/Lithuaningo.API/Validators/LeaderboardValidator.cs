@@ -8,21 +8,11 @@ public class UpdateLeaderboardEntryValidator : AbstractValidator<UpdateLeaderboa
     public UpdateLeaderboardEntryValidator()
     {
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required")
-            .Must(BeValidGuid).WithMessage("Invalid User ID format");
-
-        RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("Name is required")
-            .MinimumLength(2).WithMessage("Name must be at least 2 characters")
-            .MaximumLength(100).WithMessage("Name must not exceed 100 characters");
+            .NotEmpty().WithMessage("User ID is required");
 
         RuleFor(x => x.Score)
+            .NotEmpty().WithMessage("Score is required")
             .GreaterThanOrEqualTo(0).WithMessage("Score must be non-negative")
             .LessThanOrEqualTo(int.MaxValue).WithMessage("Score must not exceed maximum value");
-    }
-
-    private bool BeValidGuid(string guid)
-    {
-        return Guid.TryParse(guid, out _);
     }
 } 

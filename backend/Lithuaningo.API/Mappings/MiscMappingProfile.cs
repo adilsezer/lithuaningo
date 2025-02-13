@@ -6,10 +6,9 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Models.Quiz;
 using Lithuaningo.API.DTOs.Announcement;
 using Lithuaningo.API.DTOs.Quiz;
-using Lithuaningo.API.DTOs.Word;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.DTOs.AppInfo;
-using Lithuaningo.API.DTOs.ChallengeStats;
+using Lithuaningo.API.DTOs.UserChallengeStats;
 using Lithuaningo.API.DTOs.DeckComment;
 using Lithuaningo.API.Utils;
 
@@ -34,15 +33,28 @@ namespace Lithuaningo.API.Mappings
             CreateMap<UpdateAnnouncementRequest, Announcement>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            // Challenge Stats mappings
-            CreateMap<ChallengeStats, ChallengeStatsResponse>();
+            // User Challenge Stats mappings
+            CreateMap<UserChallengeStats, UserChallengeStatsResponse>();
 
             // Deck Comment mappings
-            CreateMap<DeckComment, DeckCommentResponse>();
+            CreateMap<DeckComment, DeckCommentResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.DeckId, opt => opt.MapFrom(src => src.DeckId))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+
             CreateMap<CreateDeckCommentRequest, DeckComment>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                .ForMember(dest => dest.DeckId, opt => opt.MapFrom(src => src.DeckId))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+
             CreateMap<UpdateDeckCommentRequest, DeckComment>()
+                .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             // Quiz mappings
@@ -50,26 +62,19 @@ namespace Lithuaningo.API.Mappings
             CreateMap<CreateQuizQuestionRequest, QuizQuestion>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.QuizDate, opt => opt.MapFrom(src => DateTime.UtcNow.Date))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "multiple_choice"));
 
-            // Word mappings
-            CreateMap<WordForm, WordFormResponse>()
-                .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => 
-                    TimeFormatUtils.GetTimeAgo(src.CreatedAt)));
-            CreateMap<Lemma, LemmaResponse>();
-
             // Leaderboard mappings
-            CreateMap<LeaderboardWeek, LeaderboardResponse>();
+            CreateMap<LeaderboardWeek, LeaderboardWeekResponse>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
+                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate))
+                .ForMember(dest => dest.Entries, opt => opt.MapFrom(src => src.Entries.Values));
+
             CreateMap<LeaderboardEntry, LeaderboardEntryResponse>()
-                .ForMember(dest => dest.LastUpdatedTimeAgo, opt => opt.MapFrom(src => 
-                    TimeFormatUtils.GetTimeAgo(src.LastUpdated)))
-                .ForMember(dest => dest.Rank, opt => opt.MapFrom((src, dest, _, context) => 
-                {
-                    var entries = context.Items["Entries"] as List<LeaderboardEntry>;
-                    if (entries == null) return 0;
-                    return entries.OrderByDescending(e => e.Score).ToList().FindIndex(e => e.UserId == src.UserId) + 1;
-                }));
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score));
         }
     }
 } 

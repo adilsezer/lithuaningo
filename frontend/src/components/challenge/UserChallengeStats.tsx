@@ -1,20 +1,20 @@
 import React from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "react-native-paper";
-import { useChallengeStats } from "@hooks/useChallengeStats";
+import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 
-interface ChallengeStatsProps {
+interface UserChallengeStatsProps {
   deckId: string;
   userId?: string;
 }
 
-export const ChallengeStatsView: React.FC<ChallengeStatsProps> = ({
+export const UserChallengeStatsView: React.FC<UserChallengeStatsProps> = ({
   deckId,
   userId,
 }) => {
   const theme = useTheme();
-  const { stats, isLoading } = useChallengeStats(userId);
+  const { stats, isLoading } = useUserChallengeStats(userId);
 
   if (isLoading) {
     return <LoadingIndicator />;

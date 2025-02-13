@@ -76,8 +76,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var stats = await _userFlashcardStatsService.GetUserFlashcardStatsAsync(deckId, userId);
-                var response = _mapper.Map<UserFlashcardStatsResponse>(stats);
-                return Ok(response);
+                return Ok(stats);
             }
             catch (Exception ex)
             {
@@ -96,7 +95,8 @@ namespace Lithuaningo.API.Controllers
         ///         "flashcardId": "flashcard-guid",
         ///         "userId": "user-guid",
         ///         "isCorrect": true,
-        ///         "timeSpentSeconds": 15
+        ///         "confidenceLevel": 3,
+        ///         "timeTakenSeconds": 15
         ///     }
         /// </remarks>
         /// <param name="deckId">The deck identifier</param>
@@ -130,7 +130,13 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var stats = _mapper.Map<UserFlashcardStats>(request);
-                await _userFlashcardStatsService.TrackUserFlashcardStatsAsync(deckId, stats.UserId.ToString(), request.FlashcardId, request.IsCorrect);
+                await _userFlashcardStatsService.TrackUserFlashcardStatsAsync(
+                    deckId,
+                    stats.UserId.ToString(),
+                    request.FlashcardId,
+                    request.IsCorrect,
+                    request.ConfidenceLevel,
+                    request.TimeTakenSeconds);
                 return NoContent();
             }
             catch (Exception ex)
@@ -179,8 +185,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var history = await _userFlashcardStatsService.GetUserFlashcardHistoryAsync(userId);
-                var response = _mapper.Map<List<UserFlashcardStatsResponse>>(history);
-                return Ok(response);
+                return Ok(history);
             }
             catch (Exception ex)
             {

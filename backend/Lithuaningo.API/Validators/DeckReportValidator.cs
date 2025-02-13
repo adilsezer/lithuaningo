@@ -8,8 +8,10 @@ public class CreateDeckReportValidator : AbstractValidator<CreateDeckReportReque
     public CreateDeckReportValidator()
     {
         RuleFor(x => x.DeckId)
-            .NotEmpty().WithMessage("Deck ID is required")
-            .Must(BeValidGuid).WithMessage("Invalid Deck ID format");
+            .NotEmpty().WithMessage("Deck ID is required");
+
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("User ID is required");
 
         RuleFor(x => x.Reason)
             .NotEmpty().WithMessage("Reason is required")
@@ -18,11 +20,6 @@ public class CreateDeckReportValidator : AbstractValidator<CreateDeckReportReque
         RuleFor(x => x.Details)
             .NotEmpty().WithMessage("Details are required")
             .MaximumLength(1000).WithMessage("Details must not exceed 1000 characters");
-    }
-
-    private bool BeValidGuid(string guid)
-    {
-        return Guid.TryParse(guid, out _);
     }
 }
 
@@ -37,18 +34,12 @@ public class UpdateDeckReportValidator : AbstractValidator<UpdateDeckReportReque
             .Must(status => _validStatuses.Contains(status.ToLower()))
             .WithMessage($"Status must be one of: {string.Join(", ", _validStatuses)}");
 
-        RuleFor(x => x.ReviewedBy)
-            .Must(BeValidGuidOrNull).WithMessage("Invalid Reviewer ID format")
-            .When(x => !string.IsNullOrEmpty(x.ReviewedBy));
+        RuleFor(x => x.ReviewerId)
+            .NotEmpty().WithMessage("Reviewer ID is required");
 
         RuleFor(x => x.Resolution)
             .NotEmpty().WithMessage("Resolution is required when updating status")
             .MaximumLength(1000).WithMessage("Resolution must not exceed 1000 characters")
             .When(x => x.Status.ToLower() != "pending");
-    }
-
-    private bool BeValidGuidOrNull(string? guid)
-    {
-        return string.IsNullOrEmpty(guid) || Guid.TryParse(guid, out _);
     }
 } 

@@ -21,7 +21,7 @@ export type { Deck } from "./Deck";
 export * from "./Flashcard";
 export * from "./UserFlashcardStats";
 
-export interface ChallengeStats {
+export interface UserChallengeStats {
   id: string;
   userId: string;
   cardsReviewed: number;

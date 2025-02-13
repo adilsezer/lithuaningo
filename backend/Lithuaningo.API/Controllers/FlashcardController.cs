@@ -380,12 +380,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     PUT /api/v1/Flashcard/{id}/review
-        ///     {
-        ///         "wasCorrect": true,
-        ///         "difficulty": 3,
-        ///         "timeSpentSeconds": 15
-        ///     }
+        ///     PUT /api/v1/Flashcard/{id}/review?wasCorrect=true
         /// 
         /// This updates:
         /// - Next review date
@@ -393,9 +388,9 @@ namespace Lithuaningo.API.Controllers
         /// - Success rate statistics
         /// </remarks>
         /// <param name="id">The flashcard identifier</param>
-        /// <param name="request">The review update request</param>
+        /// <param name="wasCorrect">Whether the review was correct</param>
         /// <response code="204">Review status updated successfully</response>
-        /// <response code="400">If flashcard ID is empty or request is invalid</response>
+        /// <response code="400">If flashcard ID is empty</response>
         /// <response code="500">If there was an internal error during update</response>
         [HttpPut("{id}/review")]
         [SwaggerOperation(
@@ -405,11 +400,11 @@ namespace Lithuaningo.API.Controllers
             Tags = new[] { "Flashcard" }
         )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> UpdateReviewStatus(
             string id,
-            [FromBody] UpdateReviewRequest request)
+            [FromQuery] bool wasCorrect)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -417,14 +412,9 @@ namespace Lithuaningo.API.Controllers
                 return BadRequest("Flashcard ID cannot be empty");
             }
 
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             try
             {
-                await _flashcardService.UpdateReviewStatusAsync(id, request.WasCorrect);
+                await _flashcardService.UpdateReviewStatusAsync(id, wasCorrect);
                 return NoContent();
             }
             catch (Exception ex)

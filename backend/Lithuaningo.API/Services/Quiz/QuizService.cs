@@ -99,10 +99,7 @@ namespace Lithuaningo.API.Services
                     Question = q.Question,
                     Options = q.Options,
                     CorrectAnswer = q.CorrectAnswer,
-                    Explanation = q.Explanation,
-                    Category = q.Category,
-                    DifficultyLevel = q.DifficultyLevel,
-                    QuizDate = today,
+                    ExampleSentence = q.ExampleSentence,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 }).ToList();
@@ -163,50 +160,6 @@ namespace Lithuaningo.API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error retrieving quiz questions for category {Category}", category);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Gets quiz questions by difficulty level.
-        /// </summary>
-        public async Task<IEnumerable<QuizQuestion>> GetQuizQuestionsByDifficultyAsync(int difficultyLevel)
-        {
-            if (difficultyLevel < 1 || difficultyLevel > 5)
-            {
-                throw new ArgumentException("Difficulty level must be between 1 and 5", nameof(difficultyLevel));
-            }
-
-            var cacheKey = $"{CacheKeyPrefix}difficulty:{difficultyLevel}";
-            var cached = await _cache.GetAsync<IEnumerable<QuizQuestion>>(cacheKey);
-
-            if (cached != null)
-            {
-                _logger.LogInformation("Retrieved quiz questions from cache for difficulty level {Level}", 
-                    difficultyLevel);
-                return cached;
-            }
-
-            try
-            {
-                var response = await _supabaseClient
-                    .From<QuizQuestion>()
-                    .Filter("difficulty_level", Operator.Equals, difficultyLevel)
-                    .Get();
-
-                var questions = response.Models;
-
-                await _cache.SetAsync(cacheKey, questions,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} quiz questions for difficulty level {Level}", 
-                    questions.Count, difficultyLevel);
-
-                return questions;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving quiz questions for difficulty level {Level}", 
-                    difficultyLevel);
                 throw;
             }
         }

@@ -103,8 +103,8 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
         // Configure HTTPS options for production
         serverOptions.ConfigureHttpsDefaults(httpsOptions =>
         {
-            httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 | 
-                                      System.Security.Authentication.SslProtocols.Tls13;
+            httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
+                                     System.Security.Authentication.SslProtocols.Tls13;
         });
     }
 });
@@ -160,7 +160,6 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Basic Services
     services.AddControllers();
     services.AddEndpointsApiExplorer();
-    
     // API Versioning
     services.AddApiVersioning(options =>
     {
@@ -178,9 +177,9 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Configure Swagger with security
     services.AddSwaggerGen(c =>
     {
-        c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo 
-        { 
-            Title = "Lithuaningo API v1", 
+        c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "Lithuaningo API v1",
             Version = "v1",
             Description = @"Version 1 of the Lithuaningo API for the Lithuanian language learning platform.
 
@@ -206,9 +205,9 @@ To authorize in Swagger UI:
             }
         });
 
-        c.SwaggerDoc("v2", new Microsoft.OpenApi.Models.OpenApiInfo 
-        { 
-            Title = "Lithuaningo API v2", 
+        c.SwaggerDoc("v2", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "Lithuaningo API v2",
             Version = "v2",
             Description = "Version 2 of the Lithuaningo API with enhanced features and optimizations",
             Contact = new Microsoft.OpenApi.Models.OpenApiContact
@@ -281,15 +280,14 @@ To authorize in Swagger UI:
     // Core Services
     services.AddScoped<IUserProfileService, SupabaseUserProfileService>();
     services.AddScoped<IUserFlashcardStatsService, SupabaseUserFlashcardStatsService>();
-    services.AddScoped<IWordService, SupabaseWordService>();
     services.AddScoped<IAnnouncementService, SupabaseAnnouncementService>();
     services.AddScoped<IAppInfoService, SupabaseAppInfoService>();
     services.AddScoped<IDeckService, SupabaseDeckService>();
+    services.AddScoped<IDeckVoteService, SupabaseDeckVoteService>();
     services.AddScoped<IFlashcardService, SupabaseFlashcardService>();
     services.AddScoped<IDeckCommentService, SupabaseDeckCommentService>();
     services.AddScoped<IDeckReportService, SupabaseDeckReportService>();
     services.AddScoped<ILeaderboardService, SupabaseLeaderboardService>();
-    
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
 
@@ -318,7 +316,6 @@ To authorize in Swagger UI:
         {
             options.Filters.Add(new RequireHttpsAttribute());
         }
-        
         // Add security headers
         options.Filters.Add(new ResponseCacheAttribute { NoStore = true, Location = ResponseCacheLocation.None });
     })
@@ -337,7 +334,6 @@ To authorize in Swagger UI:
         };
     })
     .AddApplicationPart(typeof(UserProfileController).Assembly)
-    .AddApplicationPart(typeof(WordController).Assembly)
     .AddApplicationPart(typeof(QuizController).Assembly)
     .AddApplicationPart(typeof(AnnouncementController).Assembly)
     .AddApplicationPart(typeof(AppInfoController).Assembly)
@@ -370,7 +366,6 @@ To authorize in Swagger UI:
 
                     var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
                     var isValid = await authService.ValidateTokenAsync(token);
-                    
                     if (!isValid)
                     {
                         context.Fail("Invalid token");

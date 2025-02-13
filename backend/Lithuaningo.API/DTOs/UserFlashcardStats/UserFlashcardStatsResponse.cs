@@ -13,14 +13,19 @@ namespace Lithuaningo.API.DTOs.UserFlashcardStats
         public Guid Id { get; set; }
 
         /// <summary>
-        /// The deck identifier
-        /// </summary>
-        public Guid DeckId { get; set; }
-
-        /// <summary>
         /// The user identifier
         /// </summary>
         public Guid UserId { get; set; }
+
+        /// <summary>
+        /// The flashcard identifier
+        /// </summary>
+        public Guid FlashcardId { get; set; }
+
+        /// <summary>
+        /// Accuracy rate (0-100)
+        /// </summary>
+        public double AccuracyRate { get; set; }
 
         /// <summary>
         /// Total number of cards reviewed
@@ -33,33 +38,13 @@ namespace Lithuaningo.API.DTOs.UserFlashcardStats
         public int CorrectAnswers { get; set; }
 
         /// <summary>
-        /// Accuracy rate (0-100)
-        /// </summary>
-        public double AccuracyRate { get; set; }
-
-        /// <summary>
         /// When these stats were last updated
         /// </summary>
         public DateTime LastReviewedAt { get; set; }
 
         /// <summary>
-        /// Human-readable time since last review
-        /// </summary>
-        public string LastReviewedTimeAgo { get; set; } = string.Empty;
-
-        /// <summary>
         /// Human-readable time until next review
         /// </summary>
         public string? NextReviewDue { get; set; }
-
-        /// <summary>
-        /// When these stats were created
-        /// </summary>
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// When these stats were last updated
-        /// </summary>
-        public DateTime UpdatedAt { get; set; }
     }
 } 

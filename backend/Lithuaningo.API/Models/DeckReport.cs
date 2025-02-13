@@ -18,6 +18,10 @@ namespace Lithuaningo.API.Models
         [Column("user_id")]
         public Guid UserId { get; set; }
         
+        // Reviewer is optional – make nullable.
+        [Column("reviewer_id")]
+        public Guid? ReviewerId { get; set; }
+
         [Column("reason")]
         public string Reason { get; set; } = string.Empty;
         
@@ -27,10 +31,6 @@ namespace Lithuaningo.API.Models
         // Status (e.g., "pending", "resolved", etc.)
         [Column("status")]
         public string Status { get; set; } = "pending";
-        
-        // Reviewer is optional – make nullable.
-        [Column("reviewed_by")]
-        public Guid? ReviewedBy { get; set; }
         
         [Column("resolution")]
         public string Resolution { get; set; } = string.Empty;

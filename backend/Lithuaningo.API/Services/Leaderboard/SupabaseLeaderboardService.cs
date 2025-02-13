@@ -66,7 +66,6 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<LeaderboardEntry>()
-                    .Filter(l => l.Period, Operator.Equals, weekId)
                     .Order(l => l.Score, Ordering.Descending)
                     .Get();
 
@@ -77,10 +76,7 @@ namespace Lithuaningo.API.Services
                     {
                         Id = l.Id,
                         UserId = l.UserId,
-                        Name = string.Empty, // This can be populated later from user profile data.
-                        Period = l.Period,
                         Score = l.Score,
-                        Rank = l.Rank,
                         CreatedAt = l.CreatedAt,
                         UpdatedAt = l.UpdatedAt
                     }
@@ -108,16 +104,11 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task UpdateLeaderboardEntryAsync(string userId, string name, int score)
+        public async Task<LeaderboardEntry> UpdateLeaderboardEntryAsync(string userId, int score)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
                 throw new ArgumentException("Invalid user ID format", nameof(userId));
-            }
-
-            if (string.IsNullOrWhiteSpace(name))
-            {
-                throw new ArgumentException("Name cannot be empty", nameof(name));
             }
 
             if (score < 0)
@@ -132,17 +123,16 @@ namespace Lithuaningo.API.Services
                 // Try to find an existing entry for this user in the current week.
                 var existingResponse = await _supabaseClient
                     .From<LeaderboardEntry>()
-                    .Filter(l => l.Period, Operator.Equals, currentWeek)
                     .Filter(l => l.UserId, Operator.Equals, userGuid)
                     .Get();
 
                 var existing = existingResponse.Models.FirstOrDefault();
+                LeaderboardEntry updatedEntry;
 
                 if (existing != null)
                 {
                     // Update the existing entry.
                     existing.Score = score;
-                    existing.Name = name;
                     existing.UpdatedAt = DateTime.UtcNow;
 
                     var response = await _supabaseClient
@@ -150,7 +140,7 @@ namespace Lithuaningo.API.Services
                         .Where(l => l.Id == existing.Id)
                         .Update(existing);
 
-                    var updatedEntry = response.Models.First();
+                    updatedEntry = response.Models.First();
                     _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}", 
                         updatedEntry.Id, userId);
                 }
@@ -161,10 +151,7 @@ namespace Lithuaningo.API.Services
                     {
                         Id = Guid.NewGuid(),
                         UserId = userGuid,
-                        Name = name,
-                        Period = currentWeek,
                         Score = score,
-                        Rank = 0, // Will be updated by a Supabase function later.
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };
@@ -173,13 +160,15 @@ namespace Lithuaningo.API.Services
                         .From<LeaderboardEntry>()
                         .Insert(newEntry);
 
-                    var createdEntry = response.Models.First();
+                    updatedEntry = response.Models.First();
                     _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId}", 
-                        createdEntry.Id, userId);
+                        updatedEntry.Id, userId);
                 }
 
                 // Invalidate the cache for the current week
                 await InvalidateLeaderboardCacheAsync(currentWeek);
+
+                return updatedEntry;
             }
             catch (Exception ex)
             {

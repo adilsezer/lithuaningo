@@ -20,17 +20,17 @@ namespace Lithuaningo.API.Models
         [Column("minimum_version")]
         public string MinimumVersion { get; set; } = string.Empty;
 
-        [Column("is_maintenance")]
-        public bool IsMaintenance { get; set; }
-
-        [Column("maintenance_message")]
-        public string? MaintenanceMessage { get; set; }
-
         [Column("force_update")]
         public bool ForceUpdate { get; set; }
 
         [Column("update_url")]
         public string? UpdateUrl { get; set; }
+
+        [Column("is_maintenance")]
+        public bool IsMaintenance { get; set; }
+
+        [Column("maintenance_message")]
+        public string? MaintenanceMessage { get; set; }
 
         [Column("release_notes")]
         public string? ReleaseNotes { get; set; }

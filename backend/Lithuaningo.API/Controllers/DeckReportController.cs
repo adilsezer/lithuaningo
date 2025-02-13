@@ -77,7 +77,7 @@ namespace Lithuaningo.API.Controllers
                 var reportId = await _reportService.CreateReportAsync(report);
                 var createdReport = await _reportService.GetReportByIdAsync(reportId);
                 var response = _mapper.Map<DeckReportResponse>(createdReport);
-                return CreatedAtAction(nameof(GetReport), new { id = response.Id }, response);
+                return CreatedAtAction(nameof(GetReport), new { id = reportId }, response);
             }
             catch (Exception ex)
             {
@@ -281,7 +281,7 @@ namespace Lithuaningo.API.Controllers
                 await _reportService.UpdateReportStatusAsync(
                     id,
                     request.Status,
-                    request.ReviewedBy,
+                    request.ReviewerId.ToString(),
                     request.Resolution);
 
                 var updatedReport = await _reportService.GetReportByIdAsync(id);

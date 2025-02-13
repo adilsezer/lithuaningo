@@ -1,22 +1,23 @@
 using Lithuaningo.API.Models;
 using System.Threading.Tasks;
+using Lithuaningo.API.DTOs.UserChallengeStats;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
-    public interface IChallengeStatsService
+    public interface IUserChallengeStatsService
     {
         /// <summary>
         /// Retrieves challenge statistics for the specified user.
         /// </summary>
         /// <param name="userId">The ID of the user to get stats for.</param>
         /// <returns>Challenge statistics for the specified user.</returns>
-        Task<ChallengeStats> GetChallengeStatsAsync(string userId);
+        Task<UserChallengeStats> GetUserChallengeStatsAsync(string userId);
 
         /// <summary>
         /// Updates the challenge statistics for a user.
         /// </summary>
-        /// <param name="challengeStats">The updated challenge statistics.</param>
-        Task UpdateChallengeStatsAsync(ChallengeStats challengeStats);
+        /// <param name="userChallengeStats">The updated user challenge statistics.</param>
+        Task UpdateUserChallengeStatsAsync(UserChallengeStats userChallengeStats);
 
         /// <summary>
         /// Updates the daily streak for a user based on their last activity.
@@ -29,7 +30,7 @@ namespace Lithuaningo.API.Services.Interfaces
         /// </summary>
         /// <param name="userId">The ID of the user to add points for.</param>
         /// <param name="amount">The amount of experience points to add.</param>
-        Task AddExperiencePointsAsync(string userId, int amount);
+            Task AddExperiencePointsAsync(string userId, int amount);
 
         /// <summary>
         /// Increments the number of mastered cards for a user.

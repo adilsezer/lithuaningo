@@ -18,6 +18,11 @@ namespace Lithuaningo.API.DTOs.UserProfile
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
+        /// Whether the email is verified
+        /// </summary>
+        public bool EmailVerified { get; set; }
+
+        /// <summary>
         /// User's full name
         /// </summary>
         public string FullName { get; set; } = string.Empty;
@@ -28,14 +33,24 @@ namespace Lithuaningo.API.DTOs.UserProfile
         public string? AvatarUrl { get; set; }
 
         /// <summary>
-        /// Human-readable time elapsed since creation
+        /// When the user last logged in
         /// </summary>
-        public string TimeAgo { get; set; } = string.Empty;
+        public DateTime? LastLoginAt { get; set; }
 
         /// <summary>
-        /// Human-readable time since last login
+        /// Whether the user is an admin
         /// </summary>
-        public string? LastLoginTimeAgo { get; set; }
+        public bool IsAdmin { get; set; }
+
+        /// <summary>
+        /// Whether the user is a premium user
+        /// </summary>
+        public bool IsPremium { get; set; }
+
+        /// <summary>
+        /// When the user's premium expires
+        /// </summary>
+        public DateTime? PremiumExpiresAt { get; set; }
 
         /// <summary>
         /// When this profile was created
@@ -46,10 +61,5 @@ namespace Lithuaningo.API.DTOs.UserProfile
         /// When this profile was last updated
         /// </summary>
         public DateTime UpdatedAt { get; set; }
-
-        /// <summary>
-        /// When the user last logged in
-        /// </summary>
-        public DateTime? LastLoginAt { get; set; }
     }
 } 

@@ -12,7 +12,7 @@ import {
   Flashcard,
   DeckComment,
   LeaderboardWeek,
-  ChallengeStats,
+  UserChallengeStats,
   DeckReport,
   UserFlashcardStats,
   TrackProgressRequest,
@@ -302,17 +302,17 @@ class ApiClient {
   }
 
   // Challenge Stats Controller
-  async getChallengeStats(userId: string): Promise<ChallengeStats> {
-    return this.request<ChallengeStats>(
+  async getUserChallengeStats(userId: string): Promise<UserChallengeStats> {
+    return this.request<UserChallengeStats>(
       `/api/v1/ChallengeStats/${userId}/stats`
     );
   }
 
-  async updateChallengeStats(
+  async updateUserChallengeStats(
     userId: string,
-    stats: Partial<ChallengeStats>
-  ): Promise<ChallengeStats> {
-    return this.request<ChallengeStats>(
+    stats: Partial<UserChallengeStats>
+  ): Promise<UserChallengeStats> {
+    return this.request<UserChallengeStats>(
       `/api/v1/ChallengeStats/${userId}/stats`,
       {
         method: "PUT",

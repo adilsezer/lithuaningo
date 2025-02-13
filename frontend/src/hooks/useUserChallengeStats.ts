@@ -1,10 +1,10 @@
 import { useState, useEffect, useCallback } from "react";
-import { ChallengeStats } from "@src/types";
+import { UserChallengeStats } from "@src/types";
 import useUIStore from "@stores/useUIStore";
-import { ChallengeStatsService } from "@src/services/data/challengeStatsService";
+import { UserChallengeStatsService } from "@src/services/data/userChallengeStatsService";
 
-export const useChallengeStats = (userId?: string) => {
-  const [stats, setStats] = useState<ChallengeStats | null>(null);
+export const useUserChallengeStats = (userId?: string) => {
+  const [stats, setStats] = useState<UserChallengeStats | null>(null);
   const [error, setError] = useState<string | null>(null);
   const { setLoading } = useUIStore();
   const isLoading = useUIStore((state) => state.isLoading);
@@ -13,11 +13,13 @@ export const useChallengeStats = (userId?: string) => {
     if (!userId) return;
     setLoading(true);
     try {
-      const data = await ChallengeStatsService.getChallengeStats(userId);
+      const data = await UserChallengeStatsService.getUserChallengeStats(
+        userId
+      );
       setStats(data);
       setError(null);
     } catch (error) {
-      console.error("Error fetching challenge stats:", error);
+      console.error("Error fetching user challenge stats:", error);
       setError(
         error instanceof Error ? error.message : "Failed to fetch stats"
       );
@@ -29,7 +31,7 @@ export const useChallengeStats = (userId?: string) => {
   const incrementCardsReviewed = useCallback(async () => {
     if (!userId) return;
     try {
-      await ChallengeStatsService.incrementCardsReviewed(userId);
+      await UserChallengeStatsService.incrementCardsReviewed(userId);
       await fetchStats(); // Refresh stats after increment
     } catch (error) {
       console.error("Error incrementing cards reviewed:", error);
@@ -42,7 +44,7 @@ export const useChallengeStats = (userId?: string) => {
   const incrementCardsMastered = useCallback(async () => {
     if (!userId) return;
     try {
-      await ChallengeStatsService.incrementCardsMastered(userId);
+      await UserChallengeStatsService.incrementCardsMastered(userId);
       await fetchStats(); // Refresh stats after increment
     } catch (error) {
       console.error("Error incrementing cards mastered:", error);
@@ -56,7 +58,7 @@ export const useChallengeStats = (userId?: string) => {
     async (goal: number) => {
       if (!userId) return;
       try {
-        await ChallengeStatsService.updateWeeklyGoal(userId, goal);
+        await UserChallengeStatsService.updateWeeklyGoal(userId, goal);
         await fetchStats(); // Refresh stats after update
       } catch (error) {
         console.error("Error updating weekly goal:", error);

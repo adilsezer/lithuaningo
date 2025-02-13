@@ -14,20 +14,23 @@ namespace Lithuaningo.API.Models
         [Column("deck_id")]
         public Guid DeckId { get; set; }
 
-        [Column("front_text")]
-        public string FrontText { get; set; } = string.Empty;
+        [Column("front_word")]
+        public string FrontWord { get; set; } = string.Empty;
 
-        [Column("back_text")]
-        public string BackText { get; set; } = string.Empty;
+        [Column("back_word")]
+        public string BackWord { get; set; } = string.Empty;
 
-        [Column("review_count")]
-        public int ReviewCount { get; set; }
+        [Column("example_sentence")]
+        public string ExampleSentence { get; set; } = string.Empty;
 
-        [Column("last_reviewed_at")]
-        public DateTime? LastReviewedAt { get; set; }
+        [Column("example_sentence_translation")]
+        public string ExampleSentenceTranslation { get; set; } = string.Empty;
 
-        [Column("correct_rate")]
-        public double? CorrectRate { get; set; }
+        [Column("image_url")]
+        public string ImageUrl { get; set; } = string.Empty;
+
+        [Column("audio_url")]
+        public string AudioUrl { get; set; } = string.Empty;
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }

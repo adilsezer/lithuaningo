@@ -5,21 +5,25 @@ namespace Lithuaningo.API.DTOs.Quiz
 {
     public class CreateQuizQuestionRequest
     {
-        [Required]
+        [Required(ErrorMessage = "Question is required")]
+        [StringLength(500, MinimumLength = 10, ErrorMessage = "Question must be between 10 and 500 characters")]
         public string Question { get; set; } = string.Empty;
 
-        [Required]
-        [MinLength(2)]
+        [Required(ErrorMessage = "Options are required")]
+        [MinLength(2, ErrorMessage = "At least 2 options are required")]
+        [MaxLength(5, ErrorMessage = "Maximum 5 options are allowed")]
         public List<string> Options { get; set; } = new();
 
-        [Required]
+        [Required(ErrorMessage = "Correct answer is required")]
         public string CorrectAnswer { get; set; } = string.Empty;
 
-        public string? Explanation { get; set; }
+        [StringLength(500, ErrorMessage = "Example sentence must not exceed 500 characters")]
+        public string? ExampleSentence { get; set; }
 
-        public string? Category { get; set; }
+        [StringLength(500, ErrorMessage = "Example sentence translation must not exceed 500 characters")]
+        public string ExampleSentenceTranslation { get; set; } = string.Empty;
 
-        [Range(1, 5)]
-        public int DifficultyLevel { get; set; } = 1;
+        [Required(ErrorMessage = "Question type is required")]
+        public QuizQuestionType Type { get; set; }
     }
 } 

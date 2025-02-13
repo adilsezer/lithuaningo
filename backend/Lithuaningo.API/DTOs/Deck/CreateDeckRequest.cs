@@ -16,12 +16,6 @@ namespace Lithuaningo.API.DTOs.Deck
         public Guid UserId { get; set; }
 
         /// <summary>
-        /// The user's display name
-        /// </summary>
-        [Required(ErrorMessage = "User name is required")]
-        public string UserName { get; set; } = string.Empty;
-
-        /// <summary>
         /// The deck title
         /// </summary>
         [Required(ErrorMessage = "Title is required")]

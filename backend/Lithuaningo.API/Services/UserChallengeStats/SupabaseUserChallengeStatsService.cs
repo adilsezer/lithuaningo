@@ -11,19 +11,19 @@ using Supabase;
 
 namespace Lithuaningo.API.Services;
 
-public class SupabaseChallengeStatsService : IChallengeStatsService
+public class SupabaseUserChallengeStatsService : IUserChallengeStatsService
 {
     private readonly Client _supabaseClient;
     private readonly ICacheService _cache;
     private readonly CacheSettings _cacheSettings;
     private const string CacheKeyPrefix = "challenge-stats:";
-    private readonly ILogger<SupabaseChallengeStatsService> _logger;
+    private readonly ILogger<SupabaseUserChallengeStatsService> _logger;
 
-    public SupabaseChallengeStatsService(
+    public SupabaseUserChallengeStatsService(
         ISupabaseService supabaseService,
         ICacheService cache,
         IOptions<CacheSettings> cacheSettings,
-        ILogger<SupabaseChallengeStatsService> logger)
+        ILogger<SupabaseUserChallengeStatsService> logger)
     {
         _supabaseClient = supabaseService.Client;
         _cache = cache;
@@ -31,7 +31,7 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
-    public async Task<ChallengeStats> GetChallengeStatsAsync(string userId)
+    public async Task<UserChallengeStats> GetUserChallengeStatsAsync(string userId)
     {
         if (!Guid.TryParse(userId, out var userGuid))
         {
@@ -39,7 +39,7 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         }
 
         var cacheKey = $"{CacheKeyPrefix}{userGuid}";
-        var cached = await _cache.GetAsync<ChallengeStats>(cacheKey);
+        var cached = await _cache.GetAsync<UserChallengeStats>(cacheKey);
 
         if (cached != null)
         {
@@ -50,7 +50,7 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         try
         {
             var response = await _supabaseClient
-                .From<ChallengeStats>()
+                .From<UserChallengeStats>()
                 .Where(u => u.UserId == userGuid)
                 .Get();
 
@@ -58,20 +58,19 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
             if (stats == null)
             {
                 // Create default stats if none exist
-                stats = new ChallengeStats
+                stats = new UserChallengeStats
                 {
                     Id = Guid.NewGuid(),
                     UserId = userGuid,
                     CurrentStreak = 0,
                     LongestStreak = 0,
                     LastChallengeDate = DateTime.UtcNow,
-                    HasCompletedTodayChallenge = false,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 };
 
                 var createResponse = await _supabaseClient
-                    .From<ChallengeStats>()
+                    .From<UserChallengeStats>()
                     .Insert(stats);
 
                 stats = createResponse.Models.First();
@@ -91,32 +90,32 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
         }
     }
 
-    public async Task UpdateChallengeStatsAsync(ChallengeStats challengeStats)
+    public async Task UpdateUserChallengeStatsAsync(UserChallengeStats userChallengeStats)
     {
-        if (challengeStats == null)
+        if (userChallengeStats == null)
         {
-            throw new ArgumentNullException(nameof(challengeStats));
+            throw new ArgumentNullException(nameof(userChallengeStats));
         }
 
         try
         {
-            challengeStats.UpdatedAt = DateTime.UtcNow;
+            userChallengeStats.UpdatedAt = DateTime.UtcNow;
 
             var response = await _supabaseClient
-                .From<ChallengeStats>()
-                .Where(u => u.Id == challengeStats.Id)
-                .Update(challengeStats);
+                .From<UserChallengeStats>()
+                .Where(u => u.Id == userChallengeStats.Id)
+                .Update(userChallengeStats);
 
             var updatedStats = response.Models.First();
 
             // Invalidate cache
-            var cacheKey = $"{CacheKeyPrefix}{challengeStats.UserId}";
+            var cacheKey = $"{CacheKeyPrefix}{userChallengeStats.UserId}";
             await _cache.RemoveAsync(cacheKey);
-            _logger.LogInformation("Updated challenge stats for user {UserId}", challengeStats.UserId);
+            _logger.LogInformation("Updated challenge stats for user {UserId}", userChallengeStats.UserId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating challenge stats for user {UserId}", challengeStats.UserId);
+            _logger.LogError(ex, "Error updating challenge stats for user {UserId}", userChallengeStats.UserId);
             throw;
         }
     }
@@ -130,37 +129,36 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
 
         try
         {
-            var challengeStats = await GetChallengeStatsAsync(userId);
+            var userChallengeStats = await GetUserChallengeStatsAsync(userId);
             var today = DateTime.UtcNow.Date;
 
-            if (!challengeStats.HasCompletedTodayChallenge)
+            if (userChallengeStats.LastChallengeDate.Date < today)
             {
-                challengeStats.HasCompletedTodayChallenge = true;
-                challengeStats.LastChallengeDate = DateTime.UtcNow;
+                userChallengeStats.LastChallengeDate = DateTime.UtcNow;
 
                 // Update streak logic
-                if (challengeStats.LastChallengeDate.Date < today)
+                if (userChallengeStats.LastChallengeDate.Date < today)
                 {
-                    if (challengeStats.LastChallengeDate.Date.AddDays(1) == today)
+                    if (userChallengeStats.LastChallengeDate.Date.AddDays(1) == today)
                     {
                         // Consecutive day
-                        challengeStats.CurrentStreak++;
-                        if (challengeStats.CurrentStreak > challengeStats.LongestStreak)
+                        userChallengeStats.CurrentStreak++;
+                        if (userChallengeStats.CurrentStreak > userChallengeStats.LongestStreak)
                         {
-                            challengeStats.LongestStreak = challengeStats.CurrentStreak;
+                            userChallengeStats.LongestStreak = userChallengeStats.CurrentStreak;
                         }
                         _logger.LogInformation("Increased streak to {Streak} for user {UserId}", 
-                            challengeStats.CurrentStreak, userId);
+                            userChallengeStats.CurrentStreak, userId);
                     }
                     else
                     {
                         // Streak broken
-                        challengeStats.CurrentStreak = 1;
+                        userChallengeStats.CurrentStreak = 1;
                         _logger.LogInformation("Reset streak for user {UserId}", userId);
                     }
                 }
 
-                await UpdateChallengeStatsAsync(challengeStats);
+                await UpdateUserChallengeStatsAsync(userChallengeStats);
             }
         }
         catch (Exception ex)
@@ -179,8 +177,8 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
 
         try
         {
-            var userStats = await GetChallengeStatsAsync(userId);
-            await UpdateChallengeStatsAsync(userStats);
+            var userStats = await GetUserChallengeStatsAsync(userId);
+            await UpdateUserChallengeStatsAsync(userStats);
             _logger.LogInformation("Added {Amount} experience points for user {UserId}", amount, userId);
         }
         catch (Exception ex)
@@ -199,8 +197,8 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
 
         try
         {
-            var userStats = await GetChallengeStatsAsync(userId);
-            await UpdateChallengeStatsAsync(userStats);
+            var userStats = await GetUserChallengeStatsAsync(userId);
+            await UpdateUserChallengeStatsAsync(userStats);
             _logger.LogInformation("Added learned word for user {UserId}, word {WordId}", userId, wordId);
         }
         catch (Exception ex)
@@ -219,8 +217,8 @@ public class SupabaseChallengeStatsService : IChallengeStatsService
 
         try
         {
-            var userStats = await GetChallengeStatsAsync(userId);
-            await UpdateChallengeStatsAsync(userStats);
+            var userStats = await GetUserChallengeStatsAsync(userId);
+            await UpdateUserChallengeStatsAsync(userStats);
             _logger.LogInformation("Incremented total quizzes completed for user {UserId}", userId);
         }
         catch (Exception ex)

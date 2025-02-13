@@ -168,7 +168,7 @@ namespace Lithuaningo.API.Services
 
                 report.Status = status.ToLowerInvariant();
                 report.UpdatedAt = DateTime.UtcNow;
-                report.ReviewedBy = reviewedBy != null && Guid.TryParse(reviewedBy, out var reviewerId) ? reviewerId : null;
+                report.ReviewerId = reviewedBy != null && Guid.TryParse(reviewedBy, out var reviewerId) ? reviewerId : null;
                 report.Resolution = resolution ?? string.Empty;
 
                 var updateResponse = await _supabaseClient

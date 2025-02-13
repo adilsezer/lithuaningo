@@ -128,7 +128,6 @@ namespace Lithuaningo.API.Services
                 flashcard.Id = Guid.NewGuid();
                 flashcard.CreatedAt = DateTime.UtcNow;
                 flashcard.UpdatedAt = DateTime.UtcNow;
-                flashcard.ReviewCount = 0;
 
                 var response = await _supabaseClient
                     .From<Flashcard>()
@@ -305,24 +304,15 @@ namespace Lithuaningo.API.Services
 
         public async Task<List<Flashcard>> GetRandomFlashcardsAsync(int limit = 10)
         {
-            if (limit <= 0)
-            {
-                throw new ArgumentException("Limit must be greater than 0", nameof(limit));
-            }
-
             try
             {
                 var response = await _supabaseClient
                     .From<Flashcard>()
-                    .Select("*, deck!inner(*)")
-                    .Order("random()", Ordering.Ascending)
+                    .Select("*")
                     .Limit(limit)
                     .Get();
 
-                var flashcards = response.Models;
-                _logger.LogInformation("Retrieved {Count} random flashcards", flashcards.Count);
-
-                return flashcards;
+                return response.Models;
             }
             catch (Exception ex)
             {
@@ -335,23 +325,18 @@ namespace Lithuaningo.API.Services
         {
             if (string.IsNullOrWhiteSpace(query))
             {
-                throw new ArgumentException("Search query cannot be empty", nameof(query));
+                return new List<Flashcard>();
             }
 
             try
             {
                 var response = await _supabaseClient
                     .From<Flashcard>()
-                    .Select("*, deck!inner(*)")
-                    .Filter("front_text", Operator.ILike, $"%{query}%")
-                    .Filter("back_text", Operator.ILike, $"%{query}%")
+                    .Filter(f => f.FrontWord, Operator.ILike, $"%{query}%")
+                    .Filter(f => f.BackWord, Operator.ILike, $"%{query}%")
                     .Get();
 
-                var flashcards = response.Models;
-                _logger.LogInformation("Found {Count} flashcards matching query: {Query}", 
-                    flashcards.Count, query);
-
-                return flashcards;
+                return response.Models;
             }
             catch (Exception ex)
             {
@@ -368,10 +353,7 @@ namespace Lithuaningo.API.Services
                 _cache.RemoveAsync($"{CacheKeyPrefix}{flashcard.Id}"),
                 
                 // Invalidate user's flashcard list cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}user:{flashcard.DeckId}"),
-                
-                // Invalidate due flashcards cache for the user
-                _cache.RemoveAsync($"{CacheKeyPrefix}due:{flashcard.DeckId}:20")
+                _cache.RemoveAsync($"{CacheKeyPrefix}user:{flashcard.DeckId}")
             };
 
             await Task.WhenAll(tasks);

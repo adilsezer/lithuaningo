@@ -7,9 +7,6 @@ export interface QuizQuestion {
   correctAnswer: string;
   explanation?: string;
   type: QuestionType;
-  quizDate: string;
-  category?: string;
-  difficultyLevel: number;
   createdAt: string;
 }
 
@@ -18,8 +15,6 @@ export interface CreateQuizQuestionRequest {
   options: string[];
   correctAnswer: string;
   explanation?: string;
-  category?: string;
-  difficultyLevel: number;
 }
 
 export interface QuizResult {

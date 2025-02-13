@@ -9,6 +9,16 @@ namespace Lithuaningo.API.DTOs.Deck
     public class DeckResponse
     {
         /// <summary>
+        /// The user identifier who created the deck
+        /// </summary>
+        public Guid UserId { get; set; }
+
+        /// <summary>
+        /// The username of the user who created the deck
+        /// </summary>
+        public string Username { get; set; } = string.Empty;
+
+        /// <summary>
         /// The deck title
         /// </summary>
         public string Title { get; set; } = string.Empty;
@@ -27,16 +37,6 @@ namespace Lithuaningo.API.DTOs.Deck
         /// Tags associated with the deck
         /// </summary>
         public List<string> Tags { get; set; } = new();
-
-        /// <summary>
-        /// The user identifier who created the deck
-        /// </summary>
-        public Guid UserId { get; set; }
-
-        /// <summary>
-        /// The display name of the user who created the deck
-        /// </summary>
-        public string UserName { get; set; } = string.Empty;
 
         /// <summary>
         /// Whether the deck is public

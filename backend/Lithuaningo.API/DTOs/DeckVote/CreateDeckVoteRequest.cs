@@ -1,13 +1,12 @@
 using System;
 using System.ComponentModel.DataAnnotations;
-using Lithuaningo.API.Validators;
 
-namespace Lithuaningo.API.DTOs.DeckComment
+namespace Lithuaningo.API.DTOs.DeckVote
 {
     /// <summary>
-    /// Request to create a new deck comment
+    /// Request to create a new deck vote
     /// </summary>
-    public class CreateDeckCommentRequest
+    public class CreateDeckVoteRequest
     {
         /// <summary>
         /// The deck identifier
@@ -16,16 +15,14 @@ namespace Lithuaningo.API.DTOs.DeckComment
         public Guid DeckId { get; set; }
 
         /// <summary>
-        /// The user identifier
+        /// The user identifier who is voting
         /// </summary>
         [Required(ErrorMessage = "User ID is required")]
         public Guid UserId { get; set; }
 
         /// <summary>
-        /// The deck comment content
+        /// Whether the vote is an upvote
         /// </summary>
-        [Required(ErrorMessage = "Content is required")]
-        [StringLength(1000, MinimumLength = 1, ErrorMessage = "Content must be between 1 and 1000 characters")]
-        public string Content { get; set; } = string.Empty;
+        public bool IsUpvote { get; set; }
     }
 } 

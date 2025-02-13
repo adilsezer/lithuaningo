@@ -59,14 +59,14 @@ namespace Lithuaningo.API.Controllers
             OperationId = "GetCurrentWeekLeaderboard",
             Tags = new[] { "Leaderboard" }
         )]
-        [ProducesResponseType(typeof(LeaderboardResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(LeaderboardWeekResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<LeaderboardResponse>> GetCurrentWeekLeaderboard()
+        public async Task<ActionResult<LeaderboardWeekResponse>> GetCurrentWeekLeaderboard()
         {
             try
             {
                 var leaderboard = await _leaderboardService.GetCurrentWeekLeaderboardAsync();
-                var response = _mapper.Map<LeaderboardResponse>(leaderboard);
+                var response = _mapper.Map<LeaderboardWeekResponse>(leaderboard);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -102,10 +102,10 @@ namespace Lithuaningo.API.Controllers
             OperationId = "GetWeekLeaderboard",
             Tags = new[] { "Leaderboard" }
         )]
-        [ProducesResponseType(typeof(LeaderboardResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(LeaderboardWeekResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<LeaderboardResponse>> GetWeekLeaderboard(string weekId)
+        public async Task<ActionResult<LeaderboardWeekResponse>> GetWeekLeaderboard(string weekId)
         {
             if (string.IsNullOrWhiteSpace(weekId))
             {
@@ -121,7 +121,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var leaderboard = await _leaderboardService.GetWeekLeaderboardAsync(weekId);
-                var response = _mapper.Map<LeaderboardResponse>(leaderboard);
+                var response = _mapper.Map<LeaderboardWeekResponse>(leaderboard);
                 return Ok(response);
             }
             catch (Exception ex)
@@ -139,11 +139,11 @@ namespace Lithuaningo.API.Controllers
         ///     POST /api/v1/Leaderboard/entry
         ///     {
         ///         "userId": "user-guid",
-        ///         "name": "User Display Name",
         ///         "score": 100
         ///     }
         /// </remarks>
         /// <param name="request">The leaderboard entry update request</param>
+        /// <returns>The updated leaderboard entry</returns>
         /// <response code="200">Entry updated successfully</response>
         /// <response code="400">If request model is invalid</response>
         /// <response code="500">If there was an internal error during update</response>
@@ -154,10 +154,10 @@ namespace Lithuaningo.API.Controllers
             OperationId = "UpdateLeaderboardEntry",
             Tags = new[] { "Leaderboard" }
         )]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(LeaderboardEntryResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult> UpdateLeaderboardEntry([FromBody] UpdateLeaderboardEntryRequest request)
+        public async Task<ActionResult<LeaderboardEntryResponse>> UpdateLeaderboardEntry([FromBody] UpdateLeaderboardEntryRequest request)
         {
             if (!ModelState.IsValid)
             {
@@ -166,8 +166,9 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                await _leaderboardService.UpdateLeaderboardEntryAsync(request.UserId, request.Name, request.Score);
-                return Ok();
+                var entry = await _leaderboardService.UpdateLeaderboardEntryAsync(request.UserId.ToString(), request.Score);
+                var response = _mapper.Map<LeaderboardEntryResponse>(entry);
+                return Ok(response);
             }
             catch (Exception ex)
             {

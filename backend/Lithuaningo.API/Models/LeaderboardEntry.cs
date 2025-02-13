@@ -14,24 +14,13 @@ namespace Lithuaningo.API.Models
         [Column("user_id")]
         public Guid UserId { get; set; }
 
-        [Column("name")]
-        public string Name { get; set; } = string.Empty;
-
-        [Column("period")]
-        public string Period { get; set; } = string.Empty; // Format: YYYY-WW for weekly
-
         [Column("score")]
         public int Score { get; set; }
-
-        [Column("rank")]
-        public int Rank { get; set; }
 
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
-
-        public DateTime LastUpdated => UpdatedAt;
     }
 }

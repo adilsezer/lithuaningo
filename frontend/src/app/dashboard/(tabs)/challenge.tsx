@@ -6,10 +6,10 @@ import CustomText from "@components/ui/CustomText";
 import Leaderboard from "@components/ui/Leaderboard";
 import { useLeaderboard } from "@hooks/useLeaderboard";
 import { useUserData } from "@stores/useUserStore";
-import { ChallengeStatsCard } from "@components/challenge/ChallengeStatsCard";
+import { UserChallengeStatsCard } from "@components/challenge/UserChallengeStatsCard";
 import CustomDivider from "@components/ui/CustomDivider";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
-import { useChallengeStats } from "@hooks/useChallengeStats";
+import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 
 export default function LearnScreen() {
   const handleNavigation = (route: string) => {
@@ -18,7 +18,7 @@ export default function LearnScreen() {
 
   const userData = useUserData();
   const { entries, weekId, startDate, endDate } = useLeaderboard();
-  const { stats, error, isLoading } = useChallengeStats(userData?.id);
+  const { stats, error, isLoading } = useUserChallengeStats(userData?.id);
 
   if (error) {
     return <ErrorMessage message={error} />;
@@ -39,7 +39,7 @@ export default function LearnScreen() {
         quiz or warm up with flashcards.
       </CustomText>
 
-      {stats && <ChallengeStatsCard stats={stats} />}
+      {stats && <UserChallengeStatsCard stats={stats} />}
 
       <CustomButton
         title="Start Daily Challenge"

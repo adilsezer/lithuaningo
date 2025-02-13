@@ -1,17 +1,19 @@
 import apiClient from "@services/api/apiClient";
-import { ChallengeStats } from "@src/types";
+import { UserChallengeStats } from "@src/types";
 
-export class ChallengeStatsService {
+export class UserChallengeStatsService {
   /**
    * Fetches challenge statistics for a user
    * @param userId The ID of the user
    * @returns Promise<ChallengeStats>
    */
-  static async getChallengeStats(userId: string): Promise<ChallengeStats> {
+  static async getUserChallengeStats(
+    userId: string
+  ): Promise<UserChallengeStats> {
     try {
-      return await apiClient.getChallengeStats(userId);
+      return await apiClient.getUserChallengeStats(userId);
     } catch (error) {
-      console.error("Error in getChallengeStats:", error);
+      console.error("Error in getUserChallengeStats:", error);
       throw error;
     }
   }
@@ -61,27 +63,14 @@ export class ChallengeStatsService {
    * @param userId The ID of the user
    * @param stats Partial challenge stats to update
    */
-  static async updateChallengeStats(
+  static async updateUserChallengeStats(
     userId: string,
-    stats: Partial<ChallengeStats>
-  ): Promise<ChallengeStats> {
+    stats: Partial<UserChallengeStats>
+  ): Promise<UserChallengeStats> {
     try {
-      return await apiClient.updateChallengeStats(userId, stats);
+      return await apiClient.updateUserChallengeStats(userId, stats);
     } catch (error) {
-      console.error("Error in updateChallengeStats:", error);
-      throw error;
-    }
-  }
-
-  /**
-   * Gets the flashcard history for a user
-   * @param userId The ID of the user
-   */
-  static async getFlashcardHistory(userId: string): Promise<ChallengeStats[]> {
-    try {
-      return await apiClient.getFlashcardHistory(userId);
-    } catch (error) {
-      console.error("Error in getFlashcardHistory:", error);
+      console.error("Error in updateUserChallengeStats:", error);
       throw error;
     }
   }

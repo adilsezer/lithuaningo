@@ -49,8 +49,8 @@ namespace Lithuaningo.API.Mappings.Resolvers
         
         public string? Resolve(DeckReport source, DeckReportResponse destination, string? destMember, ResolutionContext context)
         {
-            if (!source.ReviewedBy.HasValue) return null;
-            var profile = _userProfileService.GetUserProfileAsync(source.ReviewedBy.Value.ToString()).Result;
+            if (!source.ReviewerId.HasValue) return null;
+            var profile = _userProfileService.GetUserProfileAsync(source.ReviewerId.Value.ToString()).Result;
             return profile?.FullName;
         }
     }

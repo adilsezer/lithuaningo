@@ -8,6 +8,11 @@ namespace Lithuaningo.API.DTOs.DeckComment
     public class DeckCommentResponse
     {
         /// <summary>
+        /// The unique identifier for the comment
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
         /// The deck identifier
         /// </summary>
         public Guid DeckId { get; set; }
@@ -16,6 +21,11 @@ namespace Lithuaningo.API.DTOs.DeckComment
         /// The user identifier who created the deck comment
         /// </summary>
         public Guid UserId { get; set; }
+
+        /// <summary>
+        /// The username of the user who created the deck comment
+        /// </summary>
+        public string Username { get; set; } = string.Empty;
 
         /// <summary>
         /// The deck comment content

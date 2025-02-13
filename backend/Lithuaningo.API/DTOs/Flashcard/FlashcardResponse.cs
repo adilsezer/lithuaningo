@@ -8,58 +8,43 @@ namespace Lithuaningo.API.DTOs.Flashcard
     public class FlashcardResponse
     {
         /// <summary>
-        /// The unique identifier
+        /// The unique identifier for the flashcard
         /// </summary>
         public Guid Id { get; set; }
 
         /// <summary>
-        /// The deck identifier
+        /// The deck identifier this flashcard belongs to
         /// </summary>
         public Guid DeckId { get; set; }
 
         /// <summary>
-        /// The front text of the flashcard
+        /// The front word of the flashcard (question)
         /// </summary>
-        public string FrontText { get; set; } = string.Empty;
+        public string FrontWord { get; set; } = string.Empty;
 
         /// <summary>
-        /// The back text of the flashcard
+        /// The back word of the flashcard (answer)
         /// </summary>
-        public string BackText { get; set; } = string.Empty;
+        public string BackWord { get; set; } = string.Empty;
 
         /// <summary>
-        /// Number of times this card has been reviewed
+        /// The example sentence of the flashcard
         /// </summary>
-        public int ReviewCount { get; set; }
+        public string ExampleSentence { get; set; } = string.Empty;
 
         /// <summary>
-        /// When this card was last reviewed
+        /// The example sentence translation of the flashcard
         /// </summary>
-        public DateTime? LastReviewedAt { get; set; }
+        public string ExampleSentenceTranslation { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// URL to the flashcard's image
+        /// </summary>
+        public string ImageUrl { get; set; } = string.Empty;
 
         /// <summary>
-        /// Human-readable time since last review
+        /// URL to the flashcard's audio
         /// </summary>
-        public string? LastReviewedTimeAgo { get; set; }
-
-        /// <summary>
-        /// Percentage of correct answers (0-100)
-        /// </summary>
-        public double? CorrectRate { get; set; }
-
-        /// <summary>
-        /// Human-readable time elapsed since creation
-        /// </summary>
-        public string TimeAgo { get; set; } = string.Empty;
-
-        /// <summary>
-        /// When this flashcard was created
-        /// </summary>
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// When this flashcard was last updated
-        /// </summary>
-        public DateTime UpdatedAt { get; set; }
+        public string AudioUrl { get; set; } = string.Empty;
     }
 } 

@@ -4,8 +4,8 @@ using Supabase.Postgrest.Attributes;
 
 namespace Lithuaningo.API.Models;
 
-[Table("challenge_stats")]
-public class ChallengeStats : BaseModel
+[Table("user_challenge_stats")]
+public class UserChallengeStats : BaseModel
 {
     [PrimaryKey("id")]
     [Column("id")]
@@ -23,8 +23,20 @@ public class ChallengeStats : BaseModel
     [Column("last_challenge_date")]
     public DateTime LastChallengeDate { get; set; }
 
-    [Column("has_completed_today_challenge")]
-    public bool HasCompletedTodayChallenge { get; set; }
+    [Column("today_correct_answer_count")]
+    public int TodayCorrectAnswerCount { get; set; }
+
+    [Column("today_incorrect_answer_count")]
+    public int TodayIncorrectAnswerCount { get; set; }
+
+    [Column("total_challenges_completed")]
+    public int TotalChallengesCompleted { get; set; }
+
+    [Column("total_correct_answers")]
+    public int TotalCorrectAnswers { get; set; }
+
+    [Column("total_incorrect_answers")]
+    public int TotalIncorrectAnswers { get; set; }
 
     [Column("created_at")]
     public DateTime CreatedAt { get; set; }

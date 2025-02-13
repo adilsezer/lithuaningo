@@ -12,37 +12,46 @@ namespace Lithuaningo.API.Mappings
         public FlashcardMappingProfile()
         {
             CreateMap<Flashcard, FlashcardResponse>()
-                .ForMember(dest => dest.LastReviewedTimeAgo, opt => opt.MapFrom(src => 
-                    src.LastReviewedAt.HasValue ? TimeFormatUtils.GetTimeAgo(src.LastReviewedAt.Value) : null))
-                .ForMember(dest => dest.TimeAgo, opt => opt.MapFrom(src => 
-                    TimeFormatUtils.GetTimeAgo(src.CreatedAt)));
+                .ForMember(dest => dest.FrontWord, opt => opt.MapFrom(src => src.FrontWord))
+                .ForMember(dest => dest.BackWord, opt => opt.MapFrom(src => src.BackWord))
+                .ForMember(dest => dest.ExampleSentence, opt => opt.MapFrom(src => src.ExampleSentence))
+                .ForMember(dest => dest.ExampleSentenceTranslation, opt => opt.MapFrom(src => src.ExampleSentenceTranslation))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+                .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioUrl));
 
             CreateMap<CreateFlashcardRequest, Flashcard>()
+                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => Guid.NewGuid()))
+                .ForMember(dest => dest.FrontWord, opt => opt.MapFrom(src => src.FrontWord))
+                .ForMember(dest => dest.BackWord, opt => opt.MapFrom(src => src.BackWord))
+                .ForMember(dest => dest.ExampleSentence, opt => opt.MapFrom(src => src.ExampleSentence))
+                .ForMember(dest => dest.ExampleSentenceTranslation, opt => opt.MapFrom(src => src.ExampleSentenceTranslation))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+                .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioUrl))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.ReviewCount, opt => opt.MapFrom(src => 0))
-                .ForMember(dest => dest.LastReviewedAt, opt => opt.Ignore())
-                .ForMember(dest => dest.CorrectRate, opt => opt.MapFrom(src => 0.0));
-
-            CreateMap<UpdateFlashcardRequest, Flashcard>()
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            CreateMap<UpdateReviewRequest, Flashcard>()
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.LastReviewedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.ReviewCount, opt => opt.MapFrom((src, dest) => dest.ReviewCount + 1));
+            CreateMap<UpdateFlashcardRequest, Flashcard>()
+                .ForMember(dest => dest.FrontWord, opt => opt.MapFrom(src => src.FrontWord))
+                .ForMember(dest => dest.BackWord, opt => opt.MapFrom(src => src.BackWord))
+                .ForMember(dest => dest.ExampleSentence, opt => opt.MapFrom(src => src.ExampleSentence))
+                .ForMember(dest => dest.ExampleSentenceTranslation, opt => opt.MapFrom(src => src.ExampleSentenceTranslation))
+                .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
+                .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioUrl))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             // UserFlashcardStats mappings
             CreateMap<UserFlashcardStats, UserFlashcardStatsResponse>()
-                .ForMember(dest => dest.AccuracyRate, opt => opt.MapFrom(src => 
-                    src.ConfidenceLevel > 0 ? src.ConfidenceLevel * 20.0 : 0))
-                .ForMember(dest => dest.LastReviewedTimeAgo, opt => opt.MapFrom(src => 
-                    TimeFormatUtils.GetTimeAgo(src.LastReviewedAt)))
+                .ForMember(dest => dest.AccuracyRate, opt => opt.MapFrom(src => src.AccuracyRate))
+                .ForMember(dest => dest.TotalReviewed, opt => opt.MapFrom(src => src.TotalReviewed))
+                .ForMember(dest => dest.CorrectAnswers, opt => opt.MapFrom(src => src.CorrectAnswers))
+                .ForMember(dest => dest.LastReviewedAt, opt => opt.MapFrom(src => src.LastReviewedAt))
                 .ForMember(dest => dest.NextReviewDue, opt => opt.MapFrom(src => 
-                    src.NextReviewAt.HasValue ? TimeFormatUtils.GetTimeRemaining(src.NextReviewAt.Value) : null));
+                    src.NextReviewDue.HasValue ? TimeFormatUtils.GetTimeRemaining(src.NextReviewDue.Value) : null));
 
             CreateMap<TrackProgressRequest, UserFlashcardStats>()
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.FlashcardId, opt => opt.MapFrom(src => Guid.Parse(src.FlashcardId)))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
+                .ForMember(dest => dest.LastReviewedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
         }
     }
 } 

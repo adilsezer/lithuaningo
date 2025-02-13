@@ -3,12 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 using Supabase;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
@@ -19,20 +21,23 @@ namespace Lithuaningo.API.Services
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "flashcard-stats:";
         private readonly ILogger<SupabaseUserFlashcardStatsService> _logger;
+        private readonly IMapper _mapper;
 
         public SupabaseUserFlashcardStatsService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseUserFlashcardStatsService> logger)
+            ILogger<SupabaseUserFlashcardStatsService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<UserFlashcardStats> GetUserFlashcardStatsAsync(string deckId, string userId)
+        public async Task<UserFlashcardStatsResponse> GetUserFlashcardStatsAsync(string deckId, string userId)
         {
             if (!Guid.TryParse(deckId, out var deckGuid))
             {
@@ -45,7 +50,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}{deckGuid}:{userGuid}";
-            var cached = await _cache.GetAsync<UserFlashcardStats>(cacheKey);
+            var cached = await _cache.GetAsync<UserFlashcardStatsResponse>(cacheKey);
 
             if (cached != null)
             {
@@ -73,19 +78,19 @@ namespace Lithuaningo.API.Services
                         Id = Guid.NewGuid(),
                         UserId = userGuid,
                         FlashcardId = Guid.Empty,
-                        ConfidenceLevel = 0,
                         LastReviewedAt = DateTime.UtcNow,
                         CreatedAt = DateTime.UtcNow,
-                        NextReviewAt = null
+                        UpdatedAt = DateTime.UtcNow
                     };
                 }
 
-                await _cache.SetAsync(cacheKey, result,
+                var response = _mapper.Map<UserFlashcardStatsResponse>(result);
+                await _cache.SetAsync(cacheKey, response,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached flashcard stats for deck {DeckId} and user {UserId}", 
                     deckId, userId);
 
-                return result;
+                return response;
             }
             catch (Exception ex)
             {
@@ -95,7 +100,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task TrackUserFlashcardStatsAsync(string deckId, string userId, string flashcardId, bool isCorrect)
+        public async Task TrackUserFlashcardStatsAsync(string deckId, string userId, string flashcardId, bool isCorrect, int? confidenceLevel = null, int? timeTakenSeconds = null)
         {
             if (!Guid.TryParse(deckId, out _))
             {
@@ -123,6 +128,16 @@ namespace Lithuaningo.API.Services
                     { "review_time", DateTime.UtcNow }
                 };
 
+                if (confidenceLevel.HasValue)
+                {
+                    parameters.Add("confidence_level", confidenceLevel.Value);
+                }
+
+                if (timeTakenSeconds.HasValue)
+                {
+                    parameters.Add("time_taken_seconds", timeTakenSeconds.Value);
+                }
+
                 await _supabaseClient.Rpc("track_flashcard_stats", parameters);
 
                 // Invalidate relevant cache entries
@@ -138,7 +153,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<UserFlashcardStats>> GetUserFlashcardHistoryAsync(string userId)
+        public async Task<List<UserFlashcardStatsResponse>> GetUserFlashcardHistoryAsync(string userId)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -146,7 +161,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}history:{userGuid}";
-            var cached = await _cache.GetAsync<List<UserFlashcardStats>>(cacheKey);
+            var cached = await _cache.GetAsync<List<UserFlashcardStatsResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -163,13 +178,14 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var stats = response.Models;
+                var statsResponse = _mapper.Map<List<UserFlashcardStatsResponse>>(stats);
 
-                await _cache.SetAsync(cacheKey, stats,
+                await _cache.SetAsync(cacheKey, statsResponse,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} flashcard history entries for user {UserId}", 
                     stats.Count, userId);
 
-                return stats;
+                return statsResponse;
             }
             catch (Exception ex)
             {

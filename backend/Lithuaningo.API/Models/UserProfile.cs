@@ -14,19 +14,31 @@ namespace Lithuaningo.API.Models
         [Column("email")]
         public string Email { get; set; } = string.Empty;
 
+        [Column("email_verified")]
+        public bool EmailVerified { get; set; }
+
         [Column("full_name")]
         public string FullName { get; set; } = string.Empty;
 
         [Column("avatar_url")]
         public string? AvatarUrl { get; set; }
 
+        [Column("last_login_at")]
+        public DateTime LastLoginAt { get; set; }
+
+        [Column("is_admin")]
+        public bool IsAdmin { get; set; }
+
+        [Column("is_premium")]
+        public bool IsPremium { get; set; }
+
+        [Column("premium_expires_at")]
+        public DateTime? PremiumExpiresAt { get; set; }
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
-
-        [Column("last_login_at")]
-        public DateTime LastLoginAt { get; set; }
     }
 }

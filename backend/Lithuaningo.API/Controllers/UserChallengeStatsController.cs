@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.DTOs.ChallengeStats;
+using Lithuaningo.API.DTOs.UserChallengeStats;
 using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
@@ -18,18 +18,18 @@ namespace Lithuaningo.API.Controllers
     [Authorize]
     [ApiVersion("1.0")]
     [SwaggerTag("Challenge statistics management endpoints")]
-    public class ChallengeStatsController : BaseApiController
+    public class UserChallengeStatsController : BaseApiController
     {
-        private readonly IChallengeStatsService _challengeStatsService;
-        private readonly ILogger<ChallengeStatsController> _logger;
+        private readonly IUserChallengeStatsService _userChallengeStatsService;
+        private readonly ILogger<UserChallengeStatsController> _logger;
         private readonly IMapper _mapper;
 
-        public ChallengeStatsController(
-            IChallengeStatsService challengeStatsService,
-            ILogger<ChallengeStatsController> logger,
+        public UserChallengeStatsController(
+            IUserChallengeStatsService userChallengeStatsService,
+            ILogger<UserChallengeStatsController> logger,
             IMapper mapper)
         {
-            _challengeStatsService = challengeStatsService ?? throw new ArgumentNullException(nameof(challengeStatsService));
+            _userChallengeStatsService = userChallengeStatsService ?? throw new ArgumentNullException(nameof(userChallengeStatsService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
@@ -60,11 +60,11 @@ namespace Lithuaningo.API.Controllers
             OperationId = "GetChallengeStats",
             Tags = new[] { "ChallengeStats" }
         )]
-        [ProducesResponseType(typeof(ChallengeStatsResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserChallengeStatsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<ChallengeStatsResponse>> GetChallengeStats(string userId)
+        public async Task<ActionResult<UserChallengeStatsResponse>> GetUserChallengeStats(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
@@ -80,19 +80,19 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var stats = await _challengeStatsService.GetChallengeStatsAsync(userId);
+                var stats = await _userChallengeStatsService.GetUserChallengeStatsAsync(userId);
                 if (stats == null)
                 {
                     _logger.LogInformation("Challenge stats not found for user {UserId}", userId);
                     return NotFound();
                 }
 
-                var response = _mapper.Map<ChallengeStatsResponse>(stats);
+                var response = _mapper.Map<UserChallengeStatsResponse>(stats);
                 return Ok(response);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving challenge stats for user {UserId}", userId);
+                _logger.LogError(ex, "Error retrieving user challenge stats for user {UserId}", userId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -131,7 +131,7 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                await _challengeStatsService.UpdateDailyStreakAsync(userId);
+                await _userChallengeStatsService.UpdateDailyStreakAsync(userId);
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -142,116 +142,6 @@ namespace Lithuaningo.API.Controllers
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating daily streak for user {UserId}", userId);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Adds experience points to a user's profile.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     POST /api/v1/ChallengeStats/{userId}/stats/experience
-        ///     {
-        ///         "amount": 100
-        ///     }
-        /// </remarks>
-        /// <param name="userId">The user's unique identifier</param>
-        /// <param name="request">The experience points to add</param>
-        /// <response code="204">Experience points added successfully</response>
-        /// <response code="400">Invalid user ID or request body</response>
-        /// <response code="500">An error occurred during the update</response>
-        [HttpPost("{userId}/stats/experience")]
-        [SwaggerOperation(
-            Summary = "Adds experience points",
-            Description = "Adds experience points to a user's profile",
-            OperationId = "AddExperiencePoints",
-            Tags = new[] { "ChallengeStats" }
-        )]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> AddExperiencePoints(string userId, [FromBody] AddExperienceRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                _logger.LogWarning("User ID parameter is empty");
-                return BadRequest("User ID cannot be empty");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                await _challengeStatsService.AddExperiencePointsAsync(userId, request.Amount);
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning(ex, "Invalid argument for user {UserId}", userId);
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error adding experience points for user {UserId}", userId);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
-        /// Marks a word as learned for the user.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     POST /api/v1/ChallengeStats/{userId}/stats/learned-word
-        ///     {
-        ///         "wordId": "word-guid"
-        ///     }
-        /// </remarks>
-        /// <param name="userId">The user's unique identifier</param>
-        /// <param name="request">Should contain the WordId in an AddLearnedWordRequest payload</param>
-        /// <response code="204">Successfully marked the word as learned</response>
-        /// <response code="400">User ID is empty or request payload is invalid</response>
-        /// <response code="500">An error occurred during the update</response>
-        [HttpPost("{userId}/stats/learned-word")]
-        [SwaggerOperation(
-            Summary = "Marks word as learned",
-            Description = "Adds a word to the user's learned words collection",
-            OperationId = "AddLearnedWord",
-            Tags = new[] { "ChallengeStats" }
-        )]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> AddLearnedWord(string userId, [FromBody] AddLearnedWordRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                _logger.LogWarning("User ID parameter is empty");
-                return BadRequest("User ID cannot be empty");
-            }
-
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                await _challengeStatsService.AddLearnedWordAsync(userId, request.WordId);
-                return NoContent();
-            }
-            catch (ArgumentException ex)
-            {
-                _logger.LogWarning(ex, "Invalid argument for user {UserId}", userId);
-                return BadRequest(ex.Message);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error adding learned word for user {UserId}", userId);
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -290,7 +180,7 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                await _challengeStatsService.IncrementTotalQuizzesCompletedAsync(userId);
+                await _userChallengeStatsService.IncrementTotalQuizzesCompletedAsync(userId);
                 return NoContent();
             }
             catch (ArgumentException ex)

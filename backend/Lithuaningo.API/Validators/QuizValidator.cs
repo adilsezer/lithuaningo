@@ -9,8 +9,8 @@ public class CreateQuizQuestionValidator : AbstractValidator<CreateQuizQuestionR
     {
         RuleFor(x => x.Question)
             .NotEmpty().WithMessage("Question is required")
-            .MaximumLength(500).WithMessage("Question must not exceed 500 characters")
-            .MinimumLength(10).WithMessage("Question must be at least 10 characters");
+            .MinimumLength(10).WithMessage("Question must be at least 10 characters")
+            .MaximumLength(500).WithMessage("Question must not exceed 500 characters");
 
         RuleFor(x => x.Options)
             .NotNull().WithMessage("Options cannot be null")
@@ -28,15 +28,15 @@ public class CreateQuizQuestionValidator : AbstractValidator<CreateQuizQuestionR
             .Must((question, correctAnswer) => question.Options.Contains(correctAnswer))
             .WithMessage("Correct answer must be one of the provided options");
 
-        RuleFor(x => x.Explanation)
-            .MaximumLength(1000).WithMessage("Explanation must not exceed 1000 characters")
-            .When(x => !string.IsNullOrEmpty(x.Explanation));
+        RuleFor(x => x.ExampleSentence)
+            .MaximumLength(500).WithMessage("Example sentence must not exceed 500 characters")
+            .When(x => !string.IsNullOrEmpty(x.ExampleSentence));
 
-        RuleFor(x => x.Category)
-            .MaximumLength(50).WithMessage("Category must not exceed 50 characters")
-            .When(x => !string.IsNullOrEmpty(x.Category));
+        RuleFor(x => x.ExampleSentenceTranslation)
+            .MaximumLength(500).WithMessage("Example sentence translation must not exceed 500 characters")
+            .When(x => !string.IsNullOrEmpty(x.ExampleSentenceTranslation));
 
-        RuleFor(x => x.DifficultyLevel)
-            .InclusiveBetween(1, 5).WithMessage("Difficulty level must be between 1 and 5");
+        RuleFor(x => x.Type)
+            .IsInEnum().WithMessage("Invalid question type");
     }
 } 

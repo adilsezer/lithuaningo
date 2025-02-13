@@ -136,8 +136,7 @@ namespace Lithuaningo.API.Controllers
                 var questions = _mapper.Map<List<QuizQuestion>>(requests);
                 foreach (var question in questions)
                 {
-                    question.QuizDate = DateTime.UtcNow.Date;
-                    question.Type = "multiple_choice";
+                    question.Type = QuizQuestionType.MultipleChoice;
                 }
 
                 await _quizService.CreateDailyQuizQuestionsAsync(questions);

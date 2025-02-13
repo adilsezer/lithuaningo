@@ -19,10 +19,6 @@ public class CreateDeckValidator : AbstractValidator<CreateDeckRequest>
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required");
 
-        RuleFor(x => x.UserName)
-            .NotEmpty().WithMessage("User name is required")
-            .MaximumLength(100).WithMessage("User name must not exceed 100 characters");
-
         RuleFor(x => x.IsPublic)
             .NotNull().WithMessage("IsPublic flag is required");
 

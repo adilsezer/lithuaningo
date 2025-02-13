@@ -3,11 +3,11 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
-import { ChallengeStatsView } from "@components/challenge/ChallengeStats";
+import { UserChallengeStatsView } from "@components/challenge/UserChallengeStats";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
 import BackButton from "@components/layout/BackButton";
-import { useChallengeStats } from "@hooks/useChallengeStats";
+import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import { useTheme } from "react-native-paper";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
@@ -18,7 +18,7 @@ export default function PracticeScreen() {
   const theme = useTheme();
   const userData = useUserData();
   const { stats, isLoading, incrementCardsReviewed, incrementCardsMastered } =
-    useChallengeStats(userData?.id);
+    useUserChallengeStats(userData?.id);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -80,7 +80,7 @@ export default function PracticeScreen() {
           Practice
         </CustomText>
         {stats && (
-          <ChallengeStatsView deckId={id as string} userId={userData?.id} />
+          <UserChallengeStatsView deckId={id as string} userId={userData?.id} />
         )}
         <CustomText
           style={[styles.progress, { color: theme.colors.onSurface }]}

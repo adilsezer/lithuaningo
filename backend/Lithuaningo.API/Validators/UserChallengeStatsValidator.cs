@@ -1,12 +1,12 @@
 using FluentValidation;
-using Lithuaningo.API.DTOs.ChallengeStats;
+using Lithuaningo.API.DTOs.UserChallengeStats;
 using System;
 
 namespace Lithuaningo.API.Validators;
 
-public class CreateChallengeStatsValidator : AbstractValidator<CreateChallengeStatsRequest>
+public class CreateUserChallengeStatsValidator : AbstractValidator<CreateUserChallengeStatsRequest>
 {
-    public CreateChallengeStatsValidator()
+    public CreateUserChallengeStatsValidator()
     {
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required");
@@ -21,9 +21,9 @@ public class CreateChallengeStatsValidator : AbstractValidator<CreateChallengeSt
     }
 }
 
-public class UpdateChallengeStatsValidator : AbstractValidator<UpdateChallengeStatsRequest>
+public class UpdateUserChallengeStatsValidator : AbstractValidator<UpdateUserChallengeStatsRequest>
 {
-    public UpdateChallengeStatsValidator()
+    public UpdateUserChallengeStatsValidator()
     {
         RuleFor(x => x.CurrentStreak)
             .GreaterThanOrEqualTo(0).WithMessage("Current streak must be non-negative");
@@ -34,28 +34,3 @@ public class UpdateChallengeStatsValidator : AbstractValidator<UpdateChallengeSt
             .WithMessage("Longest streak must be greater than or equal to current streak");
     }
 }
-
-public class AddExperienceValidator : AbstractValidator<AddExperienceRequest>
-{
-    public AddExperienceValidator()
-    {
-        RuleFor(x => x.Amount)
-            .InclusiveBetween(1, 1000)
-            .WithMessage("Experience amount must be between 1 and 1000");
-    }
-}
-
-public class AddLearnedWordValidator : AbstractValidator<AddLearnedWordRequest>
-{
-    public AddLearnedWordValidator()
-    {
-        RuleFor(x => x.WordId)
-            .NotEmpty().WithMessage("Word ID is required")
-            .Must(BeValidGuid).WithMessage("Invalid Word ID format");
-    }
-
-    private bool BeValidGuid(string guid)
-    {
-        return Guid.TryParse(guid, out _);
-    }
-} 

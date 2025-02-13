@@ -8,22 +8,15 @@ public class CreateDeckCommentValidator : AbstractValidator<CreateDeckCommentReq
     public CreateDeckCommentValidator()
     {
         RuleFor(x => x.DeckId)
-            .NotEmpty().WithMessage("Deck ID is required")
-            .Must(BeValidGuid).WithMessage("Invalid Deck ID format");
+            .NotEmpty().WithMessage("Deck ID is required");
 
         RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required")
-            .Must(BeValidGuid).WithMessage("Invalid User ID format");
+            .NotEmpty().WithMessage("User ID is required");
 
         RuleFor(x => x.Content)
             .NotEmpty().WithMessage("Content is required")
             .MinimumLength(1).WithMessage("Content must not be empty")
             .MaximumLength(1000).WithMessage("Content must not exceed 1000 characters");
-    }
-
-    private bool BeValidGuid(string guid)
-    {
-        return Guid.TryParse(guid, out _);
     }
 }
 

@@ -3,16 +3,21 @@ import { View, StyleSheet } from "react-native";
 import { Card, ProgressBar, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import CustomText from "@components/ui/CustomText";
-import { ChallengeStats } from "@src/types";
+import { UserChallengeStats } from "@src/types";
 
-interface StatItemProps {
+interface UserChallengeStatItemProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
   value: number | string;
   label: string;
   color: string;
 }
 
-const StatItem: React.FC<StatItemProps> = ({ icon, value, label, color }) => {
+const UserChallengeStatItem: React.FC<UserChallengeStatItemProps> = ({
+  icon,
+  value,
+  label,
+  color,
+}) => {
   const theme = useTheme();
   return (
     <View style={styles.statItem}>
@@ -33,11 +38,11 @@ const StatItem: React.FC<StatItemProps> = ({ icon, value, label, color }) => {
   );
 };
 
-interface ChallengeStatsCardProps {
-  stats: ChallengeStats;
+interface UserChallengeStatsCardProps {
+  stats: UserChallengeStats;
 }
 
-export const ChallengeStatsCard: React.FC<ChallengeStatsCardProps> = ({
+export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
   stats,
 }) => {
   const theme = useTheme();
@@ -49,19 +54,19 @@ export const ChallengeStatsCard: React.FC<ChallengeStatsCardProps> = ({
     <Card style={[styles.container, { borderColor: theme.colors.primary }]}>
       <Card.Content>
         <View style={styles.statsContainer}>
-          <StatItem
+          <UserChallengeStatItem
             icon="cards"
             value={stats.cardsReviewed}
             label="Cards Reviewed"
             color={theme.colors.primary}
           />
-          <StatItem
+          <UserChallengeStatItem
             icon="star"
             value={stats.cardsMastered}
             label="Cards Mastered"
             color={theme.colors.secondary}
           />
-          <StatItem
+          <UserChallengeStatItem
             icon="fire"
             value={stats.currentStreak}
             label={`Streak${
