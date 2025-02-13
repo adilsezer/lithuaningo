@@ -5,14 +5,14 @@ using Supabase;
 
 namespace Lithuaningo.API.Services.Auth;
 
-public class SupabaseAuthService : IAuthService
+public class AuthService : IAuthService
 {
     private readonly Client _supabaseClient;
-    private readonly ILogger<SupabaseAuthService> _logger;
+    private readonly ILogger<AuthService> _logger;
 
-    public SupabaseAuthService(
+    public AuthService(
         ISupabaseConfiguration supabaseConfiguration,
-        ILogger<SupabaseAuthService> logger)
+        ILogger<AuthService> logger)
     {
         _logger = logger;
         

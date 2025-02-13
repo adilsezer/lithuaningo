@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Lithuaningo.API.Models.Quiz;
+using Lithuaningo.API.DTOs.Quiz;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
@@ -13,11 +13,11 @@ namespace Lithuaningo.API.Services.Interfaces
         /// Retrieves the quiz questions for the current day. If none exist, they are automatically created.
         /// </summary>
         /// <returns>A list of quiz questions.</returns>
-        Task<IEnumerable<QuizQuestion>> GetDailyQuizQuestionsAsync();
+        Task<IEnumerable<QuizQuestionResponse>> GetDailyQuizQuestionsAsync();
 
         /// <summary>
         /// Generates new quiz questions for the day using the ChatGPT 4o mini API and stores them in Supabase.
         /// </summary>
-        Task CreateDailyQuizQuestionsAsync(IEnumerable<QuizQuestion> questions);
+        Task<IEnumerable<QuizQuestionResponse>> CreateDailyQuizQuestionsAsync(IEnumerable<CreateQuizQuestionRequest> questions);
     }
 }

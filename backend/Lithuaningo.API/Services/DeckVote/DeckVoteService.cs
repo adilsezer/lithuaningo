@@ -3,33 +3,38 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.DeckVote;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 using Supabase;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseDeckVoteService : IDeckVoteService
+    public class DeckVoteService : IDeckVoteService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "deck-vote:";
-        private readonly ILogger<SupabaseDeckVoteService> _logger;
+        private readonly ILogger<DeckVoteService> _logger;
+        private readonly IMapper _mapper;
 
-        public SupabaseDeckVoteService(
+        public DeckVoteService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseDeckVoteService> logger)
+            ILogger<DeckVoteService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         public async Task<bool> VoteDeckAsync(Guid deckId, Guid userId, bool isUpvote)
@@ -90,10 +95,10 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<DeckVote?> GetUserVoteAsync(Guid deckId, Guid userId)
+        public async Task<DeckVoteResponse?> GetUserVoteAsync(Guid deckId, Guid userId)
         {
             var cacheKey = $"{CacheKeyPrefix}deck:{deckId}:user:{userId}";
-            var cached = await _cache.GetAsync<DeckVote>(cacheKey);
+            var cached = await _cache.GetAsync<DeckVoteResponse>(cacheKey);
 
             if (cached != null)
             {
@@ -113,13 +118,15 @@ namespace Lithuaningo.API.Services
                 var vote = response.Models.FirstOrDefault();
                 if (vote != null)
                 {
-                    await _cache.SetAsync(cacheKey, vote,
+                    var voteResponse = _mapper.Map<DeckVoteResponse>(vote);
+                    await _cache.SetAsync(cacheKey, voteResponse,
                         TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                     _logger.LogInformation("Retrieved and cached vote for deck {DeckId} and user {UserId}", 
                         deckId, userId);
+                    return voteResponse;
                 }
 
-                return vote;
+                return null;
             }
             catch (Exception ex)
             {
@@ -129,10 +136,10 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<DeckVote>> GetDeckVotesAsync(Guid deckId)
+        public async Task<List<DeckVoteResponse>> GetDeckVotesAsync(Guid deckId)
         {
             var cacheKey = $"{CacheKeyPrefix}deck:{deckId}";
-            var cached = await _cache.GetAsync<List<DeckVote>>(cacheKey);
+            var cached = await _cache.GetAsync<List<DeckVoteResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -148,12 +155,14 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var votes = response.Models;
-                await _cache.SetAsync(cacheKey, votes,
+                var voteResponses = _mapper.Map<List<DeckVoteResponse>>(votes);
+                
+                await _cache.SetAsync(cacheKey, voteResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} votes for deck {DeckId}", 
                     votes.Count, deckId);
 
-                return votes;
+                return voteResponses;
             }
             catch (Exception ex)
             {
@@ -166,9 +175,13 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                var votes = await GetDeckVotesAsync(deckId);
-                var upvotes = votes.Count(v => v.IsUpvote);
-                var downvotes = votes.Count - upvotes;
+                var votes = await _supabaseClient
+                    .From<DeckVote>()
+                    .Filter(v => v.DeckId, Operator.Equals, deckId)
+                    .Get();
+
+                var upvotes = votes.Models.Count(v => v.IsUpvote);
+                var downvotes = votes.Models.Count - upvotes;
 
                 return (upvotes, downvotes);
             }

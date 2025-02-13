@@ -3,36 +3,41 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.DeckReport;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 using Supabase;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseDeckReportService : IDeckReportService
+    public class DeckReportService : IDeckReportService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "deck-report:";
-        private readonly ILogger<SupabaseDeckReportService> _logger;
+        private readonly ILogger<DeckReportService> _logger;
+        private readonly IMapper _mapper;
 
-        public SupabaseDeckReportService(
+        public DeckReportService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseDeckReportService> logger)
+            ILogger<DeckReportService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<List<DeckReport>> GetReportsByStatusAsync(string status)
+        public async Task<List<DeckReportResponse>> GetReportsByStatusAsync(string status)
         {
             if (string.IsNullOrWhiteSpace(status))
             {
@@ -40,7 +45,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}status:{status.ToLowerInvariant()}";
-            var cached = await _cache.GetAsync<List<DeckReport>>(cacheKey);
+            var cached = await _cache.GetAsync<List<DeckReportResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -57,13 +62,14 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var reports = response.Models;
+                var reportResponses = _mapper.Map<List<DeckReportResponse>>(reports);
 
-                await _cache.SetAsync(cacheKey, reports,
+                await _cache.SetAsync(cacheKey, reportResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} reports with status {Status}", 
                     reports.Count, status);
 
-                return reports;
+                return reportResponses;
             }
             catch (Exception ex)
             {
@@ -72,10 +78,10 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<DeckReport>> GetDeckReportsAsync(Guid deckId)
+        public async Task<List<DeckReportResponse>> GetDeckReportsAsync(Guid deckId)
         {
             var cacheKey = $"{CacheKeyPrefix}deck:{deckId}";
-            var cached = await _cache.GetAsync<List<DeckReport>>(cacheKey);
+            var cached = await _cache.GetAsync<List<DeckReportResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -92,13 +98,14 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var reports = response.Models;
+                var reportResponses = _mapper.Map<List<DeckReportResponse>>(reports);
 
-                await _cache.SetAsync(cacheKey, reports,
+                await _cache.SetAsync(cacheKey, reportResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} reports for deck {DeckId}", 
                     reports.Count, deckId);
 
-                return reports;
+                return reportResponses;
             }
             catch (Exception ex)
             {
@@ -107,15 +114,16 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<string> CreateReportAsync(DeckReport report)
+        public async Task<string> CreateReportAsync(CreateDeckReportRequest request)
         {
-            if (report == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(report));
+                throw new ArgumentNullException(nameof(request));
             }
 
             try
             {
+                var report = _mapper.Map<DeckReport>(request);
                 report.Id = Guid.NewGuid();
                 report.CreatedAt = DateTime.UtcNow;
                 report.UpdatedAt = DateTime.UtcNow;
@@ -136,7 +144,50 @@ namespace Lithuaningo.API.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating report for deck {DeckId}", report.DeckId);
+                _logger.LogError(ex, "Error creating report for deck {DeckId}", request.DeckId);
+                throw;
+            }
+        }
+
+        public async Task<DeckReportResponse?> GetReportByIdAsync(string id)
+        {
+            if (!Guid.TryParse(id, out var reportId))
+            {
+                throw new ArgumentException("Invalid report ID format", nameof(id));
+            }
+
+            var cacheKey = $"{CacheKeyPrefix}{reportId}";
+            var cached = await _cache.GetAsync<DeckReportResponse>(cacheKey);
+
+            if (cached != null)
+            {
+                _logger.LogInformation("Retrieved report {Id} from cache", id);
+                return cached;
+            }
+
+            try
+            {
+                var response = await _supabaseClient
+                    .From<DeckReport>()
+                    .Where(r => r.Id == reportId)
+                    .Get();
+
+                var report = response.Models.FirstOrDefault();
+                if (report != null)
+                {
+                    var reportResponse = _mapper.Map<DeckReportResponse>(report);
+                    await _cache.SetAsync(cacheKey, reportResponse,
+                        TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                    _logger.LogInformation("Retrieved and cached report {Id}", id);
+                    return reportResponse;
+                }
+
+                _logger.LogInformation("Report {Id} not found", id);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving report {Id}", id);
                 throw;
             }
         }
@@ -189,65 +240,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private async Task InvalidateReportCacheAsync(DeckReport report)
-        {
-            var tasks = new List<Task>
-            {
-                // Invalidate status-based cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}status:{report.Status}"),
-                
-                // Invalidate deck-based cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}deck:{report.DeckId}")
-            };
-
-            await Task.WhenAll(tasks);
-        }
-
-        public async Task<DeckReport?> GetReportByIdAsync(string id)
-        {
-            if (!Guid.TryParse(id, out var reportId))
-            {
-                throw new ArgumentException("Invalid report ID format", nameof(id));
-            }
-
-            var cacheKey = $"{CacheKeyPrefix}{reportId}";
-            var cached = await _cache.GetAsync<DeckReport>(cacheKey);
-
-            if (cached != null)
-            {
-                _logger.LogInformation("Retrieved report {Id} from cache", id);
-                return cached;
-            }
-
-            try
-            {
-                var response = await _supabaseClient
-                    .From<DeckReport>()
-                    .Where(r => r.Id == reportId)
-                    .Get();
-
-                var report = response.Models.FirstOrDefault();
-                if (report != null)
-                {
-                    await _cache.SetAsync(cacheKey, report,
-                        TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                    _logger.LogInformation("Retrieved and cached report {Id}", id);
-                }
-                else
-                {
-                    _logger.LogInformation("Report {Id} not found", id);
-                }
-
-                return report;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving report {Id}", id);
-                throw;
-            }
-        }
-
-        public async Task<List<DeckReport>> GetPendingReportsAsync(int limit = 50)
+        public async Task<List<DeckReportResponse>> GetPendingReportsAsync(int limit = 50)
         {
             if (limit <= 0)
             {
@@ -255,7 +248,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}pending:{limit}";
-            var cached = await _cache.GetAsync<List<DeckReport>>(cacheKey);
+            var cached = await _cache.GetAsync<List<DeckReportResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -273,12 +266,13 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var reports = response.Models;
+                var reportResponses = _mapper.Map<List<DeckReportResponse>>(reports);
 
-                await _cache.SetAsync(cacheKey, reports,
+                await _cache.SetAsync(cacheKey, reportResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} pending reports", reports.Count);
 
-                return reports;
+                return reportResponses;
             }
             catch (Exception ex)
             {
@@ -308,7 +302,8 @@ namespace Lithuaningo.API.Services
                     .Delete();
 
                 // Invalidate relevant cache entries
-                await InvalidateReportCacheAsync(report);
+                var modelReport = _mapper.Map<DeckReport>(report);
+                await InvalidateReportCacheAsync(modelReport);
                 _logger.LogInformation("Deleted report {Id}", id);
             }
             catch (Exception ex)
@@ -316,6 +311,28 @@ namespace Lithuaningo.API.Services
                 _logger.LogError(ex, "Error deleting report {Id}", id);
                 throw;
             }
+        }
+
+        private async Task InvalidateReportCacheAsync(DeckReport report)
+        {
+            var tasks = new List<Task>
+            {
+                // Invalidate status-based cache
+                _cache.RemoveAsync($"{CacheKeyPrefix}status:{report.Status}"),
+                
+                // Invalidate deck-based cache
+                _cache.RemoveAsync($"{CacheKeyPrefix}deck:{report.DeckId}"),
+                
+                // Invalidate specific report cache
+                _cache.RemoveAsync($"{CacheKeyPrefix}{report.Id}"),
+                
+                // Invalidate pending reports cache if this was a pending report
+                report.Status == "pending" 
+                    ? _cache.RemoveAsync($"{CacheKeyPrefix}pending:50")
+                    : Task.CompletedTask
+            };
+
+            await Task.WhenAll(tasks);
         }
     }
 }

@@ -2,17 +2,15 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.DTOs.UserProfile;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
-using AutoMapper;
+using Lithuaningo.API.DTOs.UserProfile;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
-    /// Manages user profile operations including creation, updates, preferences, and learning progress tracking.
+    /// Manages user profile operations including creation, retrieval, update, and deletion.
     /// </summary>
     /// <remarks>
     /// This controller handles:
@@ -28,16 +26,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IUserProfileService _userProfileService;
         private readonly ILogger<UserProfileController> _logger;
-        private readonly IMapper _mapper;
 
         public UserProfileController(
             IUserProfileService userProfileService,
-            ILogger<UserProfileController> logger,
-            IMapper mapper)
+            ILogger<UserProfileController> logger)
         {
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -53,12 +48,12 @@ namespace Lithuaningo.API.Controllers
         /// - Progress statistics
         /// - Achievement data
         /// </remarks>
-        /// <param name="id">The unique identifier of the user profile</param>
-        /// <returns>The requested user profile</returns>
+        /// <param name="id">The user identifier</param>
+        /// <returns>The user profile</returns>
         /// <response code="200">Returns the user profile</response>
-        /// <response code="400">If the user ID format is invalid</response>
-        /// <response code="404">If the user profile is not found</response>
-        /// <response code="500">If there was an internal error during retrieval</response>
+        /// <response code="400">If id format is invalid</response>
+        /// <response code="404">If profile is not found</response>
+        /// <response code="500">If there was an internal error</response>
         [HttpGet("{id}")]
         [SwaggerOperation(
             Summary = "Retrieves user profile",
@@ -72,20 +67,28 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<UserProfileResponse>> GetUserProfile(string id)
         {
-            if (!Guid.TryParse(id, out _))
+            if (string.IsNullOrWhiteSpace(id))
             {
-                _logger.LogWarning("Invalid user ID format: {Id}", id);
-                return BadRequest("Invalid user ID format");
+                _logger.LogWarning("User ID parameter is empty");
+                return BadRequest("User ID cannot be empty");
             }
 
-            var user = await _userProfileService.GetUserProfileAsync(id);
-            if (user is null)
+            try
             {
-                return NotFound();
-            }
+                var profile = await _userProfileService.GetUserProfileAsync(id);
+                if (profile == null)
+                {
+                    _logger.LogInformation("User profile not found for ID {UserId}", id);
+                    return NotFound();
+                }
 
-            var response = _mapper.Map<UserProfileResponse>(user);
-            return Ok(response);
+                return Ok(profile);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving user profile for ID {UserId}", id);
+                return StatusCode(500, "Internal server error");
+            }
         }
 
         /// <summary>
@@ -96,16 +99,16 @@ namespace Lithuaningo.API.Controllers
         ///     POST /api/v1/UserProfile
         ///     {
         ///         "userId": "user-guid",
-        ///         "displayName": "John Doe",
-        ///         "email": "john@example.com",
-        ///         "preferredLanguage": "en"
+        ///         "email": "user@example.com",
+        ///         "fullName": "John Doe",
+        ///         "avatarUrl": "https://example.com/avatar.jpg"
         ///     }
         /// </remarks>
         /// <param name="request">The user profile creation request</param>
         /// <returns>The created user profile</returns>
-        /// <response code="200">Returns the created user profile</response>
-        /// <response code="400">If the request model is invalid</response>
-        /// <response code="500">If there was an internal error during creation</response>
+        /// <response code="200">Returns the created profile</response>
+        /// <response code="400">If request model is invalid</response>
+        /// <response code="500">If there was an internal error</response>
         [AllowAnonymous]
         [HttpPost]
         [SwaggerOperation(
@@ -119,12 +122,6 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<UserProfileResponse>> CreateUserProfile([FromBody] CreateUserProfileRequest request)
         {
-            if (!Guid.TryParse(request.UserId, out _))
-            {
-                _logger.LogWarning("Invalid user ID format: {UserId}", request.UserId);
-                return BadRequest("Invalid user ID format");
-            }
-
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -132,15 +129,13 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var userProfile = _mapper.Map<UserProfile>(request);
-                var createdProfile = await _userProfileService.CreateUserProfileAsync(request.UserId);
-                var response = _mapper.Map<UserProfileResponse>(createdProfile);
-                return Ok(response);
+                var profile = await _userProfileService.CreateUserProfileAsync(request);
+                return Ok(profile);
             }
-            catch (InvalidOperationException ex)
+            catch (Exception ex)
             {
-                _logger.LogWarning(ex, "User profile already exists for ID {UserId}", request.UserId);
-                return BadRequest(ex.Message);
+                _logger.LogError(ex, "Error creating user profile");
+                return StatusCode(500, "Internal server error");
             }
         }
 
@@ -151,21 +146,18 @@ namespace Lithuaningo.API.Controllers
         /// Sample request:
         ///     PUT /api/v1/UserProfile/{id}
         ///     {
-        ///         "displayName": "Updated Name",
-        ///         "preferredLanguage": "lt",
-        ///         "notificationSettings": {
-        ///             "emailNotifications": true,
-        ///             "pushNotifications": false
-        ///         }
+        ///         "email": "updated@example.com",
+        ///         "fullName": "Updated Name",
+        ///         "avatarUrl": "https://example.com/new-avatar.jpg"
         ///     }
         /// </remarks>
-        /// <param name="id">The unique identifier of the user profile to update</param>
-        /// <param name="request">The user profile update request</param>
+        /// <param name="id">The user identifier</param>
+        /// <param name="request">The profile update request</param>
         /// <returns>The updated user profile</returns>
-        /// <response code="200">Returns the updated user profile</response>
-        /// <response code="400">If the request model is invalid</response>
-        /// <response code="404">If the user profile is not found</response>
-        /// <response code="500">If there was an internal error during update</response>
+        /// <response code="200">Returns the updated profile</response>
+        /// <response code="400">If request model is invalid</response>
+        /// <response code="404">If profile is not found</response>
+        /// <response code="500">If there was an internal error</response>
         [HttpPut("{id}")]
         [SwaggerOperation(
             Summary = "Updates user profile",
@@ -179,10 +171,10 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<UserProfileResponse>> UpdateUserProfile(string id, [FromBody] UpdateUserProfileRequest request)
         {
-            if (!Guid.TryParse(id, out var userGuid))
+            if (string.IsNullOrWhiteSpace(id))
             {
-                _logger.LogWarning("Invalid user ID format: {Id}", id);
-                return BadRequest("Invalid user ID format");
+                _logger.LogWarning("User ID parameter is empty");
+                return BadRequest("User ID cannot be empty");
             }
 
             if (!ModelState.IsValid)
@@ -190,20 +182,21 @@ namespace Lithuaningo.API.Controllers
                 return BadRequest(ModelState);
             }
 
-            var existingUser = await _userProfileService.GetUserProfileAsync(id);
-            if (existingUser is null)
+            try
             {
+                var profile = await _userProfileService.UpdateUserProfileAsync(id, request);
+                return Ok(profile);
+            }
+            catch (KeyNotFoundException)
+            {
+                _logger.LogInformation("User profile not found for ID {UserId}", id);
                 return NotFound();
             }
-
-            var userProfile = _mapper.Map<UserProfile>(request);
-            userProfile.Id = userGuid;
-            userProfile.CreatedAt = existingUser.CreatedAt;
-            userProfile.LastLoginAt = existingUser.LastLoginAt;
-
-            var updatedUser = await _userProfileService.UpdateUserProfileAsync(userProfile);
-            var response = _mapper.Map<UserProfileResponse>(updatedUser);
-            return Ok(response);
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating user profile for ID {UserId}", id);
+                return StatusCode(500, "Internal server error");
+            }
         }
 
         /// <summary>
@@ -213,11 +206,12 @@ namespace Lithuaningo.API.Controllers
         /// Sample request:
         ///     DELETE /api/v1/UserProfile/{id}
         /// </remarks>
-        /// <param name="id">The unique identifier of the user profile to delete</param>
-        /// <response code="200">If the profile was successfully deleted</response>
-        /// <response code="400">If the user ID format is invalid</response>
-        /// <response code="404">If the user profile is not found</response>
-        /// <response code="500">If there was an internal error during deletion</response>
+        /// <param name="id">The user identifier</param>
+        /// <returns>No content</returns>
+        /// <response code="200">Profile successfully deleted</response>
+        /// <response code="400">If id format is invalid</response>
+        /// <response code="404">If profile is not found</response>
+        /// <response code="500">If there was an internal error</response>
         [HttpDelete("{id}")]
         [SwaggerOperation(
             Summary = "Deletes user profile",
@@ -231,19 +225,28 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> DeleteUserProfile(string id)
         {
-            if (!Guid.TryParse(id, out _))
+            if (string.IsNullOrWhiteSpace(id))
             {
-                _logger.LogWarning("Invalid user ID format: {Id}", id);
-                return BadRequest("Invalid user ID format");
+                _logger.LogWarning("User ID parameter is empty");
+                return BadRequest("User ID cannot be empty");
             }
 
-            var success = await _userProfileService.DeleteUserProfileAsync(id);
-            if (!success)
+            try
             {
-                return NotFound();
-            }
+                var result = await _userProfileService.DeleteUserProfileAsync(id);
+                if (!result)
+                {
+                    _logger.LogInformation("User profile not found for ID {UserId}", id);
+                    return NotFound();
+                }
 
-            return Ok();
+                return Ok();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting user profile for ID {UserId}", id);
+                return StatusCode(500, "Internal server error");
+            }
         }
 
         /// <summary>
@@ -253,11 +256,12 @@ namespace Lithuaningo.API.Controllers
         /// Sample request:
         ///     POST /api/v1/UserProfile/{id}/login
         /// </remarks>
-        /// <param name="id">The unique identifier of the user profile</param>
-        /// <response code="200">If the login timestamp was successfully updated</response>
-        /// <response code="400">If the user ID format is invalid</response>
-        /// <response code="404">If the user profile is not found</response>
-        /// <response code="500">If there was an internal error during update</response>
+        /// <param name="id">The user identifier</param>
+        /// <returns>No content</returns>
+        /// <response code="200">Login timestamp updated successfully</response>
+        /// <response code="400">If id format is invalid</response>
+        /// <response code="404">If profile is not found</response>
+        /// <response code="500">If there was an internal error</response>
         [HttpPost("{id}/login")]
         [SwaggerOperation(
             Summary = "Updates login timestamp",
@@ -271,10 +275,10 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult> UpdateLastLogin(string id)
         {
-            if (!Guid.TryParse(id, out _))
+            if (string.IsNullOrWhiteSpace(id))
             {
-                _logger.LogWarning("Invalid user ID format: {Id}", id);
-                return BadRequest("Invalid user ID format");
+                _logger.LogWarning("User ID parameter is empty");
+                return BadRequest("User ID cannot be empty");
             }
 
             try
@@ -282,10 +286,15 @@ namespace Lithuaningo.API.Controllers
                 await _userProfileService.UpdateLastLoginAsync(id);
                 return Ok();
             }
-            catch (InvalidOperationException ex)
+            catch (KeyNotFoundException)
             {
-                _logger.LogWarning(ex, "User profile not found for login update: {Id}", id);
-                return NotFound(ex.Message);
+                _logger.LogInformation("User profile not found for ID {UserId}", id);
+                return NotFound();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating last login for ID {UserId}", id);
+                return StatusCode(500, "Internal server error");
             }
         }
     }

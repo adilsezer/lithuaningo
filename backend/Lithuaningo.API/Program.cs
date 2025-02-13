@@ -278,16 +278,16 @@ To authorize in Swagger UI:
     services.AddScoped<IStorageService, StorageService>();
 
     // Core Services
-    services.AddScoped<IUserProfileService, SupabaseUserProfileService>();
-    services.AddScoped<IUserFlashcardStatsService, SupabaseUserFlashcardStatsService>();
-    services.AddScoped<IAnnouncementService, SupabaseAnnouncementService>();
-    services.AddScoped<IAppInfoService, SupabaseAppInfoService>();
-    services.AddScoped<IDeckService, SupabaseDeckService>();
-    services.AddScoped<IDeckVoteService, SupabaseDeckVoteService>();
-    services.AddScoped<IFlashcardService, SupabaseFlashcardService>();
-    services.AddScoped<IDeckCommentService, SupabaseDeckCommentService>();
-    services.AddScoped<IDeckReportService, SupabaseDeckReportService>();
-    services.AddScoped<ILeaderboardService, SupabaseLeaderboardService>();
+    services.AddScoped<IUserProfileService, UserProfileService>();
+    services.AddScoped<IUserFlashcardStatsService, UserFlashcardStatsService>();
+    services.AddScoped<IAnnouncementService, AnnouncementService>();
+    services.AddScoped<IAppInfoService, AppInfoService>();
+    services.AddScoped<IDeckService, DeckService>();
+    services.AddScoped<IDeckVoteService, DeckVoteService>();
+    services.AddScoped<IFlashcardService, FlashcardService>();
+    services.AddScoped<IDeckCommentService, DeckCommentService>();
+    services.AddScoped<IDeckReportService, DeckReportService>();
+    services.AddScoped<ILeaderboardService, LeaderboardService>();
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
 
@@ -343,7 +343,7 @@ To authorize in Swagger UI:
     .AddApplicationPart(typeof(StorageService).Assembly);
 
     // Add Authentication Services
-    services.AddScoped<IAuthService, SupabaseAuthService>();
+    services.AddScoped<IAuthService, AuthService>();
 
     services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>

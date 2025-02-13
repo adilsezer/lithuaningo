@@ -9,7 +9,7 @@ namespace Lithuaningo.API.DTOs.Leaderboard
     public class LeaderboardWeekResponse
     {
         /// <summary>
-        /// The week identifier (YYYY-WW format)
+        /// The unique identifier of the leaderboard week
         /// </summary>
         public Guid Id { get; set; }
 
@@ -24,8 +24,8 @@ namespace Lithuaningo.API.DTOs.Leaderboard
         public DateTime EndDate { get; set; }
 
         /// <summary>
-        /// List of leaderboard entries
+        /// Dictionary of leaderboard entries, keyed by user ID
         /// </summary>
-        public List<LeaderboardEntryResponse> Entries { get; set; } = new();
+        public Dictionary<string, LeaderboardEntryResponse> Entries { get; set; } = new();
     }
 }

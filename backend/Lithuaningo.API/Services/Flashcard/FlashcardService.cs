@@ -1,4 +1,5 @@
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using System;
@@ -9,30 +10,34 @@ using static Supabase.Postgrest.Constants;
 using Lithuaningo.API.Services.Cache;
 using Microsoft.Extensions.Options;
 using Supabase;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseFlashcardService : IFlashcardService
+    public class FlashcardService : IFlashcardService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "flashcard:";
-        private readonly ILogger<SupabaseFlashcardService> _logger;
+        private readonly ILogger<FlashcardService> _logger;
+        private readonly IMapper _mapper;
 
-        public SupabaseFlashcardService(
+        public FlashcardService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseFlashcardService> logger)
+            ILogger<FlashcardService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<Flashcard?> GetFlashcardByIdAsync(string id)
+        public async Task<FlashcardResponse?> GetFlashcardByIdAsync(string id)
         {
             if (!Guid.TryParse(id, out var flashcardId))
             {
@@ -40,7 +45,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}{flashcardId}";
-            var cached = await _cache.GetAsync<Flashcard>(cacheKey);
+            var cached = await _cache.GetAsync<FlashcardResponse>(cacheKey);
 
             if (cached != null)
             {
@@ -58,16 +63,15 @@ namespace Lithuaningo.API.Services
                 var flashcard = response.Models.FirstOrDefault();
                 if (flashcard != null)
                 {
-                    await _cache.SetAsync(cacheKey, flashcard,
+                    var flashcardResponse = _mapper.Map<FlashcardResponse>(flashcard);
+                    await _cache.SetAsync(cacheKey, flashcardResponse,
                         TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                     _logger.LogInformation("Retrieved and cached flashcard {Id}", id);
-                }
-                else
-                {
-                    _logger.LogInformation("Flashcard {Id} not found", id);
+                    return flashcardResponse;
                 }
 
-                return flashcard;
+                _logger.LogInformation("Flashcard {Id} not found", id);
+                return null;
             }
             catch (Exception ex)
             {
@@ -76,7 +80,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<Flashcard>> GetUserFlashcardsAsync(string userId)
+        public async Task<List<FlashcardResponse>> GetUserFlashcardsAsync(string userId)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -84,7 +88,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}user:{userGuid}";
-            var cached = await _cache.GetAsync<List<Flashcard>>(cacheKey);
+            var cached = await _cache.GetAsync<List<FlashcardResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -101,13 +105,14 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var flashcards = response.Models;
+                var flashcardResponses = _mapper.Map<List<FlashcardResponse>>(flashcards);
                 
-                await _cache.SetAsync(cacheKey, flashcards,
+                await _cache.SetAsync(cacheKey, flashcardResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} flashcards for user {UserId}", 
                     flashcards.Count, userId);
 
-                return flashcards;
+                return flashcardResponses;
             }
             catch (Exception ex)
             {
@@ -116,15 +121,16 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<string> CreateFlashcardAsync(Flashcard flashcard)
+        public async Task<string> CreateFlashcardAsync(CreateFlashcardRequest request)
         {
-            if (flashcard == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(flashcard));
+                throw new ArgumentNullException(nameof(request));
             }
 
             try
             {
+                var flashcard = _mapper.Map<Flashcard>(request);
                 flashcard.Id = Guid.NewGuid();
                 flashcard.CreatedAt = DateTime.UtcNow;
                 flashcard.UpdatedAt = DateTime.UtcNow;
@@ -152,33 +158,47 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task UpdateFlashcardAsync(string id, Flashcard flashcard)
+        public async Task<FlashcardResponse> UpdateFlashcardAsync(string id, UpdateFlashcardRequest request)
         {
             if (!Guid.TryParse(id, out var flashcardId))
             {
                 throw new ArgumentException("Invalid flashcard ID format", nameof(id));
             }
 
-            if (flashcard == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(flashcard));
+                throw new ArgumentNullException(nameof(request));
             }
 
             try
             {
+                var existingFlashcard = await _supabaseClient
+                    .From<Flashcard>()
+                    .Where(f => f.Id == flashcardId)
+                    .Get();
+
+                var flashcard = existingFlashcard.Models.FirstOrDefault();
+                if (flashcard == null)
+                {
+                    throw new ArgumentException("Flashcard not found", nameof(id));
+                }
+
+                _mapper.Map(request, flashcard);
                 flashcard.UpdatedAt = DateTime.UtcNow;
+
                 var response = await _supabaseClient
                     .From<Flashcard>()
                     .Where(f => f.Id == flashcardId)
                     .Update(flashcard);
 
-                var updatedFlashcard = response.Models.FirstOrDefault();
-                if (updatedFlashcard != null)
-                {
-                    // Invalidate relevant cache entries
-                    await InvalidateFlashcardCacheAsync(updatedFlashcard);
-                    _logger.LogInformation("Updated flashcard {Id}", id);
-                }
+                var updatedFlashcard = response.Models.First();
+                var flashcardResponse = _mapper.Map<FlashcardResponse>(updatedFlashcard);
+
+                // Invalidate relevant cache entries
+                await InvalidateFlashcardCacheAsync(updatedFlashcard);
+                _logger.LogInformation("Updated flashcard {Id}", id);
+
+                return flashcardResponse;
             }
             catch (Exception ex)
             {
@@ -206,7 +226,8 @@ namespace Lithuaningo.API.Services
                         .Delete();
 
                     // Invalidate relevant cache entries
-                    await InvalidateFlashcardCacheAsync(flashcard);
+                    var modelFlashcard = _mapper.Map<Flashcard>(flashcard);
+                    await InvalidateFlashcardCacheAsync(modelFlashcard);
                     _logger.LogInformation("Deleted flashcard {Id}", id);
                 }
             }
@@ -217,7 +238,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<Flashcard>> GetDueForReviewAsync(string userId, int limit = 20)
+        public async Task<List<FlashcardResponse>> GetDueForReviewAsync(string userId, int limit = 20)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -230,7 +251,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}due:{userGuid}:{limit}";
-            var cached = await _cache.GetAsync<List<Flashcard>>(cacheKey);
+            var cached = await _cache.GetAsync<List<FlashcardResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -252,14 +273,15 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var flashcards = response.Models;
+                var flashcardResponses = _mapper.Map<List<FlashcardResponse>>(flashcards);
 
                 // Cache for a shorter duration since this is time-sensitive
-                await _cache.SetAsync(cacheKey, flashcards,
+                await _cache.SetAsync(cacheKey, flashcardResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} due flashcards for user {UserId}", 
                     flashcards.Count, userId);
 
-                return flashcards;
+                return flashcardResponses;
             }
             catch (Exception ex)
             {
@@ -291,7 +313,8 @@ namespace Lithuaningo.API.Services
                 var flashcard = await GetFlashcardByIdAsync(id);
                 if (flashcard != null)
                 {
-                    await InvalidateFlashcardCacheAsync(flashcard);
+                    var modelFlashcard = _mapper.Map<Flashcard>(flashcard);
+                    await InvalidateFlashcardCacheAsync(modelFlashcard);
                 }
                 _logger.LogInformation("Updated review status for flashcard {Id}", id);
             }
@@ -302,7 +325,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<Flashcard>> GetRandomFlashcardsAsync(int limit = 10)
+        public async Task<List<FlashcardResponse>> GetRandomFlashcardsAsync(int limit = 10)
         {
             try
             {
@@ -312,7 +335,8 @@ namespace Lithuaningo.API.Services
                     .Limit(limit)
                     .Get();
 
-                return response.Models;
+                var flashcards = response.Models;
+                return _mapper.Map<List<FlashcardResponse>>(flashcards);
             }
             catch (Exception ex)
             {
@@ -321,11 +345,11 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<Flashcard>> SearchFlashcardsAsync(string query)
+        public async Task<List<FlashcardResponse>> SearchFlashcardsAsync(string query)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
-                return new List<Flashcard>();
+                return new List<FlashcardResponse>();
             }
 
             try
@@ -336,7 +360,8 @@ namespace Lithuaningo.API.Services
                     .Filter(f => f.BackWord, Operator.ILike, $"%{query}%")
                     .Get();
 
-                return response.Models;
+                var flashcards = response.Models;
+                return _mapper.Map<List<FlashcardResponse>>(flashcards);
             }
             catch (Exception ex)
             {

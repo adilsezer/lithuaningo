@@ -8,6 +8,11 @@ namespace Lithuaningo.API.DTOs.DeckVote
     public class DeckVoteResponse
     {
         /// <summary>
+        /// The unique identifier of the vote
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
         /// The deck identifier
         /// </summary>
         public Guid DeckId { get; set; }
@@ -31,5 +36,10 @@ namespace Lithuaningo.API.DTOs.DeckVote
         /// When this vote was created
         /// </summary>
         public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// When this vote was last updated
+        /// </summary>
+        public DateTime UpdatedAt { get; set; }
     }
 } 

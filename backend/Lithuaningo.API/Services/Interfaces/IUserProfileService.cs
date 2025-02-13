@@ -1,15 +1,39 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
-using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.UserProfile;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
     public interface IUserProfileService
     {
-        Task<UserProfile?> GetUserProfileAsync(string userId);
-        Task<UserProfile> CreateUserProfileAsync(string userId);
-        Task<UserProfile> UpdateUserProfileAsync(UserProfile userProfile);
+        /// <summary>
+        /// Gets a user profile by ID
+        /// </summary>
+        Task<UserProfileResponse?> GetUserProfileAsync(string userId);
+
+        /// <summary>
+        /// Creates a new user profile
+        /// </summary>
+        Task<UserProfileResponse> CreateUserProfileAsync(CreateUserProfileRequest request);
+
+        /// <summary>
+        /// Updates an existing user profile
+        /// </summary>
+        Task<UserProfileResponse> UpdateUserProfileAsync(string userId, UpdateUserProfileRequest request);
+
+        /// <summary>
+        /// Deletes a user profile
+        /// </summary>
         Task<bool> DeleteUserProfileAsync(string userId);
+
+        /// <summary>
+        /// Updates the last login timestamp for a user
+        /// </summary>
         Task UpdateLastLoginAsync(string userId);
-        Task<IEnumerable<UserProfile>> GetUserProfilesAsync();
+
+        /// <summary>
+        /// Gets all user profiles
+        /// </summary>
+        Task<IEnumerable<UserProfileResponse>> GetUserProfilesAsync();
     }
 }

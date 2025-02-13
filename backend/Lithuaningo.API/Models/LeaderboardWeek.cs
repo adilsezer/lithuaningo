@@ -10,7 +10,7 @@ namespace Lithuaningo.API.Models
     {
         [PrimaryKey("id")]
         [Column("id")]
-        public string Id { get; set; } = string.Empty;
+        public Guid Id { get; set; }
 
         [Column("start_date")]
         public DateTime StartDate { get; set; }

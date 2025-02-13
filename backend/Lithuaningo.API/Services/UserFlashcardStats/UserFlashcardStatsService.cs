@@ -14,20 +14,20 @@ using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseUserFlashcardStatsService : IUserFlashcardStatsService
+    public class UserFlashcardStatsService : IUserFlashcardStatsService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "flashcard-stats:";
-        private readonly ILogger<SupabaseUserFlashcardStatsService> _logger;
+        private readonly ILogger<UserFlashcardStatsService> _logger;
         private readonly IMapper _mapper;
 
-        public SupabaseUserFlashcardStatsService(
+        public UserFlashcardStatsService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseUserFlashcardStatsService> logger,
+            ILogger<UserFlashcardStatsService> logger,
             IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
@@ -100,7 +100,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task TrackUserFlashcardStatsAsync(string deckId, string userId, string flashcardId, bool isCorrect, int? confidenceLevel = null, int? timeTakenSeconds = null)
+        public async Task TrackUserFlashcardStatsAsync(string deckId, string userId, TrackProgressRequest request)
         {
             if (!Guid.TryParse(deckId, out _))
             {
@@ -112,9 +112,9 @@ namespace Lithuaningo.API.Services
                 throw new ArgumentException("Invalid user ID format", nameof(userId));
             }
 
-            if (!Guid.TryParse(flashcardId, out _))
+            if (!Guid.TryParse(request.FlashcardId, out _))
             {
-                throw new ArgumentException("Invalid flashcard ID format", nameof(flashcardId));
+                throw new ArgumentException("Invalid flashcard ID format", nameof(request.FlashcardId));
             }
 
             try
@@ -123,19 +123,19 @@ namespace Lithuaningo.API.Services
                 {
                     { "deck_id", deckId },
                     { "user_id", userId },
-                    { "flashcard_id", flashcardId },
-                    { "was_correct", isCorrect },
+                    { "flashcard_id", request.FlashcardId },
+                    { "was_correct", request.IsCorrect },
                     { "review_time", DateTime.UtcNow }
                 };
 
-                if (confidenceLevel.HasValue)
+                if (request.ConfidenceLevel.HasValue)
                 {
-                    parameters.Add("confidence_level", confidenceLevel.Value);
+                    parameters.Add("confidence_level", request.ConfidenceLevel.Value);
                 }
 
-                if (timeTakenSeconds.HasValue)
+                if (request.TimeTakenSeconds > 0)
                 {
-                    parameters.Add("time_taken_seconds", timeTakenSeconds.Value);
+                    parameters.Add("time_taken_seconds", request.TimeTakenSeconds);
                 }
 
                 await _supabaseClient.Rpc("track_flashcard_stats", parameters);
@@ -143,12 +143,12 @@ namespace Lithuaningo.API.Services
                 // Invalidate relevant cache entries
                 await InvalidateUserFlashcardStatsCacheAsync(deckId, userId);
                 _logger.LogInformation("Tracked flashcard stats for deck {DeckId}, user {UserId}, flashcard {FlashcardId}", 
-                    deckId, userId, flashcardId);
+                    deckId, userId, request.FlashcardId);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error tracking flashcard stats for deck {DeckId}, user {UserId}, flashcard {FlashcardId}", 
-                    deckId, userId, flashcardId);
+                    deckId, userId, request.FlashcardId);
                 throw;
             }
         }

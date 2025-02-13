@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Lithuaningo.API.DTOs.DeckReport;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -24,16 +22,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IDeckReportService _reportService;
         private readonly ILogger<DeckReportController> _logger;
-        private readonly IMapper _mapper;
 
         public DeckReportController(
             IDeckReportService reportService,
-            ILogger<DeckReportController> logger,
-            IMapper mapper)
+            ILogger<DeckReportController> logger)
         {
             _reportService = reportService ?? throw new ArgumentNullException(nameof(reportService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -73,11 +68,9 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var report = _mapper.Map<DeckReport>(request);
-                var reportId = await _reportService.CreateReportAsync(report);
+                var reportId = await _reportService.CreateReportAsync(request);
                 var createdReport = await _reportService.GetReportByIdAsync(reportId);
-                var response = _mapper.Map<DeckReportResponse>(createdReport);
-                return CreatedAtAction(nameof(GetReport), new { id = reportId }, response);
+                return CreatedAtAction(nameof(GetReport), new { id = reportId }, createdReport);
             }
             catch (Exception ex)
             {
@@ -122,12 +115,11 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                List<DeckReport> reports = status.ToLower() == "pending"
+                List<DeckReportResponse> reports = status.ToLower() == "pending"
                     ? await _reportService.GetPendingReportsAsync(limit)
                     : await _reportService.GetReportsByStatusAsync(status);
 
-                var response = _mapper.Map<List<DeckReportResponse>>(reports);
-                return Ok(response);
+                return Ok(reports);
             }
             catch (Exception ex)
             {
@@ -177,8 +169,7 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
-                var response = _mapper.Map<DeckReportResponse>(report);
-                return Ok(response);
+                return Ok(report);
             }
             catch (Exception ex)
             {
@@ -221,8 +212,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var reports = await _reportService.GetDeckReportsAsync(Guid.Parse(deckId));
-                var response = _mapper.Map<List<DeckReportResponse>>(reports);
-                return Ok(response);
+                return Ok(reports);
             }
             catch (Exception ex)
             {
@@ -290,8 +280,7 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
-                var response = _mapper.Map<DeckReportResponse>(updatedReport);
-                return Ok(response);
+                return Ok(updatedReport);
             }
             catch (Exception ex)
             {

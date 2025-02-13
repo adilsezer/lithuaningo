@@ -2,10 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.AppInfo;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -20,16 +18,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IAppInfoService _appInfoService;
         private readonly ILogger<AppInfoController> _logger;
-        private readonly IMapper _mapper;
 
         public AppInfoController(
             IAppInfoService appInfoService,
-            ILogger<AppInfoController> logger,
-            IMapper mapper)
+            ILogger<AppInfoController> logger)
         {
             _appInfoService = appInfoService ?? throw new ArgumentNullException(nameof(appInfoService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -76,8 +71,7 @@ namespace Lithuaningo.API.Controllers
                 {
                     return NotFound();
                 }
-                var response = _mapper.Map<AppInfoResponse>(appInfo);
-                return Ok(response);
+                return Ok(appInfo);
             }
             catch (Exception ex)
             {
@@ -93,10 +87,13 @@ namespace Lithuaningo.API.Controllers
         /// Sample request:
         ///     PUT /api/v1/AppInfo/{platform}
         ///     {
-        ///         "version": "1.2.0",
-        ///         "minVersion": "1.0.0",
-        ///         "mandatoryUpdate": false,
-        ///         "updateMessage": "New features available"
+        ///         "currentVersion": "1.2.0",
+        ///         "minimumVersion": "1.0.0",
+        ///         "forceUpdate": false,
+        ///         "updateUrl": "https://example.com/update",
+        ///         "isMaintenance": false,
+        ///         "maintenanceMessage": "System under maintenance",
+        ///         "releaseNotes": "New features available"
         ///     }
         /// </remarks>
         /// <param name="platform">The platform identifier (e.g., "ios", "android")</param>
@@ -131,11 +128,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var appInfo = _mapper.Map<AppInfo>(request);
-                appInfo.Platform = platform;
-                var updatedAppInfo = await _appInfoService.UpdateAppInfoAsync(platform, appInfo);
-                var response = _mapper.Map<AppInfoResponse>(updatedAppInfo);
-                return Ok(response);
+                var updatedAppInfo = await _appInfoService.UpdateAppInfoAsync(platform, request);
+                return Ok(updatedAppInfo);
             }
             catch (Exception ex)
             {

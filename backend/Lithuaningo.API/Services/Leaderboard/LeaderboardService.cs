@@ -1,38 +1,44 @@
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lithuaningo.API.Utilities;
 using static Supabase.Postgrest.Constants;
 using Supabase;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseLeaderboardService : ILeaderboardService
+    public class LeaderboardService : ILeaderboardService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "leaderboard:";
-        private readonly ILogger<SupabaseLeaderboardService> _logger;
+        private readonly ILogger<LeaderboardService> _logger;
+        private readonly IMapper _mapper;
 
-        public SupabaseLeaderboardService(
+        public LeaderboardService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseLeaderboardService> logger)
+            ILogger<LeaderboardService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<LeaderboardWeek> GetCurrentWeekLeaderboardAsync()
+        public async Task<LeaderboardWeekResponse> GetCurrentWeekLeaderboardAsync()
         {
             try
             {
@@ -46,7 +52,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<LeaderboardWeek> GetWeekLeaderboardAsync(string weekId)
+        public async Task<LeaderboardWeekResponse> GetWeekLeaderboardAsync(string weekId)
         {
             if (string.IsNullOrWhiteSpace(weekId))
             {
@@ -54,7 +60,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}week:{weekId}";
-            var cached = await _cache.GetAsync<LeaderboardWeek>(cacheKey);
+            var cached = await _cache.GetAsync<LeaderboardWeekResponse>(cacheKey);
 
             if (cached != null)
             {
@@ -65,37 +71,37 @@ namespace Lithuaningo.API.Services
             try
             {
                 var response = await _supabaseClient
-                    .From<LeaderboardEntry>()
-                    .Order(l => l.Score, Ordering.Descending)
+                    .From<LeaderboardWeek>()
+                    .Filter(l => l.Id.ToString(), Operator.Equals, weekId)
                     .Get();
 
-                var (startDate, endDate) = DateUtils.GetWeekDates(weekId);
-                var entries = response.Models.ToDictionary(
-                    l => l.UserId.ToString(),
-                    l => new LeaderboardEntry
-                    {
-                        Id = l.Id,
-                        UserId = l.UserId,
-                        Score = l.Score,
-                        CreatedAt = l.CreatedAt,
-                        UpdatedAt = l.UpdatedAt
-                    }
-                );
-
-                var leaderboard = new LeaderboardWeek
+                var leaderboardWeek = response.Models.FirstOrDefault();
+                if (leaderboardWeek == null)
                 {
-                    Id = weekId,
-                    StartDate = startDate,
-                    EndDate = endDate,
-                    Entries = entries
-                };
+                    var (startDate, endDate) = DateUtils.GetWeekDates(weekId);
+                    leaderboardWeek = new LeaderboardWeek
+                    {
+                        Id = Guid.NewGuid(),
+                        StartDate = startDate,
+                        EndDate = endDate,
+                        Entries = new Dictionary<string, LeaderboardEntry>()
+                    };
 
-                await _cache.SetAsync(cacheKey, leaderboard,
+                    var createResponse = await _supabaseClient
+                        .From<LeaderboardWeek>()
+                        .Insert(leaderboardWeek);
+                    
+                    leaderboardWeek = createResponse.Models.First();
+                }
+
+                var leaderboardResponse = _mapper.Map<LeaderboardWeekResponse>(leaderboardWeek);
+
+                await _cache.SetAsync(cacheKey, leaderboardResponse,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries", 
-                    weekId, entries.Count);
+                    weekId, leaderboardWeek.Entries.Count);
 
-                return leaderboard;
+                return leaderboardResponse;
             }
             catch (Exception ex)
             {
@@ -104,7 +110,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<LeaderboardEntry> UpdateLeaderboardEntryAsync(string userId, int score)
+        public async Task<LeaderboardEntryResponse> UpdateLeaderboardEntryAsync(string userId, int score)
         {
             if (!Guid.TryParse(userId, out var userGuid))
             {
@@ -168,7 +174,7 @@ namespace Lithuaningo.API.Services
                 // Invalidate the cache for the current week
                 await InvalidateLeaderboardCacheAsync(currentWeek);
 
-                return updatedEntry;
+                return _mapper.Map<LeaderboardEntryResponse>(updatedEntry);
             }
             catch (Exception ex)
             {

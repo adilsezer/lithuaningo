@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.DeckComment;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -33,16 +31,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IDeckCommentService _deckCommentService;
         private readonly ILogger<DeckCommentController> _logger;
-        private readonly IMapper _mapper;
 
         public DeckCommentController(
             IDeckCommentService deckCommentService,
-            ILogger<DeckCommentController> logger,
-            IMapper mapper)
+            ILogger<DeckCommentController> logger)
         {
             _deckCommentService = deckCommentService ?? throw new ArgumentNullException(nameof(deckCommentService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -84,9 +79,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var deckComments = await _deckCommentService.GetDeckCommentsAsync(deckId);
-                var response = _mapper.Map<List<DeckCommentResponse>>(deckComments);
-                return Ok(response);
+                var comments = await _deckCommentService.GetDeckCommentsAsync(deckId);
+                return Ok(comments);
             }
             catch (Exception ex)
             {
@@ -140,10 +134,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var deckComment = _mapper.Map<DeckComment>(request);
-                var createdDeckComment = await _deckCommentService.CreateDeckCommentAsync(deckComment);
-                var response = _mapper.Map<DeckCommentResponse>(createdDeckComment);
-                return CreatedAtAction(nameof(GetComment), new { id = createdDeckComment.Id }, response);
+                var comment = await _deckCommentService.CreateDeckCommentAsync(request);
+                return CreatedAtAction(nameof(GetComment), new { id = comment.Id }, comment);
             }
             catch (Exception ex)
             {
@@ -192,13 +184,12 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var deckComment = await _deckCommentService.GetDeckCommentByIdAsync(id);
-                if (deckComment == null)
+                var comment = await _deckCommentService.GetDeckCommentByIdAsync(id);
+                if (comment == null)
                 {
                     return NotFound();
                 }
-                var response = _mapper.Map<DeckCommentResponse>(deckComment);
-                return Ok(response);
+                return Ok(comment);
             }
             catch (Exception ex)
             {
@@ -259,15 +250,13 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var deckComment = _mapper.Map<DeckComment>(request);
-                deckComment.Id = Guid.Parse(id);
-                var updatedDeckComment = await _deckCommentService.UpdateDeckCommentAsync(deckComment);
-                if (updatedDeckComment == null)
-                {
-                    return NotFound();
-                }
-                var response = _mapper.Map<DeckCommentResponse>(updatedDeckComment);
-                return Ok(response);
+                var comment = await _deckCommentService.UpdateDeckCommentAsync(id, request);
+                return Ok(comment);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "Bad request when updating comment with ID: {Id}", id);
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -356,9 +345,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var userDeckComments = await _deckCommentService.GetUserDeckCommentsAsync(userId);
-                var response = _mapper.Map<List<DeckCommentResponse>>(userDeckComments);
-                return Ok(response);
+                var comments = await _deckCommentService.GetUserDeckCommentsAsync(userId);
+                return Ok(comments);
             }
             catch (Exception ex)
             {

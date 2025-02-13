@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.DeckVote;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -22,16 +20,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IDeckVoteService _voteService;
         private readonly ILogger<DeckVoteController> _logger;
-        private readonly IMapper _mapper;
 
         public DeckVoteController(
             IDeckVoteService voteService,
-            ILogger<DeckVoteController> logger,
-            IMapper mapper)
+            ILogger<DeckVoteController> logger)
         {
             _voteService = voteService ?? throw new ArgumentNullException(nameof(voteService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -113,8 +108,7 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
-                var response = _mapper.Map<DeckVoteResponse>(vote);
-                return Ok(response);
+                return Ok(vote);
             }
             catch (Exception ex)
             {

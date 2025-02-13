@@ -5,11 +5,9 @@ using Microsoft.AspNetCore.Http;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Lithuaningo.API.DTOs.Flashcard;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -29,20 +27,17 @@ namespace Lithuaningo.API.Controllers
         private readonly IStorageService _storageService;
         private readonly IOptions<StorageSettings> _storageSettings;
         private readonly ILogger<FlashcardController> _logger;
-        private readonly IMapper _mapper;
 
         public FlashcardController(
             IFlashcardService flashcardService,
             IStorageService storageService,
             IOptions<StorageSettings> storageSettings,
-            ILogger<FlashcardController> logger,
-            IMapper mapper)
+            ILogger<FlashcardController> logger)
         {
             _flashcardService = flashcardService ?? throw new ArgumentNullException(nameof(flashcardService));
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
             _storageSettings = storageSettings ?? throw new ArgumentNullException(nameof(storageSettings));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -91,8 +86,7 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
-                var response = _mapper.Map<FlashcardResponse>(flashcard);
-                return Ok(response);
+                return Ok(flashcard);
             }
             catch (Exception ex)
             {
@@ -137,8 +131,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var flashcards = await _flashcardService.GetUserFlashcardsAsync(userId);
-                var response = _mapper.Map<List<FlashcardResponse>>(flashcards);
-                return Ok(response);
+                return Ok(flashcards);
             }
             catch (Exception ex)
             {
@@ -194,8 +187,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var flashcards = await _flashcardService.GetDueForReviewAsync(userId, limit);
-                var response = _mapper.Map<List<FlashcardResponse>>(flashcards);
-                return Ok(response);
+                return Ok(flashcards);
             }
             catch (Exception ex)
             {
@@ -243,11 +235,9 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var flashcard = _mapper.Map<Flashcard>(request);
-                var flashcardId = await _flashcardService.CreateFlashcardAsync(flashcard);
+                var flashcardId = await _flashcardService.CreateFlashcardAsync(request);
                 var createdFlashcard = await _flashcardService.GetFlashcardByIdAsync(flashcardId);
-                var response = _mapper.Map<FlashcardResponse>(createdFlashcard);
-                return CreatedAtAction(nameof(GetFlashcard), new { id = flashcardId }, response);
+                return CreatedAtAction(nameof(GetFlashcard), new { id = flashcardId }, createdFlashcard);
             }
             catch (Exception ex)
             {
@@ -311,15 +301,8 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
-                var flashcard = _mapper.Map<Flashcard>(request);
-                flashcard.Id = Guid.Parse(id);
-                flashcard.DeckId = existingFlashcard.DeckId;
-                flashcard.CreatedAt = existingFlashcard.CreatedAt;
-
-                await _flashcardService.UpdateFlashcardAsync(id, flashcard);
-                var updatedFlashcard = await _flashcardService.GetFlashcardByIdAsync(id);
-                var response = _mapper.Map<FlashcardResponse>(updatedFlashcard);
-                return Ok(response);
+                var updatedFlashcard = await _flashcardService.UpdateFlashcardAsync(id, request);
+                return Ok(updatedFlashcard);
             }
             catch (Exception ex)
             {
@@ -462,8 +445,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var flashcards = await _flashcardService.GetRandomFlashcardsAsync(limit);
-                var response = _mapper.Map<List<FlashcardResponse>>(flashcards);
-                return Ok(response);
+                return Ok(flashcards);
             }
             catch (Exception ex)
             {
@@ -511,8 +493,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var flashcards = await _flashcardService.SearchFlashcardsAsync(query);
-                var response = _mapper.Map<List<FlashcardResponse>>(flashcards);
-                return Ok(response);
+                return Ok(flashcards);
             }
             catch (Exception ex)
             {

@@ -1,4 +1,5 @@
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.Announcement;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -9,48 +10,37 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using static Supabase.Postgrest.Constants;
 using Supabase;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseAnnouncementService : IAnnouncementService
+    public class AnnouncementService : IAnnouncementService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "announcement:";
-        private readonly ILogger<SupabaseAnnouncementService> _logger;
+        private readonly ILogger<AnnouncementService> _logger;
+        private readonly IMapper _mapper;
 
-        public SupabaseAnnouncementService(
+        public AnnouncementService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseAnnouncementService> logger)
+            ILogger<AnnouncementService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        // Mapping method to allow for future transformation (currently one-to-one).
-        private Announcement MapToAnnouncement(Announcement supabaseAnnouncement)
-        {
-            return new Announcement
-            {
-                Id = supabaseAnnouncement.Id,
-                Title = supabaseAnnouncement.Title,
-                Content = supabaseAnnouncement.Content,
-                IsActive = supabaseAnnouncement.IsActive,
-                CreatedAt = supabaseAnnouncement.CreatedAt,
-                UpdatedAt = supabaseAnnouncement.UpdatedAt,
-                ValidUntil = supabaseAnnouncement.ValidUntil
-            };
-        }
-
-        public async Task<IEnumerable<Announcement>> GetAnnouncementsAsync()
+        public async Task<IEnumerable<AnnouncementResponse>> GetAnnouncementsAsync()
         {
             var cacheKey = $"{CacheKeyPrefix}all";
-            var cached = await _cache.GetAsync<IEnumerable<Announcement>>(cacheKey);
+            var cached = await _cache.GetAsync<IEnumerable<AnnouncementResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -67,12 +57,13 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var announcements = response.Models;
+                var announcementResponses = _mapper.Map<IEnumerable<AnnouncementResponse>>(announcements);
 
-                await _cache.SetAsync(cacheKey, announcements,
+                await _cache.SetAsync(cacheKey, announcementResponses,
                     TimeSpan.FromMinutes(_cacheSettings.AnnouncementCacheMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} announcements", announcements.Count);
 
-                return announcements;
+                return announcementResponses;
             }
             catch (Exception ex)
             {
@@ -81,7 +72,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<Announcement?> GetAnnouncementByIdAsync(string id)
+        public async Task<AnnouncementResponse?> GetAnnouncementByIdAsync(string id)
         {
             if (!Guid.TryParse(id, out var announcementId))
             {
@@ -89,7 +80,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}{announcementId}";
-            var cached = await _cache.GetAsync<Announcement>(cacheKey);
+            var cached = await _cache.GetAsync<AnnouncementResponse>(cacheKey);
 
             if (cached != null)
             {
@@ -107,16 +98,15 @@ namespace Lithuaningo.API.Services
                 var announcement = response.Models.FirstOrDefault();
                 if (announcement != null)
                 {
-                    await _cache.SetAsync(cacheKey, announcement,
+                    var announcementResponse = _mapper.Map<AnnouncementResponse>(announcement);
+                    await _cache.SetAsync(cacheKey, announcementResponse,
                         TimeSpan.FromMinutes(_cacheSettings.AnnouncementCacheMinutes));
                     _logger.LogInformation("Retrieved and cached announcement {Id}", id);
-                }
-                else
-                {
-                    _logger.LogInformation("Announcement {Id} not found", id);
+                    return announcementResponse;
                 }
 
-                return announcement;
+                _logger.LogInformation("Announcement {Id} not found", id);
+                return null;
             }
             catch (Exception ex)
             {
@@ -125,34 +115,38 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task CreateAnnouncementAsync(Announcement announcement)
+        public async Task<AnnouncementResponse> CreateAnnouncementAsync(CreateAnnouncementRequest request)
         {
-            if (announcement == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(announcement));
+                throw new ArgumentNullException(nameof(request));
             }
 
             try
             {
-                // Create a new announcement instance with timestamps
-                var newAnnouncement = new Announcement
+                var announcement = new Announcement
                 {
                     Id = Guid.NewGuid(),
-                    Title = announcement.Title,
-                    Content = announcement.Content,
-                    IsActive = true,
+                    Title = request.Title,
+                    Content = request.Content,
+                    IsActive = request.IsActive,
+                    ValidUntil = request.ValidUntil,
                     CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow,
-                    ValidUntil = announcement.ValidUntil
+                    UpdatedAt = DateTime.UtcNow
                 };
 
                 var response = await _supabaseClient
                     .From<Announcement>()
-                    .Insert(newAnnouncement);
+                    .Insert(announcement);
+
+                var createdAnnouncement = response.Models.First();
+                var announcementResponse = _mapper.Map<AnnouncementResponse>(createdAnnouncement);
 
                 // Invalidate the cache for all announcements
                 await _cache.RemoveAsync($"{CacheKeyPrefix}all");
-                _logger.LogInformation("Created new announcement with ID {Id}", newAnnouncement.Id);
+                _logger.LogInformation("Created new announcement with ID {Id}", announcement.Id);
+
+                return announcementResponse;
             }
             catch (Exception ex)
             {
@@ -161,23 +155,28 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task UpdateAnnouncementAsync(string id, Announcement announcement)
+        public async Task<AnnouncementResponse> UpdateAnnouncementAsync(string id, UpdateAnnouncementRequest request)
         {
             if (!Guid.TryParse(id, out var announcementId))
             {
                 throw new ArgumentException("Invalid announcement ID format", nameof(id));
             }
 
-            if (announcement == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(announcement));
+                throw new ArgumentNullException(nameof(request));
             }
 
             try
             {
                 // Check that the announcement exists
-                var existing = await GetAnnouncementByIdAsync(id);
-                if (existing == null)
+                var existing = await _supabaseClient
+                    .From<Announcement>()
+                    .Where(a => a.Id == announcementId)
+                    .Get();
+
+                var existingAnnouncement = existing.Models.FirstOrDefault();
+                if (existingAnnouncement == null)
                 {
                     throw new ArgumentException("Announcement not found", nameof(id));
                 }
@@ -186,18 +185,21 @@ namespace Lithuaningo.API.Services
                 var updatedAnnouncement = new Announcement
                 {
                     Id = announcementId,
-                    Title = announcement.Title,
-                    Content = announcement.Content,
-                    IsActive = announcement.IsActive,
-                    ValidUntil = announcement.ValidUntil,
-                    CreatedAt = existing.CreatedAt,
+                    Title = request.Title,
+                    Content = request.Content,
+                    IsActive = request.IsActive,
+                    ValidUntil = request.ValidUntil,
+                    CreatedAt = existingAnnouncement.CreatedAt,
                     UpdatedAt = DateTime.UtcNow
                 };
 
-                await _supabaseClient
+                var response = await _supabaseClient
                     .From<Announcement>()
                     .Where(a => a.Id == announcementId)
                     .Update(updatedAnnouncement);
+
+                var updated = response.Models.First();
+                var announcementResponse = _mapper.Map<AnnouncementResponse>(updated);
 
                 // Invalidate both specific and list caches
                 var cacheKey = $"{CacheKeyPrefix}{announcementId}";
@@ -205,6 +207,7 @@ namespace Lithuaningo.API.Services
                 await _cache.RemoveAsync($"{CacheKeyPrefix}all");
 
                 _logger.LogInformation("Updated announcement {Id}", id);
+                return announcementResponse;
             }
             catch (Exception ex)
             {

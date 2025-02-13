@@ -9,6 +9,8 @@ using Lithuaningo.API.Services.Cache;
 using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 using Supabase;
+using Lithuaningo.API.DTOs.Quiz;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
@@ -23,27 +25,30 @@ namespace Lithuaningo.API.Services
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "quiz:";
         private readonly ILogger<QuizService> _logger;
+        private readonly IMapper _mapper;
 
         public QuizService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<QuizService> logger)
+            ILogger<QuizService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
         /// Retrieves quiz questions for the current day from Supabase.
         /// </summary>
-        public async Task<IEnumerable<QuizQuestion>> GetDailyQuizQuestionsAsync()
+        public async Task<IEnumerable<QuizQuestionResponse>> GetDailyQuizQuestionsAsync()
         {
             var today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
             var cacheKey = $"{CacheKeyPrefix}daily:{today}";
-            var cached = await _cache.GetAsync<IEnumerable<QuizQuestion>>(cacheKey);
+            var cached = await _cache.GetAsync<IEnumerable<QuizQuestionResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -59,13 +64,14 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var questions = response.Models;
+                var questionResponses = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
 
-                await _cache.SetAsync(cacheKey, questions,
+                await _cache.SetAsync(cacheKey, questionResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} quiz questions for {Date}", 
                     questions.Count, today);
 
-                return questions;
+                return questionResponses;
             }
             catch (Exception ex)
             {
@@ -78,7 +84,7 @@ namespace Lithuaningo.API.Services
         /// Creates new quiz questions for the day.
         /// </summary>
         /// <param name="questions">The quiz questions to create</param>
-        public async Task CreateDailyQuizQuestionsAsync(IEnumerable<QuizQuestion> questions)
+        public async Task<IEnumerable<QuizQuestionResponse>> CreateDailyQuizQuestionsAsync(IEnumerable<CreateQuizQuestionRequest> questions)
         {
             if (questions == null)
             {
@@ -100,6 +106,7 @@ namespace Lithuaningo.API.Services
                     Options = q.Options,
                     CorrectAnswer = q.CorrectAnswer,
                     ExampleSentence = q.ExampleSentence,
+                    Type = q.Type,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow
                 }).ToList();
@@ -114,6 +121,8 @@ namespace Lithuaningo.API.Services
 
                 _logger.LogInformation("Created {Count} quiz questions for {Date}", 
                     quizQuestions.Count, today.ToString("yyyy-MM-dd"));
+
+                return _mapper.Map<IEnumerable<QuizQuestionResponse>>(response.Models);
             }
             catch (Exception ex)
             {
@@ -125,7 +134,7 @@ namespace Lithuaningo.API.Services
         /// <summary>
         /// Gets quiz questions by category.
         /// </summary>
-        public async Task<IEnumerable<QuizQuestion>> GetQuizQuestionsByCategoryAsync(string category)
+        public async Task<IEnumerable<QuizQuestionResponse>> GetQuizQuestionsByCategoryAsync(string category)
         {
             if (string.IsNullOrWhiteSpace(category))
             {
@@ -133,7 +142,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}category:{category.ToLowerInvariant()}";
-            var cached = await _cache.GetAsync<IEnumerable<QuizQuestion>>(cacheKey);
+            var cached = await _cache.GetAsync<IEnumerable<QuizQuestionResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -149,13 +158,14 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var questions = response.Models;
+                var questionResponses = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
 
-                await _cache.SetAsync(cacheKey, questions,
+                await _cache.SetAsync(cacheKey, questionResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached {Count} quiz questions for category {Category}", 
                     questions.Count, category);
 
-                return questions;
+                return questionResponses;
             }
             catch (Exception ex)
             {

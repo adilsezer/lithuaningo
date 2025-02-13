@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.UserFlashcardStats;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -23,16 +22,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IUserFlashcardStatsService _userFlashcardStatsService;
         private readonly ILogger<UserFlashcardStatsController> _logger;
-        private readonly IMapper _mapper;
 
         public UserFlashcardStatsController(
             IUserFlashcardStatsService userFlashcardStatsService,
-            ILogger<UserFlashcardStatsController> logger,
-            IMapper mapper)
+            ILogger<UserFlashcardStatsController> logger)
         {
             _userFlashcardStatsService = userFlashcardStatsService ?? throw new ArgumentNullException(nameof(userFlashcardStatsService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -129,14 +125,7 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var stats = _mapper.Map<UserFlashcardStats>(request);
-                await _userFlashcardStatsService.TrackUserFlashcardStatsAsync(
-                    deckId,
-                    stats.UserId.ToString(),
-                    request.FlashcardId,
-                    request.IsCorrect,
-                    request.ConfidenceLevel,
-                    request.TimeTakenSeconds);
+                await _userFlashcardStatsService.TrackUserFlashcardStatsAsync(deckId, request.UserId.ToString(), request);
                 return NoContent();
             }
             catch (Exception ex)

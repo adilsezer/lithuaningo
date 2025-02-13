@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Models.Quiz;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Quiz;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -30,16 +28,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IQuizService _quizService;
         private readonly ILogger<QuizController> _logger;
-        private readonly IMapper _mapper;
 
         public QuizController(
             IQuizService quizService,
-            ILogger<QuizController> logger,
-            IMapper mapper)
+            ILogger<QuizController> logger)
         {
             _quizService = quizService ?? throw new ArgumentNullException(nameof(quizService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -75,8 +70,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var questions = await _quizService.GetDailyQuizQuestionsAsync();
-                var response = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
-                return Ok(response);
+                return Ok(questions);
             }
             catch (Exception ex)
             {
@@ -133,15 +127,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var questions = _mapper.Map<List<QuizQuestion>>(requests);
-                foreach (var question in questions)
-                {
-                    question.Type = QuizQuestionType.MultipleChoice;
-                }
-
-                await _quizService.CreateDailyQuizQuestionsAsync(questions);
-                var response = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
-                return Ok(response);
+                var questions = await _quizService.CreateDailyQuizQuestionsAsync(requests);
+                return Ok(questions);
             }
             catch (NotImplementedException nie)
             {

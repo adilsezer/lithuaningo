@@ -8,6 +8,11 @@ namespace Lithuaningo.API.DTOs.AppInfo
     public class AppInfoResponse
     {
         /// <summary>
+        /// The unique identifier of the app info
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
         /// The platform identifier (e.g., "ios", "android")
         /// </summary>
         public string Platform { get; set; } = string.Empty;
@@ -46,5 +51,15 @@ namespace Lithuaningo.API.DTOs.AppInfo
         /// Release notes for the current version
         /// </summary>
         public string? ReleaseNotes { get; set; }
+
+        /// <summary>
+        /// When the app info was created
+        /// </summary>
+        public DateTime CreatedAt { get; set; }
+
+        /// <summary>
+        /// When the app info was last updated
+        /// </summary>
+        public DateTime UpdatedAt { get; set; }
     }
 } 

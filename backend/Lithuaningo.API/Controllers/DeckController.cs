@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Deck;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
+using Lithuaningo.API.DTOs.Flashcard;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -33,16 +32,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IDeckService _deckService;
         private readonly ILogger<DeckController> _logger;
-        private readonly IMapper _mapper;
 
         public DeckController(
             IDeckService deckService,
-            ILogger<DeckController> logger,
-            IMapper mapper)
+            ILogger<DeckController> logger)
         {
             _deckService = deckService ?? throw new ArgumentNullException(nameof(deckService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -75,8 +71,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var decks = await _deckService.GetDecksAsync();
-                var response = _mapper.Map<List<DeckResponse>>(decks);
-                return Ok(response);
+                return Ok(decks);
             }
             catch (Exception ex)
             {
@@ -130,8 +125,7 @@ namespace Lithuaningo.API.Controllers
                 {
                     return NotFound();
                 }
-                var response = _mapper.Map<DeckResponse>(deck);
-                return Ok(response);
+                return Ok(deck);
             }
             catch (Exception ex)
             {
@@ -178,13 +172,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var deck = _mapper.Map<Deck>(request);
-                var deckId = await _deckService.CreateDeckAsync(deck);
-                var createdDeck = await _deckService.GetDeckByIdAsync(deckId);
-                var response = _mapper.Map<DeckResponse>(createdDeck);
-                
-                // Use ID for routing but return response without ID
-                return CreatedAtAction(nameof(GetDeck), new { id = deckId }, response);
+                var deck = await _deckService.CreateDeckAsync(request);
+                return CreatedAtAction(nameof(GetDeck), new { id = deck.Id }, deck);
             }
             catch (Exception ex)
             {
@@ -240,16 +229,13 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var deck = _mapper.Map<Deck>(request);
-                deck.Id = Guid.Parse(id);
-                await _deckService.UpdateDeckAsync(id, deck);
-                var updatedDeck = await _deckService.GetDeckByIdAsync(id);
-                if (updatedDeck == null)
-                {
-                    return NotFound();
-                }
-                var response = _mapper.Map<DeckResponse>(updatedDeck);
-                return Ok(response);
+                var deck = await _deckService.UpdateDeckAsync(id, request);
+                return Ok(deck);
+            }
+            catch (ArgumentException ex)
+            {
+                _logger.LogWarning(ex, "Bad request when updating deck with ID: {Id}", id);
+                return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
@@ -344,8 +330,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var decks = await _deckService.GetUserDecksAsync(userId);
-                var response = _mapper.Map<List<DeckResponse>>(decks);
-                return Ok(response);
+                return Ok(decks);
             }
             catch (Exception ex)
             {
@@ -396,8 +381,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var decks = await _deckService.GetTopRatedDecksAsync(limit, timeRange);
-                var response = _mapper.Map<List<DeckResponse>>(decks);
-                return Ok(response);
+                return Ok(decks);
             }
             catch (Exception ex)
             {
@@ -557,13 +541,16 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(typeof(List<DeckResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<Deck>>> SearchDecks([FromQuery] string query, [FromQuery] string? category = null)
+        public async Task<ActionResult<List<DeckResponse>>> SearchDecks(
+            [FromQuery] string query,
+            [FromQuery] string? category = null)
         {
             if (string.IsNullOrWhiteSpace(query))
             {
                 _logger.LogWarning("Search query is empty");
                 return BadRequest("Query cannot be empty");
             }
+
             try
             {
                 var decks = await _deckService.SearchDecksAsync(query, category);
@@ -601,16 +588,17 @@ namespace Lithuaningo.API.Controllers
             OperationId = "GetDeckFlashcards",
             Tags = new[] { "Deck" }
         )]
-        [ProducesResponseType(typeof(List<Flashcard>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<Flashcard>>> GetDeckFlashcards(string deckId)
+        public async Task<ActionResult<List<FlashcardResponse>>> GetDeckFlashcards(string deckId)
         {
             if (!Guid.TryParse(deckId, out _))
             {
                 _logger.LogWarning("Invalid deck ID format for flashcards: {DeckId}", deckId);
                 return BadRequest("Invalid deck ID format");
             }
+
             try
             {
                 var flashcards = await _deckService.GetDeckFlashcardsAsync(deckId);
@@ -659,6 +647,7 @@ namespace Lithuaningo.API.Controllers
                 _logger.LogWarning("Invalid deck ID format for rating: {Id}", id);
                 return BadRequest("Invalid deck ID format");
             }
+
             try
             {
                 var rating = await _deckService.GetDeckRatingAsync(id, timeRange);

@@ -9,6 +9,11 @@ namespace Lithuaningo.API.DTOs.Deck
     public class DeckResponse
     {
         /// <summary>
+        /// The unique identifier of the deck
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
         /// The user identifier who created the deck
         /// </summary>
         public Guid UserId { get; set; }

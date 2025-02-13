@@ -5,9 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Leaderboard;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -25,16 +23,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly ILeaderboardService _leaderboardService;
         private readonly ILogger<LeaderboardController> _logger;
-        private readonly IMapper _mapper;
 
         public LeaderboardController(
             ILeaderboardService leaderboardService,
-            ILogger<LeaderboardController> logger,
-            IMapper mapper)
+            ILogger<LeaderboardController> logger)
         {
             _leaderboardService = leaderboardService ?? throw new ArgumentNullException(nameof(leaderboardService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -66,8 +61,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var leaderboard = await _leaderboardService.GetCurrentWeekLeaderboardAsync();
-                var response = _mapper.Map<LeaderboardWeekResponse>(leaderboard);
-                return Ok(response);
+                return Ok(leaderboard);
             }
             catch (Exception ex)
             {
@@ -121,8 +115,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var leaderboard = await _leaderboardService.GetWeekLeaderboardAsync(weekId);
-                var response = _mapper.Map<LeaderboardWeekResponse>(leaderboard);
-                return Ok(response);
+                return Ok(leaderboard);
             }
             catch (Exception ex)
             {
@@ -167,8 +160,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var entry = await _leaderboardService.UpdateLeaderboardEntryAsync(request.UserId.ToString(), request.Score);
-                var response = _mapper.Map<LeaderboardEntryResponse>(entry);
-                return Ok(response);
+                return Ok(entry);
             }
             catch (Exception ex)
             {

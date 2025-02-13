@@ -2,36 +2,41 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.AppInfo;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 using Supabase;
+using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {
-    public class SupabaseAppInfoService : IAppInfoService
+    public class AppInfoService : IAppInfoService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
         private const string CacheKeyPrefix = "app-info:";
-        private readonly ILogger<SupabaseAppInfoService> _logger;
+        private readonly ILogger<AppInfoService> _logger;
+        private readonly IMapper _mapper;
 
-        public SupabaseAppInfoService(
+        public AppInfoService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<SupabaseAppInfoService> logger)
+            ILogger<AppInfoService> logger,
+            IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<AppInfo> GetAppInfoAsync(string platform)
+        public async Task<AppInfoResponse?> GetAppInfoAsync(string platform)
         {
             if (string.IsNullOrWhiteSpace(platform))
             {
@@ -40,7 +45,7 @@ namespace Lithuaningo.API.Services
 
             var normalizedPlatform = platform.ToLowerInvariant();
             var cacheKey = $"{CacheKeyPrefix}{normalizedPlatform}";
-            var cached = await _cache.GetAsync<AppInfo>(cacheKey);
+            var cached = await _cache.GetAsync<AppInfoResponse>(cacheKey);
 
             if (cached != null)
             {
@@ -75,11 +80,12 @@ namespace Lithuaningo.API.Services
                     };
                 }
 
-                await _cache.SetAsync(cacheKey, appInfo,
+                var appInfoResponse = _mapper.Map<AppInfoResponse>(appInfo);
+                await _cache.SetAsync(cacheKey, appInfoResponse,
                     TimeSpan.FromMinutes(_cacheSettings.AppInfoCacheMinutes));
                 _logger.LogInformation("Retrieved and cached app info for platform '{Platform}'", platform);
 
-                return appInfo;
+                return appInfoResponse;
             }
             catch (Exception ex)
             {
@@ -88,16 +94,16 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<AppInfo> UpdateAppInfoAsync(string platform, AppInfo appInfo)
+        public async Task<AppInfoResponse> UpdateAppInfoAsync(string platform, UpdateAppInfoRequest request)
         {
             if (string.IsNullOrWhiteSpace(platform))
             {
                 throw new ArgumentException("Platform cannot be empty", nameof(platform));
             }
 
-            if (appInfo == null)
+            if (request == null)
             {
-                throw new ArgumentNullException(nameof(appInfo));
+                throw new ArgumentNullException(nameof(request));
             }
 
             var normalizedPlatform = platform.ToLowerInvariant();
@@ -105,10 +111,6 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                // Normalize platform and update timestamp
-                appInfo.Platform = normalizedPlatform;
-                appInfo.UpdatedAt = DateTime.UtcNow;
-
                 // Attempt to fetch an existing record
                 var response = await _supabaseClient
                     .From<AppInfo>()
@@ -116,31 +118,35 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var existingAppInfo = response.Models.FirstOrDefault();
-                if (existingAppInfo != null)
+                var appInfo = new AppInfo
                 {
-                    // Preserve original Id and CreatedAt timestamp
-                    appInfo.Id = existingAppInfo.Id;
-                    appInfo.CreatedAt = existingAppInfo.CreatedAt;
-                }
-                else
-                {
-                    appInfo.Id = Guid.NewGuid();
-                    appInfo.CreatedAt = DateTime.UtcNow;
-                }
+                    Id = existingAppInfo?.Id ?? Guid.NewGuid(),
+                    Platform = normalizedPlatform,
+                    CurrentVersion = request.CurrentVersion,
+                    MinimumVersion = request.MinimumVersion,
+                    ForceUpdate = request.ForceUpdate,
+                    UpdateUrl = request.UpdateUrl,
+                    IsMaintenance = request.IsMaintenance,
+                    MaintenanceMessage = request.MaintenanceMessage,
+                    ReleaseNotes = request.ReleaseNotes,
+                    CreatedAt = existingAppInfo?.CreatedAt ?? DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow
+                };
 
                 // Perform upsert operation
                 var upsertResponse = await _supabaseClient
                     .From<AppInfo>()
                     .Upsert(appInfo);
 
-                var upsertedAppInfo = upsertResponse.Models.FirstOrDefault() ?? appInfo;
+                var upsertedAppInfo = upsertResponse.Models.First();
+                var appInfoResponse = _mapper.Map<AppInfoResponse>(upsertedAppInfo);
 
                 // Update cache with new data
-                await _cache.SetAsync(cacheKey, upsertedAppInfo,
+                await _cache.SetAsync(cacheKey, appInfoResponse,
                     TimeSpan.FromMinutes(_cacheSettings.AppInfoCacheMinutes));
                 _logger.LogInformation("Updated and cached app info for platform '{Platform}'", platform);
 
-                return upsertedAppInfo;
+                return appInfoResponse;
             }
             catch (Exception ex)
             {

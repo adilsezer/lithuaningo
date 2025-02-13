@@ -2,10 +2,8 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.UserChallengeStats;
-using AutoMapper;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 
@@ -22,16 +20,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IUserChallengeStatsService _userChallengeStatsService;
         private readonly ILogger<UserChallengeStatsController> _logger;
-        private readonly IMapper _mapper;
 
         public UserChallengeStatsController(
             IUserChallengeStatsService userChallengeStatsService,
-            ILogger<UserChallengeStatsController> logger,
-            IMapper mapper)
+            ILogger<UserChallengeStatsController> logger)
         {
             _userChallengeStatsService = userChallengeStatsService ?? throw new ArgumentNullException(nameof(userChallengeStatsService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -87,8 +82,7 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
-                var response = _mapper.Map<UserChallengeStatsResponse>(stats);
-                return Ok(response);
+                return Ok(stats);
             }
             catch (Exception ex)
             {

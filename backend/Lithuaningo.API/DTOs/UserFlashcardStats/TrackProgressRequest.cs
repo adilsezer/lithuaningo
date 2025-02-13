@@ -1,3 +1,4 @@
+using System;
 using System.ComponentModel.DataAnnotations;
 using Lithuaningo.API.Validators;
 
@@ -8,6 +9,13 @@ namespace Lithuaningo.API.DTOs.UserFlashcardStats
     /// </summary>
     public class TrackProgressRequest
     {
+        /// <summary>
+        /// The user identifier
+        /// </summary>
+        [Required(ErrorMessage = "User ID is required")]
+        [ValidGuid(ErrorMessage = "Invalid User ID format")]
+        public Guid UserId { get; set; }
+
         /// <summary>
         /// The flashcard identifier
         /// </summary>

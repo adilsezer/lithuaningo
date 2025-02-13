@@ -8,9 +8,24 @@ namespace Lithuaningo.API.DTOs.DeckReport
     public class DeckReportResponse
     {
         /// <summary>
+        /// The unique identifier of the report
+        /// </summary>
+        public Guid Id { get; set; }
+
+        /// <summary>
         /// The deck identifier
         /// </summary>
         public Guid DeckId { get; set; }
+
+        /// <summary>
+        /// The user identifier who reported the deck
+        /// </summary>
+        public Guid UserId { get; set; }
+
+        /// <summary>
+        /// The user identifier who reviewed the report (optional)
+        /// </summary>
+        public Guid? ReviewerId { get; set; }
 
         /// <summary>
         /// The reason for the report

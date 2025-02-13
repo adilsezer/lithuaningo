@@ -24,16 +24,13 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly IAnnouncementService _announcementService;
         private readonly ILogger<AnnouncementController> _logger;
-        private readonly IMapper _mapper;
 
         public AnnouncementController(
             IAnnouncementService announcementService,
-            ILogger<AnnouncementController> logger,
-            IMapper mapper)
+            ILogger<AnnouncementController> logger)
         {
             _announcementService = announcementService ?? throw new ArgumentNullException(nameof(announcementService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <summary>
@@ -61,8 +58,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var announcements = await _announcementService.GetAnnouncementsAsync();
-                var response = _mapper.Map<IEnumerable<AnnouncementResponse>>(announcements);
-                return Ok(response);
+                return Ok(announcements);
             }
             catch (Exception ex)
             {
@@ -111,8 +107,7 @@ namespace Lithuaningo.API.Controllers
                 {
                     return NotFound();
                 }
-                var response = _mapper.Map<AnnouncementResponse>(announcement);
-                return Ok(response);
+                return Ok(announcement);
             }
             catch (Exception ex)
             {
@@ -130,8 +125,8 @@ namespace Lithuaningo.API.Controllers
         ///     {
         ///         "title": "New Feature Release",
         ///         "content": "Check out our latest features!",
-        ///         "startDate": "2024-03-15T00:00:00Z",
-        ///         "endDate": "2024-03-22T00:00:00Z"
+        ///         "isActive": true,
+        ///         "validUntil": "2024-03-22T00:00:00Z"
         ///     }
         /// </remarks>
         /// <param name="request">The announcement creation request</param>
@@ -159,10 +154,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var announcement = _mapper.Map<Announcement>(request);
-                await _announcementService.CreateAnnouncementAsync(announcement);
-                var response = _mapper.Map<AnnouncementResponse>(announcement);
-                return CreatedAtAction(nameof(GetAnnouncementById), new { id = announcement.Id }, response);
+                var announcement = await _announcementService.CreateAnnouncementAsync(request);
+                return CreatedAtAction(nameof(GetAnnouncementById), new { id = announcement.Id }, announcement);
             }
             catch (Exception ex)
             {
@@ -180,13 +173,13 @@ namespace Lithuaningo.API.Controllers
         ///     {
         ///         "title": "Updated Feature Release",
         ///         "content": "Updated content for our latest features!",
-        ///         "startDate": "2024-03-15T00:00:00Z",
-        ///         "endDate": "2024-03-22T00:00:00Z"
+        ///         "isActive": true,
+        ///         "validUntil": "2024-03-22T00:00:00Z"
         ///     }
         /// </remarks>
         /// <param name="id">The announcement identifier</param>
         /// <param name="request">The announcement update request</param>
-        /// <response code="204">Announcement successfully updated</response>
+        /// <response code="200">Returns the updated announcement</response>
         /// <response code="400">Either the announcement ID is empty or ModelState is invalid</response>
         /// <response code="404">No announcement found with the given ID</response>
         /// <response code="500">An error occurred during the update</response>
@@ -198,11 +191,11 @@ namespace Lithuaningo.API.Controllers
             OperationId = "UpdateAnnouncement",
             Tags = new[] { "Announcement" }
         )]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(typeof(AnnouncementResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateAnnouncement(string id, [FromBody] UpdateAnnouncementRequest request)
+        public async Task<ActionResult<AnnouncementResponse>> UpdateAnnouncement(string id, [FromBody] UpdateAnnouncementRequest request)
         {
             if (string.IsNullOrWhiteSpace(id))
             {
@@ -217,11 +210,8 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var announcement = _mapper.Map<Announcement>(request);
-                announcement.Id = Guid.Parse(id);
-                
-                await _announcementService.UpdateAnnouncementAsync(id, announcement);
-                return NoContent();
+                var announcement = await _announcementService.UpdateAnnouncementAsync(id, request);
+                return Ok(announcement);
             }
             catch (ArgumentException ex)
             {

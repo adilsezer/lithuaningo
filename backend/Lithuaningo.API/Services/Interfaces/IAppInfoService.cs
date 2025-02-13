@@ -1,4 +1,5 @@
 using Lithuaningo.API.Models;
+using Lithuaningo.API.DTOs.AppInfo;
 using System.Threading.Tasks;
 
 namespace Lithuaningo.API.Services.Interfaces
@@ -10,15 +11,15 @@ namespace Lithuaningo.API.Services.Interfaces
         /// </summary>
         /// <param name="platform">The platform (ios/android) to get info for.</param>
         /// <returns>App information for the specified platform.</returns>
-        Task<AppInfo> GetAppInfoAsync(string platform);
+        Task<AppInfoResponse?> GetAppInfoAsync(string platform);
 
         /// <summary>
         /// Updates (or inserts) app information for the specified platform using an upsert operation.
         /// </summary>
         /// <param name="platform">The platform (ios/android) to update.</param>
-        /// <param name="appInfo">The new app information.</param>
+        /// <param name="request">The new app information.</param>
         /// <returns>The upserted AppInfo record.</returns>
-        Task<AppInfo> UpdateAppInfoAsync(string platform, AppInfo appInfo);
+        Task<AppInfoResponse> UpdateAppInfoAsync(string platform, UpdateAppInfoRequest request);
 
         /// <summary>
         /// Deletes the app information with the specified ID.
