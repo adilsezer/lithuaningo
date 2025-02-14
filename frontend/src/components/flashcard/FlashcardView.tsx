@@ -1,10 +1,12 @@
 import React, { useRef, useState, useEffect } from "react";
 import { StyleSheet, View, Animated, Image } from "react-native";
-import { Card, Text, IconButton, useTheme, Button } from "react-native-paper";
+import { Card, IconButton, useTheme, Button } from "react-native-paper";
 import { Flashcard } from "@src/types";
 import AudioControl from "@components/ui/AudioControl";
 import { useFlashcardStats } from "@hooks/useFlashcardStats";
 import { useUserData } from "@stores/useUserStore";
+import CustomText from "@components/ui/CustomText";
+import { formatDistanceToNow } from "date-fns";
 
 interface FlashcardViewProps {
   flashcard: Flashcard;
@@ -20,6 +22,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const fadeAnim = useRef(new Animated.Value(1)).current;
   const { stats, getUserFlashcardStats, trackProgress } = useFlashcardStats();
   const userData = useUserData();
+  const [startTime] = useState(Date.now());
 
   useEffect(() => {
     if (userData?.id && flashcard.deckId) {
@@ -44,9 +47,13 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
   const handleAnswer = async (isCorrect: boolean) => {
     if (userData?.id) {
+      const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
       await trackProgress(flashcard.deckId, {
+        userId: userData.id,
         flashcardId: flashcard.id,
         isCorrect,
+        timeTakenSeconds,
+        confidenceLevel: isCorrect ? 4 : 2, // Basic confidence level based on correctness
       });
     }
     onAnswer(isCorrect);
@@ -56,9 +63,19 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
   const renderCardContent = (isBack: boolean) => (
     <>
-      <Text variant="bodyLarge" style={styles.text}>
-        {isBack ? flashcard.backText : flashcard.frontText}
-      </Text>
+      <CustomText variant="bodyLarge" style={styles.text}>
+        {isBack ? flashcard.backWord : flashcard.frontWord}
+      </CustomText>
+      {!isBack && flashcard.exampleSentence && (
+        <CustomText variant="bodyMedium" style={styles.example}>
+          {flashcard.exampleSentence}
+        </CustomText>
+      )}
+      {isBack && flashcard.exampleSentenceTranslation && (
+        <CustomText variant="bodyMedium" style={styles.example}>
+          {flashcard.exampleSentenceTranslation}
+        </CustomText>
+      )}
       {flashcard.imageUrl && (
         <Image source={{ uri: flashcard.imageUrl }} style={styles.image} />
       )}
@@ -68,25 +85,32 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
           onPress={(e) => e.stopPropagation()}
         />
       )}
-      <Text variant="bodyMedium" style={styles.stats}>
+      <CustomText variant="bodyMedium" style={styles.stats}>
         {isBack ? (
-          `Created: ${flashcard.timeAgo}`
+          `Created: ${formatDistanceToNow(new Date(flashcard.createdAt), {
+            addSuffix: true,
+          })}`
         ) : (
           <>
             Reviews: {stats?.totalReviewed || 0} | Success Rate:{" "}
-            {stats?.accuracyRate ? `${Math.round(stats.accuracyRate)}%` : "N/A"}
+            {stats?.accuracyRate
+              ? `${Math.round(stats.accuracyRate * 100)}%`
+              : "N/A"}
           </>
         )}
-      </Text>
-      {!isBack && stats?.lastReviewedTimeAgo && (
-        <Text variant="bodySmall" style={styles.timeAgo}>
-          Last reviewed: {stats.lastReviewedTimeAgo}
-        </Text>
+      </CustomText>
+      {!isBack && stats?.lastReviewedAt && (
+        <CustomText variant="bodySmall" style={styles.timeAgo}>
+          Last reviewed:{" "}
+          {formatDistanceToNow(new Date(stats.lastReviewedAt), {
+            addSuffix: true,
+          })}
+        </CustomText>
       )}
       {!isBack && stats?.nextReviewDue && (
-        <Text variant="bodySmall" style={styles.nextReview}>
+        <CustomText variant="bodySmall" style={styles.nextReview}>
           Next review: {stats.nextReviewDue}
-        </Text>
+        </CustomText>
       )}
     </>
   );
@@ -149,6 +173,11 @@ const styles = StyleSheet.create({
   text: {
     textAlign: "center",
     marginVertical: 12,
+  },
+  example: {
+    textAlign: "center",
+    marginVertical: 8,
+    fontStyle: "italic",
   },
   stats: {
     textAlign: "center",

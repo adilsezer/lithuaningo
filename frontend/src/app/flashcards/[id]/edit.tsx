@@ -38,25 +38,47 @@ export default function EditFlashcardScreen() {
 
   const fields: FormField[] = [
     {
-      name: "frontText",
-      label: "Front Side",
+      name: "frontWord",
+      label: "Front Word",
       category: "text-input",
       type: "text",
-      placeholder: "Enter front side text",
-      defaultValue: flashcard?.frontText || "",
+      placeholder: "Enter front word",
+      defaultValue: flashcard?.frontWord || "",
     },
     {
-      name: "backText",
-      label: "Back Side",
+      name: "backWord",
+      label: "Back Word",
       category: "text-input",
       type: "text",
-      placeholder: "Enter back side text",
-      defaultValue: flashcard?.backText || "",
+      placeholder: "Enter back word",
+      defaultValue: flashcard?.backWord || "",
+    },
+    {
+      name: "exampleSentence",
+      label: "Example Sentence",
+      category: "text-input",
+      type: "text",
+      placeholder: "Enter example sentence",
+      defaultValue: flashcard?.exampleSentence || "",
+    },
+    {
+      name: "exampleSentenceTranslation",
+      label: "Example Sentence Translation",
+      category: "text-input",
+      type: "text",
+      placeholder: "Enter sentence translation",
+      defaultValue: flashcard?.exampleSentenceTranslation || "",
     },
   ];
 
   const handleSubmit = async (
-    formData: Pick<Flashcard, "frontText" | "backText">
+    formData: Pick<
+      Flashcard,
+      | "frontWord"
+      | "backWord"
+      | "exampleSentence"
+      | "exampleSentenceTranslation"
+    >
   ) => {
     if (!id || !flashcard) {
       showError("Missing required data");

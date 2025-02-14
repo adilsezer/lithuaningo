@@ -47,25 +47,17 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
 }) => {
   const theme = useTheme();
 
-  const weeklyProgressPercentage =
-    (stats.weeklyProgress / stats.weeklyGoal) * 100;
+  const accuracy =
+    stats.totalCorrectAnswers + stats.totalIncorrectAnswers > 0
+      ? (stats.totalCorrectAnswers /
+          (stats.totalCorrectAnswers + stats.totalIncorrectAnswers)) *
+        100
+      : 0;
 
   return (
     <Card style={[styles.container, { borderColor: theme.colors.primary }]}>
       <Card.Content>
         <View style={styles.statsContainer}>
-          <UserChallengeStatItem
-            icon="cards"
-            value={stats.cardsReviewed}
-            label="Cards Reviewed"
-            color={theme.colors.primary}
-          />
-          <UserChallengeStatItem
-            icon="star"
-            value={stats.cardsMastered}
-            label="Cards Mastered"
-            color={theme.colors.secondary}
-          />
           <UserChallengeStatItem
             icon="fire"
             value={stats.currentStreak}
@@ -76,36 +68,57 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
             }`}
             color={theme.colors.error}
           />
+          <UserChallengeStatItem
+            icon="check"
+            value={stats.todayCorrectAnswers}
+            label="Today's Correct"
+            color={theme.colors.primary}
+          />
+          <UserChallengeStatItem
+            icon="close"
+            value={stats.todayIncorrectAnswers}
+            label="Today's Incorrect"
+            color={theme.colors.error}
+          />
         </View>
 
         <View style={styles.weeklyProgress}>
           <View style={styles.weeklyGoalHeader}>
-            <CustomText variant="bodyMedium">Weekly Progress</CustomText>
+            <CustomText variant="bodyMedium">Overall Accuracy</CustomText>
             <CustomText
               variant="bodySmall"
               style={{ color: theme.colors.onSurfaceVariant }}
             >
-              {stats.weeklyProgress} / {stats.weeklyGoal} cards
+              {accuracy.toFixed(1)}%
             </CustomText>
           </View>
           <ProgressBar
-            progress={stats.weeklyProgress / stats.weeklyGoal}
+            progress={accuracy / 100}
             color={theme.colors.primary}
             style={styles.progressBar}
           />
         </View>
 
-        {stats.lastActivityTimeAgo && (
+        <View style={styles.totalStats}>
           <CustomText
             variant="bodySmall"
-            style={[
-              styles.lastActivity,
-              { color: theme.colors.onSurfaceVariant },
-            ]}
+            style={{ color: theme.colors.onSurfaceVariant }}
           >
-            Last activity: {stats.lastActivityTimeAgo}
+            Total Challenges: {stats.totalChallengesCompleted}
           </CustomText>
-        )}
+          <CustomText
+            variant="bodySmall"
+            style={{ color: theme.colors.onSurfaceVariant }}
+          >
+            Total Correct: {stats.totalCorrectAnswers}
+          </CustomText>
+          <CustomText
+            variant="bodySmall"
+            style={{ color: theme.colors.onSurfaceVariant }}
+          >
+            Total Incorrect: {stats.totalIncorrectAnswers}
+          </CustomText>
+        </View>
       </Card.Content>
     </Card>
   );
@@ -147,8 +160,8 @@ const styles = StyleSheet.create({
     height: 8,
     borderRadius: 4,
   },
-  lastActivity: {
-    textAlign: "center",
-    fontStyle: "italic",
+  totalStats: {
+    marginTop: 16,
+    gap: 4,
   },
 });

@@ -1,61 +1,51 @@
 import apiClient, { ApiError } from "@services/api/apiClient";
-import { LeaderboardWeek } from "@src/types";
+import { LeaderboardWeek, UpdateLeaderboardEntryRequest } from "@src/types";
 
-const getCurrentWeekLeaderboard = async (): Promise<LeaderboardWeek | null> => {
-  try {
-    return await apiClient.getCurrentWeekLeaderboard();
-  } catch (error) {
-    if (error instanceof ApiError) {
-      //crashlytics().recordError(error);
-      console.error(`API Error ${error.status}:`, error.data);
-    } else {
-      console.error("Error fetching current week leaderboard:", error);
+class LeaderboardService {
+  async getCurrentWeekLeaderboard(): Promise<LeaderboardWeek | null> {
+    try {
+      return await apiClient.getCurrentWeekLeaderboard();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error(`API Error ${error.status}:`, error.data);
+      } else {
+        console.error("Error fetching current week leaderboard:", error);
+      }
+      throw error;
     }
-    return null;
   }
-};
 
-const getWeekLeaderboard = async (
-  weekId: string
-): Promise<LeaderboardWeek | null> => {
-  try {
-    if (!weekId) {
-      console.error("Week ID is required");
-      return null;
+  async getWeekLeaderboard(weekId: string): Promise<LeaderboardWeek | null> {
+    try {
+      if (!weekId) {
+        throw new Error("Week ID is required");
+      }
+      return await apiClient.getWeekLeaderboard(weekId);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error(`API Error ${error.status}:`, error.data);
+      } else {
+        console.error("Error fetching week leaderboard:", error);
+      }
+      throw error;
     }
-    return await apiClient.getWeekLeaderboard(weekId);
-  } catch (error) {
-    if (error instanceof ApiError) {
-      //crashlytics().recordError(error);
-      console.error(`API Error ${error.status}:`, error.data);
-    } else {
-      console.error("Error fetching week leaderboard:", error);
-    }
-    return null;
   }
-};
 
-const updateLeaderboardEntry = async (
-  userId: string,
-  name: string,
-  score: number
-): Promise<boolean> => {
-  try {
-    await apiClient.updateLeaderboardScore(userId, name, score);
-    return true;
-  } catch (error) {
-    if (error instanceof ApiError) {
-      //crashlytics().recordError(error);
-      console.error(`API Error ${error.status}:`, error.data);
-    } else {
-      console.error("Error updating leaderboard entry:", error);
+  async updateLeaderboardEntry(
+    request: UpdateLeaderboardEntryRequest
+  ): Promise<boolean> {
+    try {
+      await apiClient.updateLeaderboardEntry(request);
+      return true;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error(`API Error ${error.status}:`, error.data);
+      } else {
+        console.error("Error updating leaderboard entry:", error);
+      }
+      throw error;
     }
-    return false;
   }
-};
+}
 
-export default {
-  getCurrentWeekLeaderboard,
-  getWeekLeaderboard,
-  updateLeaderboardEntry,
-};
+export default new LeaderboardService();

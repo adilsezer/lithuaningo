@@ -2,7 +2,7 @@ import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import type { Flashcard } from "@src/types";
+import type { FlashcardFormData } from "@src/types";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
@@ -21,24 +21,36 @@ export default function NewFlashcardScreen() {
 
   const fields: FormField[] = [
     {
-      name: "frontText",
-      label: "Front Side",
+      name: "frontWord",
+      label: "Front Word",
       category: "text-input",
       type: "text",
-      placeholder: "Enter front side text",
+      placeholder: "Enter front word",
     },
     {
-      name: "backText",
-      label: "Back Side",
+      name: "backWord",
+      label: "Back Word",
       category: "text-input",
       type: "text",
-      placeholder: "Enter back side text",
+      placeholder: "Enter back word",
+    },
+    {
+      name: "exampleSentence",
+      label: "Example Sentence",
+      category: "text-input",
+      type: "text",
+      placeholder: "Enter an example sentence",
+    },
+    {
+      name: "exampleSentenceTranslation",
+      label: "Example Sentence Translation",
+      category: "text-input",
+      type: "text",
+      placeholder: "Enter the sentence translation",
     },
   ];
 
-  const handleSubmit = async (
-    formData: Pick<Flashcard, "frontText" | "backText">
-  ) => {
+  const handleSubmit = async (formData: FlashcardFormData) => {
     if (!deckId) {
       showError("Missing deck ID");
       return;

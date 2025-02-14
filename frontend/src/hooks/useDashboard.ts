@@ -10,7 +10,7 @@ export const useDashboard = () => {
   const userData = useUserData();
   const setError = useSetError();
   const isLoading = useIsLoading();
-  const announcements = useAnnouncements();
+  const { announcements, error: announcementsError } = useAnnouncements();
   const { profile } = useUserProfile();
   const isDarkMode = useIsDarkMode();
 
@@ -19,11 +19,7 @@ export const useDashboard = () => {
   }, [setError]);
 
   const validAnnouncements = announcements.filter((announcement) => {
-    if (
-      !announcement.title ||
-      !announcement.content ||
-      !announcement.isActive
-    ) {
+    if (!announcement.isActive) {
       return false;
     }
 
@@ -44,6 +40,7 @@ export const useDashboard = () => {
     profile,
     isDarkMode,
     isLoading,
+    error: announcementsError,
 
     // Actions
     clearError,

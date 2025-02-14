@@ -1,6 +1,15 @@
-export type { Announcement } from "./Announcement";
-export type { AppInfo } from "./AppInfo";
-export type { DeckComment } from "./DeckComment";
+export type {
+  Announcement,
+  CreateAnnouncementRequest,
+  UpdateAnnouncementRequest,
+} from "./Announcement";
+export type { AppInfo, UpdateAppInfoRequest } from "./AppInfo";
+export type {
+  DeckComment,
+  CreateDeckCommentRequest,
+  UpdateDeckCommentRequest,
+} from "./DeckComment";
+export type { Deck, CreateDeckRequest, UpdateDeckRequest } from "./Deck";
 export * from "./LeaderboardModels";
 export { QuestionType } from "./QuestionType";
 export * from "./QuizQuestion";
@@ -15,8 +24,8 @@ export type {
   UpdateUserProfileRequest,
 } from "./UserProfile";
 export type { UserStats } from "./UserStats";
-export type { Deck } from "./Deck";
 export * from "./Flashcard";
 export * from "./UserFlashcardStats";
 export * from "./UserChallengeStats";
 export * from "./DeckReport";
+export * from "./DeckVote";

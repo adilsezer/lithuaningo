@@ -1,45 +1,70 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useUserData } from "@stores/useUserStore";
-import { LeaderboardWeek } from "@src/types";
+import { LeaderboardWeek, LeaderboardEntry } from "@src/types";
 import leaderboardService from "@services/data/leaderboardService";
+import { useSetError } from "@stores/useUIStore";
 
 export const useLeaderboard = () => {
   const userData = useUserData();
+  const setError = useSetError();
   const [leaderboard, setLeaderboard] = useState<LeaderboardWeek | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const fetchLeaderboard = useCallback(async () => {
+    if (!userData?.id) return;
+
+    try {
+      setIsLoading(true);
+      const newLeaderboard =
+        await leaderboardService.getCurrentWeekLeaderboard();
+      setLeaderboard(newLeaderboard);
+    } catch (error) {
+      setError(
+        error instanceof Error ? error.message : "Failed to fetch leaderboard"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [userData?.id, setError]);
 
   useEffect(() => {
-    if (userData?.id) {
-      leaderboardService.getCurrentWeekLeaderboard().then((newLeaderboard) => {
-        setLeaderboard(newLeaderboard);
-      });
-    }
-  }, [userData]);
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
 
-  const updateScore = async (score: number) => {
-    if (!userData?.id || !userData?.fullName) return false;
+  const updateScore = useCallback(
+    async (score: number) => {
+      if (!userData?.id) return false;
 
-    const success = await leaderboardService.updateLeaderboardEntry(
-      userData.id,
-      userData.fullName,
-      score
-    );
-
-    if (success) {
-      const updatedLeaderboard =
-        await leaderboardService.getCurrentWeekLeaderboard();
-      if (updatedLeaderboard) {
-        setLeaderboard(updatedLeaderboard);
+      try {
+        setIsLoading(true);
+        await leaderboardService.updateLeaderboardEntry({
+          userId: userData.id,
+          score,
+        });
+        await fetchLeaderboard();
+        return true;
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to update score"
+        );
+        return false;
+      } finally {
+        setIsLoading(false);
       }
-    }
+    },
+    [userData?.id, fetchLeaderboard, setError]
+  );
 
-    return success;
-  };
+  // Convert entries object to array and sort by score
+  const sortedEntries = Object.values(leaderboard?.entries ?? {}).sort(
+    (a, b) => b.score - a.score
+  );
 
   return {
-    entries: leaderboard?.entries ?? [],
+    entries: sortedEntries,
+    isLoading,
     updateScore,
-    weekId: leaderboard?.weekId,
-    startDate: leaderboard?.startDate ?? undefined,
-    endDate: leaderboard?.endDate ?? undefined,
+    startDate: leaderboard?.startDate,
+    endDate: leaderboard?.endDate,
   };
 };

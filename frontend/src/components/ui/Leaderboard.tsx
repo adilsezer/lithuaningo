@@ -33,12 +33,7 @@ const TrophyIcon = ({
   );
 };
 
-const Leaderboard = ({
-  entries,
-  weekId,
-  startDate,
-  endDate,
-}: LeaderboardProps) => {
+const Leaderboard = ({ entries, startDate, endDate }: LeaderboardProps) => {
   const theme = useTheme();
 
   const dateRange =
@@ -83,17 +78,14 @@ const Leaderboard = ({
         {entries.length > 0 ? (
           entries.map((entry, index) => (
             <DataTable.Row key={entry.userId}>
-              <DataTable.Cell>{entry.rank || index + 1}</DataTable.Cell>
+              <DataTable.Cell>{index + 1}</DataTable.Cell>
               <DataTable.Cell style={{ flex: 3 }}>
                 <View style={styles.nameView}>
                   <TrophyIcon position={index} color={theme.colors.primary} />
-                  <CustomText>{entry.name}</CustomText>
+                  <CustomText>{entry.username}</CustomText>
                 </View>
               </DataTable.Cell>
               <DataTable.Cell numeric>{entry.score}</DataTable.Cell>
-              <DataTable.Cell numeric style={{ flex: 2 }}>
-                {entry.lastUpdatedTimeAgo}
-              </DataTable.Cell>
             </DataTable.Row>
           ))
         ) : (

@@ -4,20 +4,27 @@ import { UserProfile } from "@src/types/UserProfile";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Types
-export type UserData = Pick<UserProfile, "id" | "email" | "fullName">;
+export type UserData = Pick<
+  UserProfile,
+  | "id"
+  | "email"
+  | "fullName"
+  | "emailVerified"
+  | "isAdmin"
+  | "isPremium"
+  | "premiumExpiresAt"
+>;
 
 interface UserStore {
-  // Existing state
+  // State
   isLoggedIn: boolean;
   userData: UserData | null;
   needsReauthentication: boolean;
   error: string | null;
-
-  // New auth-specific state
   isAuthenticated: boolean;
   storageInitialized: boolean;
 
-  // Existing actions
+  // Actions
   logIn: (userData: UserData) => void;
   logOut: () => void;
   updateUserProfile: (userData: Partial<UserData>) => void;
@@ -25,8 +32,6 @@ interface UserStore {
   clearReauthentication: () => void;
   deleteAccount: () => void;
   setError: (error: string | null) => void;
-
-  // New auth-specific actions
   setAuthenticated: (value: boolean) => void;
   setStorageInitialized: (value: boolean) => void;
 }
@@ -60,17 +65,15 @@ const customStorage = {
 export const useUserStore = create<UserStore>()(
   persist(
     (set) => ({
-      // Existing state
+      // State
       isLoggedIn: false,
       userData: null,
       needsReauthentication: false,
       error: null,
-
-      // New auth state
       isAuthenticated: false,
       storageInitialized: false,
 
-      // Existing actions
+      // Actions
       logIn: (userData) =>
         set({
           isLoggedIn: true,
@@ -85,7 +88,7 @@ export const useUserStore = create<UserStore>()(
           userData: null,
           needsReauthentication: false,
           error: null,
-          isAuthenticated: false, // Clear auth state on logout
+          isAuthenticated: false,
         }),
 
       updateUserProfile: (userData) =>
@@ -103,12 +106,10 @@ export const useUserStore = create<UserStore>()(
           userData: null,
           needsReauthentication: false,
           error: null,
-          isAuthenticated: false, // Clear auth state on account deletion
+          isAuthenticated: false,
         }),
 
       setError: (error) => set({ error }),
-
-      // New auth action
       setAuthenticated: (value) => set({ isAuthenticated: value }),
       setStorageInitialized: (value) => set({ storageInitialized: value }),
     }),
@@ -122,14 +123,21 @@ export const useUserStore = create<UserStore>()(
   )
 );
 
-// Existing hooks
+// Hooks
 export const useUserData = () => useUserStore((state) => state.userData);
 export const useIsLoggedIn = () => useUserStore((state) => state.isLoggedIn);
 export const useUserError = () => useUserStore((state) => state.error);
-
-// New auth-specific hook
 export const useIsAuthenticated = () =>
   useUserStore((state) => state.isAuthenticated);
-
 export const useIsStorageInitialized = () =>
   useUserStore((state) => state.storageInitialized);
+
+// Selector hooks for new properties
+export const useIsAdmin = () =>
+  useUserStore((state) => state.userData?.isAdmin ?? false);
+export const useIsPremium = () =>
+  useUserStore((state) => state.userData?.isPremium ?? false);
+export const usePremiumExpiresAt = () =>
+  useUserStore((state) => state.userData?.premiumExpiresAt);
+export const useIsEmailVerified = () =>
+  useUserStore((state) => state.userData?.emailVerified ?? false);

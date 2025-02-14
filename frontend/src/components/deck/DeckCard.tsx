@@ -25,6 +25,7 @@ export interface DeckCardProps {
   rating: number;
   actions: DeckActions;
 }
+
 export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
   const theme = useTheme();
 
@@ -87,12 +88,12 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
           }}
         >
           <Avatar.Text
-            label={deck.createdByUsername[0]}
+            label={deck.username[0]}
             size={24}
             style={{ marginRight: 8 }}
           />
           <Text variant="bodySmall" style={{ flex: 1 }}>
-            By {deck.createdByUsername}
+            By {deck.username}
           </Text>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <IconButton icon="cards-outline" size={16} style={{ margin: 0 }} />

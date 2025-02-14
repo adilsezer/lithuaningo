@@ -158,9 +158,9 @@ export default function EditDeckScreen() {
                 <Card.Content>
                   <View style={styles.flashcardContent}>
                     <View style={styles.flashcardText}>
-                      <CustomText bold>{flashcard.frontText}</CustomText>
+                      <CustomText bold>{flashcard.frontWord}</CustomText>
                       <CustomText style={styles.translationText}>
-                        {flashcard.backText}
+                        {flashcard.backWord}
                       </CustomText>
                       {flashcard.reviewCount > 0 && (
                         <CustomText

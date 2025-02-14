@@ -1,10 +1,15 @@
 export interface Flashcard {
   id: string;
   deckId: string;
-  frontText: string;
-  backText: string;
-  imageUrl?: string;
-  audioUrl?: string;
+  frontWord: string;
+  backWord: string;
+  exampleSentence: string;
+  exampleSentenceTranslation: string;
+  imageUrl: string;
+  audioUrl: string;
+  // Frontend-specific properties for UI/UX
+  frontText?: string; // Deprecated: Use frontWord instead
+  backText?: string; // Deprecated: Use backWord instead
   reviewCount: number;
   lastReviewedAt: string | null;
   lastReviewedTimeAgo: string | null;
@@ -14,9 +19,30 @@ export interface Flashcard {
   updatedAt: string;
 }
 
+export interface CreateFlashcardRequest {
+  deckId: string;
+  frontWord: string;
+  backWord: string;
+  exampleSentence: string;
+  exampleSentenceTranslation: string;
+  imageUrl?: string;
+  audioUrl?: string;
+}
+
+export interface UpdateFlashcardRequest {
+  frontWord: string;
+  backWord: string;
+  exampleSentence: string;
+  exampleSentenceTranslation: string;
+  imageUrl?: string;
+  audioUrl?: string;
+}
+
 export interface FlashcardFormData {
-  frontText: string;
-  backText: string;
+  frontWord: string;
+  backWord: string;
+  exampleSentence: string;
+  exampleSentenceTranslation: string;
   imageFile?: File;
   audioFile?: File;
 }

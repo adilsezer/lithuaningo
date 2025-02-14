@@ -1,5 +1,9 @@
 import apiClient from "../api/apiClient";
-import { Flashcard } from "@src/types";
+import {
+  Flashcard,
+  CreateFlashcardRequest,
+  UpdateFlashcardRequest,
+} from "@src/types";
 
 class FlashcardService {
   async getDeckFlashcards(deckId: string) {
@@ -7,20 +11,20 @@ class FlashcardService {
   }
 
   async createFlashcard(
-    flashcard: Pick<Flashcard, "deckId" | "frontText" | "backText">,
+    flashcard: Omit<CreateFlashcardRequest, "imageUrl" | "audioUrl">,
     imageFile?: File,
     audioFile?: File
   ): Promise<string> {
     try {
       const [imageUrl, audioUrl] = await Promise.all([
-        imageFile ? this.uploadFile(imageFile) : Promise.resolve(undefined),
-        audioFile ? this.uploadFile(audioFile) : Promise.resolve(undefined),
+        imageFile ? this.uploadFile(imageFile) : Promise.resolve(""),
+        audioFile ? this.uploadFile(audioFile) : Promise.resolve(""),
       ]);
 
       return apiClient.createFlashcard({
         ...flashcard,
-        imageUrl,
-        audioUrl,
+        imageUrl: imageUrl || "",
+        audioUrl: audioUrl || "",
       });
     } catch (error) {
       console.error("Error in createFlashcard:", error);
@@ -30,11 +34,11 @@ class FlashcardService {
 
   async updateFlashcard(
     id: string,
-    flashcard: Pick<Flashcard, "frontText" | "backText">,
+    flashcard: Omit<UpdateFlashcardRequest, "imageUrl" | "audioUrl">,
     imageFile?: File,
     audioFile?: File,
-    currentImageUrl?: string,
-    currentAudioUrl?: string
+    currentImageUrl: string = "",
+    currentAudioUrl: string = ""
   ) {
     try {
       const [imageUrl, audioUrl] = await Promise.all([
@@ -48,8 +52,8 @@ class FlashcardService {
 
       return apiClient.updateFlashcard(id, {
         ...flashcard,
-        imageUrl,
-        audioUrl,
+        imageUrl: imageUrl || "",
+        audioUrl: audioUrl || "",
       });
     } catch (error) {
       console.error("Error updating flashcard:", error);

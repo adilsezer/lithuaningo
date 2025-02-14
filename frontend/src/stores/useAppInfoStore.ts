@@ -37,7 +37,7 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
 
       const needsUpdate =
         latestAppInfo.minimumVersion > currentVersion ||
-        (latestAppInfo.latestVersion !== currentVersion &&
+        (latestAppInfo.currentVersion !== currentVersion &&
           latestAppInfo.forceUpdate);
 
       set({

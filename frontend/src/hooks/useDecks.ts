@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { useRouter } from "expo-router";
 import {
   useIsLoading,
@@ -8,19 +8,12 @@ import {
 } from "@stores/useUIStore";
 import { useUserData } from "@stores/useUserStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import type { Deck } from "@src/types";
+import type { Deck, CreateDeckRequest, UpdateDeckRequest } from "@src/types";
 import deckService from "@services/data/deckService";
 import { DeckCategory } from "@src/types/DeckCategory";
 
 interface UseDecksOptions {
   initialCategory?: DeckCategory;
-}
-
-interface DeckRatings {
-  [deckId: string]: {
-    rating: number;
-    timestamp: number;
-  };
 }
 
 export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
@@ -37,11 +30,6 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   const [selectedCategory, setSelectedCategory] = useState<DeckCategory>(
     options?.initialCategory || "All Decks"
   );
-  const [deckRatings, setDeckRatings] = useState<Record<string, number>>({});
-
-  // Cache
-  const ratingsCache = useRef<DeckRatings>({});
-  const CACHE_EXPIRY = 5 * 60 * 1000; // 5 minutes
 
   // Error handling
   const handleError = useCallback(
@@ -67,51 +55,6 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     return true;
   }, [userData?.id]);
 
-  // Load deck ratings from cache or API
-  const loadDeckRatings = useCallback(async () => {
-    if (!userData?.id) return;
-
-    try {
-      const now = Date.now();
-      const cachedRatings = ratingsCache.current;
-
-      // Check cache first
-      const validRatings: Record<string, number> = {};
-      let needsFetch = false;
-
-      Object.entries(cachedRatings).forEach(
-        ([deckId, { rating, timestamp }]) => {
-          if (now - timestamp < CACHE_EXPIRY) {
-            validRatings[deckId] = rating;
-          } else {
-            needsFetch = true;
-          }
-        }
-      );
-
-      if (needsFetch || Object.keys(validRatings).length === 0) {
-        const freshRatings = await Promise.all(
-          decks.map(async (deck) => {
-            const rating = await deckService.getDeckRating(deck.id);
-            return { deckId: deck.id, rating: rating as number };
-          })
-        );
-
-        freshRatings.forEach(({ deckId, rating }) => {
-          ratingsCache.current[deckId] = {
-            rating,
-            timestamp: now,
-          };
-          validRatings[deckId] = rating;
-        });
-      }
-
-      setDeckRatings(validRatings);
-    } catch (error) {
-      handleError(error, "Failed to load deck ratings");
-    }
-  }, [decks, userData?.id, handleError]);
-
   // Fetch decks based on category and search query
   const fetchDecks = useCallback(async () => {
     try {
@@ -128,7 +71,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
         // Use getDecks with category (or undefined for "All")
         const category =
           selectedCategory === "All Decks" ? undefined : selectedCategory;
-        fetchedDecks = await deckService.getDecks(category);
+        fetchedDecks = await deckService.getPublicDecks();
       }
 
       if (searchQuery.trim()) {
@@ -155,60 +98,26 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     handleError,
   ]);
 
-  // Vote on a deck
-  const voteDeck = useCallback(
-    async (deckId: string, isUpvote: boolean) => {
-      if (!checkAuth()) return;
-
-      try {
-        setLoading(true);
-        clearError();
-
-        await deckService.voteDeck(deckId, userData!.id, isUpvote);
-        await loadDeckRatings();
-        await fetchDecks();
-      } catch (error) {
-        handleError(error, "Failed to vote on deck");
-      } finally {
-        setLoading(false);
-      }
-    },
-    [
-      checkAuth,
-      userData,
-      setLoading,
-      clearError,
-      loadDeckRatings,
-      fetchDecks,
-      handleError,
-    ]
-  );
-
   // Create a new deck
   const createDeck = useCallback(
-    async (title: string, description: string) => {
+    async (title: string, description: string, category: string = "Other") => {
       if (!checkAuth()) return;
 
       try {
         setLoading(true);
         clearError();
 
-        const newDeck: Omit<
-          Deck,
-          "id" | "cardCount" | "rating" | "timeAgo" | "updatedAt"
-        > = {
+        const request: CreateDeckRequest = {
+          userId: userData!.id,
           title,
           description,
-          category: "Other",
-          createdBy: userData!.id,
-          createdByUserName: userData!.name || "Anonymous",
+          category,
           tags: [],
           isPublic: true,
-          createdAt: new Date().toISOString(),
         };
 
-        const deckId = await deckService.createDeck(newDeck);
-        return deckId;
+        const deck = await deckService.createDeck(request);
+        return deck.id;
       } catch (error) {
         handleError(error, "Failed to create deck");
         return undefined;
@@ -222,7 +131,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   const getDeckById = useCallback(
     async (id: string) => {
       try {
-        const deck = await deckService.getDeckById(id);
+        const deck = await deckService.getDeck(id);
         return deck;
       } catch (error) {
         handleError(error, "Failed to fetch deck");
@@ -233,13 +142,23 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   );
 
   const updateDeck = useCallback(
-    async (id: string, deck: Deck) => {
+    async (id: string, deck: Partial<Deck>) => {
       if (!checkAuth()) return;
 
       try {
         setLoading(true);
         clearError();
-        await deckService.updateDeck(id, deck);
+
+        const request: UpdateDeckRequest = {
+          title: deck.title || "",
+          description: deck.description || "",
+          category: deck.category || "Other",
+          tags: deck.tags || [],
+          isPublic: deck.isPublic ?? true,
+          imageUrl: deck.imageUrl,
+        };
+
+        await deckService.updateDeck(id, request);
       } catch (error) {
         handleError(error, "Failed to update deck");
       } finally {
@@ -253,10 +172,6 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   useEffect(() => {
     setSearchQuery("");
   }, [selectedCategory]);
-
-  useEffect(() => {
-    loadDeckRatings();
-  }, [loadDeckRatings]);
 
   // Derived states
   const filteredDecks = useMemo(() => decks || [], [decks]);
@@ -277,7 +192,6 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     selectedCategory,
     isEmpty,
     emptyMessage,
-    deckRatings,
     isAuthenticated: !!userData?.id,
 
     // Actions
@@ -285,7 +199,6 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     setSelectedCategory,
     clearError,
     fetchDecks,
-    voteDeck,
     createDeck,
     getDeckById,
     updateDeck,

@@ -20,9 +20,6 @@ namespace Lithuaningo.API.DTOs.Quiz
         [StringLength(500, ErrorMessage = "Example sentence must not exceed 500 characters")]
         public string? ExampleSentence { get; set; }
 
-        [StringLength(500, ErrorMessage = "Example sentence translation must not exceed 500 characters")]
-        public string ExampleSentenceTranslation { get; set; } = string.Empty;
-
         [Required(ErrorMessage = "Question type is required")]
         public QuizQuestionType Type { get; set; }
     }

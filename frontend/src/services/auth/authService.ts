@@ -23,6 +23,11 @@ interface AuthResponse {
 interface ProfileUpdateData {
   displayName?: string;
   email?: string;
+  emailVerified?: boolean;
+  avatarUrl?: string;
+  isAdmin?: boolean;
+  isPremium?: boolean;
+  premiumExpiresAt?: string;
 }
 
 // Helper Functions
@@ -53,7 +58,12 @@ const updateEmailVerificationStatus = async (
     if (userProfile) {
       await apiClient.updateUserProfile(userId, {
         email,
+        emailVerified,
         fullName: userProfile.fullName,
+        isAdmin: userProfile.isAdmin,
+        isPremium: userProfile.isPremium,
+        premiumExpiresAt: userProfile.premiumExpiresAt,
+        avatarUrl: userProfile.avatarUrl,
       });
     }
   } catch (error) {
@@ -80,6 +90,10 @@ export const updateUserState = async (session: { user: User } | null) => {
     id: user.id,
     email: user.email,
     fullName: name,
+    emailVerified: user.email_confirmed_at !== null,
+    isAdmin: false,
+    isPremium: false,
+    premiumExpiresAt: undefined,
   });
 
   await ensureUserProfile(user.id, user.email, name);
@@ -97,13 +111,25 @@ const ensureUserProfile = async (
   try {
     const userProfile = await apiClient.getUserProfile(userId);
     if (!userProfile) {
-      // First create the profile with just userId
-      await apiClient.createUserProfile({ userId });
-
-      // Then update it with the additional info
+      // Create new profile with default values
+      await apiClient.createUserProfile({
+        userId,
+        email,
+        emailVerified: false,
+        fullName: name,
+        isAdmin: false,
+        isPremium: false,
+      });
+    } else {
+      // Update existing profile
       await apiClient.updateUserProfile(userId, {
         email,
+        emailVerified: userProfile.emailVerified,
         fullName: name,
+        isAdmin: userProfile.isAdmin,
+        isPremium: userProfile.isPremium,
+        premiumExpiresAt: userProfile.premiumExpiresAt,
+        avatarUrl: userProfile.avatarUrl,
       });
     }
   } catch (error) {
@@ -349,16 +375,31 @@ export const updateProfile = async (
       if (error) throw error;
     }
 
-    if (updates.displayName) {
-      const { error } = await supabase.auth.updateUser({
-        data: { name: updates.displayName },
-      });
-      if (error) throw error;
-    }
-
     const { data: sessionData, error: sessionError } =
       await supabase.auth.getSession();
     if (sessionError) throw sessionError;
+
+    if (!sessionData.session?.user) {
+      throw new Error("No active session");
+    }
+
+    const userId = sessionData.session.user.id;
+    const userProfile = await apiClient.getUserProfile(userId);
+
+    if (!userProfile) {
+      throw new Error("User profile not found");
+    }
+
+    await apiClient.updateUserProfile(userId, {
+      email: updates.email || userProfile.email,
+      emailVerified: updates.emailVerified ?? userProfile.emailVerified,
+      fullName: updates.displayName || userProfile.fullName,
+      avatarUrl: updates.avatarUrl ?? userProfile.avatarUrl,
+      isAdmin: updates.isAdmin ?? userProfile.isAdmin,
+      isPremium: updates.isPremium ?? userProfile.isPremium,
+      premiumExpiresAt:
+        updates.premiumExpiresAt ?? userProfile.premiumExpiresAt,
+    });
 
     await updateUserState(sessionData.session);
     return {

@@ -1,15 +1,25 @@
 export interface DeckReport {
   id: string;
   deckId: string;
-  reporterId: string;
+  userId: string;
+  reviewerId?: string;
   reason: string;
   details: string;
   status: "pending" | "resolved" | "rejected";
-  reviewedBy?: string;
-  reviewedByUserName?: string;
-  reportedByUserName: string;
-  resolution?: string;
-  timeAgo: string;
+  resolution: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface CreateDeckReportRequest {
+  deckId: string;
+  userId: string;
+  reason: string;
+  details: string;
+}
+
+export interface UpdateDeckReportRequest {
+  status: "pending" | "resolved" | "rejected";
+  reviewerId: string;
+  resolution: string;
 }

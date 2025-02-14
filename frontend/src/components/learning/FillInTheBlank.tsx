@@ -13,7 +13,6 @@ interface FillInTheBlankQuizProps {
   sentenceText: string;
   questionText: string;
   questionWord: string;
-  translation: string;
   image: string;
   correctAnswerText: string;
   questionIndex: number;
@@ -24,7 +23,6 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
   sentenceText,
   questionText,
   correctAnswerText,
-  translation,
   image,
   questionIndex,
   questionWord,
@@ -118,7 +116,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
           },
         ]}
       >
-        Translation: {translation}
+        Translation: {correctAnswerText}
       </CustomText>
 
       {image && (

@@ -20,18 +20,32 @@ import { FormField } from "@components/form/form.types";
 
 const flashcardFields: FormField[] = [
   {
-    name: "frontText",
-    label: "Front Text",
+    name: "frontWord",
+    label: "Front Word",
     category: "text-input",
     type: "text",
-    placeholder: "Enter front text",
+    placeholder: "Enter front word",
   },
   {
-    name: "backText",
-    label: "Back Text",
+    name: "backWord",
+    label: "Back Word",
     category: "text-input",
     type: "text",
-    placeholder: "Enter back text",
+    placeholder: "Enter back word",
+  },
+  {
+    name: "exampleSentence",
+    label: "Example Sentence",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter example sentence",
+  },
+  {
+    name: "exampleSentenceTranslation",
+    label: "Example Sentence Translation",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter sentence translation",
   },
 ];
 
@@ -50,8 +64,10 @@ export default function CreateFlashcardScreen() {
   } = useForm<FlashcardFormData>({
     resolver: zodResolver(flashcardFormSchema),
     defaultValues: {
-      frontText: "",
-      backText: "",
+      frontWord: "",
+      backWord: "",
+      exampleSentence: "",
+      exampleSentenceTranslation: "",
     },
   });
 

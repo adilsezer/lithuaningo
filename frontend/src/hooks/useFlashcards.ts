@@ -1,5 +1,9 @@
 import { useState, useCallback } from "react";
-import { Flashcard } from "@src/types";
+import {
+  Flashcard,
+  CreateFlashcardRequest,
+  UpdateFlashcardRequest,
+} from "@src/types";
 import flashcardService from "@src/services/data/flashcardService";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import {
@@ -47,7 +51,7 @@ export const useFlashcards = () => {
 
   const createFlashcard = useCallback(
     async (
-      flashcard: Pick<Flashcard, "deckId" | "frontText" | "backText">,
+      flashcard: Omit<CreateFlashcardRequest, "imageUrl" | "audioUrl">,
       imageFile?: File,
       audioFile?: File
     ) => {
@@ -70,7 +74,7 @@ export const useFlashcards = () => {
   const updateFlashcard = useCallback(
     async (
       id: string,
-      flashcard: Pick<Flashcard, "frontText" | "backText">,
+      flashcard: Omit<UpdateFlashcardRequest, "imageUrl" | "audioUrl">,
       imageFile?: File,
       audioFile?: File,
       currentImageUrl?: string,

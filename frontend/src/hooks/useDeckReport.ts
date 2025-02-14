@@ -1,6 +1,6 @@
 import { useCallback } from "react";
-import { reportService } from "@services/data/reportService";
-import { DeckReport } from "@src/types";
+import reportService from "@src/services/data/deckReportService";
+import { CreateDeckReportRequest } from "@src/types";
 import {
   useIsLoading,
   useSetLoading,
@@ -8,20 +8,18 @@ import {
   useSetError,
 } from "@stores/useUIStore";
 
-export const useReport = () => {
+export const useDeckReport = () => {
   const setLoading = useSetLoading();
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
 
   const submitReport = useCallback(
-    async (
-      report: Pick<DeckReport, "deckId" | "reporterId" | "reason" | "details">
-    ) => {
+    async (request: CreateDeckReportRequest) => {
       try {
         setLoading(true);
         setError(null);
-        await reportService.submitReport(report);
+        await reportService.submitReport(request);
       } catch (err) {
         setError(
           err instanceof Error ? err.message : "Failed to submit report"

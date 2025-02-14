@@ -28,7 +28,7 @@ export const UserChallengeStatsView: React.FC<UserChallengeStatsProps> = ({
         <Text
           style={[{ color: theme.colors.onBackground }, localStyles.statValue]}
         >
-          {stats.cardsReviewed}
+          {stats.totalChallengesCompleted}
         </Text>
         <Text
           style={[{ color: theme.colors.onSurface }, localStyles.statLabel]}
@@ -40,7 +40,7 @@ export const UserChallengeStatsView: React.FC<UserChallengeStatsProps> = ({
         <Text
           style={[{ color: theme.colors.onBackground }, localStyles.statValue]}
         >
-          {stats.cardsMastered}
+          {stats.totalCorrectAnswers}
         </Text>
         <Text
           style={[{ color: theme.colors.onSurface }, localStyles.statLabel]}

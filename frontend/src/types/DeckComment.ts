@@ -2,10 +2,18 @@ export interface DeckComment {
   id: string;
   deckId: string;
   userId: string;
-  userName: string;
+  username: string;
   content: string;
-  timeAgo: string;
   createdAt: string;
   updatedAt: string;
-  isEdited: boolean;
+}
+
+export interface CreateDeckCommentRequest {
+  deckId: string;
+  userId: string;
+  content: string;
+}
+
+export interface UpdateDeckCommentRequest {
+  content: string;
 }

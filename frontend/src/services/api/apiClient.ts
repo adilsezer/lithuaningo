@@ -18,6 +18,15 @@ import {
   CreateQuizQuestionRequest,
   CreateUserProfileRequest,
   UpdateUserProfileRequest,
+  UpdateAppInfoRequest,
+  CreateAnnouncementRequest,
+  UpdateAnnouncementRequest,
+  CreateDeckReportRequest,
+  UpdateDeckReportRequest,
+  CreateDeckVoteRequest,
+  DeckVote,
+  CreateFlashcardRequest,
+  UpdateFlashcardRequest,
 } from "@src/types";
 import { supabase } from "@services/supabase/supabaseClient";
 import Constants from "expo-constants";
@@ -233,21 +242,21 @@ class ApiClient {
   }
 
   async createAnnouncement(
-    announcement: Partial<Announcement>
+    request: CreateAnnouncementRequest
   ): Promise<Announcement> {
     return this.request<Announcement>(`/api/v1/announcement`, {
       method: "POST",
-      data: announcement,
+      data: request,
     });
   }
 
   async updateAnnouncement(
     id: string,
-    announcement: Partial<Announcement>
-  ): Promise<void> {
-    return this.request(`/api/v1/announcement/${id}`, {
+    request: UpdateAnnouncementRequest
+  ): Promise<Announcement> {
+    return this.request<Announcement>(`/api/v1/announcement/${id}`, {
       method: "PUT",
-      data: announcement,
+      data: request,
     });
   }
 
@@ -276,7 +285,7 @@ class ApiClient {
 
   async updateAppInfo(
     platform: string,
-    info: Partial<AppInfo>
+    info: UpdateAppInfoRequest
   ): Promise<AppInfo> {
     return this.request<AppInfo>(`/api/v1/AppInfo/${platform}`, {
       method: "PUT",
@@ -329,6 +338,21 @@ class ApiClient {
   async incrementCardsMastered(userId: string): Promise<void> {
     return this.request(
       `/api/v1/ChallengeStats/${userId}/stats/cards-mastered`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  async updateDailyStreak(userId: string): Promise<void> {
+    return this.request(`/api/v1/ChallengeStats/${userId}/stats/streak`, {
+      method: "POST",
+    });
+  }
+
+  async incrementQuizzesCompleted(userId: string): Promise<void> {
+    return this.request(
+      `/api/v1/ChallengeStats/${userId}/stats/quiz-completed`,
       {
         method: "POST",
       }
@@ -419,17 +443,6 @@ class ApiClient {
     });
   }
 
-  async voteDeck(
-    id: string,
-    userId: string,
-    isUpvote: boolean
-  ): Promise<boolean> {
-    return this.request<boolean>(`/api/v1/deck/${id}/vote`, {
-      method: "POST",
-      params: { userId, isUpvote },
-    });
-  }
-
   async reportDeck(id: string, userId: string, reason: string): Promise<void> {
     return this.request(`/api/v1/deck/${id}/report`, {
       method: "POST",
@@ -448,22 +461,13 @@ class ApiClient {
     return this.request<Flashcard[]>(`/api/v1/deck/${deckId}/flashcards`);
   }
 
-  async getDeckRating(id: string, timeRange: string = "all"): Promise<number> {
-    return this.request<number>(`/api/v1/deck/${id}/rating`, {
-      params: { timeRange },
-    });
-  }
-
   // Deck Report Controller
-  async createDeckReport(report: {
-    deckId: string;
-    reporterId: string;
-    reason: string;
-    details: string;
-  }): Promise<DeckReport> {
+  async createDeckReport(
+    request: CreateDeckReportRequest
+  ): Promise<DeckReport> {
     return this.request<DeckReport>(`/api/v1/deckreport`, {
       method: "POST",
-      data: report,
+      data: request,
     });
   }
 
@@ -486,7 +490,7 @@ class ApiClient {
 
   async updateDeckReportStatus(
     id: string,
-    request: { status: string; reviewedBy: string; resolution?: string }
+    request: UpdateDeckReportRequest
   ): Promise<DeckReport> {
     return this.request<DeckReport>(`/api/v1/deckreport/${id}/status`, {
       method: "PUT",
@@ -539,7 +543,6 @@ class ApiClient {
 
   async updateLeaderboardEntry(request: {
     userId: string;
-    name: string;
     score: number;
   }): Promise<void> {
     return this.request(`/api/v1/leaderboard/entry`, {
@@ -548,28 +551,16 @@ class ApiClient {
     });
   }
 
-  async createFlashcard(
-    flashcard: Pick<
-      Flashcard,
-      "deckId" | "frontText" | "backText" | "imageUrl" | "audioUrl"
-    >
-  ): Promise<string> {
+  async createFlashcard(flashcard: CreateFlashcardRequest): Promise<string> {
     const response = await axios.post(`${this.baseURL}/flashcards`, flashcard);
     return response.data;
   }
 
-  async updateFlashcard(
-    id: string,
-    flashcard: Pick<
-      Flashcard,
-      "frontText" | "backText" | "imageUrl" | "audioUrl"
-    >
-  ) {
-    const response = await axios.put(
-      `${this.baseURL}/flashcards/${id}`,
-      flashcard
-    );
-    return response.data;
+  async updateFlashcard(id: string, flashcard: UpdateFlashcardRequest) {
+    return this.request(`/api/v1/flashcards/${id}`, {
+      method: "PUT",
+      data: flashcard,
+    });
   }
 
   async uploadFile(formData: FormData): Promise<string> {
@@ -601,6 +592,32 @@ class ApiClient {
       data
     );
     return response.data;
+  }
+
+  // Deck Vote Controller
+  async createDeckVote(request: CreateDeckVoteRequest): Promise<boolean> {
+    return this.request<boolean>(`/api/v1/deckvote`, {
+      method: "POST",
+      data: request,
+    });
+  }
+
+  async getUserVote(deckId: string, userId: string): Promise<DeckVote | null> {
+    return this.request<DeckVote | null>(
+      `/api/v1/deckvote/${deckId}/user/${userId}`
+    );
+  }
+
+  async getDeckVotes(deckId: string): Promise<DeckVote[]> {
+    return this.request<DeckVote[]>(`/api/v1/deckvote/${deckId}`);
+  }
+
+  async getVoteCounts(
+    deckId: string
+  ): Promise<{ upvotes: number; downvotes: number }> {
+    return this.request<{ upvotes: number; downvotes: number }>(
+      `/api/v1/deckvote/${deckId}/counts`
+    );
   }
 
   private handleError(error: any) {

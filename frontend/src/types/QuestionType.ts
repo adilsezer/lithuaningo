@@ -1,6 +1,8 @@
 export enum QuestionType {
   MultipleChoice = "MultipleChoice",
-  FillInTheBlank = "FillInTheBlank",
   TrueFalse = "TrueFalse",
-  ReorderWords = "ReorderWords",
+  FillInTheBlank = "FillInTheBlank",
+  RearrangeTheSentence = "RearrangeTheSentence",
+  IdentifyTheError = "IdentifyTheError",
+  IdentifyThePartOfSpeech = "IdentifyThePartOfSpeech",
 }

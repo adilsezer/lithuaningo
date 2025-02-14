@@ -1,15 +1,20 @@
 export interface LeaderboardWeek {
-  weekId: string; // YYYY-WW format
+  id: string;
   startDate: string;
   endDate: string;
-  entries: LeaderboardEntry[];
+  entries: { [key: string]: LeaderboardEntry };
 }
 
 export interface LeaderboardEntry {
+  id: string;
   userId: string;
-  name: string;
+  username: string;
   score: number;
-  rank: number;
-  lastUpdatedTimeAgo: string;
-  lastUpdated: string;
 }
+
+export interface UpdateLeaderboardEntryRequest {
+  userId: string;
+  score: number;
+}
+
+export type LeaderboardTimeRange = "week" | "month" | "all";

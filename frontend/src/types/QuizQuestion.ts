@@ -5,16 +5,18 @@ export interface QuizQuestion {
   question: string;
   options: string[];
   correctAnswer: string;
-  explanation?: string;
+  exampleSentence?: string;
   type: QuestionType;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface CreateQuizQuestionRequest {
   question: string;
   options: string[];
   correctAnswer: string;
-  explanation?: string;
+  exampleSentence?: string;
+  type: QuestionType;
 }
 
 export interface QuizResult {

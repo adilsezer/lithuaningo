@@ -11,6 +11,7 @@ import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { CustomPicker } from "@components/ui/CustomPicker";
+import { useDeckVote } from "@src/hooks/useDeckVote";
 
 export default function DecksScreen() {
   const userData = useUserData();
@@ -23,13 +24,11 @@ export default function DecksScreen() {
     searchQuery,
     selectedCategory,
     emptyMessage,
-    deckRatings,
     isAuthenticated,
     setSearchQuery,
     setSelectedCategory,
     clearError,
     fetchDecks,
-    voteDeck,
   } = useDecks(userData?.id);
 
   useEffect(() => {
@@ -47,15 +46,21 @@ export default function DecksScreen() {
   );
 
   const handleDeckActions = useCallback(
-    (deckId: string) => ({
-      onVote: (isUpvote: boolean) => voteDeck(deckId, isUpvote),
-      onReport: () => handleNavigation(`/decks/${deckId}/report`),
-      onComment: () => handleNavigation(`/decks/${deckId}/comments`),
-      onQuiz: () => handleNavigation(`/decks/${deckId}/quiz`),
-      onPractice: () => handleNavigation(`/decks/${deckId}`),
-      onEdit: () => handleNavigation(`/decks/${deckId}/edit`),
-    }),
-    [voteDeck, handleNavigation]
+    (deckId: string) => {
+      const { voteDeck } = useDeckVote(deckId);
+      return {
+        onVote: async (isUpvote: boolean) => {
+          if (!userData?.id) return;
+          await voteDeck({ deckId, userId: userData.id, isUpvote });
+        },
+        onReport: () => handleNavigation(`/decks/${deckId}/report`),
+        onComment: () => handleNavigation(`/decks/${deckId}/comments`),
+        onQuiz: () => handleNavigation(`/decks/${deckId}/quiz`),
+        onPractice: () => handleNavigation(`/decks/${deckId}`),
+        onEdit: () => handleNavigation(`/decks/${deckId}/edit`),
+      };
+    },
+    [userData?.id, handleNavigation]
   );
 
   const renderHeader = useCallback(
@@ -115,13 +120,19 @@ export default function DecksScreen() {
     >
       <FlatList
         data={decks}
-        renderItem={({ item }) => (
-          <DeckCard
-            deck={item}
-            rating={deckRatings[item.id] || 0}
-            actions={handleDeckActions(item.id)}
-          />
-        )}
+        renderItem={({ item }) => {
+          const { voteCounts } = useDeckVote(item.id);
+          return (
+            <DeckCard
+              deck={item}
+              rating={
+                voteCounts.upvotes /
+                  (voteCounts.upvotes + voteCounts.downvotes) || 0
+              }
+              actions={handleDeckActions(item.id)}
+            />
+          );
+        }}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={renderHeader}

@@ -15,6 +15,7 @@ import { QuizQuestion } from "@src/types";
 import { useUserData } from "@stores/useUserStore";
 import quizService from "@services/data/quizService";
 import { router } from "expo-router";
+import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 
 const QuizScreen: React.FC = () => {
   const theme = useTheme();
@@ -27,6 +28,8 @@ const QuizScreen: React.FC = () => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const { stats, updateStats, updateDailyStreak, incrementQuizzesCompleted } =
+    useUserChallengeStats(userData?.id);
 
   useEffect(() => {
     fetchDailyQuiz();
@@ -35,7 +38,7 @@ const QuizScreen: React.FC = () => {
   const fetchDailyQuiz = async () => {
     try {
       setLoading(true);
-      const dailyQuestions = await quizService.startQuiz();
+      const dailyQuestions = await quizService.getDailyQuiz();
       setQuestions(dailyQuestions);
     } catch (err) {
       setError("Failed to load quiz questions");
@@ -53,7 +56,24 @@ const QuizScreen: React.FC = () => {
       setScore((prev) => prev + 1);
     }
 
-    if (currentQuestion.explanation) {
+    if (stats && userData?.id) {
+      await updateStats({
+        todayCorrectAnswers: isCorrect
+          ? stats.todayCorrectAnswers + 1
+          : stats.todayCorrectAnswers,
+        todayIncorrectAnswers: !isCorrect
+          ? stats.todayIncorrectAnswers + 1
+          : stats.todayIncorrectAnswers,
+        totalCorrectAnswers: isCorrect
+          ? stats.totalCorrectAnswers + 1
+          : stats.totalCorrectAnswers,
+        totalIncorrectAnswers: !isCorrect
+          ? stats.totalIncorrectAnswers + 1
+          : stats.totalIncorrectAnswers,
+      });
+    }
+
+    if (currentQuestion.exampleSentence) {
       setShowExplanation(true);
     } else {
       await moveToNextQuestion();
@@ -68,12 +88,16 @@ const QuizScreen: React.FC = () => {
       setCurrentIndex((prev) => prev + 1);
     } else {
       if (userData?.id) {
-        await quizService.submitQuizResult({
-          userId: userData.id,
-          deckId: "daily",
-          score,
-          totalQuestions: questions.length,
-        });
+        await Promise.all([
+          quizService.submitQuizResult({
+            userId: userData.id,
+            deckId: "daily",
+            score,
+            totalQuestions: questions.length,
+          }),
+          updateDailyStreak(),
+          incrementQuizzesCompleted(),
+        ]);
       }
       setIsCompleted(true);
     }
@@ -159,10 +183,10 @@ const QuizScreen: React.FC = () => {
             </Button>
           ))}
 
-          {showExplanation && currentQuestion.explanation && (
+          {showExplanation && currentQuestion.exampleSentence && (
             <View style={styles.explanationContainer}>
               <CustomText variant="bodyMedium" style={styles.explanation}>
-                {currentQuestion.explanation}
+                {currentQuestion.exampleSentence}
               </CustomText>
               <Button mode="contained" onPress={moveToNextQuestion}>
                 Next Question

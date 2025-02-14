@@ -46,9 +46,11 @@ const NotificationScreen: React.FC = () => {
         subtitle={NOTIFICATION_CONFIGS.update.subtitle(appInfo.releaseNotes)}
         buttonText={NOTIFICATION_CONFIGS.update.buttonText}
         buttonAction={() => {
-          Linking.openURL(appInfo.updateUrl!).catch((err) =>
-            console.error("Failed to open URL:", err)
-          );
+          if (appInfo.updateUrl) {
+            Linking.openURL(appInfo.updateUrl).catch((err) =>
+              console.error("Failed to open URL:", err)
+            );
+          }
         }}
       />
     );

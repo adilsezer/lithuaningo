@@ -23,7 +23,7 @@ export const useAppInfo = () => {
     () => ({
       needsUpdate:
         (appInfo?.minimumVersion && appInfo.minimumVersion > currentVersion) ||
-        (appInfo?.latestVersion !== currentVersion && appInfo?.forceUpdate),
+        (appInfo?.currentVersion !== currentVersion && appInfo?.forceUpdate),
       isUnderMaintenance: appInfo?.isMaintenance ?? false,
     }),
     [appInfo, currentVersion]

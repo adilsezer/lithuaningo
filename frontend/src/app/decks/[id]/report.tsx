@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react";
 import { View, StyleSheet } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
-import { useReport } from "@hooks/useReport";
+import { useDeckReport } from "@src/hooks/useDeckReport";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
@@ -15,7 +15,7 @@ export default function ReportScreen() {
   const { id } = useLocalSearchParams();
   const theme = useTheme();
   const userData = useUserData();
-  const { isLoading, error, submitReport, clearError } = useReport();
+  const { isLoading, error, submitReport, clearError } = useDeckReport();
   const [isSuccess, setIsSuccess] = useState(false);
 
   const navigateToDecks = useCallback(() => {
@@ -30,7 +30,7 @@ export default function ReportScreen() {
 
     await submitReport({
       deckId: id as string,
-      reporterId: userData.id,
+      userId: userData.id,
       reason: data.reason,
       details: data.details,
     });

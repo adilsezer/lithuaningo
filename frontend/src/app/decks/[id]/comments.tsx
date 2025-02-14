@@ -7,10 +7,11 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/layout/BackButton";
-import { useDeckComments } from "@hooks/useComments";
+import { useDeckComments } from "@src/hooks/useDeckComments";
 import { deckCommentFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
+import { formatDistanceToNow } from "date-fns";
 
 export default function DeckCommentsScreen() {
   const { id } = useLocalSearchParams();
@@ -89,11 +90,13 @@ export default function DeckCommentsScreen() {
           >
             <View style={styles.commentHeader}>
               <CustomText variant="labelLarge" style={styles.userName}>
-                {item.userName}
+                {item.username}
               </CustomText>
               <CustomText variant="labelSmall" style={styles.timeAgo}>
-                {item.timeAgo}
-                {item.isEdited && " (edited)"}
+                {formatDistanceToNow(new Date(item.createdAt), {
+                  addSuffix: true,
+                })}
+                {item.updatedAt !== item.createdAt && " (edited)"}
               </CustomText>
             </View>
             <CustomText

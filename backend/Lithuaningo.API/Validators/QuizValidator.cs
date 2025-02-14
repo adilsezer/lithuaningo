@@ -32,10 +32,6 @@ public class CreateQuizQuestionValidator : AbstractValidator<CreateQuizQuestionR
             .MaximumLength(500).WithMessage("Example sentence must not exceed 500 characters")
             .When(x => !string.IsNullOrEmpty(x.ExampleSentence));
 
-        RuleFor(x => x.ExampleSentenceTranslation)
-            .MaximumLength(500).WithMessage("Example sentence translation must not exceed 500 characters")
-            .When(x => !string.IsNullOrEmpty(x.ExampleSentenceTranslation));
-
         RuleFor(x => x.Type)
             .IsInEnum().WithMessage("Invalid question type");
     }

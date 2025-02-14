@@ -95,8 +95,12 @@ export const deckFormSchema = z
   .partial();
 
 export const flashcardFormSchema = z.object({
-  frontText: z.string().min(1, "Front text is required"),
-  backText: z.string().min(1, "Back text is required"),
+  frontWord: z.string().min(1, "Front word is required"),
+  backWord: z.string().min(1, "Back word is required"),
+  exampleSentence: z.string().min(1, "Example sentence is required"),
+  exampleSentenceTranslation: z
+    .string()
+    .min(1, "Example sentence translation is required"),
 });
 
 export const flashcardEditSchema = flashcardFormSchema;

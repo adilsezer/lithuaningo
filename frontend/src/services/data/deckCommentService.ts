@@ -1,5 +1,9 @@
-import apiClient from "@services/api/apiClient";
-import { DeckComment } from "@src/types";
+import apiClient from "../api/apiClient";
+import {
+  DeckComment,
+  CreateDeckCommentRequest,
+  UpdateDeckCommentRequest,
+} from "@src/types";
 import { ApiError } from "@services/api/apiClient";
 
 class DeckCommentService {
@@ -14,15 +18,27 @@ class DeckCommentService {
     }
   }
 
-  async addDeckComment(
-    comment: Pick<DeckComment, "deckId" | "content" | "userId" | "userName">
-  ): Promise<string> {
+  async addDeckComment(request: CreateDeckCommentRequest): Promise<string> {
     try {
-      const createdDeckComment = await apiClient.createDeckComment(comment);
+      const createdDeckComment = await apiClient.createDeckComment(request);
       return createdDeckComment.id;
     } catch (error) {
       if (error instanceof ApiError) {
         throw new Error(`Failed to add deck comment: ${error.message}`);
+      }
+      throw error;
+    }
+  }
+
+  async updateDeckComment(
+    id: string,
+    request: UpdateDeckCommentRequest
+  ): Promise<DeckComment> {
+    try {
+      return await apiClient.updateDeckComment(id, request);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw new Error(`Failed to update deck comment: ${error.message}`);
       }
       throw error;
     }

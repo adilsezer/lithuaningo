@@ -14,18 +14,32 @@ import CustomAudioPicker from "@components/ui/CustomAudioPicker";
 
 const flashcardFields: FormField[] = [
   {
-    name: "frontText",
-    label: "Front Text",
+    name: "frontWord",
+    label: "Front Word",
     category: "text-input",
     type: "text",
-    placeholder: "Enter front text",
+    placeholder: "Enter front word",
   },
   {
-    name: "backText",
-    label: "Back Text",
+    name: "backWord",
+    label: "Back Word",
     category: "text-input",
     type: "text",
-    placeholder: "Enter back text",
+    placeholder: "Enter back word",
+  },
+  {
+    name: "exampleSentence",
+    label: "Example Sentence",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter example sentence",
+  },
+  {
+    name: "exampleSentenceTranslation",
+    label: "Example Sentence Translation",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter sentence translation",
   },
 ];
 
@@ -102,8 +116,10 @@ export default function EditFlashcardScreen() {
         submitButtonText="Update Flashcard"
         zodSchema={flashcardEditSchema}
         defaultValues={{
-          frontText: flashcard.frontText,
-          backText: flashcard.backText,
+          frontWord: flashcard.frontWord,
+          backWord: flashcard.backWord,
+          exampleSentence: flashcard.exampleSentence,
+          exampleSentenceTranslation: flashcard.exampleSentenceTranslation,
         }}
       />
 

@@ -11,33 +11,6 @@ export const NOTIFICATION_KEYS = {
   NOTIFICATION_PROMPT_KEY: "hasPromptedForNotifications",
 };
 
-export const APP_INFO_KEYS = {
-  LATEST_VERSION: "latestVersion",
-  MANDATORY_UPDATE: "mandatoryUpdate",
-  UPDATE_URL: "updateUrl",
-  IS_UNDER_MAINTENANCE: "isUnderMaintenance",
-};
-
 export const THEME_KEYS = {
   THEME: "theme",
-};
-
-export const QUIZ_KEYS = {
-  QUIZ_QUESTIONS_KEY: (userId: string, dateKey: string) =>
-    `quizQuestions_${userId}_${dateKey}`,
-  QUIZ_PROGRESS_KEY: (userId: string, dateKey: string) =>
-    `quizProgress_${userId}_${dateKey}`,
-  INCORRECT_QUESTIONS_KEY: (userId: string, dateKey: string) =>
-    `incorrectQuestions_${userId}_${dateKey}`,
-  INCORRECT_PROGRESS_KEY: (userId: string, dateKey: string) =>
-    `incorrectProgress_${userId}_${dateKey}`,
-  SESSION_STATE_KEY: (userId: string, dateKey: string) =>
-    `sessionState_${userId}_${dateKey}`,
-};
-
-export const SENTENCE_KEYS = {
-  COMPLETION_STATUS_KEY: (userId: string, dateKey: string) =>
-    `completionStatus_${userId}_${dateKey}`,
-  SENTENCES_KEY: (userId: string, dateKey: string) =>
-    `sentences_${userId}_${dateKey}`,
 };

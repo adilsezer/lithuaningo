@@ -17,7 +17,7 @@ export default function LearnScreen() {
   };
 
   const userData = useUserData();
-  const { entries, weekId, startDate, endDate } = useLeaderboard();
+  const { entries, startDate, endDate } = useLeaderboard();
   const { stats, error, isLoading } = useUserChallengeStats(userData?.id);
 
   if (error) {
@@ -46,12 +46,7 @@ export default function LearnScreen() {
         onPress={() => handleNavigation("/learning/quiz")}
       />
       <CustomDivider />
-      <Leaderboard
-        entries={entries}
-        weekId={weekId}
-        startDate={startDate}
-        endDate={endDate}
-      />
+      <Leaderboard entries={entries} startDate={startDate} endDate={endDate} />
     </ScrollView>
   );
 }

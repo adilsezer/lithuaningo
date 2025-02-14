@@ -9,3 +9,17 @@ export interface Announcement {
   status?: string;
   timeRemaining?: string;
 }
+
+export interface CreateAnnouncementRequest {
+  title: string;
+  content: string;
+  isActive: boolean;
+  validUntil?: string;
+}
+
+export interface UpdateAnnouncementRequest {
+  title: string;
+  content: string;
+  isActive: boolean;
+  validUntil?: string;
+}

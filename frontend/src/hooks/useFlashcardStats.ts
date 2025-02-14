@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { UserFlashcardStats, TrackProgressRequest } from "@src/types";
-import apiClient from "@services/api/apiClient";
+import { UserFlashcardStatsResponse, TrackProgressRequest } from "@src/types";
+import { UserFlashcardStatsService } from "@services/data/userFlashcardStatsService";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import {
   useIsLoading,
@@ -15,8 +15,8 @@ export const useFlashcardStats = () => {
   const setError = useSetError();
   const error = useError();
   const { showError } = useAlertDialog();
-  const [stats, setStats] = useState<UserFlashcardStats | null>(null);
-  const [history, setHistory] = useState<UserFlashcardStats[]>([]);
+  const [stats, setStats] = useState<UserFlashcardStatsResponse | null>(null);
+  const [history, setHistory] = useState<UserFlashcardStatsResponse[]>([]);
 
   const handleError = useCallback(
     (error: Error, message: string) => {
@@ -33,7 +33,10 @@ export const useFlashcardStats = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiClient.getUserFlashcardStats(deckId, userId);
+        const data = await UserFlashcardStatsService.getUserFlashcardStats(
+          deckId,
+          userId
+        );
         setStats(data);
         return data;
       } catch (error) {
@@ -51,7 +54,9 @@ export const useFlashcardStats = () => {
       try {
         setLoading(true);
         setError(null);
-        const data = await apiClient.getUserFlashcardHistory(userId);
+        const data = await UserFlashcardStatsService.getUserFlashcardHistory(
+          userId
+        );
         setHistory(data);
         return data;
       } catch (error) {
@@ -69,7 +74,7 @@ export const useFlashcardStats = () => {
       try {
         setLoading(true);
         setError(null);
-        await apiClient.trackProgress(deckId, request);
+        await UserFlashcardStatsService.trackProgress(deckId, request);
         // Refresh stats after tracking progress
         if (stats?.userId) {
           await getUserFlashcardStats(deckId, stats.userId);

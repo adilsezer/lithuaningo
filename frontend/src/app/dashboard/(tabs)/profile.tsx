@@ -7,7 +7,6 @@ import { useRouter } from "expo-router";
 import { getCurrentDateKey } from "@utils/dateUtils";
 import { clearData } from "@utils/storageUtils";
 import CustomSwitch from "@components/ui/CustomSwitch";
-import { SENTENCE_KEYS, QUIZ_KEYS } from "@config/constants";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useIsDarkMode, useThemeActions } from "@stores/useThemeStore";
@@ -74,41 +73,6 @@ export default function ProfileScreen() {
 
   const handleNavigation = (path: string) => {
     router.push(path);
-  };
-
-  const { showConfirm, showError, showSuccess } = useAlertDialog();
-
-  const handleClearProgress = async () => {
-    if (!userData) {
-      showError("No user data available");
-      return;
-    }
-
-    showConfirm({
-      title: "Clear Progress",
-      message:
-        "Are you sure you want to clear today's progress? This action cannot be undone.",
-      confirmText: "Clear",
-      onConfirm: async () => {
-        const currentDateKey = getCurrentDateKey();
-        const keysToClear = [
-          SENTENCE_KEYS.COMPLETION_STATUS_KEY(userData.id, currentDateKey),
-          SENTENCE_KEYS.SENTENCES_KEY(userData.id, currentDateKey),
-          QUIZ_KEYS.QUIZ_PROGRESS_KEY(userData.id, currentDateKey),
-          QUIZ_KEYS.QUIZ_QUESTIONS_KEY(userData.id, currentDateKey),
-          QUIZ_KEYS.INCORRECT_QUESTIONS_KEY(userData.id, currentDateKey),
-          QUIZ_KEYS.INCORRECT_PROGRESS_KEY(userData.id, currentDateKey),
-          QUIZ_KEYS.SESSION_STATE_KEY(userData.id, currentDateKey),
-        ];
-
-        try {
-          await Promise.all(keysToClear.map(clearData));
-          showSuccess("Progress data cleared successfully");
-        } catch (error) {
-          showError("Failed to clear progress data");
-        }
-      },
-    });
   };
 
   if (!isLoggedIn || !userData) {

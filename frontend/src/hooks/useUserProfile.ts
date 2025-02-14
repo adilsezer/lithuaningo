@@ -1,7 +1,11 @@
 import { useState, useCallback, useEffect } from "react";
 import { useUserData } from "@stores/useUserStore";
 import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
-import { UserProfile } from "@src/types";
+import {
+  UserProfile,
+  CreateUserProfileRequest,
+  UpdateUserProfileRequest,
+} from "@src/types";
 import userProfileService from "@services/data/userProfileService";
 
 export const useUserProfile = () => {
@@ -27,6 +31,91 @@ export const useUserProfile = () => {
     }
   }, [userId, setLoading, setError]);
 
+  const createProfile = useCallback(
+    async (request: CreateUserProfileRequest) => {
+      try {
+        setLoading(true);
+        const userProfile = await userProfileService.createUserProfile(request);
+        if (userProfile) {
+          setProfile(userProfile);
+          return true;
+        }
+        return false;
+      } catch (err) {
+        setError("Failed to create user profile");
+        console.error("Error creating user profile:", err);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [setLoading, setError]
+  );
+
+  const updateProfile = useCallback(
+    async (request: UpdateUserProfileRequest) => {
+      if (!userId) return false;
+
+      try {
+        setLoading(true);
+        const userProfile = await userProfileService.updateUserProfile(
+          userId,
+          request
+        );
+        if (userProfile) {
+          setProfile(userProfile);
+          return true;
+        }
+        return false;
+      } catch (err) {
+        setError("Failed to update user profile");
+        console.error("Error updating user profile:", err);
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [userId, setLoading, setError]
+  );
+
+  const deleteProfile = useCallback(async () => {
+    if (!userId) return false;
+
+    try {
+      setLoading(true);
+      const success = await userProfileService.deleteUserProfile(userId);
+      if (success) {
+        setProfile(null);
+      }
+      return success;
+    } catch (err) {
+      setError("Failed to delete user profile");
+      console.error("Error deleting user profile:", err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, setLoading, setError]);
+
+  const updateLastLogin = useCallback(async () => {
+    if (!userId) return false;
+
+    try {
+      setLoading(true);
+      const success = await userProfileService.updateLastLogin(userId);
+      if (success) {
+        await fetchProfile();
+      }
+      return success;
+    } catch (err) {
+      setError("Failed to update last login");
+      console.error("Error updating last login:", err);
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  }, [userId, setLoading, setError, fetchProfile]);
+
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
@@ -35,5 +124,9 @@ export const useUserProfile = () => {
     profile,
     isLoading,
     fetchProfile,
+    createProfile,
+    updateProfile,
+    deleteProfile,
+    updateLastLogin,
   };
 };

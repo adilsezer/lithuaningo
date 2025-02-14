@@ -28,48 +28,61 @@ export const useUserChallengeStats = (userId?: string) => {
     }
   }, [userId, setLoading]);
 
-  const incrementCardsReviewed = useCallback(async () => {
+  const updateDailyStreak = useCallback(async () => {
     if (!userId) return;
     try {
-      await UserChallengeStatsService.incrementCardsReviewed(userId);
+      await UserChallengeStatsService.updateDailyStreak(userId);
+      await fetchStats(); // Refresh stats after update
+    } catch (error) {
+      console.error("Error updating daily streak:", error);
+      setError(
+        error instanceof Error ? error.message : "Failed to update streak"
+      );
+    }
+  }, [userId, fetchStats]);
+
+  const incrementQuizzesCompleted = useCallback(async () => {
+    if (!userId) return;
+    try {
+      await UserChallengeStatsService.incrementQuizzesCompleted(userId);
       await fetchStats(); // Refresh stats after increment
     } catch (error) {
-      console.error("Error incrementing cards reviewed:", error);
+      console.error("Error incrementing quizzes completed:", error);
       setError(
         error instanceof Error ? error.message : "Failed to update stats"
       );
     }
   }, [userId, fetchStats]);
 
-  const incrementCardsMastered = useCallback(async () => {
-    if (!userId) return;
-    try {
-      await UserChallengeStatsService.incrementCardsMastered(userId);
-      await fetchStats(); // Refresh stats after increment
-    } catch (error) {
-      console.error("Error incrementing cards mastered:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to update stats"
-      );
-    }
-  }, [userId, fetchStats]);
-
-  const updateWeeklyGoal = useCallback(
-    async (goal: number) => {
-      if (!userId) return;
+  const updateStats = useCallback(
+    async (updates: Partial<UserChallengeStats>) => {
+      if (!userId || !stats) return;
       try {
-        await UserChallengeStatsService.updateWeeklyGoal(userId, goal);
-        await fetchStats(); // Refresh stats after update
+        const updatedStats =
+          await UserChallengeStatsService.updateUserChallengeStats(userId, {
+            currentStreak: updates.currentStreak ?? stats.currentStreak,
+            longestStreak: updates.longestStreak ?? stats.longestStreak,
+            todayCorrectAnswers:
+              updates.todayCorrectAnswers ?? stats.todayCorrectAnswers,
+            todayIncorrectAnswers:
+              updates.todayIncorrectAnswers ?? stats.todayIncorrectAnswers,
+            totalChallengesCompleted:
+              updates.totalChallengesCompleted ??
+              stats.totalChallengesCompleted,
+            totalCorrectAnswers:
+              updates.totalCorrectAnswers ?? stats.totalCorrectAnswers,
+            totalIncorrectAnswers:
+              updates.totalIncorrectAnswers ?? stats.totalIncorrectAnswers,
+          });
+        setStats(updatedStats);
       } catch (error) {
-        console.error("Error updating weekly goal:", error);
+        console.error("Error updating stats:", error);
         setError(
-          error instanceof Error
-            ? error.message
-            : "Failed to update weekly goal"
+          error instanceof Error ? error.message : "Failed to update stats"
         );
       }
     },
-    [userId, fetchStats]
+    [userId, stats]
   );
 
   useEffect(() => {
@@ -80,9 +93,9 @@ export const useUserChallengeStats = (userId?: string) => {
     stats,
     error,
     isLoading,
-    incrementCardsReviewed,
-    incrementCardsMastered,
-    updateWeeklyGoal,
+    updateDailyStreak,
+    incrementQuizzesCompleted,
+    updateStats,
     refreshStats: fetchStats,
   };
 };

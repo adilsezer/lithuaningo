@@ -14,6 +14,7 @@ import { useUserData } from "@stores/useUserStore";
 import { useError, useSetError, useIsLoading } from "@stores/useUIStore";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
+import { useDeckVote } from "@src/hooks/useDeckVote";
 
 const DashboardScreen: React.FC = () => {
   const theme = useTheme();
@@ -30,12 +31,9 @@ const DashboardScreen: React.FC = () => {
 
   const { stats, error: statsError } = useUserStats();
 
-  const {
-    decks: topRatedDecks = [],
-    deckRatings = {},
-    voteDeck,
-    fetchDecks,
-  } = useDecks(userData?.id, { initialCategory: "Top Rated" });
+  const { decks: topRatedDecks = [], fetchDecks } = useDecks(userData?.id, {
+    initialCategory: "Top Rated",
+  });
 
   // Set global error state when component-specific errors occur
   useEffect(() => {
@@ -49,15 +47,21 @@ const DashboardScreen: React.FC = () => {
   }, [fetchDecks]);
 
   const handleDeckActions = React.useCallback(
-    (deckId: string) => ({
-      onVote: (isUpvote: boolean) => voteDeck(deckId, isUpvote),
-      onReport: () => router.push(`/decks/${deckId}/report`),
-      onComment: () => router.push(`/decks/${deckId}/comments`),
-      onQuiz: () => router.push(`/decks/${deckId}/quiz`),
-      onPractice: () => router.push(`/decks/${deckId}`),
-      onEdit: () => router.push(`/decks/${deckId}/edit`),
-    }),
-    [voteDeck]
+    (deckId: string) => {
+      const { voteDeck } = useDeckVote(deckId);
+      return {
+        onVote: async (isUpvote: boolean) => {
+          if (!userData?.id) return;
+          await voteDeck({ deckId, userId: userData.id, isUpvote });
+        },
+        onReport: () => router.push(`/decks/${deckId}/report`),
+        onComment: () => router.push(`/decks/${deckId}/comments`),
+        onQuiz: () => router.push(`/decks/${deckId}/quiz`),
+        onPractice: () => router.push(`/decks/${deckId}`),
+        onEdit: () => router.push(`/decks/${deckId}/edit`),
+      };
+    },
+    [userData?.id]
   );
 
   const renderTopRatedDeck = React.useCallback(() => {
@@ -81,20 +85,17 @@ const DashboardScreen: React.FC = () => {
       );
     }
 
+    const { voteCounts } = useDeckVote(topDeck.id);
     return (
       <DeckCard
         deck={topDeck}
-        rating={deckRatings?.[topDeck.id] || 0}
+        rating={
+          voteCounts.upvotes / (voteCounts.upvotes + voteCounts.downvotes) || 0
+        }
         actions={handleDeckActions(topDeck.id)}
       />
     );
-  }, [
-    topRatedDecks,
-    deckRatings,
-    handleDeckActions,
-    isLoading,
-    theme.colors.primary,
-  ]);
+  }, [topRatedDecks, handleDeckActions, isLoading, theme.colors.primary]);
 
   const content = (
     <ScrollView>
@@ -107,7 +108,7 @@ const DashboardScreen: React.FC = () => {
         )}
 
         <CustomText variant="titleLarge" bold>
-          Hi, {dashboardUser?.name || "there"}!
+          Hi, {dashboardUser?.fullName || "there"}!
         </CustomText>
 
         {stats && <UserStatsCard stats={stats} />}
