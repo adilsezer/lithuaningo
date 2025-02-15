@@ -64,7 +64,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Retrieves deck comments",
             Description = "Gets all comments associated with the specified deck",
             OperationId = "GetDeckComments",
-            Tags = new[] { "Comment" }
+            Tags = new[] { "DeckComment" }
         )]
         [ProducesResponseType(typeof(List<DeckCommentResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -120,7 +120,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Creates a new comment",
             Description = "Creates a new comment for a deck",
             OperationId = "CreateComment",
-            Tags = new[] { "Comment" }
+            Tags = new[] { "DeckComment" }
         )]
         [ProducesResponseType(typeof(DeckCommentResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -168,7 +168,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Retrieves a specific comment",
             Description = "Gets detailed information about a specific comment",
             OperationId = "GetComment",
-            Tags = new[] { "Comment" }
+            Tags = new[] { "DeckComment" }
         )]
         [ProducesResponseType(typeof(DeckCommentResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -229,7 +229,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Updates an existing comment",
             Description = "Updates a comment with the specified properties",
             OperationId = "UpdateComment",
-            Tags = new[] { "Comment" }
+            Tags = new[] { "DeckComment" }
         )]
         [ProducesResponseType(typeof(DeckCommentResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
@@ -285,7 +285,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Deletes a comment",
             Description = "Permanently removes a comment from the system",
             OperationId = "DeleteComment",
-            Tags = new[] { "Comment" }
+            Tags = new[] { "DeckComment" }
         )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -330,7 +330,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Retrieves user comments",
             Description = "Gets all comments made by the specified user",
             OperationId = "GetUserComments",
-            Tags = new[] { "Comment" }
+            Tags = new[] { "DeckComment" }
         )]
         [ProducesResponseType(typeof(List<DeckCommentResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]

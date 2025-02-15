@@ -26,7 +26,6 @@ const APP_ROUTES = [
   "decks/[id]/report",
   "flashcards/new",
   "flashcards/[id]/edit",
-  "learning/[wordId]",
   "learning/quiz",
   "auth/login",
   "auth/signup",

@@ -51,4 +51,9 @@ public class UserChallengeStatsResponse
     /// Total number of incorrect answers
     /// </summary>
     public int TotalIncorrectAnswers { get; set; }
+
+    /// <summary>
+    /// Total number of answers today (correct + incorrect)
+    /// </summary>
+    public int TodayTotalAnswers => TodayCorrectAnswers + TodayIncorrectAnswers;
 }

@@ -3,7 +3,7 @@ import { ScrollView, View, StyleSheet } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { useUserStats } from "@hooks/useUserStats";
+import { useUserChallengeStats } from "@hooks/useUserChallengeStats";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 
@@ -24,7 +24,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 }) => {
   const theme = useTheme();
   const router = useRouter();
-  const { stats } = useUserStats();
+  const { stats } = useUserChallengeStats();
   const [timeRemaining, setTimeRemaining] = useState(calculateTimeRemaining());
 
   useEffect(() => {
@@ -56,7 +56,7 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
 
       {showStats && (
         <View style={styles.statsContainer}>
-          {stats?.todayAnsweredQuestions !== undefined && (
+          {stats?.todayTotalAnswers !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="help-circle-outline"
@@ -64,13 +64,13 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 color={theme.colors.primary}
               />
               <CustomText style={styles.statText}>
-                {stats?.todayAnsweredQuestions}
+                {stats?.todayTotalAnswers}
               </CustomText>
               <CustomText>Total Questions</CustomText>
             </View>
           )}
 
-          {stats?.todayCorrectAnsweredQuestions !== undefined && (
+          {stats?.todayCorrectAnswers !== undefined && (
             <View style={styles.statItem}>
               <Ionicons
                 name="checkmark-circle-outline"
@@ -78,19 +78,18 @@ const CompletedLayout: React.FC<CompletedLayoutProps> = ({
                 color="green"
               />
               <CustomText style={styles.statText}>
-                {stats?.todayCorrectAnsweredQuestions}
+                {stats?.todayCorrectAnswers}
               </CustomText>
               <CustomText>Correct Answers</CustomText>
             </View>
           )}
 
-          {stats?.todayAnsweredQuestions !== undefined &&
-            stats?.todayCorrectAnsweredQuestions !== undefined && (
+          {stats?.todayTotalAnswers !== undefined &&
+            stats?.todayCorrectAnswers !== undefined && (
               <View style={styles.statItem}>
                 <Ionicons name="close-circle-outline" size={24} color="red" />
                 <CustomText style={styles.statText}>
-                  {stats.todayAnsweredQuestions -
-                    stats.todayCorrectAnsweredQuestions}
+                  {stats?.todayTotalAnswers - stats?.todayCorrectAnswers}
                 </CustomText>
                 <CustomText>Wrong Answers</CustomText>
               </View>

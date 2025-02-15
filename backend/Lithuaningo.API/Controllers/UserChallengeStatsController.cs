@@ -53,7 +53,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Retrieves challenge statistics for a user",
             Description = "Gets detailed challenge statistics for a specified user",
             OperationId = "GetChallengeStats",
-            Tags = new[] { "ChallengeStats" }
+            Tags = new[] { "UserChallengeStats" }
         )]
         [ProducesResponseType(typeof(UserChallengeStatsResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -110,7 +110,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Updates daily streak",
             Description = "Updates the daily streak counter for a user",
             OperationId = "UpdateDailyStreak",
-            Tags = new[] { "ChallengeStats" }
+            Tags = new[] { "UserChallengeStats" }
         )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
@@ -159,7 +159,7 @@ namespace Lithuaningo.API.Controllers
             Summary = "Increments completed quizzes",
             Description = "Increments the total number of quizzes completed by a user",
             OperationId = "IncrementQuizzesCompleted",
-            Tags = new[] { "ChallengeStats" }
+            Tags = new[] { "UserChallengeStats" }
         )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]

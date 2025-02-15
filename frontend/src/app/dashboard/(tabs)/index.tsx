@@ -6,7 +6,6 @@ import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
 import { UserStatsCard } from "@components/dashboard/UserStatsCard";
 import { useDashboard } from "@hooks/useDashboard";
-import { useUserStats } from "@hooks/useUserStats";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useDecks } from "@hooks/useDecks";
 import { DeckCard } from "@components/deck/DeckCard";
@@ -15,6 +14,7 @@ import { useError, useSetError, useIsLoading } from "@stores/useUIStore";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useDeckVote } from "@src/hooks/useDeckVote";
+import { useUserChallengeStats } from "@hooks/useUserChallengeStats";
 
 const DashboardScreen: React.FC = () => {
   const theme = useTheme();
@@ -29,7 +29,7 @@ const DashboardScreen: React.FC = () => {
     clearError,
   } = useDashboard();
 
-  const { stats, error: statsError } = useUserStats();
+  const { stats, error: statsError } = useUserChallengeStats();
 
   const { decks: topRatedDecks = [], fetchDecks } = useDecks(userData?.id, {
     initialCategory: "Top Rated",
@@ -114,8 +114,8 @@ const DashboardScreen: React.FC = () => {
         {stats && <UserStatsCard stats={stats} />}
 
         <DailyChallengeCard
-          answeredQuestions={stats?.todayAnsweredQuestions ?? 0}
-          correctAnswers={stats?.todayCorrectAnsweredQuestions ?? 0}
+          answeredQuestions={stats?.todayTotalAnswers ?? 0}
+          correctAnswers={stats?.todayCorrectAnswers ?? 0}
         />
         <CustomButton
           title="Start Daily Challenge"

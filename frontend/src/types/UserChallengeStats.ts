@@ -7,6 +7,7 @@ export interface UserChallengeStats {
   hasCompletedTodayChallenge: boolean;
   todayCorrectAnswers: number;
   todayIncorrectAnswers: number;
+  todayTotalAnswers: number;
   totalChallengesCompleted: number;
   totalCorrectAnswers: number;
   totalIncorrectAnswers: number;
