@@ -117,3 +117,11 @@ export const quizFormSchema = z.object({
 export const deckCommentFormSchema = z.object({
   content: z.string().min(1, "Deck comment is required"),
 });
+
+export const verifyEmailFormSchema = z.object({
+  token: z
+    .string()
+    .min(1, "Verification code is required")
+    .length(6, "Verification code must be 6 digits")
+    .regex(/^\d+$/, "Verification code must contain only numbers"),
+});

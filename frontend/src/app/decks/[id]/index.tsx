@@ -17,8 +17,7 @@ export default function PracticeScreen() {
   const { getDeckFlashcards, flashcards, error } = useFlashcards();
   const theme = useTheme();
   const userData = useUserData();
-  const { stats, isLoading, incrementCardsReviewed, incrementCardsMastered } =
-    useUserChallengeStats(userData?.id);
+  const { stats, isLoading, updateStats } = useUserChallengeStats(userData?.id);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -31,10 +30,12 @@ export default function PracticeScreen() {
     if (!userData?.id) return;
 
     try {
-      await incrementCardsReviewed();
-      if (isCorrect) {
-        await incrementCardsMastered();
-      }
+      await updateStats({
+        todayCorrectAnswers:
+          (stats?.todayCorrectAnswers ?? 0) + (isCorrect ? 1 : 0),
+        todayIncorrectAnswers:
+          (stats?.todayIncorrectAnswers ?? 0) + (isCorrect ? 0 : 1),
+      });
     } catch (error) {
       console.error("Error updating challenge stats:", error);
     }

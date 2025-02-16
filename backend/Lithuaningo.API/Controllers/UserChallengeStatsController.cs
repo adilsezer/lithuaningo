@@ -34,7 +34,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/ChallengeStats/{userId}/stats
+        ///     GET /api/v1/UserChallengeStats/{userId}/stats
         /// 
         /// The response includes:
         /// - Daily streak information
@@ -96,7 +96,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     POST /api/v1/ChallengeStats/{userId}/stats/streak
+        ///     POST /api/v1/UserChallengeStats/{userId}/stats/streak
         /// 
         /// This endpoint should be called when a user completes their daily challenge
         /// to maintain their streak count.
@@ -145,7 +145,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     POST /api/v1/ChallengeStats/{userId}/stats/quiz-completed
+        ///     POST /api/v1/UserChallengeStats/{userId}/stats/quiz-completed
         /// 
         /// This endpoint should be called each time a user completes a quiz,
         /// regardless of their performance.

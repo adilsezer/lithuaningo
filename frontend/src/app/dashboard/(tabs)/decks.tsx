@@ -12,6 +12,40 @@ import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { CustomPicker } from "@components/ui/CustomPicker";
 import { useDeckVote } from "@src/hooks/useDeckVote";
+import { Deck } from "@src/types";
+
+// Separate component for DeckCard with votes
+const DeckCardWithVotes: React.FC<{ deck: Deck }> = ({ deck }) => {
+  const router = useRouter();
+  const userData = useUserData();
+  const { voteCounts, voteDeck } = useDeckVote(deck.id);
+
+  const handleNavigation = useCallback(
+    (route: string) => {
+      if (!userData?.id) {
+        return;
+      }
+      router.push(route);
+    },
+    [userData?.id, router]
+  );
+
+  const actions = {
+    onVote: async (isUpvote: boolean) => {
+      if (!userData?.id) return;
+      await voteDeck({ deckId: deck.id, userId: userData.id, isUpvote });
+    },
+    onReport: () => handleNavigation(`/decks/${deck.id}/report`),
+    onComment: () => handleNavigation(`/decks/${deck.id}/comments`),
+    onQuiz: () => handleNavigation(`/decks/${deck.id}/quiz`),
+    onPractice: () => handleNavigation(`/decks/${deck.id}`),
+    onEdit: () => handleNavigation(`/decks/${deck.id}/edit`),
+  };
+
+  const rating =
+    voteCounts.upvotes / (voteCounts.upvotes + voteCounts.downvotes) || 0;
+  return <DeckCard deck={deck} rating={rating} actions={actions} />;
+};
 
 export default function DecksScreen() {
   const userData = useUserData();
@@ -43,24 +77,6 @@ export default function DecksScreen() {
       router.push(route);
     },
     [isAuthenticated, router]
-  );
-
-  const handleDeckActions = useCallback(
-    (deckId: string) => {
-      const { voteDeck } = useDeckVote(deckId);
-      return {
-        onVote: async (isUpvote: boolean) => {
-          if (!userData?.id) return;
-          await voteDeck({ deckId, userId: userData.id, isUpvote });
-        },
-        onReport: () => handleNavigation(`/decks/${deckId}/report`),
-        onComment: () => handleNavigation(`/decks/${deckId}/comments`),
-        onQuiz: () => handleNavigation(`/decks/${deckId}/quiz`),
-        onPractice: () => handleNavigation(`/decks/${deckId}`),
-        onEdit: () => handleNavigation(`/decks/${deckId}/edit`),
-      };
-    },
-    [userData?.id, handleNavigation]
   );
 
   const renderHeader = useCallback(
@@ -120,19 +136,7 @@ export default function DecksScreen() {
     >
       <FlatList
         data={decks}
-        renderItem={({ item }) => {
-          const { voteCounts } = useDeckVote(item.id);
-          return (
-            <DeckCard
-              deck={item}
-              rating={
-                voteCounts.upvotes /
-                  (voteCounts.upvotes + voteCounts.downvotes) || 0
-              }
-              actions={handleDeckActions(item.id)}
-            />
-          );
-        }}
+        renderItem={({ item }) => <DeckCardWithVotes deck={item} />}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={renderHeader}

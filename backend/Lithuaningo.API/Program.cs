@@ -19,6 +19,7 @@ using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationM
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Lithuaningo.API.Services.Auth;
+using System.Text;
 
 // TODO: Add HTTPS to the API when deploying to production
 
@@ -345,31 +346,38 @@ To authorize in Swagger UI:
     // Add Authentication Services
     services.AddScoped<IAuthService, AuthService>();
 
+    // Add JWT Authentication
     services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         .AddJwtBearer(options =>
         {
+            var supabaseSettings = configuration.GetSection("Supabase").Get<SupabaseSettings>();
+            if (supabaseSettings == null)
+            {
+                throw new InvalidOperationException("Supabase settings not found in configuration");
+            }
+
             options.TokenValidationParameters = new TokenValidationParameters
             {
-                ValidateIssuerSigningKey = true,
-                ValidateIssuer = false,
-                ValidateAudience = false,
+                ValidateIssuer = true,
+                ValidateAudience = true,
                 ValidateLifetime = true,
-                ClockSkew = TimeSpan.Zero
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = $"{supabaseSettings.Url}/auth/v1",
+                ValidAudience = "authenticated",
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(supabaseSettings.JwtSecret)),
+                ClockSkew = TimeSpan.FromMinutes(5)
             };
 
             options.Events = new JwtBearerEvents
             {
-                OnMessageReceived = async context =>
+                OnAuthenticationFailed = context =>
                 {
-                    var token = context.Request.Headers["Authorization"].FirstOrDefault()?.Split(" ").Last();
-                    if (string.IsNullOrEmpty(token)) return;
-
-                    var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
-                    var isValid = await authService.ValidateTokenAsync(token);
-                    if (!isValid)
+                    if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
                     {
-                        context.Fail("Invalid token");
+                        context.Response.Headers["Token-Expired"] = "true";
                     }
+                    return Task.CompletedTask;
                 }
             };
         });

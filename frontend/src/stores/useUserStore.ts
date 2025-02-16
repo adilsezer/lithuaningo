@@ -74,22 +74,32 @@ export const useUserStore = create<UserStore>()(
       storageInitialized: false,
 
       // Actions
-      logIn: (userData) =>
+      logIn: (userData) => {
+        console.log("[UserStore] Logging in user:", {
+          id: userData.id,
+          email: userData.email,
+          emailVerified: userData.emailVerified,
+        });
         set({
           isLoggedIn: true,
           userData,
           needsReauthentication: false,
           error: null,
-        }),
+        });
+        console.log("[UserStore] User logged in successfully");
+      },
 
-      logOut: () =>
+      logOut: () => {
+        console.log("[UserStore] Logging out user");
         set({
           isLoggedIn: false,
           userData: null,
           needsReauthentication: false,
           error: null,
           isAuthenticated: false,
-        }),
+        });
+        console.log("[UserStore] User logged out successfully");
+      },
 
       updateUserProfile: (userData) =>
         set((state) => ({
@@ -100,17 +110,23 @@ export const useUserStore = create<UserStore>()(
       requireReauthentication: () => set({ needsReauthentication: true }),
       clearReauthentication: () => set({ needsReauthentication: false }),
 
-      deleteAccount: () =>
+      deleteAccount: () => {
+        console.log("[UserStore] Deleting account and clearing state");
         set({
           isLoggedIn: false,
           userData: null,
           needsReauthentication: false,
           error: null,
           isAuthenticated: false,
-        }),
+        });
+        console.log("[UserStore] Account deleted and state cleared");
+      },
 
       setError: (error) => set({ error }),
-      setAuthenticated: (value) => set({ isAuthenticated: value }),
+      setAuthenticated: (value) => {
+        console.log("[UserStore] Setting authenticated state:", value);
+        set({ isAuthenticated: value });
+      },
       setStorageInitialized: (value) => set({ storageInitialized: value }),
     }),
     {

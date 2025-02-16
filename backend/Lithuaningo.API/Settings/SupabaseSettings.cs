@@ -5,6 +5,7 @@ public class SupabaseSettings
     public string Url { get; set; } = string.Empty;
     public string AnonKey { get; set; } = string.Empty;
     public string ServiceKey { get; set; } = string.Empty;
+    public string JwtSecret { get; set; } = string.Empty;
 
     public void Validate()
     {
@@ -14,5 +15,7 @@ public class SupabaseSettings
             throw new InvalidOperationException("Supabase Service Key is required");
         if (string.IsNullOrEmpty(AnonKey))
             throw new InvalidOperationException("Supabase Anon Key is required");
+        if (string.IsNullOrEmpty(JwtSecret))
+            throw new InvalidOperationException("Supabase JWT Secret is required");
     }
 } 

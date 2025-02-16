@@ -15,13 +15,58 @@ import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useDeckVote } from "@src/hooks/useDeckVote";
 import { useUserChallengeStats } from "@hooks/useUserChallengeStats";
+import { Deck } from "@src/types";
+
+const TopRatedDeckCard: React.FC<{ deck: Deck | null }> = ({ deck }) => {
+  const theme = useTheme();
+  const userData = useUserData();
+  const isLoading = useIsLoading();
+  const { voteDeck, voteCounts } = useDeckVote(deck?.id ?? "");
+
+  if (isLoading) {
+    return (
+      <View style={styles.emptyState}>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+      </View>
+    );
+  }
+
+  if (!deck) {
+    return (
+      <View style={styles.emptyState}>
+        <CustomText>No top rated decks this week</CustomText>
+      </View>
+    );
+  }
+
+  const actions = {
+    onVote: async (isUpvote: boolean) => {
+      if (!userData?.id) return;
+      await voteDeck({ deckId: deck.id, userId: userData.id, isUpvote });
+    },
+    onReport: () => router.push(`/decks/${deck.id}/report`),
+    onComment: () => router.push(`/decks/${deck.id}/comments`),
+    onQuiz: () => router.push(`/decks/${deck.id}/quiz`),
+    onPractice: () => router.push(`/decks/${deck.id}`),
+    onEdit: () => router.push(`/decks/${deck.id}/edit`),
+  };
+
+  return (
+    <DeckCard
+      deck={deck}
+      rating={
+        voteCounts.upvotes / (voteCounts.upvotes + voteCounts.downvotes) || 0
+      }
+      actions={actions}
+    />
+  );
+};
 
 const DashboardScreen: React.FC = () => {
   const theme = useTheme();
   const userData = useUserData();
   const error = useError();
   const setError = useSetError();
-  const isLoading = useIsLoading();
 
   const {
     userData: dashboardUser,
@@ -45,57 +90,6 @@ const DashboardScreen: React.FC = () => {
   React.useEffect(() => {
     fetchDecks();
   }, [fetchDecks]);
-
-  const handleDeckActions = React.useCallback(
-    (deckId: string) => {
-      const { voteDeck } = useDeckVote(deckId);
-      return {
-        onVote: async (isUpvote: boolean) => {
-          if (!userData?.id) return;
-          await voteDeck({ deckId, userId: userData.id, isUpvote });
-        },
-        onReport: () => router.push(`/decks/${deckId}/report`),
-        onComment: () => router.push(`/decks/${deckId}/comments`),
-        onQuiz: () => router.push(`/decks/${deckId}/quiz`),
-        onPractice: () => router.push(`/decks/${deckId}`),
-        onEdit: () => router.push(`/decks/${deckId}/edit`),
-      };
-    },
-    [userData?.id]
-  );
-
-  const renderTopRatedDeck = React.useCallback(() => {
-    if (isLoading) {
-      return (
-        <View style={styles.emptyState}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-        </View>
-      );
-    }
-
-    const hasTopRatedDecks =
-      Array.isArray(topRatedDecks) && topRatedDecks.length > 0;
-    const topDeck = hasTopRatedDecks ? topRatedDecks[0] : null;
-
-    if (!hasTopRatedDecks || !topDeck) {
-      return (
-        <View style={styles.emptyState}>
-          <CustomText>No top rated decks this week</CustomText>
-        </View>
-      );
-    }
-
-    const { voteCounts } = useDeckVote(topDeck.id);
-    return (
-      <DeckCard
-        deck={topDeck}
-        rating={
-          voteCounts.upvotes / (voteCounts.upvotes + voteCounts.downvotes) || 0
-        }
-        actions={handleDeckActions(topDeck.id)}
-      />
-    );
-  }, [topRatedDecks, handleDeckActions, isLoading, theme.colors.primary]);
 
   const content = (
     <ScrollView>
@@ -123,7 +117,9 @@ const DashboardScreen: React.FC = () => {
         />
 
         <CustomText variant="titleLarge">Top Rated Deck of the Week</CustomText>
-        {renderTopRatedDeck()}
+        <TopRatedDeckCard
+          deck={topRatedDecks.length > 0 ? topRatedDecks[0] : null}
+        />
         <CustomButton
           title="View All Decks"
           onPress={() => router.push("/dashboard/decks")}

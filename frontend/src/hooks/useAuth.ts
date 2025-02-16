@@ -10,6 +10,8 @@ import {
   updatePassword,
   resetPassword,
   deleteAccount,
+  verifyEmail as verifyEmailService,
+  resendOTP,
 } from "@services/auth/authService";
 import { useAuthOperation } from "./useAuthOperation";
 import { useAlertDialog } from "@hooks/useAlertDialog";
@@ -31,19 +33,30 @@ export const useAuth = () => {
     [router]
   );
 
+  const navigateToVerification = useCallback(
+    (email: string) => {
+      router.push({
+        pathname: "/auth/verify-email",
+        params: { email },
+      });
+    },
+    [router]
+  );
+
   // Authentication methods
   const signUp = useCallback(
     async (email: string, password: string, name: string) => {
       const result = await performAuthOperation(async () => {
         const response = await signUpWithEmail(email, password, name);
         if (response.success) {
-          // crashlytics().log("User signed up successfully");
           showAlert({
-            title: "Verification Email Sent",
-            message:
-              "Please check your email to verify your account before logging in.",
+            title: "Verification Required",
+            message: "Please check your email for the verification code.",
             buttons: [
-              { text: "OK", onPress: () => navigateAfterAuth("/auth/login") },
+              {
+                text: "OK",
+                onPress: () => navigateToVerification(email),
+              },
             ],
           });
         }
@@ -51,22 +64,38 @@ export const useAuth = () => {
       }, "Sign Up Failed");
       return result;
     },
-    [performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, showAlert, navigateToVerification]
   );
 
   const signIn = useCallback(
     async (email: string, password: string) => {
       const result = await performAuthOperation(async () => {
         const response = await signInWithEmail(email, password);
+        console.log("Sign in response:", response);
+
         if (response.success) {
-          // crashlytics().log("User signed in with email");
           navigateAfterAuth("/dashboard");
+          return response;
         }
+
+        if (response.code === "EMAIL_NOT_VERIFIED") {
+          const emailToVerify = response.email || email;
+          console.log("Redirecting to verification for email:", emailToVerify);
+
+          navigateToVerification(emailToVerify);
+
+          showAlert({
+            title: "Email Not Verified",
+            message: "Please verify your email before logging in.",
+            buttons: [{ text: "OK", onPress: () => {} }],
+          });
+        }
+
         return response;
       }, "Login Failed");
       return result;
     },
-    [performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth, showAlert, navigateToVerification]
   );
 
   const signInWithSocial = useCallback(
@@ -163,6 +192,45 @@ export const useAuth = () => {
     return result;
   }, [performAuthOperation, navigateAfterAuth]);
 
+  const verifyEmail = useCallback(
+    async (email: string, token: string) => {
+      const result = await performAuthOperation(async () => {
+        const response = await verifyEmailService(email, token);
+        if (response.success) {
+          // crashlytics().log("Email verified successfully");
+          showAlert({
+            title: "Success",
+            message: "Your email has been verified. You can now log in.",
+            buttons: [
+              { text: "OK", onPress: () => navigateAfterAuth("/auth/login") },
+            ],
+          });
+        }
+        return response;
+      }, "Email Verification Failed");
+      return result;
+    },
+    [performAuthOperation, navigateAfterAuth, showAlert]
+  );
+
+  const resendVerificationCode = useCallback(
+    async (email: string) => {
+      const result = await performAuthOperation(async () => {
+        const response = await resendOTP(email);
+        if (response.success) {
+          showAlert({
+            title: "Code Sent",
+            message: "A new verification code has been sent to your email.",
+            buttons: [{ text: "OK", onPress: () => {} }],
+          });
+        }
+        return response;
+      }, "Resend Failed");
+      return result.success;
+    },
+    [performAuthOperation, showAlert]
+  );
+
   return {
     signUp,
     signIn,
@@ -172,5 +240,7 @@ export const useAuth = () => {
     updatePassword: handleUpdatePassword,
     resetPassword: handleResetPassword,
     deleteAccount: handleDeleteAccount,
+    verifyEmail,
+    resendVerificationCode,
   };
 };

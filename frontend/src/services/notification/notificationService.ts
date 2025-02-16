@@ -1,9 +1,9 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
-import { getCurrentDateKey } from "@utils/dateUtils";
 import { storeData, retrieveData } from "@utils/storageUtils";
-import { NOTIFICATION_KEYS, SENTENCE_KEYS } from "@config/constants";
+import { NOTIFICATION_KEYS } from "@config/constants";
+import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -51,15 +51,14 @@ async function requestPermissions() {
   }
 }
 
-async function checkIfReviewedToday(
-  userId: string | undefined
-): Promise<boolean> {
-  const COMPLETION_STATUS_KEY = SENTENCE_KEYS.COMPLETION_STATUS_KEY(
-    userId!,
-    getCurrentDateKey()
-  );
-  const completionStatus = await retrieveData<boolean>(COMPLETION_STATUS_KEY);
-  return completionStatus ?? false;
+async function checkIfCompletedToday(userId: string): Promise<boolean> {
+  try {
+    const stats = await UserChallengeStatsService.getUserChallengeStats(userId);
+    return stats.hasCompletedTodayChallenge;
+  } catch (error) {
+    console.error("Error checking daily completion status:", error);
+    return false;
+  }
 }
 
 function getNextDayDate(date: Date): Date {
@@ -73,11 +72,13 @@ export async function scheduleDailyReviewReminder(
   time: Date,
   forNextDay = false
 ) {
+  if (!userId) return;
+
   await cancelAllScheduledNotifications();
 
   try {
-    const hasReviewedToday = await checkIfReviewedToday(userId);
-    if (!hasReviewedToday || forNextDay) {
+    const hasCompletedToday = await checkIfCompletedToday(userId);
+    if (!hasCompletedToday || forNextDay) {
       const notificationDate = forNextDay ? getNextDayDate(time) : time;
       await Notifications.scheduleNotificationAsync({
         content: {

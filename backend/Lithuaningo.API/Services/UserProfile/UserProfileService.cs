@@ -82,41 +82,41 @@ namespace Lithuaningo.API.Services
 
         public async Task<UserProfileResponse> CreateUserProfileAsync(CreateUserProfileRequest request)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            if (!Guid.TryParse(request.UserId, out var userGuid))
-            {
-                throw new ArgumentException("Invalid user ID format", nameof(request.UserId));
-            }
-
             try
             {
-                var profile = _mapper.Map<UserProfile>(request);
-                profile.Id = userGuid;
+                _logger.LogInformation("Creating user profile for user: {UserId}", request.UserId);
+
+                var profile = _mapper.Map<Models.UserProfile>(request);
+                profile.LastLoginAt = DateTime.UtcNow;
                 profile.CreatedAt = DateTime.UtcNow;
                 profile.UpdatedAt = DateTime.UtcNow;
-                profile.LastLoginAt = DateTime.UtcNow;
 
-                var response = await _supabaseClient
-                    .From<UserProfile>()
-                    .Insert(profile);
+                var supabaseTable = _supabaseClient.From<Models.UserProfile>();
+                
+                // Check if profile already exists
+                var existingProfile = await supabaseTable
+                    .Where(p => p.Id == profile.Id)
+                    .Single();
+                    
+                if (existingProfile != null)
+                {
+                    _logger.LogWarning("Profile already exists for user: {UserId}", request.UserId);
+                    return _mapper.Map<UserProfileResponse>(existingProfile);
+                }
 
-                var createdProfile = response.Models.First();
-                var profileResponse = _mapper.Map<UserProfileResponse>(createdProfile);
+                // Create new profile
+                await supabaseTable.Insert(profile);
+                _logger.LogInformation("Successfully created profile for user: {UserId}", request.UserId);
 
-                // Invalidate cache
-                var cacheKey = $"{CacheKeyPrefix}{request.UserId}";
-                await _cache.RemoveAsync(cacheKey);
+                // Clear cache
+                await _cache.RemoveAsync($"{CacheKeyPrefix}{request.UserId}");
 
-                _logger.LogInformation("Created user profile for user {UserId}", request.UserId);
-                return profileResponse;
+                return _mapper.Map<UserProfileResponse>(profile);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating user profile for user {UserId}", request.UserId);
+                _logger.LogError(ex, "Failed to create user profile for user: {UserId}. Error: {Error}", 
+                    request.UserId, ex.Message);
                 throw;
             }
         }

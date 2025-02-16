@@ -56,6 +56,8 @@ export type FormField = {
   // Link
   linkText?: string;
   onPress?: () => void;
+
+  maxLength?: number;
 };
 
 export interface FormProps<T extends FieldValues> {

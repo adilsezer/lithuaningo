@@ -52,19 +52,25 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                var query = _supabaseClient
-                    .From<Deck>()
-                    .Filter(d => d.IsPublic, Operator.Equals, true);
+                // Start with a basic query
+                var supabaseTable = _supabaseClient.From<Deck>();
+                
+                // Apply filters - using raw "true" value for boolean filter
+                var query = supabaseTable.Filter(d => d.IsPublic, Operator.Equals, "true");
 
                 if (!string.IsNullOrEmpty(category))
                 {
                     query = query.Filter(d => d.Category, Operator.Equals, category);
                 }
 
+                // Apply limit if specified
                 if (limit.HasValue)
                 {
                     query = query.Limit(limit.Value);
                 }
+
+                // Order by creation date (newest first)
+                query = query.Order("created_at", Ordering.Descending);
 
                 var response = await query.Get();
                 var decks = response.Models;
@@ -184,11 +190,28 @@ namespace Lithuaningo.API.Services
                 var response = await _supabaseClient
                     .From<Deck>()
                     .Where(d => d.IsPublic == true)
-                    .Order(d => d.Rating, Ordering.Descending)
+                    .Order("rating", Ordering.Descending)
                     .Limit(limit)
                     .Get();
 
                 var decks = response.Models;
+                
+                // Update ratings before mapping
+                foreach (var deck in decks)
+                {
+                    var votes = await _supabaseClient
+                        .From<DeckVote>()
+                        .Where(v => v.DeckId == deck.Id)
+                        .Get();
+
+                    if (votes.Models.Any())
+                    {
+                        int totalVotes = votes.Models.Count;
+                        int upvotes = votes.Models.Count(v => v.IsUpvote);
+                        deck.Rating = (double)upvotes / totalVotes;
+                    }
+                }
+
                 var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
 
                 await _cache.SetAsync(cacheKey, deckResponses,
@@ -343,8 +366,8 @@ namespace Lithuaningo.API.Services
                 // Check for an existing vote
                 var existingVoteResponse = await _supabaseClient
                     .From<DeckVote>()
-                    .Filter(v => v.DeckId, Operator.Equals, deckGuid)
-                    .Filter(v => v.UserId, Operator.Equals, userGuid)
+                    .Where(v => v.DeckId == deckGuid)
+                    .Where(v => v.UserId == userGuid)
                     .Get();
 
                 if (existingVoteResponse.Models.Any())
@@ -405,7 +428,7 @@ namespace Lithuaningo.API.Services
 
                 // Simple search using a case-insensitive "like" operator on the title
                 var response = await baseQuery
-                    .Filter(d => d.Title, Operator.ILike, $"%{query}%")
+                    .Filter("title", Operator.ILike, $"%{query}%")
                     .Get();
 
                 var decks = response.Models;
@@ -493,7 +516,7 @@ namespace Lithuaningo.API.Services
             {
                 var query = _supabaseClient
                     .From<DeckVote>()
-                    .Filter(v => v.DeckId, Operator.Equals, deckGuid);
+                    .Where(v => v.DeckId == deckGuid);
 
                 // Filter votes by time range if needed
                 if (timeRange != "all")
@@ -506,7 +529,7 @@ namespace Lithuaningo.API.Services
                         _ => DateTime.MinValue
                     };
 
-                    query = query.Filter(v => v.CreatedAt, Operator.GreaterThanOrEqual, startDate);
+                    query = query.Filter("created_at", Operator.GreaterThanOrEqual, startDate);
                 }
 
                 var votesResponse = await query.Get();

@@ -7,6 +7,9 @@ import { getErrorMessage } from "@utils/errorMessages";
 import { supabase } from "@services/supabase/supabaseClient";
 import { User } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { AUTH_PATTERNS } from "@utils/validationPatterns";
+import { AuthResponse } from "@src/types/auth.types";
+import { updateUserState } from "@services/user/userStateService";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -14,11 +17,6 @@ GoogleSignin.configure({
   iosClientId: Constants.expoConfig?.extra?.googleIosClientId,
   offlineAccess: true,
 });
-
-interface AuthResponse {
-  success: boolean;
-  message?: string;
-}
 
 interface ProfileUpdateData {
   displayName?: string;
@@ -38,7 +36,9 @@ const handleAuthError = (error: any): AuthResponse => {
   if (error.message?.includes("Email not confirmed")) {
     return {
       success: false,
-      message: "Please verify your email address before signing in.",
+      message: "Please verify your email before logging in.",
+      code: "EMAIL_NOT_VERIFIED",
+      email: error.email, // Include email from error
     };
   }
 
@@ -48,92 +48,54 @@ const handleAuthError = (error: any): AuthResponse => {
   };
 };
 
-const updateEmailVerificationStatus = async (
-  userId: string,
-  email: string,
-  emailVerified: boolean
-) => {
-  try {
-    const userProfile = await apiClient.getUserProfile(userId);
-    if (userProfile) {
-      await apiClient.updateUserProfile(userId, {
-        email,
-        emailVerified,
-        fullName: userProfile.fullName,
-        isAdmin: userProfile.isAdmin,
-        isPremium: userProfile.isPremium,
-        premiumExpiresAt: userProfile.premiumExpiresAt,
-        avatarUrl: userProfile.avatarUrl,
-      });
-    }
-  } catch (error) {
-    console.error("Error updating email verification status:", error);
-  }
-};
-
-export const updateUserState = async (session: { user: User } | null) => {
-  if (!session?.user) {
-    throw new Error("User is unexpectedly null or undefined.");
-  }
-
-  const { user } = session;
-  if (!user.email) {
-    throw new Error("User email is unexpectedly null or undefined.");
-  }
-
-  const name = user.user_metadata?.name;
-  if (!name || typeof name !== "string") {
-    throw new Error("User name is required and must be a string");
-  }
-
-  useUserStore.getState().logIn({
-    id: user.id,
-    email: user.email,
-    fullName: name,
-    emailVerified: user.email_confirmed_at !== null,
-    isAdmin: false,
-    isPremium: false,
-    premiumExpiresAt: undefined,
-  });
-
-  await ensureUserProfile(user.id, user.email, name);
-};
-
 const ensureUserProfile = async (
   userId: string,
   email: string,
   name: string
 ) => {
-  if (!userId || !email || !name) {
-    throw new Error("Missing required user profile information");
-  }
+  console.log("[ensureUserProfile] Starting with:", { email, name, userId });
 
   try {
-    const userProfile = await apiClient.getUserProfile(userId);
-    if (!userProfile) {
-      // Create new profile with default values
-      await apiClient.createUserProfile({
-        userId,
-        email,
-        emailVerified: false,
-        fullName: name,
-        isAdmin: false,
-        isPremium: false,
-      });
-    } else {
-      // Update existing profile
-      await apiClient.updateUserProfile(userId, {
-        email,
-        emailVerified: userProfile.emailVerified,
-        fullName: name,
-        isAdmin: userProfile.isAdmin,
-        isPremium: userProfile.isPremium,
-        premiumExpiresAt: userProfile.premiumExpiresAt,
-        avatarUrl: userProfile.avatarUrl,
-      });
+    console.log("[ensureUserProfile] Getting session");
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+    if (!session?.access_token) {
+      console.error("[ensureUserProfile] No access token in session");
+      throw new Error("No valid session available");
     }
-  } catch (error) {
-    console.error("Error ensuring user profile:", error);
+    console.log("[ensureUserProfile] Valid session obtained");
+
+    try {
+      console.log("[ensureUserProfile] Fetching existing profile");
+      await apiClient.getUserProfile(userId);
+      console.log("[ensureUserProfile] Existing profile found");
+      return true;
+    } catch (error: any) {
+      if (error?.status === 404) {
+        console.log(
+          "[ensureUserProfile] No existing profile, creating new one"
+        );
+        const createProfileRequest = {
+          userId,
+          email,
+          emailVerified: true,
+          fullName: name,
+          isAdmin: false,
+          isPremium: false,
+          premiumExpiresAt: undefined,
+          lastLoginAt: new Date().toISOString(),
+        };
+
+        await apiClient.createUserProfile(createProfileRequest);
+        console.log("[ensureUserProfile] New profile created successfully");
+        return true;
+      }
+      throw error;
+    }
+  } catch (error: any) {
+    console.error("[ensureUserProfile] Error:", error);
+    throw new Error("Failed to create or update user profile");
   }
 };
 
@@ -144,6 +106,13 @@ export const signUpWithEmail = async (
   name: string
 ): Promise<AuthResponse> => {
   try {
+    if (!AUTH_PATTERNS.EMAIL.test(email)) {
+      return {
+        success: false,
+        message: "Please enter a valid email address.",
+      };
+    }
+
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
@@ -156,15 +125,51 @@ export const signUpWithEmail = async (
 
     if (error) throw error;
 
-    if (data.user) {
-      await ensureUserProfile(data.user.id, email, name);
+    if (data.user?.identities?.length === 0) {
+      return {
+        success: false,
+        message: "The email address is already registered.",
+      };
     }
 
     return {
       success: true,
-      message: "Registration successful! Please verify your email to continue.",
+      message:
+        "Registration successful! Please verify your email with the code sent.",
     };
   } catch (error) {
+    return handleAuthError(error);
+  }
+};
+
+export const verifyEmail = async (
+  email: string,
+  token: string
+): Promise<AuthResponse> => {
+  try {
+    const { data: verifyData, error: verifyError } =
+      await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "signup",
+      });
+
+    if (verifyError) throw verifyError;
+
+    if (verifyData.user) {
+      const name = verifyData.user.user_metadata?.name;
+      if (!name) {
+        throw new Error("Name is required");
+      }
+      await ensureUserProfile(verifyData.user.id, email, name);
+    }
+
+    return {
+      success: true,
+      message: "Email verified successfully! You can now log in.",
+    };
+  } catch (error) {
+    console.error("Verification Error:", error);
     return handleAuthError(error);
   }
 };
@@ -213,45 +218,65 @@ const resetAuthAttempts = async () => {
   );
 };
 
+export const resendOTP = async (email: string): Promise<AuthResponse> => {
+  try {
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+    });
+
+    if (error) throw error;
+
+    return {
+      success: true,
+      message: "A new verification code has been sent to your email.",
+    };
+  } catch (error) {
+    return handleAuthError(error);
+  }
+};
+
 export const signInWithEmail = async (
   email: string,
   password: string
 ): Promise<AuthResponse> => {
+  console.log("[signInWithEmail] Starting login attempt for email:", email);
   try {
-    await checkAuthAttempts(); // Check attempts before sign in
+    await checkAuthAttempts();
+    console.log("[signInWithEmail] Auth attempts check passed");
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
+    console.log("[signInWithEmail] Supabase auth response:", {
+      hasData: !!data,
+      error: error?.message,
+    });
 
     if (error) {
-      await incrementAuthAttempts(); // Increment on failure
+      console.log("[signInWithEmail] Login error:", error.message);
+      if (error.message?.toLowerCase().includes("email not confirmed")) {
+        return {
+          success: false,
+          message: "Please verify your email before logging in.",
+          code: "EMAIL_NOT_VERIFIED",
+          email,
+        };
+      }
+      await incrementAuthAttempts();
       throw error;
     }
 
-    if (!data.user.email_confirmed_at) {
-      await incrementAuthAttempts(); // Increment on unverified email
-      await supabase.auth.signOut();
-      return {
-        success: false,
-        message: "Please verify your email before logging in.",
-      };
+    if (!data.user) {
+      console.error("[signInWithEmail] No user data received");
+      throw new Error("No user data received");
     }
 
-    if (!data.user.email) {
-      throw new Error("Email is required");
-    }
-
-    const name = data.user.user_metadata?.name;
-    if (!name) {
-      throw new Error("Name is required");
-    }
-
-    await resetAuthAttempts(); // Reset on successful login
-    await ensureUserProfile(data.user.id, data.user.email, name);
-    await updateUserState(data.session);
-    return { success: true };
+    return {
+      success: true,
+      message: "Successfully logged in",
+    };
   } catch (error) {
     return handleAuthError(error);
   }

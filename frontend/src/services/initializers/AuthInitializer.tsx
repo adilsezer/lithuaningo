@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
-import { updateUserState } from "@services/auth/authService";
+import { updateUserState } from "@services/user/userStateService";
 import { useAlertActions } from "@stores/useAlertStore";
 import { supabase } from "@services/supabase/supabaseClient";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";

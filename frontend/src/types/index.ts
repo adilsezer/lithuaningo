@@ -23,7 +23,6 @@ export type {
   CreateUserProfileRequest,
   UpdateUserProfileRequest,
 } from "./UserProfile";
-export type { UserStats } from "./UserStats";
 export * from "./Flashcard";
 export * from "./UserFlashcardStats";
 export * from "./UserChallengeStats";

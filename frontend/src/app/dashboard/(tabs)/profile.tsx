@@ -96,7 +96,7 @@ export default function ProfileScreen() {
       <ProfileHeader
         fullName={profile?.fullName || userData.fullName}
         email={profile?.email || userData.email}
-        lastLoginTimeAgo={profile?.lastLoginTimeAgo}
+        lastLoginTimeAgo={profile?.lastLoginAt}
       />
 
       <ProfileActions onNavigate={handleNavigation} />

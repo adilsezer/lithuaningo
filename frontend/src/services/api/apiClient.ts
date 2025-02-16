@@ -29,7 +29,6 @@ import {
   UpdateFlashcardRequest,
 } from "@src/types";
 import { supabase } from "@services/supabase/supabaseClient";
-import Constants from "expo-constants";
 import { useUserStore } from "@stores/useUserStore";
 
 export class ApiError extends Error {
@@ -79,18 +78,29 @@ class ApiClient {
     // Request interceptor for authentication
     this.axiosInstance.interceptors.request.use(
       async (config) => {
-        const session = await supabase.auth.getSession();
-        const token = session?.data.session?.access_token;
+        console.log("[ApiClient] Making request to:", config.url);
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const token = session?.access_token;
 
         if (token) {
+          console.log("[ApiClient] Token available for request");
           config.headers.Authorization = `Bearer ${token}`;
+        } else {
+          console.warn(
+            "[ApiClient] No auth token available for request:",
+            config.url
+          );
         }
         return config;
       },
       (error) => {
-        console.error("[API Request Error]", {
+        console.error("[ApiClient] Request interceptor error:", {
           message: error.message,
           config: error.config,
+          url: error.config?.url,
         });
         return Promise.reject(error);
       }
@@ -99,41 +109,27 @@ class ApiClient {
     // Response interceptor for auth errors
     this.axiosInstance.interceptors.response.use(
       (response) => {
+        console.log(
+          "[ApiClient] Successful response from:",
+          response.config.url
+        );
         return response;
       },
       async (error) => {
-        console.error("[API Response Error]", {
+        console.error("[ApiClient] Response error:", {
           message: error.message,
           status: error.response?.status,
           url: error.config?.url,
-          response: error.response?.data,
+          data: error.response?.data,
+          headers: error.config?.headers,
         });
 
         if (error.response?.status === 401) {
+          console.warn("[ApiClient] Unauthorized request, signing out user");
           const { setAuthenticated } = useUserStore.getState();
           await supabase.auth.signOut();
           setAuthenticated(false);
         }
-        return Promise.reject(error);
-      }
-    );
-
-    // Add these interceptors after your existing axios instance creation
-    this.axiosInstance.interceptors.request.use(
-      (config) => {
-        return config;
-      },
-      (error) => {
-        console.error("[ApiClient] Request Error:", error);
-        return Promise.reject(error);
-      }
-    );
-
-    this.axiosInstance.interceptors.response.use(
-      (response) => {
-        return response;
-      },
-      (error) => {
         return Promise.reject(error);
       }
     );
@@ -171,7 +167,7 @@ class ApiClient {
 
   // Quiz Controller
   async getDailyQuiz(): Promise<QuizQuestion[]> {
-    return this.request<QuizQuestion[]>(`/api/v1/quiz/daily`);
+    return this.request<QuizQuestion[]>(`/api/v1/Quiz/daily`);
   }
 
   async submitQuizResult(
@@ -184,27 +180,27 @@ class ApiClient {
   }
 
   async getQuizHistory(userId: string): Promise<QuizResult[]> {
-    return this.request<QuizResult[]>(`/api/v1/quiz/history/${userId}`);
+    return this.request<QuizResult[]>(`/api/v1/Quiz/history/${userId}`);
   }
 
   async createDailyQuiz(
     questions: CreateQuizQuestionRequest[]
   ): Promise<QuizQuestion[]> {
-    return this.request<QuizQuestion[]>(`/api/v1/quiz/daily`, {
+    return this.request<QuizQuestion[]>(`/api/v1/Quiz/daily`, {
       method: "POST",
       data: questions,
     });
   }
 
   // User Profile Controller
-  async getUserProfile(id: string): Promise<UserProfile> {
-    return this.request<UserProfile>(`/api/v1/userprofile/${id}`);
+  async getUserProfile(userId: string): Promise<UserProfile> {
+    return this.request<UserProfile>(`/api/v1/UserProfile/${userId}`);
   }
 
   async createUserProfile(
     request: CreateUserProfileRequest
   ): Promise<UserProfile> {
-    return this.request<UserProfile>(`/api/v1/userprofile`, {
+    return this.request<UserProfile>("/api/v1/UserProfile", {
       method: "POST",
       data: request,
     });
@@ -214,37 +210,75 @@ class ApiClient {
     id: string,
     profile: UpdateUserProfileRequest
   ): Promise<UserProfile> {
-    return this.request<UserProfile>(`/api/v1/userprofile/${id}`, {
-      method: "PUT",
-      data: profile,
-    });
+    console.log("[ApiClient] Updating user profile:", { id, profile });
+    try {
+      const updatedProfile = await this.request<UserProfile>(
+        `/api/v1/UserProfile/${id}`,
+        {
+          method: "PUT",
+          data: profile,
+        }
+      );
+      console.log("[ApiClient] Successfully updated user profile:", {
+        id: updatedProfile.id,
+        email: updatedProfile.email,
+      });
+      return updatedProfile;
+    } catch (error) {
+      console.error("[ApiClient] Failed to update user profile:", {
+        id,
+        profile,
+        error,
+      });
+      throw error;
+    }
   }
 
   async deleteUserProfile(id: string): Promise<void> {
-    return this.request(`/api/v1/userprofile/${id}`, {
-      method: "DELETE",
-    });
+    console.log("[ApiClient] Deleting user profile:", id);
+    try {
+      await this.request(`/api/v1/UserProfile/${id}`, {
+        method: "DELETE",
+      });
+      console.log("[ApiClient] Successfully deleted user profile:", id);
+    } catch (error) {
+      console.error("[ApiClient] Failed to delete user profile:", {
+        userId: id,
+        error,
+      });
+      throw error;
+    }
   }
 
   async updateLastLogin(id: string): Promise<void> {
-    return this.request(`/api/v1/userprofile/${id}/login`, {
-      method: "POST",
-    });
+    console.log("[ApiClient] Updating last login for user:", id);
+    try {
+      await this.request(`/api/v1/UserProfile/${id}/login`, {
+        method: "POST",
+      });
+      console.log("[ApiClient] Successfully updated last login for user:", id);
+    } catch (error) {
+      console.error("[ApiClient] Failed to update last login:", {
+        userId: id,
+        error,
+      });
+      throw error;
+    }
   }
 
   // Announcement Controller
   async getAnnouncements(): Promise<Announcement[]> {
-    return this.request<Announcement[]>(`/api/v1/announcement`);
+    return this.request<Announcement[]>(`/api/v1/Announcement`);
   }
 
   async getAnnouncementById(id: string): Promise<Announcement> {
-    return this.request<Announcement>(`/api/v1/announcement/${id}`);
+    return this.request<Announcement>(`/api/v1/Announcement/${id}`);
   }
 
   async createAnnouncement(
     request: CreateAnnouncementRequest
   ): Promise<Announcement> {
-    return this.request<Announcement>(`/api/v1/announcement`, {
+    return this.request<Announcement>(`/api/v1/Announcement`, {
       method: "POST",
       data: request,
     });
@@ -254,14 +288,14 @@ class ApiClient {
     id: string,
     request: UpdateAnnouncementRequest
   ): Promise<Announcement> {
-    return this.request<Announcement>(`/api/v1/announcement/${id}`, {
+    return this.request<Announcement>(`/api/v1/Announcement/${id}`, {
       method: "PUT",
       data: request,
     });
   }
 
   async deleteAnnouncement(id: string): Promise<void> {
-    return this.request(`/api/v1/announcement/${id}`, {
+    return this.request(`/api/v1/Announcement/${id}`, {
       method: "DELETE",
     });
   }
@@ -299,10 +333,10 @@ class ApiClient {
     });
   }
 
-  // Challenge Stats Controller
+  // User Challenge Stats Controller
   async getUserChallengeStats(userId: string): Promise<UserChallengeStats> {
     return this.request<UserChallengeStats>(
-      `/api/v1/ChallengeStats/${userId}/stats`
+      `/api/v1/UserChallengeStats/${userId}/stats`
     );
   }
 
@@ -311,7 +345,7 @@ class ApiClient {
     stats: Partial<UserChallengeStats>
   ): Promise<UserChallengeStats> {
     return this.request<UserChallengeStats>(
-      `/api/v1/ChallengeStats/${userId}/stats`,
+      `/api/v1/UserChallengeStats/${userId}/stats`,
       {
         method: "PUT",
         data: stats,
@@ -320,15 +354,18 @@ class ApiClient {
   }
 
   async updateWeeklyGoal(userId: string, goal: number): Promise<void> {
-    return this.request(`/api/v1/ChallengeStats/${userId}/stats/weekly-goal`, {
-      method: "PUT",
-      data: { goal },
-    });
+    return this.request(
+      `/api/v1/UserChallengeStats/${userId}/stats/weekly-goal`,
+      {
+        method: "PUT",
+        data: { goal },
+      }
+    );
   }
 
   async incrementCardsReviewed(userId: string): Promise<void> {
     return this.request(
-      `/api/v1/ChallengeStats/${userId}/stats/cards-reviewed`,
+      `/api/v1/UserChallengeStats/${userId}/stats/cards-reviewed`,
       {
         method: "POST",
       }
@@ -337,7 +374,7 @@ class ApiClient {
 
   async incrementCardsMastered(userId: string): Promise<void> {
     return this.request(
-      `/api/v1/ChallengeStats/${userId}/stats/cards-mastered`,
+      `/api/v1/UserChallengeStats/${userId}/stats/cards-mastered`,
       {
         method: "POST",
       }
@@ -345,14 +382,14 @@ class ApiClient {
   }
 
   async updateDailyStreak(userId: string): Promise<void> {
-    return this.request(`/api/v1/ChallengeStats/${userId}/stats/streak`, {
+    return this.request(`/api/v1/UserChallengeStats/${userId}/stats/streak`, {
       method: "POST",
     });
   }
 
   async incrementQuizzesCompleted(userId: string): Promise<void> {
     return this.request(
-      `/api/v1/ChallengeStats/${userId}/stats/quiz-completed`,
+      `/api/v1/UserChallengeStats/${userId}/stats/quiz-completed`,
       {
         method: "POST",
       }
@@ -361,7 +398,7 @@ class ApiClient {
 
   // Deck Comment Controller
   async getDeckComments(deckId: string): Promise<DeckComment[]> {
-    return this.request<DeckComment[]>(`/api/v1/deckcomment/deck/${deckId}`);
+    return this.request<DeckComment[]>(`/api/v1/DeckComment/deck/${deckId}`);
   }
 
   async createDeckComment(comment: {
@@ -371,80 +408,80 @@ class ApiClient {
     rating?: number;
     tags?: string[];
   }): Promise<DeckComment> {
-    return this.request<DeckComment>(`/api/v1/deckcomment`, {
+    return this.request<DeckComment>(`/api/v1/DeckComment`, {
       method: "POST",
       data: comment,
     });
   }
 
   async getDeckComment(id: string): Promise<DeckComment> {
-    return this.request<DeckComment>(`/api/v1/deckcomment/${id}`);
+    return this.request<DeckComment>(`/api/v1/DeckComment/${id}`);
   }
 
   async updateDeckComment(
     id: string,
     comment: Partial<DeckComment>
   ): Promise<DeckComment> {
-    return this.request<DeckComment>(`/api/v1/deckcomment/${id}`, {
+    return this.request<DeckComment>(`/api/v1/DeckComment/${id}`, {
       method: "PUT",
       data: comment,
     });
   }
 
   async deleteDeckComment(id: string): Promise<void> {
-    return this.request(`/api/v1/deckcomment/${id}`, {
+    return this.request(`/api/v1/DeckComment/${id}`, {
       method: "DELETE",
     });
   }
 
   async getUserDeckComments(userId: string): Promise<DeckComment[]> {
-    return this.request<DeckComment[]>(`/api/v1/deckcomment/user/${userId}`);
+    return this.request<DeckComment[]>(`/api/v1/DeckComment/user/${userId}`);
   }
 
   // Deck Controller
   async getPublicDecks(): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/deck`);
+    return this.request<Deck[]>(`/api/v1/Deck`);
   }
 
   async getDeck(id: string): Promise<Deck> {
-    return this.request<Deck>(`/api/v1/deck/${id}`);
+    return this.request<Deck>(`/api/v1/Deck/${id}`);
   }
 
   async createDeck(deck: Partial<Deck>): Promise<Deck> {
-    return this.request<Deck>(`/api/v1/deck`, {
+    return this.request<Deck>(`/api/v1/Deck`, {
       method: "POST",
       data: deck,
     });
   }
 
   async updateDeck(id: string, deck: Partial<Deck>): Promise<Deck> {
-    return this.request<Deck>(`/api/v1/deck/${id}`, {
+    return this.request<Deck>(`/api/v1/Deck/${id}`, {
       method: "PUT",
       data: deck,
     });
   }
 
   async deleteDeck(id: string): Promise<void> {
-    return this.request(`/api/v1/deck/${id}`, {
+    return this.request(`/api/v1/Deck/${id}`, {
       method: "DELETE",
     });
   }
 
   async getUserDecks(userId: string): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/deck/user/${userId}`);
+    return this.request<Deck[]>(`/api/v1/Deck/user/${userId}`);
   }
 
   async getTopRatedDecks(
     limit: number = 10,
     timeRange: "week" | "month" | "all" = "all"
   ): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/deck/top-rated`, {
+    return this.request<Deck[]>(`/api/v1/Deck/top-rated`, {
       params: { limit, timeRange },
     });
   }
 
   async reportDeck(id: string, userId: string, reason: string): Promise<void> {
-    return this.request(`/api/v1/deck/${id}/report`, {
+    return this.request(`/api/v1/DeckReport/${id}`, {
       method: "POST",
       params: { userId },
       data: reason,
@@ -452,20 +489,20 @@ class ApiClient {
   }
 
   async searchDecks(query: string, category?: string): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/deck/search`, {
+    return this.request<Deck[]>(`/api/v1/Deck/search`, {
       params: { query, category },
     });
   }
 
   async getDeckFlashcards(deckId: string): Promise<Flashcard[]> {
-    return this.request<Flashcard[]>(`/api/v1/deck/${deckId}/flashcards`);
+    return this.request<Flashcard[]>(`/api/v1/Deck/${deckId}/flashcards`);
   }
 
   // Deck Report Controller
   async createDeckReport(
     request: CreateDeckReportRequest
   ): Promise<DeckReport> {
-    return this.request<DeckReport>(`/api/v1/deckreport`, {
+    return this.request<DeckReport>(`/api/v1/DeckReport`, {
       method: "POST",
       data: request,
     });
@@ -475,31 +512,31 @@ class ApiClient {
     status: string = "pending",
     limit: number = 50
   ): Promise<DeckReport[]> {
-    return this.request<DeckReport[]>(`/api/v1/deckreport`, {
+    return this.request<DeckReport[]>(`/api/v1/DeckReport`, {
       params: { status, limit },
     });
   }
 
   async getDeckReport(id: string): Promise<DeckReport> {
-    return this.request<DeckReport>(`/api/v1/deckreport/${id}`);
+    return this.request<DeckReport>(`/api/v1/DeckReport/${id}`);
   }
 
   async getDeckReportsByDeckId(deckId: string): Promise<DeckReport[]> {
-    return this.request<DeckReport[]>(`/api/v1/deckreport/deck/${deckId}`);
+    return this.request<DeckReport[]>(`/api/v1/DeckReport/deck/${deckId}`);
   }
 
   async updateDeckReportStatus(
     id: string,
     request: UpdateDeckReportRequest
   ): Promise<DeckReport> {
-    return this.request<DeckReport>(`/api/v1/deckreport/${id}/status`, {
+    return this.request<DeckReport>(`/api/v1/DeckReport/${id}/status`, {
       method: "PUT",
       data: request,
     });
   }
 
   async deleteDeckReport(id: string): Promise<void> {
-    return this.request(`/api/v1/deckreport/${id}`, {
+    return this.request(`/api/v1/DeckReport/${id}`, {
       method: "DELETE",
     });
   }
@@ -508,7 +545,7 @@ class ApiClient {
     deckId: string,
     request: TrackProgressRequest
   ): Promise<void> {
-    return this.request(`/api/v1/userflashcardstats/${deckId}/track`, {
+    return this.request(`/api/v1/UserFlashcardStats/${deckId}/track`, {
       method: "POST",
       data: request,
     });
@@ -519,7 +556,7 @@ class ApiClient {
     userId: string
   ): Promise<UserFlashcardStats> {
     return this.request<UserFlashcardStats>(
-      `/api/v1/userflashcardstats/${deckId}/stats`,
+      `/api/v1/UserFlashcardStats/${deckId}/stats`,
       {
         params: { userId },
       }
@@ -528,75 +565,32 @@ class ApiClient {
 
   async getUserFlashcardHistory(userId: string): Promise<UserFlashcardStats[]> {
     return this.request<UserFlashcardStats[]>(
-      `/api/v1/userflashcardstats/user/${userId}/history`
+      `/api/v1/UserFlashcardStats/user/${userId}/history`
     );
   }
 
   // Leaderboard Controller
   async getCurrentWeekLeaderboard(): Promise<LeaderboardWeek> {
-    return this.request<LeaderboardWeek>(`/api/v1/leaderboard/current`);
+    return this.request<LeaderboardWeek>(`/api/v1/Leaderboard/current`);
   }
 
   async getWeekLeaderboard(weekId: string): Promise<LeaderboardWeek> {
-    return this.request<LeaderboardWeek>(`/api/v1/leaderboard/${weekId}`);
+    return this.request<LeaderboardWeek>(`/api/v1/Leaderboard/${weekId}`);
   }
 
   async updateLeaderboardEntry(request: {
     userId: string;
     score: number;
   }): Promise<void> {
-    return this.request(`/api/v1/leaderboard/entry`, {
+    return this.request(`/api/v1/Leaderboard/entry`, {
       method: "POST",
       data: request,
     });
   }
 
-  async createFlashcard(flashcard: CreateFlashcardRequest): Promise<string> {
-    const response = await axios.post(`${this.baseURL}/flashcards`, flashcard);
-    return response.data;
-  }
-
-  async updateFlashcard(id: string, flashcard: UpdateFlashcardRequest) {
-    return this.request(`/api/v1/flashcards/${id}`, {
-      method: "PUT",
-      data: flashcard,
-    });
-  }
-
-  async uploadFile(formData: FormData): Promise<string> {
-    const response = await axios.post(
-      `${this.baseURL}/files/upload`,
-      formData,
-      {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      }
-    );
-    return response.data.url;
-  }
-
-  async deleteFlashcard(id: string) {
-    const response = await axios.delete(`${this.baseURL}/flashcards/${id}`);
-    return response.data;
-  }
-
-  async getFlashcardById(id: string): Promise<Flashcard> {
-    const response = await axios.get(`${this.baseURL}/flashcards/${id}`);
-    return response.data;
-  }
-
-  async updateReviewStatus(id: string, data: { wasCorrect: boolean }) {
-    const response = await axios.post(
-      `${this.baseURL}/flashcards/${id}/review`,
-      data
-    );
-    return response.data;
-  }
-
   // Deck Vote Controller
   async createDeckVote(request: CreateDeckVoteRequest): Promise<boolean> {
-    return this.request<boolean>(`/api/v1/deckvote`, {
+    return this.request<boolean>(`/api/v1/DeckVote`, {
       method: "POST",
       data: request,
     });
@@ -604,20 +598,62 @@ class ApiClient {
 
   async getUserVote(deckId: string, userId: string): Promise<DeckVote | null> {
     return this.request<DeckVote | null>(
-      `/api/v1/deckvote/${deckId}/user/${userId}`
+      `/api/v1/DeckVote/${deckId}/user/${userId}`
     );
   }
 
   async getDeckVotes(deckId: string): Promise<DeckVote[]> {
-    return this.request<DeckVote[]>(`/api/v1/deckvote/${deckId}`);
+    return this.request<DeckVote[]>(`/api/v1/DeckVote/${deckId}`);
   }
 
   async getVoteCounts(
     deckId: string
   ): Promise<{ upvotes: number; downvotes: number }> {
     return this.request<{ upvotes: number; downvotes: number }>(
-      `/api/v1/deckvote/${deckId}/counts`
+      `/api/v1/DeckVote/${deckId}/counts`
     );
+  }
+
+  // Flashcard Controller
+  async createFlashcard(flashcard: CreateFlashcardRequest): Promise<string> {
+    return this.request<string>(`/api/v1/Flashcard`, {
+      method: "POST",
+      data: flashcard,
+    });
+  }
+
+  async updateFlashcard(id: string, flashcard: UpdateFlashcardRequest) {
+    return this.request(`/api/v1/Flashcard/${id}`, {
+      method: "PUT",
+      data: flashcard,
+    });
+  }
+
+  async uploadFile(formData: FormData): Promise<string> {
+    return this.request<string>(`/api/v1/Flashcard/upload`, {
+      method: "POST",
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
+
+  async deleteFlashcard(id: string) {
+    return this.request(`/api/v1/Flashcard/${id}`, {
+      method: "DELETE",
+    });
+  }
+
+  async getFlashcardById(id: string): Promise<Flashcard> {
+    return this.request<Flashcard>(`/api/v1/Flashcard/${id}`);
+  }
+
+  async updateReviewStatus(id: string, data: { wasCorrect: boolean }) {
+    return this.request(`/api/v1/Flashcard/${id}/review`, {
+      method: "PUT",
+      params: { wasCorrect: data.wasCorrect },
+    });
   }
 
   private handleError(error: any) {

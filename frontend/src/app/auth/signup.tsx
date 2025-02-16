@@ -1,6 +1,5 @@
-import React, { useEffect } from "react";
-import { Platform, ScrollView } from "react-native";
-import CustomButton from "@components/ui/CustomButton";
+import React from "react";
+import { ScrollView } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";

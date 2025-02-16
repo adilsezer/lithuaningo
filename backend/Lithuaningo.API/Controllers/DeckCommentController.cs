@@ -45,7 +45,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/Comment/deck/{deckId}
+        ///     GET /api/v1/DeckComment/deck/{deckId}
         /// 
         /// The response includes:
         /// - Comment content
@@ -94,7 +94,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     POST /api/v1/Comment
+        ///     POST /api/v1/DeckComment
         ///     {
         ///         "deckId": "deck-guid",
         ///         "userId": "user-guid",
@@ -149,7 +149,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/Comment/{id}
+        ///     GET /api/v1/DeckComment/{id}
         /// 
         /// The response includes:
         /// - Comment details
@@ -203,7 +203,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     PUT /api/v1/Comment/{id}
+        ///     PUT /api/v1/DeckComment/{id}
         ///     {
         ///         "content": "Updated: This deck is excellent for beginners!",
         ///         "rating": 5,
@@ -270,7 +270,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     DELETE /api/v1/Comment/{id}
+        ///     DELETE /api/v1/DeckComment/{id}
         /// 
         /// Permanently removes the comment from the system.
         /// This action cannot be undone.
@@ -315,7 +315,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/Comment/user/{userId}
+        ///     GET /api/v1/DeckComment/user/{userId}
         /// 
         /// Returns all comments made by the specified user across all decks.
         /// Results are ordered by creation date (newest first).
