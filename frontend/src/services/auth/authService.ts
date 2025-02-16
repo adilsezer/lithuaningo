@@ -1,7 +1,6 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useUserStore } from "@stores/useUserStore";
-import apiClient from "@services/api/apiClient";
 import Constants from "expo-constants";
 import { getErrorMessage } from "@utils/errorMessages";
 import { supabase } from "@services/supabase/supabaseClient";
@@ -9,6 +8,8 @@ import { User } from "@supabase/supabase-js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AUTH_PATTERNS } from "@utils/validationPatterns";
 import { AuthResponse } from "@src/types/auth.types";
+import userProfileService from "@services/data/userProfileService";
+import { UserProfile } from "@src/types";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -30,13 +31,10 @@ export const updateAuthState = async (session: { user: User } | null) => {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  const name = user.user_metadata?.name;
-  if (!name || typeof name !== "string") {
-    console.error(
-      "[Auth] Invalid or missing name in metadata:",
-      user.user_metadata
-    );
-    throw new Error("User name is required and must be a string");
+  const name = user.user_metadata?.name || "No Name";
+  if (typeof name !== "string") {
+    console.error("[Auth] Invalid name type in metadata:", user.user_metadata);
+    throw new Error("User name must be a string");
   }
 
   const userData = {
@@ -49,9 +47,9 @@ export const updateAuthState = async (session: { user: User } | null) => {
     premiumExpiresAt: undefined,
   };
 
+  await ensureUserProfile(user.id, user.email, name);
   useUserStore.getState().logIn(userData);
   useUserStore.getState().setAuthenticated(true);
-  await ensureUserProfile(user.id, user.email, name);
 };
 
 // Helper Functions
@@ -77,33 +75,27 @@ const ensureUserProfile = async (
   userId: string,
   email: string,
   name: string
-) => {
-  try {
-    try {
-      await apiClient.getUserProfile(userId);
-      return true;
-    } catch (error: any) {
-      if (error?.status === 404) {
-        const createProfileRequest = {
-          userId,
-          email,
-          emailVerified: true,
-          fullName: name,
-          isAdmin: false,
-          isPremium: false,
-          premiumExpiresAt: undefined,
-          lastLoginAt: new Date().toISOString(),
-        };
+): Promise<UserProfile> => {
+  const profileRequest = {
+    userId,
+    email,
+    emailVerified: true,
+    fullName: name,
+    isAdmin: false,
+    isPremium: false,
+    premiumExpiresAt: undefined,
+    lastLoginAt: new Date().toISOString(),
+  };
 
-        await apiClient.createUserProfile(createProfileRequest);
-        return true;
-      }
-      throw error;
-    }
-  } catch (error: any) {
-    console.error("[Auth] Profile error:", error);
-    throw new Error("Failed to create or update user profile");
-  }
+  const profile = await userProfileService.createUserProfile(profileRequest);
+  if (profile) return profile;
+
+  // If creation failed, try to fetch existing profile
+  const existingProfile = await userProfileService.fetchUserProfile(userId);
+  if (existingProfile) return existingProfile;
+
+  // If both creation and fetch failed, throw error
+  throw new Error("Failed to ensure user profile");
 };
 
 // Auth rate limiting
@@ -253,9 +245,16 @@ export const signInWithEmail = async (
 export const signInWithGoogle = async (): Promise<AuthResponse> => {
   try {
     await checkAuthAttempts();
-    const { idToken } = await GoogleSignin.signIn();
-    if (!idToken) throw new Error("Failed to get ID token from Google Sign-In");
 
+    // Sign in with Google
+    await GoogleSignin.hasPlayServices();
+    const { idToken } = await GoogleSignin.signIn();
+
+    if (!idToken) {
+      throw new Error("Failed to get ID token from Google Sign-In");
+    }
+
+    // Sign in with Supabase using the Google ID token
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "google",
       token: idToken,
@@ -284,8 +283,9 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
       ],
     });
 
-    if (!credential.identityToken)
+    if (!credential.identityToken) {
       throw new Error("No identity token from Apple Sign-In");
+    }
 
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "apple",
@@ -372,11 +372,11 @@ export const updateProfile = async (
     if (!sessionData.session?.user) throw new Error("No active session");
 
     const userId = sessionData.session.user.id;
-    const userProfile = await apiClient.getUserProfile(userId);
+    const userProfile = await userProfileService.fetchUserProfile(userId);
 
     if (!userProfile) throw new Error("User profile not found");
 
-    await apiClient.updateUserProfile(userId, {
+    await userProfileService.updateUserProfile(userId, {
       email: updates.email || userProfile.email,
       emailVerified: updates.emailVerified ?? userProfile.emailVerified,
       fullName: updates.displayName || userProfile.fullName,
@@ -434,7 +434,7 @@ export const deleteAccount = async (): Promise<AuthResponse> => {
     if (sessionError) throw sessionError;
     if (!sessionData.session?.user) throw new Error("No active session");
 
-    await apiClient.deleteUserProfile(sessionData.session.user.id);
+    await userProfileService.deleteUserProfile(sessionData.session.user.id);
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
 

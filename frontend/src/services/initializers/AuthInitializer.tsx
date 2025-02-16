@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
 import { updateAuthState } from "@services/auth/authService";
@@ -13,32 +13,41 @@ const AuthInitializer: React.FC = () => {
   const { logOut } = useUserStore();
   const { showAlert } = useAlertActions();
   const router = useRouter();
+  const isUpdatingRef = useRef(false);
+
+  const handleAuthStateUpdate = async (session: Session | null) => {
+    if (isUpdatingRef.current) {
+      console.log("[Auth] Update already in progress, skipping...");
+      return;
+    }
+
+    try {
+      isUpdatingRef.current = true;
+      if (session) {
+        await updateAuthState(session);
+      } else {
+        logOut();
+        router.replace("/");
+      }
+    } catch (error) {
+      console.error("[Auth] State update failed:", error);
+      showAlert({
+        title: "Authentication Error",
+        message:
+          "There was a problem with your authentication. Please try again.",
+        buttons: [{ text: "OK", onPress: () => router.replace("/auth/login") }],
+      });
+    } finally {
+      isUpdatingRef.current = false;
+    }
+  };
 
   useEffect(() => {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        try {
-          if (event === "SIGNED_IN" || event === "USER_UPDATED") {
-            if (session) {
-              await updateAuthState(session);
-            }
-          } else if (event === "SIGNED_OUT") {
-            logOut();
-            router.replace("/");
-          }
-        } catch (error) {
-          console.error("Auth state change error:", error);
-          showAlert({
-            title: "Authentication Error",
-            message:
-              "There was a problem with your authentication. Please try again.",
-            buttons: [
-              { text: "OK", onPress: () => router.replace("/auth/login") },
-            ],
-          });
-        }
+        await handleAuthStateUpdate(session);
       }
     );
 

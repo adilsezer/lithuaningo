@@ -13,6 +13,7 @@ import { useIsDarkMode, useThemeActions } from "@stores/useThemeStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import CustomDivider from "@components/ui/CustomDivider";
 import { useUserProfile } from "@hooks/useUserProfile";
+import { formatRelative } from "@utils/dateUtils";
 
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
@@ -53,8 +54,8 @@ const ProfileHeader = ({
     </CustomText>
     <CustomText variant="bodyLarge">{email}</CustomText>
     {lastLoginTimeAgo && (
-      <CustomText variant="bodySmall">
-        Last active: {lastLoginTimeAgo}
+      <CustomText variant="bodyMedium">
+        Last active: {formatRelative(lastLoginTimeAgo)}
       </CustomText>
     )}
   </>
