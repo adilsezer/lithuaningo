@@ -17,23 +17,15 @@ export type UserData = Pick<
 
 interface UserStore {
   // State
-  isLoggedIn: boolean;
   userData: UserData | null;
-  needsReauthentication: boolean;
-  error: string | null;
   isAuthenticated: boolean;
-  storageInitialized: boolean;
 
   // Actions
   logIn: (userData: UserData) => void;
   logOut: () => void;
   updateUserProfile: (userData: Partial<UserData>) => void;
-  requireReauthentication: () => void;
-  clearReauthentication: () => void;
   deleteAccount: () => void;
-  setError: (error: string | null) => void;
   setAuthenticated: (value: boolean) => void;
-  setStorageInitialized: (value: boolean) => void;
 }
 
 // Custom storage with error handling
@@ -66,12 +58,8 @@ export const useUserStore = create<UserStore>()(
   persist(
     (set) => ({
       // State
-      isLoggedIn: false,
       userData: null,
-      needsReauthentication: false,
-      error: null,
       isAuthenticated: false,
-      storageInitialized: false,
 
       // Actions
       logIn: (userData) => {
@@ -81,10 +69,7 @@ export const useUserStore = create<UserStore>()(
           emailVerified: userData.emailVerified,
         });
         set({
-          isLoggedIn: true,
           userData,
-          needsReauthentication: false,
-          error: null,
           isAuthenticated: true,
         });
         console.log("[UserStore] User logged in successfully");
@@ -93,10 +78,7 @@ export const useUserStore = create<UserStore>()(
       logOut: () => {
         console.log("[UserStore] Logging out user");
         set({
-          isLoggedIn: false,
           userData: null,
-          needsReauthentication: false,
-          error: null,
           isAuthenticated: false,
         });
         console.log("[UserStore] User logged out successfully");
@@ -108,46 +90,31 @@ export const useUserStore = create<UserStore>()(
           userData: state.userData ? { ...state.userData, ...userData } : null,
         })),
 
-      requireReauthentication: () => set({ needsReauthentication: true }),
-      clearReauthentication: () => set({ needsReauthentication: false }),
-
       deleteAccount: () => {
         console.log("[UserStore] Deleting account and clearing state");
         set({
-          isLoggedIn: false,
           userData: null,
-          needsReauthentication: false,
-          error: null,
           isAuthenticated: false,
         });
         console.log("[UserStore] Account deleted and state cleared");
       },
 
-      setError: (error) => set({ error }),
       setAuthenticated: (value) => {
         console.log("[UserStore] Setting authenticated state:", value);
         set({ isAuthenticated: value });
       },
-      setStorageInitialized: (value) => set({ storageInitialized: value }),
     }),
     {
       name: "user-storage",
       storage: createJSONStorage(() => customStorage),
-      onRehydrateStorage: () => (state) => {
-        state?.setStorageInitialized(true);
-      },
     }
   )
 );
 
 // Hooks
 export const useUserData = () => useUserStore((state) => state.userData);
-export const useIsLoggedIn = () => useUserStore((state) => state.isLoggedIn);
-export const useUserError = () => useUserStore((state) => state.error);
 export const useIsAuthenticated = () =>
   useUserStore((state) => state.isAuthenticated);
-export const useIsStorageInitialized = () =>
-  useUserStore((state) => state.storageInitialized);
 
 // Selector hooks for new properties
 export const useIsAdmin = () =>

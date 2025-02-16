@@ -1,7 +1,7 @@
 import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import { useUserData, useIsLoggedIn } from "@stores/useUserStore";
+import { useUserData, useIsAuthenticated } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import { getCurrentDateKey } from "@utils/dateUtils";
@@ -68,14 +68,14 @@ export default function ProfileScreen() {
   const router = useRouter();
 
   const userData = useUserData();
-  const isLoggedIn = useIsLoggedIn();
+  const isAuthenticated = useIsAuthenticated();
   const { profile } = useUserProfile();
 
   const handleNavigation = (path: string) => {
     router.push(path);
   };
 
-  if (!isLoggedIn || !userData) {
+  if (!isAuthenticated || !userData) {
     return (
       <View style={[styles.container]}>
         <CustomText>No user data available</CustomText>
