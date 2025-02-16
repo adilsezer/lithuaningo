@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
-import { updateUserState } from "@services/user/userStateService";
+import { updateAuthState } from "@services/auth/authService";
 import { useAlertActions } from "@stores/useAlertStore";
 import { supabase } from "@services/supabase/supabaseClient";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
@@ -20,15 +20,16 @@ const AuthInitializer: React.FC = () => {
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
         try {
-          if (session) {
-            await updateUserState(session);
-          } else {
+          if (event === "SIGNED_IN" || event === "USER_UPDATED") {
+            if (session) {
+              await updateAuthState(session);
+            }
+          } else if (event === "SIGNED_OUT") {
             logOut();
             router.replace("/");
           }
         } catch (error) {
           console.error("Auth state change error:", error);
-
           showAlert({
             title: "Authentication Error",
             message:
@@ -49,7 +50,7 @@ const AuthInitializer: React.FC = () => {
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        updateUserState(session);
+        updateAuthState(session);
       }
     });
   }, []);
@@ -64,7 +65,7 @@ const AuthInitializer: React.FC = () => {
         console.error("Error refreshing token:", error);
         logOut();
       } else if (session) {
-        await updateUserState(session);
+        await updateAuthState(session);
       }
     };
 

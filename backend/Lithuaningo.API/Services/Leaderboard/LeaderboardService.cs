@@ -23,6 +23,7 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "leaderboard:";
         private readonly ILogger<LeaderboardService> _logger;
         private readonly IMapper _mapper;
+        private const int LEADERBOARD_SIZE = 20;
 
         public LeaderboardService(
             ISupabaseService supabaseService,
@@ -38,7 +39,7 @@ namespace Lithuaningo.API.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
-        public async Task<LeaderboardWeekResponse> GetCurrentWeekLeaderboardAsync()
+        public async Task<List<LeaderboardEntryResponse>> GetCurrentWeekLeaderboardAsync()
         {
             try
             {
@@ -52,7 +53,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<LeaderboardWeekResponse> GetWeekLeaderboardAsync(string weekId)
+        public async Task<List<LeaderboardEntryResponse>> GetWeekLeaderboardAsync(string weekId)
         {
             if (string.IsNullOrWhiteSpace(weekId))
             {
@@ -60,7 +61,7 @@ namespace Lithuaningo.API.Services
             }
 
             var cacheKey = $"{CacheKeyPrefix}week:{weekId}";
-            var cached = await _cache.GetAsync<LeaderboardWeekResponse>(cacheKey);
+            var cached = await _cache.GetAsync<List<LeaderboardEntryResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -70,38 +71,43 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                var response = await _supabaseClient
-                    .From<LeaderboardWeek>()
-                    .Filter(l => l.Id.ToString(), Operator.Equals, weekId)
+                // Get top 20 leaderboard entries
+                var entriesResponse = await _supabaseClient
+                    .From<LeaderboardEntry>()
+                    .Select("*")
+                    .Filter("week_id", Operator.Equals, weekId)
+                    .Order("score", Ordering.Descending)
+                    .Limit(LEADERBOARD_SIZE)
                     .Get();
 
-                var leaderboardWeek = response.Models.FirstOrDefault();
-                if (leaderboardWeek == null)
+                var entries = entriesResponse.Models;
+
+                // Fetch user profiles separately
+                var userIds = entries.Select(e => e.UserId).ToList();
+                var userProfiles = await _supabaseClient
+                    .From<UserProfile>()
+                    .Filter("id", Operator.In, userIds)
+                    .Get();
+
+                var userProfileMap = userProfiles.Models.ToDictionary(u => u.Id);
+
+                // Map entries to response DTOs with user information
+                var mappedEntries = entries.Select(entry =>
                 {
-                    var (startDate, endDate) = DateUtils.GetWeekDates(weekId);
-                    leaderboardWeek = new LeaderboardWeek
-                    {
-                        Id = Guid.NewGuid(),
-                        StartDate = startDate,
-                        EndDate = endDate,
-                        Entries = new Dictionary<string, LeaderboardEntry>()
-                    };
+                    var dto = _mapper.Map<LeaderboardEntryResponse>(entry);
+                    dto.Username = userProfileMap.TryGetValue(entry.UserId, out var profile) 
+                        ? profile.FullName ?? "Unknown User" 
+                        : "Unknown User";
+                    return dto;
+                }).ToList();
 
-                    var createResponse = await _supabaseClient
-                        .From<LeaderboardWeek>()
-                        .Insert(leaderboardWeek);
-                    
-                    leaderboardWeek = createResponse.Models.First();
-                }
-
-                var leaderboardResponse = _mapper.Map<LeaderboardWeekResponse>(leaderboardWeek);
-
-                await _cache.SetAsync(cacheKey, leaderboardResponse,
+                await _cache.SetAsync(cacheKey, mappedEntries,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries", 
-                    weekId, leaderboardWeek.Entries.Count);
 
-                return leaderboardResponse;
+                _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries", 
+                    weekId, entries.Count);
+
+                return mappedEntries;
             }
             catch (Exception ex)
             {
@@ -119,45 +125,55 @@ namespace Lithuaningo.API.Services
 
             if (score < 0)
             {
-                throw new ArgumentException("Score cannot be negative", nameof(score));
+                throw new ArgumentException("Points to add cannot be negative", nameof(score));
             }
 
             var currentWeek = DateUtils.GetCurrentWeekPeriod();
 
             try
             {
-                // Try to find an existing entry for this user in the current week.
+                // Get user info to verify user exists
+                var userResponse = await _supabaseClient
+                    .From<UserProfile>()
+                    .Filter("id", Operator.Equals, userGuid)
+                    .Single();
+
+                if (userResponse == null)
+                {
+                    throw new InvalidOperationException($"User {userId} not found");
+                }
+
+                // Try to find an existing entry for this user in the current week
                 var existingResponse = await _supabaseClient
                     .From<LeaderboardEntry>()
-                    .Filter(l => l.UserId, Operator.Equals, userGuid)
-                    .Get();
+                    .Filter("user_id", Operator.Equals, userGuid)
+                    .Filter("week_id", Operator.Equals, currentWeek)
+                    .Single();
 
-                var existing = existingResponse.Models.FirstOrDefault();
                 LeaderboardEntry updatedEntry;
-
-                if (existing != null)
+                if (existingResponse != null)
                 {
-                    // Update the existing entry.
-                    existing.Score = score;
-                    existing.UpdatedAt = DateTime.UtcNow;
-
+                    // Update existing entry by adding the new score to the existing score
                     var response = await _supabaseClient
                         .From<LeaderboardEntry>()
-                        .Where(l => l.Id == existing.Id)
-                        .Update(existing);
+                        .Where(l => l.Id == existingResponse.Id)
+                        .Set(l => l.Score, existingResponse.Score + score)
+                        .Set(l => l.UpdatedAt, DateTime.UtcNow)
+                        .Update();
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}", 
-                        updatedEntry.Id, userId);
+                    _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}, added {Score} points", 
+                        updatedEntry.Id, userId, score);
                 }
                 else
                 {
-                    // Create a new entry.
+                    // Create new entry starting with the initial score
                     var newEntry = new LeaderboardEntry
                     {
                         Id = Guid.NewGuid(),
                         UserId = userGuid,
-                        Score = score,
+                        WeekId = currentWeek,
+                        Score = score, // Initial score for new entry
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
                     };
@@ -167,14 +183,18 @@ namespace Lithuaningo.API.Services
                         .Insert(newEntry);
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId}", 
-                        updatedEntry.Id, userId);
+                    _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId} with initial score {Score}", 
+                        updatedEntry.Id, userId, score);
                 }
 
-                // Invalidate the cache for the current week
+                // Map to response DTO
+                var dto = _mapper.Map<LeaderboardEntryResponse>(updatedEntry);
+                dto.Username = userResponse.FullName ?? "Unknown User";
+
+                // Invalidate cache since leaderboard has changed
                 await InvalidateLeaderboardCacheAsync(currentWeek);
 
-                return _mapper.Map<LeaderboardEntryResponse>(updatedEntry);
+                return dto;
             }
             catch (Exception ex)
             {
@@ -185,13 +205,8 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateLeaderboardCacheAsync(string weekId)
         {
-            var tasks = new List<Task>
-            {
-                // Invalidate specific week cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}week:{weekId}")
-            };
-
-            await Task.WhenAll(tasks);
+            var cacheKey = $"{CacheKeyPrefix}week:{weekId}";
+            await _cache.RemoveAsync(cacheKey);
         }
     }
 }

@@ -6,6 +6,7 @@ import {
   useError,
   useSetError,
 } from "@stores/useUIStore";
+import { useIsAuthenticated } from "@stores/useUserStore";
 import { useUserData } from "@stores/useUserStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import type { Deck, CreateDeckRequest, UpdateDeckRequest } from "@src/types";
@@ -24,6 +25,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   const setError = useSetError();
   const error = useError();
   const { showError } = useAlertDialog();
+  const isAuthenticated = useIsAuthenticated();
   // Local state
   const [decks, setDecks] = useState<Deck[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -57,6 +59,12 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
 
   // Fetch decks based on category and search query
   const fetchDecks = useCallback(async () => {
+    // Don't fetch if not authenticated
+    if (!isAuthenticated) {
+      setDecks([]);
+      return;
+    }
+
     try {
       setLoading(true);
       clearError();
@@ -96,6 +104,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
     setLoading,
     clearError,
     handleError,
+    isAuthenticated,
   ]);
 
   // Create a new deck

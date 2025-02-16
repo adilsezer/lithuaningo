@@ -1,16 +1,12 @@
 import React from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { DataTable, useTheme } from "react-native-paper";
-import { format } from "date-fns";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import CustomText from "./CustomText";
 import { LeaderboardEntry } from "@src/types";
 
 interface LeaderboardProps {
   entries: LeaderboardEntry[];
-  weekId?: string;
-  startDate?: string;
-  endDate?: string;
 }
 
 const TrophyIcon = ({
@@ -33,29 +29,21 @@ const TrophyIcon = ({
   );
 };
 
-const Leaderboard = ({ entries, startDate, endDate }: LeaderboardProps) => {
+const Leaderboard = ({ entries }: LeaderboardProps) => {
   const theme = useTheme();
-
-  const dateRange =
-    startDate && endDate
-      ? `${format(new Date(startDate), "MMM d")} - ${format(
-          new Date(endDate),
-          "MMM d, yyyy"
-        )}`
-      : "This Week";
 
   return (
     <ScrollView>
       <DataTable
         style={[styles.tableContainer, { borderColor: theme.colors.primary }]}
       >
-        {/* Title & Date Range integrated into header */}
+        {/* Title integrated into header */}
         <DataTable.Header
           style={[styles.header, { backgroundColor: theme.colors.primary }]}
         >
           <DataTable.Title style={styles.titleCell}>
             <CustomText variant="titleSmall" bold color="white">
-              Leaderboard ({dateRange})
+              Top 20 Leaders This Week
             </CustomText>
           </DataTable.Title>
         </DataTable.Header>
@@ -69,9 +57,6 @@ const Leaderboard = ({ entries, startDate, endDate }: LeaderboardProps) => {
           <DataTable.Title>Rank</DataTable.Title>
           <DataTable.Title style={{ flex: 3 }}>Name</DataTable.Title>
           <DataTable.Title numeric>Score</DataTable.Title>
-          <DataTable.Title numeric style={{ flex: 2 }}>
-            Last Active
-          </DataTable.Title>
         </DataTable.Header>
 
         {/* Data Rows */}

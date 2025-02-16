@@ -9,7 +9,6 @@ import {
   Deck,
   Flashcard,
   DeckComment,
-  LeaderboardWeek,
   UserChallengeStats,
   DeckReport,
   UserFlashcardStats,
@@ -27,6 +26,8 @@ import {
   DeckVote,
   CreateFlashcardRequest,
   UpdateFlashcardRequest,
+  UpdateLeaderboardEntryRequest,
+  LeaderboardEntry,
 } from "@src/types";
 import { supabase } from "@services/supabase/supabaseClient";
 import { useUserStore } from "@stores/useUserStore";
@@ -570,19 +571,14 @@ class ApiClient {
   }
 
   // Leaderboard Controller
-  async getCurrentWeekLeaderboard(): Promise<LeaderboardWeek> {
-    return this.request<LeaderboardWeek>(`/api/v1/Leaderboard/current`);
+  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntry[]> {
+    return this.request<LeaderboardEntry[]>(`/api/v1/Leaderboard/current`);
   }
 
-  async getWeekLeaderboard(weekId: string): Promise<LeaderboardWeek> {
-    return this.request<LeaderboardWeek>(`/api/v1/Leaderboard/${weekId}`);
-  }
-
-  async updateLeaderboardEntry(request: {
-    userId: string;
-    score: number;
-  }): Promise<void> {
-    return this.request(`/api/v1/Leaderboard/entry`, {
+  async updateLeaderboardEntry(
+    request: UpdateLeaderboardEntryRequest
+  ): Promise<LeaderboardEntry> {
+    return this.request<LeaderboardEntry>(`/api/v1/Leaderboard/entry`, {
       method: "POST",
       data: request,
     });

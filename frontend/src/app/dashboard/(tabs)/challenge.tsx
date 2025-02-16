@@ -17,8 +17,19 @@ export default function LearnScreen() {
   };
 
   const userData = useUserData();
-  const { entries, startDate, endDate } = useLeaderboard();
+  const {
+    entries,
+    loading,
+    error: leaderboardError,
+    fetchLeaderboard,
+  } = useLeaderboard();
   const { stats, error, isLoading } = useUserChallengeStats(userData?.id);
+
+  React.useEffect(() => {
+    fetchLeaderboard();
+  }, [fetchLeaderboard]);
+
+  console.log("[Challenge] Leaderboard entries:", entries);
 
   if (error) {
     return <ErrorMessage message={error} />;
@@ -46,7 +57,7 @@ export default function LearnScreen() {
         onPress={() => handleNavigation("/learning/quiz")}
       />
       <CustomDivider />
-      <Leaderboard entries={entries} startDate={startDate} endDate={endDate} />
+      <Leaderboard entries={entries} />
     </ScrollView>
   );
 }

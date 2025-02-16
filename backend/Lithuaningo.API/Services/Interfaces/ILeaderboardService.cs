@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.Leaderboard;
 
@@ -6,23 +7,23 @@ namespace Lithuaningo.API.Services.Interfaces
     public interface ILeaderboardService
     {
         /// <summary>
-        /// Gets the leaderboard for the current week
+        /// Gets the paginated leaderboard entries for the current week
         /// </summary>
-        /// <returns>The current week's leaderboard with Guid identifier</returns>
-        Task<LeaderboardWeekResponse> GetCurrentWeekLeaderboardAsync();
+        /// <returns>List of leaderboard entries for the current week</returns>
+        Task<List<LeaderboardEntryResponse>> GetCurrentWeekLeaderboardAsync();
 
         /// <summary>
-        /// Gets the leaderboard for a specific week
+        /// Gets the paginated leaderboard entries for a specific week
         /// </summary>
-        /// <param name="weekId">The week identifier in YYYY-WW format (e.g., "2024-12")</param>
-        /// <returns>The specified week's leaderboard with Guid identifier</returns>
-        Task<LeaderboardWeekResponse> GetWeekLeaderboardAsync(string weekId);
+        /// <param name="weekId">The week identifier in YYYY-WW format</param>
+        /// <returns>List of leaderboard entries for the specified week</returns>
+        Task<List<LeaderboardEntryResponse>> GetWeekLeaderboardAsync(string weekId);
 
         /// <summary>
-        /// Updates a user's leaderboard entry
+        /// Updates or creates a user's leaderboard entry for the current week
         /// </summary>
         /// <param name="userId">The user's Guid identifier</param>
-        /// <param name="score">The user's score</param>
+        /// <param name="score">The score to update</param>
         /// <returns>The updated leaderboard entry</returns>
         Task<LeaderboardEntryResponse> UpdateLeaderboardEntryAsync(string userId, int score);
     }

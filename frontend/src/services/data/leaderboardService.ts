@@ -1,8 +1,8 @@
 import apiClient, { ApiError } from "@services/api/apiClient";
-import { LeaderboardWeek, UpdateLeaderboardEntryRequest } from "@src/types";
+import { LeaderboardEntry, UpdateLeaderboardEntryRequest } from "@src/types";
 
 class LeaderboardService {
-  async getCurrentWeekLeaderboard(): Promise<LeaderboardWeek | null> {
+  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntry[]> {
     try {
       return await apiClient.getCurrentWeekLeaderboard();
     } catch (error) {
@@ -15,28 +15,11 @@ class LeaderboardService {
     }
   }
 
-  async getWeekLeaderboard(weekId: string): Promise<LeaderboardWeek | null> {
-    try {
-      if (!weekId) {
-        throw new Error("Week ID is required");
-      }
-      return await apiClient.getWeekLeaderboard(weekId);
-    } catch (error) {
-      if (error instanceof ApiError) {
-        console.error(`API Error ${error.status}:`, error.data);
-      } else {
-        console.error("Error fetching week leaderboard:", error);
-      }
-      throw error;
-    }
-  }
-
   async updateLeaderboardEntry(
     request: UpdateLeaderboardEntryRequest
-  ): Promise<boolean> {
+  ): Promise<LeaderboardEntry> {
     try {
-      await apiClient.updateLeaderboardEntry(request);
-      return true;
+      return await apiClient.updateLeaderboardEntry(request);
     } catch (error) {
       if (error instanceof ApiError) {
         console.error(`API Error ${error.status}:`, error.data);

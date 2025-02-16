@@ -33,7 +33,7 @@ const VerifyEmailScreen: React.FC = () => {
     const success = await resendVerificationCode(email as string);
     if (success) {
       setResendDisabled(true);
-      setCountdown(30);
+      setCountdown(60);
       const timer = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {

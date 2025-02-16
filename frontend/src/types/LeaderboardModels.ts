@@ -1,15 +1,11 @@
-export interface LeaderboardWeek {
-  id: string;
-  startDate: string;
-  endDate: string;
-  entries: { [key: string]: LeaderboardEntry };
-}
-
 export interface LeaderboardEntry {
   id: string;
   userId: string;
   username: string;
   score: number;
+  weekId: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface UpdateLeaderboardEntryRequest {

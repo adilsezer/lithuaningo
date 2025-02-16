@@ -85,6 +85,7 @@ export const useUserStore = create<UserStore>()(
           userData,
           needsReauthentication: false,
           error: null,
+          isAuthenticated: true,
         });
         console.log("[UserStore] User logged in successfully");
       },

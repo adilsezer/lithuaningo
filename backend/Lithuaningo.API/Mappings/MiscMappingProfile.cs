@@ -65,12 +65,6 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "multiple_choice"));
 
             // Leaderboard mappings
-            CreateMap<LeaderboardWeek, LeaderboardWeekResponse>()
-                .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
-                .ForMember(dest => dest.StartDate, opt => opt.MapFrom(src => src.StartDate))
-                .ForMember(dest => dest.EndDate, opt => opt.MapFrom(src => src.EndDate))
-                .ForMember(dest => dest.Entries, opt => opt.MapFrom(src => src.Entries.Values));
-
             CreateMap<LeaderboardEntry, LeaderboardEntryResponse>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))

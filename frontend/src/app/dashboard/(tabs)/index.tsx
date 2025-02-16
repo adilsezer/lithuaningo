@@ -11,6 +11,7 @@ import { useDecks } from "@hooks/useDecks";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useUserData } from "@stores/useUserStore";
 import { useError, useSetError, useIsLoading } from "@stores/useUIStore";
+import { useIsAuthenticated } from "@stores/useUserStore";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useDeckVote } from "@src/hooks/useDeckVote";
@@ -67,6 +68,7 @@ const DashboardScreen: React.FC = () => {
   const userData = useUserData();
   const error = useError();
   const setError = useSetError();
+  const isAuthenticated = useIsAuthenticated();
 
   const {
     userData: dashboardUser,
@@ -91,13 +93,18 @@ const DashboardScreen: React.FC = () => {
     fetchDecks();
   }, [fetchDecks]);
 
+  // Don't render content if not authenticated
+  if (!isAuthenticated) {
+    return null;
+  }
+
   const content = (
     <ScrollView>
       <View style={styles.container}>
         {validAnnouncements?.length > 0 && (
           <AnnouncementsCard
             announcements={validAnnouncements}
-            backgroundColor={theme.colors.secondary}
+            backgroundColor={theme.colors.primary}
           />
         )}
 

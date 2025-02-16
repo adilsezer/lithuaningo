@@ -289,6 +289,7 @@ To authorize in Swagger UI:
     services.AddScoped<IDeckCommentService, DeckCommentService>();
     services.AddScoped<IDeckReportService, DeckReportService>();
     services.AddScoped<ILeaderboardService, LeaderboardService>();
+    services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
 
