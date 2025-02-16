@@ -61,36 +61,103 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                var parameters = new Dictionary<string, object>
-                {
-                    { "deck_id", deckId },
-                    { "user_id", userId }
-                };
+                // First check if the deck exists
+                var deckResponse = await _supabaseClient
+                    .From<Deck>()
+                    .Where(d => d.Id == deckGuid)
+                    .Single();
 
-                var result = await _supabaseClient.Rpc<UserFlashcardStats>("get_flashcard_stats", parameters);
-                
-                if (result == null)
+                if (deckResponse == null)
                 {
-                    _logger.LogInformation("No flashcard stats found for deck {DeckId} and user {UserId}", 
-                        deckId, userId);
-                    result = new UserFlashcardStats
+                    _logger.LogWarning("Deck {DeckId} not found", deckId);
+                    return new UserFlashcardStatsResponse
                     {
                         Id = Guid.NewGuid(),
                         UserId = userGuid,
                         FlashcardId = Guid.Empty,
+                        AccuracyRate = 0,
+                        TotalReviewed = 0,
+                        CorrectAnswers = 0,
                         LastReviewedAt = DateTime.UtcNow,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
+                        NextReviewDue = "Later"
                     };
                 }
 
-                var response = _mapper.Map<UserFlashcardStatsResponse>(result);
-                await _cache.SetAsync(cacheKey, response,
+                // Get all flashcards for the deck
+                var flashcardsResponse = await _supabaseClient
+                    .From<Flashcard>()
+                    .Where(f => f.DeckId == deckGuid)
+                    .Get();
+
+                if (!flashcardsResponse.Models.Any())
+                {
+                    _logger.LogInformation("No flashcards found for deck {DeckId}", deckId);
+                    return new UserFlashcardStatsResponse
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = userGuid,
+                        FlashcardId = Guid.Empty,
+                        AccuracyRate = 0,
+                        TotalReviewed = 0,
+                        CorrectAnswers = 0,
+                        LastReviewedAt = DateTime.UtcNow,
+                        NextReviewDue = "Later"
+                    };
+                }
+
+                var flashcardIds = flashcardsResponse.Models.Select(f => f.Id).ToList();
+
+                // Then get stats for these flashcards
+                var statsResponse = await _supabaseClient
+                    .From<UserFlashcardStats>()
+                    .Where(s => s.UserId == userGuid)
+                    .Filter("flashcard_id", Operator.In, flashcardIds)
+                    .Get();
+
+                var stats = statsResponse.Models;
+
+                if (!stats.Any())
+                {
+                    _logger.LogInformation("No flashcard stats found for deck {DeckId} and user {UserId}", 
+                        deckId, userId);
+                    var response = new UserFlashcardStatsResponse
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = userGuid,
+                        FlashcardId = flashcardIds.FirstOrDefault(),
+                        AccuracyRate = 0,
+                        TotalReviewed = 0,
+                        CorrectAnswers = 0,
+                        LastReviewedAt = DateTime.UtcNow,
+                        NextReviewDue = "Later"
+                    };
+
+                    // Cache the empty stats to prevent repeated queries
+                    await _cache.SetAsync(cacheKey, response,
+                        TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+
+                    return response;
+                }
+
+                // Aggregate stats for all flashcards in the deck
+                var aggregatedStats = new UserFlashcardStatsResponse
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userGuid,
+                    FlashcardId = flashcardIds.FirstOrDefault(),
+                    TotalReviewed = stats.Sum(s => s.TotalReviewed),
+                    CorrectAnswers = stats.Sum(s => s.CorrectAnswers),
+                    AccuracyRate = stats.Any() ? stats.Average(s => s.AccuracyRate) : 0,
+                    LastReviewedAt = stats.Max(s => s.LastReviewedAt),
+                    NextReviewDue = stats.Any(s => s.NextReviewDue <= DateTime.UtcNow) ? "Now" : "Later"
+                };
+
+                await _cache.SetAsync(cacheKey, aggregatedStats,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                 _logger.LogInformation("Retrieved and cached flashcard stats for deck {DeckId} and user {UserId}", 
                     deckId, userId);
 
-                return response;
+                return aggregatedStats;
             }
             catch (Exception ex)
             {
@@ -173,8 +240,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<UserFlashcardStats>()
-                    .Filter("user_id", Operator.Equals, userGuid)
-                    .Order("last_reviewed_at", Ordering.Descending)
+                    .Where(s => s.UserId == userGuid)
                     .Get();
 
                 var stats = response.Models;

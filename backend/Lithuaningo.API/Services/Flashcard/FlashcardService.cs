@@ -261,15 +261,20 @@ namespace Lithuaningo.API.Services
 
             try
             {
+                // First get the user's flashcard stats that are due for review
+                var statsResponse = await _supabaseClient
+                    .From<UserFlashcardStats>()
+                    .Where(s => s.UserId == userGuid)
+                    .Where(s => s.NextReviewDue <= DateTime.UtcNow)
+                    .Limit(limit)
+                    .Get();
+
+                var dueFlashcardIds = statsResponse.Models.Select(s => s.FlashcardId).ToList();
+
+                // Then get the actual flashcards
                 var response = await _supabaseClient
                     .From<Flashcard>()
-                    .Select("*, deck!inner(*)")
-                    .Filter("deck.created_by", Operator.Equals, userGuid)
-                    .Filter<object>("next_review_at", Operator.Is, null)
-                    .Filter("next_review_at", Operator.LessThanOrEqual, DateTime.UtcNow)
-                    .Order("next_review_at", Ordering.Ascending)
-                    .Order("created_at", Ordering.Ascending)
-                    .Limit(limit)
+                    .Filter("id", Operator.In, dueFlashcardIds)
                     .Get();
 
                 var flashcards = response.Models;

@@ -57,10 +57,10 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<AppInfo>()
-                    .Filter(a => a.Platform, Operator.Equals, normalizedPlatform)
-                    .Get();
+                    .Where(a => a.Platform == normalizedPlatform)
+                    .Single();
 
-                var appInfo = response.Models.FirstOrDefault();
+                var appInfo = response;
                 if (appInfo == null)
                 {
                     // Create a default record if not found
@@ -114,10 +114,10 @@ namespace Lithuaningo.API.Services
                 // Attempt to fetch an existing record
                 var response = await _supabaseClient
                     .From<AppInfo>()
-                    .Filter(a => a.Platform, Operator.Equals, normalizedPlatform)
-                    .Get();
+                    .Where(a => a.Platform == normalizedPlatform)
+                    .Single();
 
-                var existingAppInfo = response.Models.FirstOrDefault();
+                var existingAppInfo = response;
                 var appInfo = new AppInfo
                 {
                     Id = existingAppInfo?.Id ?? Guid.NewGuid(),

@@ -44,8 +44,8 @@ namespace Lithuaningo.API.Services
                 // Check for existing vote
                 var existingVoteResponse = await _supabaseClient
                     .From<DeckVote>()
-                    .Filter(v => v.DeckId, Operator.Equals, deckId)
-                    .Filter(v => v.UserId, Operator.Equals, userId)
+                    .Where(v => v.DeckId == deckId)
+                    .Where(v => v.UserId == userId)
                     .Get();
 
                 if (existingVoteResponse.Models.Any())
@@ -111,8 +111,8 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckVote>()
-                    .Filter(v => v.DeckId, Operator.Equals, deckId)
-                    .Filter(v => v.UserId, Operator.Equals, userId)
+                    .Where(v => v.DeckId == deckId)
+                    .Where(v => v.UserId == userId)
                     .Get();
 
                 var vote = response.Models.FirstOrDefault();
@@ -151,7 +151,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckVote>()
-                    .Filter(v => v.DeckId, Operator.Equals, deckId)
+                    .Where(v => v.DeckId == deckId)
                     .Get();
 
                 var votes = response.Models;
@@ -177,7 +177,7 @@ namespace Lithuaningo.API.Services
             {
                 var votes = await _supabaseClient
                     .From<DeckVote>()
-                    .Filter(v => v.DeckId, Operator.Equals, deckId)
+                    .Where(v => v.DeckId == deckId)
                     .Get();
 
                 var upvotes = votes.Models.Count(v => v.IsUpvote);
@@ -198,7 +198,7 @@ namespace Lithuaningo.API.Services
             {
                 var query = _supabaseClient
                     .From<DeckVote>()
-                    .Filter(v => v.DeckId, Operator.Equals, deckId);
+                    .Where(v => v.DeckId == deckId);
 
                 // Filter votes by time range if needed
                 if (timeRange != "all")
@@ -210,7 +210,7 @@ namespace Lithuaningo.API.Services
                         _ => DateTime.MinValue
                     };
 
-                    query = query.Filter(v => v.CreatedAt, Operator.GreaterThanOrEqual, startDate);
+                    query = query.Where(v => v.CreatedAt >= startDate);
                 }
 
                 var votesResponse = await query.Get();

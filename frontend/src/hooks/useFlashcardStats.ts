@@ -31,8 +31,6 @@ export const useFlashcardStats = () => {
   const getUserFlashcardStats = useCallback(
     async (deckId: string, userId: string) => {
       try {
-        setLoading(true);
-        setError(null);
         const data = await UserFlashcardStatsService.getUserFlashcardStats(
           deckId,
           userId
@@ -42,11 +40,9 @@ export const useFlashcardStats = () => {
       } catch (error) {
         handleError(error as Error, "Failed to load flashcard stats");
         throw error;
-      } finally {
-        setLoading(false);
       }
     },
-    [handleError, setError, setLoading]
+    [handleError]
   );
 
   const getUserFlashcardHistory = useCallback(

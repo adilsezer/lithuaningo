@@ -60,7 +60,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<QuizQuestion>()
-                    .Filter("quiz_date", Operator.Equals, today)
+                    .Where(q => q.CreatedAt.Date == DateTime.Parse(today).Date)
                     .Get();
 
                 var questions = response.Models;
@@ -68,8 +68,7 @@ namespace Lithuaningo.API.Services
 
                 await _cache.SetAsync(cacheKey, questionResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} quiz questions for {Date}", 
-                    questions.Count, today);
+                _logger.LogInformation("Retrieved {Count} quiz questions for {Date}", questions.Count, today);
 
                 return questionResponses;
             }
@@ -154,7 +153,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<QuizQuestion>()
-                    .Filter("category", Operator.Equals, category.ToLowerInvariant())
+                    .Where(q => q.Type.ToString().ToLower() == category.ToLowerInvariant())
                     .Get();
 
                 var questions = response.Models;

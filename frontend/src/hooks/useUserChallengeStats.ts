@@ -1,7 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
-import { UserChallengeStats } from "@src/types";
-import useUIStore from "@stores/useUIStore";
+import { useState, useCallback } from "react";
+import {
+  UserChallengeStats,
+  UpdateUserChallengeStatsRequest,
+} from "@src/types";
 import { UserChallengeStatsService } from "@src/services/data/userChallengeStatsService";
+import useUIStore from "@stores/useUIStore";
 
 export const useUserChallengeStats = (userId?: string) => {
   const [stats, setStats] = useState<UserChallengeStats | null>(null);
@@ -9,8 +12,10 @@ export const useUserChallengeStats = (userId?: string) => {
   const { setLoading } = useUIStore();
   const isLoading = useUIStore((state) => state.isLoading);
 
+  // Fetch stats only once when the hook is initialized
   const fetchStats = useCallback(async () => {
     if (!userId) return;
+
     setLoading(true);
     try {
       const data = await UserChallengeStatsService.getUserChallengeStats(
@@ -28,16 +33,54 @@ export const useUserChallengeStats = (userId?: string) => {
     }
   }, [userId, setLoading]);
 
+  // Update stats with optimistic updates
+  const updateStats = useCallback(
+    async (updates: Partial<UpdateUserChallengeStatsRequest>) => {
+      if (!userId || !stats) return;
+
+      // Optimistic update
+      const updatedStats = {
+        ...stats,
+        ...updates,
+      };
+      setStats(updatedStats);
+
+      try {
+        // Create complete request object by merging with existing stats
+        const completeUpdates: UpdateUserChallengeStatsRequest = {
+          currentStreak: stats.currentStreak,
+          longestStreak: stats.longestStreak,
+          todayCorrectAnswers: stats.todayCorrectAnswers,
+          todayIncorrectAnswers: stats.todayIncorrectAnswers,
+          totalChallengesCompleted: stats.totalChallengesCompleted,
+          totalCorrectAnswers: stats.totalCorrectAnswers,
+          totalIncorrectAnswers: stats.totalIncorrectAnswers,
+          ...updates,
+        };
+
+        await UserChallengeStatsService.updateUserChallengeStats(
+          userId,
+          completeUpdates
+        );
+      } catch (error) {
+        // Revert on error
+        setStats(stats);
+        console.error("Error updating challenge stats:", error);
+        throw error;
+      }
+    },
+    [userId, stats]
+  );
+
+  // Other methods remain the same
   const updateDailyStreak = useCallback(async () => {
     if (!userId) return;
     try {
       await UserChallengeStatsService.updateDailyStreak(userId);
-      await fetchStats(); // Refresh stats after update
+      await fetchStats(); // Refresh stats after streak update
     } catch (error) {
       console.error("Error updating daily streak:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to update streak"
-      );
+      throw error;
     }
   }, [userId, fetchStats]);
 
@@ -48,54 +91,17 @@ export const useUserChallengeStats = (userId?: string) => {
       await fetchStats(); // Refresh stats after increment
     } catch (error) {
       console.error("Error incrementing quizzes completed:", error);
-      setError(
-        error instanceof Error ? error.message : "Failed to update stats"
-      );
+      throw error;
     }
   }, [userId, fetchStats]);
 
-  const updateStats = useCallback(
-    async (updates: Partial<UserChallengeStats>) => {
-      if (!userId || !stats) return;
-      try {
-        const updatedStats =
-          await UserChallengeStatsService.updateUserChallengeStats(userId, {
-            currentStreak: updates.currentStreak ?? stats.currentStreak,
-            longestStreak: updates.longestStreak ?? stats.longestStreak,
-            todayCorrectAnswers:
-              updates.todayCorrectAnswers ?? stats.todayCorrectAnswers,
-            todayIncorrectAnswers:
-              updates.todayIncorrectAnswers ?? stats.todayIncorrectAnswers,
-            totalChallengesCompleted:
-              updates.totalChallengesCompleted ??
-              stats.totalChallengesCompleted,
-            totalCorrectAnswers:
-              updates.totalCorrectAnswers ?? stats.totalCorrectAnswers,
-            totalIncorrectAnswers:
-              updates.totalIncorrectAnswers ?? stats.totalIncorrectAnswers,
-          });
-        setStats(updatedStats);
-      } catch (error) {
-        console.error("Error updating stats:", error);
-        setError(
-          error instanceof Error ? error.message : "Failed to update stats"
-        );
-      }
-    },
-    [userId, stats]
-  );
-
-  useEffect(() => {
-    fetchStats();
-  }, [fetchStats]);
-
   return {
     stats,
-    error,
     isLoading,
+    error,
+    fetchStats,
+    updateStats,
     updateDailyStreak,
     incrementQuizzesCompleted,
-    updateStats,
-    refreshStats: fetchStats,
   };
 };

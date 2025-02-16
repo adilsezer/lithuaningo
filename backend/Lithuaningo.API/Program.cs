@@ -271,7 +271,7 @@ To authorize in Swagger UI:
 
     // Supabase Configuration
     services.AddSingleton<ISupabaseConfiguration, SupabaseConfiguration>();
-    services.AddScoped<ISupabaseService, SupabaseService>();
+    services.AddSingleton<ISupabaseService, SupabaseService>();
 
     // Storage Configuration with secure defaults
     services.Configure<StorageSettings>(configuration.GetSection("StorageSettings"));

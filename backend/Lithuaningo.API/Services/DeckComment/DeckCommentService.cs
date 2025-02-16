@@ -57,7 +57,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckComment>()
-                    .Filter("deck_id", Operator.Equals, deckGuid)
+                    .Where(d => d.DeckId == deckGuid)
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
@@ -266,7 +266,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckComment>()
-                    .Filter("user_id", Operator.Equals, userGuid)
+                    .Where(c => c.UserId == userGuid)
                     .Order("created_at", Ordering.Descending)
                     .Get();
 

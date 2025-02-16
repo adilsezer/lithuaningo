@@ -28,7 +28,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
     if (userData?.id && flashcard.deckId) {
       getUserFlashcardStats(flashcard.deckId, userData.id);
     }
-  }, [userData?.id, flashcard.deckId, getUserFlashcardStats]);
+  }, [flashcard.id]); // Only fetch when the flashcard changes
 
   const flipCard = () => {
     Animated.timing(fadeAnim, {

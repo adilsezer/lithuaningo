@@ -75,7 +75,7 @@ namespace Lithuaningo.API.Services
                 var entriesResponse = await _supabaseClient
                     .From<LeaderboardEntry>()
                     .Select("*")
-                    .Filter("week_id", Operator.Equals, weekId)
+                    .Where(l => l.WeekId == weekId)
                     .Order("score", Ordering.Descending)
                     .Limit(LEADERBOARD_SIZE)
                     .Get();
@@ -135,7 +135,7 @@ namespace Lithuaningo.API.Services
                 // Get user info to verify user exists
                 var userResponse = await _supabaseClient
                     .From<UserProfile>()
-                    .Filter("id", Operator.Equals, userGuid)
+                    .Where(u => u.Id == userGuid)
                     .Single();
 
                 if (userResponse == null)
@@ -146,8 +146,8 @@ namespace Lithuaningo.API.Services
                 // Try to find an existing entry for this user in the current week
                 var existingResponse = await _supabaseClient
                     .From<LeaderboardEntry>()
-                    .Filter("user_id", Operator.Equals, userGuid)
-                    .Filter("week_id", Operator.Equals, currentWeek)
+                    .Where(l => l.UserId == userGuid)
+                    .Where(l => l.WeekId == currentWeek)
                     .Single();
 
                 LeaderboardEntry updatedEntry;

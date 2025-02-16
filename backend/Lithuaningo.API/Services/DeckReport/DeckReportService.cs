@@ -57,7 +57,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckReport>()
-                    .Filter(r => r.Status, Operator.Equals, status.ToLowerInvariant())
+                    .Where(r => r.Status == status.ToLowerInvariant())
                     .Order(r => r.CreatedAt, Ordering.Descending)
                     .Get();
 
@@ -93,8 +93,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckReport>()
-                    .Filter(r => r.DeckId, Operator.Equals, deckId)
-                    .Order(r => r.CreatedAt, Ordering.Descending)
+                    .Where(r => r.DeckId == deckId)
                     .Get();
 
                 var reports = response.Models;
@@ -260,7 +259,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckReport>()
-                    .Filter(r => r.Status, Operator.Equals, "pending")
+                    .Where(r => r.Status == "pending")
                     .Order(r => r.CreatedAt, Ordering.Ascending)
                     .Limit(limit)
                     .Get();

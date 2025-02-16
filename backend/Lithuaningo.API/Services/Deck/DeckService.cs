@@ -52,28 +52,26 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                // Start with a basic query
-                var supabaseTable = _supabaseClient.From<Deck>();
-                
-                // Apply filters - using raw "true" value for boolean filter
-                var query = supabaseTable.Filter(d => d.IsPublic, Operator.Equals, "true");
+                // Build and execute query in a single chain
+                var response = await _supabaseClient
+                    .From<Deck>()
+                    .Filter("is_public", Operator.Equals, "true")
+                    .Order("created_at", Ordering.Descending)
+                    .Get();
 
+                var decks = response.Models;
+
+                // Apply additional filters in memory if needed
                 if (!string.IsNullOrEmpty(category))
                 {
-                    query = query.Filter(d => d.Category, Operator.Equals, category);
+                    decks = decks.Where(d => d.Category == category).ToList();
                 }
 
-                // Apply limit if specified
                 if (limit.HasValue)
                 {
-                    query = query.Limit(limit.Value);
+                    decks = decks.Take(limit.Value).ToList();
                 }
 
-                // Order by creation date (newest first)
-                query = query.Order("created_at", Ordering.Descending);
-
-                var response = await query.Get();
-                var decks = response.Models;
                 var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
 
                 await _cache.SetAsync(cacheKey, deckResponses,

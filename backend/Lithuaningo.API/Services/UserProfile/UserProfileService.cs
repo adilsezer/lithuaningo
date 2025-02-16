@@ -100,7 +100,7 @@ namespace Lithuaningo.API.Services
                     
                 if (existingProfile != null)
                 {
-                    _logger.LogWarning("Profile already exists for user: {UserId}", request.UserId);
+                    _logger.LogInformation("Profile already exists for user: {UserId}", request.UserId);
                     return _mapper.Map<UserProfileResponse>(existingProfile);
                 }
 
