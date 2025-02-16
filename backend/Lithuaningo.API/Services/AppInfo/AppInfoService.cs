@@ -171,11 +171,10 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var appInfo = response.Models.FirstOrDefault();
-                if (appInfo != null)
+                if (appInfo == null)
                 {
-                    // Remove from cache
-                    var cacheKey = $"{CacheKeyPrefix}{appInfo.Platform}";
-                    await _cache.RemoveAsync(cacheKey);
+                    _logger.LogInformation("App info {Id} not found for deletion", id);
+                    return;
                 }
 
                 // Delete from database
@@ -183,6 +182,9 @@ namespace Lithuaningo.API.Services
                     .From<AppInfo>()
                     .Where(a => a.Id == appInfoId)
                     .Delete();
+
+                // Remove from cache
+                await _cache.RemoveAsync($"{CacheKeyPrefix}{appInfo.Platform}");
 
                 _logger.LogInformation("Deleted app info with ID '{Id}'", id);
             }

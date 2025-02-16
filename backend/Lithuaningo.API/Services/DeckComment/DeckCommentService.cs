@@ -232,9 +232,11 @@ namespace Lithuaningo.API.Services
                     .Where(c => c.Id == commentId)
                     .Delete();
 
-                // Invalidate relevant cache entries
-                var modelComment = _mapper.Map<DeckComment>(comment);
-                await InvalidateCommentCacheAsync(modelComment);
+                // Invalidate cache entries using the response data directly
+                await _cache.RemoveAsync($"{CacheKeyPrefix}{comment.Id}");
+                await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{comment.DeckId}");
+                await _cache.RemoveAsync($"{CacheKeyPrefix}user:{comment.UserId}");
+
                 _logger.LogInformation("Deleted deck comment {Id}", deckCommentId);
 
                 return true;

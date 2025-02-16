@@ -225,9 +225,11 @@ namespace Lithuaningo.API.Services
                         .Where(f => f.Id == flashcardId)
                         .Delete();
 
-                    // Invalidate relevant cache entries
-                    var modelFlashcard = _mapper.Map<Flashcard>(flashcard);
-                    await InvalidateFlashcardCacheAsync(modelFlashcard);
+                    // Invalidate cache entries using the response data directly
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}{flashcard.Id}");
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{flashcard.DeckId}");
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}due:all");
+
                     _logger.LogInformation("Deleted flashcard {Id}", id);
                 }
             }

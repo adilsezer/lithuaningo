@@ -326,9 +326,16 @@ namespace Lithuaningo.API.Services
                         .Where(d => d.Id == deckGuid)
                         .Delete();
 
-                    // Invalidate relevant cache entries
-                    var modelDeck = _mapper.Map<Deck>(deck);
-                    await InvalidateDeckCacheAsync(modelDeck);
+                    // Invalidate cache entries using the response data directly
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}{deck.Id}");
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}user:{deck.UserId}");
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}list:all:0");
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}top:10:all");
+                    if (deck.Category != null)
+                    {
+                        await _cache.RemoveAsync($"{CacheKeyPrefix}list:{deck.Category}:0");
+                    }
+
                     _logger.LogInformation("Deleted deck {Id}", id);
                 }
             }

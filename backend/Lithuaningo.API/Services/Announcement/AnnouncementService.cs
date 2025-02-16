@@ -225,14 +225,21 @@ namespace Lithuaningo.API.Services
 
             try
             {
+                // Get the announcement first to verify it exists
+                var announcement = await GetAnnouncementByIdAsync(id);
+                if (announcement == null)
+                {
+                    _logger.LogInformation("Announcement {Id} not found for deletion", id);
+                    return;
+                }
+
                 await _supabaseClient
                     .From<Announcement>()
                     .Where(a => a.Id == announcementId)
                     .Delete();
 
                 // Invalidate both specific and list caches
-                var cacheKey = $"{CacheKeyPrefix}{announcementId}";
-                await _cache.RemoveAsync(cacheKey);
+                await _cache.RemoveAsync($"{CacheKeyPrefix}{announcement.Id}");
                 await _cache.RemoveAsync($"{CacheKeyPrefix}all");
 
                 _logger.LogInformation("Deleted announcement {Id}", id);

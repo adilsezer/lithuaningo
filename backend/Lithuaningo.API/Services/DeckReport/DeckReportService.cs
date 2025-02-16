@@ -300,9 +300,15 @@ namespace Lithuaningo.API.Services
                     .Where(r => r.Id == reportId)
                     .Delete();
 
-                // Invalidate relevant cache entries
-                var modelReport = _mapper.Map<DeckReport>(report);
-                await InvalidateReportCacheAsync(modelReport);
+                // Invalidate cache entries using the response data directly
+                await _cache.RemoveAsync($"{CacheKeyPrefix}status:{report.Status}");
+                await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{report.DeckId}");
+                await _cache.RemoveAsync($"{CacheKeyPrefix}{report.Id}");
+                if (report.Status == "pending")
+                {
+                    await _cache.RemoveAsync($"{CacheKeyPrefix}pending:50");
+                }
+
                 _logger.LogInformation("Deleted report {Id}", id);
             }
             catch (Exception ex)

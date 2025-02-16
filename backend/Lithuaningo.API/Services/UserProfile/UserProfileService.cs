@@ -180,14 +180,21 @@ namespace Lithuaningo.API.Services
 
             try
             {
+                // Get the profile first to verify it exists
+                var profile = await GetUserProfileAsync(userId);
+                if (profile == null)
+                {
+                    _logger.LogInformation("User profile {UserId} not found for deletion", userId);
+                    return false;
+                }
+
                 await _supabaseClient
                     .From<UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Delete();
 
                 // Invalidate cache
-                var cacheKey = $"{CacheKeyPrefix}{userId}";
-                await _cache.RemoveAsync(cacheKey);
+                await _cache.RemoveAsync($"{CacheKeyPrefix}{profile.Id}");
 
                 _logger.LogInformation("Deleted user profile for user {UserId}", userId);
                 return true;
