@@ -56,6 +56,7 @@ namespace Lithuaningo.API.Services
                 var response = await _supabaseClient
                     .From<Deck>()
                     .Filter("is_public", Operator.Equals, "true")
+                    .Select("*, user_profiles (full_name)")
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
@@ -72,7 +73,13 @@ namespace Lithuaningo.API.Services
                     decks = decks.Take(limit.Value).ToList();
                 }
 
-                var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
+                var deckResponses = new List<DeckResponse>();
+                foreach (var deck in decks)
+                {
+                    var deckResponse = _mapper.Map<DeckResponse>(deck);
+                    deckResponse.Username = deck.UserProfile?.FullName ?? string.Empty;
+                    deckResponses.Add(deckResponse);
+                }
 
                 await _cache.SetAsync(cacheKey, deckResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));
@@ -109,6 +116,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<Deck>()
+                    .Select("*, user_profiles (full_name)")
                     .Where(d => d.Id == deckGuid)
                     .Get();
 
@@ -116,6 +124,7 @@ namespace Lithuaningo.API.Services
                 if (deck != null)
                 {
                     var deckResponse = _mapper.Map<DeckResponse>(deck);
+                    deckResponse.Username = deck.UserProfile?.FullName ?? string.Empty;
                     await _cache.SetAsync(cacheKey, deckResponse,
                         TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));
                     _logger.LogInformation("Retrieved and cached deck {Id}", id);
@@ -152,11 +161,19 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<Deck>()
+                    .Select("*, user_profiles (full_name)")
                     .Where(d => d.UserId == userGuid)
                     .Get();
 
                 var decks = response.Models;
-                var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
+                var deckResponses = new List<DeckResponse>();
+
+                foreach (var deck in decks)
+                {
+                    var deckResponse = _mapper.Map<DeckResponse>(deck);
+                    deckResponse.Username = deck.UserProfile?.FullName ?? string.Empty;
+                    deckResponses.Add(deckResponse);
+                }
 
                 await _cache.SetAsync(cacheKey, deckResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));
@@ -187,6 +204,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<Deck>()
+                    .Select("*, user_profiles (full_name)")
                     .Where(d => d.IsPublic == true)
                     .Order("rating", Ordering.Descending)
                     .Limit(limit)
@@ -210,7 +228,13 @@ namespace Lithuaningo.API.Services
                     }
                 }
 
-                var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
+                var deckResponses = new List<DeckResponse>();
+                foreach (var deck in decks)
+                {
+                    var deckResponse = _mapper.Map<DeckResponse>(deck);
+                    deckResponse.Username = deck.UserProfile?.FullName ?? string.Empty;
+                    deckResponses.Add(deckResponse);
+                }
 
                 await _cache.SetAsync(cacheKey, deckResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));

@@ -1,6 +1,8 @@
 using System;
 using Supabase.Postgrest.Models;
 using Supabase.Postgrest.Attributes;
+using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace Lithuaningo.API.Models
 {
@@ -25,5 +27,8 @@ namespace Lithuaningo.API.Models
 
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
+
+        [JsonProperty("user_profiles")]
+        public UserProfile? UserProfile { get; set; }
     }
 }

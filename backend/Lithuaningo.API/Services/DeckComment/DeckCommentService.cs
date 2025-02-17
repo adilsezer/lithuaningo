@@ -55,14 +55,25 @@ namespace Lithuaningo.API.Services
 
             try
             {
+                // Use join to retrieve related user_profiles (full_name) in one call.
                 var response = await _supabaseClient
                     .From<DeckComment>()
+                    .Select("*, user_profiles (full_name)")
                     .Where(d => d.DeckId == deckGuid)
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
                 var comments = response.Models;
-                var commentResponses = _mapper.Map<List<DeckCommentResponse>>(comments);
+                var commentResponses = new List<DeckCommentResponse>();
+
+                foreach (var comment in comments)
+                {
+                    var commentResponse = _mapper.Map<DeckCommentResponse>(comment);
+                    // Set Username from joined user_profiles relation
+                    commentResponse.Username = comment.UserProfile?.FullName ?? string.Empty;
+                    Console.WriteLine(commentResponse.Username);
+                    commentResponses.Add(commentResponse);
+                }
 
                 await _cache.SetAsync(cacheKey, commentResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
@@ -98,6 +109,7 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckComment>()
+                    .Select("*, user_profiles (full_name)")
                     .Where(c => c.Id == commentGuid)
                     .Get();
 
@@ -105,6 +117,8 @@ namespace Lithuaningo.API.Services
                 if (comment != null)
                 {
                     var commentResponse = _mapper.Map<DeckCommentResponse>(comment);
+                    commentResponse.Username = comment.UserProfile?.FullName ?? string.Empty;
+
                     await _cache.SetAsync(cacheKey, commentResponse,
                         TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
                     _logger.LogInformation("Retrieved and cached deck comment {Id}", deckCommentId);
@@ -146,6 +160,9 @@ namespace Lithuaningo.API.Services
 
                 var createdComment = response.Models.First();
                 var commentResponse = _mapper.Map<DeckCommentResponse>(createdComment);
+
+                // Optionally, you might perform an additional join query here if you need the username immediately.
+                // For now, we'll leave Username empty since it can be retrieved via the join in Get methods.
 
                 // Invalidate relevant cache entries
                 await InvalidateCommentCacheAsync(createdComment);
@@ -196,8 +213,8 @@ namespace Lithuaningo.API.Services
 
                 var updatedComment = response.Models.First();
                 var commentResponse = _mapper.Map<DeckCommentResponse>(updatedComment);
+                // If needed, you can fetch joined data here too.
 
-                // Invalidate relevant cache entries
                 await InvalidateCommentCacheAsync(updatedComment);
                 _logger.LogInformation("Updated deck comment {Id}", id);
 
@@ -219,7 +236,6 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                // Get the comment first to know which cache keys to invalidate
                 var comment = await GetDeckCommentByIdAsync(deckCommentId);
                 if (comment == null)
                 {
@@ -232,7 +248,6 @@ namespace Lithuaningo.API.Services
                     .Where(c => c.Id == commentId)
                     .Delete();
 
-                // Invalidate cache entries using the response data directly
                 await _cache.RemoveAsync($"{CacheKeyPrefix}{comment.Id}");
                 await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{comment.DeckId}");
                 await _cache.RemoveAsync($"{CacheKeyPrefix}user:{comment.UserId}");
@@ -268,12 +283,23 @@ namespace Lithuaningo.API.Services
             {
                 var response = await _supabaseClient
                     .From<DeckComment>()
+                    .Select("*, user_profiles (full_name)")
                     .Where(c => c.UserId == userGuid)
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
                 var comments = response.Models;
-                var commentResponses = _mapper.Map<List<DeckCommentResponse>>(comments);
+                var commentResponses = new List<DeckCommentResponse>();
+
+                // Since all comments are from the same user, we extract username from the joined relation of the first comment.
+                var username = comments.FirstOrDefault()?.UserProfile?.FullName ?? string.Empty;
+
+                foreach (var comment in comments)
+                {
+                    var commentResponse = _mapper.Map<DeckCommentResponse>(comment);
+                    commentResponse.Username = username;
+                    commentResponses.Add(commentResponse);
+                }
 
                 await _cache.SetAsync(cacheKey, commentResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
@@ -293,13 +319,8 @@ namespace Lithuaningo.API.Services
         {
             var tasks = new List<Task>
             {
-                // Invalidate specific comment cache
                 _cache.RemoveAsync($"{CacheKeyPrefix}{comment.Id}"),
-                
-                // Invalidate deck's comments list cache
                 _cache.RemoveAsync($"{CacheKeyPrefix}deck:{comment.DeckId}"),
-                
-                // Invalidate user's comments list cache
                 _cache.RemoveAsync($"{CacheKeyPrefix}user:{comment.UserId}")
             };
 
