@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import BackButton from "@components/layout/BackButton";
@@ -7,6 +7,8 @@ import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { changePasswordFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
+import { useUserData } from "@stores/useUserStore";
+
 const changePasswordFields: FormField[] = [
   {
     name: "currentPassword",
@@ -34,6 +36,19 @@ const changePasswordFields: FormField[] = [
 const ChangePasswordScreen: React.FC = () => {
   const loading = useIsLoading();
   const { updatePassword } = useAuth();
+  const userData = useUserData();
+
+  if (userData?.authProvider !== "email") {
+    return (
+      <ScrollView>
+        <BackButton />
+        <CustomText>
+          Password change is only available for email/password accounts. You are
+          signed in with {userData?.authProvider}.
+        </CustomText>
+      </ScrollView>
+    );
+  }
 
   return (
     <ScrollView>

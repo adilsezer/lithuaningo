@@ -1,12 +1,13 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { ScrollView, View } from "react-native";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import { useAuth } from "@hooks/useAuth";
-import { useIsLoading } from "@stores/useUIStore";
+import { useForgotPassword } from "@hooks/useForgotPassword";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
+import { useAlertDialog } from "@hooks/useAlertDialog";
+import { router } from "expo-router";
 
 const forgotPasswordFields: FormField[] = [
   {
@@ -21,8 +22,35 @@ const forgotPasswordFields: FormField[] = [
 ];
 
 const ForgotPasswordScreen: React.FC = () => {
-  const isLoading = useIsLoading();
-  const { resetPassword } = useAuth();
+  const { isLoading, handleResetPassword } = useForgotPassword();
+  const { showAlert, showError } = useAlertDialog();
+
+  const handleSubmit = async (data: { email: string }) => {
+    const result = await handleResetPassword(data.email);
+
+    if (result.success) {
+      // Force the alert to be shown in the next tick
+      setTimeout(() => {
+        showAlert({
+          title: "Check Your Email",
+          message: "We've sent you a code to reset your password.",
+          buttons: [
+            {
+              text: "OK",
+              onPress: () => {
+                router.push({
+                  pathname: "/auth/reset-password-verify",
+                  params: { email: data.email },
+                });
+              },
+            },
+          ],
+        });
+      }, 0);
+    } else if (result.message) {
+      showError(result.message);
+    }
+  };
 
   return (
     <ScrollView>
@@ -33,15 +61,13 @@ const ForgotPasswordScreen: React.FC = () => {
           Reset Password
         </CustomText>
         <CustomText>
-          Enter your email and we will send you a link to reset your password.
+          Enter your email and we will send you a code to reset your password.
         </CustomText>
       </View>
 
       <Form
         fields={forgotPasswordFields}
-        onSubmit={async (data) => {
-          await resetPassword(data.email);
-        }}
+        onSubmit={handleSubmit}
         submitButtonText="Reset Password"
         isLoading={isLoading}
         options={{ mode: "onBlur" }}

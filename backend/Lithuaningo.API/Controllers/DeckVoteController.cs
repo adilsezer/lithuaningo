@@ -150,5 +150,42 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
+
+        /// <summary>
+        /// Removes a vote for a deck.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     DELETE /api/v1/DeckVote/{deckId}/user/{userId}
+        /// </remarks>
+        /// <param name="deckId">The deck identifier</param>
+        /// <param name="userId">The user identifier</param>
+        /// <returns>True if the vote was removed, false otherwise</returns>
+        /// <response code="200">Vote successfully removed</response>
+        /// <response code="404">Vote not found</response>
+        /// <response code="500">Error during removal</response>
+        [HttpDelete("{deckId}/user/{userId}")]
+        [SwaggerOperation(
+            Summary = "Removes a vote",
+            Description = "Removes a vote for a specific deck by user",
+            OperationId = "RemoveVote",
+            Tags = new[] { "DeckVote" }
+        )]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<bool>> RemoveVote(Guid deckId, Guid userId)
+        {
+            try
+            {
+                await _voteService.RemoveVoteAsync(deckId, userId);
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing vote");
+                return StatusCode(500, "Internal server error");
+            }
+        }
     }
 } 

@@ -80,47 +80,6 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<UserProfileResponse> CreateUserProfileAsync(CreateUserProfileRequest request)
-        {
-            try
-            {
-                _logger.LogInformation("Creating user profile for user: {UserId}", request.UserId);
-
-                var profile = _mapper.Map<Models.UserProfile>(request);
-                profile.LastLoginAt = DateTime.UtcNow;
-                profile.CreatedAt = DateTime.UtcNow;
-                profile.UpdatedAt = DateTime.UtcNow;
-
-                var supabaseTable = _supabaseClient.From<Models.UserProfile>();
-                
-                // Check if profile already exists
-                var existingProfile = await supabaseTable
-                    .Where(p => p.Id == profile.Id)
-                    .Single();
-                    
-                if (existingProfile != null)
-                {
-                    _logger.LogInformation("Profile already exists for user: {UserId}", request.UserId);
-                    return _mapper.Map<UserProfileResponse>(existingProfile);
-                }
-
-                // Create new profile
-                await supabaseTable.Insert(profile);
-                _logger.LogInformation("Successfully created profile for user: {UserId}", request.UserId);
-
-                // Clear cache
-                await _cache.RemoveAsync($"{CacheKeyPrefix}{request.UserId}");
-
-                return _mapper.Map<UserProfileResponse>(profile);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create user profile for user: {UserId}. Error: {Error}", 
-                    request.UserId, ex.Message);
-                throw;
-            }
-        }
-
         public async Task<UserProfileResponse> UpdateUserProfileAsync(string userId, UpdateUserProfileRequest request)
         {
             if (request == null)

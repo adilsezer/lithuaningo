@@ -55,10 +55,25 @@ export const changePasswordFormSchema = z
     path: ["confirmPassword"],
   });
 
-export const editProfileFormSchema = z.object({
-  displayName: nameSchema,
-  currentPassword: z.string().min(1, "Current password is required"),
-});
+export const editProfileFormSchema = z
+  .object({
+    displayName: nameSchema,
+    currentPassword: z
+      .string()
+      .min(1, "Current password is required")
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      // If currentPassword is undefined (social auth), validation passes
+      // If currentPassword is provided, it must meet the requirements
+      return !data.currentPassword || data.currentPassword.length >= 1;
+    },
+    {
+      message: "Current password is required for email/password users",
+      path: ["currentPassword"],
+    }
+  );
 
 export const deleteAccountFormSchema = z.object({
   password: z.string().min(1, "Please enter your password to confirm deletion"),
@@ -125,3 +140,18 @@ export const verifyEmailFormSchema = z.object({
     .length(6, "Verification code must be 6 digits")
     .regex(/^\d+$/, "Verification code must contain only numbers"),
 });
+
+export const resetPasswordVerifyFormSchema = z
+  .object({
+    token: z
+      .string()
+      .min(1, "Reset code is required")
+      .length(6, "Reset code must be 6 digits")
+      .regex(/^\d+$/, "Reset code must contain only numbers"),
+    newPassword: passwordSchema,
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });

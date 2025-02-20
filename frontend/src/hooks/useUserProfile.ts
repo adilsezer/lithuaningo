@@ -1,11 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useUserData } from "@stores/useUserStore";
 import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
-import {
-  UserProfile,
-  CreateUserProfileRequest,
-  UpdateUserProfileRequest,
-} from "@src/types";
+import { UserProfile, UpdateUserProfileRequest } from "@src/types";
 import userProfileService from "@services/data/userProfileService";
 
 export const useUserProfile = () => {
@@ -30,27 +26,6 @@ export const useUserProfile = () => {
       setLoading(false);
     }
   }, [userId, setLoading, setError]);
-
-  const createProfile = useCallback(
-    async (request: CreateUserProfileRequest) => {
-      try {
-        setLoading(true);
-        const userProfile = await userProfileService.createUserProfile(request);
-        if (userProfile) {
-          setProfile(userProfile);
-          return true;
-        }
-        return false;
-      } catch (err) {
-        setError("Failed to create user profile");
-        console.error("Error creating user profile:", err);
-        return false;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [setLoading, setError]
-  );
 
   const updateProfile = useCallback(
     async (request: UpdateUserProfileRequest) => {
@@ -124,7 +99,6 @@ export const useUserProfile = () => {
     profile,
     isLoading,
     fetchProfile,
-    createProfile,
     updateProfile,
     deleteProfile,
     updateLastLogin,

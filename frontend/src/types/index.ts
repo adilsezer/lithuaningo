@@ -18,11 +18,7 @@ export type {
   CreateQuizQuestionRequest,
   QuizResult,
 } from "./QuizQuestion";
-export type {
-  UserProfile,
-  CreateUserProfileRequest,
-  UpdateUserProfileRequest,
-} from "./UserProfile";
+export type { UserProfile, UpdateUserProfileRequest } from "./UserProfile";
 export * from "./Flashcard";
 export * from "./UserFlashcardStats";
 export * from "./UserChallengeStats";

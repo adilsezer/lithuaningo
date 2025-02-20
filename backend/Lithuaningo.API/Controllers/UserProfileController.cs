@@ -92,54 +92,6 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Creates a new user profile.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     POST /api/v1/UserProfile
-        ///     {
-        ///         "userId": "user-guid",
-        ///         "email": "user@example.com",
-        ///         "fullName": "John Doe",
-        ///         "avatarUrl": "https://example.com/avatar.jpg"
-        ///     }
-        /// </remarks>
-        /// <param name="request">The user profile creation request</param>
-        /// <returns>The created user profile</returns>
-        /// <response code="200">Returns the created profile</response>
-        /// <response code="400">If request model is invalid</response>
-        /// <response code="500">If there was an internal error</response>
-        [AllowAnonymous]
-        [HttpPost]
-        [SwaggerOperation(
-            Summary = "Creates user profile",
-            Description = "Creates a new user profile with the specified details",
-            OperationId = "CreateUserProfile",
-            Tags = new[] { "UserProfile" }
-        )]
-        [ProducesResponseType(typeof(UserProfileResponse), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UserProfileResponse>> CreateUserProfile([FromBody] CreateUserProfileRequest request)
-        {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
-            try
-            {
-                var profile = await _userProfileService.CreateUserProfileAsync(request);
-                return Ok(profile);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error creating user profile");
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
         /// Updates an existing user profile.
         /// </summary>
         /// <remarks>

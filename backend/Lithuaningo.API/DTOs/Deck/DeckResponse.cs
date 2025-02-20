@@ -51,7 +51,7 @@ namespace Lithuaningo.API.DTOs.Deck
         /// <summary>
         /// Total number of cards in the deck
         /// </summary>
-        public int FlashcardCount { get; set; }
+        public int FlashcardsCount { get; set; }
 
         /// <summary>
         /// Average rating of the deck

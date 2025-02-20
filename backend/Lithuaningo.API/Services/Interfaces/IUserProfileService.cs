@@ -12,11 +12,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<UserProfileResponse?> GetUserProfileAsync(string userId);
 
         /// <summary>
-        /// Creates a new user profile
-        /// </summary>
-        Task<UserProfileResponse> CreateUserProfileAsync(CreateUserProfileRequest request);
-
-        /// <summary>
         /// Updates an existing user profile
         /// </summary>
         Task<UserProfileResponse> UpdateUserProfileAsync(string userId, UpdateUserProfileRequest request);

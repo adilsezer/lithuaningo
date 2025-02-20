@@ -18,6 +18,11 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<bool> VoteDeckAsync(Guid deckId, Guid userId, bool isUpvote);
 
         /// <summary>
+        /// Removes a vote for a deck
+        /// </summary>
+        Task RemoveVoteAsync(Guid deckId, Guid userId);
+
+        /// <summary>
         /// Gets all votes for a specific deck
         /// </summary>
         Task<List<DeckVoteResponse>> GetDeckVotesAsync(Guid deckId);

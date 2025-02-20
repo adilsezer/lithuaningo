@@ -6,16 +6,12 @@ import {
 } from "@stores/useUIStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useCallback } from "react";
-
-interface AuthResponse {
-  success: boolean;
-  message?: string;
-}
+import { AuthResponse } from "@src/types/auth.types";
 
 export const useAuthOperation = () => {
   const setLoading = useSetLoading();
   const setError = useSetError();
-  const { showError, showSuccess } = useAlertDialog();
+  const { showError } = useAlertDialog();
 
   const handleError = useCallback(
     (error: any, title: string) => {
@@ -26,7 +22,7 @@ export const useAuthOperation = () => {
       showError(message, title);
       return { success: false, message };
     },
-    [setError]
+    [setError, showError]
   );
 
   const clearError = useCallback(() => {
@@ -48,10 +44,6 @@ export const useAuthOperation = () => {
         if (!result.success) {
           const error = new Error(result.message || "Operation failed");
           return handleError(error, errorTitle);
-        }
-
-        if (successMessage) {
-          showSuccess(successMessage);
         }
 
         return result;

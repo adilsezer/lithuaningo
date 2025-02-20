@@ -7,10 +7,6 @@ import {
   useSetError,
 } from "@stores/useUIStore";
 
-export type ForgotPasswordData = {
-  email: string;
-};
-
 export const useForgotPassword = () => {
   const isLoading = useIsLoading();
   const setLoading = useSetLoading();
@@ -28,16 +24,22 @@ export const useForgotPassword = () => {
   }, [setError]);
 
   const handleResetPassword = useCallback(
-    async (data: ForgotPasswordData) => {
+    async (email: string) => {
       try {
         setLoading(true);
         setError(null);
-        await resetPassword(data.email);
-        return true;
+        const result = await resetPassword(email);
+
+        if (!result.success) {
+          setError(result.message || "Failed to reset password");
+          return result;
+        }
+        return result;
       } catch (error) {
-        setError("Failed to reset password");
-        console.error("Error resetting password:", error);
-        return false;
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to reset password";
+        setError(errorMessage);
+        return { success: false, message: errorMessage };
       } finally {
         setLoading(false);
       }

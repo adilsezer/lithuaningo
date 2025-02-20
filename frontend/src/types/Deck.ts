@@ -9,7 +9,7 @@ export interface Deck {
   isPublic: boolean;
   rating: number;
   imageUrl?: string;
-  flashcardCount: number;
+  flashcardsCount: number;
   createdAt: string;
   updatedAt: string;
 }

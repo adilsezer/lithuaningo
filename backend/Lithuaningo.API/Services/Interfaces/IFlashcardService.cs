@@ -7,7 +7,6 @@ namespace Lithuaningo.API.Services.Interfaces
     public interface IFlashcardService
     {
         Task<FlashcardResponse?> GetFlashcardByIdAsync(string id);
-        Task<List<FlashcardResponse>> GetUserFlashcardsAsync(string userId);
         Task<string> CreateFlashcardAsync(CreateFlashcardRequest request);
         Task<FlashcardResponse> UpdateFlashcardAsync(string id, UpdateFlashcardRequest request);
         Task DeleteFlashcardAsync(string id);

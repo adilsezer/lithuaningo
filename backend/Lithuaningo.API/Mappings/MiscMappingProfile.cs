@@ -42,6 +42,7 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.DeckId, opt => opt.MapFrom(src => src.DeckId))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
 
@@ -68,7 +69,8 @@ namespace Lithuaningo.API.Mappings
             CreateMap<LeaderboardEntry, LeaderboardEntryResponse>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
-                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score));
+                .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username));
         }
     }
 } 

@@ -17,7 +17,6 @@ const AuthInitializer: React.FC = () => {
 
   const handleAuthStateUpdate = async (session: Session | null) => {
     if (isUpdatingRef.current) {
-      console.log("[Auth] Update already in progress, skipping...");
       return;
     }
 

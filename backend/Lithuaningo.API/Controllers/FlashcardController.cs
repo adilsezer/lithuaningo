@@ -96,51 +96,6 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all flashcards for a specific user.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     GET /api/v1/Flashcard/user/{userId}
-        /// 
-        /// Returns all flashcards created by or shared with the user.
-        /// Results are ordered by creation date (newest first).
-        /// </remarks>
-        /// <param name="userId">The user identifier</param>
-        /// <returns>List of flashcards for the user</returns>
-        /// <response code="200">Returns the list of user's flashcards</response>
-        /// <response code="400">If user ID is empty</response>
-        /// <response code="500">If there was an internal error during retrieval</response>
-        [HttpGet("user/{userId}")]
-        [SwaggerOperation(
-            Summary = "Retrieves user flashcards",
-            Description = "Gets all flashcards associated with a specific user",
-            OperationId = "GetUserFlashcards",
-            Tags = new[] { "Flashcard" }
-        )]
-        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<FlashcardResponse>>> GetUserFlashcards(string userId)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                _logger.LogWarning("User ID is empty");
-                return BadRequest("User ID cannot be empty");
-            }
-
-            try
-            {
-                var flashcards = await _flashcardService.GetUserFlashcardsAsync(userId);
-                return Ok(flashcards);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving flashcards for user {UserId}", userId);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
         /// Retrieves flashcards due for review.
         /// </summary>
         /// <remarks>

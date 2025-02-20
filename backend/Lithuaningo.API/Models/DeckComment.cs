@@ -28,7 +28,7 @@ namespace Lithuaningo.API.Models
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
 
-        [JsonProperty("user_profiles")]
-        public UserProfile? UserProfile { get; set; }
+        [Column("username")]
+        public string Username { get; set; } = string.Empty;
     }
 }

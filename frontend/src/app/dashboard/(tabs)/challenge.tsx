@@ -29,8 +29,6 @@ export default function LearnScreen() {
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  console.log("[Challenge] Leaderboard entries:", entries);
-
   if (error) {
     return <ErrorMessage message={error} />;
   }

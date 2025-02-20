@@ -1,20 +1,17 @@
 import { GoogleSignin } from "@react-native-google-signin/google-signin";
 import * as AppleAuthentication from "expo-apple-authentication";
 import { useUserStore } from "@stores/useUserStore";
-import Constants from "expo-constants";
 import { getErrorMessage } from "@utils/errorMessages";
 import { supabase } from "@services/supabase/supabaseClient";
 import { User } from "@supabase/supabase-js";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { AUTH_PATTERNS } from "@utils/validationPatterns";
 import { AuthResponse } from "@src/types/auth.types";
 import userProfileService from "@services/data/userProfileService";
-import { UserProfile } from "@src/types";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
-  webClientId: Constants.expoConfig?.extra?.googleWebClientId,
-  iosClientId: Constants.expoConfig?.extra?.googleIosClientId,
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
   offlineAccess: true,
 });
 
@@ -31,7 +28,7 @@ export const updateAuthState = async (session: { user: User } | null) => {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  const name = user.user_metadata?.name || "No Name";
+  const name = user.user_metadata?.display_name || "No Name";
   if (typeof name !== "string") {
     console.error("[Auth] Invalid name type in metadata:", user.user_metadata);
     throw new Error("User name must be a string");
@@ -45,9 +42,9 @@ export const updateAuthState = async (session: { user: User } | null) => {
     isAdmin: false,
     isPremium: false,
     premiumExpiresAt: undefined,
+    authProvider: user.app_metadata?.provider || "email",
   };
 
-  await ensureUserProfile(user.id, user.email, name);
   useUserStore.getState().logIn(userData);
   useUserStore.getState().setAuthenticated(true);
 };
@@ -71,77 +68,6 @@ const handleAuthError = (error: any): AuthResponse => {
   };
 };
 
-const ensureUserProfile = async (
-  userId: string,
-  email: string,
-  name: string
-): Promise<UserProfile> => {
-  const profileRequest = {
-    userId,
-    email,
-    emailVerified: true,
-    fullName: name,
-    isAdmin: false,
-    isPremium: false,
-    premiumExpiresAt: undefined,
-    lastLoginAt: new Date().toISOString(),
-  };
-
-  const profile = await userProfileService.createUserProfile(profileRequest);
-  if (profile) return profile;
-
-  // If creation failed, try to fetch existing profile
-  const existingProfile = await userProfileService.fetchUserProfile(userId);
-  if (existingProfile) return existingProfile;
-
-  // If both creation and fetch failed, throw error
-  throw new Error("Failed to ensure user profile");
-};
-
-// Auth rate limiting
-const AUTH_ATTEMPT_KEY = "auth_attempts";
-const MAX_AUTH_ATTEMPTS = 5;
-const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
-
-const checkAuthAttempts = async () => {
-  const attempts = await AsyncStorage.getItem(AUTH_ATTEMPT_KEY);
-  const attemptsData = attempts
-    ? JSON.parse(attempts)
-    : { count: 0, timestamp: 0 };
-
-  if (attemptsData.count >= MAX_AUTH_ATTEMPTS) {
-    const timePassed = Date.now() - attemptsData.timestamp;
-    if (timePassed < LOCKOUT_DURATION) {
-      throw new Error("Too many login attempts. Please try again later.");
-    }
-    await AsyncStorage.setItem(
-      AUTH_ATTEMPT_KEY,
-      JSON.stringify({ count: 0, timestamp: 0 })
-    );
-  }
-};
-
-const incrementAuthAttempts = async () => {
-  const attempts = await AsyncStorage.getItem(AUTH_ATTEMPT_KEY);
-  const attemptsData = attempts
-    ? JSON.parse(attempts)
-    : { count: 0, timestamp: 0 };
-  await AsyncStorage.setItem(
-    AUTH_ATTEMPT_KEY,
-    JSON.stringify({
-      count: attemptsData.count + 1,
-      timestamp: Date.now(),
-    })
-  );
-};
-
-const resetAuthAttempts = async () => {
-  await AsyncStorage.setItem(
-    AUTH_ATTEMPT_KEY,
-    JSON.stringify({ count: 0, timestamp: 0 })
-  );
-};
-
 // Auth Functions
 export const signUpWithEmail = async (
   email: string,
@@ -156,7 +82,12 @@ export const signUpWithEmail = async (
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
-      options: { data: { name } },
+      options: {
+        data: {
+          display_name: name,
+          provider: "email",
+        },
+      },
     });
 
     if (error) throw error;
@@ -193,9 +124,8 @@ export const verifyEmail = async (
     if (verifyError) throw verifyError;
 
     if (verifyData.user) {
-      const name = verifyData.user.user_metadata?.name;
+      const name = verifyData.user.user_metadata?.display_name;
       if (!name) throw new Error("Name is required");
-      await ensureUserProfile(verifyData.user.id, email, name);
     }
 
     return {
@@ -212,8 +142,6 @@ export const signInWithEmail = async (
   password: string
 ): Promise<AuthResponse> => {
   try {
-    await checkAuthAttempts();
-
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -228,13 +156,11 @@ export const signInWithEmail = async (
           email,
         };
       }
-      await incrementAuthAttempts();
       throw error;
     }
 
     if (!data.user) throw new Error("No user data received");
 
-    await resetAuthAttempts();
     await updateAuthState(data.session);
     return { success: true, message: "Successfully logged in" };
   } catch (error) {
@@ -244,8 +170,6 @@ export const signInWithEmail = async (
 
 export const signInWithGoogle = async (): Promise<AuthResponse> => {
   try {
-    await checkAuthAttempts();
-
     // Sign in with Google
     await GoogleSignin.hasPlayServices();
     const { idToken } = await GoogleSignin.signIn();
@@ -261,11 +185,9 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
     });
 
     if (error) {
-      await incrementAuthAttempts();
       throw error;
     }
 
-    await resetAuthAttempts();
     await updateAuthState(data.session);
     return { success: true };
   } catch (error) {
@@ -275,7 +197,6 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
 
 export const signInWithApple = async (): Promise<AuthResponse> => {
   try {
-    await checkAuthAttempts();
     const credential = await AppleAuthentication.signInAsync({
       requestedScopes: [
         AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
@@ -293,11 +214,9 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
     });
 
     if (error) {
-      await incrementAuthAttempts();
       throw error;
     }
 
-    await resetAuthAttempts();
     await updateAuthState(data.session);
     return { success: true };
   } catch (error) {
@@ -347,7 +266,7 @@ export const resendOTP = async (email: string): Promise<AuthResponse> => {
 };
 
 export const updateProfile = async (
-  currentPassword: string,
+  currentPassword: string | undefined,
   updates: {
     displayName?: string;
     email?: string;
@@ -359,13 +278,6 @@ export const updateProfile = async (
   }
 ): Promise<AuthResponse> => {
   try {
-    if (updates.email) {
-      const { error } = await supabase.auth.updateUser({
-        email: updates.email,
-      });
-      if (error) throw error;
-    }
-
     const { data: sessionData, error: sessionError } =
       await supabase.auth.getSession();
     if (sessionError) throw sessionError;
@@ -376,6 +288,7 @@ export const updateProfile = async (
 
     if (!userProfile) throw new Error("User profile not found");
 
+    // Update the profile
     await userProfileService.updateUserProfile(userId, {
       email: updates.email || userProfile.email,
       emailVerified: updates.emailVerified ?? userProfile.emailVerified,
@@ -390,9 +303,7 @@ export const updateProfile = async (
     await updateAuthState(sessionData.session);
     return {
       success: true,
-      message: updates.email
-        ? "Profile updated. Please verify your new email address."
-        : "Profile updated successfully.",
+      message: "Profile updated successfully.",
     };
   } catch (error) {
     return handleAuthError(error);
@@ -415,15 +326,70 @@ export const updatePassword = async (
 export const resetPassword = async (email: string): Promise<AuthResponse> => {
   try {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${Constants.expoConfig?.scheme}://auth-callback`,
+      redirectTo: undefined,
     });
     if (error) throw error;
     return {
       success: true,
-      message: "Password reset email sent. Please check your inbox.",
+      message: "Password reset code sent. Please check your email.",
+      code: "OTP_SENT",
+      email,
     };
   } catch (error) {
     return handleAuthError(error);
+  }
+};
+
+export const verifyPasswordReset = async (
+  email: string,
+  token: string,
+  newPassword: string
+): Promise<AuthResponse> => {
+  try {
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token,
+      type: "recovery",
+    });
+
+    if (error) {
+      // Use a single message for both invalid and expired tokens
+      if (
+        error.message.includes("Invalid otp") ||
+        error.message.includes("expired")
+      ) {
+        return {
+          success: false,
+          message:
+            "Token has expired or is invalid. Please request a new code.",
+        };
+      }
+      throw error;
+    }
+
+    // After verifying OTP, update the password
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: newPassword,
+    });
+
+    if (updateError) {
+      return {
+        success: false,
+        message:
+          "There was a problem updating your password. Please try again.",
+      };
+    }
+
+    return {
+      success: true,
+      message: "Password has been reset successfully. You can now log in.",
+    };
+  } catch (error) {
+    console.error("Password reset verification error:", error);
+    return {
+      success: false,
+      message: "Token has expired or is invalid. Please request a new code.",
+    };
   }
 };
 

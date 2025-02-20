@@ -71,7 +71,6 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                // Get top 20 leaderboard entries
                 var entriesResponse = await _supabaseClient
                     .From<LeaderboardEntry>()
                     .Select("*")
@@ -80,32 +79,13 @@ namespace Lithuaningo.API.Services
                     .Limit(LEADERBOARD_SIZE)
                     .Get();
 
-                var entries = entriesResponse.Models;
-
-                // Fetch user profiles separately
-                var userIds = entries.Select(e => e.UserId).ToList();
-                var userProfiles = await _supabaseClient
-                    .From<UserProfile>()
-                    .Filter("id", Operator.In, userIds)
-                    .Get();
-
-                var userProfileMap = userProfiles.Models.ToDictionary(u => u.Id);
-
-                // Map entries to response DTOs with user information
-                var mappedEntries = entries.Select(entry =>
-                {
-                    var dto = _mapper.Map<LeaderboardEntryResponse>(entry);
-                    dto.Username = userProfileMap.TryGetValue(entry.UserId, out var profile) 
-                        ? profile.FullName ?? "Unknown User" 
-                        : "Unknown User";
-                    return dto;
-                }).ToList();
+                var mappedEntries = _mapper.Map<List<LeaderboardEntryResponse>>(entriesResponse.Models);
 
                 await _cache.SetAsync(cacheKey, mappedEntries,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
 
                 _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries", 
-                    weekId, entries.Count);
+                    weekId, entriesResponse.Models.Count);
 
                 return mappedEntries;
             }

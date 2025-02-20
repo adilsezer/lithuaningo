@@ -52,5 +52,11 @@ namespace Lithuaningo.API.Models
         /// </summary>
         [Column("updated_at")]
         public DateTime UpdatedAt { get; set; }
+
+        /// <summary>
+        /// The username of the user
+        /// </summary>
+        [Column("username")]
+        public string Username { get; set; } = string.Empty;
     }
 }

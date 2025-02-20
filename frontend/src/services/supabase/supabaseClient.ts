@@ -15,7 +15,6 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error("Supabase configuration is missing");
 }
 
-console.log("[Supabase] Initializing client");
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     storage: AsyncStorage,

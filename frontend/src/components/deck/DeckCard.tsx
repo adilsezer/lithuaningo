@@ -98,7 +98,7 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
           <View style={{ flexDirection: "row", alignItems: "center" }}>
             <IconButton icon="cards-outline" size={16} style={{ margin: 0 }} />
             <Text variant="bodySmall" style={{ marginRight: 12 }}>
-              {deck.flashcardCount} cards
+              {deck.flashcardsCount} cards
             </Text>
             <IconButton
               icon="star-outline"

@@ -42,27 +42,33 @@ namespace Lithuaningo.API.Services
             try
             {
                 // Check for existing vote
-                var existingVoteResponse = await _supabaseClient
+                var existingVote = await _supabaseClient
                     .From<DeckVote>()
                     .Where(v => v.DeckId == deckId)
                     .Where(v => v.UserId == userId)
-                    .Get();
+                    .Single();
 
-                if (existingVoteResponse.Models.Any())
+                if (existingVote != null)
                 {
-                    var vote = existingVoteResponse.Models.First();
-                    if (vote.IsUpvote == isUpvote)
+                    if (existingVote.IsUpvote == isUpvote)
                     {
-                        return true;
+                        // User is trying to vote the same way again
+                        _logger.LogInformation("User {UserId} attempted to {VoteType} deck {DeckId} again", 
+                            userId, isUpvote ? "upvote" : "downvote", deckId);
+                        return false;
                     }
 
                     // Update existing vote
+                    existingVote.IsUpvote = isUpvote;
+                    existingVote.UpdatedAt = DateTime.UtcNow;
+
                     await _supabaseClient
                         .From<DeckVote>()
-                        .Where(v => v.Id == vote.Id)
-                        .Set(v => v.IsUpvote, isUpvote)
-                        .Set(v => v.UpdatedAt, DateTime.UtcNow)
-                        .Update();
+                        .Where(v => v.Id == existingVote.Id)
+                        .Update(existingVote);
+
+                    _logger.LogInformation("Updated vote for deck {DeckId} by user {UserId} to {VoteType}", 
+                        deckId, userId, isUpvote ? "upvote" : "downvote");
                 }
                 else
                 {
@@ -75,22 +81,43 @@ namespace Lithuaningo.API.Services
                         IsUpvote = isUpvote,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
+                        // Username is set by trigger
                     };
 
                     await _supabaseClient
                         .From<DeckVote>()
                         .Insert(vote);
+
+                    _logger.LogInformation("Created new {VoteType} for deck {DeckId} by user {UserId}", 
+                        isUpvote ? "upvote" : "downvote", deckId, userId);
                 }
 
-                // Invalidate relevant cache entries
                 await InvalidateVoteCacheAsync(deckId, userId);
-                _logger.LogInformation("Updated vote for deck {DeckId} by user {UserId}", deckId, userId);
-
                 return true;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error voting for deck {DeckId} by user {UserId}", deckId, userId);
+                throw;
+            }
+        }
+
+        public async Task RemoveVoteAsync(Guid deckId, Guid userId)
+        {
+            try
+            {
+                await _supabaseClient
+                    .From<DeckVote>()
+                    .Where(v => v.DeckId == deckId)
+                    .Where(v => v.UserId == userId)
+                    .Delete();
+
+                await InvalidateVoteCacheAsync(deckId, userId);
+                _logger.LogInformation("Removed vote for deck {DeckId} by user {UserId}", deckId, userId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error removing vote for deck {DeckId} by user {UserId}", deckId, userId);
                 throw;
             }
         }
@@ -152,15 +179,13 @@ namespace Lithuaningo.API.Services
                 var response = await _supabaseClient
                     .From<DeckVote>()
                     .Where(v => v.DeckId == deckId)
+                    .Select("*")
                     .Get();
 
-                var votes = response.Models;
-                var voteResponses = _mapper.Map<List<DeckVoteResponse>>(votes);
+                var voteResponses = _mapper.Map<List<DeckVoteResponse>>(response.Models);
                 
                 await _cache.SetAsync(cacheKey, voteResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} votes for deck {DeckId}", 
-                    votes.Count, deckId);
 
                 return voteResponses;
             }

@@ -13,6 +13,7 @@ export type UserData = Pick<
   | "isAdmin"
   | "isPremium"
   | "premiumExpiresAt"
+  | "authProvider"
 >;
 
 interface UserStore {
@@ -63,25 +64,17 @@ export const useUserStore = create<UserStore>()(
 
       // Actions
       logIn: (userData) => {
-        console.log("[UserStore] Logging in user:", {
-          id: userData.id,
-          email: userData.email,
-          emailVerified: userData.emailVerified,
-        });
         set({
           userData,
           isAuthenticated: true,
         });
-        console.log("[UserStore] User logged in successfully");
       },
 
       logOut: () => {
-        console.log("[UserStore] Logging out user");
         set({
           userData: null,
           isAuthenticated: false,
         });
-        console.log("[UserStore] User logged out successfully");
       },
 
       updateUserProfile: (userData) =>
@@ -91,16 +84,13 @@ export const useUserStore = create<UserStore>()(
         })),
 
       deleteAccount: () => {
-        console.log("[UserStore] Deleting account and clearing state");
         set({
           userData: null,
           isAuthenticated: false,
         });
-        console.log("[UserStore] Account deleted and state cleared");
       },
 
       setAuthenticated: (value) => {
-        console.log("[UserStore] Setting authenticated state:", value);
         set({ isAuthenticated: value });
       },
     }),

@@ -15,7 +15,6 @@ import {
   TrackProgressRequest,
   QuizResult,
   CreateQuizQuestionRequest,
-  CreateUserProfileRequest,
   UpdateUserProfileRequest,
   UpdateAppInfoRequest,
   CreateAnnouncementRequest,
@@ -79,15 +78,12 @@ class ApiClient {
     // Request interceptor for authentication
     this.axiosInstance.interceptors.request.use(
       async (config) => {
-        console.log("[ApiClient] Making request to:", config.url);
-
         const {
           data: { session },
         } = await supabase.auth.getSession();
         const token = session?.access_token;
 
         if (token) {
-          console.log("[ApiClient] Token available for request");
           config.headers.Authorization = `Bearer ${token}`;
         } else {
           console.warn(
@@ -110,10 +106,6 @@ class ApiClient {
     // Response interceptor for auth errors
     this.axiosInstance.interceptors.response.use(
       (response) => {
-        console.log(
-          "[ApiClient] Successful response from:",
-          response.config.url
-        );
         return response;
       },
       async (error) => {
@@ -198,20 +190,10 @@ class ApiClient {
     return this.request<UserProfile>(`/api/v1/UserProfile/${userId}`);
   }
 
-  async createUserProfile(
-    request: CreateUserProfileRequest
-  ): Promise<UserProfile> {
-    return this.request<UserProfile>("/api/v1/UserProfile", {
-      method: "POST",
-      data: request,
-    });
-  }
-
   async updateUserProfile(
     id: string,
     profile: UpdateUserProfileRequest
   ): Promise<UserProfile> {
-    console.log("[ApiClient] Updating user profile:", { id, profile });
     try {
       const updatedProfile = await this.request<UserProfile>(
         `/api/v1/UserProfile/${id}`,
@@ -220,10 +202,6 @@ class ApiClient {
           data: profile,
         }
       );
-      console.log("[ApiClient] Successfully updated user profile:", {
-        id: updatedProfile.id,
-        email: updatedProfile.email,
-      });
       return updatedProfile;
     } catch (error) {
       console.error("[ApiClient] Failed to update user profile:", {
@@ -236,12 +214,10 @@ class ApiClient {
   }
 
   async deleteUserProfile(id: string): Promise<void> {
-    console.log("[ApiClient] Deleting user profile:", id);
     try {
       await this.request(`/api/v1/UserProfile/${id}`, {
         method: "DELETE",
       });
-      console.log("[ApiClient] Successfully deleted user profile:", id);
     } catch (error) {
       console.error("[ApiClient] Failed to delete user profile:", {
         userId: id,
@@ -252,12 +228,10 @@ class ApiClient {
   }
 
   async updateLastLogin(id: string): Promise<void> {
-    console.log("[ApiClient] Updating last login for user:", id);
     try {
       await this.request(`/api/v1/UserProfile/${id}/login`, {
         method: "POST",
       });
-      console.log("[ApiClient] Successfully updated last login for user:", id);
     } catch (error) {
       console.error("[ApiClient] Failed to update last login:", {
         userId: id,

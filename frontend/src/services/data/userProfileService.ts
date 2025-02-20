@@ -1,9 +1,5 @@
 import apiClient from "@services/api/apiClient";
-import {
-  UserProfile,
-  CreateUserProfileRequest,
-  UpdateUserProfileRequest,
-} from "@src/types";
+import { UserProfile, UpdateUserProfileRequest } from "@src/types";
 
 const fetchUserProfile = async (
   userId: string
@@ -12,17 +8,6 @@ const fetchUserProfile = async (
     return await apiClient.getUserProfile(userId);
   } catch (error) {
     console.error("Error fetching user profile:", error);
-    return null;
-  }
-};
-
-const createUserProfile = async (
-  request: CreateUserProfileRequest
-): Promise<UserProfile | null> => {
-  try {
-    return await apiClient.createUserProfile(request);
-  } catch (error) {
-    console.error("Error creating user profile:", error);
     return null;
   }
 };
@@ -61,7 +46,6 @@ const updateLastLogin = async (userId: string): Promise<boolean> => {
 
 export default {
   fetchUserProfile,
-  createUserProfile,
   updateUserProfile,
   deleteUserProfile,
   updateLastLogin,

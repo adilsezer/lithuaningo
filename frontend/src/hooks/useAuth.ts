@@ -12,6 +12,7 @@ import {
   deleteAccount,
   verifyEmail as verifyEmailService,
   resendOTP,
+  verifyPasswordReset,
 } from "@services/auth/authService";
 import { useAuthOperation } from "./useAuthOperation";
 import { useAlertDialog } from "@hooks/useAlertDialog";
@@ -71,7 +72,6 @@ export const useAuth = () => {
     async (email: string, password: string) => {
       const result = await performAuthOperation(async () => {
         const response = await signInWithEmail(email, password);
-        console.log("Sign in response:", response);
 
         if (response.success) {
           navigateAfterAuth("/dashboard");
@@ -80,7 +80,6 @@ export const useAuth = () => {
 
         if (response.code === "EMAIL_NOT_VERIFIED") {
           const emailToVerify = response.email || email;
-          console.log("Redirecting to verification for email:", emailToVerify);
 
           navigateToVerification(emailToVerify);
 
@@ -168,15 +167,32 @@ export const useAuth = () => {
     async (email: string) => {
       const result = await performAuthOperation(async () => {
         const response = await resetPassword(email);
-        if (response.success) {
-          // crashlytics().log("Password reset email sent");
-          navigateAfterAuth("/auth/login");
-        }
         return response;
       }, "Password Reset Failed");
       return result;
     },
-    [performAuthOperation, navigateAfterAuth]
+    [performAuthOperation]
+  );
+
+  const handleVerifyPasswordReset = useCallback(
+    async (email: string, token: string, newPassword: string) => {
+      const result = await performAuthOperation(async () => {
+        const response = await verifyPasswordReset(email, token, newPassword);
+        if (response.success) {
+          // crashlytics().log("Password reset verified and updated");
+          showAlert({
+            title: "Success",
+            message: "Your password has been reset. You can now log in.",
+            buttons: [
+              { text: "OK", onPress: () => navigateAfterAuth("/auth/login") },
+            ],
+          });
+        }
+        return response;
+      }, "Password Reset Verification Failed");
+      return result;
+    },
+    [performAuthOperation, showAlert, navigateAfterAuth]
   );
 
   // Account management
@@ -239,6 +255,7 @@ export const useAuth = () => {
     updateProfile: handleUpdateProfile,
     updatePassword: handleUpdatePassword,
     resetPassword: handleResetPassword,
+    verifyPasswordReset: handleVerifyPasswordReset,
     deleteAccount: handleDeleteAccount,
     verifyEmail,
     resendVerificationCode,

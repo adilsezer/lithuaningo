@@ -80,47 +80,6 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<FlashcardResponse>> GetUserFlashcardsAsync(string userId)
-        {
-            if (!Guid.TryParse(userId, out var userGuid))
-            {
-                throw new ArgumentException("Invalid user ID format", nameof(userId));
-            }
-
-            var cacheKey = $"{CacheKeyPrefix}user:{userGuid}";
-            var cached = await _cache.GetAsync<List<FlashcardResponse>>(cacheKey);
-
-            if (cached != null)
-            {
-                _logger.LogInformation("Retrieved user flashcards from cache for user {UserId}", userId);
-                return cached;
-            }
-
-            try
-            {
-                var response = await _supabaseClient
-                    .From<Flashcard>()
-                    .Select("*, deck!inner(*)")
-                    .Filter("deck.created_by", Operator.Equals, userGuid)
-                    .Get();
-
-                var flashcards = response.Models;
-                var flashcardResponses = _mapper.Map<List<FlashcardResponse>>(flashcards);
-                
-                await _cache.SetAsync(cacheKey, flashcardResponses,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} flashcards for user {UserId}", 
-                    flashcards.Count, userId);
-
-                return flashcardResponses;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving flashcards for user {UserId}", userId);
-                throw;
-            }
-        }
-
         public async Task<string> CreateFlashcardAsync(CreateFlashcardRequest request)
         {
             if (request == null)

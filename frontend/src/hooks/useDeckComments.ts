@@ -33,7 +33,6 @@ export const useDeckComments = (deckId: string) => {
       clearError();
       const data = await deckCommentService.getDeckComments(deckId);
       setDeckComments(data);
-      console.log("fetchDeckComments", data);
       return true;
     } catch (err) {
       handleError(err, "Failed to load comments");

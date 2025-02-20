@@ -35,6 +35,9 @@ namespace Lithuaningo.API.Models
         [Column("premium_expires_at")]
         public DateTime? PremiumExpiresAt { get; set; }
 
+        [Column("auth_provider")]
+        public string AuthProvider { get; set; } = string.Empty;
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 
