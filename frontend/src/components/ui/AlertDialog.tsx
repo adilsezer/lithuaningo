@@ -21,7 +21,7 @@ export const AlertDialog: React.FC = () => {
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={hideDialog}>
+      <Dialog visible={visible} onDismiss={hideDialog} dismissable={false}>
         {/* Icon changes based on alert mode */}
         <Dialog.Icon
           icon={
@@ -52,13 +52,26 @@ export const AlertDialog: React.FC = () => {
           <Text style={{ textAlign: "center" }}>{message}</Text>
         </Dialog.Content>
         {/* Dialog Actions */}
-        <Dialog.Actions>
+        <Dialog.Actions
+          style={{
+            flexDirection: "row",
+            justifyContent: "center",
+            paddingHorizontal: 16,
+            gap: 8,
+          }}
+        >
           {alertMode === "CONFIRM" ? (
             <>
               <Button
+                mode="outlined"
                 onPress={() => {
                   hideDialog();
                   onCancel?.();
+                }}
+                style={{ minWidth: 100 }}
+                labelStyle={{
+                  fontSize: 14,
+                  color: theme.colors.error,
                 }}
               >
                 {cancelText}
@@ -70,13 +83,18 @@ export const AlertDialog: React.FC = () => {
                     await onConfirm?.();
                   } catch (err) {
                     console.error("Error in confirmation:", err);
-                    // We can use the store directly here
                     useAlertStore
                       .getState()
                       .showError("An error occurred during confirmation.");
                   } finally {
                     hideDialog();
                   }
+                }}
+                style={{ minWidth: 100 }}
+                buttonColor={theme.colors.primary}
+                labelStyle={{
+                  fontSize: 14,
+                  color: theme.colors.onPrimary,
                 }}
               >
                 {confirmText}
@@ -87,9 +105,19 @@ export const AlertDialog: React.FC = () => {
             buttons.map((button, index) => (
               <Button
                 key={index}
+                mode={index === buttons.length - 1 ? "contained" : "outlined"}
                 onPress={() => {
                   button.onPress();
                   hideDialog();
+                }}
+                style={{ minWidth: 100 }}
+                buttonColor={theme.colors.primary}
+                labelStyle={{
+                  fontSize: 14,
+                  color:
+                    index === buttons.length - 1
+                      ? theme.colors.onPrimary
+                      : theme.colors.primary,
                 }}
               >
                 {button.text}
