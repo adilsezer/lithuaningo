@@ -66,6 +66,10 @@ const EditProfileScreen: React.FC = () => {
         isLoading={loading}
         options={{ mode: "onBlur" }}
         zodSchema={editProfileFormSchema}
+        defaultValues={{
+          authProvider: userData.authProvider,
+          displayName: userData.fullName,
+        }}
       />
     </ScrollView>
   );

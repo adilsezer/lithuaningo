@@ -58,19 +58,19 @@ export const changePasswordFormSchema = z
 export const editProfileFormSchema = z
   .object({
     displayName: nameSchema,
-    currentPassword: z
-      .string()
-      .min(1, "Current password is required")
-      .optional(),
+    currentPassword: z.string().optional(),
+    authProvider: z.string().optional(),
   })
   .refine(
     (data) => {
-      // If currentPassword is undefined (social auth), validation passes
-      // If currentPassword is provided, it must meet the requirements
-      return !data.currentPassword || data.currentPassword.length >= 1;
+      // Only require password for email users
+      if (data.authProvider === "email") {
+        return !!data.currentPassword && data.currentPassword.length >= 1;
+      }
+      return true;
     },
     {
-      message: "Current password is required for email/password users",
+      message: "Current password is required for email users",
       path: ["currentPassword"],
     }
   );

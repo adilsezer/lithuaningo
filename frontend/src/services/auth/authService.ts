@@ -335,6 +335,31 @@ export const updateProfile = async (
     if (sessionError) throw sessionError;
     if (!sessionData.session?.user) throw new Error("No active session");
 
+    const provider = sessionData.session.user.app_metadata?.provider || "email";
+
+    // Validate current password for email users
+    if (provider === "email") {
+      if (!currentPassword) {
+        return {
+          success: false,
+          message: "Current password is required for email users",
+        };
+      }
+
+      // Verify current password by attempting to sign in
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: sessionData.session.user.email!,
+        password: currentPassword,
+      });
+
+      if (signInError) {
+        return {
+          success: false,
+          message: "Current password is incorrect",
+        };
+      }
+    }
+
     // Define the mapping between our update fields and Supabase fields
     const updateData = {
       display_name: updates.displayName,
