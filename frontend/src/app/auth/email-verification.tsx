@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import BackButton from "@components/layout/BackButton";
@@ -26,8 +26,25 @@ const EmailVerificationScreen: React.FC = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
   const loading = useIsLoading();
   const { verifyEmail, resendVerificationCode } = useAuth();
-  const [resendDisabled, setResendDisabled] = useState(false);
-  const [countdown, setCountdown] = useState(0);
+  const [resendDisabled, setResendDisabled] = useState(true);
+  const [countdown, setCountdown] = useState(60);
+
+  useEffect(() => {
+    // Start initial countdown when component mounts
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setResendDisabled(false);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    // Cleanup timer on unmount
+    return () => clearInterval(timer);
+  }, []);
 
   if (!email) {
     return (

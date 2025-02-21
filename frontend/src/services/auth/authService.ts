@@ -28,21 +28,20 @@ export const updateAuthState = async (session: { user: User } | null) => {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  const name =
-    user.user_metadata?.display_name || generateAnonymousName(user.id);
-  if (typeof name !== "string") {
-    console.error("[Auth] Invalid name type in metadata:", user.user_metadata);
-    throw new Error("User name must be a string");
-  }
+  // Get display name from various possible locations in metadata
+  const displayName =
+    user.user_metadata?.display_name ||
+    user.user_metadata?.name ||
+    generateAnonymousName(user.id);
 
   const userData = {
     id: user.id,
     email: user.email,
-    fullName: name,
+    fullName: displayName,
     emailVerified: user.email_confirmed_at !== null,
-    isAdmin: false,
-    isPremium: false,
-    premiumExpiresAt: undefined,
+    isAdmin: user.user_metadata?.is_admin || false,
+    isPremium: user.user_metadata?.is_premium || false,
+    premiumExpiresAt: user.user_metadata?.premium_expires_at,
     authProvider: user.app_metadata?.provider || "email",
   };
 
@@ -180,34 +179,42 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
   try {
     // Sign in with Google
     await GoogleSignin.hasPlayServices();
-    const { idToken } = await GoogleSignin.signIn();
+    const userInfo = await GoogleSignin.signIn();
+    const tokens = await GoogleSignin.getTokens();
 
-    if (!idToken) {
+    if (!userInfo.idToken) {
       throw new Error("Failed to get ID token from Google Sign-In");
     }
 
     // Sign in with Supabase using the Google ID token
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "google",
-      token: idToken,
+      token: userInfo.idToken,
+      access_token: tokens.accessToken,
     });
 
     if (error) throw error;
 
-    // Then update user metadata
-    if (data.user) {
-      await supabase.auth.updateUser({
-        data: {
-          display_name:
-            data.user.user_metadata?.full_name ||
-            generateAnonymousName(data.user.id),
-          avatar_url: data.user.user_metadata?.avatar_url || "",
-          is_admin: false,
-          is_premium: false,
-          premium_expires_at: null,
-          provider: "google",
-        },
-      });
+    // Check if we have user data
+    if (!data.user || !data.session) {
+      throw new Error("No user data received from authentication");
+    }
+
+    // Update user metadata with a properly formatted display name
+    const displayName =
+      userInfo.user.name ||
+      data.user.user_metadata?.name ||
+      generateAnonymousName(data.user.id);
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: {
+        display_name: displayName,
+        avatar_url: userInfo.user.photo || "",
+      },
+    });
+
+    if (updateError) {
+      console.error("Failed to update user metadata:", updateError);
     }
 
     await updateAuthState(data.session);
@@ -230,27 +237,38 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
       throw new Error("No identity token from Apple Sign-In");
     }
 
+    // Sign in with Supabase using the Apple ID token
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "apple",
       token: credential.identityToken,
+      access_token: credential.authorizationCode || undefined,
     });
 
     if (error) throw error;
 
-    if (data.user) {
-      await supabase.auth.updateUser({
-        data: {
-          display_name:
-            credential.fullName?.givenName && credential.fullName?.familyName
-              ? `${credential.fullName.givenName} ${credential.fullName.familyName}`.trim()
-              : generateAnonymousName(data.user.id),
-          avatar_url: data.user.user_metadata?.avatar_url || "",
-          is_admin: false,
-          is_premium: false,
-          premium_expires_at: null,
-          provider: "apple",
-        },
-      });
+    // Check if we have user data
+    if (!data.user || !data.session) {
+      throw new Error("No user data received from authentication");
+    }
+
+    // Update user metadata with a properly formatted display name
+    const displayName =
+      (credential.fullName?.givenName && credential.fullName?.familyName
+        ? `${credential.fullName.givenName} ${credential.fullName.familyName}`.trim()
+        : null) ||
+      data.user.user_metadata?.display_name ||
+      data.user.user_metadata?.name ||
+      generateAnonymousName(data.user.id);
+
+    const { error: updateError } = await supabase.auth.updateUser({
+      data: {
+        display_name: displayName,
+        avatar_url: data.user.user_metadata?.avatar_url || "",
+      },
+    });
+
+    if (updateError) {
+      console.error("Failed to update user metadata:", updateError);
     }
 
     await updateAuthState(data.session);
