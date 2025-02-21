@@ -179,7 +179,6 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await verifyPasswordReset(email, token, newPassword);
         if (response.success) {
-          // crashlytics().log("Password reset verified and updated");
           showAlert({
             title: "Success",
             message: "Your password has been reset. You can now log in.",
@@ -213,7 +212,6 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await verifyEmailService(email, token);
         if (response.success) {
-          // crashlytics().log("Email verified successfully");
           showAlert({
             title: "Success",
             message: "Your email has been verified. You can now log in.",

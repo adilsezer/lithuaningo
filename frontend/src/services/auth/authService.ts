@@ -128,6 +128,9 @@ export const verifyEmail = async (
       if (!name) throw new Error("Name is required");
     }
 
+    // Sign out after successful email verification
+    await supabase.auth.signOut();
+
     return {
       success: true,
       message: "Email verified successfully! You can now log in.",
@@ -346,6 +349,7 @@ export const verifyPasswordReset = async (
   newPassword: string
 ): Promise<AuthResponse> => {
   try {
+    // First verify the OTP
     const { error } = await supabase.auth.verifyOtp({
       email,
       token,
@@ -353,7 +357,6 @@ export const verifyPasswordReset = async (
     });
 
     if (error) {
-      // Use a single message for both invalid and expired tokens
       if (
         error.message.includes("Invalid otp") ||
         error.message.includes("expired")
@@ -367,7 +370,7 @@ export const verifyPasswordReset = async (
       throw error;
     }
 
-    // After verifying OTP, update the password
+    // Update the password
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPassword,
     });
@@ -380,16 +383,15 @@ export const verifyPasswordReset = async (
       };
     }
 
+    // Sign out after successful password reset
+    await supabase.auth.signOut();
+
     return {
       success: true,
       message: "Password has been reset successfully. You can now log in.",
     };
   } catch (error) {
-    console.error("Password reset verification error:", error);
-    return {
-      success: false,
-      message: "Token has expired or is invalid. Please request a new code.",
-    };
+    return handleAuthError(error);
   }
 };
 
