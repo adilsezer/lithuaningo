@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView } from "react-native";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";

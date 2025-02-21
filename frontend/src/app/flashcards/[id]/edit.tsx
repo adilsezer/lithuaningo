@@ -3,7 +3,7 @@ import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import type { Flashcard } from "@src/types";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { flashcardEditSchema } from "@utils/zodSchemas";

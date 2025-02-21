@@ -1,6 +1,6 @@
 import React from "react";
 import { StyleSheet, ScrollView } from "react-native";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { useAbout } from "@hooks/useAbout";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";

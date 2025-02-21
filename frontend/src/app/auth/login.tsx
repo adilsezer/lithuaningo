@@ -2,7 +2,7 @@ import React, { useEffect, useCallback } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import CustomDivider from "@components/ui/CustomDivider";
 import { Form } from "@components/form/Form";

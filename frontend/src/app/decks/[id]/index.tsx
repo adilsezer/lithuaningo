@@ -6,7 +6,7 @@ import { FlashcardView } from "@components/flashcard/FlashcardView";
 import { UserChallengeStatsView } from "@components/challenge/UserChallengeStats";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import { useTheme } from "react-native-paper";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";

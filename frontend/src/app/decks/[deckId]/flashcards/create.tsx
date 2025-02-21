@@ -10,7 +10,7 @@ import { FlashcardFormData } from "@src/types";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import CustomButton from "@components/ui/CustomButton";
 import CustomAudioPicker from "@components/ui/CustomAudioPicker";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";

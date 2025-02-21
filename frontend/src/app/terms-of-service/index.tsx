@@ -1,6 +1,6 @@
 import React from "react";
 import { ScrollView, StyleProp, StyleSheet, TextStyle } from "react-native";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import * as Linking from "expo-linking";
 import CustomText from "@components/ui/CustomText";
 

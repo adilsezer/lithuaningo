@@ -7,7 +7,7 @@ import {
   StyleSheet,
 } from "react-native";
 import { useTheme, Button } from "react-native-paper";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";

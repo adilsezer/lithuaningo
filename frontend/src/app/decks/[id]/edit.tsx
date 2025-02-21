@@ -8,7 +8,7 @@ import { useSetLoading } from "@stores/useUIStore";
 import { Deck } from "@src/types";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { useTheme, Card, IconButton } from "react-native-paper";
 import { deckFormSchema } from "@utils/zodSchemas";

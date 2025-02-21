@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";

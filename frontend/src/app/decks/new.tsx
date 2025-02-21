@@ -1,7 +1,7 @@
 import React, { useMemo, useCallback } from "react";
 import { View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import { useDecks } from "@hooks/useDecks";
 import { FormField } from "@components/form/form.types";

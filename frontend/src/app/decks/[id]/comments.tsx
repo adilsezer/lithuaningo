@@ -6,7 +6,7 @@ import CustomButton from "@components/ui/CustomButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { useDeckComments } from "@src/hooks/useDeckComments";
 import { deckCommentFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";

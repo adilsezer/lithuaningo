@@ -36,7 +36,6 @@ const BackButton: React.FC = () => {
       onPress={handleBack}
       style={{ margin: 10 }}
       size={iconSize}
-      animated
     />
   );
 };

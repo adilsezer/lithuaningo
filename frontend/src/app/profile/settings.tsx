@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { useUserData } from "@stores/useUserStore";
 import { useReminderSettings } from "@hooks/useReminderSettings";
 import CustomButton from "@components/ui/CustomButton";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { ReminderSettings } from "@components/settings/ReminderSettings";
 import CustomText from "@components/ui/CustomText";
 const SettingsScreen: React.FC = () => {

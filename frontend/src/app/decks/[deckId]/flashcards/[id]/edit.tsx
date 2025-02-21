@@ -6,7 +6,7 @@ import { useTheme } from "react-native-paper";
 import { Flashcard, FlashcardFormData } from "@src/types";
 import { flashcardEditSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";

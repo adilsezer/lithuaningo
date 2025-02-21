@@ -1,7 +1,7 @@
 import React from "react";
 import { View, StyleSheet, TextStyle, ViewStyle } from "react-native";
 import CustomButton from "./CustomButton";
-import BackButton from "@components/layout/BackButton";
+import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 
