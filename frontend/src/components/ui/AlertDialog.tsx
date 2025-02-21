@@ -86,8 +86,6 @@ export const AlertDialog: React.FC = () => {
                     useAlertStore
                       .getState()
                       .showError("An error occurred during confirmation.");
-                  } finally {
-                    hideDialog();
                   }
                 }}
                 style={{ minWidth: 100 }}
@@ -107,8 +105,8 @@ export const AlertDialog: React.FC = () => {
                 key={index}
                 mode={index === buttons.length - 1 ? "contained" : "outlined"}
                 onPress={() => {
-                  button.onPress();
                   hideDialog();
+                  button.onPress();
                 }}
                 style={{ minWidth: 100 }}
                 buttonColor={theme.colors.primary}

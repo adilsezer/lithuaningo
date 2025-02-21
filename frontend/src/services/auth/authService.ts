@@ -531,58 +531,73 @@ const reAuthenticateWithApple = async (): Promise<AuthResponse> => {
   }
 };
 
-export const deleteAccount = async (): Promise<AuthResponse> => {
+export const deleteAccount = async (
+  password?: string
+): Promise<AuthResponse> => {
   try {
-    const { data: sessionData, error: sessionError } =
-      await supabase.auth.getSession();
-    if (sessionError) throw sessionError;
-    if (!sessionData.session?.user) throw new Error("No active session");
+    const session = await supabase.auth.getSession();
+    if (!session.data.session) {
+      return handleAuthError(new Error("No active session"));
+    }
+
+    const { user } = session.data.session;
+    const provider = user.app_metadata.provider;
 
     // Re-authenticate based on provider
-    const provider = sessionData.session.user.app_metadata?.provider;
-    if (provider) {
-      let authResponse: AuthResponse;
-
-      if (provider === "google") {
-        authResponse = await reAuthenticateWithGoogle();
-      } else if (provider === "apple") {
-        authResponse = await reAuthenticateWithApple();
-      } else {
-        authResponse = { success: true };
+    if (provider === "email") {
+      if (!password) {
+        return handleAuthError(
+          new Error("Password is required for account deletion")
+        );
       }
 
+      const { error } = await supabase.auth.signInWithPassword({
+        email: user.email!,
+        password,
+      });
+
+      if (error) {
+        return handleAuthError(error);
+      }
+    } else if (provider === "google") {
+      const authResponse = await reAuthenticateWithGoogle();
       if (!authResponse.success) {
-        return {
-          success: false,
-          message: `Please verify your ${provider} account before deleting`,
-        };
+        return handleAuthError(
+          new Error("Please verify your Google account before deletion")
+        );
+      }
+    } else if (provider === "apple") {
+      const authResponse = await reAuthenticateWithApple();
+      if (!authResponse.success) {
+        return handleAuthError(
+          new Error("Please verify your Apple ID before deletion")
+        );
       }
     }
 
-    // Delete the user using a Supabase RPC function
+    // Delete user RPC function
     const { error: deleteError } = await supabase.rpc("delete_user");
-    if (deleteError) throw deleteError;
+    if (deleteError) {
+      return handleAuthError(deleteError);
+    }
 
-    // Return success first
-    const response: AuthResponse = {
+    // Return success with cleanup function
+    return {
       success: true,
-      message:
-        "Your account has been successfully deleted. We're sorry to see you go.",
-    };
-
-    // Schedule cleanup to run after response is handled
-    setTimeout(async () => {
-      try {
+      message: "Your account has been successfully deleted.",
+      cleanup: async () => {
+        if (provider === "google") {
+          try {
+            await GoogleSignin.revokeAccess();
+            await GoogleSignin.signOut();
+          } catch (error) {
+            console.error("Error revoking Google access:", error);
+          }
+        }
+        await useUserStore.getState().logOut();
         await supabase.auth.signOut();
-        const store = useUserStore.getState();
-        store.deleteAccount();
-        store.logOut();
-      } catch (error) {
-        console.error("Error during cleanup:", error);
-      }
-    }, 1000);
-
-    return response;
+      },
+    };
   } catch (error) {
     return handleAuthError(error);
   }

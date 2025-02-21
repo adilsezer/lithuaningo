@@ -46,9 +46,9 @@ export const useAuthOperation = () => {
           return handleError(error, errorTitle);
         }
 
-        // Only show success alert if explicitly requested
+        // Show success alert if requested and there's a message
         if (options?.showSuccessAlert && result.message) {
-          showSuccess(result.message);
+          showSuccess(result.message, "Success");
         }
 
         return result;

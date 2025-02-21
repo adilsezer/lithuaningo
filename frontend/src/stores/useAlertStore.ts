@@ -63,6 +63,7 @@ const useAlertStore = create<AlertState & AlertActions>((set, get) => ({
   },
 
   showConfirm: (options) => {
+    const { onConfirm } = options;
     set({
       visible: true,
       alertMode: "CONFIRM",
@@ -70,7 +71,11 @@ const useAlertStore = create<AlertState & AlertActions>((set, get) => ({
       message: options.message,
       confirmText: options.confirmText ?? "OK",
       cancelText: options.cancelText ?? "Cancel",
-      onConfirm: options.onConfirm,
+      onConfirm: async () => {
+        if (onConfirm) {
+          await onConfirm();
+        }
+      },
       onCancel: options.onCancel ?? null,
     });
   },

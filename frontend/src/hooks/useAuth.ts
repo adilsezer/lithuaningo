@@ -24,7 +24,7 @@ export type SocialProvider = "google" | "apple";
 export const useAuth = () => {
   const router = useRouter();
   const { performAuthOperation } = useAuthOperation();
-  const { showAlert } = useAlertDialog();
+  const { showAlert, showConfirm } = useAlertDialog();
 
   // Navigation helpers
   const navigateAfterAuth = useCallback(
@@ -228,26 +228,48 @@ export const useAuth = () => {
   );
 
   // Account management
-  const handleDeleteAccount = useCallback(async () => {
-    const result = await performAuthOperation(async () => {
-      const response = await deleteAccount();
-      if (response.success) {
-        showAlert({
-          title: "Account Deleted",
+  const handleDeleteAccount = useCallback(
+    async (password?: string, authProvider?: string) => {
+      return new Promise((resolve) => {
+        showConfirm({
+          title: "Confirm Deletion",
           message:
-            "Your account has been successfully deleted. We're sorry to see you go.",
-          buttons: [
-            {
-              text: "OK",
-              onPress: () => navigateAfterAuth("/"),
-            },
-          ],
+            authProvider === "email"
+              ? "Are you sure you want to delete your account? This action cannot be undone."
+              : `You'll need to verify your ${authProvider} account before deletion. Are you sure you want to proceed?`,
+          confirmText: "Delete",
+          cancelText: "Cancel",
+          onConfirm: async () => {
+            const result = await performAuthOperation(async () => {
+              const response = await deleteAccount(password);
+              if (response.success) {
+                showAlert({
+                  title: "Account Deleted",
+                  message:
+                    "Your account has been successfully deleted. We're sorry to see you go.",
+                  buttons: [
+                    {
+                      text: "OK",
+                      onPress: async () => {
+                        if (response.cleanup) {
+                          await response.cleanup();
+                        }
+                        navigateAfterAuth("/");
+                      },
+                    },
+                  ],
+                });
+              }
+              return response;
+            }, "Account Deletion Failed");
+            resolve(result);
+          },
+          onCancel: () => resolve({ success: false }),
         });
-      }
-      return response;
-    }, "Account Deletion Failed");
-    return result;
-  }, [performAuthOperation, navigateAfterAuth, showAlert]);
+      });
+    },
+    [performAuthOperation, navigateAfterAuth, showAlert, showConfirm]
+  );
 
   const verifyEmail = useCallback(
     async (email: string, token: string) => {
