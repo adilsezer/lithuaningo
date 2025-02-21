@@ -39,7 +39,7 @@ const ForgotPasswordScreen: React.FC = () => {
               text: "OK",
               onPress: () => {
                 router.push({
-                  pathname: "/auth/reset-password-verify",
+                  pathname: "/auth/password-reset-verification",
                   params: { email: data.email },
                 });
               },

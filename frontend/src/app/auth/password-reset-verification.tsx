@@ -1,37 +1,67 @@
 import React, { useState } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import BackButton from "@components/layout/BackButton";
 import { Form } from "@components/form/Form";
-import type { FormField } from "@components/form/form.types";
+import { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import { verifyEmailFormSchema } from "@utils/zodSchemas";
+import { resetPasswordVerifyFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import CustomButton from "@components/ui/CustomButton";
-import { useLocalSearchParams } from "expo-router";
 
-const verifyEmailFields: FormField[] = [
+const resetPasswordVerifyFields: FormField[] = [
   {
     name: "token",
-    label: "Verification Code",
+    label: "Reset Code",
     category: "text-input",
     type: "text",
     placeholder: "Enter the 6-digit code",
     keyboardType: "number-pad",
     maxLength: 6,
   },
+  {
+    name: "newPassword",
+    label: "New Password",
+    category: "text-input",
+    type: "password",
+    placeholder: "Enter your new password",
+  },
+  {
+    name: "confirmPassword",
+    label: "Confirm Password",
+    category: "text-input",
+    type: "password",
+    placeholder: "Confirm your new password",
+  },
 ];
 
-const VerifyEmailScreen: React.FC = () => {
-  const loading = useIsLoading();
-  const { verifyEmail, resendVerificationCode } = useAuth();
+const PasswordResetVerificationScreen: React.FC = () => {
   const { email } = useLocalSearchParams<{ email: string }>();
+  const loading = useIsLoading();
+  const { verifyPasswordReset, resetPassword } = useAuth();
   const [resendDisabled, setResendDisabled] = useState(false);
   const [countdown, setCountdown] = useState(0);
 
+  if (!email) {
+    return (
+      <ScrollView>
+        <BackButton />
+        <View style={styles.container}>
+          <CustomText variant="titleLarge" bold>
+            Error
+          </CustomText>
+          <CustomText variant="bodyLarge" style={styles.description}>
+            Invalid reset password request. Please try again.
+          </CustomText>
+        </View>
+      </ScrollView>
+    );
+  }
+
   const handleResend = async () => {
-    const success = await resendVerificationCode(email as string);
-    if (success) {
+    const response = await resetPassword(email);
+    if (response.success) {
       setResendDisabled(true);
       setCountdown(60);
       const timer = setInterval(() => {
@@ -52,23 +82,22 @@ const VerifyEmailScreen: React.FC = () => {
       <BackButton />
       <View style={styles.container}>
         <CustomText variant="titleLarge" bold>
-          Verify Your Email
+          Reset Password
         </CustomText>
 
         <CustomText variant="bodyLarge" style={styles.description}>
-          We've sent a verification code to {email}. Please enter the code below
-          to verify your email address.
+          Enter the verification code sent to {email} and set your new password.
         </CustomText>
 
         <Form
-          fields={verifyEmailFields}
+          fields={resetPasswordVerifyFields}
           onSubmit={async (data) => {
-            await verifyEmail(email as string, data.token);
+            await verifyPasswordReset(email, data.token, data.newPassword);
           }}
-          submitButtonText="Verify Email"
+          submitButtonText="Reset Password"
           isLoading={loading}
           options={{ mode: "onBlur" }}
-          zodSchema={verifyEmailFormSchema}
+          zodSchema={resetPasswordVerifyFormSchema}
         />
 
         <View style={styles.resendContainer}>
@@ -83,7 +112,7 @@ const VerifyEmailScreen: React.FC = () => {
         </View>
 
         <CustomText variant="bodyMedium" style={styles.note}>
-          Didn't receive the code? Check your spam folder or contact support.
+          Please check your spam folder if you don't see the code in your inbox.
         </CustomText>
       </View>
     </ScrollView>
@@ -93,6 +122,7 @@ const VerifyEmailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     gap: 16,
+    padding: 16,
   },
   description: {
     marginTop: 8,
@@ -107,4 +137,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default VerifyEmailScreen;
+export default PasswordResetVerificationScreen;

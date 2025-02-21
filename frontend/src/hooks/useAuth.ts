@@ -37,7 +37,7 @@ export const useAuth = () => {
   const navigateToVerification = useCallback(
     (email: string) => {
       router.push({
-        pathname: "/auth/verify-email",
+        pathname: "/auth/email-verification",
         params: { email },
       });
     },
