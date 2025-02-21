@@ -7,7 +7,6 @@ import { useForgotPassword } from "@hooks/useForgotPassword";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import { router } from "expo-router";
 
 const forgotPasswordFields: FormField[] = [
   {
@@ -23,31 +22,11 @@ const forgotPasswordFields: FormField[] = [
 
 const ForgotPasswordScreen: React.FC = () => {
   const { isLoading, handleResetPassword } = useForgotPassword();
-  const { showAlert, showError } = useAlertDialog();
+  const { showError } = useAlertDialog();
 
   const handleSubmit = async (data: { email: string }) => {
     const result = await handleResetPassword(data.email);
-
-    if (result.success) {
-      // Force the alert to be shown in the next tick
-      setTimeout(() => {
-        showAlert({
-          title: "Check Your Email",
-          message: "We've sent you a code to reset your password.",
-          buttons: [
-            {
-              text: "OK",
-              onPress: () => {
-                router.push({
-                  pathname: "/auth/password-reset-verification",
-                  params: { email: data.email },
-                });
-              },
-            },
-          ],
-        });
-      }, 0);
-    } else if (result.message) {
+    if (!result.success && result.message) {
       showError(result.message);
     }
   };

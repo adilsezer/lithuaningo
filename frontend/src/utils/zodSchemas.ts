@@ -75,9 +75,23 @@ export const editProfileFormSchema = z
     }
   );
 
-export const deleteAccountFormSchema = z.object({
-  password: z.string().min(1, "Please enter your password to confirm deletion"),
-});
+export const deleteAccountFormSchema = z
+  .object({
+    password: z
+      .string()
+      .min(1, "Please enter your password to confirm deletion")
+      .optional(),
+  })
+  .refine(
+    (data) => {
+      // Password is not required for social auth users
+      return true;
+    },
+    {
+      message: "Password is required for email/password users",
+      path: ["password"],
+    }
+  );
 
 // New schemas for other forms
 export const deckFormSchema = z

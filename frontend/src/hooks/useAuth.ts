@@ -138,14 +138,22 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await updateProfile(currentPassword, updates);
         if (response.success) {
-          // crashlytics().log("User profile updated");
-          navigateAfterAuth("/dashboard/profile");
+          showAlert({
+            title: "Success",
+            message: "Your profile has been updated successfully.",
+            buttons: [
+              {
+                text: "OK",
+                onPress: () => navigateAfterAuth("/dashboard/profile"),
+              },
+            ],
+          });
         }
         return response;
       }, "Profile Update Failed");
       return result;
     },
-    [performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth, showAlert]
   );
 
   const handleUpdatePassword = useCallback(
@@ -153,25 +161,50 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await updatePassword(currentPassword, newPassword);
         if (response.success) {
-          // crashlytics().log("User password updated");
-          navigateAfterAuth("/dashboard/profile");
+          showAlert({
+            title: "Success",
+            message: "Your password has been updated successfully.",
+            buttons: [
+              {
+                text: "OK",
+                onPress: () => navigateAfterAuth("/dashboard/profile"),
+              },
+            ],
+          });
         }
         return response;
       }, "Password Update Failed");
       return result;
     },
-    [performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth, showAlert]
   );
 
   const handleResetPassword = useCallback(
     async (email: string) => {
       const result = await performAuthOperation(async () => {
         const response = await resetPassword(email);
+        if (response.success) {
+          showAlert({
+            title: "Check Your Email",
+            message: "We've sent you a code to reset your password.",
+            buttons: [
+              {
+                text: "OK",
+                onPress: () => {
+                  router.push({
+                    pathname: "/auth/password-reset-verification",
+                    params: { email },
+                  });
+                },
+              },
+            ],
+          });
+        }
         return response;
       }, "Password Reset Failed");
       return result;
     },
-    [performAuthOperation]
+    [performAuthOperation, showAlert]
   );
 
   const handleVerifyPasswordReset = useCallback(
@@ -199,13 +232,22 @@ export const useAuth = () => {
     const result = await performAuthOperation(async () => {
       const response = await deleteAccount();
       if (response.success) {
-        // crashlytics().log("User account deleted");
-        navigateAfterAuth("/");
+        showAlert({
+          title: "Account Deleted",
+          message:
+            "Your account has been successfully deleted. We're sorry to see you go.",
+          buttons: [
+            {
+              text: "OK",
+              onPress: () => navigateAfterAuth("/"),
+            },
+          ],
+        });
       }
       return response;
     }, "Account Deletion Failed");
     return result;
-  }, [performAuthOperation, navigateAfterAuth]);
+  }, [performAuthOperation, navigateAfterAuth, showAlert]);
 
   const verifyEmail = useCallback(
     async (email: string, token: string) => {

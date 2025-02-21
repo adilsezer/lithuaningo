@@ -6,7 +6,7 @@ import { supabase } from "@services/supabase/supabaseClient";
 import { User } from "@supabase/supabase-js";
 import { AUTH_PATTERNS } from "@utils/validationPatterns";
 import { AuthResponse } from "@src/types/auth.types";
-import userProfileService from "@services/data/userProfileService";
+import { generateAnonymousName } from "@utils/userUtils";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -28,7 +28,8 @@ export const updateAuthState = async (session: { user: User } | null) => {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  const name = user.user_metadata?.display_name || "No Name";
+  const name =
+    user.user_metadata?.display_name || generateAnonymousName(user.id);
   if (typeof name !== "string") {
     console.error("[Auth] Invalid name type in metadata:", user.user_metadata);
     throw new Error("User name must be a string");
@@ -84,7 +85,11 @@ export const signUpWithEmail = async (
       password,
       options: {
         data: {
-          display_name: name,
+          display_name: name || generateAnonymousName(crypto.randomUUID()),
+          avatar_url: "",
+          is_admin: false,
+          is_premium: false,
+          premium_expires_at: null,
           provider: "email",
         },
       },
@@ -187,8 +192,22 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
       token: idToken,
     });
 
-    if (error) {
-      throw error;
+    if (error) throw error;
+
+    // Then update user metadata
+    if (data.user) {
+      await supabase.auth.updateUser({
+        data: {
+          display_name:
+            data.user.user_metadata?.full_name ||
+            generateAnonymousName(data.user.id),
+          avatar_url: data.user.user_metadata?.avatar_url || "",
+          is_admin: false,
+          is_premium: false,
+          premium_expires_at: null,
+          provider: "google",
+        },
+      });
     }
 
     await updateAuthState(data.session);
@@ -216,8 +235,22 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
       token: credential.identityToken,
     });
 
-    if (error) {
-      throw error;
+    if (error) throw error;
+
+    if (data.user) {
+      await supabase.auth.updateUser({
+        data: {
+          display_name:
+            credential.fullName?.givenName && credential.fullName?.familyName
+              ? `${credential.fullName.givenName} ${credential.fullName.familyName}`.trim()
+              : generateAnonymousName(data.user.id),
+          avatar_url: data.user.user_metadata?.avatar_url || "",
+          is_admin: false,
+          is_premium: false,
+          premium_expires_at: null,
+          provider: "apple",
+        },
+      });
     }
 
     await updateAuthState(data.session);
@@ -272,8 +305,6 @@ export const updateProfile = async (
   currentPassword: string | undefined,
   updates: {
     displayName?: string;
-    email?: string;
-    emailVerified?: boolean;
     avatarUrl?: string;
     isAdmin?: boolean;
     isPremium?: boolean;
@@ -286,24 +317,30 @@ export const updateProfile = async (
     if (sessionError) throw sessionError;
     if (!sessionData.session?.user) throw new Error("No active session");
 
-    const userId = sessionData.session.user.id;
-    const userProfile = await userProfileService.fetchUserProfile(userId);
+    // Define the mapping between our update fields and Supabase fields
+    const updateData = {
+      display_name: updates.displayName,
+      avatar_url: updates.avatarUrl,
+      is_admin: updates.isAdmin,
+      is_premium: updates.isPremium,
+      premium_expires_at: updates.premiumExpiresAt,
+    };
 
-    if (!userProfile) throw new Error("User profile not found");
+    // Remove any undefined values
+    const cleanedData = Object.fromEntries(
+      Object.entries(updateData).filter(([_, value]) => value !== undefined)
+    );
 
-    // Update the profile
-    await userProfileService.updateUserProfile(userId, {
-      email: updates.email || userProfile.email,
-      emailVerified: updates.emailVerified ?? userProfile.emailVerified,
-      fullName: updates.displayName || userProfile.fullName,
-      avatarUrl: updates.avatarUrl ?? userProfile.avatarUrl,
-      isAdmin: updates.isAdmin ?? userProfile.isAdmin,
-      isPremium: updates.isPremium ?? userProfile.isPremium,
-      premiumExpiresAt:
-        updates.premiumExpiresAt ?? userProfile.premiumExpiresAt,
-    });
+    // Update the Supabase auth user with the cleaned data
+    const { data: userData, error: updateError } =
+      await supabase.auth.updateUser({
+        data: cleanedData,
+      });
 
-    await updateAuthState(sessionData.session);
+    if (updateError) throw updateError;
+    if (!userData.user) throw new Error("Failed to update user");
+
+    await updateAuthState({ user: userData.user });
     return {
       success: true,
       message: "Profile updated successfully.",
@@ -318,8 +355,30 @@ export const updatePassword = async (
   newPassword: string
 ): Promise<AuthResponse> => {
   try {
+    // Get current user's email
+    const { data: sessionData, error: sessionError } =
+      await supabase.auth.getSession();
+    if (sessionError) throw sessionError;
+    if (!sessionData.session?.user?.email)
+      throw new Error("No active session or email");
+
+    // Verify current password by attempting to sign in
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: sessionData.session.user.email,
+      password: currentPassword,
+    });
+
+    if (signInError) {
+      return {
+        success: false,
+        message: "Current password is incorrect",
+      };
+    }
+
+    // If current password is verified, update to new password
     const { error } = await supabase.auth.updateUser({ password: newPassword });
     if (error) throw error;
+
     return { success: true, message: "Password updated successfully." };
   } catch (error) {
     return handleAuthError(error);
@@ -395,6 +454,40 @@ export const verifyPasswordReset = async (
   }
 };
 
+// Re-authentication helpers that don't update auth state
+const reAuthenticateWithGoogle = async (): Promise<AuthResponse> => {
+  try {
+    await GoogleSignin.hasPlayServices();
+    const { idToken } = await GoogleSignin.signIn();
+    if (!idToken) {
+      throw new Error("Failed to authenticate with Google");
+    }
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Failed to verify Google account",
+    };
+  }
+};
+
+const reAuthenticateWithApple = async (): Promise<AuthResponse> => {
+  try {
+    await AppleAuthentication.signInAsync({
+      requestedScopes: [
+        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+        AppleAuthentication.AppleAuthenticationScope.EMAIL,
+      ],
+    });
+    return { success: true };
+  } catch (error) {
+    return {
+      success: false,
+      message: "Failed to verify Apple ID",
+    };
+  }
+};
+
 export const deleteAccount = async (): Promise<AuthResponse> => {
   try {
     const { data: sessionData, error: sessionError } =
@@ -402,15 +495,51 @@ export const deleteAccount = async (): Promise<AuthResponse> => {
     if (sessionError) throw sessionError;
     if (!sessionData.session?.user) throw new Error("No active session");
 
-    await userProfileService.deleteUserProfile(sessionData.session.user.id);
-    const { error } = await supabase.auth.signOut();
-    if (error) throw error;
+    // Re-authenticate based on provider
+    const provider = sessionData.session.user.app_metadata?.provider;
+    if (provider) {
+      let authResponse: AuthResponse;
 
-    const store = useUserStore.getState();
-    store.deleteAccount();
-    store.logOut();
+      if (provider === "google") {
+        authResponse = await reAuthenticateWithGoogle();
+      } else if (provider === "apple") {
+        authResponse = await reAuthenticateWithApple();
+      } else {
+        authResponse = { success: true };
+      }
 
-    return { success: true, message: "Account deleted successfully." };
+      if (!authResponse.success) {
+        return {
+          success: false,
+          message: `Please verify your ${provider} account before deleting`,
+        };
+      }
+    }
+
+    // Delete the user using a Supabase RPC function
+    const { error: deleteError } = await supabase.rpc("delete_user");
+    if (deleteError) throw deleteError;
+
+    // Return success first
+    const response: AuthResponse = {
+      success: true,
+      message:
+        "Your account has been successfully deleted. We're sorry to see you go.",
+    };
+
+    // Schedule cleanup to run after response is handled
+    setTimeout(async () => {
+      try {
+        await supabase.auth.signOut();
+        const store = useUserStore.getState();
+        store.deleteAccount();
+        store.logOut();
+      } catch (error) {
+        console.error("Error during cleanup:", error);
+      }
+    }, 1000);
+
+    return response;
   } catch (error) {
     return handleAuthError(error);
   }

@@ -11,7 +11,7 @@ import { AuthResponse } from "@src/types/auth.types";
 export const useAuthOperation = () => {
   const setLoading = useSetLoading();
   const setError = useSetError();
-  const { showError } = useAlertDialog();
+  const { showError, showSuccess } = useAlertDialog();
 
   const handleError = useCallback(
     (error: any, title: string) => {
@@ -33,7 +33,7 @@ export const useAuthOperation = () => {
     async (
       operation: () => Promise<AuthResponse>,
       errorTitle: string,
-      successMessage?: string
+      options?: { showSuccessAlert?: boolean }
     ) => {
       setLoading(true);
       clearError();
@@ -46,6 +46,11 @@ export const useAuthOperation = () => {
           return handleError(error, errorTitle);
         }
 
+        // Only show success alert if explicitly requested
+        if (options?.showSuccessAlert && result.message) {
+          showSuccess(result.message);
+        }
+
         return result;
       } catch (error: any) {
         return handleError(error, errorTitle);
@@ -53,7 +58,7 @@ export const useAuthOperation = () => {
         setLoading(false);
       }
     },
-    [handleError, clearError, setLoading]
+    [handleError, clearError, setLoading, showSuccess]
   );
 
   return {

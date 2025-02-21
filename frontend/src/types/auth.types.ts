@@ -4,4 +4,5 @@ export interface AuthResponse {
   message?: string;
   code?: string;
   email?: string;
+  cleanup?: () => Promise<void>;
 }

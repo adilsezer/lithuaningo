@@ -63,7 +63,6 @@ const ProfileHeader = ({
 
 export default function ProfileScreen() {
   const { signOut } = useAuth();
-  const theme = useTheme();
   const { toggleTheme } = useThemeActions();
   const isDarkMode = useIsDarkMode();
   const router = useRouter();
@@ -95,8 +94,8 @@ export default function ProfileScreen() {
       <CustomDivider />
 
       <ProfileHeader
-        fullName={profile?.fullName || userData.fullName}
-        email={profile?.email || userData.email}
+        fullName={userData?.fullName || profile?.fullName || "No name"}
+        email={userData?.email || profile?.email || "No email"}
         lastLoginTimeAgo={profile?.lastLoginAt}
       />
 
