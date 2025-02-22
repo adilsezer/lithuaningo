@@ -1,6 +1,6 @@
 import CustomText from "@components/ui/CustomText";
 import React from "react";
-import { View, StyleProp, ViewStyle } from "react-native";
+import { View, StyleProp, ViewStyle, TextStyle } from "react-native";
 import { Switch, Text, useTheme } from "react-native-paper";
 
 interface CustomSwitchProps {
@@ -9,6 +9,9 @@ interface CustomSwitchProps {
   label: string;
   error?: string;
   style?: StyleProp<ViewStyle>;
+  containerStyle?: StyleProp<ViewStyle>;
+  switchContainerStyle?: StyleProp<ViewStyle>;
+  labelStyle?: StyleProp<TextStyle>;
 }
 
 export default function CustomSwitch({
@@ -17,20 +20,38 @@ export default function CustomSwitch({
   label,
   error,
   style,
+  containerStyle,
+  switchContainerStyle,
+  labelStyle,
 }: CustomSwitchProps) {
   const theme = useTheme();
 
+  // Default styles that can be overridden
+  const defaultContainerStyle: ViewStyle = {
+    marginVertical: 12,
+    width: "100%",
+  };
+
+  const defaultSwitchContainerStyle: ViewStyle = {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+  };
+
+  const defaultLabelStyle: TextStyle = {
+    flex: 1,
+    marginRight: 16,
+    textAlign: "left",
+    marginVertical: 0,
+  };
+
   return (
-    <View style={[{ marginVertical: 12 }, style]}>
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "center",
-          alignItems: "center",
-          gap: 16,
-        }}
-      >
-        <CustomText variant="bodyLarge">{label}</CustomText>
+    <View style={[defaultContainerStyle, style, containerStyle]}>
+      <View style={[defaultSwitchContainerStyle, switchContainerStyle]}>
+        <CustomText variant="bodyLarge" style={[defaultLabelStyle, labelStyle]}>
+          {label}
+        </CustomText>
         <Switch
           value={value}
           onValueChange={onValueChange}
