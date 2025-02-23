@@ -112,7 +112,7 @@ export default function NewDeckScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <BackButton />
-      <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView contentContainerStyle={{ paddingHorizontal: 16 }}>
         <CustomText variant="titleLarge" bold>
           Create New Deck
         </CustomText>
