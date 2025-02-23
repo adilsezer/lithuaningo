@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef } from "react";
 import { StyleProp, ViewStyle } from "react-native";
 import { TextInput, HelperText, useTheme } from "react-native-paper";
 
@@ -21,64 +21,70 @@ export interface CustomTextInputProps {
   autoCorrect?: boolean;
 }
 
-const CustomTextInput: React.FC<CustomTextInputProps> = ({
-  value,
-  onChangeText,
-  label,
-  placeholder,
-  error,
-  secureTextEntry = false,
-  disabled = false,
-  multiline = false,
-  numberOfLines = 1,
-  style,
-  left,
-  right,
-  mode = "outlined",
-  keyboardType = "default",
-  autoCapitalize = "none",
-  autoCorrect = false,
-}) => {
-  const theme = useTheme();
+const CustomTextInput = forwardRef<any, CustomTextInputProps>(
+  (
+    {
+      value,
+      onChangeText,
+      label,
+      placeholder,
+      error,
+      secureTextEntry = false,
+      disabled = false,
+      multiline = false,
+      numberOfLines = 1,
+      style,
+      left,
+      right,
+      mode = "outlined",
+      keyboardType = "default",
+      autoCapitalize = "none",
+      autoCorrect = false,
+    },
+    ref
+  ) => {
+    const theme = useTheme();
 
-  return (
-    <>
-      <TextInput
-        value={value}
-        onChangeText={onChangeText}
-        label={label}
-        placeholder={placeholder}
-        error={!!error}
-        secureTextEntry={secureTextEntry}
-        disabled={disabled}
-        multiline={multiline}
-        numberOfLines={numberOfLines}
-        mode={mode}
-        style={[
-          {
-            backgroundColor: theme.colors.background,
-            marginTop: 12,
-          },
-          style,
-        ]}
-        outlineColor={theme.colors.primary}
-        left={left}
-        right={right}
-        keyboardType={keyboardType}
-        autoCapitalize={autoCapitalize}
-        autoCorrect={autoCorrect}
-      />
-      {error && (
-        <HelperText
-          type="error"
-          visible={!!error}
-          style={{ marginHorizontal: 16 }}
-        >
-          {error}
-        </HelperText>
-      )}
-    </>
-  );
-};
+    return (
+      <>
+        <TextInput
+          ref={ref}
+          value={value}
+          onChangeText={onChangeText}
+          label={label}
+          placeholder={placeholder}
+          error={!!error}
+          secureTextEntry={secureTextEntry}
+          disabled={disabled}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          mode={mode}
+          style={[
+            {
+              backgroundColor: theme.colors.background,
+              marginTop: 12,
+            },
+            style,
+          ]}
+          outlineColor={theme.colors.primary}
+          left={left}
+          right={right}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={autoCorrect}
+        />
+        {error && (
+          <HelperText
+            type="error"
+            visible={!!error}
+            style={{ marginHorizontal: 16 }}
+          >
+            {error}
+          </HelperText>
+        )}
+      </>
+    );
+  }
+);
 
 export default CustomTextInput;

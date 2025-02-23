@@ -69,3 +69,7 @@ export interface FormProps<T extends FieldValues> {
   submitButtonStyle?: ViewStyle;
   zodSchema?: z.ZodType<T>;
 }
+
+export interface FormRef {
+  reset: () => void;
+}

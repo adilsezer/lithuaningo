@@ -1,5 +1,5 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
+import { View, StyleSheet, TextInput } from "react-native";
 import {
   useForm,
   Controller,
@@ -13,6 +13,7 @@ import CustomButton from "@components/ui/CustomButton";
 import { FormProps, FormField as FormFieldType } from "./form.types";
 import { FormField } from "./FormField";
 import { useAlertDialog } from "@hooks/useAlertDialog";
+
 const getDefaultValueByCategory = (field: FormFieldType): any => {
   switch (field.category) {
     case "toggle":
@@ -27,17 +28,25 @@ const getDefaultValueByCategory = (field: FormFieldType): any => {
   }
 };
 
-export function Form<T extends FieldValues>({
-  fields,
-  onSubmit,
-  submitButtonText,
-  isLoading = false,
-  options,
-  defaultValues,
-  style,
-  submitButtonStyle,
-  zodSchema,
-}: FormProps<T>) {
+type FormComponent = <T extends FieldValues = FieldValues>(
+  props: FormProps<T> & { ref?: React.Ref<{ reset: () => void }> }
+) => React.ReactElement;
+
+export const Form = forwardRef(function Form<T extends FieldValues>(
+  {
+    fields,
+    onSubmit,
+    submitButtonText,
+    isLoading = false,
+    options,
+    defaultValues,
+    style,
+    submitButtonStyle,
+    zodSchema,
+  }: FormProps<T>,
+  ref: React.Ref<{ reset: () => void }>
+) {
+  const firstFieldRef = useRef<TextInput>(null);
   const form = useForm<T>({
     mode: "onSubmit",
     reValidateMode: "onChange",
@@ -54,6 +63,16 @@ export function Form<T extends FieldValues>({
       ...defaultValues,
     } as DefaultValues<T>,
   });
+
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      form.reset();
+      // Focus on the first field after a short delay to ensure the form is reset
+      setTimeout(() => {
+        firstFieldRef.current?.focus();
+      }, 0);
+    },
+  }));
 
   const { showError } = useAlertDialog();
 
@@ -88,7 +107,7 @@ export function Form<T extends FieldValues>({
 
   return (
     <View style={style}>
-      {fields.map((field) => (
+      {fields.map((field, index) => (
         <Controller
           key={field.name}
           control={control}
@@ -101,6 +120,7 @@ export function Form<T extends FieldValues>({
                 onBlur={fieldProps.onBlur}
                 value={fieldProps.value}
                 error={getFieldError(field.name)}
+                ref={index === 0 ? firstFieldRef : undefined}
               />
             </View>
           )}
@@ -114,7 +134,7 @@ export function Form<T extends FieldValues>({
       />
     </View>
   );
-}
+}) as FormComponent;
 
 const styles = StyleSheet.create({
   fieldContainer: {

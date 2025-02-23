@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef } from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useAlertDialog } from "@hooks/useAlertDialog";
@@ -16,8 +16,9 @@ export default function NewFlashcardScreen() {
   const router = useRouter();
   const { deckId } = useLocalSearchParams<{ deckId: string }>();
   const theme = useTheme();
-  const { showError } = useAlertDialog();
+  const { showError, showSuccess } = useAlertDialog();
   const { createFlashcard } = useFlashcards();
+  const formRef = useRef<{ reset: () => void }>(null);
 
   const fields: FormField[] = [
     {
@@ -62,7 +63,8 @@ export default function NewFlashcardScreen() {
     });
 
     if (success) {
-      router.push(`/decks/${deckId}`);
+      showSuccess("Flashcard created successfully");
+      formRef.current?.reset();
     }
   };
 
@@ -70,17 +72,18 @@ export default function NewFlashcardScreen() {
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <BackButton />
       <ScrollView contentContainerStyle={styles.container}>
-        <CustomText variant="titleLarge" style={styles.title}>
+        <CustomText variant="titleLarge" bold>
           Create New Flashcard
         </CustomText>
         <Form
+          ref={formRef}
           fields={fields}
           onSubmit={handleSubmit}
           submitButtonText="Create Flashcard"
           zodSchema={flashcardFormSchema}
         />
         <CustomButton
-          title="Back to Deck"
+          title="Go to Deck"
           onPress={() => router.push(`/decks/${deckId}`)}
         />
       </ScrollView>
@@ -91,8 +94,5 @@ export default function NewFlashcardScreen() {
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-  },
-  title: {
-    marginBottom: 24,
   },
 });
