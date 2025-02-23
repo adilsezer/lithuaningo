@@ -1,8 +1,11 @@
 import apiClient from "../api/apiClient";
+import { fileUploadService } from "../upload/FileUploadService";
 import {
   Flashcard,
   CreateFlashcardRequest,
   UpdateFlashcardRequest,
+  ImageFile,
+  AudioFile,
 } from "@src/types";
 
 class FlashcardService {
@@ -12,13 +15,17 @@ class FlashcardService {
 
   async createFlashcard(
     flashcard: Omit<CreateFlashcardRequest, "imageUrl" | "audioUrl">,
-    imageFile?: File,
-    audioFile?: File
+    imageFile?: ImageFile,
+    audioFile?: AudioFile
   ): Promise<string> {
     try {
       const [imageUrl, audioUrl] = await Promise.all([
-        imageFile ? this.uploadFile(imageFile) : Promise.resolve(""),
-        audioFile ? this.uploadFile(audioFile) : Promise.resolve(""),
+        imageFile
+          ? fileUploadService.uploadFlashcardImage(imageFile)
+          : Promise.resolve(""),
+        audioFile
+          ? fileUploadService.uploadFlashcardAudio(audioFile)
+          : Promise.resolve(""),
       ]);
 
       return apiClient.createFlashcard({
@@ -35,18 +42,18 @@ class FlashcardService {
   async updateFlashcard(
     id: string,
     flashcard: Omit<UpdateFlashcardRequest, "imageUrl" | "audioUrl">,
-    imageFile?: File,
-    audioFile?: File,
+    imageFile?: ImageFile,
+    audioFile?: AudioFile,
     currentImageUrl: string = "",
     currentAudioUrl: string = ""
   ) {
     try {
       const [imageUrl, audioUrl] = await Promise.all([
         imageFile
-          ? this.uploadFile(imageFile)
+          ? fileUploadService.uploadFlashcardImage(imageFile)
           : Promise.resolve(currentImageUrl),
         audioFile
-          ? this.uploadFile(audioFile)
+          ? fileUploadService.uploadFlashcardAudio(audioFile)
           : Promise.resolve(currentAudioUrl),
       ]);
 
@@ -57,23 +64,6 @@ class FlashcardService {
       });
     } catch (error) {
       console.error("Error updating flashcard:", error);
-      throw error;
-    }
-  }
-
-  async uploadFile(file: File): Promise<string> {
-    try {
-      if (file.type.startsWith("audio/") || file.type.startsWith("image/")) {
-        const formData = new FormData();
-        formData.append("file", file);
-        return apiClient.uploadFile(formData);
-      } else {
-        throw new Error(
-          "Invalid file type. Only audio and image files are allowed."
-        );
-      }
-    } catch (error) {
-      console.error("Error uploading file:", error);
       throw error;
     }
   }

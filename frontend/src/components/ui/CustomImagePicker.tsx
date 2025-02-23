@@ -53,6 +53,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
         uri: asset.uri,
         type: "image/jpeg",
         name: asset.uri.split("/").pop() || "image.jpg",
+        size: asset.fileSize || 0,
       });
     }
   };
@@ -61,17 +62,17 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
     <View style={styles.container}>
       <Pressable
         style={[
-          styles.imageContainer,
+          styles.card,
           { borderColor: error ? theme.colors.error : theme.colors.primary },
         ]}
         onPress={handleImagePick}
       >
         {value ? (
-          <Image source={{ uri: value.uri }} style={styles.image} />
+          <Image source={{ uri: value.uri }} style={styles.content} />
         ) : (
           <View
             style={[
-              styles.placeholder,
+              styles.cardContent,
               { backgroundColor: theme.colors.surface },
             ]}
           >
@@ -81,10 +82,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
               iconColor={theme.colors.primary}
             />
             <CustomText
-              style={[
-                styles.placeholderText,
-                { color: theme.colors.onBackground },
-              ]}
+              style={[styles.statusText, { color: theme.colors.onBackground }]}
             >
               {placeholderText}
             </CustomText>
@@ -105,29 +103,33 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 16,
   },
-  imageContainer: {
+  card: {
     width: "100%",
     height: 200,
     borderWidth: 1,
     borderRadius: 8,
     overflow: "hidden",
   },
-  image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
-  },
-  placeholder: {
+  cardContent: {
     width: "100%",
     height: "100%",
     justifyContent: "center",
     alignItems: "center",
+    backgroundColor: "transparent",
   },
-  placeholderText: {
+  content: {
+    width: "100%",
+    height: "100%",
+    resizeMode: "cover",
+  },
+  statusText: {
     fontSize: 16,
+    marginTop: 8,
+    textAlign: "center",
   },
   errorText: {
     fontSize: 12,
-    marginTop: 4,
+    marginTop: 8,
+    textAlign: "center",
   },
 });

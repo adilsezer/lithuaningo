@@ -1,3 +1,5 @@
+import { ImageFile } from "./ImageFile";
+
 export interface Flashcard {
   id: string;
   deckId: string;
@@ -43,6 +45,6 @@ export interface FlashcardFormData {
   backWord: string;
   exampleSentence: string;
   exampleSentenceTranslation: string;
-  imageFile?: File;
-  audioFile?: File;
+  imageFile?: ImageFile;
+  audioFile?: ImageFile; // Using ImageFile type as it has the same structure needed for audio files
 }

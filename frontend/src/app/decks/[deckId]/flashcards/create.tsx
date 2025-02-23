@@ -6,7 +6,7 @@ import { Audio } from "expo-av";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { flashcardFormSchema } from "@utils/zodSchemas";
-import { FlashcardFormData } from "@src/types";
+import { FlashcardFormData, MediaFile } from "@src/types";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
@@ -54,8 +54,8 @@ export default function CreateFlashcardScreen() {
   const router = useRouter();
   const theme = useTheme();
   const { createFlashcard } = useFlashcards();
-  const [imageFile, setImageFile] = useState<File>();
-  const [audioFile, setAudioFile] = useState<File>();
+  const [imageFile, setImageFile] = useState<MediaFile>();
+  const [audioFile, setAudioFile] = useState<MediaFile>();
 
   const {
     control,
@@ -83,7 +83,12 @@ export default function CreateFlashcardScreen() {
       const { uri } = result.assets[0];
       const response = await fetch(uri);
       const blob = await response.blob();
-      const file = new File([blob], "image.jpg", { type: "image/jpeg" });
+      const file: MediaFile = {
+        uri,
+        type: "image/jpeg",
+        name: "image.jpg",
+        size: blob.size,
+      };
       setImageFile(file);
     }
   };
@@ -111,7 +116,12 @@ export default function CreateFlashcardScreen() {
       if (uri) {
         const response = await fetch(uri);
         const blob = await response.blob();
-        const file = new File([blob], "audio.m4a", { type: "audio/m4a" });
+        const file: MediaFile = {
+          uri,
+          type: "audio/m4a",
+          name: "audio.m4a",
+          size: blob.size,
+        };
         setAudioFile(file);
       }
     } catch (error) {
@@ -162,46 +172,14 @@ export default function CreateFlashcardScreen() {
       <View style={styles.mediaButtons}>
         <View style={styles.mediaButton}>
           <CustomImagePicker
-            value={
-              imageFile
-                ? {
-                    uri: URL.createObjectURL(imageFile),
-                    type: imageFile.type,
-                    name: imageFile.name,
-                  }
-                : null
-            }
-            onChange={async (file) => {
-              if (file) {
-                const response = await fetch(file.uri);
-                const blob = await response.blob();
-                setImageFile(new File([blob], file.name, { type: file.type }));
-              } else {
-                setImageFile(undefined);
-              }
-            }}
+            value={imageFile || null}
+            onChange={(file) => setImageFile(file || undefined)}
           />
         </View>
         <View style={styles.mediaButton}>
           <CustomAudioPicker
-            value={
-              audioFile
-                ? {
-                    uri: URL.createObjectURL(audioFile),
-                    type: audioFile.type,
-                    name: audioFile.name,
-                  }
-                : null
-            }
-            onChange={async (file) => {
-              if (file) {
-                const response = await fetch(file.uri);
-                const blob = await response.blob();
-                setAudioFile(new File([blob], file.name, { type: file.type }));
-              } else {
-                setAudioFile(undefined);
-              }
-            }}
+            value={audioFile || null}
+            onChange={(file) => setAudioFile(file || undefined)}
           />
         </View>
       </View>

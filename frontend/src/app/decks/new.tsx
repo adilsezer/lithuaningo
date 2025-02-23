@@ -92,7 +92,7 @@ export default function NewDeckScreen() {
             tags:
               data.tags
                 ?.split(",")
-                .map((tag) => tag.trim())
+                .map((t) => t.trim())
                 .filter(Boolean) ?? [],
             isPublic: data.isPublic ?? true,
           },

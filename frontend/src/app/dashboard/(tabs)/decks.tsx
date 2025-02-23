@@ -63,7 +63,7 @@ export default function DecksScreen() {
     setSelectedCategory,
     clearError,
     fetchDecks,
-  } = useDecks(userData?.id);
+  } = useDecks({ userId: userData?.id });
 
   useEffect(() => {
     fetchDecks();

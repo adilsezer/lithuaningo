@@ -7,12 +7,14 @@ interface CustomAudioPickerProps {
   value: AudioFile | null;
   onChange: (file: AudioFile | null) => void;
   error?: string;
+  placeholderText?: string;
 }
 
 export default function CustomAudioPicker({
   value,
   onChange,
   error,
+  placeholderText = "Tap to start recording",
 }: CustomAudioPickerProps) {
   const theme = useTheme();
   const {
@@ -45,10 +47,13 @@ export default function CustomAudioPicker({
     <View style={styles.container}>
       <Card
         mode="outlined"
-        style={{
-          backgroundColor: theme.colors.surface,
-          borderColor: theme.colors.primary,
-        }}
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.surface,
+            borderColor: error ? theme.colors.error : theme.colors.primary,
+          },
+        ]}
       >
         <Card.Content style={styles.cardContent}>
           <IconButton
@@ -78,7 +83,7 @@ export default function CustomAudioPicker({
               ? isPlaying(value.uri)
                 ? "Playing... Tap to pause"
                 : "Tap to play"
-              : "Tap to start recording"}
+              : placeholderText}
           </Text>
         </Card.Content>
       </Card>
@@ -92,13 +97,7 @@ export default function CustomAudioPicker({
         </Button>
       )}
       {error && (
-        <Text
-          style={{
-            color: theme.colors.error,
-            marginTop: 8,
-            textAlign: "center",
-          }}
-        >
+        <Text style={[styles.errorText, { color: theme.colors.error }]}>
           {error}
         </Text>
       )}
@@ -111,14 +110,27 @@ const styles = StyleSheet.create({
     width: "100%",
     marginTop: 16,
   },
+  card: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+  },
   cardContent: {
+    width: "100%",
+    height: "100%",
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "transparent",
   },
   statusText: {
+    fontSize: 16,
     marginTop: 8,
     textAlign: "center",
-    fontSize: 16,
+  },
+  errorText: {
+    fontSize: 12,
+    marginTop: 8,
+    textAlign: "center",
   },
   actionButton: {
     marginTop: 8,

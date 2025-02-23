@@ -1,6 +1,9 @@
-export interface ImageFile {
+export interface MediaFile {
   uri: string;
   type: string;
   name: string;
-  size: number;
+  size?: number;
 }
+
+export type ImageFile = MediaFile;
+export type AudioFile = MediaFile;

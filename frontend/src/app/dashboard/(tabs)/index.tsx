@@ -4,7 +4,6 @@ import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
 import { AnnouncementsCard } from "@components/dashboard/AnnouncementsCard";
 import { DailyChallengeCard } from "@components/dashboard/DailyChallengeCard";
-import { UserStatsCard } from "@components/dashboard/UserStatsCard";
 import { useDashboard } from "@hooks/useDashboard";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useDecks } from "@hooks/useDecks";
@@ -78,7 +77,8 @@ const DashboardScreen: React.FC = () => {
 
   const { stats, error: statsError } = useUserChallengeStats();
 
-  const { decks: topRatedDecks = [], fetchDecks } = useDecks(userData?.id, {
+  const { decks: topRatedDecks = [], fetchDecks } = useDecks({
+    userId: userData?.id,
     initialCategory: "Top Rated",
   });
 
@@ -111,8 +111,6 @@ const DashboardScreen: React.FC = () => {
         <CustomText variant="titleLarge" bold>
           Hi, {dashboardUser?.fullName || "there"}!
         </CustomText>
-
-        {stats && <UserStatsCard stats={stats} />}
 
         <DailyChallengeCard
           answeredQuestions={stats?.todayTotalAnswers ?? 0}

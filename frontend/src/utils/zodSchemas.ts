@@ -93,13 +93,22 @@ export const deleteAccountFormSchema = z
     }
   );
 
-const imageFileSchema = z
-  .object({
-    uri: z.string(),
-    type: z.string(),
-    name: z.string(),
-  })
-  .optional();
+const mediaFileSchema = z.object({
+  uri: z.string().min(1, "File URI is required"),
+  type: z.string().min(1, "File type is required"),
+  name: z.string().min(1, "File name is required"),
+  size: z.number().optional(),
+});
+
+const imageFileSchema = mediaFileSchema.refine(
+  (file) => file.type.startsWith("image/"),
+  "Only image files are allowed"
+);
+
+const audioFileSchema = mediaFileSchema.refine(
+  (file) => file.type.startsWith("audio/"),
+  "Only audio files are allowed"
+);
 
 // New schemas for other forms
 export const deckFormSchema = z.object({
@@ -116,24 +125,9 @@ export const deckFormSchema = z.object({
     .refine((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat), {
       message: "Invalid category selected",
     }),
-  tags: z
-    .string()
-    .optional()
-    .transform((val) => val || "")
-    .refine(
-      (val) => {
-        const tags = val
-          .split(",")
-          .map((t) => t.trim())
-          .filter((t) => t.length > 0);
-        return tags.length <= 10 && tags.every((t) => t.length <= 30);
-      },
-      {
-        message: "Maximum 10 tags, each under 30 characters",
-      }
-    ),
+  tags: z.string().optional().default(""),
   isPublic: z.boolean().default(true),
-  imageFile: z.any().optional(), // Allow any file type, validation handled by component
+  imageFile: imageFileSchema.optional(),
   consent: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms",
   }),
@@ -146,6 +140,8 @@ export const flashcardFormSchema = z.object({
   exampleSentenceTranslation: z
     .string()
     .min(1, "Example sentence translation is required"),
+  imageFile: imageFileSchema.optional(),
+  audioFile: audioFileSchema.optional(),
 });
 
 export const flashcardEditSchema = flashcardFormSchema;
@@ -168,7 +164,8 @@ export const verifyEmailFormSchema = z.object({
     .string()
     .min(1, "Verification code is required")
     .length(6, "Verification code must be 6 digits")
-    .regex(/^\d+$/, "Verification code must contain only numbers"),
+    .regex(/^\d+$/, "Verification code must contain only numbers")
+    .max(6, "Verification code cannot be longer than 6 digits"),
 });
 
 export const resetPasswordVerifyFormSchema = z
@@ -177,7 +174,8 @@ export const resetPasswordVerifyFormSchema = z
       .string()
       .min(1, "Reset code is required")
       .length(6, "Reset code must be 6 digits")
-      .regex(/^\d+$/, "Reset code must contain only numbers"),
+      .regex(/^\d+$/, "Reset code must contain only numbers")
+      .max(6, "Reset code cannot be longer than 6 digits"),
     newPassword: passwordSchema,
     confirmPassword: z.string().min(1, "Please confirm your password"),
   })

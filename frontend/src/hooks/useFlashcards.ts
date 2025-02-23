@@ -3,6 +3,8 @@ import {
   Flashcard,
   CreateFlashcardRequest,
   UpdateFlashcardRequest,
+  ImageFile,
+  AudioFile,
 } from "@src/types";
 import flashcardService from "@src/services/data/flashcardService";
 import { useAlertDialog } from "@hooks/useAlertDialog";
@@ -52,8 +54,8 @@ export const useFlashcards = () => {
   const createFlashcard = useCallback(
     async (
       flashcard: Omit<CreateFlashcardRequest, "imageUrl" | "audioUrl">,
-      imageFile?: File,
-      audioFile?: File
+      imageFile?: ImageFile,
+      audioFile?: AudioFile
     ) => {
       try {
         setLoading(true);
@@ -75,8 +77,8 @@ export const useFlashcards = () => {
     async (
       id: string,
       flashcard: Omit<UpdateFlashcardRequest, "imageUrl" | "audioUrl">,
-      imageFile?: File,
-      audioFile?: File,
+      imageFile?: ImageFile,
+      audioFile?: AudioFile,
       currentImageUrl?: string,
       currentAudioUrl?: string
     ) => {

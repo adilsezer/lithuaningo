@@ -18,7 +18,6 @@ const verifyEmailFields: FormField[] = [
     type: "text",
     placeholder: "Enter the 6-digit code",
     keyboardType: "number-pad",
-    maxLength: 6,
   },
 ];
 

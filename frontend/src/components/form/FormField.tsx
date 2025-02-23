@@ -69,13 +69,7 @@ export const FormField = forwardRef<any, FormFieldProps>(
         );
 
       case "image-input":
-        return (
-          <CustomImagePicker
-            {...props}
-            onChange={onChange}
-            maxSize={field.maxSize}
-          />
-        );
+        return <CustomImagePicker {...props} onChange={onChange} />;
 
       case "audio-input":
         return <CustomAudioPicker {...props} onChange={onChange} />;

@@ -5,13 +5,14 @@ import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useDecks } from "@hooks/useDecks";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { useSetLoading } from "@stores/useUIStore";
-import { Deck } from "@src/types";
+import { Deck, DeckFormData } from "@src/types";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { useTheme, Card, IconButton } from "react-native-paper";
 import { deckFormSchema } from "@utils/zodSchemas";
+import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
 
 const deckFields: FormField[] = [
   {
@@ -27,6 +28,25 @@ const deckFields: FormField[] = [
     category: "text-input",
     type: "text",
     placeholder: "Enter deck description",
+  },
+  {
+    name: "category",
+    label: "Category",
+    category: "selection",
+    type: "picker",
+    options: deckCategories
+      .filter((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat))
+      .map((cat) => ({
+        label: cat,
+        value: cat,
+      })),
+  },
+  {
+    name: "tags",
+    label: "Tags (comma separated)",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter tags",
   },
   {
     name: "isPublic",
@@ -74,11 +94,22 @@ export default function EditDeckScreen() {
     }
   }, [id, getDeckFlashcards]);
 
-  const handleSubmit = async (data: Partial<Deck>) => {
+  const handleSubmit = async (data: DeckFormData) => {
     if (!deck || !id) return;
 
     try {
-      await updateDeck(id, { ...deck, ...data });
+      await updateDeck(id, {
+        ...deck,
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        tags:
+          data.tags
+            ?.split(",")
+            .map((t) => t.trim())
+            .filter(Boolean) ?? [],
+        isPublic: data.isPublic ?? true,
+      });
       router.push(`/decks/${id}`);
     } catch (error) {
       console.error("Error updating deck:", error);
@@ -137,7 +168,10 @@ export default function EditDeckScreen() {
           defaultValues={{
             title: deck.title,
             description: deck.description,
+            category: deck.category as DeckCategory,
+            tags: deck.tags.join(", "),
             isPublic: deck.isPublic,
+            consent: true,
           }}
         />
 

@@ -11,7 +11,7 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";
 import CustomAudioPicker from "@components/ui/CustomAudioPicker";
-
+import { MediaFile } from "@src/types";
 const flashcardFields: FormField[] = [
   {
     name: "frontWord",
@@ -49,8 +49,8 @@ export default function EditFlashcardScreen() {
   const theme = useTheme();
   const { updateFlashcard, getFlashcardById } = useFlashcards();
   const [flashcard, setFlashcard] = useState<Flashcard | null>(null);
-  const [imageFile, setImageFile] = useState<File>();
-  const [audioFile, setAudioFile] = useState<File>();
+  const [imageFile, setImageFile] = useState<MediaFile>();
+  const [audioFile, setAudioFile] = useState<MediaFile>();
 
   useEffect(() => {
     const loadFlashcard = async () => {
@@ -129,7 +129,7 @@ export default function EditFlashcardScreen() {
             value={
               imageFile
                 ? {
-                    uri: URL.createObjectURL(imageFile),
+                    uri: imageFile.uri,
                     type: imageFile.type,
                     name: imageFile.name,
                   }
@@ -145,7 +145,12 @@ export default function EditFlashcardScreen() {
               if (file) {
                 const response = await fetch(file.uri);
                 const blob = await response.blob();
-                setImageFile(new File([blob], file.name, { type: file.type }));
+                setImageFile({
+                  uri: file.uri,
+                  type: file.type,
+                  name: file.name,
+                  size: blob.size,
+                });
               } else {
                 setImageFile(undefined);
               }
@@ -157,7 +162,7 @@ export default function EditFlashcardScreen() {
             value={
               audioFile
                 ? {
-                    uri: URL.createObjectURL(audioFile),
+                    uri: audioFile.uri,
                     type: audioFile.type,
                     name: audioFile.name,
                   }
@@ -173,7 +178,12 @@ export default function EditFlashcardScreen() {
               if (file) {
                 const response = await fetch(file.uri);
                 const blob = await response.blob();
-                setAudioFile(new File([blob], file.name, { type: file.type }));
+                setAudioFile({
+                  uri: file.uri,
+                  type: file.type,
+                  name: file.name,
+                  size: blob.size,
+                });
               } else {
                 setAudioFile(undefined);
               }

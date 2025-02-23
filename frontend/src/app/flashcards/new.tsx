@@ -49,6 +49,23 @@ export default function NewFlashcardScreen() {
       type: "text",
       placeholder: "Enter the sentence translation",
     },
+    {
+      name: "imageFile",
+      label: "Flashcard Image",
+      category: "image-input",
+      type: "image",
+      maxSize: 5 * 1024 * 1024, // 5MB
+      placeholderText: "Tap to add an flashcard image (optional)",
+    },
+    {
+      name: "audioFile",
+      label: "Flashcard Audio",
+      category: "audio-input",
+      type: "audio",
+      maxSize: 10 * 1024 * 1024, // 10MB
+      maxDuration: 30, // 30 seconds
+      placeholderText: "Tap to add an flashcard audio (optional)",
+    },
   ];
 
   const handleSubmit = async (formData: FlashcardFormData) => {
@@ -57,14 +74,23 @@ export default function NewFlashcardScreen() {
       return;
     }
 
-    const success = await createFlashcard({
-      ...formData,
-      deckId,
-    });
+    try {
+      const success = await createFlashcard(
+        {
+          ...formData,
+          deckId,
+        },
+        formData.imageFile,
+        formData.audioFile
+      );
 
-    if (success) {
-      showSuccess("Flashcard created successfully");
-      formRef.current?.reset();
+      if (success) {
+        showSuccess("Flashcard created successfully");
+        formRef.current?.reset();
+      }
+    } catch (error) {
+      console.error("Failed to create flashcard:", error);
+      showError("Failed to create flashcard. Please try again.");
     }
   };
 

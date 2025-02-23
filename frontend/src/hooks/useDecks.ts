@@ -20,6 +20,7 @@ import { DeckCategory } from "@src/types/DeckCategory";
 
 interface UseDecksOptions {
   initialCategory?: DeckCategory;
+  userId?: string;
 }
 
 export const useDecks = (options?: UseDecksOptions) => {
