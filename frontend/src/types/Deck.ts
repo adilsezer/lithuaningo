@@ -21,7 +21,7 @@ export interface CreateDeckRequest {
   category: string;
   tags: string[];
   isPublic: boolean;
-  imageUrl?: string;
+  imageUrl?: string | null;
 }
 
 export interface UpdateDeckRequest {
@@ -30,5 +30,5 @@ export interface UpdateDeckRequest {
   category: string;
   tags: string[];
   isPublic: boolean;
-  imageUrl?: string;
+  imageUrl?: string | null;
 }

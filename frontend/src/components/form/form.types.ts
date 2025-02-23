@@ -49,6 +49,7 @@ export type FormField = {
   // Image
   allowMultiple?: boolean;
   maxSize?: number;
+  placeholderText?: string;
 
   // Audio
   maxDuration?: number;

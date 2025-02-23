@@ -86,7 +86,10 @@ export const FormField: React.FC<FormFieldProps> = ({
 
     case "link":
       return (
-        <CustomText onPress={field.onPress}>
+        <CustomText
+          style={{ textDecorationLine: "underline" }}
+          onPress={field.onPress}
+        >
           {field.linkText || field.label}
         </CustomText>
       );

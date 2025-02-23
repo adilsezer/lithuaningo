@@ -498,18 +498,7 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                var subfolder = file.ContentType.StartsWith("audio/")
-                    ? _storageSettings.Value.Paths.Audio
-                    : file.ContentType.StartsWith("image/")
-                        ? _storageSettings.Value.Paths.Images
-                        : _storageSettings.Value.Paths.Other;
-
-                var url = await _storageService.UploadFileAsync(
-                    file,
-                    _storageSettings.Value.Paths.Flashcards,
-                    subfolder
-                );
-
+                var url = await _flashcardService.UploadFlashcardFileAsync(file);
                 return Ok(url);
             }
             catch (Exception ex)

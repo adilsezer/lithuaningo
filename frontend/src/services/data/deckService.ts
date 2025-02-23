@@ -1,5 +1,10 @@
 import apiClient from "@services/api/apiClient";
-import { Deck, CreateDeckRequest, UpdateDeckRequest } from "@src/types";
+import {
+  Deck,
+  CreateDeckRequest,
+  UpdateDeckRequest,
+  ImageFile,
+} from "@src/types";
 import { ApiError } from "@services/api/apiClient";
 
 class DeckService {
@@ -25,10 +30,98 @@ class DeckService {
     }
   }
 
-  async createDeck(deck: CreateDeckRequest): Promise<Deck> {
+  async uploadFile(file: ImageFile): Promise<string> {
     try {
-      return await apiClient.createDeck(deck);
+      if (file.type.startsWith("image/")) {
+        console.log("[DeckService.uploadFile] Starting image upload:", {
+          name: file.name,
+          type: file.type,
+          size: "N/A",
+        });
+
+        const formData = new FormData();
+        formData.append("file", {
+          uri: file.uri,
+          type: file.type,
+          name: file.name,
+        } as any);
+
+        const url = await apiClient.uploadDeckFile(formData);
+        console.log("[DeckService.uploadFile] Image upload successful:", {
+          name: file.name,
+          url,
+        });
+
+        return url;
+      } else {
+        const error = `Invalid file type: ${file.type}. Only image files are allowed.`;
+        console.error("[DeckService.uploadFile] Error:", error);
+        throw new Error(error);
+      }
     } catch (error) {
+      console.error("[DeckService.uploadFile] Error uploading file:", {
+        name: file.name,
+        type: file.type,
+        error,
+      });
+      throw error;
+    }
+  }
+
+  async createDeck(
+    deck: Omit<CreateDeckRequest, "imageUrl">,
+    imageFile?: ImageFile
+  ): Promise<Deck> {
+    try {
+      let imageUrl: string | undefined = undefined;
+
+      if (imageFile) {
+        console.log("[DeckService.createDeck] Processing image for deck:", {
+          title: deck.title,
+          imageName: imageFile.name,
+        });
+
+        try {
+          imageUrl = await this.uploadFile(imageFile);
+          console.log(
+            "[DeckService.createDeck] Image processed successfully:",
+            {
+              title: deck.title,
+              imageUrl,
+            }
+          );
+        } catch (error) {
+          console.error("[DeckService.createDeck] Image upload failed:", {
+            title: deck.title,
+            imageName: imageFile.name,
+            error,
+          });
+          // Continue with deck creation even if image upload fails
+        }
+      }
+
+      console.log("[DeckService.createDeck] Creating deck:", {
+        title: deck.title,
+        hasImage: !!imageUrl,
+      });
+
+      const response = await apiClient.createDeck({
+        ...deck,
+        imageUrl,
+      });
+
+      console.log("[DeckService.createDeck] Deck created successfully:", {
+        id: response.id,
+        title: response.title,
+        imageUrl: response.imageUrl,
+      });
+
+      return response;
+    } catch (error) {
+      console.error("[DeckService.createDeck] Error creating deck:", {
+        title: deck.title,
+        error,
+      });
       if (error instanceof ApiError) {
         throw new Error(`Failed to create deck: ${error.message}`);
       }
@@ -36,9 +129,33 @@ class DeckService {
     }
   }
 
-  async updateDeck(id: string, deck: UpdateDeckRequest): Promise<Deck> {
+  async updateDeck(
+    id: string,
+    deck: Omit<UpdateDeckRequest, "imageUrl">,
+    imageFile?: ImageFile
+  ): Promise<Deck> {
     try {
-      return await apiClient.updateDeck(id, deck);
+      let imageUrl: string | undefined = undefined;
+
+      if (imageFile) {
+        try {
+          imageUrl = await this.uploadFile(imageFile);
+        } catch (error) {
+          console.error("[DeckService.updateDeck] Image upload failed:", {
+            id,
+            imageName: imageFile.name,
+            error,
+          });
+          // Continue with deck update even if image upload fails
+        }
+      }
+
+      const response = await apiClient.updateDeck(id, {
+        ...deck,
+        imageUrl,
+      });
+
+      return response;
     } catch (error) {
       if (error instanceof ApiError) {
         throw new Error(`Failed to update deck: ${error.message}`);

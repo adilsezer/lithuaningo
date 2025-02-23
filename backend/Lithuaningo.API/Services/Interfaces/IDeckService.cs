@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Deck;
+using Microsoft.AspNetCore.Http;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
@@ -19,5 +20,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<List<Flashcard>> GetDeckFlashcardsAsync(string deckId);
         Task ReportDeckAsync(string id, string userId, string reason);
         Task<double> GetDeckRatingAsync(string deckId, string timeRange = "all");
+        Task<string> UploadDeckImageAsync(IFormFile file);
     }
 }

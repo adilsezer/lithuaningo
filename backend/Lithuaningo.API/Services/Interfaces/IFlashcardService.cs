@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.Flashcard;
+using Microsoft.AspNetCore.Http;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
@@ -14,5 +15,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task UpdateReviewStatusAsync(string id, bool wasCorrect);
         Task<List<FlashcardResponse>> GetRandomFlashcardsAsync(int limit = 10);
         Task<List<FlashcardResponse>> SearchFlashcardsAsync(string query);
+        Task<string> UploadFlashcardFileAsync(IFormFile file);
     }
 }

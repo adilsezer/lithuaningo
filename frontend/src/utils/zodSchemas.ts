@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { AUTH_PATTERNS } from "./validationPatterns";
-import { deckCategories } from "@src/types/DeckCategory";
+import { deckCategories, DeckCategory } from "@src/types/DeckCategory";
 
 export const emailSchema = z
   .string()
@@ -93,35 +93,51 @@ export const deleteAccountFormSchema = z
     }
   );
 
-// New schemas for other forms
-export const deckFormSchema = z
+const imageFileSchema = z
   .object({
-    title: z.string().min(1, "Title is required"),
-    description: z.string().min(1, "Description is required"),
-    category: z
-      .enum(deckCategories, {
-        errorMap: () => ({ message: "Category is required" }),
-      })
-      .optional(),
-    tags: z.preprocess((val) => {
-      if (typeof val === "string") {
-        return val
-          ? val
-              .split(",")
-              .map((tag) => tag.trim())
-              .filter(Boolean)
-          : undefined;
-      }
-      return val;
-    }, z.array(z.string()).optional()) as z.ZodType<string[] | undefined>,
-    consent: z
-      .boolean()
-      .refine((val) => val === true, {
-        message: "You must agree to the terms before creating a deck",
-      })
-      .optional(),
+    uri: z.string(),
+    type: z.string(),
+    name: z.string(),
   })
-  .partial();
+  .optional();
+
+// New schemas for other forms
+export const deckFormSchema = z.object({
+  title: z
+    .string()
+    .min(1, "Title is required")
+    .max(100, "Title must not exceed 100 characters"),
+  description: z
+    .string()
+    .min(1, "Description is required")
+    .max(1000, "Description must not exceed 1000 characters"),
+  category: z
+    .enum(deckCategories as readonly [DeckCategory, ...DeckCategory[]])
+    .refine((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat), {
+      message: "Invalid category selected",
+    }),
+  tags: z
+    .string()
+    .optional()
+    .transform((val) => val || "")
+    .refine(
+      (val) => {
+        const tags = val
+          .split(",")
+          .map((t) => t.trim())
+          .filter((t) => t.length > 0);
+        return tags.length <= 10 && tags.every((t) => t.length <= 30);
+      },
+      {
+        message: "Maximum 10 tags, each under 30 characters",
+      }
+    ),
+  isPublic: z.boolean().default(true),
+  imageFile: z.any().optional(), // Allow any file type, validation handled by component
+  consent: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the terms",
+  }),
+});
 
 export const flashcardFormSchema = z.object({
   frontWord: z.string().min(1, "Front word is required"),

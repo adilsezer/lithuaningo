@@ -8,6 +8,7 @@ using Lithuaningo.API.DTOs.Deck;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
 using Lithuaningo.API.DTOs.Flashcard;
+using Microsoft.AspNetCore.Http;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -535,6 +536,90 @@ namespace Lithuaningo.API.Controllers
             {
                 _logger.LogError(ex, "Error retrieving rating for deck {Id}", id);
                 return StatusCode(500, "Internal server error");
+            }
+        }
+
+        /// <summary>
+        /// Uploads a file (image) for a deck.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        ///     POST /api/v1/Deck/upload
+        /// 
+        /// The request should be a multipart/form-data with a single file.
+        /// Supported file types: image/jpeg, image/png, image/gif
+        /// Maximum file size: 5MB
+        /// </remarks>
+        /// <param name="file">The file to upload</param>
+        /// <returns>The URL of the uploaded file</returns>
+        /// <response code="200">Returns the URL of the uploaded file</response>
+        /// <response code="400">If file is invalid or missing</response>
+        /// <response code="500">If there was an internal error during upload</response>
+        [HttpPost("upload")]
+        [SwaggerOperation(
+            Summary = "Uploads a deck image",
+            Description = "Uploads an image file for a deck",
+            OperationId = "UploadDeckImage",
+            Tags = new[] { "Deck" }
+        )]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<string>> UploadFile(IFormFile file)
+        {
+            if (file == null || file.Length == 0)
+            {
+                _logger.LogWarning("[DeckController.UploadFile] No file uploaded or empty file");
+                return BadRequest("No file uploaded");
+            }
+
+            _logger.LogInformation(
+                "[DeckController.UploadFile] Starting file upload: {FileName}, Type: {ContentType}, Size: {Size}KB",
+                file.FileName,
+                file.ContentType,
+                file.Length / 1024
+            );
+
+            if (!file.ContentType.StartsWith("image/"))
+            {
+                _logger.LogWarning(
+                    "[DeckController.UploadFile] Invalid file type: {ContentType} for file {FileName}",
+                    file.ContentType,
+                    file.FileName
+                );
+                return BadRequest("Only image files are allowed");
+            }
+
+            if (file.Length > 5 * 1024 * 1024) // 5MB limit
+            {
+                _logger.LogWarning(
+                    "[DeckController.UploadFile] File too large: {Size}KB for file {FileName}",
+                    file.Length / 1024,
+                    file.FileName
+                );
+                return BadRequest("File size must not exceed 5MB");
+            }
+
+            try
+            {
+                var url = await _deckService.UploadDeckImageAsync(file);
+                _logger.LogInformation(
+                    "[DeckController.UploadFile] File uploaded successfully: {FileName}, URL: {Url}",
+                    file.FileName,
+                    url
+                );
+                return Ok(url);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "[DeckController.UploadFile] Error uploading file: {FileName}, Type: {ContentType}, Size: {Size}KB",
+                    file.FileName,
+                    file.ContentType,
+                    file.Length / 1024
+                );
+                return StatusCode(500, "Error uploading deck image");
             }
         }
     }

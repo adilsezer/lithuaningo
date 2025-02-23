@@ -609,6 +609,16 @@ class ApiClient {
     });
   }
 
+  async uploadDeckFile(formData: FormData): Promise<string> {
+    return this.request<string>(`/api/v1/Deck/upload`, {
+      method: "POST",
+      data: formData,
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+  }
+
   async deleteFlashcard(id: string) {
     return this.request(`/api/v1/Flashcard/${id}`, {
       method: "DELETE",

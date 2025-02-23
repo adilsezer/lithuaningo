@@ -9,7 +9,12 @@ import {
 import { useIsAuthenticated } from "@stores/useUserStore";
 import { useUserData } from "@stores/useUserStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import type { Deck, CreateDeckRequest, UpdateDeckRequest } from "@src/types";
+import type {
+  Deck,
+  CreateDeckRequest,
+  UpdateDeckRequest,
+  ImageFile,
+} from "@src/types";
 import deckService from "@services/data/deckService";
 import { DeckCategory } from "@src/types/DeckCategory";
 
@@ -109,23 +114,14 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
 
   // Create a new deck
   const createDeck = useCallback(
-    async (title: string, description: string, category: string = "Other") => {
+    async (request: CreateDeckRequest, imageFile?: ImageFile) => {
       if (!checkAuth()) return;
 
       try {
         setLoading(true);
         clearError();
 
-        const request: CreateDeckRequest = {
-          userId: userData!.id,
-          title,
-          description,
-          category,
-          tags: [],
-          isPublic: true,
-        };
-
-        const deck = await deckService.createDeck(request);
+        const deck = await deckService.createDeck(request, imageFile);
         return deck.id;
       } catch (error) {
         handleError(error, "Failed to create deck");
@@ -134,7 +130,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
         setLoading(false);
       }
     },
-    [checkAuth, userData, setLoading, clearError, handleError]
+    [checkAuth, setLoading, clearError, handleError]
   );
 
   const getDeckById = useCallback(
@@ -151,23 +147,18 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
   );
 
   const updateDeck = useCallback(
-    async (id: string, deck: Partial<Deck>) => {
+    async (
+      id: string,
+      deck: Omit<UpdateDeckRequest, "imageUrl">,
+      imageFile?: ImageFile
+    ) => {
       if (!checkAuth()) return;
 
       try {
         setLoading(true);
         clearError();
 
-        const request: UpdateDeckRequest = {
-          title: deck.title || "",
-          description: deck.description || "",
-          category: deck.category || "Other",
-          tags: deck.tags || [],
-          isPublic: deck.isPublic ?? true,
-          imageUrl: deck.imageUrl,
-        };
-
-        await deckService.updateDeck(id, request);
+        await deckService.updateDeck(id, deck, imageFile);
       } catch (error) {
         handleError(error, "Failed to update deck");
       } finally {

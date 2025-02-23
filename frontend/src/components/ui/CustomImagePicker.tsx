@@ -3,17 +3,14 @@ import { View, StyleSheet, Text, Image, Pressable } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { IconButton, useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
-type ImageFile = {
-  uri: string;
-  type: string;
-  name: string;
-};
+import type { ImageFile } from "@src/types";
 
 type CustomImagePickerProps = {
   value: ImageFile | null;
   onChange: (file: ImageFile | null) => void;
   error?: string;
   maxSize?: number;
+  placeholderText?: string;
 };
 
 export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
@@ -21,6 +18,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
   onChange,
   error,
   maxSize,
+  placeholderText = "Tap to select image",
 }) => {
   const theme = useTheme();
 
@@ -88,7 +86,7 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
                 { color: theme.colors.onBackground },
               ]}
             >
-              Tap to select image
+              {placeholderText}
             </CustomText>
           </View>
         )}

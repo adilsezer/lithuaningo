@@ -6,15 +6,29 @@ import { Form } from "@components/form/Form";
 import { useDecks } from "@hooks/useDecks";
 import { FormField } from "@components/form/form.types";
 import { deckCategories, DeckCategory } from "@src/types/DeckCategory";
-import type { Deck } from "@src/types";
+import type { CreateDeckRequest } from "@src/types";
+import type { ImageFile } from "@src/types";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
+import { useUserData } from "@stores/useUserStore";
+import { CustomImagePicker } from "@components/ui/CustomImagePicker";
+
+interface DeckFormData {
+  title: string;
+  description: string;
+  category: DeckCategory;
+  tags?: string;
+  isPublic?: boolean;
+  imageFile?: ImageFile;
+  consent: boolean;
+}
 
 export default function NewDeckScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { createDeck } = useDecks();
+  const userData = useUserData();
 
   const fields: FormField[] = useMemo(
     () => [
@@ -23,20 +37,25 @@ export default function NewDeckScreen() {
         label: "Title",
         category: "text-input",
         type: "text",
-        placeholder: "Enter deck title",
+        placeholder: "Enter deck title (1-100 characters)",
+        required: true,
       },
       {
         name: "description",
         label: "Description",
         category: "text-input",
         type: "text",
-        placeholder: "Enter deck description",
+        multiline: true,
+        numberOfLines: 3,
+        placeholder: "Enter deck description (1-1000 characters)",
+        required: true,
       },
       {
         name: "category",
         label: "Category",
         category: "selection",
         type: "picker",
+        required: true,
         options: deckCategories
           .filter(
             (cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat)
@@ -48,10 +67,19 @@ export default function NewDeckScreen() {
       },
       {
         name: "tags",
-        label: "Tags (comma separated)",
+        label: "Tags (comma separated, max 10 tags)",
         category: "text-input",
         type: "text",
-        placeholder: "Enter tags",
+        placeholder: "e.g., basics, grammar, verbs",
+        helperText: "Each tag should be less than 30 characters",
+      },
+      {
+        name: "imageFile",
+        label: "Deck Image",
+        category: "image-input",
+        type: "image",
+        maxSize: 5 * 1024 * 1024, // 5MB limit
+        placeholderText: "Tap to select deck cover image",
       },
       {
         name: "isPublic",
@@ -66,6 +94,7 @@ export default function NewDeckScreen() {
           "By creating a deck, you confirm it's original, public, and compliant.",
         category: "toggle",
         type: "switch",
+        required: true,
       },
       {
         name: "terms-link",
@@ -80,13 +109,27 @@ export default function NewDeckScreen() {
   );
 
   const handleSubmit = useCallback(
-    async (data: Partial<Deck>) => {
-      if (!data.title || !data.description) {
+    async (data: DeckFormData) => {
+      if (!userData?.id || !data.title || !data.description || !data.category) {
         return;
       }
 
       try {
-        const deckId = await createDeck(data.title, data.description);
+        const createDeckRequest = {
+          userId: userData.id,
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          tags: data.tags
+            ? data.tags
+                .split(",")
+                .map((tag: string) => tag.trim())
+                .filter((tag: string) => tag.length > 0)
+            : [],
+          isPublic: data.isPublic ?? true,
+        };
+
+        const deckId = await createDeck(createDeckRequest, data.imageFile);
         if (!deckId) {
           throw new Error("Failed to create deck - no ID returned");
         }
@@ -96,7 +139,7 @@ export default function NewDeckScreen() {
         console.error("Failed to create deck:", error);
       }
     },
-    [createDeck, router]
+    [createDeck, router, userData?.id]
   );
 
   return (

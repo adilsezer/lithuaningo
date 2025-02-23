@@ -12,6 +12,8 @@ using Lithuaningo.API.Services.Interfaces;
 using static Supabase.Postgrest.Constants;
 using Supabase;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Lithuaningo.API.Settings;
 
 namespace Lithuaningo.API.Services
 {
@@ -23,19 +25,25 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "deck:";
         private readonly ILogger<DeckService> _logger;
         private readonly IMapper _mapper;
+        private readonly IStorageService _storageService;
+        private readonly IOptions<StorageSettings> _storageSettings;
 
         public DeckService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<DeckService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            IStorageService storageService,
+            IOptions<StorageSettings> storageSettings)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
+            _storageSettings = storageSettings ?? throw new ArgumentNullException(nameof(storageSettings));
         }
 
         public async Task<List<DeckResponse>> GetDecksAsync(string? category = null, int? limit = null)
@@ -552,6 +560,52 @@ namespace Lithuaningo.API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error calculating rating for deck {DeckId}", deckId);
+                throw;
+            }
+        }
+
+        public async Task<string> UploadDeckImageAsync(IFormFile file)
+        {
+            if (file == null)
+            {
+                _logger.LogError("[DeckService.UploadDeckImageAsync] File is null");
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            try
+            {
+                _logger.LogInformation(
+                    "[DeckService.UploadDeckImageAsync] Processing file upload: {FileName}, Type: {ContentType}, Size: {Size}KB",
+                    file.FileName,
+                    file.ContentType,
+                    file.Length / 1024
+                );
+
+                var url = await _storageService.UploadFileAsync(
+                    file,
+                    _storageSettings.Value.Paths.Decks,
+                    _storageSettings.Value.Paths.Images
+                );
+
+                _logger.LogInformation(
+                    "[DeckService.UploadDeckImageAsync] File uploaded successfully: {FileName}, URL: {Url}, Path: {Path}/{SubPath}",
+                    file.FileName,
+                    url,
+                    _storageSettings.Value.Paths.Decks,
+                    _storageSettings.Value.Paths.Images
+                );
+
+                return url;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(
+                    ex,
+                    "[DeckService.UploadDeckImageAsync] Error uploading file: {FileName}, Type: {ContentType}, Size: {Size}KB",
+                    file.FileName,
+                    file.ContentType,
+                    file.Length / 1024
+                );
                 throw;
             }
         }

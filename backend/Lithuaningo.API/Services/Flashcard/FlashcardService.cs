@@ -11,6 +11,8 @@ using Lithuaningo.API.Services.Cache;
 using Microsoft.Extensions.Options;
 using Supabase;
 using AutoMapper;
+using Microsoft.AspNetCore.Http;
+using Lithuaningo.API.Settings;
 
 namespace Lithuaningo.API.Services
 {
@@ -22,17 +24,23 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "flashcard:";
         private readonly ILogger<FlashcardService> _logger;
         private readonly IMapper _mapper;
+        private readonly IStorageService _storageService;
+        private readonly IOptions<StorageSettings> _storageSettings;
 
         public FlashcardService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
+            IStorageService storageService,
+            IOptions<StorageSettings> storageSettings,
             ILogger<FlashcardService> logger,
             IMapper mapper)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
+            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
+            _storageSettings = storageSettings ?? throw new ArgumentNullException(nameof(storageSettings));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
@@ -348,6 +356,36 @@ namespace Lithuaningo.API.Services
             };
 
             await Task.WhenAll(tasks);
+        }
+
+        public async Task<string> UploadFlashcardFileAsync(IFormFile file)
+        {
+            if (file == null)
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            try
+            {
+                var subfolder = file.ContentType.StartsWith("audio/")
+                    ? _storageSettings.Value.Paths.Audio
+                    : file.ContentType.StartsWith("image/")
+                        ? _storageSettings.Value.Paths.Images
+                        : _storageSettings.Value.Paths.Other;
+
+                var url = await _storageService.UploadFileAsync(
+                    file,
+                    _storageSettings.Value.Paths.Flashcards,
+                    subfolder
+                );
+
+                return url;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading flashcard file");
+                throw;
+            }
         }
     }
 }
