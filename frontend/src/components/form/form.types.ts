@@ -37,6 +37,8 @@ export type FormField = {
   keyboardType?: KeyboardType;
   autoCapitalize?: "none" | "sentences" | "words" | "characters";
   editable?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
 
   // Selection/Toggle
   options?: Array<{ label: string; value: any }>;
@@ -46,19 +48,14 @@ export type FormField = {
   minDate?: Date;
   maxDate?: Date;
 
-  // Image
-  allowMultiple?: boolean;
+  // Image/Audio
   maxSize?: number;
-  placeholderText?: string;
-
-  // Audio
   maxDuration?: number;
+  placeholderText?: string;
 
   // Link
   linkText?: string;
   onPress?: () => void;
-
-  maxLength?: number;
 };
 
 export interface FormProps<T extends FieldValues> {

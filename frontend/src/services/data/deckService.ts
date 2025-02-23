@@ -1,4 +1,5 @@
 import apiClient from "@services/api/apiClient";
+import { fileUploadService } from "@services/upload/FileUploadService";
 import {
   Deck,
   CreateDeckRequest,
@@ -7,14 +8,17 @@ import {
 } from "@src/types";
 import { ApiError } from "@services/api/apiClient";
 
+interface CreateDeckParams {
+  request: Omit<CreateDeckRequest, "imageUrl">;
+  imageFile?: ImageFile;
+}
+
 class DeckService {
   async getPublicDecks(): Promise<Deck[]> {
     try {
       return await apiClient.getPublicDecks();
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to fetch public decks: ${error.message}`);
-      }
+      console.error("[DeckService.getPublicDecks] Error:", error);
       throw error;
     }
   }
@@ -23,143 +27,50 @@ class DeckService {
     try {
       return await apiClient.getDeck(id);
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to fetch deck: ${error.message}`);
-      }
+      console.error("[DeckService.getDeck] Error:", error);
       throw error;
     }
   }
 
-  async uploadFile(file: ImageFile): Promise<string> {
+  async createDeck({ request, imageFile }: CreateDeckParams): Promise<Deck> {
     try {
-      if (file.type.startsWith("image/")) {
-        console.log("[DeckService.uploadFile] Starting image upload:", {
-          name: file.name,
-          type: file.type,
-          size: "N/A",
-        });
-
-        const formData = new FormData();
-        formData.append("file", {
-          uri: file.uri,
-          type: file.type,
-          name: file.name,
-        } as any);
-
-        const url = await apiClient.uploadDeckFile(formData);
-        console.log("[DeckService.uploadFile] Image upload successful:", {
-          name: file.name,
-          url,
-        });
-
-        return url;
-      } else {
-        const error = `Invalid file type: ${file.type}. Only image files are allowed.`;
-        console.error("[DeckService.uploadFile] Error:", error);
-        throw new Error(error);
-      }
-    } catch (error) {
-      console.error("[DeckService.uploadFile] Error uploading file:", {
-        name: file.name,
-        type: file.type,
-        error,
-      });
-      throw error;
-    }
-  }
-
-  async createDeck(
-    deck: Omit<CreateDeckRequest, "imageUrl">,
-    imageFile?: ImageFile
-  ): Promise<Deck> {
-    try {
-      let imageUrl: string | undefined = undefined;
-
+      let imageUrl: string | undefined;
       if (imageFile) {
-        console.log("[DeckService.createDeck] Processing image for deck:", {
-          title: deck.title,
-          imageName: imageFile.name,
-        });
-
-        try {
-          imageUrl = await this.uploadFile(imageFile);
-          console.log(
-            "[DeckService.createDeck] Image processed successfully:",
-            {
-              title: deck.title,
-              imageUrl,
-            }
-          );
-        } catch (error) {
-          console.error("[DeckService.createDeck] Image upload failed:", {
-            title: deck.title,
-            imageName: imageFile.name,
-            error,
-          });
-          // Continue with deck creation even if image upload fails
-        }
+        imageUrl = await fileUploadService.uploadDeckImage(imageFile);
       }
 
-      console.log("[DeckService.createDeck] Creating deck:", {
-        title: deck.title,
-        hasImage: !!imageUrl,
-      });
-
-      const response = await apiClient.createDeck({
-        ...deck,
+      return await apiClient.createDeck({
+        ...request,
         imageUrl,
       });
-
-      console.log("[DeckService.createDeck] Deck created successfully:", {
-        id: response.id,
-        title: response.title,
-        imageUrl: response.imageUrl,
-      });
-
-      return response;
     } catch (error) {
-      console.error("[DeckService.createDeck] Error creating deck:", {
-        title: deck.title,
+      console.error("[DeckService.createDeck] Error:", {
+        title: request.title,
         error,
       });
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to create deck: ${error.message}`);
-      }
       throw error;
     }
   }
 
   async updateDeck(
     id: string,
-    deck: Omit<UpdateDeckRequest, "imageUrl">,
+    request: Omit<UpdateDeckRequest, "imageUrl">,
     imageFile?: ImageFile
   ): Promise<Deck> {
     try {
-      let imageUrl: string | undefined = undefined;
-
+      // First handle image upload if provided
+      let imageUrl: string | undefined;
       if (imageFile) {
-        try {
-          imageUrl = await this.uploadFile(imageFile);
-        } catch (error) {
-          console.error("[DeckService.updateDeck] Image upload failed:", {
-            id,
-            imageName: imageFile.name,
-            error,
-          });
-          // Continue with deck update even if image upload fails
-        }
+        imageUrl = await fileUploadService.uploadDeckImage(imageFile);
       }
 
-      const response = await apiClient.updateDeck(id, {
-        ...deck,
+      // Then update the deck with the image URL
+      return await apiClient.updateDeck(id, {
+        ...request,
         imageUrl,
       });
-
-      return response;
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to update deck: ${error.message}`);
-      }
+      console.error("[DeckService.updateDeck] Error:", error);
       throw error;
     }
   }
@@ -168,9 +79,7 @@ class DeckService {
     try {
       await apiClient.deleteDeck(id);
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to delete deck: ${error.message}`);
-      }
+      console.error("[DeckService.deleteDeck] Error:", error);
       throw error;
     }
   }
@@ -179,9 +88,7 @@ class DeckService {
     try {
       return await apiClient.getUserDecks(userId);
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to fetch user decks: ${error.message}`);
-      }
+      console.error("[DeckService.getUserDecks] Error:", error);
       throw error;
     }
   }
@@ -193,9 +100,7 @@ class DeckService {
     try {
       return await apiClient.getTopRatedDecks(limit, timeRange);
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to fetch top rated decks: ${error.message}`);
-      }
+      console.error("[DeckService.getTopRatedDecks] Error:", error);
       throw error;
     }
   }
@@ -204,9 +109,7 @@ class DeckService {
     try {
       return await apiClient.searchDecks(query, category);
     } catch (error) {
-      if (error instanceof ApiError) {
-        throw new Error(`Failed to search decks: ${error.message}`);
-      }
+      console.error("[DeckService.searchDecks] Error:", error);
       throw error;
     }
   }

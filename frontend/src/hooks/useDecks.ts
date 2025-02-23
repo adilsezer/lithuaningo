@@ -22,14 +22,14 @@ interface UseDecksOptions {
   initialCategory?: DeckCategory;
 }
 
-export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
+export const useDecks = (options?: UseDecksOptions) => {
   const router = useRouter();
   const userData = useUserData();
   const setLoading = useSetLoading();
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
-  const { showError } = useAlertDialog();
+  const { showError, showSuccess } = useAlertDialog();
   const isAuthenticated = useIsAuthenticated();
   // Local state
   const [decks, setDecks] = useState<Deck[]>([]);
@@ -121,7 +121,13 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
         setLoading(true);
         clearError();
 
-        const deck = await deckService.createDeck(request, imageFile);
+        // Validate request
+        if (!request.title || !request.description) {
+          throw new Error("Missing required fields");
+        }
+
+        const deck = await deckService.createDeck({ request, imageFile });
+        showSuccess("Deck created! Add flashcards to help everyone learn");
         return deck.id;
       } catch (error) {
         handleError(error, "Failed to create deck");
@@ -130,7 +136,7 @@ export const useDecks = (currentUserId?: string, options?: UseDecksOptions) => {
         setLoading(false);
       }
     },
-    [checkAuth, setLoading, clearError, handleError]
+    [checkAuth, setLoading, clearError, handleError, showSuccess]
   );
 
   const getDeckById = useCallback(
