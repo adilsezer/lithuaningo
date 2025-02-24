@@ -14,48 +14,6 @@ import { useTheme, Card, IconButton } from "react-native-paper";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
 
-const deckFields: FormField[] = [
-  {
-    name: "title",
-    label: "Title",
-    category: "text-input",
-    type: "text",
-    placeholder: "Enter deck title",
-  },
-  {
-    name: "description",
-    label: "Description",
-    category: "text-input",
-    type: "text",
-    placeholder: "Enter deck description",
-  },
-  {
-    name: "category",
-    label: "Category",
-    category: "selection",
-    type: "picker",
-    options: deckCategories
-      .filter((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat))
-      .map((cat) => ({
-        label: cat,
-        value: cat,
-      })),
-  },
-  {
-    name: "tags",
-    label: "Tags (comma separated)",
-    category: "text-input",
-    type: "text",
-    placeholder: "Enter tags",
-  },
-  {
-    name: "isPublic",
-    label: "Make deck public",
-    category: "toggle",
-    type: "switch",
-  },
-];
-
 export default function EditDeckScreen() {
   const theme = useTheme();
   const router = useRouter();
@@ -70,6 +28,66 @@ export default function EditDeckScreen() {
   } = useFlashcards();
   const [deck, setDeck] = useState<Deck | null>(null);
   const setLoading = useSetLoading();
+
+  const fields: FormField[] = [
+    {
+      name: "title",
+      label: "Title",
+      category: "text-input",
+      type: "text",
+      placeholder: "Enter deck title (1-100 characters)",
+    },
+    {
+      name: "description",
+      label: "Description",
+      category: "text-input",
+      type: "text",
+      multiline: true,
+      numberOfLines: 3,
+      placeholder: "Enter deck description (1-1000 characters)",
+    },
+    {
+      name: "category",
+      label: "Category",
+      category: "selection",
+      type: "picker",
+      options: deckCategories
+        .filter((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat))
+        .map((cat) => ({
+          label: cat,
+          value: cat,
+        })),
+    },
+    {
+      name: "tags",
+      label: "Tags (comma separated, max 10 tags)",
+      category: "text-input",
+      type: "text",
+      placeholder: "e.g., basics, grammar, verbs",
+    },
+    {
+      name: "imageFile",
+      label: "Deck Image",
+      category: "image-input",
+      type: "image",
+      maxSize: 5 * 1024 * 1024,
+      placeholderText: "Tap to change deck cover image",
+      defaultValue: deck?.imageUrl,
+    },
+    {
+      name: "isPublic",
+      label: "Make deck public",
+      category: "toggle",
+      type: "switch",
+    },
+    {
+      name: "consent",
+      label:
+        "By updating this deck, you confirm it's original, public, and compliant.",
+      category: "toggle",
+      type: "switch",
+    },
+  ];
 
   const fetchDeck = useCallback(async () => {
     if (!id) return;
@@ -98,18 +116,22 @@ export default function EditDeckScreen() {
     if (!deck || !id) return;
 
     try {
-      await updateDeck(id, {
-        ...deck,
-        title: data.title,
-        description: data.description,
-        category: data.category,
-        tags:
-          data.tags
-            ?.split(",")
-            .map((t) => t.trim())
-            .filter(Boolean) ?? [],
-        isPublic: data.isPublic ?? true,
-      });
+      await updateDeck(
+        id,
+        {
+          ...deck,
+          title: data.title,
+          description: data.description,
+          category: data.category,
+          tags:
+            data.tags
+              ?.split(",")
+              .map((t) => t.trim())
+              .filter(Boolean) ?? [],
+          isPublic: data.isPublic ?? true,
+        },
+        data.imageFile
+      );
       router.push(`/decks/${id}`);
     } catch (error) {
       console.error("Error updating deck:", error);
@@ -161,7 +183,7 @@ export default function EditDeckScreen() {
         </CustomText>
 
         <Form
-          fields={deckFields}
+          fields={fields}
           onSubmit={handleSubmit}
           submitButtonText="Update Deck"
           zodSchema={deckFormSchema}
@@ -234,7 +256,7 @@ export default function EditDeckScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
+    paddingHorizontal: 16,
   },
   flashcardsSection: {
     marginTop: 24,

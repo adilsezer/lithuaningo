@@ -19,6 +19,7 @@ export default function NewFlashcardScreen() {
   const { showError, showSuccess } = useAlertDialog();
   const { createFlashcard } = useFlashcards();
   const formRef = useRef<{ reset: () => void }>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const fields: FormField[] = [
     {
@@ -87,6 +88,7 @@ export default function NewFlashcardScreen() {
       if (success) {
         showSuccess("Flashcard created successfully");
         formRef.current?.reset();
+        scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: true });
       }
     } catch (error) {
       console.error("Failed to create flashcard:", error);
@@ -97,7 +99,11 @@ export default function NewFlashcardScreen() {
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <BackButton />
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        ref={scrollViewRef}
+        contentContainerStyle={styles.container}
+        showsVerticalScrollIndicator={false}
+      >
         <CustomText variant="titleLarge" bold>
           Create New Flashcard
         </CustomText>
