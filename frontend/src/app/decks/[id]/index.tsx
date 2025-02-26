@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
 import { UserChallengeStatsView } from "@components/challenge/UserChallengeStats";
@@ -11,6 +11,7 @@ import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import { useTheme } from "react-native-paper";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
+import CustomButton from "@components/ui/CustomButton";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
@@ -76,7 +77,6 @@ export default function PracticeScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <BackButton />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -98,6 +98,10 @@ export default function PracticeScreen() {
             onAnswer={handleAnswer}
           />
         </View>
+        <CustomButton
+          title="Back to Decks"
+          onPress={() => router.push("/dashboard/decks")}
+        />
       </ScrollView>
     </View>
   );
