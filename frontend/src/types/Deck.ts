@@ -10,11 +10,16 @@ export interface Deck {
   category: string;
   tags: string[];
   isPublic: boolean;
-  rating: number;
   imageUrl?: string;
   flashcardsCount: number;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface DeckWithRatingResponse extends Deck {
+  rating: number;
+  totalVotes: number;
+  upvoteCount: number;
 }
 
 export interface CreateDeckRequest {
@@ -45,6 +50,12 @@ export interface DeckFormData {
   imageFile?: ImageFile;
   consent: boolean;
 }
+
+export const isDeckWithRating = (
+  deck: Deck | DeckWithRatingResponse
+): deck is DeckWithRatingResponse => {
+  return "rating" in deck && "totalVotes" in deck && "upvoteCount" in deck;
+};
 
 export const convertFormToRequest = (
   formData: DeckFormData,

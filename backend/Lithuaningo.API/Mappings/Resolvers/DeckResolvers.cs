@@ -23,16 +23,16 @@ namespace Lithuaningo.API.Mappings.Resolvers
 
     public class DeckRatingResolver : IValueResolver<Deck, DeckResponse, double>
     {
-        private readonly IDeckService _deckService;
+        private readonly IDeckVoteService _voteService;
         
-        public DeckRatingResolver(IDeckService deckService)
+        public DeckRatingResolver(IDeckVoteService voteService)
         {
-            _deckService = deckService;
+            _voteService = voteService;
         }
         
         public double Resolve(Deck source, DeckResponse destination, double destMember, ResolutionContext context)
         {
-            return _deckService.GetDeckRatingAsync(source.Id.ToString()).Result;
+            return _voteService.CalculateDeckRatingAsync(source.Id).Result;
         }
     }
 } 

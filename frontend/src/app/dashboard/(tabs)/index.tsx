@@ -15,13 +15,19 @@ import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useDeckVote } from "@src/hooks/useDeckVote";
 import { useUserChallengeStats } from "@hooks/useUserChallengeStats";
-import { Deck } from "@src/types";
+import { Deck, DeckWithRatingResponse } from "@src/types";
 
-const TopRatedDeckCard: React.FC<{ deck: Deck | null }> = ({ deck }) => {
+const TopRatedDeckCard: React.FC<{
+  deck: (Deck | DeckWithRatingResponse) | null;
+}> = ({ deck }) => {
   const theme = useTheme();
   const userData = useUserData();
   const isLoading = useIsLoading();
-  const { voteDeck, voteCounts } = useDeckVote(deck?.id ?? "");
+  const { voteDeck } = useDeckVote(deck?.id ?? "");
+  const { fetchDecks } = useDecks({
+    userId: userData?.id,
+    initialCategory: "Top Rated",
+  });
 
   if (isLoading) {
     return (
@@ -42,7 +48,14 @@ const TopRatedDeckCard: React.FC<{ deck: Deck | null }> = ({ deck }) => {
   const actions = {
     onVote: async (isUpvote: boolean) => {
       if (!userData?.id) return;
-      await voteDeck({ deckId: deck.id, userId: userData.id, isUpvote });
+      const result = await voteDeck({
+        deckId: deck.id,
+        userId: userData.id,
+        isUpvote,
+      });
+      if (result) {
+        await fetchDecks();
+      }
     },
     onReport: () => router.push(`/decks/${deck.id}/report`),
     onComment: () => router.push(`/decks/${deck.id}/comments`),
@@ -51,15 +64,7 @@ const TopRatedDeckCard: React.FC<{ deck: Deck | null }> = ({ deck }) => {
     onEdit: () => router.push(`/decks/${deck.id}/edit`),
   };
 
-  return (
-    <DeckCard
-      deck={deck}
-      rating={
-        voteCounts.upvotes / (voteCounts.upvotes + voteCounts.downvotes) || 0
-      }
-      actions={actions}
-    />
-  );
+  return <DeckCard deck={deck} actions={actions} />;
 };
 
 const DashboardScreen: React.FC = () => {

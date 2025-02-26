@@ -27,6 +27,7 @@ namespace Lithuaningo.API.Services
         private readonly IMapper _mapper;
         private readonly IStorageService _storageService;
         private readonly IOptions<StorageSettings> _storageSettings;
+        private readonly IDeckVoteService _deckVoteService;
 
         public DeckService(
             ISupabaseService supabaseService,
@@ -35,7 +36,8 @@ namespace Lithuaningo.API.Services
             ILogger<DeckService> logger,
             IMapper mapper,
             IStorageService storageService,
-            IOptions<StorageSettings> storageSettings)
+            IOptions<StorageSettings> storageSettings,
+            IDeckVoteService deckVoteService)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
@@ -44,6 +46,7 @@ namespace Lithuaningo.API.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
             _storageSettings = storageSettings ?? throw new ArgumentNullException(nameof(storageSettings));
+            _deckVoteService = deckVoteService ?? throw new ArgumentNullException(nameof(deckVoteService));
         }
 
         public async Task<List<DeckResponse>> GetDecksAsync(string? category = null, int? limit = null)
@@ -122,6 +125,7 @@ namespace Lithuaningo.API.Services
                 if (deck != null)
                 {
                     var deckResponse = _mapper.Map<DeckResponse>(deck);
+                    
                     await _cache.SetAsync(cacheKey, deckResponse,
                         TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));
                     _logger.LogInformation("Retrieved and cached deck {Id}", id);
@@ -179,10 +183,10 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<DeckResponse>> GetTopRatedDecksAsync(int limit = 10, string timeRange = "all")
+        public async Task<List<DeckWithRatingResponse>> GetTopRatedDecksAsync(int limit = 10, string timeRange = "all")
         {
             var cacheKey = $"{CacheKeyPrefix}top:{limit}:{timeRange}";
-            var cached = await _cache.GetAsync<List<DeckResponse>>(cacheKey);
+            var cached = await _cache.GetAsync<List<DeckWithRatingResponse>>(cacheKey);
 
             if (cached != null)
             {
@@ -192,39 +196,42 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                var response = await _supabaseClient
+                // Get all public decks first
+                var decksQuery = await _supabaseClient
                     .From<Deck>()
                     .Select("*")
                     .Where(d => d.IsPublic == true)
-                    .Order("rating", Ordering.Descending)
-                    .Limit(limit)
                     .Get();
 
-                var decks = response.Models;
-                
-                // Update ratings before mapping
+                var decks = decksQuery.Models;
+
+                // Get vote statistics for each deck using DeckVoteService
+                var deckResponses = new List<DeckWithRatingResponse>();
                 foreach (var deck in decks)
                 {
-                    var votes = await _supabaseClient
-                        .From<DeckVote>()
-                        .Where(v => v.DeckId == deck.Id)
-                        .Get();
+                    var deckResponse = _mapper.Map<DeckWithRatingResponse>(deck);
+                    var (upvotes, downvotes) = await _deckVoteService.GetDeckVoteCountsAsync(deck.Id);
+                    var rating = await _deckVoteService.CalculateDeckRatingAsync(deck.Id, timeRange);
 
-                    if (votes.Models.Any())
-                    {
-                        int totalVotes = votes.Models.Count;
-                        int upvotes = votes.Models.Count(v => v.IsUpvote);
-                        deck.Rating = (double)upvotes / totalVotes;
-                    }
+                    deckResponse.TotalVotes = upvotes + downvotes;
+                    deckResponse.UpvoteCount = upvotes;
+                    deckResponse.Rating = rating;
+
+                    deckResponses.Add(deckResponse);
                 }
 
-                var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
+                // Sort and take the top rated decks
+                var topDecks = deckResponses
+                    .OrderByDescending(d => d.Rating)
+                    .ThenByDescending(d => d.CreatedAt)
+                    .Take(limit)
+                    .ToList();
 
-                await _cache.SetAsync(cacheKey, deckResponses,
+                await _cache.SetAsync(cacheKey, topDecks,
                     TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} top rated decks", decks.Count);
+                _logger.LogInformation("Retrieved and cached {0} top rated decks", topDecks.Count);
 
-                return deckResponses;
+                return topDecks;
             }
             catch (Exception ex)
             {
@@ -334,99 +341,15 @@ namespace Lithuaningo.API.Services
                         .Where(d => d.Id == deckGuid)
                         .Delete();
 
-                    // Invalidate cache entries using the response data directly
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}{deck.Id}");
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}user:{deck.UserId}");
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}list:all:0");
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}top:10:all");
-                    if (deck.Category != null)
-                    {
-                        await _cache.RemoveAsync($"{CacheKeyPrefix}list:{deck.Category}:0");
-                    }
-
+                    // Invalidate cache entries
+                    var modelDeck = _mapper.Map<Deck>(deck);
+                    await InvalidateDeckCacheAsync(modelDeck);
                     _logger.LogInformation("Deleted deck {Id}", id);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error deleting deck {Id}", id);
-                throw;
-            }
-        }
-
-        public async Task<bool> VoteDeckAsync(string id, string userId, bool isUpvote)
-        {
-            if (!Guid.TryParse(id, out var deckGuid))
-            {
-                throw new ArgumentException("Invalid deck ID format", nameof(id));
-            }
-
-            if (!Guid.TryParse(userId, out var userGuid))
-            {
-                throw new ArgumentException("Invalid user ID format", nameof(userId));
-            }
-
-            try
-            {
-                // Verify deck exists
-                var deck = await GetDeckByIdAsync(id);
-                if (deck == null)
-                {
-                    _logger.LogWarning("Deck {Id} not found", id);
-                    return false;
-                }
-
-                // Check for an existing vote
-                var existingVoteResponse = await _supabaseClient
-                    .From<DeckVote>()
-                    .Where(v => v.DeckId == deckGuid)
-                    .Where(v => v.UserId == userGuid)
-                    .Get();
-
-                if (existingVoteResponse.Models.Any())
-                {
-                    var vote = existingVoteResponse.Models.First();
-                    if (vote.IsUpvote == isUpvote)
-                    {
-                        return true;
-                    }
-
-                    // Update existing vote
-                    await _supabaseClient
-                        .From<DeckVote>()
-                        .Where(v => v.Id == vote.Id)
-                        .Set(v => v.IsUpvote, isUpvote)
-                        .Set(v => v.UpdatedAt, DateTime.UtcNow)
-                        .Update();
-                }
-                else
-                {
-                    // Insert new vote
-                    var vote = new DeckVote
-                    {
-                        Id = Guid.NewGuid(),
-                        DeckId = deckGuid,
-                        UserId = userGuid,
-                        IsUpvote = isUpvote,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-
-                    await _supabaseClient
-                        .From<DeckVote>()
-                        .Insert(vote);
-                }
-
-                // Invalidate relevant cache entries since the vote count changed
-                var modelDeck = _mapper.Map<Deck>(deck);
-                await InvalidateDeckCacheAsync(modelDeck);
-                _logger.LogInformation("Updated vote for deck {Id} by user {UserId}", id, userId);
-
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error voting for deck {Id} by user {UserId}", id, userId);
                 throw;
             }
         }
@@ -446,6 +369,11 @@ namespace Lithuaningo.API.Services
 
                 var decks = response.Models;
                 var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
+
+                if (!string.IsNullOrEmpty(category))
+                {
+                    deckResponses = deckResponses.Where(d => d.Category == category).ToList();
+                }
 
                 return deckResponses;
             }
@@ -518,52 +446,6 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<double> GetDeckRatingAsync(string deckId, string timeRange = "all")
-        {
-            if (!Guid.TryParse(deckId, out var deckGuid))
-            {
-                throw new ArgumentException("Invalid deck ID format", nameof(deckId));
-            }
-
-            try
-            {
-                var query = _supabaseClient
-                    .From<DeckVote>()
-                    .Where(v => v.DeckId == deckGuid);
-
-                // Filter votes by time range if needed
-                if (timeRange != "all")
-                {
-                    var startDate = timeRange.ToLower() switch
-                    {
-                        "week" => DateTime.UtcNow.AddDays(-7),
-                        "month" => DateTime.UtcNow.AddMonths(-1),
-                        "year" => DateTime.UtcNow.AddYears(-1),
-                        _ => DateTime.MinValue
-                    };
-
-                    query = query.Filter("created_at", Operator.GreaterThanOrEqual, startDate);
-                }
-
-                var votesResponse = await query.Get();
-
-                if (!votesResponse.Models.Any())
-                {
-                    return 0.0;
-                }
-
-                int totalVotes = votesResponse.Models.Count;
-                int upvotes = votesResponse.Models.Count(v => v.IsUpvote);
-
-                return (double)upvotes / totalVotes;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error calculating rating for deck {DeckId}", deckId);
-                throw;
-            }
-        }
-
         public async Task<string> UploadDeckImageAsync(IFormFile file)
         {
             if (file == null)
@@ -623,6 +505,9 @@ namespace Lithuaningo.API.Services
                 // Invalidate general deck lists that might contain this deck
                 _cache.RemoveAsync($"{CacheKeyPrefix}list:all:0"),
                 _cache.RemoveAsync($"{CacheKeyPrefix}top:10:all"),
+                _cache.RemoveAsync($"{CacheKeyPrefix}top:10:week"),
+                _cache.RemoveAsync($"{CacheKeyPrefix}top:10:month"),
+                _cache.RemoveAsync($"{CacheKeyPrefix}top:10:year"),
                 
                 // If the deck has a category, invalidate that category's cache
                 deck.Category != null 

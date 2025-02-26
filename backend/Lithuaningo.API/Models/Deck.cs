@@ -31,9 +31,6 @@ namespace Lithuaningo.API.Models
         [Column("is_public")]
         public bool IsPublic { get; set; }
 
-        [Column("rating")]
-        public double Rating { get; set; }
-
         [Column("image_url")]
         public string? ImageUrl { get; set; }
 

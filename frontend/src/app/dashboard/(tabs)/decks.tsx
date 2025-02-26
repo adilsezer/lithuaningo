@@ -12,13 +12,16 @@ import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { CustomPicker } from "@components/ui/CustomPicker";
 import { useDeckVote } from "@src/hooks/useDeckVote";
-import { Deck } from "@src/types";
+import { Deck, DeckWithRatingResponse } from "@src/types";
 
 // Separate component for DeckCard with votes
-const DeckCardWithVotes: React.FC<{ deck: Deck }> = ({ deck }) => {
+const DeckCardWithVotes: React.FC<{ deck: Deck | DeckWithRatingResponse }> = ({
+  deck,
+}) => {
   const router = useRouter();
   const userData = useUserData();
-  const { voteCounts, voteDeck } = useDeckVote(deck.id);
+  const { voteDeck } = useDeckVote(deck.id);
+  const { fetchDecks } = useDecks({ userId: userData?.id });
 
   const handleNavigation = useCallback(
     (route: string) => {
@@ -33,7 +36,14 @@ const DeckCardWithVotes: React.FC<{ deck: Deck }> = ({ deck }) => {
   const actions = {
     onVote: async (isUpvote: boolean) => {
       if (!userData?.id) return;
-      await voteDeck({ deckId: deck.id, userId: userData.id, isUpvote });
+      const result = await voteDeck({
+        deckId: deck.id,
+        userId: userData.id,
+        isUpvote,
+      });
+      if (result) {
+        await fetchDecks();
+      }
     },
     onReport: () => handleNavigation(`/decks/${deck.id}/report`),
     onComment: () => handleNavigation(`/decks/${deck.id}/comments`),
@@ -42,9 +52,7 @@ const DeckCardWithVotes: React.FC<{ deck: Deck }> = ({ deck }) => {
     onEdit: () => handleNavigation(`/decks/${deck.id}/edit`),
   };
 
-  const rating =
-    voteCounts.upvotes / (voteCounts.upvotes + voteCounts.downvotes) || 0;
-  return <DeckCard deck={deck} rating={rating} actions={actions} />;
+  return <DeckCard deck={deck} actions={actions} />;
 };
 
 export default function DecksScreen() {

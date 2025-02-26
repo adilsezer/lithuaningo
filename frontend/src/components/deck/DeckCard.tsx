@@ -9,7 +9,7 @@ import {
   Avatar,
   useTheme,
 } from "react-native-paper";
-import { Deck } from "@src/types";
+import { Deck, DeckWithRatingResponse, isDeckWithRating } from "@src/types";
 
 export interface DeckActions {
   onVote: (isUpvote: boolean) => void;
@@ -21,13 +21,17 @@ export interface DeckActions {
 }
 
 export interface DeckCardProps {
-  deck: Deck;
-  rating: number;
+  deck: Deck | DeckWithRatingResponse;
   actions: DeckActions;
 }
 
-export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
+export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
   const theme = useTheme();
+
+  // Get rating information if available
+  const hasRating = isDeckWithRating(deck);
+  const rating = hasRating ? deck.rating : 0;
+  const totalVotes = hasRating ? deck.totalVotes : 0;
 
   return (
     <Card
@@ -106,7 +110,9 @@ export const DeckCard = memo<DeckCardProps>(({ deck, rating, actions }) => {
               style={{ margin: 0 }}
               iconColor={theme.colors.secondary}
             />
-            <Text variant="bodySmall">{(rating * 100).toFixed(0)}%</Text>
+            <Text variant="bodySmall">
+              {totalVotes > 0 ? `${(rating * 100).toFixed(0)}%` : "No ratings"}
+            </Text>
           </View>
         </View>
 

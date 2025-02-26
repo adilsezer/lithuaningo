@@ -491,55 +491,6 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves the rating for a deck.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     GET /api/v1/Deck/{id}/rating?timeRange=month
-        /// 
-        /// Time range options:
-        /// - "week": Last 7 days
-        /// - "month": Last 30 days
-        /// - "year": Last 365 days
-        /// - "all": All time (default)
-        /// </remarks>
-        /// <param name="id">The deck identifier</param>
-        /// <param name="timeRange">Time range for rating calculation</param>
-        /// <returns>The deck's rating</returns>
-        /// <response code="200">Returns the deck rating</response>
-        /// <response code="400">If deck ID format is invalid</response>
-        /// <response code="500">If there was an internal error during retrieval</response>
-        [HttpGet("{id}/rating")]
-        [SwaggerOperation(
-            Summary = "Retrieves deck rating",
-            Description = "Gets the rating for a deck within the specified time range",
-            OperationId = "GetDeckRating",
-            Tags = new[] { "Deck" }
-        )]
-        [ProducesResponseType(typeof(double), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<double>> GetDeckRating(string id, [FromQuery] string timeRange = "all")
-        {
-            if (!Guid.TryParse(id, out _))
-            {
-                _logger.LogWarning("Invalid deck ID format for rating: {Id}", id);
-                return BadRequest("Invalid deck ID format");
-            }
-
-            try
-            {
-                var rating = await _deckService.GetDeckRatingAsync(id, timeRange);
-                return Ok(rating);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving rating for deck {Id}", id);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
         /// Uploads a file (image) for a deck.
         /// </summary>
         /// <remarks>

@@ -54,11 +54,6 @@ namespace Lithuaningo.API.DTOs.Deck
         public int FlashcardsCount { get; set; }
 
         /// <summary>
-        /// Average rating of the deck
-        /// </summary>
-        public double Rating { get; set; }
-
-        /// <summary>
         /// URL to the deck's image
         /// </summary>
         public string? ImageUrl { get; set; }

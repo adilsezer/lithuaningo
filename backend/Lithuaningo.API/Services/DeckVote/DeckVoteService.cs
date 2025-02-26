@@ -41,38 +41,34 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                // Check for existing vote
-                var existingVote = await _supabaseClient
-                    .From<DeckVote>()
-                    .Where(v => v.DeckId == deckId)
-                    .Where(v => v.UserId == userId)
-                    .Single();
-
+                var existingVote = await GetUserVoteAsync(deckId, userId);
                 if (existingVote != null)
                 {
                     if (existingVote.IsUpvote == isUpvote)
                     {
-                        // User is trying to vote the same way again
-                        _logger.LogInformation("User {UserId} attempted to {VoteType} deck {DeckId} again", 
-                            userId, isUpvote ? "upvote" : "downvote", deckId);
-                        return false;
+                        return true;
                     }
 
-                    // Update existing vote
-                    existingVote.IsUpvote = isUpvote;
-                    existingVote.UpdatedAt = DateTime.UtcNow;
-
-                    await _supabaseClient
+                    var updateResponse = await _supabaseClient
                         .From<DeckVote>()
                         .Where(v => v.Id == existingVote.Id)
-                        .Update(existingVote);
+                        .Update(new DeckVote 
+                        { 
+                            Id = existingVote.Id,
+                            DeckId = existingVote.DeckId,
+                            UserId = existingVote.UserId,
+                            IsUpvote = isUpvote,
+                            CreatedAt = existingVote.CreatedAt,
+                            UpdatedAt = DateTime.UtcNow
+                        });
 
-                    _logger.LogInformation("Updated vote for deck {DeckId} by user {UserId} to {VoteType}", 
-                        deckId, userId, isUpvote ? "upvote" : "downvote");
+                    if (!updateResponse.Models.Any())
+                    {
+                        throw new Exception("Failed to update vote");
+                    }
                 }
                 else
                 {
-                    // Create new vote
                     var vote = new DeckVote
                     {
                         Id = Guid.NewGuid(),
@@ -81,18 +77,20 @@ namespace Lithuaningo.API.Services
                         IsUpvote = isUpvote,
                         CreatedAt = DateTime.UtcNow,
                         UpdatedAt = DateTime.UtcNow
-                        // Username is set by trigger
                     };
 
-                    await _supabaseClient
+                    var response = await _supabaseClient
                         .From<DeckVote>()
                         .Insert(vote);
 
-                    _logger.LogInformation("Created new {VoteType} for deck {DeckId} by user {UserId}", 
-                        isUpvote ? "upvote" : "downvote", deckId, userId);
+                    if (!response.Models.Any())
+                    {
+                        throw new Exception("Failed to create vote");
+                    }
                 }
 
                 await InvalidateVoteCacheAsync(deckId, userId);
+                await InvalidateDeckCacheAsync(deckId);
                 return true;
             }
             catch (Exception ex)
@@ -198,6 +196,11 @@ namespace Lithuaningo.API.Services
 
         public async Task<(int upvotes, int downvotes)> GetDeckVoteCountsAsync(Guid deckId)
         {
+            if (deckId == Guid.Empty)
+            {
+                throw new ArgumentException("Deck ID is required", nameof(deckId));
+            }
+
             try
             {
                 var votes = await _supabaseClient
@@ -259,16 +262,30 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateVoteCacheAsync(Guid deckId, Guid userId)
         {
-            var tasks = new List<Task>
+            var userVoteKey = $"{CacheKeyPrefix}user:{deckId}:{userId}";
+            var deckVotesKey = $"{CacheKeyPrefix}deck:{deckId}";
+            var deckCountsKey = $"{CacheKeyPrefix}counts:{deckId}";
+
+            await _cache.RemoveAsync(userVoteKey);
+            await _cache.RemoveAsync(deckVotesKey);
+            await _cache.RemoveAsync(deckCountsKey);
+        }
+
+        private async Task InvalidateDeckCacheAsync(Guid deckId)
+        {
+            // Invalidate all possible deck cache keys that might contain this deck
+            var keys = new[]
             {
-                // Invalidate specific user vote cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}deck:{deckId}:user:{userId}"),
-                
-                // Invalidate deck votes list cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}deck:{deckId}")
+                $"{CacheKeyPrefix}top:",  // Top rated decks cache
+                $"{CacheKeyPrefix}{deckId}",  // Single deck cache
+                $"{CacheKeyPrefix}user:",  // User decks cache
+                $"{CacheKeyPrefix}"  // Public decks cache
             };
 
-            await Task.WhenAll(tasks);
+            foreach (var key in keys)
+            {
+                await _cache.RemoveAsync(key);
+            }
         }
     }
 } 

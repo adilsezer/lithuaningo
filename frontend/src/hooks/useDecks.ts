@@ -11,6 +11,7 @@ import { useUserData } from "@stores/useUserStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import type {
   Deck,
+  DeckWithRatingResponse,
   CreateDeckRequest,
   UpdateDeckRequest,
   ImageFile,
@@ -32,8 +33,9 @@ export const useDecks = (options?: UseDecksOptions) => {
   const error = useError();
   const { showError, showSuccess } = useAlertDialog();
   const isAuthenticated = useIsAuthenticated();
+
   // Local state
-  const [decks, setDecks] = useState<Deck[]>([]);
+  const [decks, setDecks] = useState<(Deck | DeckWithRatingResponse)[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<DeckCategory>(
     options?.initialCategory || "All Decks"
@@ -47,7 +49,7 @@ export const useDecks = (options?: UseDecksOptions) => {
       showError(message);
       return null;
     },
-    [setError]
+    [setError, showError]
   );
 
   const clearError = useCallback(() => {
@@ -61,11 +63,10 @@ export const useDecks = (options?: UseDecksOptions) => {
       return false;
     }
     return true;
-  }, [userData?.id]);
+  }, [userData?.id, showError]);
 
   // Fetch decks based on category and search query
   const fetchDecks = useCallback(async () => {
-    // Don't fetch if not authenticated
     if (!isAuthenticated) {
       setDecks([]);
       return;
@@ -75,14 +76,13 @@ export const useDecks = (options?: UseDecksOptions) => {
       setLoading(true);
       clearError();
 
-      let fetchedDecks: Deck[] = [];
+      let fetchedDecks: (Deck | DeckWithRatingResponse)[] = [];
 
       if (selectedCategory === "My Decks" && userData?.id) {
         fetchedDecks = await deckService.getUserDecks(userData.id);
       } else if (selectedCategory === "Top Rated") {
         fetchedDecks = await deckService.getTopRatedDecks();
       } else {
-        // Use getDecks with category (or undefined for "All")
         const category =
           selectedCategory === "All Decks" ? undefined : selectedCategory;
         fetchedDecks = await deckService.getPublicDecks();
@@ -122,7 +122,6 @@ export const useDecks = (options?: UseDecksOptions) => {
         setLoading(true);
         clearError();
 
-        // Validate request
         if (!request.title || !request.description) {
           throw new Error("Missing required fields");
         }
@@ -143,8 +142,7 @@ export const useDecks = (options?: UseDecksOptions) => {
   const getDeckById = useCallback(
     async (id: string) => {
       try {
-        const deck = await deckService.getDeck(id);
-        return deck;
+        return await deckService.getDeck(id);
       } catch (error) {
         handleError(error, "Failed to fetch deck");
         return null;
@@ -164,7 +162,6 @@ export const useDecks = (options?: UseDecksOptions) => {
       try {
         setLoading(true);
         clearError();
-
         await deckService.updateDeck(id, deck, imageFile);
       } catch (error) {
         handleError(error, "Failed to update deck");
@@ -191,7 +188,6 @@ export const useDecks = (options?: UseDecksOptions) => {
   }, [searchQuery, selectedCategory]);
 
   return {
-    // States
     decks: filteredDecks,
     isLoading,
     error,
@@ -200,8 +196,6 @@ export const useDecks = (options?: UseDecksOptions) => {
     isEmpty,
     emptyMessage,
     isAuthenticated: !!userData?.id,
-
-    // Actions
     setSearchQuery,
     setSelectedCategory,
     clearError,

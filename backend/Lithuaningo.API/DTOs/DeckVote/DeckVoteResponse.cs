@@ -23,11 +23,6 @@ namespace Lithuaningo.API.DTOs.DeckVote
         public Guid UserId { get; set; }
 
         /// <summary>
-        /// The username of the user who voted
-        /// </summary>
-        public string Username { get; set; } = string.Empty;
-
-        /// <summary>
         /// Whether the vote is an upvote
         /// </summary>
         public bool IsUpvote { get; set; }

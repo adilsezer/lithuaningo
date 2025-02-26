@@ -27,6 +27,7 @@ import {
   UpdateFlashcardRequest,
   UpdateLeaderboardEntryRequest,
   LeaderboardEntry,
+  DeckWithRatingResponse,
 } from "@src/types";
 import { supabase } from "@services/supabase/supabaseClient";
 import { useUserStore } from "@stores/useUserStore";
@@ -449,10 +450,14 @@ class ApiClient {
   async getTopRatedDecks(
     limit: number = 10,
     timeRange: "week" | "month" | "all" = "all"
-  ): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/Deck/top-rated`, {
-      params: { limit, timeRange },
-    });
+  ): Promise<DeckWithRatingResponse[]> {
+    const response = await this.request<DeckWithRatingResponse[]>(
+      `/api/v1/Deck/top-rated`,
+      {
+        params: { limit, timeRange },
+      }
+    );
+    return response;
   }
 
   async reportDeck(id: string, userId: string, reason: string): Promise<void> {
@@ -579,9 +584,13 @@ class ApiClient {
   async getVoteCounts(
     deckId: string
   ): Promise<{ upvotes: number; downvotes: number }> {
-    return this.request<{ upvotes: number; downvotes: number }>(
+    const response = await this.request<{ item1: number; item2: number }>(
       `/api/v1/DeckVote/${deckId}/counts`
     );
+    return {
+      upvotes: response.item1,
+      downvotes: response.item2,
+    };
   }
 
   // Flashcard Controller

@@ -1,9 +1,5 @@
 import apiClient from "@services/api/apiClient";
-import {
-  DeckVote,
-  CreateDeckVoteRequest,
-  UpdateDeckVoteRequest,
-} from "@src/types";
+import { DeckVote, CreateDeckVoteRequest } from "@src/types";
 import { ApiError } from "@services/api/apiClient";
 
 class DeckVoteService {
