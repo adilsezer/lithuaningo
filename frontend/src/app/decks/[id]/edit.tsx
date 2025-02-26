@@ -74,13 +74,6 @@ export default function EditDeckScreen() {
       type: "image",
       maxSize: 5 * 1024 * 1024,
       placeholderText: "Tap to change deck cover image",
-      defaultValue: deck?.imageUrl
-        ? {
-            uri: deck.imageUrl,
-            type: "image/jpeg",
-            name: deck.imageUrl.split("/").pop() || "image.jpg",
-          }
-        : undefined,
     },
     {
       name: "isPublic",

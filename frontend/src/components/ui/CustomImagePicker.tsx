@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { View, StyleSheet, Text, Image, Pressable } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import { IconButton, useTheme } from "react-native-paper";
@@ -68,7 +68,29 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
         onPress={handleImagePick}
       >
         {value ? (
-          <Image source={{ uri: value.uri }} style={styles.content} />
+          <View style={styles.imageContainer}>
+            <Image source={{ uri: value.uri }} style={styles.content} />
+            <View
+              style={[
+                styles.overlay,
+                {
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                },
+              ]}
+            >
+              <IconButton
+                icon="camera"
+                size={32}
+                iconColor={theme.colors.surface}
+                style={styles.overlayIcon}
+              />
+              <CustomText
+                style={[styles.overlayText, { color: theme.colors.surface }]}
+              >
+                {placeholderText}
+              </CustomText>
+            </View>
+          </View>
         ) : (
           <View
             style={[
@@ -110,6 +132,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
   },
+  imageContainer: {
+    width: "100%",
+    height: "100%",
+    position: "relative",
+  },
   cardContent: {
     width: "100%",
     height: "100%",
@@ -121,6 +148,25 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     resizeMode: "cover",
+  },
+  overlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  overlayIcon: {
+    margin: 0,
+    marginBottom: 8,
+  },
+  overlayText: {
+    fontSize: 16,
+    textAlign: "center",
+    fontWeight: "500",
+    paddingHorizontal: 16,
   },
   statusText: {
     fontSize: 16,
