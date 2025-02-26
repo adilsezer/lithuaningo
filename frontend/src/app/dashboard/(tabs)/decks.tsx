@@ -15,13 +15,13 @@ import { useDeckVote } from "@src/hooks/useDeckVote";
 import { Deck, DeckWithRatingResponse } from "@src/types";
 
 // Separate component for DeckCard with votes
-const DeckCardWithVotes: React.FC<{ deck: Deck | DeckWithRatingResponse }> = ({
-  deck,
-}) => {
+const DeckCardWithVotes: React.FC<{
+  deck: Deck | DeckWithRatingResponse;
+  onVoted: () => Promise<void>;
+}> = ({ deck, onVoted }) => {
   const router = useRouter();
   const userData = useUserData();
   const { voteDeck } = useDeckVote(deck.id);
-  const { fetchDecks } = useDecks({ userId: userData?.id });
 
   const handleNavigation = useCallback(
     (route: string) => {
@@ -42,7 +42,7 @@ const DeckCardWithVotes: React.FC<{ deck: Deck | DeckWithRatingResponse }> = ({
         isUpvote,
       });
       if (result) {
-        await fetchDecks();
+        await onVoted();
       }
     },
     onReport: () => handleNavigation(`/decks/${deck.id}/report`),
@@ -75,6 +75,10 @@ export default function DecksScreen() {
 
   useEffect(() => {
     fetchDecks();
+  }, [fetchDecks]);
+
+  const handleVoted = useCallback(async () => {
+    await fetchDecks();
   }, [fetchDecks]);
 
   const handleNavigation = useCallback(
@@ -144,7 +148,9 @@ export default function DecksScreen() {
     >
       <FlatList
         data={decks}
-        renderItem={({ item }) => <DeckCardWithVotes deck={item} />}
+        renderItem={({ item }) => (
+          <DeckCardWithVotes deck={item} onVoted={handleVoted} />
+        )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={renderHeader}

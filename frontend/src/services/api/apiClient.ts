@@ -451,6 +451,10 @@ class ApiClient {
     limit: number = 10,
     timeRange: "week" | "month" | "all" = "all"
   ): Promise<DeckWithRatingResponse[]> {
+    console.log("[ApiClient.getTopRatedDecks] Fetching decks", {
+      limit,
+      timeRange,
+    });
     const response = await this.request<DeckWithRatingResponse[]>(
       `/api/v1/Deck/top-rated`,
       {

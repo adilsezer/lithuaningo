@@ -5,6 +5,7 @@ import {
   CreateDeckRequest,
   UpdateDeckRequest,
   ImageFile,
+  DeckWithRatingResponse,
 } from "@src/types";
 import { ApiError } from "@services/api/apiClient";
 
@@ -14,11 +15,15 @@ interface CreateDeckParams {
 }
 
 class DeckService {
-  async getPublicDecks(): Promise<Deck[]> {
+  async getTopRatedDecks(
+    limit: number = 10,
+    timeRange: "all" | "week" | "month" = "all"
+  ): Promise<DeckWithRatingResponse[]> {
     try {
-      return await apiClient.getPublicDecks();
+      console.log(`[DeckService] Getting decks with timeRange: ${timeRange}`);
+      return await apiClient.getTopRatedDecks(limit, timeRange);
     } catch (error) {
-      console.error("[DeckService.getPublicDecks] Error:", error);
+      console.error("[DeckService.getTopRatedDecks] Error:", error);
       throw error;
     }
   }
@@ -80,27 +85,6 @@ class DeckService {
       await apiClient.deleteDeck(id);
     } catch (error) {
       console.error("[DeckService.deleteDeck] Error:", error);
-      throw error;
-    }
-  }
-
-  async getUserDecks(userId: string): Promise<Deck[]> {
-    try {
-      return await apiClient.getUserDecks(userId);
-    } catch (error) {
-      console.error("[DeckService.getUserDecks] Error:", error);
-      throw error;
-    }
-  }
-
-  async getTopRatedDecks(
-    limit: number = 10,
-    timeRange: "all" | "week" | "month" = "all"
-  ): Promise<Deck[]> {
-    try {
-      return await apiClient.getTopRatedDecks(limit, timeRange);
-    } catch (error) {
-      console.error("[DeckService.getTopRatedDecks] Error:", error);
       throw error;
     }
   }

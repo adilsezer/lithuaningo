@@ -13,25 +13,24 @@ export const useDeckVote = (deckId?: string) => {
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
-  const [voteCounts, setVoteCounts] = useState<{
-    upvotes: number;
-    downvotes: number;
-  }>({ upvotes: 0, downvotes: 0 });
   const [userVote, setUserVote] = useState<DeckVote | null>(null);
 
   const voteDeck = useCallback(
     async (request: CreateDeckVoteRequest) => {
       if (!deckId) return false;
       try {
+        console.log("[useDeckVote] Voting for deck:", request);
         setLoading(true);
         setError(null);
         const result = await voteService.voteDeck(request);
+        console.log("[useDeckVote] Vote result:", result);
         if (result) {
-          await fetchVoteCounts();
+          console.log("[useDeckVote] Fetching updated user vote");
           await fetchUserVote(request.userId);
         }
         return result;
       } catch (err) {
+        console.error("[useDeckVote] Error voting:", err);
         setError(err instanceof Error ? err.message : "Failed to vote");
         throw err;
       } finally {
@@ -41,32 +40,22 @@ export const useDeckVote = (deckId?: string) => {
     [deckId, setLoading, setError]
   );
 
-  const fetchVoteCounts = useCallback(async () => {
-    if (!deckId) return;
-    try {
-      setLoading(true);
-      const counts = await voteService.getDeckVoteCounts(deckId);
-      setVoteCounts(counts);
-      return counts;
-    } catch (err) {
-      console.error("Error fetching vote counts:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch vote counts"
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [deckId, setLoading, setError]);
-
   const fetchUserVote = useCallback(
     async (userId: string) => {
       if (!deckId) return;
       try {
+        console.log(
+          "[useDeckVote] Fetching user vote for deck:",
+          deckId,
+          "user:",
+          userId
+        );
         setLoading(true);
         const vote = await voteService.getUserVote(deckId, userId);
+        console.log("[useDeckVote] Received user vote:", vote);
         setUserVote(vote);
       } catch (err) {
-        console.error("Error fetching user vote:", err);
+        console.error("[useDeckVote] Error fetching user vote:", err);
         setError(
           err instanceof Error ? err.message : "Failed to fetch user vote"
         );
@@ -79,9 +68,10 @@ export const useDeckVote = (deckId?: string) => {
 
   useEffect(() => {
     if (deckId) {
-      fetchVoteCounts();
+      // We don't need to fetch vote counts on mount anymore
+      // as we get them from DeckWithRatingResponse
     }
-  }, [deckId, fetchVoteCounts]);
+  }, [deckId]);
 
   const clearError = useCallback(() => {
     setError(null);
@@ -90,10 +80,8 @@ export const useDeckVote = (deckId?: string) => {
   return {
     isLoading,
     error,
-    voteCounts,
     userVote,
     voteDeck,
-    fetchVoteCounts,
     fetchUserVote,
     clearError,
   };

@@ -73,22 +73,38 @@ export const useDecks = (options?: UseDecksOptions) => {
     }
 
     try {
+      console.log("[useDecks] Starting to fetch decks", {
+        selectedCategory,
+        searchQuery,
+      });
       setLoading(true);
       clearError();
 
       let fetchedDecks: (Deck | DeckWithRatingResponse)[] = [];
 
-      if (selectedCategory === "My Decks" && userData?.id) {
-        fetchedDecks = await deckService.getUserDecks(userData.id);
-      } else if (selectedCategory === "Top Rated") {
-        fetchedDecks = await deckService.getTopRatedDecks();
-      } else {
-        const category =
-          selectedCategory === "All Decks" ? undefined : selectedCategory;
-        fetchedDecks = await deckService.getPublicDecks();
+      // All categories now use getTopRatedDecks with timeRange: "all"
+      console.log("[useDecks] Fetching decks for category:", selectedCategory);
+      fetchedDecks = await deckService.getTopRatedDecks(10, "all");
+
+      // Filter by category if needed
+      if (
+        selectedCategory !== "All Decks" &&
+        selectedCategory !== "Top Rated"
+      ) {
+        if (selectedCategory === "My Decks") {
+          fetchedDecks = fetchedDecks.filter(
+            (deck) => deck.userId === userData?.id
+          );
+        } else {
+          fetchedDecks = fetchedDecks.filter(
+            (deck) => deck.category === selectedCategory
+          );
+        }
       }
 
+      // Filter by search query if present
       if (searchQuery.trim()) {
+        console.log("[useDecks] Filtering by search query:", searchQuery);
         const query = searchQuery.toLowerCase();
         fetchedDecks = fetchedDecks.filter(
           (deck) =>
@@ -97,8 +113,10 @@ export const useDecks = (options?: UseDecksOptions) => {
         );
       }
 
+      console.log("[useDecks] Setting final decks:", fetchedDecks);
       setDecks(fetchedDecks);
     } catch (error) {
+      console.error("[useDecks] Error fetching decks:", error);
       handleError(error, "Failed to fetch decks");
     } finally {
       setLoading(false);

@@ -19,7 +19,8 @@ namespace Lithuaningo.API.Services
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
-        private const string CacheKeyPrefix = "deck-vote:";
+        private const string VoteCachePrefix = "deck-vote:";
+        private const string DeckCachePrefix = "deck:";
         private readonly ILogger<DeckVoteService> _logger;
         private readonly IMapper _mapper;
 
@@ -41,14 +42,31 @@ namespace Lithuaningo.API.Services
         {
             try
             {
+                _logger.LogInformation("[VoteDeckAsync] Starting vote operation for deck {DeckId}, user {UserId}, isUpvote: {IsUpvote}", 
+                    deckId, userId, isUpvote);
+
+                // Get deck info for cache invalidation
+                var deck = await _supabaseClient
+                    .From<Deck>()
+                    .Where(d => d.Id == deckId)
+                    .Single();
+
+                if (deck == null)
+                {
+                    _logger.LogError("[VoteDeckAsync] Deck not found: {DeckId}", deckId);
+                    throw new Exception("Deck not found");
+                }
+                    
                 var existingVote = await GetUserVoteAsync(deckId, userId);
                 if (existingVote != null)
                 {
                     if (existingVote.IsUpvote == isUpvote)
                     {
+                        _logger.LogInformation("[VoteDeckAsync] User already voted this way");
                         return true;
                     }
 
+                    _logger.LogInformation("[VoteDeckAsync] Updating existing vote");
                     var updateResponse = await _supabaseClient
                         .From<DeckVote>()
                         .Where(v => v.Id == existingVote.Id)
@@ -64,11 +82,14 @@ namespace Lithuaningo.API.Services
 
                     if (!updateResponse.Models.Any())
                     {
+                        _logger.LogError("[VoteDeckAsync] Failed to update vote in database");
                         throw new Exception("Failed to update vote");
                     }
+                    _logger.LogInformation("[VoteDeckAsync] Vote updated successfully");
                 }
                 else
                 {
+                    _logger.LogInformation("[VoteDeckAsync] Creating new vote");
                     var vote = new DeckVote
                     {
                         Id = Guid.NewGuid(),
@@ -85,17 +106,21 @@ namespace Lithuaningo.API.Services
 
                     if (!response.Models.Any())
                     {
+                        _logger.LogError("[VoteDeckAsync] Failed to create vote in database");
                         throw new Exception("Failed to create vote");
                     }
+                    _logger.LogInformation("[VoteDeckAsync] New vote created successfully");
                 }
 
+                _logger.LogInformation("[VoteDeckAsync] Invalidating caches");
                 await InvalidateVoteCacheAsync(deckId, userId);
-                await InvalidateDeckCacheAsync(deckId);
+                await InvalidateDeckCacheAsync(deck);
+                _logger.LogInformation("[VoteDeckAsync] Vote operation completed successfully");
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error voting for deck {DeckId} by user {UserId}", deckId, userId);
+                _logger.LogError(ex, "[VoteDeckAsync] Error voting for deck {DeckId} by user {UserId}", deckId, userId);
                 throw;
             }
         }
@@ -122,7 +147,7 @@ namespace Lithuaningo.API.Services
 
         public async Task<DeckVoteResponse?> GetUserVoteAsync(Guid deckId, Guid userId)
         {
-            var cacheKey = $"{CacheKeyPrefix}deck:{deckId}:user:{userId}";
+            var cacheKey = $"{VoteCachePrefix}deck:{deckId}:user:{userId}";
             var cached = await _cache.GetAsync<DeckVoteResponse>(cacheKey);
 
             if (cached != null)
@@ -163,7 +188,7 @@ namespace Lithuaningo.API.Services
 
         public async Task<List<DeckVoteResponse>> GetDeckVotesAsync(Guid deckId)
         {
-            var cacheKey = $"{CacheKeyPrefix}deck:{deckId}";
+            var cacheKey = $"{VoteCachePrefix}deck:{deckId}";
             var cached = await _cache.GetAsync<List<DeckVoteResponse>>(cacheKey);
 
             if (cached != null)
@@ -220,38 +245,26 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<double> CalculateDeckRatingAsync(Guid deckId, string timeRange = "all")
+        public async Task<double> CalculateDeckRatingAsync(Guid deckId)
         {
             try
             {
-                var query = _supabaseClient
-                    .From<DeckVote>()
-                    .Where(v => v.DeckId == deckId);
+                _logger.LogInformation("[CalculateDeckRatingAsync] Calculating rating for deck {DeckId}", deckId);
+                
+                var (upvotes, downvotes) = await GetDeckVoteCountsAsync(deckId);
+                var totalVotes = upvotes + downvotes;
 
-                // Filter votes by time range if needed
-                if (timeRange != "all")
+                if (totalVotes == 0)
                 {
-                    var startDate = timeRange.ToLower() switch
-                    {
-                        "week" => DateTime.UtcNow.AddDays(-7),
-                        "month" => DateTime.UtcNow.AddMonths(-1),
-                        _ => DateTime.MinValue
-                    };
-
-                    query = query.Where(v => v.CreatedAt >= startDate);
-                }
-
-                var votesResponse = await query.Get();
-
-                if (!votesResponse.Models.Any())
-                {
+                    _logger.LogInformation("[CalculateDeckRatingAsync] No votes found, returning 0");
                     return 0.0;
                 }
 
-                int totalVotes = votesResponse.Models.Count;
-                int upvotes = votesResponse.Models.Count(v => v.IsUpvote);
-
-                return (double)upvotes / totalVotes;
+                var rating = (double)upvotes / totalVotes;
+                _logger.LogInformation("[CalculateDeckRatingAsync] Rating calculated: {Rating} (upvotes: {Upvotes}, total: {Total})", 
+                    rating, upvotes, totalVotes);
+                    
+                return rating;
             }
             catch (Exception ex)
             {
@@ -262,29 +275,68 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateVoteCacheAsync(Guid deckId, Guid userId)
         {
-            var userVoteKey = $"{CacheKeyPrefix}user:{deckId}:{userId}";
-            var deckVotesKey = $"{CacheKeyPrefix}deck:{deckId}";
-            var deckCountsKey = $"{CacheKeyPrefix}counts:{deckId}";
+            try
+            {
+                _logger.LogInformation("[InvalidateVoteCacheAsync] Starting cache invalidation for deck {DeckId}, user {UserId}", 
+                    deckId, userId);
+                    
+                var userVoteKey = $"{VoteCachePrefix}deck:{deckId}:user:{userId}";
+                var deckVotesKey = $"{VoteCachePrefix}deck:{deckId}";
+                var deckCountsKey = $"{VoteCachePrefix}counts:{deckId}";
 
-            await _cache.RemoveAsync(userVoteKey);
-            await _cache.RemoveAsync(deckVotesKey);
-            await _cache.RemoveAsync(deckCountsKey);
+                await _cache.RemoveAsync(userVoteKey);
+                await _cache.RemoveAsync(deckVotesKey);
+                await _cache.RemoveAsync(deckCountsKey);
+                
+                _logger.LogInformation("[InvalidateVoteCacheAsync] Cache invalidation completed");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "[InvalidateVoteCacheAsync] Error invalidating vote cache");
+                throw;
+            }
         }
 
-        private async Task InvalidateDeckCacheAsync(Guid deckId)
+        private async Task InvalidateDeckCacheAsync(Deck deck)
         {
-            // Invalidate all possible deck cache keys that might contain this deck
-            var keys = new[]
+            try
             {
-                $"{CacheKeyPrefix}top:",  // Top rated decks cache
-                $"{CacheKeyPrefix}{deckId}",  // Single deck cache
-                $"{CacheKeyPrefix}user:",  // User decks cache
-                $"{CacheKeyPrefix}"  // Public decks cache
-            };
+                _logger.LogInformation("[InvalidateDeckCacheAsync] Starting deck cache invalidation for deck {DeckId}", deck.Id);
+                
+                // Get all possible cache keys that might contain this deck
+                var keys = new List<string>
+                {
+                    // Single deck cache
+                    $"{DeckCachePrefix}{deck.Id}",
+                    
+                    // User decks cache
+                    $"{DeckCachePrefix}user:{deck.UserId}",
+                    
+                    // All decks cache
+                    $"{DeckCachePrefix}list:all:0",
+                    
+                    // Category-specific cache
+                    $"{DeckCachePrefix}list:{deck.Category}:0",
+                    
+                    // Top rated decks cache (all variations)
+                    $"{DeckCachePrefix}top:10:all",
+                    $"{DeckCachePrefix}top:10:week",
+                    $"{DeckCachePrefix}top:10:month",
+                    $"{DeckCachePrefix}top:10:year"
+                };
 
-            foreach (var key in keys)
+                foreach (var key in keys)
+                {
+                    _logger.LogInformation("[InvalidateDeckCacheAsync] Removing cache for key: {Key}", key);
+                    await _cache.RemoveAsync(key);
+                }
+                
+                _logger.LogInformation("[InvalidateDeckCacheAsync] Deck cache invalidation completed");
+            }
+            catch (Exception ex)
             {
-                await _cache.RemoveAsync(key);
+                _logger.LogError(ex, "[InvalidateDeckCacheAsync] Error invalidating deck cache");
+                throw;
             }
         }
     }

@@ -32,6 +32,15 @@ export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
   const hasRating = isDeckWithRating(deck);
   const rating = hasRating ? deck.rating : 0;
   const totalVotes = hasRating ? deck.totalVotes : 0;
+  const upvoteCount = hasRating ? deck.upvoteCount : 0;
+  const downvoteCount = totalVotes - upvoteCount;
+
+  const ratingDisplay =
+    totalVotes > 0
+      ? `${(rating * 100).toFixed(0)}% (${upvoteCount}/${
+          upvoteCount + downvoteCount
+        })`
+      : "No ratings";
 
   return (
     <Card
@@ -110,9 +119,7 @@ export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
               style={{ margin: 0 }}
               iconColor={theme.colors.secondary}
             />
-            <Text variant="bodySmall">
-              {totalVotes > 0 ? `${(rating * 100).toFixed(0)}%` : "No ratings"}
-            </Text>
+            <Text variant="bodySmall">{ratingDisplay}</Text>
           </View>
         </View>
 

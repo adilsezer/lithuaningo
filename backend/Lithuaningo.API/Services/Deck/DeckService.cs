@@ -211,7 +211,7 @@ namespace Lithuaningo.API.Services
                 {
                     var deckResponse = _mapper.Map<DeckWithRatingResponse>(deck);
                     var (upvotes, downvotes) = await _deckVoteService.GetDeckVoteCountsAsync(deck.Id);
-                    var rating = await _deckVoteService.CalculateDeckRatingAsync(deck.Id, timeRange);
+                    var rating = await _deckVoteService.CalculateDeckRatingAsync(deck.Id);
 
                     deckResponse.TotalVotes = upvotes + downvotes;
                     deckResponse.UpvoteCount = upvotes;
@@ -494,6 +494,8 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateDeckCacheAsync(Deck deck)
         {
+            _logger.LogInformation("[InvalidateDeckCacheAsync] Starting cache invalidation for deck {DeckId}", deck.Id);
+            
             var tasks = new List<Task>
             {
                 // Invalidate specific deck cache
@@ -504,18 +506,17 @@ namespace Lithuaningo.API.Services
                 
                 // Invalidate general deck lists that might contain this deck
                 _cache.RemoveAsync($"{CacheKeyPrefix}list:all:0"),
+                _cache.RemoveAsync($"{CacheKeyPrefix}list:{deck.Category}:0"),
+                
+                // Invalidate top rated lists for all time ranges
                 _cache.RemoveAsync($"{CacheKeyPrefix}top:10:all"),
                 _cache.RemoveAsync($"{CacheKeyPrefix}top:10:week"),
                 _cache.RemoveAsync($"{CacheKeyPrefix}top:10:month"),
                 _cache.RemoveAsync($"{CacheKeyPrefix}top:10:year"),
-                
-                // If the deck has a category, invalidate that category's cache
-                deck.Category != null 
-                    ? _cache.RemoveAsync($"{CacheKeyPrefix}list:{deck.Category}:0")
-                    : Task.CompletedTask
             };
 
             await Task.WhenAll(tasks);
+            _logger.LogInformation("[InvalidateDeckCacheAsync] Cache invalidation completed for deck {DeckId}", deck.Id);
         }
     }
 }

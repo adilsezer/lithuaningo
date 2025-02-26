@@ -35,6 +35,6 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <summary>
         /// Calculates the rating for a deck based on votes
         /// </summary>
-        Task<double> CalculateDeckRatingAsync(Guid deckId, string timeRange = "all");
+        Task<double> CalculateDeckRatingAsync(Guid deckId);
     }
 } 

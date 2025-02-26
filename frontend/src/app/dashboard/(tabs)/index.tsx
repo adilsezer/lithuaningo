@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { ScrollView, View, StyleSheet, ActivityIndicator } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
@@ -19,15 +19,12 @@ import { Deck, DeckWithRatingResponse } from "@src/types";
 
 const TopRatedDeckCard: React.FC<{
   deck: (Deck | DeckWithRatingResponse) | null;
-}> = ({ deck }) => {
+  onVoted: () => Promise<void>;
+}> = ({ deck, onVoted }) => {
   const theme = useTheme();
   const userData = useUserData();
   const isLoading = useIsLoading();
   const { voteDeck } = useDeckVote(deck?.id ?? "");
-  const { fetchDecks } = useDecks({
-    userId: userData?.id,
-    initialCategory: "Top Rated",
-  });
 
   if (isLoading) {
     return (
@@ -54,7 +51,7 @@ const TopRatedDeckCard: React.FC<{
         isUpvote,
       });
       if (result) {
-        await fetchDecks();
+        await onVoted();
       }
     },
     onReport: () => router.push(`/decks/${deck.id}/report`),
@@ -94,8 +91,12 @@ const DashboardScreen: React.FC = () => {
     }
   }, [statsError, setError]);
 
-  React.useEffect(() => {
+  useEffect(() => {
     fetchDecks();
+  }, [fetchDecks]);
+
+  const handleVoted = useCallback(async () => {
+    await fetchDecks();
   }, [fetchDecks]);
 
   // Don't render content if not authenticated
@@ -129,6 +130,7 @@ const DashboardScreen: React.FC = () => {
         <CustomText variant="titleLarge">Top Rated Deck of the Week</CustomText>
         <TopRatedDeckCard
           deck={topRatedDecks.length > 0 ? topRatedDecks[0] : null}
+          onVoted={handleVoted}
         />
         <CustomButton
           title="View All Decks"
