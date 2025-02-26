@@ -2,14 +2,13 @@ import React, { useEffect } from "react";
 import { View, StyleSheet, FlatList } from "react-native";
 import { useLocalSearchParams } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
-import CustomButton from "@components/ui/CustomButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import BackButton from "@components/ui/BackButton";
 import { useDeckComments } from "@src/hooks/useDeckComments";
 import { deckCommentFormSchema } from "@utils/zodSchemas";
-import { useTheme } from "react-native-paper";
+import { useTheme, IconButton } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { formatDistanceToNow } from "date-fns";
 
@@ -89,30 +88,32 @@ export default function DeckCommentsScreen() {
             ]}
           >
             <View style={styles.commentHeader}>
-              <CustomText variant="labelLarge" style={styles.userName}>
-                {item.username}
-              </CustomText>
-              <CustomText variant="labelSmall" style={styles.timeAgo}>
-                {formatDistanceToNow(new Date(item.createdAt), {
-                  addSuffix: true,
-                })}
-                {item.updatedAt !== item.createdAt && " (edited)"}
-              </CustomText>
+              <View style={styles.userInfo}>
+                <CustomText variant="labelLarge" style={styles.userName}>
+                  {item.username}
+                </CustomText>
+                <CustomText variant="labelSmall" style={styles.timeAgo}>
+                  {formatDistanceToNow(new Date(item.createdAt), {
+                    addSuffix: true,
+                  })}
+                  {item.updatedAt !== item.createdAt && " (edited)"}
+                </CustomText>
+              </View>
+              {userData && userData.id === item.userId && (
+                <IconButton
+                  icon="delete-outline"
+                  size={20}
+                  onPress={() => item.id && deleteDeckComment(item.id)}
+                  disabled={isSubmitting}
+                  style={styles.deleteButton}
+                />
+              )}
             </View>
             <CustomText
               style={[styles.commentText, { color: theme.colors.onSurface }]}
             >
               {item.content}
             </CustomText>
-            {userData && userData.id === item.userId && (
-              <View style={styles.actionButtons}>
-                <CustomButton
-                  title="Delete"
-                  onPress={() => item.id && deleteDeckComment(item.id)}
-                  disabled={isSubmitting}
-                />
-              </View>
-            )}
           </View>
         )}
         keyExtractor={(item) => item.id}
@@ -157,7 +158,7 @@ const styles = StyleSheet.create({
     paddingBottom: 16,
   },
   commentItem: {
-    padding: 16,
+    padding: 12,
     borderRadius: 12,
     marginBottom: 8,
   },
@@ -165,7 +166,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 8,
+    marginBottom: 4,
+  },
+  userInfo: {
+    flex: 1,
   },
   userName: {
     fontWeight: "bold",
@@ -175,10 +179,9 @@ const styles = StyleSheet.create({
   },
   commentText: {
     fontSize: 14,
-    marginBottom: 8,
+    marginTop: 4,
   },
-  actionButtons: {
-    flexDirection: "row",
-    justifyContent: "flex-end",
+  deleteButton: {
+    margin: -8,
   },
 });
