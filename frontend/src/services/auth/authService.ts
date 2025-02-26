@@ -280,17 +280,24 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
 
 export const signOut = async (): Promise<AuthResponse> => {
   try {
+    // Get the current session to check the provider
+    const { data: sessionData } = await supabase.auth.getSession();
+    const provider = sessionData.session?.user?.app_metadata?.provider;
+
     const { error } = await supabase.auth.signOut();
     if (error) throw error;
 
-    try {
-      const isSignedIn = await GoogleSignin.isSignedIn();
-      if (isSignedIn) {
-        await GoogleSignin.revokeAccess();
-        await GoogleSignin.signOut();
+    // Only attempt Google sign out if the user is signed in with Google
+    if (provider === "google") {
+      try {
+        const isSignedIn = await GoogleSignin.isSignedIn();
+        if (isSignedIn) {
+          await GoogleSignin.revokeAccess();
+          await GoogleSignin.signOut();
+        }
+      } catch (googleError) {
+        console.error("Google sign out error:", googleError);
       }
-    } catch (googleError) {
-      console.error("Google sign out error:", googleError);
     }
 
     const store = useUserStore.getState();
