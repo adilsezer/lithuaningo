@@ -12,6 +12,9 @@ import { FormField } from "@components/form/form.types";
 import { CustomImagePicker } from "@components/ui/CustomImagePicker";
 import CustomAudioPicker from "@components/ui/CustomAudioPicker";
 import { MediaFile } from "@src/types";
+import { useUserData } from "@stores/useUserStore";
+import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useDecks } from "@hooks/useDecks";
 const flashcardFields: FormField[] = [
   {
     name: "frontWord",
@@ -44,27 +47,46 @@ const flashcardFields: FormField[] = [
 ];
 
 export default function EditFlashcardScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, deckId } = useLocalSearchParams<{ id: string; deckId: string }>();
   const router = useRouter();
   const theme = useTheme();
   const { updateFlashcard, getFlashcardById } = useFlashcards();
+  const { getDeckById } = useDecks();
+  const userData = useUserData();
+  const { showError } = useAlertDialog();
   const [flashcard, setFlashcard] = useState<Flashcard | null>(null);
   const [imageFile, setImageFile] = useState<MediaFile>();
   const [audioFile, setAudioFile] = useState<MediaFile>();
 
   useEffect(() => {
-    const loadFlashcard = async () => {
-      if (!id) return;
+    const loadFlashcardAndCheckAuth = async () => {
+      if (!id || !deckId) return;
       try {
-        const data = await getFlashcardById(id);
-        setFlashcard(data);
+        const [flashcardData, deckData] = await Promise.all([
+          getFlashcardById(id),
+          getDeckById(deckId),
+        ]);
+
+        setFlashcard(flashcardData);
+
+        // Check if user is authorized to edit
+        if (
+          deckData &&
+          userData?.id !== deckData.userId &&
+          !userData?.isAdmin
+        ) {
+          showError("You are not authorized to edit this flashcard");
+          router.back();
+          return;
+        }
       } catch (error) {
         console.error("Error loading flashcard:", error);
+        showError("Failed to load flashcard");
       }
     };
 
-    loadFlashcard();
-  }, [id, getFlashcardById]);
+    loadFlashcardAndCheckAuth();
+  }, [id, deckId, getFlashcardById, getDeckById, userData, router, showError]);
 
   const onSubmit = async (data: FlashcardFormData) => {
     if (!id || !flashcard) return;

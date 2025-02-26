@@ -10,6 +10,7 @@ import {
   useTheme,
 } from "react-native-paper";
 import { Deck, DeckWithRatingResponse, isDeckWithRating } from "@src/types";
+import { useUserData } from "@stores/useUserStore";
 
 export interface DeckActions {
   onVote: (isUpvote: boolean) => void;
@@ -27,6 +28,10 @@ export interface DeckCardProps {
 
 export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
   const theme = useTheme();
+  const userData = useUserData();
+
+  // Check if user can edit (is owner or admin)
+  const canEdit = userData?.id === deck.userId || userData?.isAdmin === true;
 
   // Get rating information if available
   const hasRating = isDeckWithRating(deck);
@@ -183,13 +188,15 @@ export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
           iconColor={theme.colors.primary}
           mode="outlined"
         />
-        <IconButton
-          icon="pencil-outline"
-          size={24}
-          onPress={() => actions.onEdit(deck.id)}
-          iconColor={theme.colors.primary}
-          mode="outlined"
-        />
+        {canEdit && (
+          <IconButton
+            icon="pencil-outline"
+            size={24}
+            onPress={() => actions.onEdit(deck.id)}
+            iconColor={theme.colors.primary}
+            mode="outlined"
+          />
+        )}
       </Card.Actions>
     </Card>
   );

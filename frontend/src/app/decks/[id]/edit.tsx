@@ -13,13 +13,15 @@ import CustomText from "@components/ui/CustomText";
 import { useTheme, Card, IconButton } from "react-native-paper";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
+import { useUserData } from "@stores/useUserStore";
 
 export default function EditDeckScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { showConfirm } = useAlertDialog();
+  const { showConfirm, showError } = useAlertDialog();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { getDeckById, updateDeck } = useDecks();
+  const userData = useUserData();
   const {
     flashcards,
     getDeckFlashcards,
@@ -95,12 +97,23 @@ export default function EditDeckScreen() {
     try {
       const fetchedDeck = await getDeckById(id);
       setDeck(fetchedDeck);
+
+      // Check if user is authorized to edit
+      if (
+        fetchedDeck &&
+        userData?.id !== fetchedDeck.userId &&
+        !userData?.isAdmin
+      ) {
+        showError("You are not authorized to edit this deck");
+        router.back();
+        return;
+      }
     } catch (error) {
       console.error("Error fetching deck:", error);
     } finally {
       setLoading(false);
     }
-  }, [id, getDeckById, setLoading]);
+  }, [id, getDeckById, setLoading, userData, router, showError]);
 
   useEffect(() => {
     fetchDeck();
