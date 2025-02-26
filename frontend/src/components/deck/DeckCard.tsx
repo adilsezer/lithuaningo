@@ -11,6 +11,7 @@ import {
 } from "react-native-paper";
 import { Deck, DeckWithRatingResponse, isDeckWithRating } from "@src/types";
 import { useUserData } from "@stores/useUserStore";
+import { formatRelative } from "@utils/dateUtils";
 
 export interface DeckActions {
   onVote: (isUpvote: boolean) => void;
@@ -54,150 +55,199 @@ export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
         borderWidth: 1,
         borderColor: theme.colors.primary,
         marginVertical: 8,
+        borderRadius: 16,
+        overflow: "hidden",
       }}
     >
-      <Card.Title
-        title={deck.title}
-        titleVariant="titleLarge"
-        subtitle={deck.category}
-        style={{ paddingBottom: 0 }}
-        titleStyle={{ color: theme.colors.onSurface }}
-        subtitleStyle={{ color: theme.colors.onSurface }}
-      />
+      {deck.imageUrl && (
+        <Card.Cover
+          source={{ uri: deck.imageUrl }}
+          style={{
+            height: 160,
+          }}
+        />
+      )}
 
-      <Card.Content>
-        <Text
-          variant="bodyMedium"
-          numberOfLines={2}
-          style={{ marginBottom: 12 }}
-        >
-          {deck.description}
-        </Text>
-
-        {deck.tags.length > 0 && (
+      <Card.Content style={{ paddingVertical: 16 }}>
+        <View style={{ marginBottom: 16 }}>
           <View
             style={{
               flexDirection: "row",
-              flexWrap: "wrap",
-              gap: 8,
-              marginBottom: 12,
+              alignItems: "center",
+              marginBottom: 8,
             }}
           >
-            {deck.tags.map((tag, index) => (
-              <Chip
-                key={index}
-                compact
-                mode="flat"
-                style={{ backgroundColor: theme.colors.secondaryContainer }}
+            <Avatar.Text
+              label={deck.username[0]}
+              size={40}
+              style={{ backgroundColor: theme.colors.primary, marginRight: 12 }}
+            />
+            <View style={{ flex: 1 }}>
+              <Text
+                variant="titleLarge"
+                style={{ color: theme.colors.onSurface, marginBottom: 2 }}
               >
-                <Text style={{ color: theme.colors.onSecondaryContainer }}>
-                  {tag}
-                </Text>
-              </Chip>
-            ))}
+                {deck.title}
+              </Text>
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                By {deck.username} • {deck.category}
+              </Text>
+            </View>
           </View>
-        )}
+
+          <Text
+            variant="bodyMedium"
+            style={{
+              color: theme.colors.onSurfaceVariant,
+              marginBottom: 12,
+            }}
+            numberOfLines={2}
+          >
+            {deck.description}
+          </Text>
+
+          {deck.tags.length > 0 && (
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: 8,
+                marginBottom: 16,
+              }}
+            >
+              {deck.tags.map((tag, index) => (
+                <Chip
+                  key={index}
+                  compact
+                  mode="flat"
+                  style={{ backgroundColor: theme.colors.secondaryContainer }}
+                >
+                  <Text style={{ color: theme.colors.onSecondaryContainer }}>
+                    {tag}
+                  </Text>
+                </Chip>
+              ))}
+            </View>
+          )}
+
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "space-between",
+              marginBottom: 16,
+            }}
+          >
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                📑 {deck.flashcardsCount} cards
+              </Text>
+            </View>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+            >
+              <Text
+                variant="bodyMedium"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                ⭐️ {ratingDisplay}
+              </Text>
+            </View>
+          </View>
+
+          <View style={{ flexDirection: "row", gap: 12 }}>
+            <Button
+              mode="contained"
+              onPress={() => actions.onPractice(deck.id)}
+              style={{ flex: 1 }}
+              contentStyle={{ height: 44, borderRadius: 22 }}
+              icon="school"
+              buttonColor={theme.colors.primary}
+            >
+              Practice
+            </Button>
+            <Button
+              mode="contained"
+              onPress={() => actions.onQuiz(deck.id)}
+              style={{ flex: 1 }}
+              contentStyle={{ height: 44, borderRadius: 22 }}
+              icon="brain"
+              buttonColor={theme.colors.secondary}
+            >
+              Quiz
+            </Button>
+          </View>
+        </View>
+
+        <View
+          style={{
+            height: 0.5,
+            backgroundColor: theme.colors.outlineVariant,
+            marginBottom: 8,
+            opacity: 0.3,
+          }}
+        />
+
+        <Text
+          variant="bodySmall"
+          style={{
+            color: theme.colors.onSurfaceVariant,
+            opacity: 0.6,
+            textAlign: "center",
+            marginBottom: 8,
+          }}
+        >
+          Updated {formatRelative(deck.updatedAt)}
+        </Text>
 
         <View
           style={{
             flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 16,
+            justifyContent: "space-around",
           }}
         >
-          <Avatar.Text
-            label={deck.username[0]}
+          <IconButton
+            icon="thumb-up-outline"
             size={24}
-            style={{ marginRight: 8 }}
+            onPress={() => actions.onVote(true)}
+            iconColor={theme.colors.primary}
           />
-          <Text variant="bodySmall" style={{ flex: 1 }}>
-            By {deck.username}
-          </Text>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <IconButton icon="cards-outline" size={16} style={{ margin: 0 }} />
-            <Text variant="bodySmall" style={{ marginRight: 12 }}>
-              {deck.flashcardsCount} cards
-            </Text>
+          <IconButton
+            icon="thumb-down-outline"
+            size={24}
+            onPress={() => actions.onVote(false)}
+            iconColor={theme.colors.primary}
+          />
+          <IconButton
+            icon="comment-outline"
+            size={24}
+            onPress={() => actions.onComment(deck.id)}
+            iconColor={theme.colors.primary}
+          />
+          <IconButton
+            icon="flag-outline"
+            size={24}
+            onPress={actions.onReport}
+            iconColor={theme.colors.primary}
+          />
+          {canEdit && (
             <IconButton
-              icon="star-outline"
-              size={16}
-              style={{ margin: 0 }}
-              iconColor={theme.colors.secondary}
+              icon="pencil-outline"
+              size={24}
+              onPress={() => actions.onEdit(deck.id)}
+              iconColor={theme.colors.primary}
             />
-            <Text variant="bodySmall">{ratingDisplay}</Text>
-          </View>
-        </View>
-
-        <View style={{ flexDirection: "row", gap: 8 }}>
-          <Button
-            mode="contained"
-            onPress={() => actions.onPractice(deck.id)}
-            style={{ flex: 1 }}
-            contentStyle={{ height: 40 }}
-            icon="lightbulb-outline"
-            buttonColor={theme.colors.primary}
-          >
-            Practice
-          </Button>
-          <Button
-            mode="contained"
-            onPress={() => actions.onQuiz(deck.id)}
-            style={{ flex: 1 }}
-            contentStyle={{ height: 40 }}
-            icon="lightbulb-outline"
-            buttonColor={theme.colors.secondary}
-          >
-            Quiz
-          </Button>
+          )}
         </View>
       </Card.Content>
-
-      <Card.Actions
-        style={{
-          justifyContent: "space-around",
-          paddingTop: 4,
-          marginTop: 20,
-          alignSelf: "center",
-        }}
-      >
-        <IconButton
-          icon="thumb-up-outline"
-          size={24}
-          onPress={() => actions.onVote(true)}
-          iconColor={theme.colors.primary}
-          mode="outlined"
-        />
-        <IconButton
-          icon="thumb-down-outline"
-          size={24}
-          onPress={() => actions.onVote(false)}
-          iconColor={theme.colors.primary}
-          mode="outlined"
-        />
-        <IconButton
-          icon="comment-outline"
-          size={24}
-          onPress={() => actions.onComment(deck.id)}
-          iconColor={theme.colors.primary}
-          mode="outlined"
-        />
-        <IconButton
-          icon="flag-outline"
-          size={24}
-          onPress={actions.onReport}
-          iconColor={theme.colors.primary}
-          mode="outlined"
-        />
-        {canEdit && (
-          <IconButton
-            icon="pencil-outline"
-            size={24}
-            onPress={() => actions.onEdit(deck.id)}
-            iconColor={theme.colors.primary}
-            mode="outlined"
-          />
-        )}
-      </Card.Actions>
     </Card>
   );
 });
