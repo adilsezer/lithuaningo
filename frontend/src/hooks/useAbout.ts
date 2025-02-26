@@ -1,7 +1,6 @@
 import { useCallback } from "react";
 import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
-import Constants from "expo-constants";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 
 export type AboutLink = {
@@ -14,23 +13,22 @@ export const ABOUT_LINKS = {
   email: {
     type: "email" as const,
     value: "lithuaningo@gmail.com",
-    label: "Contact us via email",
+    label: "Contact Support",
   },
   privacyPolicy: {
     type: "internal" as const,
     value: "/privacy-policy",
-    label: "View our Privacy Policy",
+    label: "Privacy Policy",
   },
   termsOfService: {
     type: "internal" as const,
     value: "/terms-of-service",
-    label: "View our Terms of Service",
+    label: "Terms of Service",
   },
-} as const;
+};
 
 export const useAbout = () => {
   const router = useRouter();
-  const appVersion = Constants.expoConfig?.version || "Unknown";
   const { showError } = useAlertDialog();
 
   const handleLinkPress = useCallback(
@@ -72,7 +70,7 @@ export const useAbout = () => {
         );
       }
     },
-    [router]
+    [router, showError]
   );
 
   const navigateToPrivacyPolicy = useCallback(() => {
@@ -84,11 +82,7 @@ export const useAbout = () => {
   }, [handleLinkPress]);
 
   return {
-    // App Info
-    appVersion,
     links: ABOUT_LINKS,
-
-    // Actions
     handleLinkPress,
     navigateToPrivacyPolicy,
     navigateToTermsOfService,

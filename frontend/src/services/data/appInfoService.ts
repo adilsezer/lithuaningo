@@ -1,21 +1,61 @@
 import Constants from "expo-constants";
-import apiClient, { ApiError } from "@services/api/apiClient";
-import { AppInfo } from "@src/types";
+import apiClient from "@services/api/apiClient";
+import { AppInfo, VERSION_REGEX } from "@src/types";
+import { Platform } from "react-native";
 
+/**
+ * Validates a version string against the X.Y.Z format
+ */
+const isValidVersion = (version: string): boolean => {
+  return VERSION_REGEX.test(version);
+};
+
+/**
+ * Compares two version strings
+ * @returns negative if v1 < v2, 0 if equal, positive if v1 > v2
+ */
+export const compareVersions = (v1: string, v2: string): number => {
+  if (!isValidVersion(v1) || !isValidVersion(v2)) {
+    throw new Error("Invalid version format. Must be X.Y.Z");
+  }
+
+  const v1Parts = v1.split(".").map(Number);
+  const v2Parts = v2.split(".").map(Number);
+
+  for (let i = 0; i < 3; i++) {
+    if (v1Parts[i] !== v2Parts[i]) {
+      return v1Parts[i] - v2Parts[i];
+    }
+  }
+  return 0;
+};
+
+/**
+ * Retrieves the latest app information for the current platform
+ */
 export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
   try {
-    return await apiClient.getAppInfo();
+    console.log(
+      "[appInfoService] Fetching app info for platform:",
+      Platform.OS
+    );
+    return await apiClient.getAppInfo(Platform.OS);
   } catch (error) {
-    if (error instanceof ApiError) {
-      //crashlytics().recordError(error);
-      console.error(`API Error ${error.status}:`, error.data);
-    } else {
-      console.error("Error fetching latest version:", error);
-    }
+    console.error("[appInfoService] Failed to fetch app info:", error);
     return null;
   }
 };
 
+/**
+ * Gets the current app version from Expo config
+ */
 export const getCurrentVersion = (): string => {
-  return Constants.expoConfig?.version || "0.0.0";
+  const version = Constants.expoConfig?.version;
+  if (!version || !isValidVersion(version)) {
+    console.warn(
+      "[appInfoService] Invalid or missing app version in Expo config"
+    );
+    return "0.0.0";
+  }
+  return version;
 };

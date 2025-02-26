@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import {
   getLatestAppInfo,
   getCurrentVersion,
+  compareVersions,
 } from "@services/data/appInfoService";
 import type { AppInfo } from "@src/types";
 
@@ -20,7 +21,7 @@ interface AppInfoActions {
 
 const currentVersion = getCurrentVersion();
 
-const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
+const useAppInfoStore = create<AppInfoState & AppInfoActions>((set) => ({
   appInfo: null,
   loading: true,
   error: null,
@@ -35,9 +36,10 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
         throw new Error("Failed to fetch app info");
       }
 
+      // Check if minimum version requirement is met
       const needsUpdate =
-        latestAppInfo.minimumVersion > currentVersion ||
-        (latestAppInfo.currentVersion !== currentVersion &&
+        compareVersions(latestAppInfo.minimumVersion, currentVersion) > 0 ||
+        (compareVersions(latestAppInfo.currentVersion, currentVersion) > 0 &&
           latestAppInfo.forceUpdate);
 
       set({
@@ -45,18 +47,18 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
         isUnderMaintenance: latestAppInfo.isMaintenance,
         needsUpdate,
         error: null,
+        loading: false,
       });
 
-      if (latestAppInfo && (needsUpdate || latestAppInfo.isMaintenance)) {
+      if (needsUpdate || latestAppInfo.isMaintenance) {
         router.replace("/notification");
       }
     } catch (err) {
       set({
         error: err instanceof Error ? err.message : "Failed to fetch app info",
+        loading: false,
       });
-      console.error("Error fetching app info:", err);
-    } finally {
-      set({ loading: false });
+      console.error("[useAppInfoStore] Error checking app status:", err);
     }
   },
 }));

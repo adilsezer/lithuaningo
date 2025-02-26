@@ -1,6 +1,5 @@
 import React from "react";
-import { Linking } from "react-native";
-import { useAppInfoState } from "@stores/useAppInfoStore";
+import { useAppInfo } from "@hooks/useAppInfo";
 import NotificationDisplay from "@components/ui/NotificationDisplay";
 import ErrorMessage from "@components/ui/ErrorMessage";
 
@@ -22,7 +21,13 @@ const NOTIFICATION_CONFIGS = {
 } as const;
 
 const NotificationScreen: React.FC = () => {
-  const { appInfo, error, isUnderMaintenance } = useAppInfoState();
+  const {
+    error,
+    maintenanceInfo: { isUnderMaintenance, message },
+    versionInfo: { needsUpdate },
+    releaseNotes,
+    handleUpdate,
+  } = useAppInfo();
 
   if (error) {
     return <ErrorMessage message={error} />;
@@ -32,26 +37,18 @@ const NotificationScreen: React.FC = () => {
     return (
       <NotificationDisplay
         title={NOTIFICATION_CONFIGS.maintenance.title}
-        subtitle={NOTIFICATION_CONFIGS.maintenance.subtitle(
-          appInfo?.maintenanceMessage
-        )}
+        subtitle={NOTIFICATION_CONFIGS.maintenance.subtitle(message)}
       />
     );
   }
 
-  if (appInfo?.updateUrl) {
+  if (needsUpdate) {
     return (
       <NotificationDisplay
         title={NOTIFICATION_CONFIGS.update.title}
-        subtitle={NOTIFICATION_CONFIGS.update.subtitle(appInfo.releaseNotes)}
+        subtitle={NOTIFICATION_CONFIGS.update.subtitle(releaseNotes)}
         buttonText={NOTIFICATION_CONFIGS.update.buttonText}
-        buttonAction={() => {
-          if (appInfo.updateUrl) {
-            Linking.openURL(appInfo.updateUrl).catch((err) =>
-              console.error("Failed to open URL:", err)
-            );
-          }
-        }}
+        buttonAction={handleUpdate}
       />
     );
   }

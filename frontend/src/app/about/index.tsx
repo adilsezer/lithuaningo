@@ -2,17 +2,20 @@ import React from "react";
 import { StyleSheet, ScrollView } from "react-native";
 import BackButton from "@components/ui/BackButton";
 import { useAbout } from "@hooks/useAbout";
+import { useAppInfo } from "@hooks/useAppInfo";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
+
 const AboutScreen = () => {
   const {
-    appVersion,
     links,
     handleLinkPress,
     navigateToPrivacyPolicy,
     navigateToTermsOfService,
   } = useAbout();
+  const { versionInfo } = useAppInfo();
   const theme = useTheme();
+
   return (
     <ScrollView>
       <BackButton />
@@ -54,10 +57,16 @@ const AboutScreen = () => {
         License
       </CustomText>
       <CustomText>This app is licensed under the MIT License.</CustomText>
+
       <CustomText variant="titleMedium" bold>
         Version
       </CustomText>
-      <CustomText>{appVersion}</CustomText>
+      <CustomText>{versionInfo.current}</CustomText>
+      {versionInfo.latest && versionInfo.current !== versionInfo.latest && (
+        <CustomText style={{ color: theme.colors.primary }}>
+          New version available: {versionInfo.latest}
+        </CustomText>
+      )}
     </ScrollView>
   );
 };

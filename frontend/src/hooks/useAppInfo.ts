@@ -1,55 +1,76 @@
-import { useState, useMemo, useCallback } from "react";
-import { AppInfo } from "@src/types";
+import { useMemo } from "react";
+import { useAppInfoState, useAppInfoActions } from "@stores/useAppInfoStore";
 import {
-  useIsLoading,
-  useSetLoading,
-  useError,
-  useSetError,
-} from "@stores/useUIStore";
-import {
-  getLatestAppInfo,
   getCurrentVersion,
+  compareVersions,
 } from "@services/data/appInfoService";
+import { Linking } from "react-native";
+import { VERSION_REGEX } from "@src/types";
 
 export const useAppInfo = () => {
-  const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
-  const setLoading = useSetLoading();
-  const isLoading = useIsLoading();
-  const setError = useSetError();
-  const error = useError();
+  const { appInfo, loading, error, isUnderMaintenance, needsUpdate } =
+    useAppInfoState();
+  const { checkAppStatus } = useAppInfoActions();
   const currentVersion = useMemo(() => getCurrentVersion(), []);
 
-  const { needsUpdate, isUnderMaintenance } = useMemo(
+  const versionInfo = useMemo(() => {
+    const latest = appInfo?.currentVersion;
+    const minimum = appInfo?.minimumVersion;
+
+    return {
+      current: currentVersion,
+      latest,
+      minimum,
+      needsUpdate,
+      isForceUpdate: appInfo?.forceUpdate && needsUpdate,
+      isValidCurrent: VERSION_REGEX.test(currentVersion),
+      hasUpdate: latest ? compareVersions(latest, currentVersion) > 0 : false,
+      isBelowMinimum: minimum
+        ? compareVersions(minimum, currentVersion) > 0
+        : false,
+    };
+  }, [appInfo, currentVersion, needsUpdate]);
+
+  const maintenanceInfo = useMemo(
     () => ({
-      needsUpdate:
-        (appInfo?.minimumVersion && appInfo.minimumVersion > currentVersion) ||
-        (appInfo?.currentVersion !== currentVersion && appInfo?.forceUpdate),
-      isUnderMaintenance: appInfo?.isMaintenance ?? false,
+      isUnderMaintenance,
+      message: appInfo?.maintenanceMessage,
+      startedAt: appInfo?.updatedAt,
     }),
-    [appInfo, currentVersion]
+    [isUnderMaintenance, appInfo?.maintenanceMessage, appInfo?.updatedAt]
   );
 
-  const fetchAppInfo = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const latestAppInfo = await getLatestAppInfo();
-      setAppInfo(latestAppInfo);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to fetch app info");
-      console.error("Error fetching app info:", err);
-    } finally {
-      setLoading(false);
+  const handleUpdate = async () => {
+    if (appInfo?.updateUrl) {
+      try {
+        const canOpen = await Linking.canOpenURL(appInfo.updateUrl);
+        if (!canOpen) {
+          throw new Error("Cannot open update URL");
+        }
+        await Linking.openURL(appInfo.updateUrl);
+      } catch (err) {
+        console.error("[useAppInfo] Failed to open update URL:", err);
+      }
     }
-  }, [setLoading, setError]);
+  };
 
   return {
-    appInfo,
-    isLoading,
+    // Basic state
+    loading,
     error,
-    needsUpdate,
-    isUnderMaintenance,
-    currentVersion,
-    fetchAppInfo,
+
+    // Version information
+    versionInfo,
+
+    // Maintenance information
+    maintenanceInfo,
+
+    // Release information
+    releaseNotes: appInfo?.releaseNotes,
+    lastUpdated: appInfo?.updatedAt,
+
+    // Actions
+    checkAppStatus,
+    handleUpdate,
   };
 };
