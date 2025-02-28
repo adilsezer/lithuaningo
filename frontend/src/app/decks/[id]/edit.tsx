@@ -10,6 +10,7 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
+import { FlashcardItem } from "@components/ui/FlashcardItem";
 import { useTheme, Card, IconButton } from "react-native-paper";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
@@ -170,7 +171,7 @@ export default function EditDeckScreen() {
   };
 
   const handleEditFlashcard = (flashcardId: string) => {
-    router.push(`/decks/${id}/flashcards/${flashcardId}/edit`);
+    router.push(`/flashcards/${flashcardId}/edit`);
   };
 
   if (!deck) {
@@ -229,41 +230,14 @@ export default function EditDeckScreen() {
             </CustomText>
           ) : (
             flashcards.map((flashcard) => (
-              <Card key={flashcard.id} style={styles.flashcardItem}>
-                <Card.Content>
-                  <View style={styles.flashcardContent}>
-                    <View style={styles.flashcardText}>
-                      <CustomText bold>{flashcard.frontWord}</CustomText>
-                      <CustomText style={styles.translationText}>
-                        {flashcard.backWord}
-                      </CustomText>
-                      {flashcard.reviewCount > 0 && (
-                        <CustomText
-                          variant="bodySmall"
-                          style={styles.statsText}
-                        >
-                          Reviews: {flashcard.reviewCount} | Success Rate:{" "}
-                          {flashcard.correctRate
-                            ? `${Math.round(flashcard.correctRate)}%`
-                            : "N/A"}
-                        </CustomText>
-                      )}
-                    </View>
-                    <View style={styles.flashcardActions}>
-                      <IconButton
-                        icon="pencil"
-                        size={20}
-                        onPress={() => handleEditFlashcard(flashcard.id)}
-                      />
-                      <IconButton
-                        icon="delete"
-                        size={20}
-                        onPress={() => handleDeleteFlashcard(flashcard.id)}
-                      />
-                    </View>
-                  </View>
-                </Card.Content>
-              </Card>
+              <FlashcardItem
+                key={flashcard.id}
+                id={flashcard.id}
+                frontWord={flashcard.frontWord}
+                backWord={flashcard.backWord}
+                onEdit={handleEditFlashcard}
+                onDelete={handleDeleteFlashcard}
+              />
             ))
           )}
         </View>
@@ -279,6 +253,7 @@ const styles = StyleSheet.create({
   },
   flashcardsSection: {
     marginTop: 24,
+    marginBottom: 32,
   },
   sectionTitle: {
     marginBottom: 16,
@@ -286,28 +261,6 @@ const styles = StyleSheet.create({
   emptyText: {
     textAlign: "center",
     marginTop: 16,
-  },
-  flashcardItem: {
-    marginBottom: 12,
-  },
-  flashcardContent: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  flashcardText: {
-    flex: 1,
-    marginRight: 16,
-  },
-  translationText: {
-    marginTop: 4,
     opacity: 0.7,
-  },
-  statsText: {
-    marginTop: 4,
-    fontStyle: "italic",
-  },
-  flashcardActions: {
-    flexDirection: "row",
   },
 });
