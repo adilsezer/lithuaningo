@@ -1,141 +1,134 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useFlashcards } from "@hooks/useFlashcards";
-import { useDecks } from "@hooks/useDecks";
-import { useUserData } from "@stores/useUserStore";
-import { useTheme, ActivityIndicator } from "react-native-paper";
-import { Flashcard, FlashcardFormData } from "@src/types";
+import { useTheme } from "react-native-paper";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import { flashcardEditSchema } from "@utils/zodSchemas";
+import { Flashcard, FlashcardFormData } from "@src/types";
+import { useFlashcards } from "@hooks/useFlashcards";
 import BackButton from "@components/ui/BackButton";
+import { ActivityIndicator } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
+import { flashcardFormSchema } from "@utils/zodSchemas";
 
+// Form fields definition
 const fields: FormField[] = [
   {
     name: "frontWord",
     label: "Front Word",
     category: "text-input",
     type: "text",
-    placeholder: "Enter front word",
+    placeholder: "Enter the word in Lithuanian",
   },
   {
     name: "backWord",
     label: "Back Word",
     category: "text-input",
     type: "text",
-    placeholder: "Enter back word",
+    placeholder: "Enter the translation",
   },
   {
     name: "exampleSentence",
     label: "Example Sentence",
     category: "text-input",
     type: "text",
-    placeholder: "Enter example sentence",
+    multiline: true,
+    numberOfLines: 2,
+    placeholder: "Enter an example sentence in Lithuanian",
   },
   {
     name: "exampleSentenceTranslation",
     label: "Example Sentence Translation",
     category: "text-input",
     type: "text",
-    placeholder: "Enter sentence translation",
+    multiline: true,
+    numberOfLines: 2,
+    placeholder: "Enter the translation of the example sentence",
   },
   {
     name: "imageFile",
-    label: "Flashcard Image",
+    label: "Image",
     category: "image-input",
     type: "image",
     maxSize: 5 * 1024 * 1024,
-    placeholderText: "Tap to change flashcard image",
+    placeholderText: "Tap to add an image",
   },
   {
     name: "audioFile",
-    label: "Flashcard Audio",
+    label: "Audio",
     category: "audio-input",
     type: "audio",
     maxSize: 10 * 1024 * 1024,
-    maxDuration: 30,
-    placeholderText: "Tap to change flashcard audio",
+    placeholderText: "Tap to add audio pronunciation",
   },
 ];
 
 export default function EditFlashcardScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const router = useRouter();
   const theme = useTheme();
-  const { updateFlashcard, getFlashcardById } = useFlashcards();
-  const { getDeckById } = useDecks();
-  const userData = useUserData();
-  const { showError, showSuccess } = useAlertDialog();
+  const router = useRouter();
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [flashcard, setFlashcard] = useState<Flashcard | null>(null);
 
+  const { updateFlashcard, getFlashcardById, isLoading } = useFlashcards();
+
   useEffect(() => {
-    const loadFlashcardAndCheckAuth = async () => {
-      if (!id) return;
-      try {
-        const flashcardData = await getFlashcardById(id);
-        setFlashcard(flashcardData);
+    if (id) {
+      loadFlashcard();
+    }
+  }, [id]);
 
-        const deckData = await getDeckById(flashcardData.deckId);
+  const loadFlashcard = async () => {
+    try {
+      const data = await getFlashcardById(id);
+      setFlashcard(data);
+    } catch (error) {
+      console.error("Error loading flashcard:", error);
+    }
+  };
 
-        if (
-          deckData &&
-          userData?.id !== deckData.userId &&
-          !userData?.isAdmin
-        ) {
-          showError("You are not authorized to edit this flashcard");
-          router.back();
-          return;
-        }
-      } catch (error) {
-        console.error("Error loading flashcard:", error);
-        showError("Failed to load flashcard");
-      }
-    };
-
-    loadFlashcardAndCheckAuth();
-  }, [id, getFlashcardById, getDeckById, userData, router, showError]);
-
-  const handleSubmit = async (formData: FlashcardFormData) => {
+  const handleSubmit = async (data: FlashcardFormData) => {
     if (!id || !flashcard) {
-      showError("Missing required data");
+      console.error("Flashcard ID or data is missing");
       return;
     }
 
+    setIsSubmitting(true);
     try {
-      const success = await updateFlashcard(
+      await updateFlashcard(
         id,
-        formData,
-        formData.imageFile,
-        formData.audioFile,
+        {
+          frontWord: data.frontWord,
+          backWord: data.backWord,
+          exampleSentence: data.exampleSentence,
+          exampleSentenceTranslation: data.exampleSentenceTranslation,
+        },
+        data.imageFile,
+        data.audioFile,
         flashcard.imageUrl,
         flashcard.audioUrl
       );
 
-      if (success) {
-        showSuccess("Flashcard updated successfully");
-        router.back();
-      }
+      // Navigate back to the deck edit screen
+      router.push(`/decks/${flashcard.deckId}/edit`);
     } catch (error) {
       console.error("Error updating flashcard:", error);
-      showError("Failed to update flashcard");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  if (!flashcard) {
+  if (isLoading || !flashcard) {
     return (
       <View
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <View style={styles.header}>
-          <BackButton />
-          <CustomText variant="titleMedium">Edit Flashcard</CustomText>
-          <View style={styles.headerRight} />
-        </View>
+        <BackButton />
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" />
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <CustomText style={{ marginTop: 16 }}>
+            Loading flashcard...
+          </CustomText>
         </View>
       </View>
     );
@@ -145,20 +138,18 @@ export default function EditFlashcardScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.header}>
-        <BackButton />
-        <CustomText variant="titleMedium">Edit Flashcard</CustomText>
-        <View style={styles.headerRight} />
-      </View>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
+      <BackButton />
+      <ScrollView style={styles.scrollView}>
+        <CustomText variant="titleLarge" bold style={styles.title}>
+          Edit Flashcard
+        </CustomText>
+
         <Form
           fields={fields}
           onSubmit={handleSubmit}
           submitButtonText="Update Flashcard"
-          zodSchema={flashcardEditSchema}
+          zodSchema={flashcardFormSchema}
+          isLoading={isSubmitting}
           defaultValues={{
             frontWord: flashcard.frontWord,
             backWord: flashcard.backWord,
@@ -168,14 +159,14 @@ export default function EditFlashcardScreen() {
               ? {
                   uri: flashcard.imageUrl,
                   type: "image/jpeg",
-                  name: "current-image.jpg",
+                  name: flashcard.imageUrl.split("/").pop() || "image.jpg",
                 }
               : undefined,
             audioFile: flashcard.audioUrl
               ? {
                   uri: flashcard.audioUrl,
-                  type: "audio/m4a",
-                  name: "current-audio.m4a",
+                  type: "audio/mpeg",
+                  name: flashcard.audioUrl.split("/").pop() || "audio.mp3",
                 }
               : undefined,
           }}
@@ -188,25 +179,19 @@ export default function EditFlashcardScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
     paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.1)",
   },
-  headerRight: {
-    width: 40, // Same width as BackButton for alignment
-  },
-  scrollContent: {
-    padding: 16,
+  scrollView: {
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+    padding: 24,
+  },
+  title: {
+    marginBottom: 16,
+    textAlign: "left",
   },
 });

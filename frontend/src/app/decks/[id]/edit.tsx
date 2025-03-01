@@ -1,11 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect } from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useDecks } from "@hooks/useDecks";
 import { useFlashcards } from "@hooks/useFlashcards";
-import { useSetLoading } from "@stores/useUIStore";
-import { Deck, DeckFormData } from "@src/types";
+import { DeckFormData } from "@src/types";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import BackButton from "@components/ui/BackButton";
@@ -14,201 +12,133 @@ import { FlashcardItem } from "@components/ui/FlashcardItem";
 import { useTheme } from "react-native-paper";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
-import { useUserData } from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
+import { ActivityIndicator } from "react-native-paper";
+import CustomDivider from "@components/ui/CustomDivider";
+// Form fields definition
+const fields: FormField[] = [
+  {
+    name: "title",
+    label: "Title",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter deck title (1-100 characters)",
+  },
+  {
+    name: "description",
+    label: "Description",
+    category: "text-input",
+    type: "text",
+    multiline: true,
+    numberOfLines: 3,
+    placeholder: "Enter deck description (1-1000 characters)",
+  },
+  {
+    name: "category",
+    label: "Category",
+    category: "selection",
+    type: "picker",
+    options: deckCategories
+      .filter((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat))
+      .map((cat) => ({
+        label: cat,
+        value: cat,
+      })),
+  },
+  {
+    name: "tags",
+    label: "Tags (comma separated, max 10 tags)",
+    category: "text-input",
+    type: "text",
+    placeholder: "e.g., basics, grammar, verbs",
+  },
+  {
+    name: "imageFile",
+    label: "Deck Image",
+    category: "image-input",
+    type: "image",
+    maxSize: 5 * 1024 * 1024,
+    placeholderText: "Tap to change deck cover image",
+  },
+  {
+    name: "isPublic",
+    label: "Make deck public",
+    category: "toggle",
+    type: "switch",
+  },
+  {
+    name: "consent",
+    label:
+      "By updating this deck, you confirm it's original, public, and compliant.",
+    category: "toggle",
+    type: "switch",
+  },
+];
 
 export default function EditDeckScreen() {
   const theme = useTheme();
   const router = useRouter();
-  const { showConfirm, showError } = useAlertDialog();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getDeckById, updateDeck, deleteDeck } = useDecks();
-  const userData = useUserData();
+
+  // Use hooks for business logic
+  const { deck, isLoading: deckLoading, updateDeck, deleteDeck } = useDecks(id);
+
   const {
     flashcards,
+    isLoading: flashcardsLoading,
     getDeckFlashcards,
     deleteFlashcard,
-    isLoading: flashcardsLoading,
   } = useFlashcards();
-  const [deck, setDeck] = useState<Deck | null>(null);
-  const setLoading = useSetLoading();
 
-  const fields: FormField[] = [
-    {
-      name: "title",
-      label: "Title",
-      category: "text-input",
-      type: "text",
-      placeholder: "Enter deck title (1-100 characters)",
-    },
-    {
-      name: "description",
-      label: "Description",
-      category: "text-input",
-      type: "text",
-      multiline: true,
-      numberOfLines: 3,
-      placeholder: "Enter deck description (1-1000 characters)",
-    },
-    {
-      name: "category",
-      label: "Category",
-      category: "selection",
-      type: "picker",
-      options: deckCategories
-        .filter((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat))
-        .map((cat) => ({
-          label: cat,
-          value: cat,
-        })),
-    },
-    {
-      name: "tags",
-      label: "Tags (comma separated, max 10 tags)",
-      category: "text-input",
-      type: "text",
-      placeholder: "e.g., basics, grammar, verbs",
-    },
-    {
-      name: "imageFile",
-      label: "Deck Image",
-      category: "image-input",
-      type: "image",
-      maxSize: 5 * 1024 * 1024,
-      placeholderText: "Tap to change deck cover image",
-    },
-    {
-      name: "isPublic",
-      label: "Make deck public",
-      category: "toggle",
-      type: "switch",
-    },
-    {
-      name: "consent",
-      label:
-        "By updating this deck, you confirm it's original, public, and compliant.",
-      category: "toggle",
-      type: "switch",
-    },
-  ];
-
-  const fetchDeck = useCallback(async () => {
-    if (!id) return;
-    setLoading(true);
-    try {
-      const fetchedDeck = await getDeckById(id);
-      setDeck(fetchedDeck);
-
-      // Check if user is authorized to edit
-      if (
-        fetchedDeck &&
-        userData?.id !== fetchedDeck.userId &&
-        !userData?.isAdmin
-      ) {
-        showError("You are not authorized to edit this deck");
-        router.back();
-        return;
-      }
-    } catch (error) {
-      console.error("Error fetching deck:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [id, getDeckById, setLoading, userData, router, showError]);
-
-  useEffect(() => {
-    fetchDeck();
-  }, [fetchDeck]);
-
+  // Load flashcards when deck ID is available
   useEffect(() => {
     if (id) {
       getDeckFlashcards(id);
     }
   }, [id, getDeckFlashcards]);
 
-  const handleSubmit = async (data: DeckFormData) => {
-    if (!deck || !id) return;
-
-    try {
-      await updateDeck(
-        id,
-        {
-          ...deck,
-          title: data.title,
-          description: data.description,
-          category: data.category,
-          tags:
-            data.tags
-              ?.split(",")
-              .map((t) => t.trim())
-              .filter(Boolean) ?? [],
-          isPublic: data.isPublic ?? true,
-        },
-        data.imageFile
-      );
-      router.push(`/decks/${id}`);
-    } catch (error) {
-      console.error("Error updating deck:", error);
-    }
-  };
-
-  const handleDeleteFlashcard = async (flashcardId: string) => {
-    if (!id) return;
-
-    showConfirm({
-      title: "Delete Flashcard",
-      message: "Are you sure you want to delete this flashcard?",
-      confirmText: "Delete",
-      cancelText: "Cancel",
-      onConfirm: async () => {
-        try {
-          await deleteFlashcard(flashcardId);
-          await getDeckFlashcards(id);
-        } catch (error) {
-          console.error("Error deleting flashcard:", error);
-        }
-      },
-    });
-  };
-
+  // Navigation handlers
   const handleEditFlashcard = (flashcardId: string) => {
     router.push(`/flashcards/${flashcardId}/edit`);
   };
 
-  const handleDeleteDeck = useCallback(async () => {
-    if (!id) return;
-
-    showConfirm({
-      title: "Delete Deck",
-      message:
-        "Are you sure you want to delete this deck? This action cannot be undone.",
-      onConfirm: async () => {
-        const success = await deleteDeck(id);
-        if (success) {
-          router.replace("/dashboard/decks");
-        }
-      },
+  // Form submission handler
+  const handleSubmit = (data: DeckFormData) => {
+    updateDeck(data, () => {
+      router.push(`/decks/${id}`);
     });
-  }, [id, deleteDeck, router, showConfirm]);
+  };
 
-  if (!deck) {
+  // Handle flashcard deletion
+  const handleDeleteFlashcard = (flashcardId: string) => {
+    deleteFlashcard(flashcardId).then(() => {
+      if (id) getDeckFlashcards(id);
+    });
+  };
+
+  // Loading state
+  if (deckLoading || !deck) {
     return (
       <View
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
         <BackButton />
-        <CustomText>Loading deck...</CustomText>
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <CustomText style={{ marginTop: 16 }}>Loading deck...</CustomText>
+        </View>
       </View>
     );
   }
 
+  // Render the screen
   return (
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <BackButton />
-      <ScrollView>
-        <CustomText variant="titleLarge" bold>
+      <ScrollView style={styles.scrollView}>
+        <CustomText variant="titleLarge" bold style={styles.title}>
           Edit Deck
         </CustomText>
 
@@ -237,17 +167,33 @@ export default function EditDeckScreen() {
         <CustomButton
           mode="contained"
           title="Delete Deck"
-          onPress={handleDeleteDeck}
+          onPress={() => deleteDeck(() => router.replace("/dashboard/decks"))}
           style={[{ backgroundColor: theme.colors.error }]}
         />
 
+        <CustomDivider />
+
         <View style={styles.flashcardsSection}>
-          <CustomText variant="titleMedium" bold style={styles.sectionTitle}>
-            Flashcards
-          </CustomText>
+          <View style={styles.sectionHeader}>
+            <CustomText variant="titleMedium" bold style={styles.sectionTitle}>
+              Flashcards
+            </CustomText>
+            <CustomButton
+              mode="contained"
+              title="Add Flashcard"
+              icon="plus"
+              onPress={() => router.push(`/flashcards/new?deckId=${id}`)}
+              style={{ backgroundColor: theme.colors.primary }}
+            />
+          </View>
 
           {flashcardsLoading ? (
-            <CustomText>Loading flashcards...</CustomText>
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator size="small" color={theme.colors.primary} />
+              <CustomText style={{ marginTop: 8 }}>
+                Loading flashcards...
+              </CustomText>
+            </View>
           ) : flashcards.length === 0 ? (
             <CustomText style={styles.emptyText}>
               No flashcards yet. Add some to get started!
@@ -276,8 +222,14 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: 16,
   },
+  scrollView: {
+    flex: 1,
+  },
+  title: {
+    marginVertical: 16,
+    textAlign: "left",
+  },
   flashcardsSection: {
-    marginTop: 24,
     marginBottom: 32,
   },
   sectionTitle: {
@@ -287,5 +239,17 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 16,
     opacity: 0.7,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 24,
+  },
+  sectionHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
   },
 });

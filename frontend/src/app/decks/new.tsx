@@ -83,21 +83,9 @@ export default function NewDeckScreen() {
       if (!userData?.id) return;
 
       try {
-        const deckId = await createDeck(
-          {
-            userId: userData.id,
-            title: data.title,
-            description: data.description,
-            category: data.category,
-            tags:
-              data.tags
-                ?.split(",")
-                .map((t) => t.trim())
-                .filter(Boolean) ?? [],
-            isPublic: data.isPublic ?? true,
-          },
-          data.imageFile
-        );
+        const deckId = await createDeck(data, () => {
+          // Success callback is handled by the hook
+        });
 
         if (deckId) {
           router.push(`/flashcards/new?deckId=${deckId}`);

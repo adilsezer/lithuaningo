@@ -262,7 +262,7 @@ namespace Lithuaningo.API.Services
                 var deckResponse = _mapper.Map<DeckResponse>(createdDeck);
 
                 // Invalidate relevant cache entries
-                await InvalidateDeckCacheAsync(createdDeck);
+                await InvalidateDeckCacheAsync(deckResponse);
                 _logger.LogInformation("Created new deck with ID {Id}", createdDeck.Id);
 
                 return deckResponse;
@@ -311,7 +311,7 @@ namespace Lithuaningo.API.Services
                 var deckResponse = _mapper.Map<DeckResponse>(updatedDeck);
 
                 // Invalidate relevant cache entries
-                await InvalidateDeckCacheAsync(updatedDeck);
+                await InvalidateDeckCacheAsync(deckResponse);
                 _logger.LogInformation("Updated deck {Id}", id);
 
                 return deckResponse;
@@ -341,9 +341,8 @@ namespace Lithuaningo.API.Services
                         .Where(d => d.Id == deckGuid)
                         .Delete();
 
-                    // Invalidate cache entries
-                    var modelDeck = _mapper.Map<Deck>(deck);
-                    await InvalidateDeckCacheAsync(modelDeck);
+                    // Invalidate cache entries directly using the DeckResponse properties
+                    await InvalidateDeckCacheAsync(deck);
                     _logger.LogInformation("Deleted deck {Id}", id);
                 }
             }
@@ -492,7 +491,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private async Task InvalidateDeckCacheAsync(Deck deck)
+        private async Task InvalidateDeckCacheAsync(DeckResponse deck)
         {
             _logger.LogInformation("[InvalidateDeckCacheAsync] Starting cache invalidation for deck {DeckId}", deck.Id);
             

@@ -15,6 +15,7 @@ import type {
   CreateDeckRequest,
   UpdateDeckRequest,
   ImageFile,
+  DeckFormData,
 } from "@src/types";
 import deckService from "@services/data/deckService";
 import { DeckCategory } from "@src/types/DeckCategory";
@@ -24,18 +25,29 @@ interface UseDecksOptions {
   userId?: string;
 }
 
-export const useDecks = (options?: UseDecksOptions) => {
+/**
+ * Hook for managing deck operations and state
+ * @param deckIdOrOptions - Either a deck ID string or options object
+ */
+export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
   const router = useRouter();
   const userData = useUserData();
   const setLoading = useSetLoading();
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
-  const { showError, showSuccess } = useAlertDialog();
+  const { showError, showSuccess, showConfirm } = useAlertDialog();
   const isAuthenticated = useIsAuthenticated();
+
+  // Parse parameters
+  const deckId =
+    typeof deckIdOrOptions === "string" ? deckIdOrOptions : undefined;
+  const options =
+    typeof deckIdOrOptions === "object" ? deckIdOrOptions : undefined;
 
   // Local state
   const [decks, setDecks] = useState<(Deck | DeckWithRatingResponse)[]>([]);
+  const [deck, setDeck] = useState<Deck | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<DeckCategory>(
     options?.initialCategory || "All Decks"
@@ -64,6 +76,34 @@ export const useDecks = (options?: UseDecksOptions) => {
     }
     return true;
   }, [userData?.id, showError]);
+
+  // Fetch a specific deck by ID
+  const fetchDeck = useCallback(async () => {
+    if (!deckId) return;
+
+    setLoading(true);
+    try {
+      console.log("[useDecks] Fetching deck by ID:", deckId);
+      const fetchedDeck = await deckService.getDeck(deckId);
+      setDeck(fetchedDeck);
+
+      // Check if user is authorized to edit
+      if (
+        fetchedDeck &&
+        userData?.id !== fetchedDeck.userId &&
+        !userData?.isAdmin
+      ) {
+        showError("You are not authorized to edit this deck");
+        router.back();
+        return;
+      }
+    } catch (error) {
+      console.error("[useDecks] Error fetching deck:", error);
+      handleError(error, "Failed to load deck");
+    } finally {
+      setLoading(false);
+    }
+  }, [deckId, setLoading, userData, router, showError, handleError]);
 
   // Fetch decks based on category and search query
   const fetchDecks = useCallback(async () => {
@@ -131,37 +171,15 @@ export const useDecks = (options?: UseDecksOptions) => {
     isAuthenticated,
   ]);
 
-  // Create a new deck
-  const createDeck = useCallback(
-    async (request: CreateDeckRequest, imageFile?: ImageFile) => {
-      if (!checkAuth()) return;
-
-      try {
-        setLoading(true);
-        clearError();
-
-        if (!request.title || !request.description) {
-          throw new Error("Missing required fields");
-        }
-
-        const deck = await deckService.createDeck({ request, imageFile });
-        showSuccess("Deck created! Add flashcards to help everyone learn");
-        return deck.id;
-      } catch (error) {
-        handleError(error, "Failed to create deck");
-        return undefined;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [checkAuth, setLoading, clearError, handleError, showSuccess]
-  );
-
+  // Get a specific deck by ID
   const getDeckById = useCallback(
     async (id: string) => {
       try {
-        return await deckService.getDeck(id);
+        console.log("[useDecks] Fetching deck by ID:", id);
+        const deck = await deckService.getDeck(id);
+        return deck;
       } catch (error) {
+        console.error("[useDecks] Error fetching deck by ID:", error);
         handleError(error, "Failed to fetch deck");
         return null;
       }
@@ -169,51 +187,152 @@ export const useDecks = (options?: UseDecksOptions) => {
     [handleError]
   );
 
-  const updateDeck = useCallback(
-    async (
-      id: string,
-      deck: Omit<UpdateDeckRequest, "imageUrl">,
-      imageFile?: ImageFile
-    ) => {
+  // Create a new deck
+  const createDeck = useCallback(
+    async (formData: DeckFormData, onSuccess?: () => void) => {
       if (!checkAuth()) return;
 
       try {
+        console.log("[useDecks] Creating new deck:", formData.title);
         setLoading(true);
         clearError();
-        await deckService.updateDeck(id, deck, imageFile);
+
+        if (!formData.title || !formData.description) {
+          throw new Error("Missing required fields");
+        }
+
+        // Convert form data to request format
+        const request: CreateDeckRequest = {
+          userId: userData?.id || "",
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          tags: formData.tags
+            ? formData.tags
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean)
+            : [],
+          isPublic: formData.isPublic ?? true,
+        };
+
+        const deck = await deckService.createDeck({
+          request,
+          imageFile: formData.imageFile,
+        });
+
+        showSuccess("Deck created! Add flashcards to help everyone learn");
+
+        if (onSuccess) {
+          onSuccess();
+        }
+
+        return deck.id;
       } catch (error) {
-        handleError(error, "Failed to update deck");
+        console.error("[useDecks] Error creating deck:", error);
+        handleError(error, "Failed to create deck");
+        return undefined;
       } finally {
         setLoading(false);
       }
     },
-    [checkAuth, setLoading, clearError, handleError]
+    [checkAuth, setLoading, clearError, handleError, showSuccess, userData?.id]
   );
 
-  const deleteDeck = useCallback(
-    async (id: string) => {
-      if (!checkAuth()) return false;
+  // Update an existing deck
+  const updateDeck = useCallback(
+    async (formData: DeckFormData, onSuccess?: () => void) => {
+      if (!checkAuth() || !deckId || !deck) return false;
 
       try {
+        console.log("[useDecks] Updating deck:", deckId);
         setLoading(true);
         clearError();
-        await deckService.deleteDeck(id);
-        showSuccess("Deck deleted successfully");
+
+        // Convert form data to request format
+        const request: Omit<UpdateDeckRequest, "imageUrl"> = {
+          title: formData.title,
+          description: formData.description,
+          category: formData.category,
+          tags: formData.tags
+            ? formData.tags
+                .split(",")
+                .map((t) => t.trim())
+                .filter(Boolean)
+            : [],
+          isPublic: formData.isPublic ?? true,
+        };
+
+        await deckService.updateDeck(deckId, request, formData.imageFile);
+        showSuccess("Deck updated successfully");
+
+        if (onSuccess) {
+          onSuccess();
+        }
+
         return true;
       } catch (error) {
-        handleError(error, "Failed to delete deck");
+        console.error("[useDecks] Error updating deck:", error);
+        handleError(error, "Failed to update deck");
         return false;
       } finally {
         setLoading(false);
       }
     },
-    [checkAuth, setLoading, clearError, handleError, showSuccess]
+    [checkAuth, setLoading, clearError, handleError, showSuccess, deckId, deck]
+  );
+
+  // Delete a deck
+  const deleteDeck = useCallback(
+    async (onSuccess?: () => void) => {
+      if (!checkAuth() || !deckId) return false;
+
+      showConfirm({
+        title: "Delete Deck",
+        message:
+          "Are you sure you want to delete this deck? This action cannot be undone.",
+        onConfirm: async () => {
+          setLoading(true);
+          try {
+            await deckService.deleteDeck(deckId);
+            showSuccess("Deck deleted successfully");
+
+            if (onSuccess) {
+              onSuccess();
+            }
+
+            // Don't return anything to match the expected void return type
+          } catch (error) {
+            console.error("[useDecks] Error deleting deck:", error);
+            handleError(error, "Failed to delete deck");
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
+    },
+    [
+      checkAuth,
+      setLoading,
+      clearError,
+      handleError,
+      showSuccess,
+      showConfirm,
+      deckId,
+    ]
   );
 
   // Effects
   useEffect(() => {
     setSearchQuery("");
   }, [selectedCategory]);
+
+  // If deckId is provided, fetch the deck on mount
+  useEffect(() => {
+    if (deckId) {
+      fetchDeck();
+    }
+  }, [deckId, fetchDeck]);
 
   // Derived states
   const filteredDecks = useMemo(() => decks || [], [decks]);
@@ -226,7 +345,9 @@ export const useDecks = (options?: UseDecksOptions) => {
   }, [searchQuery, selectedCategory]);
 
   return {
+    // State
     decks: filteredDecks,
+    deck,
     isLoading,
     error,
     searchQuery,
@@ -234,10 +355,13 @@ export const useDecks = (options?: UseDecksOptions) => {
     isEmpty,
     emptyMessage,
     isAuthenticated: !!userData?.id,
+
+    // Actions
     setSearchQuery,
     setSelectedCategory,
     clearError,
     fetchDecks,
+    fetchDeck,
     createDeck,
     getDeckById,
     updateDeck,

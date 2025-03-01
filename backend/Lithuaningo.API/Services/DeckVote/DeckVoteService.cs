@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.DeckVote;
+using Lithuaningo.API.DTOs.Deck;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.Extensions.Logging;
@@ -42,21 +43,23 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                _logger.LogInformation("[VoteDeckAsync] Starting vote operation for deck {DeckId}, user {UserId}, isUpvote: {IsUpvote}", 
-                    deckId, userId, isUpvote);
-
-                // Get deck info for cache invalidation
+                _logger.LogInformation("[VoteDeckAsync] Starting vote operation for deck {DeckId} by user {UserId}", deckId, userId);
+                
+                // Get the deck to make sure it exists
                 var deck = await _supabaseClient
                     .From<Deck>()
                     .Where(d => d.Id == deckId)
                     .Single();
-
+                
                 if (deck == null)
                 {
-                    _logger.LogError("[VoteDeckAsync] Deck not found: {DeckId}", deckId);
-                    throw new Exception("Deck not found");
+                    _logger.LogError("[VoteDeckAsync] Deck {DeckId} not found", deckId);
+                    throw new KeyNotFoundException($"Deck with ID {deckId} not found");
                 }
-                    
+                
+                // Map to DeckResponse for cache invalidation
+                var deckResponse = _mapper.Map<DeckResponse>(deck);
+
                 var existingVote = await GetUserVoteAsync(deckId, userId);
                 if (existingVote != null)
                 {
@@ -114,7 +117,7 @@ namespace Lithuaningo.API.Services
 
                 _logger.LogInformation("[VoteDeckAsync] Invalidating caches");
                 await InvalidateVoteCacheAsync(deckId, userId);
-                await InvalidateDeckCacheAsync(deck);
+                await InvalidateDeckCacheAsync(deckResponse);
                 _logger.LogInformation("[VoteDeckAsync] Vote operation completed successfully");
                 return true;
             }
@@ -297,7 +300,7 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private async Task InvalidateDeckCacheAsync(Deck deck)
+        private async Task InvalidateDeckCacheAsync(DeckResponse deck)
         {
             try
             {
