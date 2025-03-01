@@ -11,17 +11,18 @@ import { FormField } from "@components/form/form.types";
 import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { FlashcardItem } from "@components/ui/FlashcardItem";
-import { useTheme, Card, IconButton } from "react-native-paper";
+import { useTheme } from "react-native-paper";
 import { deckFormSchema } from "@utils/zodSchemas";
 import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
 import { useUserData } from "@stores/useUserStore";
+import CustomButton from "@components/ui/CustomButton";
 
 export default function EditDeckScreen() {
   const theme = useTheme();
   const router = useRouter();
   const { showConfirm, showError } = useAlertDialog();
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { getDeckById, updateDeck } = useDecks();
+  const { getDeckById, updateDeck, deleteDeck } = useDecks();
   const userData = useUserData();
   const {
     flashcards,
@@ -174,6 +175,22 @@ export default function EditDeckScreen() {
     router.push(`/flashcards/${flashcardId}/edit`);
   };
 
+  const handleDeleteDeck = useCallback(async () => {
+    if (!id) return;
+
+    showConfirm({
+      title: "Delete Deck",
+      message:
+        "Are you sure you want to delete this deck? This action cannot be undone.",
+      onConfirm: async () => {
+        const success = await deleteDeck(id);
+        if (success) {
+          router.replace("/dashboard/decks");
+        }
+      },
+    });
+  }, [id, deleteDeck, router, showConfirm]);
+
   if (!deck) {
     return (
       <View
@@ -215,6 +232,13 @@ export default function EditDeckScreen() {
                 }
               : undefined,
           }}
+        />
+
+        <CustomButton
+          mode="contained"
+          title="Delete Deck"
+          onPress={handleDeleteDeck}
+          style={[{ backgroundColor: theme.colors.error }]}
         />
 
         <View style={styles.flashcardsSection}>

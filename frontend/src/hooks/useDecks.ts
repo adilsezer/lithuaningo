@@ -190,6 +190,26 @@ export const useDecks = (options?: UseDecksOptions) => {
     [checkAuth, setLoading, clearError, handleError]
   );
 
+  const deleteDeck = useCallback(
+    async (id: string) => {
+      if (!checkAuth()) return false;
+
+      try {
+        setLoading(true);
+        clearError();
+        await deckService.deleteDeck(id);
+        showSuccess("Deck deleted successfully");
+        return true;
+      } catch (error) {
+        handleError(error, "Failed to delete deck");
+        return false;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [checkAuth, setLoading, clearError, handleError, showSuccess]
+  );
+
   // Effects
   useEffect(() => {
     setSearchQuery("");
@@ -221,5 +241,6 @@ export const useDecks = (options?: UseDecksOptions) => {
     createDeck,
     getDeckById,
     updateDeck,
+    deleteDeck,
   };
 };
