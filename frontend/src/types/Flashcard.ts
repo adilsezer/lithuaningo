@@ -45,6 +45,6 @@ export interface FlashcardFormData {
   backWord: string;
   exampleSentence: string;
   exampleSentenceTranslation: string;
-  imageFile?: ImageFile;
-  audioFile?: ImageFile; // Using ImageFile type as it has the same structure needed for audio files
+  imageFile?: ImageFile | null;
+  audioFile?: ImageFile | null; // Using ImageFile type as it has the same structure needed for audio files
 }

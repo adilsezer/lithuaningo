@@ -103,8 +103,8 @@ export default function EditFlashcardScreen() {
           exampleSentence: data.exampleSentence,
           exampleSentenceTranslation: data.exampleSentenceTranslation,
         },
-        data.imageFile,
-        data.audioFile,
+        data.imageFile || undefined,
+        data.audioFile || undefined,
         flashcard.imageUrl,
         flashcard.audioUrl
       );
@@ -161,14 +161,14 @@ export default function EditFlashcardScreen() {
                   type: "image/jpeg",
                   name: flashcard.imageUrl.split("/").pop() || "image.jpg",
                 }
-              : undefined,
+              : null,
             audioFile: flashcard.audioUrl
               ? {
                   uri: flashcard.audioUrl,
                   type: "audio/mpeg",
                   name: flashcard.audioUrl.split("/").pop() || "audio.mp3",
                 }
-              : undefined,
+              : null,
           }}
         />
       </ScrollView>

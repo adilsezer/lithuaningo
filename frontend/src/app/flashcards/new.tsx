@@ -67,6 +67,7 @@ export default function NewFlashcardScreen() {
   const { showError, showSuccess } = useAlertDialog();
   const { createFlashcard } = useFlashcards();
   const formRef = useRef<{ reset: () => void }>(null);
+  const scrollViewRef = useRef<ScrollView>(null);
 
   const handleSubmit = async (formData: FlashcardFormData) => {
     if (!deckId) {
@@ -80,13 +81,14 @@ export default function NewFlashcardScreen() {
           ...formData,
           deckId,
         },
-        formData.imageFile,
-        formData.audioFile
+        formData.imageFile || undefined,
+        formData.audioFile || undefined
       );
 
       if (success) {
         showSuccess("Flashcard created successfully");
-        router.back();
+        formRef.current?.reset();
+        scrollViewRef.current?.scrollTo({ x: 0, y: 0, animated: true });
       }
     } catch (error) {
       console.error("Failed to create flashcard:", error);
@@ -106,6 +108,7 @@ export default function NewFlashcardScreen() {
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
+        ref={scrollViewRef}
       >
         <Form
           ref={formRef}

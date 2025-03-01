@@ -140,8 +140,8 @@ export const flashcardFormSchema = z.object({
   exampleSentenceTranslation: z
     .string()
     .min(1, "Example sentence translation is required"),
-  imageFile: imageFileSchema.optional(),
-  audioFile: audioFileSchema.optional(),
+  imageFile: imageFileSchema.nullable().optional(),
+  audioFile: audioFileSchema.nullable().optional(),
 });
 
 export const flashcardEditSchema = flashcardFormSchema;
