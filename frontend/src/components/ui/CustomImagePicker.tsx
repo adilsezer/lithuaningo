@@ -67,49 +67,54 @@ export const CustomImagePicker: React.FC<CustomImagePickerProps> = ({
         ]}
         onPress={handleImagePick}
       >
-        {value ? (
-          <View style={styles.imageContainer}>
-            <Image source={{ uri: value.uri }} style={styles.content} />
+        <View style={styles.cardWrapper}>
+          {value ? (
+            <View style={styles.imageContainer}>
+              <Image source={{ uri: value.uri }} style={styles.content} />
+              <View
+                style={[
+                  styles.overlay,
+                  {
+                    backgroundColor: "rgba(0, 0, 0, 0.3)",
+                  },
+                ]}
+              >
+                <IconButton
+                  icon="camera"
+                  size={32}
+                  iconColor={theme.colors.surface}
+                  style={styles.overlayIcon}
+                />
+                <CustomText
+                  style={[styles.overlayText, { color: theme.colors.surface }]}
+                >
+                  {placeholderText}
+                </CustomText>
+              </View>
+            </View>
+          ) : (
             <View
               style={[
-                styles.overlay,
-                {
-                  backgroundColor: "rgba(0, 0, 0, 0.3)",
-                },
+                styles.cardContent,
+                { backgroundColor: theme.colors.surface },
               ]}
             >
               <IconButton
-                icon="camera"
-                size={32}
-                iconColor={theme.colors.surface}
-                style={styles.overlayIcon}
+                icon="image"
+                size={48}
+                iconColor={theme.colors.primary}
               />
               <CustomText
-                style={[styles.overlayText, { color: theme.colors.surface }]}
+                style={[
+                  styles.statusText,
+                  { color: theme.colors.onBackground },
+                ]}
               >
                 {placeholderText}
               </CustomText>
             </View>
-          </View>
-        ) : (
-          <View
-            style={[
-              styles.cardContent,
-              { backgroundColor: theme.colors.surface },
-            ]}
-          >
-            <IconButton
-              icon="image"
-              size={48}
-              iconColor={theme.colors.primary}
-            />
-            <CustomText
-              style={[styles.statusText, { color: theme.colors.onBackground }]}
-            >
-              {placeholderText}
-            </CustomText>
-          </View>
-        )}
+          )}
+        </View>
       </Pressable>
       {error && (
         <Text style={[styles.errorText, { color: theme.colors.error }]}>
@@ -130,7 +135,12 @@ const styles = StyleSheet.create({
     height: 200,
     borderWidth: 1,
     borderRadius: 8,
+  },
+  cardWrapper: {
+    width: "100%",
+    height: "100%",
     overflow: "hidden",
+    borderRadius: 8,
   },
   imageContainer: {
     width: "100%",

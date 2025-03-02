@@ -37,11 +37,13 @@ export const FlashcardItem: React.FC<FlashcardItemProps> = ({
       <Card.Content style={styles.contentContainer}>
         {imageUrl && (
           <Surface style={styles.imageContainer} elevation={0}>
-            <Card.Cover
-              source={{ uri: imageUrl }}
-              style={styles.image}
-              resizeMode="cover"
-            />
+            <View style={styles.imageWrapper}>
+              <Card.Cover
+                source={{ uri: imageUrl }}
+                style={styles.image}
+                resizeMode="cover"
+              />
+            </View>
           </Surface>
         )}
         <View style={styles.textContainer}>
@@ -102,6 +104,9 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   imageContainer: {
+    borderRadius: 8,
+  },
+  imageWrapper: {
     borderRadius: 8,
     overflow: "hidden",
   },
