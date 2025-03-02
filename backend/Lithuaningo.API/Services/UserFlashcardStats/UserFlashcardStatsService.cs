@@ -11,6 +11,7 @@ using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 using Supabase;
 using AutoMapper;
+using Lithuaningo.API.Utils;
 
 namespace Lithuaningo.API.Services
 {
@@ -33,8 +34,8 @@ namespace Lithuaningo.API.Services
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _logger = logger;
+            _mapper = mapper;
         }
 
         public async Task<UserFlashcardStatsResponse> GetUserFlashcardStatsAsync(string deckId, string userId)
@@ -65,9 +66,10 @@ namespace Lithuaningo.API.Services
                 var deckResponse = await _supabaseClient
                     .From<Deck>()
                     .Where(d => d.Id == deckGuid)
-                    .Single();
+                    .Get();
 
-                if (deckResponse == null)
+                var deck = deckResponse.Models.FirstOrDefault();
+                if (deck == null)
                 {
                     _logger.LogWarning("Deck {DeckId} not found", deckId);
                     return new UserFlashcardStatsResponse
@@ -174,38 +176,72 @@ namespace Lithuaningo.API.Services
                 throw new ArgumentException("Invalid deck ID format", nameof(deckId));
             }
 
-            if (!Guid.TryParse(userId, out _))
+            if (!Guid.TryParse(userId, out var userIdGuid))
             {
                 throw new ArgumentException("Invalid user ID format", nameof(userId));
             }
 
-            if (!Guid.TryParse(request.FlashcardId, out _))
+            if (!Guid.TryParse(request.FlashcardId, out var flashcardIdGuid))
             {
                 throw new ArgumentException("Invalid flashcard ID format", nameof(request.FlashcardId));
             }
 
             try
             {
-                var parameters = new Dictionary<string, object>
-                {
-                    { "deck_id", deckId },
-                    { "user_id", userId },
-                    { "flashcard_id", request.FlashcardId },
-                    { "was_correct", request.IsCorrect },
-                    { "review_time", DateTime.UtcNow }
-                };
+                // Try to get existing stats for this user and flashcard
+                var existingStats = await _supabaseClient
+                    .From<Models.UserFlashcardStats>()
+                    .Where(s => s.UserId == userIdGuid && s.FlashcardId == flashcardIdGuid)
+                    .Single();
 
-                if (request.ConfidenceLevel.HasValue)
+                if (existingStats != null)
                 {
-                    parameters.Add("confidence_level", request.ConfidenceLevel.Value);
+                    // Update existing stats
+                    existingStats.TotalReviewed++;
+                    if (request.IsCorrect)
+                    {
+                        existingStats.CorrectAnswers++;
+                    }
+                    existingStats.AccuracyRate = (double)existingStats.CorrectAnswers / existingStats.TotalReviewed;
+                    existingStats.LastReviewedAt = DateTime.UtcNow;
+                    
+                    // Calculate and update next review date
+                    existingStats.NextReviewDue = SpacedRepetitionUtils.CalculateNextReviewDate(
+                        existingStats.TotalReviewed + 1, 
+                        request.IsCorrect, 
+                        request.ConfidenceLevel ?? 3);
+                    existingStats.UpdatedAt = DateTime.UtcNow;
+
+                    await _supabaseClient
+                        .From<Models.UserFlashcardStats>()
+                        .Update(existingStats);
                 }
-
-                if (request.TimeTakenSeconds > 0)
+                else
                 {
-                    parameters.Add("time_taken_seconds", request.TimeTakenSeconds);
-                }
+                    // Create new stats record
+                    var newStats = new Models.UserFlashcardStats
+                    {
+                        Id = Guid.NewGuid(),
+                        UserId = userIdGuid,
+                        FlashcardId = flashcardIdGuid,
+                        TotalReviewed = 1,
+                        CorrectAnswers = request.IsCorrect ? 1 : 0,
+                        AccuracyRate = request.IsCorrect ? 1.0 : 0.0,
+                        LastReviewedAt = DateTime.UtcNow,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
 
-                await _supabaseClient.Rpc("track_flashcard_stats", parameters);
+                    // Calculate and set next review date
+                    newStats.NextReviewDue = SpacedRepetitionUtils.CalculateNextReviewDate(
+                        1, 
+                        request.IsCorrect, 
+                        request.ConfidenceLevel ?? 3);
+
+                    await _supabaseClient
+                        .From<Models.UserFlashcardStats>()
+                        .Insert(newStats);
+                }
 
                 // Invalidate relevant cache entries
                 await InvalidateUserFlashcardStatsCacheAsync(deckId, userId);
