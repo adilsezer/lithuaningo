@@ -1,6 +1,6 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { useDecks } from "@hooks/useDecks";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { DeckFormData } from "@src/types";
@@ -96,6 +96,15 @@ export default function EditDeckScreen() {
       getDeckFlashcards(id);
     }
   }, [id, getDeckFlashcards]);
+
+  // Add a focus effect to refresh flashcards when returning to this screen
+  useFocusEffect(
+    useCallback(() => {
+      if (id) {
+        getDeckFlashcards(id);
+      }
+    }, [id, getDeckFlashcards])
+  );
 
   // Navigation handlers
   const handleEditFlashcard = (flashcardId: string) => {
