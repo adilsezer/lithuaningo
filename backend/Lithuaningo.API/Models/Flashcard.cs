@@ -32,6 +32,12 @@ namespace Lithuaningo.API.Models
         [Column("audio_url")]
         public string AudioUrl { get; set; } = string.Empty;
 
+        [Column("notes")]
+        public string Notes { get; set; } = string.Empty;
+
+        [Column("level")]
+        public string Level { get; set; } = string.Empty;
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 

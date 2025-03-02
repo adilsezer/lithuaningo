@@ -37,6 +37,12 @@ public class CreateFlashcardValidator : AbstractValidator<CreateFlashcardRequest
 
         RuleFor(x => x.AudioUrl)
             .MaximumLength(2048).WithMessage("Audio URL must not exceed 2048 characters");
+            
+        RuleFor(x => x.Notes)
+            .MaximumLength(1000).WithMessage("Notes must not exceed 1000 characters");
+            
+        RuleFor(x => x.Level)
+            .MaximumLength(5).WithMessage("Level must not exceed 5 characters");
     }
 }
 
@@ -69,6 +75,12 @@ public class UpdateFlashcardValidator : AbstractValidator<UpdateFlashcardRequest
 
         RuleFor(x => x.AudioUrl)
             .MaximumLength(2048).WithMessage("Audio URL must not exceed 2048 characters");
+            
+        RuleFor(x => x.Notes)
+            .MaximumLength(1000).WithMessage("Notes must not exceed 1000 characters");
+            
+        RuleFor(x => x.Level)
+            .MaximumLength(5).WithMessage("Level must not exceed 5 characters");
     }
 }
 
@@ -76,12 +88,13 @@ public class TrackProgressValidator : AbstractValidator<TrackProgressRequest>
 {
     public TrackProgressValidator()
     {
+        RuleFor(x => x.UserId)
+            .NotEmpty().WithMessage("User ID is required")
+            .Must(id => BeValidGuid(id.ToString())).WithMessage("User ID must be a valid GUID");
+
         RuleFor(x => x.FlashcardId)
             .NotEmpty().WithMessage("Flashcard ID is required")
-            .Must(BeValidGuid).WithMessage("Invalid Flashcard ID format");
-
-        RuleFor(x => x.IsCorrect)
-            .NotNull().WithMessage("IsCorrect flag is required");
+            .Must(id => BeValidGuid(id.ToString())).WithMessage("Flashcard ID must be a valid GUID");
     }
 
     private bool BeValidGuid(string guid)

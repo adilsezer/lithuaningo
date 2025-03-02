@@ -215,6 +215,7 @@ export default function EditDeckScreen() {
                 frontWord={flashcard.frontWord}
                 backWord={flashcard.backWord}
                 imageUrl={flashcard.imageUrl}
+                level={flashcard.level}
                 onEdit={handleEditFlashcard}
                 onDelete={handleDeleteFlashcard}
               />

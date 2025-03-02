@@ -62,46 +62,63 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   };
 
   const renderCardContent = (isBack: boolean) => (
-    <View style={styles.contentWrapper}>
-      {/* Main word */}
-      <CustomText variant="headlineMedium" style={styles.mainText}>
-        {isBack ? flashcard.backWord : flashcard.frontWord}
-      </CustomText>
+    <View style={styles.cardContent}>
+      <View style={styles.contentWrapper}>
+        {flashcard.imageUrl && (
+          <Card.Cover
+            source={{ uri: flashcard.imageUrl }}
+            style={{ borderRadius: 8 }}
+          />
+        )}
+        <CustomText variant="headlineMedium" style={styles.mainText}>
+          {isBack ? flashcard.backWord : flashcard.frontWord}
+        </CustomText>
 
-      <Divider style={styles.divider} />
+        {flashcard.level && (
+          <View style={styles.levelContainer}>
+            <CustomText
+              variant="labelMedium"
+              style={{ color: theme.colors.primary }}
+            >
+              Level: {flashcard.level}
+            </CustomText>
+          </View>
+        )}
 
-      {/* Example sentence */}
-      {!isBack && flashcard.exampleSentence && (
-        <Surface style={styles.sentenceContainer} elevation={0}>
-          <CustomText variant="bodyMedium" style={styles.example}>
-            {flashcard.exampleSentence}
-          </CustomText>
-        </Surface>
-      )}
+        {isBack && (
+          <>
+            <Divider style={{ marginVertical: 8 }} />
+            <CustomText variant="titleMedium" style={{ marginBottom: 4 }}>
+              Example:
+            </CustomText>
+            <CustomText variant="bodyMedium" style={{ marginBottom: 8 }}>
+              {flashcard.exampleSentence}
+            </CustomText>
+            <CustomText variant="bodyMedium" style={{ marginBottom: 16 }}>
+              {flashcard.exampleSentenceTranslation}
+            </CustomText>
 
-      {isBack && flashcard.exampleSentenceTranslation && (
-        <Surface style={styles.sentenceContainer} elevation={0}>
-          <CustomText variant="bodyMedium" style={styles.example}>
-            {flashcard.exampleSentenceTranslation}
-          </CustomText>
-        </Surface>
-      )}
+            {flashcard.notes && (
+              <>
+                <Divider style={{ marginVertical: 8 }} />
+                <CustomText variant="titleMedium" style={{ marginBottom: 4 }}>
+                  Notes:
+                </CustomText>
+                <CustomText variant="bodyMedium" style={{ marginBottom: 16 }}>
+                  {flashcard.notes}
+                </CustomText>
+              </>
+            )}
+          </>
+        )}
 
-      {/* Image */}
-      {flashcard.imageUrl && (
-        <Card.Cover source={{ uri: flashcard.imageUrl }} style={styles.image} />
-      )}
-
-      {/* Audio control */}
-      {flashcard.audioUrl && (
-        <View style={styles.audioContainer}>
+        {flashcard.audioUrl && (
           <AudioControl
             url={flashcard.audioUrl}
-            onPress={(e) => e.stopPropagation()}
-            size={36}
+            style={{ marginTop: "auto" }}
           />
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 
@@ -219,6 +236,14 @@ const styles = StyleSheet.create({
     position: "absolute",
     bottom: 16,
     right: 16,
+  },
+  levelContainer: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    marginTop: 8,
   },
 });
 

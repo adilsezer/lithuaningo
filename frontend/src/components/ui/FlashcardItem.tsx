@@ -8,6 +8,7 @@ interface FlashcardItemProps {
   frontWord: string;
   backWord: string;
   imageUrl?: string;
+  level?: string;
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   onPress?: (id: string) => void;
@@ -18,6 +19,7 @@ export const FlashcardItem: React.FC<FlashcardItemProps> = ({
   frontWord,
   backWord,
   imageUrl,
+  level,
   onEdit,
   onDelete,
   onPress,
@@ -26,113 +28,80 @@ export const FlashcardItem: React.FC<FlashcardItemProps> = ({
 
   return (
     <Card
-      mode="outlined"
-      style={[styles.card, { borderColor: theme.colors.primary }]}
-      onPress={() => onPress?.(id)}
-      accessible={true}
-      accessibilityRole="button"
-      accessibilityLabel={`Flashcard: ${frontWord}, meaning ${backWord}`}
-      contentStyle={styles.cardContent}
+      style={[styles.card, { backgroundColor: theme.colors.surface }]}
+      onPress={() => onPress && onPress(id)}
     >
-      <Card.Content style={styles.contentContainer}>
-        {imageUrl && (
-          <Surface style={styles.imageContainer} elevation={0}>
-            <View style={styles.imageWrapper}>
-              <Card.Cover
-                source={{ uri: imageUrl }}
-                style={styles.image}
-                resizeMode="cover"
-              />
-            </View>
-          </Surface>
-        )}
+      <Card.Content style={styles.content}>
         <View style={styles.textContainer}>
-          <CustomText
-            variant="titleMedium"
-            style={[styles.title, { color: theme.colors.primary }]}
-            numberOfLines={1}
-          >
+          <CustomText variant="titleMedium" bold numberOfLines={1}>
             {frontWord}
           </CustomText>
-          <CustomText
-            variant="bodyMedium"
-            style={[styles.subtitle, { color: theme.colors.onSurfaceVariant }]}
-            numberOfLines={1}
-          >
+          <CustomText variant="bodyMedium" numberOfLines={1}>
             {backWord}
           </CustomText>
+          {level && (
+            <View style={styles.levelContainer}>
+              <CustomText
+                variant="labelSmall"
+                style={{ color: theme.colors.primary }}
+              >
+                {level}
+              </CustomText>
+            </View>
+          )}
         </View>
-        <Card.Actions style={styles.actionsContainer}>
-          <IconButton
-            icon="pencil-outline"
-            iconColor={theme.colors.primary}
-            size={18}
-            onPress={() => onEdit(id)}
-            accessibilityLabel="Edit flashcard"
-            style={styles.actionButton}
-            mode="contained-tonal"
-          />
-          <IconButton
-            icon="trash-can-outline"
-            iconColor={theme.colors.error}
-            size={18}
-            onPress={() => onDelete(id)}
-            accessibilityLabel="Delete flashcard"
-            style={styles.actionButton}
-            mode="contained-tonal"
-          />
-        </Card.Actions>
+        {imageUrl && (
+          <Card.Cover source={{ uri: imageUrl }} style={styles.image} />
+        )}
       </Card.Content>
+      <View style={styles.actions}>
+        <IconButton
+          icon="pencil"
+          size={20}
+          onPress={() => onEdit(id)}
+          iconColor={theme.colors.primary}
+        />
+        <IconButton
+          icon="delete"
+          size={20}
+          onPress={() => onDelete(id)}
+          iconColor={theme.colors.error}
+        />
+      </View>
     </Card>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 8,
-    borderRadius: 12,
+    marginBottom: 12,
+    borderRadius: 8,
   },
-  cardContent: {
-    paddingHorizontal: 0,
-    paddingVertical: 0,
-  },
-  contentContainer: {
+  content: {
     flexDirection: "row",
+    justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    gap: 12,
-  },
-  imageContainer: {
-    borderRadius: 8,
-  },
-  imageWrapper: {
-    borderRadius: 8,
-    overflow: "hidden",
-  },
-  image: {
-    height: 56,
-    width: 56,
-    borderRadius: 8,
   },
   textContainer: {
     flex: 1,
-    justifyContent: "center",
+    marginRight: 8,
   },
-  title: {
-    fontSize: 16,
-    fontWeight: "700",
-    marginBottom: 2,
+  image: {
+    width: 60,
+    height: 60,
+    borderRadius: 4,
   },
-  subtitle: {
-    fontSize: 14,
+  actions: {
+    flexDirection: "row",
+    justifyContent: "flex-end",
+    paddingHorizontal: 8,
   },
-  actionsContainer: {
-    padding: 0,
-    margin: 0,
-    gap: 4,
-  },
-  actionButton: {
-    margin: 0,
+  levelContainer: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: "rgba(0, 0, 0, 0.05)",
+    marginTop: 4,
   },
 });

@@ -46,6 +46,30 @@ const fields: FormField[] = [
     placeholder: "Enter the translation of the example sentence",
   },
   {
+    name: "level",
+    label: "Language Level",
+    category: "selection",
+    type: "picker",
+    placeholder: "Select language level",
+    options: [
+      { label: "A1 - Beginner", value: "A1" },
+      { label: "A2 - Elementary", value: "A2" },
+      { label: "B1 - Intermediate", value: "B1" },
+      { label: "B2 - Upper Intermediate", value: "B2" },
+      { label: "C1 - Advanced", value: "C1" },
+      { label: "C2 - Proficient", value: "C2" },
+    ],
+  },
+  {
+    name: "notes",
+    label: "Notes",
+    category: "text-input",
+    type: "text",
+    multiline: true,
+    numberOfLines: 3,
+    placeholder: "Add any additional notes (optional)",
+  },
+  {
     name: "imageFile",
     label: "Image",
     category: "image-input",
@@ -102,6 +126,8 @@ export default function EditFlashcardScreen() {
           backWord: data.backWord,
           exampleSentence: data.exampleSentence,
           exampleSentenceTranslation: data.exampleSentenceTranslation,
+          level: data.level,
+          notes: data.notes,
         },
         data.imageFile || undefined,
         data.audioFile || undefined,
@@ -155,6 +181,8 @@ export default function EditFlashcardScreen() {
             backWord: flashcard.backWord,
             exampleSentence: flashcard.exampleSentence,
             exampleSentenceTranslation: flashcard.exampleSentenceTranslation,
+            notes: flashcard.notes || "",
+            level: flashcard.level || "",
             imageFile: flashcard.imageUrl
               ? {
                   uri: flashcard.imageUrl,
