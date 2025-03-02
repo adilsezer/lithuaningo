@@ -69,11 +69,7 @@ export default function PracticeScreen() {
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
         <View style={styles.header}>
-          <IconButton
-            icon="arrow-left"
-            size={24}
-            onPress={() => router.back()}
-          />
+          <BackButton />
           <CustomText variant="titleLarge" style={styles.title}>
             Practice
           </CustomText>
@@ -102,7 +98,7 @@ export default function PracticeScreen() {
   const progress = (currentIndex + 1) / flashcards.length;
 
   return (
-    <SafeAreaView
+    <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.header}>
@@ -132,7 +128,7 @@ export default function PracticeScreen() {
           onAnswer={handleAnswer}
         />
       </View>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
