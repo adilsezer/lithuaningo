@@ -7,7 +7,6 @@ import {
   StyleSheet,
 } from "react-native";
 import { useTheme, Button } from "react-native-paper";
-import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
@@ -16,7 +15,7 @@ import { useUserData } from "@stores/useUserStore";
 import quizService from "@services/data/quizService";
 import { router } from "expo-router";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const QuizScreen: React.FC = () => {
   const theme = useTheme();
   const userData = useUserData();
@@ -116,8 +115,8 @@ const QuizScreen: React.FC = () => {
   if (!currentQuestion && !isCompleted) {
     return (
       <View style={styles.container}>
-        <BackButton />
-        <CustomText variant="titleLarge" style={styles.title}>
+        <HeaderWithBackButton title="Quiz" />
+        <CustomText variant="titleMedium" style={styles.title}>
           No questions available
         </CustomText>
       </View>
@@ -127,9 +126,9 @@ const QuizScreen: React.FC = () => {
   if (isCompleted) {
     return (
       <View style={styles.container}>
-        <BackButton />
+        <HeaderWithBackButton title="Quiz" />
         <View style={styles.content}>
-          <CustomText variant="titleLarge" style={styles.title}>
+          <CustomText variant="titleMedium" style={styles.title}>
             Quiz Completed!
           </CustomText>
           <CustomText variant="bodyLarge" style={styles.score}>
@@ -153,9 +152,9 @@ const QuizScreen: React.FC = () => {
       style={styles.container}
     >
       <ScrollView>
-        <BackButton />
+        <HeaderWithBackButton title="Quiz" />
         <View style={styles.content}>
-          <CustomText variant="titleLarge" style={styles.title}>
+          <CustomText variant="titleMedium" style={styles.title}>
             Daily Quiz
           </CustomText>
 

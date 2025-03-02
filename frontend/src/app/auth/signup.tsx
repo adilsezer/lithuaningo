@@ -1,6 +1,5 @@
 import React from "react";
 import { ScrollView } from "react-native";
-import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
@@ -10,7 +9,7 @@ import CustomText from "@components/ui/CustomText";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import { router } from "expo-router";
 import CustomDivider from "@components/ui/CustomDivider";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const signupFields: FormField[] = [
   {
     name: "displayName",
@@ -52,10 +51,7 @@ const SignUpScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-      <CustomText variant="titleLarge" bold>
-        Create Account
-      </CustomText>
+      <HeaderWithBackButton title="Create Account" />
 
       <Form
         fields={signupFields}

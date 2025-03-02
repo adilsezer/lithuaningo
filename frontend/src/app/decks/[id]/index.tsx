@@ -5,11 +5,11 @@ import { useFlashcards } from "@hooks/useFlashcards";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
-import BackButton from "@components/ui/BackButton";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import { useTheme, ProgressBar, Button, IconButton } from "react-native-paper";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
@@ -68,14 +68,7 @@ export default function PracticeScreen() {
       <ScrollView
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <View style={styles.header}>
-          <BackButton />
-          <CustomText variant="titleLarge" style={styles.title}>
-            Practice
-          </CustomText>
-          <View style={{ width: 40 }} />
-        </View>
-
+        <HeaderWithBackButton title="Practice" />
         <View style={styles.emptyContainer}>
           <CustomText
             variant="titleMedium"
@@ -101,14 +94,7 @@ export default function PracticeScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <View style={styles.header}>
-        <IconButton icon="arrow-left" size={24} onPress={() => router.back()} />
-        <CustomText variant="titleLarge" style={styles.title}>
-          Practice
-        </CustomText>
-        <View style={{ width: 40 }} />
-      </View>
-
+      <HeaderWithBackButton title="Practice" />
       <ProgressBar
         progress={progress}
         color={theme.colors.primary}
@@ -141,9 +127,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "space-between",
     paddingVertical: 8,
-  },
-  title: {
-    textAlign: "center",
   },
   progressBar: {
     height: 4,

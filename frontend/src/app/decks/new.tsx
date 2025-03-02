@@ -1,7 +1,6 @@
 import React, { useCallback } from "react";
 import { View, ScrollView } from "react-native";
 import { useRouter } from "expo-router";
-import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import { useDecks } from "@hooks/useDecks";
 import { FormField } from "@components/form/form.types";
@@ -11,6 +10,7 @@ import { deckFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { useUserData } from "@stores/useUserStore";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 export default function NewDeckScreen() {
   const theme = useTheme();
@@ -99,11 +99,8 @@ export default function NewDeckScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <BackButton />
+      <HeaderWithBackButton title="Create New Deck" />
       <ScrollView contentContainerStyle={{ paddingHorizontal: 16 }}>
-        <CustomText variant="titleLarge" bold>
-          Create New Deck
-        </CustomText>
         <Form
           fields={fields}
           onSubmit={handleSubmit}

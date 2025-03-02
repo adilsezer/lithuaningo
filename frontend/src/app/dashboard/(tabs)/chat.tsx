@@ -10,7 +10,7 @@ import { Card, IconButton, useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import CustomDivider from "@components/ui/CustomDivider";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 // Define a TypeScript interface for our messages.
 interface Message {
   id: string;
@@ -67,8 +67,8 @@ export default function ChatScreen(): JSX.Element {
 
   return (
     <View style={styles.container}>
-      <CustomText variant="titleLarge" bold style={{ marginVertical: 10 }}>
-        Labas! I am your AI friend. Ask me anything!
+      <CustomText variant="titleLarge" bold>
+        Lithuaningo AI Assistant
       </CustomText>
       <Image
         source={require("assets/images/icon-transparent.png")}

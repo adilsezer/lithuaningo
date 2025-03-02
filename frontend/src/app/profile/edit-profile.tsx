@@ -1,15 +1,13 @@
 import React from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import BackButton from "@components/ui/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { editProfileFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/ui/CustomText";
 import { useRouter } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const getEditProfileFields = (
   authProvider: string,
   displayName: string
@@ -52,8 +50,7 @@ const EditProfileScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-      <CustomText>Edit Profile</CustomText>
+      <HeaderWithBackButton title="Edit Profile" />
 
       <Form
         fields={getEditProfileFields(userData.authProvider, userData.fullName)}

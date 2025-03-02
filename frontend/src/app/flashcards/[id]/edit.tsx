@@ -6,11 +6,10 @@ import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { Flashcard, FlashcardFormData } from "@src/types";
 import { useFlashcards } from "@hooks/useFlashcards";
-import BackButton from "@components/ui/BackButton";
 import { ActivityIndicator } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { flashcardFormSchema } from "@utils/zodSchemas";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 // Form fields definition
 const fields: FormField[] = [
   {
@@ -149,7 +148,7 @@ export default function EditFlashcardScreen() {
       <View
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <BackButton />
+        <HeaderWithBackButton title="Edit Flashcard" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <CustomText style={{ marginTop: 16 }}>
@@ -164,12 +163,8 @@ export default function EditFlashcardScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <BackButton />
+      <HeaderWithBackButton title="Edit Flashcard" />
       <ScrollView style={styles.scrollView}>
-        <CustomText variant="titleLarge" bold style={styles.title}>
-          Edit Flashcard
-        </CustomText>
-
         <Form
           fields={fields}
           onSubmit={handleSubmit}

@@ -6,7 +6,6 @@ import { useFlashcards } from "@hooks/useFlashcards";
 import { DeckFormData } from "@src/types";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { FlashcardItem } from "@components/ui/FlashcardItem";
 import { useTheme } from "react-native-paper";
@@ -15,6 +14,7 @@ import { DeckCategory, deckCategories } from "@src/types/DeckCategory";
 import CustomButton from "@components/ui/CustomButton";
 import { ActivityIndicator } from "react-native-paper";
 import CustomDivider from "@components/ui/CustomDivider";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 // Form fields definition
 const fields: FormField[] = [
   {
@@ -131,7 +131,7 @@ export default function EditDeckScreen() {
       <View
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <BackButton />
+        <HeaderWithBackButton title="Edit Deck" />
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <CustomText style={{ marginTop: 16 }}>Loading deck...</CustomText>
@@ -145,12 +145,8 @@ export default function EditDeckScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <BackButton />
+      <HeaderWithBackButton title="Edit Deck" />
       <ScrollView style={styles.scrollView}>
-        <CustomText variant="titleLarge" bold>
-          Edit Deck
-        </CustomText>
-
         <Form
           fields={fields}
           onSubmit={handleSubmit}

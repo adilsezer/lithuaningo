@@ -5,12 +5,12 @@ import { useUserData } from "@stores/useUserStore";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
-import BackButton from "@components/ui/BackButton";
 import { useDeckComments } from "@src/hooks/useDeckComments";
 import { deckCommentFormSchema } from "@utils/zodSchemas";
 import { useTheme, IconButton } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { formatDistanceToNow } from "date-fns";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 export default function DeckCommentsScreen() {
   const { id } = useLocalSearchParams();
@@ -66,10 +66,7 @@ export default function DeckCommentsScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <BackButton />
-      <CustomText variant="titleLarge" bold>
-        Deck Comments
-      </CustomText>
+      <HeaderWithBackButton title="Deck Comments" />
       <Form
         fields={commentFields}
         onSubmit={handleAddComment}

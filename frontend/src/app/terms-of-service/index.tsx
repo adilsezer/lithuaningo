@@ -1,9 +1,8 @@
 import React from "react";
 import { ScrollView, StyleProp, StyleSheet, TextStyle } from "react-native";
-import BackButton from "@components/ui/BackButton";
 import * as Linking from "expo-linking";
 import CustomText from "@components/ui/CustomText";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 // Define a local union type for the variants used in this file.
 type ValidVariant = "titleLarge" | "titleMedium" | "bodyMedium";
 
@@ -22,15 +21,9 @@ const TermsOfService = () => {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <BackButton />
+      <HeaderWithBackButton title="Terms of Service" />
 
-      {/* Heading */}
-      <CustomText variant="titleLarge" bold>
-        Terms of Service
-      </CustomText>
-
-      {/* Paragraphs */}
-      <CustomText {...paragraphProps}>Last updated: June 10, 2024</CustomText>
+      <CustomText {...paragraphProps}>Last updated: March 10, 2024</CustomText>
 
       <CustomText variant="titleMedium" bold>
         1. Content Creation and Ownership

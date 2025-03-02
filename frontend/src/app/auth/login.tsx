@@ -2,7 +2,6 @@ import React, { useEffect, useCallback } from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import BackButton from "@components/ui/BackButton";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import CustomDivider from "@components/ui/CustomDivider";
 import { Form } from "@components/form/Form";
@@ -11,6 +10,7 @@ import type { SocialProvider } from "@hooks/useAuth";
 import { loginFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { router } from "expo-router";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 const loginFields: FormField[] = [
   {
@@ -42,11 +42,7 @@ const LoginScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-
-      <CustomText variant="titleLarge" bold>
-        Welcome Back
-      </CustomText>
+      <HeaderWithBackButton title="Welcome Back" />
 
       <Form
         fields={loginFields}

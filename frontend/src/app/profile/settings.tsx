@@ -3,9 +3,8 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { useUserData } from "@stores/useUserStore";
 import { useReminderSettings } from "@hooks/useReminderSettings";
 import CustomButton from "@components/ui/CustomButton";
-import BackButton from "@components/ui/BackButton";
 import { ReminderSettings } from "@components/settings/ReminderSettings";
-import CustomText from "@components/ui/CustomText";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const SettingsScreen: React.FC = () => {
   const userData = useUserData();
   const {
@@ -18,8 +17,7 @@ const SettingsScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-      <CustomText>Settings</CustomText>
+      <HeaderWithBackButton title="Settings" />
 
       <ReminderSettings
         reminderEnabled={reminderEnabled}

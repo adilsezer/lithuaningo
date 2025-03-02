@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useLocalSearchParams } from "expo-router";
-import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
@@ -9,6 +8,7 @@ import { useIsLoading } from "@stores/useUIStore";
 import { verifyEmailFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import CustomButton from "@components/ui/CustomButton";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 const verifyEmailFields: FormField[] = [
   {
@@ -48,9 +48,9 @@ const EmailVerificationScreen: React.FC = () => {
   if (!email) {
     return (
       <ScrollView>
-        <BackButton />
+        <HeaderWithBackButton title="Email Verification" />
         <View style={styles.container}>
-          <CustomText variant="titleLarge" bold>
+          <CustomText variant="titleMedium" bold>
             Error
           </CustomText>
           <CustomText variant="bodyLarge" style={styles.description}>
@@ -81,9 +81,9 @@ const EmailVerificationScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
+      <HeaderWithBackButton title="Email Verification" />
       <View style={styles.container}>
-        <CustomText variant="titleLarge" bold>
+        <CustomText variant="titleMedium" bold>
           Verify Your Email
         </CustomText>
 

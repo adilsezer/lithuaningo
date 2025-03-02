@@ -1,13 +1,12 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
-import BackButton from "@components/ui/BackButton";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { useForgotPassword } from "@hooks/useForgotPassword";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const forgotPasswordFields: FormField[] = [
   {
     name: "email",
@@ -33,10 +32,9 @@ const ForgotPasswordScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-
+      <HeaderWithBackButton title="Reset Password" />
       <View>
-        <CustomText variant="titleLarge" bold>
+        <CustomText variant="titleMedium" bold>
           Reset Password
         </CustomText>
         <CustomText>

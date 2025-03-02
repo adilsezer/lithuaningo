@@ -6,10 +6,10 @@ import { useDeckReport } from "@src/hooks/useDeckReport";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
-import BackButton from "@components/ui/BackButton";
 import { reportFormSchema } from "@utils/zodSchemas";
 import { useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 export default function ReportScreen() {
   const { id } = useLocalSearchParams();
@@ -70,7 +70,7 @@ export default function ReportScreen() {
       <View
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <BackButton />
+        <HeaderWithBackButton title="Report" />
         <ErrorMessage message="Please login to submit a report" fullScreen />
       </View>
     );
@@ -91,7 +91,7 @@ export default function ReportScreen() {
       <View
         style={[styles.container, { backgroundColor: theme.colors.background }]}
       >
-        <BackButton />
+        <HeaderWithBackButton title="Report" />
         <View style={styles.centerContainer}>
           <CustomText
             style={[styles.successText, { color: theme.colors.primary }]}
@@ -107,8 +107,8 @@ export default function ReportScreen() {
     <View
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <BackButton />
-      <CustomText variant="titleLarge" bold>
+      <HeaderWithBackButton title="Report" />
+      <CustomText variant="titleMedium" bold>
         Submit Report
       </CustomText>
       <CustomText

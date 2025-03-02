@@ -13,7 +13,7 @@ import CustomText from "@components/ui/CustomText";
 import { CustomPicker } from "@components/ui/CustomPicker";
 import { useDeckVote } from "@src/hooks/useDeckVote";
 import { Deck, DeckWithRatingResponse } from "@src/types";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 // Separate component for DeckCard with votes
 const DeckCardWithVotes: React.FC<{
   deck: Deck | DeckWithRatingResponse;

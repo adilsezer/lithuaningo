@@ -1,8 +1,8 @@
 import React from "react";
 import { ScrollView, StyleSheet, StyleProp, TextStyle } from "react-native";
-import BackButton from "@components/ui/BackButton";
 import * as Linking from "expo-linking";
 import CustomText from "@components/ui/CustomText";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 // Define a local union type for the variants used here.
 type ValidVariant = "titleLarge" | "titleMedium" | "bodyMedium";
@@ -22,12 +22,7 @@ const PrivacyPolicy = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-
-      {/* Heading */}
-      <CustomText variant="titleLarge" bold>
-        Privacy Policy
-      </CustomText>
+      <HeaderWithBackButton title="Privacy Policy" />
 
       {/* Use paragraphProps for body text */}
       <CustomText {...paragraphProps}>Last updated: June 10, 2024</CustomText>

@@ -10,6 +10,7 @@ import { UserChallengeStatsCard } from "@components/challenge/UserChallengeStats
 import CustomDivider from "@components/ui/CustomDivider";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 export default function LearnScreen() {
   const handleNavigation = (route: string) => {

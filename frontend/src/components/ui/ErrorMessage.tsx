@@ -1,9 +1,9 @@
 import React from "react";
 import { View, StyleSheet, TextStyle, ViewStyle } from "react-native";
 import CustomButton from "./CustomButton";
-import BackButton from "@components/ui/BackButton";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 interface ErrorMessageProps {
   message: string;
@@ -24,7 +24,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
 
   return (
     <View>
-      <BackButton />
+      <HeaderWithBackButton title="Error" />
       <View style={styles.container}>
         <CustomText
           style={[styles.text, { color: theme.colors.error }, textStyle]}

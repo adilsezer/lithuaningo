@@ -1,14 +1,13 @@
 import React from "react";
 import { ScrollView } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import BackButton from "@components/ui/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { changePasswordFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { useUserData } from "@stores/useUserStore";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const changePasswordFields: FormField[] = [
   {
     name: "currentPassword",
@@ -41,7 +40,7 @@ const ChangePasswordScreen: React.FC = () => {
   if (userData?.authProvider !== "email") {
     return (
       <ScrollView>
-        <BackButton />
+        <HeaderWithBackButton title="Change Password" />
         <CustomText>
           Password change is only available for email/password accounts. You are
           signed in with {userData?.authProvider}.
@@ -52,8 +51,7 @@ const ChangePasswordScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-      <CustomText>Change Password</CustomText>
+      <HeaderWithBackButton title="Change Password" />
 
       <Form
         fields={changePasswordFields}

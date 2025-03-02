@@ -1,14 +1,13 @@
 import React from "react";
 import { ScrollView, View, StyleSheet } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import BackButton from "@components/ui/BackButton";
 import { useIsLoading } from "@stores/useUIStore";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { deleteAccountFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { useUserData } from "@stores/useUserStore";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const getDeleteAccountFields = (authProvider: string): FormField[] => {
   if (authProvider === "email") {
     return [
@@ -37,12 +36,8 @@ const DeleteAccountScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <BackButton />
+      <HeaderWithBackButton title="Delete Account" />
       <View style={styles.container}>
-        <CustomText variant="titleLarge" bold>
-          Delete Account
-        </CustomText>
-
         <CustomText variant="bodyLarge" style={styles.warning}>
           This action cannot be undone. All your data will be permanently
           deleted.

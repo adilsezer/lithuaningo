@@ -1,11 +1,10 @@
 import React from "react";
 import { StyleSheet, ScrollView } from "react-native";
-import BackButton from "@components/ui/BackButton";
 import { useAbout } from "@hooks/useAbout";
 import { useAppInfo } from "@hooks/useAppInfo";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
-
+import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const AboutScreen = () => {
   const {
     links,
@@ -18,11 +17,7 @@ const AboutScreen = () => {
 
   return (
     <ScrollView>
-      <BackButton />
-
-      <CustomText variant="titleLarge" bold>
-        About Lithuaningo
-      </CustomText>
+      <HeaderWithBackButton title="About Lithuaningo" />
       <CustomText style={[styles.justifiedText]}>
         Lithuaningo is your gateway to mastering Lithuanian! Dive into learning
         with ease and fun. Our app provides a comprehensive learning experience
