@@ -7,6 +7,7 @@ import {
   Button,
   Divider,
   Chip,
+  Surface,
 } from "react-native-paper";
 import { Flashcard } from "@src/types";
 import AudioControl from "@components/ui/AudioControl";
@@ -71,214 +72,179 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
             borderColor: theme.colors.outline,
           },
         ]}
-        elevation={2}
+        elevation={1}
         onPress={flipCard}
       >
         <Animated.View style={[{ opacity: fadeAnim }, styles.animatedView]}>
           {!flipped ? (
             // Front of card
             <View style={styles.cardContent}>
-              {/* Main content */}
-              <View style={styles.contentWrapper}>
+              {/* Word section */}
+              <View
+                style={[
+                  styles.wordContainer,
+                  { backgroundColor: theme.colors.primary },
+                ]}
+              >
                 <CustomText
-                  variant="titleLarge"
-                  style={[styles.mainText, { color: theme.colors.onSurface }]}
+                  variant="headlineSmall"
+                  style={[styles.mainText, { color: theme.colors.onPrimary }]}
                 >
                   {flashcard.frontWord}
                 </CustomText>
-
-                <Divider
-                  style={[
-                    styles.divider,
-                    { backgroundColor: theme.colors.outlineVariant },
-                  ]}
-                />
-
-                {flashcard.imageUrl && (
-                  <Card.Cover
-                    source={{ uri: flashcard.imageUrl }}
-                    style={styles.cardImage}
-                  />
-                )}
-
-                {flashcard.audioUrl && (
-                  <AudioControl
-                    url={flashcard.audioUrl}
-                    style={styles.audioControl}
-                  />
-                )}
-
-                <Divider
-                  style={[
-                    styles.divider,
-                    { backgroundColor: theme.colors.outlineVariant },
-                  ]}
-                />
-
-                <CustomText
-                  variant="labelLarge"
-                  style={[styles.sectionTitle, { color: theme.colors.primary }]}
-                >
-                  Example:
-                </CustomText>
-
-                <CustomText
-                  variant="bodyLarge"
-                  style={[
-                    styles.exampleText,
-                    { color: theme.colors.onSurface },
-                  ]}
-                >
-                  {flashcard.exampleSentence}
-                </CustomText>
               </View>
 
-              {/* Level indicator at bottom */}
-              {flashcard.level && (
-                <View style={styles.levelContainer}>
-                  <Chip
+              {/* Image section */}
+              {flashcard.imageUrl && (
+                <Card.Cover
+                  source={{ uri: flashcard.imageUrl }}
+                  style={styles.cardImage}
+                />
+              )}
+
+              {/* Audio section */}
+              {flashcard.audioUrl && (
+                <AudioControl
+                  url={flashcard.audioUrl}
+                  style={styles.audioControl}
+                />
+              )}
+
+              {/* Example section */}
+              {flashcard.exampleSentence && (
+                <View style={styles.exampleSection}>
+                  <CustomText
+                    variant="labelLarge"
                     style={[
-                      styles.levelChip,
-                      { backgroundColor: theme.colors.primaryContainer },
+                      styles.sectionTitle,
+                      { color: theme.colors.primary },
                     ]}
-                    textStyle={{
-                      color: theme.colors.onPrimaryContainer,
-                      fontSize: 12,
-                    }}
                   >
-                    Level: {flashcard.level}
-                  </Chip>
+                    Example:
+                  </CustomText>
+                  <CustomText variant="bodyLarge" style={styles.exampleText}>
+                    {flashcard.exampleSentence}
+                  </CustomText>
                 </View>
               )}
             </View>
           ) : (
             // Back of card
             <View style={styles.cardContent}>
-              {/* Main content */}
-              <View style={styles.contentWrapper}>
+              {/* Word section */}
+              <View
+                style={[
+                  styles.wordContainer,
+                  { backgroundColor: theme.colors.secondary },
+                ]}
+              >
                 <CustomText
-                  variant="titleLarge"
-                  style={[styles.mainText, { color: theme.colors.onSurface }]}
+                  variant="headlineSmall"
+                  style={[styles.mainText, { color: theme.colors.onSecondary }]}
                 >
                   {flashcard.backWord}
                 </CustomText>
-
-                <Divider
-                  style={[
-                    styles.divider,
-                    { backgroundColor: theme.colors.outlineVariant },
-                  ]}
-                />
-
-                {flashcard.imageUrl && (
-                  <Card.Cover
-                    source={{ uri: flashcard.imageUrl }}
-                    style={styles.cardImage}
-                  />
-                )}
-
-                {flashcard.audioUrl && (
-                  <AudioControl
-                    url={flashcard.audioUrl}
-                    style={styles.audioControl}
-                  />
-                )}
-
-                <Divider
-                  style={[
-                    styles.divider,
-                    { backgroundColor: theme.colors.outlineVariant },
-                  ]}
-                />
-
-                <CustomText
-                  variant="labelLarge"
-                  style={[styles.sectionTitle, { color: theme.colors.primary }]}
-                >
-                  Example:
-                </CustomText>
-
-                <CustomText
-                  variant="bodyLarge"
-                  style={[
-                    styles.exampleText,
-                    { color: theme.colors.onSurface },
-                  ]}
-                >
-                  {flashcard.exampleSentence}
-                </CustomText>
-
-                <CustomText
-                  variant="bodyMedium"
-                  style={[
-                    styles.translationText,
-                    { color: theme.colors.onSurfaceVariant },
-                  ]}
-                >
-                  {flashcard.exampleSentenceTranslation}
-                </CustomText>
-
-                {flashcard.notes && (
-                  <>
-                    <Divider
-                      style={[
-                        styles.divider,
-                        { backgroundColor: theme.colors.outlineVariant },
-                      ]}
-                    />
-                    <CustomText
-                      variant="labelLarge"
-                      style={[
-                        styles.sectionTitle,
-                        { color: theme.colors.primary },
-                      ]}
-                    >
-                      Notes:
-                    </CustomText>
-                    <CustomText
-                      variant="bodyMedium"
-                      style={[
-                        styles.notesText,
-                        { color: theme.colors.onSurfaceVariant },
-                      ]}
-                    >
-                      {flashcard.notes}
-                    </CustomText>
-                  </>
-                )}
               </View>
 
-              {/* Level indicator at bottom */}
-              {flashcard.level && (
-                <View style={styles.levelContainer}>
-                  <Chip
+              {/* Image section */}
+              {flashcard.imageUrl && (
+                <Card.Cover
+                  source={{ uri: flashcard.imageUrl }}
+                  style={styles.cardImage}
+                />
+              )}
+
+              {/* Audio section */}
+              {flashcard.audioUrl && (
+                <AudioControl
+                  url={flashcard.audioUrl}
+                  style={styles.audioControl}
+                />
+              )}
+
+              {/* Example section */}
+              {flashcard.exampleSentence && (
+                <View style={styles.exampleSection}>
+                  <CustomText
+                    variant="labelLarge"
                     style={[
-                      styles.levelChip,
-                      { backgroundColor: theme.colors.primaryContainer },
+                      styles.sectionTitle,
+                      { color: theme.colors.primary },
                     ]}
-                    textStyle={{
-                      color: theme.colors.onPrimaryContainer,
-                      fontSize: 12,
-                    }}
                   >
-                    Level: {flashcard.level}
-                  </Chip>
+                    Example:
+                  </CustomText>
+                  <CustomText variant="bodyLarge" style={styles.exampleText}>
+                    {flashcard.exampleSentence}
+                  </CustomText>
+
+                  {flashcard.exampleSentenceTranslation && (
+                    <CustomText
+                      variant="bodyMedium"
+                      style={styles.translationText}
+                    >
+                      {flashcard.exampleSentenceTranslation}
+                    </CustomText>
+                  )}
+                </View>
+              )}
+
+              {/* Notes section */}
+              {flashcard.notes && (
+                <View style={styles.notesSection}>
+                  <CustomText
+                    variant="labelLarge"
+                    style={[
+                      styles.sectionTitle,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    Notes:
+                  </CustomText>
+                  <CustomText variant="bodyMedium" style={styles.notesText}>
+                    {flashcard.notes}
+                  </CustomText>
                 </View>
               )}
             </View>
           )}
         </Animated.View>
 
-        <IconButton
-          icon="rotate-3d"
-          mode="contained-tonal"
-          size={22}
-          style={styles.flipButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            flipCard();
-          }}
-        />
+        {/* Bottom info bar with level and flip indicator */}
+        <View style={styles.bottomInfoBar}>
+          {/* Level indicator */}
+          {flashcard.level && (
+            <Chip
+              style={[
+                styles.levelChip,
+                { backgroundColor: theme.colors.primaryContainer },
+              ]}
+              textStyle={{
+                fontWeight: "bold",
+                fontSize: 12,
+                color: theme.colors.onPrimaryContainer,
+              }}
+            >
+              Level {flashcard.level}
+            </Chip>
+          )}
+
+          {/* Flip indicator */}
+          <View style={styles.flipIndicator}>
+            <CustomText
+              variant="labelSmall"
+              style={{ color: theme.colors.outline }}
+            >
+              Tap to flip
+            </CustomText>
+            <IconButton
+              icon="gesture-tap"
+              size={14}
+              iconColor={theme.colors.outline}
+              style={{ margin: 0, padding: 0 }}
+            />
+          </View>
+        </View>
       </Card>
 
       {flipped && (
@@ -296,10 +262,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
           <Button
             mode="contained"
             onPress={() => handleAnswer(true)}
-            style={[
-              styles.actionButton,
-              { backgroundColor: theme.colors.primary },
-            ]}
+            style={styles.actionButton}
             contentStyle={styles.buttonContent}
             icon="check"
           >
@@ -317,97 +280,104 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   card: {
-    borderRadius: 14,
+    borderRadius: 12,
     borderWidth: 1,
     overflow: "hidden",
     marginBottom: 12,
-    minHeight: 320,
+    minHeight: 280,
+    position: "relative",
   },
   animatedView: {
     width: "100%",
   },
   cardContent: {
-    padding: 14,
-    paddingBottom: 42, // Space for level chip
+    padding: 0,
     position: "relative",
+    paddingBottom: 40, // Space for bottom info bar
   },
-  contentWrapper: {
-    paddingBottom: 8,
+  wordContainer: {
+    padding: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.05)",
   },
   mainText: {
     textAlign: "center",
-    marginVertical: 8,
     fontWeight: "700",
     letterSpacing: 0.25,
+    marginBottom: 0,
   },
-  divider: {
-    marginVertical: 10,
-    height: 1,
-  },
-  sectionTitle: {
-    marginBottom: 4,
-    fontWeight: "600",
-    letterSpacing: 0.5,
-  },
-  exampleText: {
-    marginBottom: 4,
-    lineHeight: 22,
-  },
-  translationText: {
-    fontStyle: "italic",
-    marginBottom: 8,
-    opacity: 0.9,
-    lineHeight: 20,
-  },
-  notesText: {
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  cardImage: {
-    borderRadius: 10,
-    marginBottom: 10,
-    height: 130,
-    alignSelf: "center",
-    width: "90%",
-  },
-  audioControl: {
-    alignSelf: "center",
-    marginVertical: 8,
-  },
-  actions: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    gap: 14,
-    marginTop: 2,
-  },
-  actionButton: {
-    flex: 1,
-    borderRadius: 10,
-  },
-  buttonContent: {
-    paddingVertical: 8,
-  },
-  flipButton: {
-    position: "absolute",
-    bottom: 10,
-    right: 10,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    zIndex: 10,
-  },
-  levelContainer: {
+  bottomInfoBar: {
     position: "absolute",
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 6,
-    backgroundColor: "rgba(255, 255, 255, 0.9)",
-    borderTopWidth: 1,
-    borderTopColor: "rgba(0, 0, 0, 0.1)",
+    flexDirection: "row",
     alignItems: "center",
+    justifyContent: "space-between",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    backgroundColor: "rgba(255,255,255,0.95)",
   },
   levelChip: {
-    marginBottom: 0,
     height: 28,
+    borderRadius: 14,
+  },
+  flipIndicator: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  cardImage: {
+    height: 150,
+    marginTop: 10,
+    marginHorizontal: 16,
+    borderRadius: 8,
+  },
+  audioControl: {
+    alignSelf: "center",
+    marginVertical: 4,
+  },
+  exampleSection: {
+    padding: 12,
+    paddingTop: 6,
+  },
+  notesSection: {
+    padding: 12,
+    paddingTop: 0,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(0,0,0,0.05)",
+  },
+  sectionTitle: {
+    marginBottom: 4,
+    fontWeight: "600",
+  },
+  exampleText: {
+    lineHeight: 20,
+    marginBottom: 2,
+  },
+  translationText: {
+    fontStyle: "italic",
+    opacity: 0.8,
+    lineHeight: 18,
+  },
+  notesText: {
+    lineHeight: 18,
+  },
+  actions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    gap: 12,
+    marginTop: 6,
+  },
+  actionButton: {
+    flex: 1,
+    borderRadius: 8,
+  },
+  buttonContent: {
+    paddingVertical: 6,
   },
 });
 
