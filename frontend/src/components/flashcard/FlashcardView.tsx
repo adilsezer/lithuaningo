@@ -321,53 +321,53 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     overflow: "hidden",
     marginBottom: 16,
-    minHeight: 400,
+    minHeight: 350,
   },
   animatedView: {
     width: "100%",
   },
   cardContent: {
-    padding: 20,
-    paddingBottom: 60, // Space for level chip
+    padding: 14,
+    paddingBottom: 50, // Space for level chip
     position: "relative",
   },
   contentWrapper: {
-    paddingBottom: 10,
+    paddingBottom: 8,
   },
   mainText: {
     textAlign: "center",
-    marginVertical: 12,
+    marginVertical: 8,
     fontWeight: "700",
   },
   divider: {
-    marginVertical: 16,
+    marginVertical: 10,
     height: 1,
   },
   sectionTitle: {
-    marginBottom: 8,
+    marginBottom: 4,
     fontWeight: "600",
   },
   exampleText: {
-    marginBottom: 8,
+    marginBottom: 4,
   },
   translationText: {
     fontStyle: "italic",
-    marginBottom: 16,
+    marginBottom: 8,
     opacity: 0.8,
   },
   notesText: {
-    marginBottom: 16,
+    marginBottom: 8,
   },
   cardImage: {
-    borderRadius: 12,
-    marginBottom: 16,
-    height: 160,
+    borderRadius: 10,
+    marginBottom: 10,
+    height: 140,
     alignSelf: "center",
     width: "90%",
   },
   audioControl: {
     alignSelf: "center",
-    marginVertical: 12,
+    marginVertical: 8,
   },
   actions: {
     flexDirection: "row",
@@ -379,12 +379,12 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   buttonContent: {
-    paddingVertical: 10,
+    paddingVertical: 8,
   },
   flipButton: {
     position: "absolute",
-    bottom: 16,
-    right: 16,
+    bottom: 12,
+    right: 12,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     zIndex: 10,
   },
@@ -393,7 +393,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 12,
+    padding: 8,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.1)",
