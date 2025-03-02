@@ -11,8 +11,6 @@ import {
 } from "react-native-paper";
 import { Flashcard } from "@src/types";
 import AudioControl from "@components/ui/AudioControl";
-import { useFlashcardStats } from "@hooks/useFlashcardStats";
-import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
 
 interface FlashcardViewProps {
@@ -27,9 +25,6 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [flipped, setFlipped] = useState(false);
   const theme = useTheme();
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const { trackProgress } = useFlashcardStats();
-  const userData = useUserData();
-  const [startTime] = useState(Date.now());
 
   const flipCard = () => {
     Animated.timing(fadeAnim, {
@@ -47,16 +42,6 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   };
 
   const handleAnswer = async (isCorrect: boolean) => {
-    if (userData?.id) {
-      const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
-      await trackProgress(flashcard.deckId, {
-        userId: userData.id,
-        flashcardId: flashcard.id,
-        isCorrect,
-        timeTakenSeconds,
-        confidenceLevel: isCorrect ? 4 : 2,
-      });
-    }
     onAnswer(isCorrect);
     setFlipped(false);
     fadeAnim.setValue(1);
@@ -83,12 +68,15 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               <View
                 style={[
                   styles.wordContainer,
-                  { backgroundColor: theme.colors.primary },
+                  { backgroundColor: theme.colors.primaryContainer },
                 ]}
               >
                 <CustomText
                   variant="headlineSmall"
-                  style={[styles.mainText, { color: theme.colors.onPrimary }]}
+                  style={[
+                    styles.mainText,
+                    { color: theme.colors.onPrimaryContainer },
+                  ]}
                 >
                   {flashcard.frontWord}
                 </CustomText>
@@ -127,6 +115,24 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                   </CustomText>
                 </View>
               )}
+
+              {/* Notes section */}
+              {flashcard.notes && (
+                <View style={styles.notesSection}>
+                  <CustomText
+                    variant="labelLarge"
+                    style={[
+                      styles.sectionTitle,
+                      { color: theme.colors.primary },
+                    ]}
+                  >
+                    Notes:
+                  </CustomText>
+                  <CustomText variant="bodyMedium" style={styles.notesText}>
+                    {flashcard.notes}
+                  </CustomText>
+                </View>
+              )}
             </View>
           ) : (
             // Back of card
@@ -135,12 +141,15 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               <View
                 style={[
                   styles.wordContainer,
-                  { backgroundColor: theme.colors.secondary },
+                  { backgroundColor: theme.colors.secondaryContainer },
                 ]}
               >
                 <CustomText
                   variant="headlineSmall"
-                  style={[styles.mainText, { color: theme.colors.onSecondary }]}
+                  style={[
+                    styles.mainText,
+                    { color: theme.colors.onSecondaryContainer },
+                  ]}
                 >
                   {flashcard.backWord}
                 </CustomText>

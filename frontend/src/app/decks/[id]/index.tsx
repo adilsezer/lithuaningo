@@ -5,7 +5,7 @@ import { useFlashcards } from "@hooks/useFlashcards";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
-import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
+import { useFlashcardStats } from "@hooks/useFlashcardStats";
 import { useTheme, ProgressBar, Button, IconButton } from "react-native-paper";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
@@ -16,28 +16,32 @@ export default function PracticeScreen() {
   const { getDeckFlashcards, flashcards, error, isLoading } = useFlashcards();
   const theme = useTheme();
   const userData = useUserData();
-  const { stats, fetchStats, updateStats } = useUserChallengeStats(
-    userData?.id
-  );
+  const { trackProgress, getUserFlashcardStats, stats } = useFlashcardStats();
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [startTime] = useState(Date.now());
 
   useEffect(() => {
     if (id) {
       getDeckFlashcards(id as string);
     }
-    if (userData?.id) {
-      fetchStats();
+    if (userData?.id && id) {
+      getUserFlashcardStats(id as string, userData.id);
     }
-  }, [id, userData?.id]);
+  }, [id, userData?.id, getUserFlashcardStats]);
 
   const handleAnswer = async (isCorrect: boolean) => {
-    if (!userData?.id || !stats) return;
+    if (!userData?.id || !id) return;
 
     try {
-      await updateStats({
-        todayCorrectAnswers: stats.todayCorrectAnswers + (isCorrect ? 1 : 0),
-        todayIncorrectAnswers:
-          stats.todayIncorrectAnswers + (isCorrect ? 0 : 1),
+      const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
+
+      // Track progress for the current flashcard
+      await trackProgress(id as string, {
+        userId: userData.id,
+        flashcardId: flashcards[currentIndex].id,
+        isCorrect,
+        timeTakenSeconds,
+        confidenceLevel: isCorrect ? 4 : 2,
       });
 
       // Move to next card
@@ -45,11 +49,11 @@ export default function PracticeScreen() {
         setCurrentIndex(currentIndex + 1);
       }
     } catch (error) {
-      console.error("Error updating challenge stats:", error);
+      console.error("Error updating flashcard stats:", error);
     }
   };
 
-  if (isLoading || stats === null) {
+  if (isLoading) {
     return <LoadingIndicator />;
   }
 
