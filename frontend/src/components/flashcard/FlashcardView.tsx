@@ -1,12 +1,18 @@
 import React, { useRef, useState, useEffect } from "react";
-import { StyleSheet, View, Animated, Image } from "react-native";
-import { Card, IconButton, useTheme, Button } from "react-native-paper";
+import { StyleSheet, View, Animated } from "react-native";
+import {
+  Card,
+  IconButton,
+  useTheme,
+  Button,
+  Divider,
+  Surface,
+} from "react-native-paper";
 import { Flashcard } from "@src/types";
 import AudioControl from "@components/ui/AudioControl";
 import { useFlashcardStats } from "@hooks/useFlashcardStats";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
-import { formatDistanceToNow } from "date-fns";
 
 interface FlashcardViewProps {
   flashcard: Flashcard;
@@ -20,26 +26,20 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   const [flipped, setFlipped] = useState(false);
   const theme = useTheme();
   const fadeAnim = useRef(new Animated.Value(1)).current;
-  const { stats, getUserFlashcardStats, trackProgress } = useFlashcardStats();
+  const { trackProgress } = useFlashcardStats();
   const userData = useUserData();
   const [startTime] = useState(Date.now());
-
-  useEffect(() => {
-    if (userData?.id && flashcard.deckId) {
-      getUserFlashcardStats(flashcard.deckId, userData.id);
-    }
-  }, [flashcard.id]); // Only fetch when the flashcard changes
 
   const flipCard = () => {
     Animated.timing(fadeAnim, {
       toValue: 0,
-      duration: 200,
+      duration: 150,
       useNativeDriver: true,
     }).start(() => {
       setFlipped((prev) => !prev);
       Animated.timing(fadeAnim, {
         toValue: 1,
-        duration: 200,
+        duration: 150,
         useNativeDriver: true,
       }).start();
     });
@@ -53,7 +53,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         flashcardId: flashcard.id,
         isCorrect,
         timeTakenSeconds,
-        confidenceLevel: isCorrect ? 4 : 2, // Basic confidence level based on correctness
+        confidenceLevel: isCorrect ? 4 : 2,
       });
     }
     onAnswer(isCorrect);
@@ -62,93 +62,91 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
   };
 
   const renderCardContent = (isBack: boolean) => (
-    <>
-      <CustomText variant="bodyLarge" style={styles.text}>
+    <View style={styles.contentWrapper}>
+      {/* Main word */}
+      <CustomText variant="headlineMedium" style={styles.mainText}>
         {isBack ? flashcard.backWord : flashcard.frontWord}
       </CustomText>
+
+      <Divider style={styles.divider} />
+
+      {/* Example sentence */}
       {!isBack && flashcard.exampleSentence && (
-        <CustomText variant="bodyMedium" style={styles.example}>
-          {flashcard.exampleSentence}
-        </CustomText>
+        <Surface style={styles.sentenceContainer} elevation={0}>
+          <CustomText variant="bodyMedium" style={styles.example}>
+            {flashcard.exampleSentence}
+          </CustomText>
+        </Surface>
       )}
+
       {isBack && flashcard.exampleSentenceTranslation && (
-        <CustomText variant="bodyMedium" style={styles.example}>
-          {flashcard.exampleSentenceTranslation}
-        </CustomText>
+        <Surface style={styles.sentenceContainer} elevation={0}>
+          <CustomText variant="bodyMedium" style={styles.example}>
+            {flashcard.exampleSentenceTranslation}
+          </CustomText>
+        </Surface>
       )}
+
+      {/* Image */}
       {flashcard.imageUrl && (
-        <Image source={{ uri: flashcard.imageUrl }} style={styles.image} />
+        <Card.Cover source={{ uri: flashcard.imageUrl }} style={styles.image} />
       )}
+
+      {/* Audio control */}
       {flashcard.audioUrl && (
-        <AudioControl
-          url={flashcard.audioUrl}
-          onPress={(e) => e.stopPropagation()}
-        />
+        <View style={styles.audioContainer}>
+          <AudioControl
+            url={flashcard.audioUrl}
+            onPress={(e) => e.stopPropagation()}
+            size={36}
+          />
+        </View>
       )}
-      <CustomText variant="bodyMedium" style={styles.stats}>
-        {isBack ? (
-          `Created: ${formatDistanceToNow(new Date(flashcard.createdAt), {
-            addSuffix: true,
-          })}`
-        ) : (
-          <>
-            Reviews: {stats?.totalReviewed || 0} | Success Rate:{" "}
-            {stats?.accuracyRate
-              ? `${Math.round(stats.accuracyRate * 100)}%`
-              : "N/A"}
-          </>
-        )}
-      </CustomText>
-      {!isBack && stats?.lastReviewedAt && (
-        <CustomText variant="bodySmall" style={styles.timeAgo}>
-          Last reviewed:{" "}
-          {formatDistanceToNow(new Date(stats.lastReviewedAt), {
-            addSuffix: true,
-          })}
-        </CustomText>
-      )}
-      {!isBack && stats?.nextReviewDue && (
-        <CustomText variant="bodySmall" style={styles.nextReview}>
-          Next review: {stats.nextReviewDue}
-        </CustomText>
-      )}
-    </>
+    </View>
   );
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container]}>
       <Card
-        style={[
-          styles.card,
-          {
-            borderColor: theme.colors.primary,
-            borderWidth: 1,
-          },
-        ]}
+        style={[styles.card, { borderColor: theme.colors.primary }]}
         onPress={flipCard}
       >
-        <Animated.View style={{ opacity: fadeAnim }}>
+        <Animated.View style={[{ opacity: fadeAnim }, styles.animatedView]}>
           <Card.Content style={styles.cardContent}>
             {renderCardContent(flipped)}
           </Card.Content>
         </Animated.View>
-        <View style={styles.flipIndicator}>
-          <IconButton
-            icon="rotate-3d"
-            size={20}
-            onPress={(e) => {
-              e.stopPropagation();
-              flipCard();
-            }}
-          />
-        </View>
+
+        <IconButton
+          icon="rotate-3d"
+          mode="contained"
+          size={24}
+          style={styles.flipButton}
+          onPress={(e) => {
+            e.stopPropagation();
+            flipCard();
+          }}
+        />
       </Card>
+
       {flipped && (
         <View style={styles.actions}>
-          <Button mode="outlined" onPress={() => handleAnswer(false)}>
+          <Button
+            mode="outlined"
+            onPress={() => handleAnswer(false)}
+            style={styles.actionButton}
+            contentStyle={styles.buttonContent}
+            icon="close"
+          >
             Incorrect
           </Button>
-          <Button mode="contained" onPress={() => handleAnswer(true)}>
+          <Button
+            mode="contained"
+            onPress={() => handleAnswer(true)}
+            style={styles.actionButton}
+            contentStyle={styles.buttonContent}
+            icon="check"
+          >
             Correct
           </Button>
         </View>
@@ -159,56 +157,68 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    margin: 16,
+    flex: 1,
   },
   card: {
     borderRadius: 12,
-    elevation: 4,
+    flex: 1,
+    borderWidth: 1,
+  },
+  animatedView: {
+    width: "100%",
+    height: "100%",
   },
   cardContent: {
-    minHeight: 300,
-    justifyContent: "center",
-    alignItems: "center",
+    padding: 16,
+    height: "100%",
   },
-  text: {
+  contentWrapper: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  mainText: {
     textAlign: "center",
-    marginVertical: 12,
+    marginVertical: 16,
+    fontWeight: "700",
+  },
+  divider: {
+    marginBottom: 16,
+  },
+  sentenceContainer: {
+    padding: 16,
+    borderRadius: 8,
+    marginBottom: 16,
   },
   example: {
     textAlign: "center",
-    marginVertical: 8,
     fontStyle: "italic",
   },
-  stats: {
-    textAlign: "center",
-    marginTop: 8,
+  image: {
+    height: 180,
+    marginBottom: 16,
+    borderRadius: 8,
   },
-  timeAgo: {
-    textAlign: "center",
-    fontStyle: "italic",
-    marginTop: 4,
-  },
-  nextReview: {
-    textAlign: "center",
-    fontStyle: "italic",
-    marginTop: 4,
-    color: "gray",
+  audioContainer: {
+    alignItems: "center",
+    marginVertical: 16,
   },
   actions: {
     flexDirection: "row",
-    justifyContent: "space-around",
-    padding: 16,
+    justifyContent: "space-between",
+    marginTop: 16,
+    gap: 12,
   },
-  flipIndicator: {
-    position: "absolute",
-    bottom: 0,
-    right: 0,
-  },
-  image: {
-    width: 200,
-    height: 200,
+  actionButton: {
+    flex: 1,
     borderRadius: 8,
-    marginVertical: 12,
+  },
+  buttonContent: {
+    paddingVertical: 8,
+  },
+  flipButton: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
   },
 });
 
