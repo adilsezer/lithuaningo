@@ -1,11 +1,5 @@
 import React, { useRef, useState } from "react";
-import {
-  StyleSheet,
-  View,
-  Animated,
-  Dimensions,
-  SafeAreaView,
-} from "react-native";
+import { StyleSheet, View, Animated, Dimensions } from "react-native";
 import {
   Card,
   IconButton,
@@ -77,7 +71,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
             borderColor: theme.colors.outline,
           },
         ]}
-        elevation={3}
+        elevation={2}
         onPress={flipCard}
       >
         <Animated.View style={[{ opacity: fadeAnim }, styles.animatedView]}>
@@ -87,7 +81,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               {/* Main content */}
               <View style={styles.contentWrapper}>
                 <CustomText
-                  variant="headlineMedium"
+                  variant="titleLarge"
                   style={[styles.mainText, { color: theme.colors.onSurface }]}
                 >
                   {flashcard.frontWord}
@@ -122,11 +116,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                 />
 
                 <CustomText
-                  variant="titleMedium"
-                  style={[
-                    styles.sectionTitle,
-                    { color: theme.colors.onSurface },
-                  ]}
+                  variant="labelLarge"
+                  style={[styles.sectionTitle, { color: theme.colors.primary }]}
                 >
                   Example:
                 </CustomText>
@@ -146,8 +137,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               {flashcard.level && (
                 <View style={styles.levelContainer}>
                   <Chip
-                    style={styles.levelChip}
-                    textStyle={{ color: theme.colors.primary }}
+                    style={[
+                      styles.levelChip,
+                      { backgroundColor: theme.colors.primaryContainer },
+                    ]}
+                    textStyle={{
+                      color: theme.colors.onPrimaryContainer,
+                      fontSize: 12,
+                    }}
                   >
                     Level: {flashcard.level}
                   </Chip>
@@ -160,7 +157,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               {/* Main content */}
               <View style={styles.contentWrapper}>
                 <CustomText
-                  variant="headlineMedium"
+                  variant="titleLarge"
                   style={[styles.mainText, { color: theme.colors.onSurface }]}
                 >
                   {flashcard.backWord}
@@ -195,11 +192,8 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                 />
 
                 <CustomText
-                  variant="titleMedium"
-                  style={[
-                    styles.sectionTitle,
-                    { color: theme.colors.onSurface },
-                  ]}
+                  variant="labelLarge"
+                  style={[styles.sectionTitle, { color: theme.colors.primary }]}
                 >
                   Example:
                 </CustomText>
@@ -233,10 +227,10 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       ]}
                     />
                     <CustomText
-                      variant="titleMedium"
+                      variant="labelLarge"
                       style={[
                         styles.sectionTitle,
-                        { color: theme.colors.onSurface },
+                        { color: theme.colors.primary },
                       ]}
                     >
                       Notes:
@@ -258,8 +252,14 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               {flashcard.level && (
                 <View style={styles.levelContainer}>
                   <Chip
-                    style={styles.levelChip}
-                    textStyle={{ color: theme.colors.primary }}
+                    style={[
+                      styles.levelChip,
+                      { backgroundColor: theme.colors.primaryContainer },
+                    ]}
+                    textStyle={{
+                      color: theme.colors.onPrimaryContainer,
+                      fontSize: 12,
+                    }}
                   >
                     Level: {flashcard.level}
                   </Chip>
@@ -272,7 +272,7 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         <IconButton
           icon="rotate-3d"
           mode="contained-tonal"
-          size={24}
+          size={22}
           style={styles.flipButton}
           onPress={(e) => {
             e.stopPropagation();
@@ -317,18 +317,18 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   card: {
-    borderRadius: 16,
+    borderRadius: 14,
     borderWidth: 1,
     overflow: "hidden",
-    marginBottom: 16,
-    minHeight: 350,
+    marginBottom: 12,
+    minHeight: 320,
   },
   animatedView: {
     width: "100%",
   },
   cardContent: {
     padding: 14,
-    paddingBottom: 50, // Space for level chip
+    paddingBottom: 42, // Space for level chip
     position: "relative",
   },
   contentWrapper: {
@@ -338,6 +338,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginVertical: 8,
     fontWeight: "700",
+    letterSpacing: 0.25,
   },
   divider: {
     marginVertical: 10,
@@ -346,22 +347,26 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginBottom: 4,
     fontWeight: "600",
+    letterSpacing: 0.5,
   },
   exampleText: {
     marginBottom: 4,
+    lineHeight: 22,
   },
   translationText: {
     fontStyle: "italic",
     marginBottom: 8,
-    opacity: 0.8,
+    opacity: 0.9,
+    lineHeight: 20,
   },
   notesText: {
     marginBottom: 8,
+    lineHeight: 20,
   },
   cardImage: {
     borderRadius: 10,
     marginBottom: 10,
-    height: 140,
+    height: 130,
     alignSelf: "center",
     width: "90%",
   },
@@ -372,19 +377,20 @@ const styles = StyleSheet.create({
   actions: {
     flexDirection: "row",
     justifyContent: "space-between",
-    gap: 16,
+    gap: 14,
+    marginTop: 2,
   },
   actionButton: {
     flex: 1,
-    borderRadius: 12,
+    borderRadius: 10,
   },
   buttonContent: {
     paddingVertical: 8,
   },
   flipButton: {
     position: "absolute",
-    bottom: 12,
-    right: 12,
+    bottom: 10,
+    right: 10,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     zIndex: 10,
   },
@@ -393,7 +399,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    padding: 8,
+    padding: 6,
     backgroundColor: "rgba(255, 255, 255, 0.9)",
     borderTopWidth: 1,
     borderTopColor: "rgba(0, 0, 0, 0.1)",
@@ -401,6 +407,7 @@ const styles = StyleSheet.create({
   },
   levelChip: {
     marginBottom: 0,
+    height: 28,
   },
 });
 
