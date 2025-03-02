@@ -184,20 +184,43 @@ namespace Lithuaningo.API.Services
             try
             {
                 // Get the flashcard first to know which cache keys to invalidate
-                var flashcard = await GetFlashcardByIdAsync(id);
+                var flashcard = await _supabaseClient
+                    .From<Flashcard>()
+                    .Where(f => f.Id == flashcardId)
+                    .Single();
+
                 if (flashcard != null)
                 {
+                    // Delete the flashcard from the database
                     await _supabaseClient
                         .From<Flashcard>()
                         .Where(f => f.Id == flashcardId)
                         .Delete();
 
-                    // Invalidate cache entries using the response data directly
+                    // Delete associated files from storage
+                    var deleteFileTasks = new List<Task>();
+                    
+                    if (!string.IsNullOrEmpty(flashcard.ImageUrl))
+                    {
+                        _logger.LogInformation("Deleting flashcard image: {ImageUrl}", flashcard.ImageUrl);
+                        deleteFileTasks.Add(_storageService.DeleteFileAsync(flashcard.ImageUrl));
+                    }
+                    
+                    if (!string.IsNullOrEmpty(flashcard.AudioUrl))
+                    {
+                        _logger.LogInformation("Deleting flashcard audio: {AudioUrl}", flashcard.AudioUrl);
+                        deleteFileTasks.Add(_storageService.DeleteFileAsync(flashcard.AudioUrl));
+                    }
+                    
+                    // Wait for all file deletions to complete
+                    await Task.WhenAll(deleteFileTasks);
+
+                    // Invalidate cache entries
                     await _cache.RemoveAsync($"{CacheKeyPrefix}{flashcard.Id}");
                     await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{flashcard.DeckId}");
                     await _cache.RemoveAsync($"{CacheKeyPrefix}due:all");
 
-                    _logger.LogInformation("Deleted flashcard {Id}", id);
+                    _logger.LogInformation("Deleted flashcard {Id} with associated files", id);
                 }
             }
             catch (Exception ex)

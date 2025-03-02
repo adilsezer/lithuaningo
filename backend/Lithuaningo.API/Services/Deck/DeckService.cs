@@ -14,6 +14,7 @@ using Supabase;
 using AutoMapper;
 using Microsoft.AspNetCore.Http;
 using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace Lithuaningo.API.Services
 {
@@ -333,17 +334,65 @@ namespace Lithuaningo.API.Services
             try
             {
                 // Get the deck first to know which cache keys to invalidate
-                var deck = await GetDeckByIdAsync(id);
+                var deck = await _supabaseClient
+                    .From<Deck>()
+                    .Where(d => d.Id == deckGuid)
+                    .Single();
+
                 if (deck != null)
                 {
+                    // Get all flashcards associated with this deck to delete their files
+                    var flashcards = await _supabaseClient
+                        .From<Flashcard>()
+                        .Where(f => f.DeckId == deckGuid)
+                        .Get();
+
+                    // Prepare file deletion tasks
+                    var deleteFileTasks = new List<Task>();
+
+                    // Delete deck image if exists
+                    if (!string.IsNullOrEmpty(deck.ImageUrl))
+                    {
+                        _logger.LogInformation("Deleting deck image: {ImageUrl}", deck.ImageUrl);
+                        deleteFileTasks.Add(_storageService.DeleteFileAsync(deck.ImageUrl));
+                    }
+
+                    // Delete all flashcard files
+                    foreach (var flashcard in flashcards.Models)
+                    {
+                        if (!string.IsNullOrEmpty(flashcard.ImageUrl))
+                        {
+                            _logger.LogInformation("Deleting flashcard image: {ImageUrl}", flashcard.ImageUrl);
+                            deleteFileTasks.Add(_storageService.DeleteFileAsync(flashcard.ImageUrl));
+                        }
+
+                        if (!string.IsNullOrEmpty(flashcard.AudioUrl))
+                        {
+                            _logger.LogInformation("Deleting flashcard audio: {AudioUrl}", flashcard.AudioUrl);
+                            deleteFileTasks.Add(_storageService.DeleteFileAsync(flashcard.AudioUrl));
+                        }
+                    }
+
+                    // Delete all flashcards in the deck
+                    await _supabaseClient
+                        .From<Flashcard>()
+                        .Where(f => f.DeckId == deckGuid)
+                        .Delete();
+
+                    // Delete the deck
                     await _supabaseClient
                         .From<Deck>()
                         .Where(d => d.Id == deckGuid)
                         .Delete();
 
-                    // Invalidate cache entries directly using the DeckResponse properties
-                    await InvalidateDeckCacheAsync(deck);
-                    _logger.LogInformation("Deleted deck {Id}", id);
+                    // Wait for all file deletions to complete
+                    await Task.WhenAll(deleteFileTasks);
+
+                    // Invalidate cache entries
+                    var deckResponse = _mapper.Map<DeckResponse>(deck);
+                    await InvalidateDeckCacheAsync(deckResponse);
+                    
+                    _logger.LogInformation("Deleted deck {Id} with all associated flashcards and files", id);
                 }
             }
             catch (Exception ex)

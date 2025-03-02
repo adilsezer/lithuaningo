@@ -20,7 +20,7 @@ export const useFlashcards = () => {
   const isLoading = useIsLoading();
   const setError = useSetError();
   const error = useError();
-  const { showError, showSuccess } = useAlertDialog();
+  const { showError, showSuccess, showConfirm } = useAlertDialog();
   const [flashcards, setFlashcards] = useState<Flashcard[]>([]);
 
   const handleError = useCallback(
@@ -106,21 +106,31 @@ export const useFlashcards = () => {
   );
 
   const deleteFlashcard = useCallback(
-    async (id: string) => {
-      try {
-        setLoading(true);
-        setError(null);
-        await flashcardService.deleteFlashcard(id);
-        showSuccess("Flashcard deleted successfully");
-        return true;
-      } catch (error) {
-        handleError(error as Error, "Failed to delete flashcard");
-        throw error;
-      } finally {
-        setLoading(false);
-      }
+    async (id: string, onSuccess?: () => void) => {
+      showConfirm({
+        title: "Delete Flashcard",
+        message:
+          "Are you sure you want to delete this flashcard? This cannot be undone.",
+        onConfirm: async () => {
+          try {
+            setLoading(true);
+            setError(null);
+            await flashcardService.deleteFlashcard(id);
+            showSuccess("Flashcard deleted successfully");
+
+            if (onSuccess) {
+              onSuccess();
+            }
+          } catch (error) {
+            handleError(error as Error, "Failed to delete flashcard");
+            throw error;
+          } finally {
+            setLoading(false);
+          }
+        },
+      });
     },
-    [handleError, setError, setLoading, showSuccess]
+    [handleError, setError, setLoading, showSuccess, showConfirm]
   );
 
   const getFlashcardById = useCallback(

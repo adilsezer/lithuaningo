@@ -97,18 +97,15 @@ export default function NewFlashcardScreen() {
   };
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <View style={styles.header}>
-        <BackButton />
-        <CustomText variant="titleMedium">Create Flashcard</CustomText>
-        <View style={styles.headerRight} />
-      </View>
+    <View style={styles.container}>
+      <CustomText variant="titleLarge" bold style={{ marginTop: 16 }}>
+        Create Flashcard
+      </CustomText>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         ref={scrollViewRef}
+        keyboardShouldPersistTaps="handled"
       >
         <Form
           ref={formRef}
@@ -121,7 +118,6 @@ export default function NewFlashcardScreen() {
           mode="outlined"
           title="Go to Deck"
           onPress={() => router.push(`/decks/${deckId}`)}
-          style={styles.secondaryButton}
         />
       </ScrollView>
     </View>
@@ -132,22 +128,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  header: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: "rgba(0, 0, 0, 0.1)",
-  },
-  headerRight: {
-    width: 40, // Same width as BackButton for alignment
-  },
   scrollContent: {
     padding: 16,
-  },
-  secondaryButton: {
-    marginTop: 12,
+    paddingBottom: 32, // Add extra padding at the bottom
   },
 });

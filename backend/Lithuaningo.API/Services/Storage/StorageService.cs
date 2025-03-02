@@ -63,6 +63,75 @@ public class StorageService : IStorageService, IDisposable
         }
     }
 
+    public async Task DeleteFileAsync(string fileUrl)
+    {
+        if (_disposed)
+        {
+            throw new ObjectDisposedException(nameof(StorageService));
+        }
+
+        if (string.IsNullOrEmpty(fileUrl))
+        {
+            return; // Nothing to delete
+        }
+
+        try
+        {
+            // Extract the file key from the URL
+            // The URL format is: https://customdomain.com/folder/subfolder/filename.ext
+            string key = ExtractKeyFromUrl(fileUrl);
+            
+            if (string.IsNullOrEmpty(key))
+            {
+                return; // Invalid URL format, nothing to delete
+            }
+
+            var deleteRequest = new DeleteObjectRequest
+            {
+                BucketName = _settings.BucketName,
+                Key = key
+            };
+
+            await _s3Client.DeleteObjectAsync(deleteRequest);
+        }
+        catch (AmazonS3Exception ex)
+        {
+            var message = ex.ErrorCode switch
+            {
+                "NoSuchBucket" => $"Bucket {_settings.BucketName} does not exist",
+                "AccessDenied" => "Access denied to R2 bucket - check credentials",
+                "NoSuchKey" => "File does not exist in the bucket",
+                _ => $"Error deleting from R2: {ex.Message}"
+            };
+            throw new Exception(message, ex);
+        }
+    }
+
+    private string ExtractKeyFromUrl(string fileUrl)
+    {
+        if (string.IsNullOrEmpty(fileUrl))
+        {
+            return string.Empty;
+        }
+
+        // Remove the domain part to get the key
+        if (fileUrl.StartsWith(_publicBucketUrl))
+        {
+            return fileUrl.Substring(_publicBucketUrl.Length + 1); // +1 for the trailing slash
+        }
+
+        // If URL doesn't start with the expected domain, try to extract the path
+        try
+        {
+            var uri = new Uri(fileUrl);
+            return uri.AbsolutePath.TrimStart('/');
+        }
+        catch
+        {
+            return string.Empty;
+        }
+    }
+
     public void Dispose()
     {
         Dispose(true);

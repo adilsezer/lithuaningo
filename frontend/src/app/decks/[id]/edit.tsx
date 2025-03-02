@@ -120,7 +120,7 @@ export default function EditDeckScreen() {
 
   // Handle flashcard deletion
   const handleDeleteFlashcard = (flashcardId: string) => {
-    deleteFlashcard(flashcardId).then(() => {
+    deleteFlashcard(flashcardId, () => {
       if (id) getDeckFlashcards(id);
     });
   };
@@ -147,7 +147,7 @@ export default function EditDeckScreen() {
     >
       <BackButton />
       <ScrollView style={styles.scrollView}>
-        <CustomText variant="titleLarge" bold style={styles.title}>
+        <CustomText variant="titleLarge" bold>
           Edit Deck
         </CustomText>
 
@@ -233,10 +233,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-  },
-  title: {
-    marginVertical: 16,
-    textAlign: "left",
   },
   flashcardsSection: {
     marginBottom: 32,

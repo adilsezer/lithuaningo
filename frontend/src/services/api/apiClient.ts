@@ -136,6 +136,7 @@ class ApiClient {
       data?: any;
       params?: any;
       headers?: Record<string, string>;
+      timeout?: number;
     }
   ): Promise<T> {
     try {
@@ -145,6 +146,7 @@ class ApiClient {
         data: options?.data,
         params: options?.params,
         headers: options?.headers,
+        timeout: options?.timeout || this.axiosInstance.defaults.timeout,
       });
       return data;
     } catch (error) {
@@ -437,12 +439,6 @@ class ApiClient {
     });
   }
 
-  async deleteDeck(id: string): Promise<void> {
-    return this.request(`/api/v1/Deck/${id}`, {
-      method: "DELETE",
-    });
-  }
-
   async getUserDecks(userId: string): Promise<Deck[]> {
     return this.request<Deck[]>(`/api/v1/Deck/user/${userId}`);
   }
@@ -632,9 +628,19 @@ class ApiClient {
     });
   }
 
-  async deleteFlashcard(id: string) {
+  DELETE_TIMEOUT = 30000; // 30 seconds for delete operations
+
+  async deleteFlashcard(id: string): Promise<void> {
     return this.request(`/api/v1/Flashcard/${id}`, {
       method: "DELETE",
+      timeout: this.DELETE_TIMEOUT,
+    });
+  }
+
+  async deleteDeck(id: string): Promise<void> {
+    return this.request(`/api/v1/Deck/${id}`, {
+      method: "DELETE",
+      timeout: this.DELETE_TIMEOUT,
     });
   }
 
