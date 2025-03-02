@@ -1,5 +1,5 @@
-import { useState, useCallback, useEffect } from "react";
-import { Audio } from "expo-av";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { Audio, InterruptionModeAndroid, InterruptionModeIOS } from "expo-av";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 
 export interface AudioFile {
@@ -17,28 +17,65 @@ export const useAudio = () => {
     useState<Audio.PermissionResponse>();
   const { showError } = useAlertDialog();
 
+  // Use a ref to track if the component is mounted
+  const isMounted = useRef(true);
+
   // Request permissions on mount
   useEffect(() => {
     const getPermission = async () => {
-      const permission = await Audio.requestPermissionsAsync();
-      setPermissionResponse(permission);
+      try {
+        const permission = await Audio.requestPermissionsAsync();
+        if (isMounted.current) {
+          setPermissionResponse(permission);
+        }
+      } catch (error) {
+        console.error("Error requesting audio permissions:", error);
+      }
     };
     getPermission();
+
+    // Set isMounted to false when component unmounts
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   // Cleanup effect for playback
   useEffect(() => {
     return () => {
       if (sound) {
-        sound.unloadAsync();
+        // Ensure we unload the sound when component unmounts
+        (async () => {
+          try {
+            await sound.stopAsync();
+            await sound.unloadAsync();
+          } catch (error) {
+            // Silently handle errors during cleanup
+            console.log("Cleanup sound error (expected):", error);
+          }
+        })();
+      }
+
+      // Also ensure we stop any ongoing recording
+      if (recording) {
+        (async () => {
+          try {
+            await recording.stopAndUnloadAsync();
+          } catch (error) {
+            // Silently handle errors during cleanup
+            console.log("Cleanup recording error (expected):", error);
+          }
+        })();
       }
     };
-  }, [sound]);
+  }, [sound, recording]);
 
   const handleError = useCallback(
     (error: Error, message: string) => {
       console.error(message, error);
-      showError(message);
+      if (isMounted.current) {
+        showError(message);
+      }
       return null;
     },
     [showError]
@@ -46,20 +83,54 @@ export const useAudio = () => {
 
   const startRecording = useCallback(async () => {
     try {
+      // First, ensure any existing recording is stopped
+      if (recording) {
+        try {
+          await recording.stopAndUnloadAsync();
+        } catch (error) {
+          console.log("Error stopping previous recording:", error);
+        }
+        setRecording(null);
+      }
+
+      // Also ensure any playing sound is stopped
+      if (sound) {
+        try {
+          await sound.stopAsync();
+          await sound.unloadAsync();
+        } catch (error) {
+          console.log("Error stopping sound before recording:", error);
+        }
+        setSound(null);
+        setPlayingUrl(null);
+      }
+
       await Audio.setAudioModeAsync({
         allowsRecordingIOS: true,
         playsInSilentModeIOS: true,
+        // Prevent audio interruption
+        interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+        shouldDuckAndroid: true,
+        interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
       });
 
-      const { recording } = await Audio.Recording.createAsync(
+      const { recording: newRecording } = await Audio.Recording.createAsync(
         Audio.RecordingOptionsPresets.HIGH_QUALITY
       );
-      setRecording(recording);
-      setIsRecording(true);
+
+      if (isMounted.current) {
+        setRecording(newRecording);
+        setIsRecording(true);
+      } else {
+        // If component unmounted during async operation, clean up
+        try {
+          await newRecording.stopAndUnloadAsync();
+        } catch (error) {}
+      }
     } catch (error) {
       handleError(error as Error, "Failed to start recording");
     }
-  }, [handleError]);
+  }, [handleError, recording, sound]);
 
   const stopRecording = useCallback(async () => {
     if (!recording) return null;
@@ -67,8 +138,11 @@ export const useAudio = () => {
     try {
       await recording.stopAndUnloadAsync();
       const uri = recording.getURI();
-      setRecording(null);
-      setIsRecording(false);
+
+      if (isMounted.current) {
+        setRecording(null);
+        setIsRecording(false);
+      }
 
       if (uri) {
         const audioFile: AudioFile = {
@@ -81,6 +155,10 @@ export const useAudio = () => {
       return null;
     } catch (error) {
       handleError(error as Error, "Failed to stop recording");
+      if (isMounted.current) {
+        setRecording(null);
+        setIsRecording(false);
+      }
       return null;
     }
   }, [recording, handleError]);
@@ -93,12 +171,17 @@ export const useAudio = () => {
           playsInSilentModeIOS: true,
           staysActiveInBackground: false,
           shouldDuckAndroid: true,
+          // Set interruption mode to mix with other audio
+          interruptionModeIOS: InterruptionModeIOS.MixWithOthers,
+          interruptionModeAndroid: InterruptionModeAndroid.DuckOthers,
         });
 
         // If we're already playing this URL, stop it
         if (playingUrl === url && sound) {
           await sound.pauseAsync();
-          setPlayingUrl(null);
+          if (isMounted.current) {
+            setPlayingUrl(null);
+          }
           return;
         }
 
@@ -107,14 +190,20 @@ export const useAudio = () => {
           try {
             await sound.pauseAsync();
             await sound.unloadAsync();
-          } catch (error) {}
-          setSound(null);
+          } catch (error) {
+            console.log("Error unloading previous sound:", error);
+          }
+          if (isMounted.current) {
+            setSound(null);
+          }
         }
 
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: url },
           { shouldPlay: true },
           async (status) => {
+            if (!isMounted.current) return;
+
             if (!status.isLoaded) {
               if (status.error) {
                 setPlayingUrl(null);
@@ -136,18 +225,26 @@ export const useAudio = () => {
           true
         );
 
-        setSound(newSound);
-        setPlayingUrl(url);
+        if (isMounted.current) {
+          setSound(newSound);
+          setPlayingUrl(url);
+        } else {
+          // If component unmounted during async operation, clean up
+          try {
+            await newSound.stopAsync();
+            await newSound.unloadAsync();
+          } catch (error) {}
+        }
       } catch (error) {
         handleError(error as Error, "Error playing audio");
-        if (sound) {
+        if (sound && isMounted.current) {
           try {
             await sound.pauseAsync();
             await sound.unloadAsync();
           } catch (unloadError) {}
+          setSound(null);
+          setPlayingUrl(null);
         }
-        setSound(null);
-        setPlayingUrl(null);
       }
     },
     [sound, playingUrl, handleError]
