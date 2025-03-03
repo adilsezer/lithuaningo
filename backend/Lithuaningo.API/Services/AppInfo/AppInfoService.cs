@@ -21,19 +21,22 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "app-info:";
         private readonly ILogger<AppInfoService> _logger;
         private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public AppInfoService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<AppInfoService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<AppInfoResponse?> GetAppInfoAsync(string platform)
@@ -183,8 +186,8 @@ namespace Lithuaningo.API.Services
                     .Where(a => a.Id == appInfoId)
                     .Delete();
 
-                // Remove from cache
-                await _cache.RemoveAsync($"{CacheKeyPrefix}{appInfo.Platform}");
+                // Use CacheInvalidator instead of direct removal
+                await _cacheInvalidator.InvalidateAppInfoAsync(appInfo.Platform);
 
                 _logger.LogInformation("Deleted app info with ID '{Id}'", id);
             }

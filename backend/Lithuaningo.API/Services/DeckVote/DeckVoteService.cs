@@ -20,23 +20,26 @@ namespace Lithuaningo.API.Services
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
-        private const string VoteCachePrefix = "deck-vote:";
-        private const string DeckCachePrefix = "deck:";
-        private readonly ILogger<DeckVoteService> _logger;
         private readonly IMapper _mapper;
+        private readonly ILogger<DeckVoteService> _logger;
+        private const string VoteCachePrefix = "vote:";
+        private const string DeckCachePrefix = "deck:";
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public DeckVoteService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
+            IMapper mapper,
             ILogger<DeckVoteService> logger,
-            IMapper mapper)
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<bool> VoteDeckAsync(Guid deckId, Guid userId, bool isUpvote)
@@ -155,9 +158,19 @@ namespace Lithuaningo.API.Services
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved user vote from cache for deck {DeckId} and user {UserId}", 
-                    deckId, userId);
-                return cached;
+                // If vote was updated in the last 30 seconds, don't use cache
+                if (cached.UpdatedAt > DateTime.UtcNow.AddSeconds(-30))
+                {
+                    _logger.LogInformation("Vote was recently updated, fetching fresh data for deck {DeckId} and user {UserId}", 
+                        deckId, userId);
+                    // Skip cache for recently updated votes
+                }
+                else
+                {
+                    _logger.LogInformation("Retrieved user vote from cache for deck {DeckId} and user {UserId}", 
+                        deckId, userId);
+                    return cached;
+                }
             }
 
             try
@@ -168,12 +181,15 @@ namespace Lithuaningo.API.Services
                     .Where(v => v.UserId == userId)
                     .Get();
 
-                var vote = response.Models.FirstOrDefault();
-                if (vote != null)
+                var votes = response.Models;
+                if (votes.Any())
                 {
+                    var vote = votes.First();
                     var voteResponse = _mapper.Map<DeckVoteResponse>(vote);
-                    await _cache.SetAsync(cacheKey, voteResponse,
-                        TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                    
+                    // Cache the result for future requests (with expiration)
+                    await _cache.SetAsync(cacheKey, voteResponse);
+                    
                     _logger.LogInformation("Retrieved and cached vote for deck {DeckId} and user {UserId}", 
                         deckId, userId);
                     return voteResponse;
@@ -231,6 +247,10 @@ namespace Lithuaningo.API.Services
 
             try
             {
+                // Always get fresh data from the database for vote counts
+                // to ensure we have the most up-to-date information
+                _logger.LogInformation("[GetDeckVoteCountsAsync] Getting fresh vote counts from database for deck {DeckId}", deckId);
+                
                 var votes = await _supabaseClient
                     .From<DeckVote>()
                     .Where(v => v.DeckId == deckId)
@@ -239,6 +259,9 @@ namespace Lithuaningo.API.Services
                 var upvotes = votes.Models.Count(v => v.IsUpvote);
                 var downvotes = votes.Models.Count - upvotes;
 
+                _logger.LogInformation("[GetDeckVoteCountsAsync] Vote counts for deck {DeckId}: upvotes={Upvotes}, downvotes={Downvotes}", 
+                    deckId, upvotes, downvotes);
+                
                 return (upvotes, downvotes);
             }
             catch (Exception ex)
@@ -280,18 +303,7 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                _logger.LogInformation("[InvalidateVoteCacheAsync] Starting cache invalidation for deck {DeckId}, user {UserId}", 
-                    deckId, userId);
-                    
-                var userVoteKey = $"{VoteCachePrefix}deck:{deckId}:user:{userId}";
-                var deckVotesKey = $"{VoteCachePrefix}deck:{deckId}";
-                var deckCountsKey = $"{VoteCachePrefix}counts:{deckId}";
-
-                await _cache.RemoveAsync(userVoteKey);
-                await _cache.RemoveAsync(deckVotesKey);
-                await _cache.RemoveAsync(deckCountsKey);
-                
-                _logger.LogInformation("[InvalidateVoteCacheAsync] Cache invalidation completed");
+                await _cacheInvalidator.InvalidateVotesAsync(deckId.ToString(), userId.ToString());
             }
             catch (Exception ex)
             {
@@ -304,37 +316,10 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                _logger.LogInformation("[InvalidateDeckCacheAsync] Starting deck cache invalidation for deck {DeckId}", deck.Id);
+                await _cacheInvalidator.InvalidateDeckAsync(deck.Id.ToString(), deck.UserId.ToString());
                 
-                // Get all possible cache keys that might contain this deck
-                var keys = new List<string>
-                {
-                    // Single deck cache
-                    $"{DeckCachePrefix}{deck.Id}",
-                    
-                    // User decks cache
-                    $"{DeckCachePrefix}user:{deck.UserId}",
-                    
-                    // All decks cache
-                    $"{DeckCachePrefix}list:all:0",
-                    
-                    // Category-specific cache
-                    $"{DeckCachePrefix}list:{deck.Category}:0",
-                    
-                    // Top rated decks cache (all variations)
-                    $"{DeckCachePrefix}top:10:all",
-                    $"{DeckCachePrefix}top:10:week",
-                    $"{DeckCachePrefix}top:10:month",
-                    $"{DeckCachePrefix}top:10:year"
-                };
-
-                foreach (var key in keys)
-                {
-                    _logger.LogInformation("[InvalidateDeckCacheAsync] Removing cache for key: {Key}", key);
-                    await _cache.RemoveAsync(key);
-                }
-                
-                _logger.LogInformation("[InvalidateDeckCacheAsync] Deck cache invalidation completed");
+                // Also invalidate the top-rated decks cache
+                await _cacheInvalidator.InvalidateTopRatedDecksAsync();
             }
             catch (Exception ex)
             {

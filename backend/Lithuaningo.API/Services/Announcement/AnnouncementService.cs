@@ -22,19 +22,22 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "announcement:";
         private readonly ILogger<AnnouncementService> _logger;
         private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public AnnouncementService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<AnnouncementService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<IEnumerable<AnnouncementResponse>> GetAnnouncementsAsync()
@@ -142,8 +145,8 @@ namespace Lithuaningo.API.Services
                 var createdAnnouncement = response.Models.First();
                 var announcementResponse = _mapper.Map<AnnouncementResponse>(createdAnnouncement);
 
-                // Invalidate the cache for all announcements
-                await _cache.RemoveAsync($"{CacheKeyPrefix}all");
+                // Replace direct cache removal with CacheInvalidator
+                await _cacheInvalidator.InvalidateAnnouncementsAsync();
                 _logger.LogInformation("Created new announcement with ID {Id}", announcement.Id);
 
                 return announcementResponse;
@@ -201,10 +204,8 @@ namespace Lithuaningo.API.Services
                 var updated = response.Models.First();
                 var announcementResponse = _mapper.Map<AnnouncementResponse>(updated);
 
-                // Invalidate both specific and list caches
-                var cacheKey = $"{CacheKeyPrefix}{announcementId}";
-                await _cache.RemoveAsync(cacheKey);
-                await _cache.RemoveAsync($"{CacheKeyPrefix}all");
+                // Replace cache invalidation code with:
+                await _cacheInvalidator.InvalidateAnnouncementsAsync(id);
 
                 _logger.LogInformation("Updated announcement {Id}", id);
                 return announcementResponse;
@@ -238,9 +239,8 @@ namespace Lithuaningo.API.Services
                     .Where(a => a.Id == announcementId)
                     .Delete();
 
-                // Invalidate both specific and list caches
-                await _cache.RemoveAsync($"{CacheKeyPrefix}{announcement.Id}");
-                await _cache.RemoveAsync($"{CacheKeyPrefix}all");
+                // Replace cache invalidation code with:
+                await _cacheInvalidator.InvalidateAnnouncementsAsync(announcement.Id.ToString());
 
                 _logger.LogInformation("Deleted announcement {Id}", id);
             }

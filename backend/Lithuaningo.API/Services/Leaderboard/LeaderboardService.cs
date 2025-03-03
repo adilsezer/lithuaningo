@@ -24,19 +24,22 @@ namespace Lithuaningo.API.Services
         private readonly ILogger<LeaderboardService> _logger;
         private readonly IMapper _mapper;
         private const int LEADERBOARD_SIZE = 20;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public LeaderboardService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<LeaderboardService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<List<LeaderboardEntryResponse>> GetCurrentWeekLeaderboardAsync()
@@ -185,8 +188,7 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateLeaderboardCacheAsync(string weekId)
         {
-            var cacheKey = $"{CacheKeyPrefix}week:{weekId}";
-            await _cache.RemoveAsync(cacheKey);
+            await _cacheInvalidator.InvalidateLeaderboardCacheAsync(weekId);
         }
     }
 }

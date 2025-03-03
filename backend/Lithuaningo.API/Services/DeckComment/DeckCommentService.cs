@@ -22,19 +22,22 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "deck-comment:";
         private readonly ILogger<DeckCommentService> _logger;
         private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public DeckCommentService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<DeckCommentService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<List<DeckCommentResponse>> GetDeckCommentsAsync(string deckId)
@@ -237,12 +240,13 @@ namespace Lithuaningo.API.Services
                     .Where(c => c.Id == commentId)
                     .Delete();
 
-                await _cache.RemoveAsync($"{CacheKeyPrefix}{comment.Id}");
-                await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{comment.DeckId}");
-                await _cache.RemoveAsync($"{CacheKeyPrefix}user:{comment.UserId}");
+                // Use CacheInvalidator for cache invalidation
+                await _cacheInvalidator.InvalidateDeckCommentAsync(
+                    comment.Id.ToString(), 
+                    comment.DeckId.ToString(), 
+                    comment.UserId.ToString());
 
                 _logger.LogInformation("Deleted deck comment {Id}", deckCommentId);
-
                 return true;
             }
             catch (Exception ex)
@@ -296,14 +300,10 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateCommentCacheAsync(DeckComment comment)
         {
-            var tasks = new List<Task>
-            {
-                _cache.RemoveAsync($"{CacheKeyPrefix}{comment.Id}"),
-                _cache.RemoveAsync($"{CacheKeyPrefix}deck:{comment.DeckId}"),
-                _cache.RemoveAsync($"{CacheKeyPrefix}user:{comment.UserId}")
-            };
-
-            await Task.WhenAll(tasks);
+            await _cacheInvalidator.InvalidateDeckCommentAsync(
+                comment.Id.ToString(),
+                comment.DeckId.ToString(),
+                comment.UserId.ToString());
         }
     }
 }

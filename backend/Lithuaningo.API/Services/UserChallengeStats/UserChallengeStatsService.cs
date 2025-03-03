@@ -21,19 +21,22 @@ public class UserChallengeStatsService : IUserChallengeStatsService
     private const string CacheKeyPrefix = "challenge-stats:";
     private readonly ILogger<UserChallengeStatsService> _logger;
     private readonly IMapper _mapper;
+    private readonly CacheInvalidator _cacheInvalidator;
 
     public UserChallengeStatsService(
         ISupabaseService supabaseService,
         ICacheService cache,
         IOptions<CacheSettings> cacheSettings,
         ILogger<UserChallengeStatsService> logger,
-        IMapper mapper)
+        IMapper mapper,
+        CacheInvalidator cacheInvalidator)
     {
         _supabaseClient = supabaseService.Client;
         _cache = cache;
         _cacheSettings = cacheSettings.Value;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+        _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
     }
 
     public async Task<UserChallengeStatsResponse> GetUserChallengeStatsAsync(string userId)
@@ -138,8 +141,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                 .Update(stats);
 
             // Invalidate cache
-            var cacheKey = $"{CacheKeyPrefix}{userGuid}";
-            await _cache.RemoveAsync(cacheKey);
+            await _cacheInvalidator.InvalidateUserChallengeStatsAsync(userId);
             _logger.LogInformation("Updated challenge stats for user {UserId}", userId);
         }
         catch (Exception ex)

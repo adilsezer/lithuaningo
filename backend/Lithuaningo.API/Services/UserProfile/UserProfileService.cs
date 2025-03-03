@@ -22,19 +22,22 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "user-profile:";
         private readonly ILogger<UserProfileService> _logger;
         private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public UserProfileService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<UserProfileService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<UserProfileResponse?> GetUserProfileAsync(string userId)
@@ -116,9 +119,7 @@ namespace Lithuaningo.API.Services
                 var updatedProfile = response.Models.First();
                 var profileResponse = _mapper.Map<UserProfileResponse>(updatedProfile);
 
-                // Invalidate cache
-                var cacheKey = $"{CacheKeyPrefix}{userId}";
-                await _cache.RemoveAsync(cacheKey);
+                await _cacheInvalidator.InvalidateUserProfileAsync(userId);
 
                 _logger.LogInformation("Updated user profile for user {UserId}", userId);
                 return profileResponse;
@@ -152,8 +153,7 @@ namespace Lithuaningo.API.Services
                     .Where(u => u.Id == userGuid)
                     .Delete();
 
-                // Invalidate cache
-                await _cache.RemoveAsync($"{CacheKeyPrefix}{profile.Id}");
+                await _cacheInvalidator.InvalidateUserProfileAsync(userId);
 
                 _logger.LogInformation("Deleted user profile for user {UserId}", userId);
                 return true;
@@ -188,9 +188,7 @@ namespace Lithuaningo.API.Services
                     .Set(u => u.UpdatedAt, DateTime.UtcNow)
                     .Update();
 
-                // Invalidate cache
-                var cacheKey = $"{CacheKeyPrefix}{userId}";
-                await _cache.RemoveAsync(cacheKey);
+                await _cacheInvalidator.InvalidateUserProfileAsync(userId);
 
                 _logger.LogInformation("Updated last login for user {UserId}", userId);
             }

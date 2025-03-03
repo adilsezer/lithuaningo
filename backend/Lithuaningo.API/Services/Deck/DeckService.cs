@@ -29,6 +29,7 @@ namespace Lithuaningo.API.Services
         private readonly IStorageService _storageService;
         private readonly IOptions<StorageSettings> _storageSettings;
         private readonly IDeckVoteService _deckVoteService;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public DeckService(
             ISupabaseService supabaseService,
@@ -38,7 +39,8 @@ namespace Lithuaningo.API.Services
             IMapper mapper,
             IStorageService storageService,
             IOptions<StorageSettings> storageSettings,
-            IDeckVoteService deckVoteService)
+            IDeckVoteService deckVoteService,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
@@ -48,6 +50,7 @@ namespace Lithuaningo.API.Services
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
             _storageSettings = storageSettings ?? throw new ArgumentNullException(nameof(storageSettings));
             _deckVoteService = deckVoteService ?? throw new ArgumentNullException(nameof(deckVoteService));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<List<DeckResponse>> GetDecksAsync(string? category = null, int? limit = null)
@@ -211,12 +214,17 @@ namespace Lithuaningo.API.Services
                 foreach (var deck in decks)
                 {
                     var deckResponse = _mapper.Map<DeckWithRatingResponse>(deck);
+                    
+                    // Always get fresh vote data
                     var (upvotes, downvotes) = await _deckVoteService.GetDeckVoteCountsAsync(deck.Id);
                     var rating = await _deckVoteService.CalculateDeckRatingAsync(deck.Id);
 
                     deckResponse.TotalVotes = upvotes + downvotes;
                     deckResponse.UpvoteCount = upvotes;
                     deckResponse.Rating = rating;
+
+                    _logger.LogInformation("Top deck {Id} has rating {Rating}, upvotes {Upvotes}, total {Total}", 
+                        deck.Id, rating, upvotes, upvotes + downvotes);
 
                     deckResponses.Add(deckResponse);
                 }
@@ -228,8 +236,10 @@ namespace Lithuaningo.API.Services
                     .Take(limit)
                     .ToList();
 
-                await _cache.SetAsync(cacheKey, topDecks,
-                    TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));
+                // Use shorter cache time for top rated decks since they change frequently
+                // 30 seconds is a good balance for most applications
+                await _cache.SetAsync(cacheKey, topDecks, TimeSpan.FromSeconds(30));
+                    
                 _logger.LogInformation("Retrieved and cached {0} top rated decks", topDecks.Count);
 
                 return topDecks;
@@ -542,29 +552,8 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateDeckCacheAsync(DeckResponse deck)
         {
-            _logger.LogInformation("[InvalidateDeckCacheAsync] Starting cache invalidation for deck {DeckId}", deck.Id);
-            
-            var tasks = new List<Task>
-            {
-                // Invalidate specific deck cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}{deck.Id}"),
-                
-                // Invalidate user's deck list cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}user:{deck.UserId}"),
-                
-                // Invalidate general deck lists that might contain this deck
-                _cache.RemoveAsync($"{CacheKeyPrefix}list:all:0"),
-                _cache.RemoveAsync($"{CacheKeyPrefix}list:{deck.Category}:0"),
-                
-                // Invalidate top rated lists for all time ranges
-                _cache.RemoveAsync($"{CacheKeyPrefix}top:10:all"),
-                _cache.RemoveAsync($"{CacheKeyPrefix}top:10:week"),
-                _cache.RemoveAsync($"{CacheKeyPrefix}top:10:month"),
-                _cache.RemoveAsync($"{CacheKeyPrefix}top:10:year"),
-            };
-
-            await Task.WhenAll(tasks);
-            _logger.LogInformation("[InvalidateDeckCacheAsync] Cache invalidation completed for deck {DeckId}", deck.Id);
+            // Use the centralized CacheInvalidator instead of manual cache removal
+            await _cacheInvalidator.InvalidateDeckAsync(deck.Id.ToString(), deck.UserId.ToString());
         }
     }
 }

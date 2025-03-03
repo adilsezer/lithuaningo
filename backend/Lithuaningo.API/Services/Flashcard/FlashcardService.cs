@@ -26,6 +26,7 @@ namespace Lithuaningo.API.Services
         private readonly IMapper _mapper;
         private readonly IStorageService _storageService;
         private readonly IOptions<StorageSettings> _storageSettings;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public FlashcardService(
             ISupabaseService supabaseService,
@@ -34,7 +35,8 @@ namespace Lithuaningo.API.Services
             IStorageService storageService,
             IOptions<StorageSettings> storageSettings,
             ILogger<FlashcardService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
@@ -43,6 +45,7 @@ namespace Lithuaningo.API.Services
             _storageSettings = storageSettings ?? throw new ArgumentNullException(nameof(storageSettings));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<FlashcardResponse?> GetFlashcardByIdAsync(string id)
@@ -216,9 +219,7 @@ namespace Lithuaningo.API.Services
                     await Task.WhenAll(deleteFileTasks);
 
                     // Invalidate cache entries
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}{flashcard.Id}");
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{flashcard.DeckId}");
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}due:all");
+                    await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString(), flashcard.DeckId.ToString());
 
                     _logger.LogInformation("Deleted flashcard {Id} with associated files", id);
                 }
@@ -277,16 +278,7 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateFlashcardCacheAsync(Flashcard flashcard)
         {
-            var tasks = new List<Task>
-            {
-                // Invalidate specific flashcard cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}{flashcard.Id}"),
-                
-                // Invalidate user's flashcard list cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}user:{flashcard.DeckId}")
-            };
-
-            await Task.WhenAll(tasks);
+            await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString(), flashcard.DeckId.ToString());
         }
 
         public async Task<string> UploadFlashcardFileAsync(IFormFile file)

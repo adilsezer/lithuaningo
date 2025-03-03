@@ -22,19 +22,22 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "deck-report:";
         private readonly ILogger<DeckReportService> _logger;
         private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public DeckReportService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<DeckReportService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         public async Task<List<DeckReportResponse>> GetReportsByStatusAsync(string status)
@@ -300,14 +303,8 @@ namespace Lithuaningo.API.Services
                     .Where(r => r.Id == reportId)
                     .Delete();
 
-                // Invalidate cache entries using the response data directly
-                await _cache.RemoveAsync($"{CacheKeyPrefix}status:{report.Status}");
-                await _cache.RemoveAsync($"{CacheKeyPrefix}deck:{report.DeckId}");
-                await _cache.RemoveAsync($"{CacheKeyPrefix}{report.Id}");
-                if (report.Status == "pending")
-                {
-                    await _cache.RemoveAsync($"{CacheKeyPrefix}pending:50");
-                }
+                // Use the cache invalidator
+                await _cacheInvalidator.InvalidateReportAsync(report.Id.ToString(), report.DeckId.ToString(), report.Status);
 
                 _logger.LogInformation("Deleted report {Id}", id);
             }
@@ -320,24 +317,7 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateReportCacheAsync(DeckReport report)
         {
-            var tasks = new List<Task>
-            {
-                // Invalidate status-based cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}status:{report.Status}"),
-                
-                // Invalidate deck-based cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}deck:{report.DeckId}"),
-                
-                // Invalidate specific report cache
-                _cache.RemoveAsync($"{CacheKeyPrefix}{report.Id}"),
-                
-                // Invalidate pending reports cache if this was a pending report
-                report.Status == "pending" 
-                    ? _cache.RemoveAsync($"{CacheKeyPrefix}pending:50")
-                    : Task.CompletedTask
-            };
-
-            await Task.WhenAll(tasks);
+            await _cacheInvalidator.InvalidateReportAsync(report.Id.ToString(), report.DeckId.ToString(), report.Status);
         }
     }
 }

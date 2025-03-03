@@ -39,6 +39,7 @@ builder.Services.AddDataProtection()
 builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
 builder.Services.AddMemoryCache(); // Use in-memory cache instead of Redis
 builder.Services.AddScoped<ICacheService, InMemoryCacheService>();
+builder.Services.AddScoped<CacheInvalidator>(); // Register the cache invalidator
 
 // Use NewtonsoftJson instead of the default System.Text.Json with secure settings
 builder.Services.AddControllers()

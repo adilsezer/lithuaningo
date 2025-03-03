@@ -26,19 +26,22 @@ namespace Lithuaningo.API.Services
         private const string CacheKeyPrefix = "quiz:";
         private readonly ILogger<QuizService> _logger;
         private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         public QuizService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<QuizService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         /// <summary>
@@ -114,9 +117,8 @@ namespace Lithuaningo.API.Services
                     .From<QuizQuestion>()
                     .Insert(quizQuestions);
 
-                // Invalidate the cache for today's questions
-                var cacheKey = $"{CacheKeyPrefix}daily:{today:yyyy-MM-dd}";
-                await _cache.RemoveAsync(cacheKey);
+                // Replace direct cache removal with CacheInvalidator
+                await _cacheInvalidator.InvalidateQuizCacheAsync();
 
                 _logger.LogInformation("Created {Count} quiz questions for {Date}", 
                     quizQuestions.Count, today.ToString("yyyy-MM-dd"));
