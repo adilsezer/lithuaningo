@@ -230,41 +230,6 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task UpdateReviewStatusAsync(string id, bool wasCorrect)
-        {
-            if (!Guid.TryParse(id, out var flashcardId))
-            {
-                throw new ArgumentException("Invalid flashcard ID format", nameof(id));
-            }
-
-            try
-            {
-                await _supabaseClient.Rpc(
-                    "update_flashcard_review_status",
-                    new Dictionary<string, object>
-                    {
-                        { "flashcard_id", flashcardId },
-                        { "was_correct", wasCorrect },
-                        { "review_time", DateTime.UtcNow }
-                    }
-                );
-
-                // Invalidate relevant cache entries since the review status changed
-                var flashcard = await GetFlashcardByIdAsync(id);
-                if (flashcard != null)
-                {
-                    var modelFlashcard = _mapper.Map<Flashcard>(flashcard);
-                    await InvalidateFlashcardCacheAsync(modelFlashcard);
-                }
-                _logger.LogInformation("Updated review status for flashcard {Id}", id);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating review status for flashcard {Id}", id);
-                throw;
-            }
-        }
-
         public async Task<List<FlashcardResponse>> GetRandomFlashcardsAsync(int limit = 10)
         {
             try

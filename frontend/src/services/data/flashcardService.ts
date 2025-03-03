@@ -75,10 +75,6 @@ class FlashcardService {
   async getFlashcardById(id: string) {
     return apiClient.getFlashcardById(id);
   }
-
-  async updateReviewStatus(id: string, wasCorrect: boolean) {
-    return apiClient.updateReviewStatus(id, { wasCorrect });
-  }
 }
 
 export default new FlashcardService();

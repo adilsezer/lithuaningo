@@ -258,55 +258,6 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Updates the review status of a flashcard.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     PUT /api/v1/Flashcard/{id}/review?wasCorrect=true
-        /// 
-        /// This updates:
-        /// - Next review date
-        /// - Review history
-        /// - Success rate statistics
-        /// </remarks>
-        /// <param name="id">The flashcard identifier</param>
-        /// <param name="wasCorrect">Whether the review was correct</param>
-        /// <response code="204">Review status updated successfully</response>
-        /// <response code="400">If flashcard ID is empty</response>
-        /// <response code="500">If there was an internal error during update</response>
-        [HttpPut("{id}/review")]
-        [SwaggerOperation(
-            Summary = "Updates review status",
-            Description = "Updates the review status and statistics for a flashcard",
-            OperationId = "UpdateReviewStatus",
-            Tags = new[] { "Flashcard" }
-        )]
-        [ProducesResponseType(StatusCodes.Status204NoContent)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> UpdateReviewStatus(
-            string id,
-            [FromQuery] bool wasCorrect)
-        {
-            if (string.IsNullOrWhiteSpace(id))
-            {
-                _logger.LogWarning("Flashcard ID is empty");
-                return BadRequest("Flashcard ID cannot be empty");
-            }
-
-            try
-            {
-                await _flashcardService.UpdateReviewStatusAsync(id, wasCorrect);
-                return NoContent();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating review status for flashcard {FlashcardId}", id);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
         /// Retrieves random flashcards.
         /// </summary>
         /// <remarks>

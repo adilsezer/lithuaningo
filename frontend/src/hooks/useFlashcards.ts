@@ -149,23 +149,6 @@ export const useFlashcards = () => {
     [handleError, setError, setLoading]
   );
 
-  const updateReviewStatus = useCallback(
-    async (id: string, wasCorrect: boolean) => {
-      try {
-        setLoading(true);
-        setError(null);
-        await flashcardService.updateReviewStatus(id, wasCorrect);
-        return true;
-      } catch (error) {
-        handleError(error as Error, "Failed to update review status");
-        throw error;
-      } finally {
-        setLoading(false);
-      }
-    },
-    [handleError, setError, setLoading]
-  );
-
   return {
     flashcards,
     isLoading,
@@ -175,6 +158,5 @@ export const useFlashcards = () => {
     updateFlashcard,
     deleteFlashcard,
     getFlashcardById,
-    updateReviewStatus,
   };
 };

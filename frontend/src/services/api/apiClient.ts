@@ -618,13 +618,6 @@ class ApiClient {
     return this.request<Flashcard>(`/api/v1/Flashcard/${id}`);
   }
 
-  async updateReviewStatus(id: string, data: { wasCorrect: boolean }) {
-    return this.request(`/api/v1/Flashcard/${id}/review`, {
-      method: "PUT",
-      params: { wasCorrect: data.wasCorrect },
-    });
-  }
-
   private handleError(error: any) {
     if (error.response) {
       // Server responded with error
