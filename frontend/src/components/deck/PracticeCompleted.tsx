@@ -25,144 +25,154 @@ export const CompletedScreen: React.FC<CompletedScreenProps> = ({
       <HeaderWithBackButton title="Practice Complete" />
       <View style={styles.completedContainer}>
         <Card style={styles.completedCard}>
-          <Card.Content>
-            <View style={styles.successIconContainer}>
-              <Avatar.Icon
-                size={80}
-                icon="trophy"
-                color={theme.colors.onPrimaryContainer}
-                style={{ backgroundColor: theme.colors.primaryContainer }}
-              />
-            </View>
-            <CustomText
-              variant="headlineSmall"
-              style={[styles.completedText, { color: theme.colors.primary }]}
-            >
-              Congratulations!
-            </CustomText>
-            <CustomText
-              variant="bodyLarge"
-              style={{
-                color: theme.colors.onSurfaceVariant,
-                textAlign: "center",
-              }}
-            >
-              You've successfully completed this deck!
-            </CustomText>
+          <View style={styles.contentWrapper}>
+            <Card.Content>
+              <View style={styles.successIconContainer}>
+                <Avatar.Icon
+                  size={80}
+                  icon="trophy"
+                  color={theme.colors.onPrimaryContainer}
+                  style={{ backgroundColor: theme.colors.primaryContainer }}
+                />
+              </View>
+              <CustomText
+                variant="headlineSmall"
+                style={[styles.completedText, { color: theme.colors.primary }]}
+              >
+                Congratulations!
+              </CustomText>
+              <CustomText
+                variant="bodyLarge"
+                style={{
+                  color: theme.colors.onSurfaceVariant,
+                  textAlign: "center",
+                }}
+              >
+                You've successfully completed this deck!
+              </CustomText>
 
-            <Divider style={styles.divider} />
+              <Divider style={styles.divider} />
 
-            <DataTable style={styles.statsContainer}>
-              <DataTable.Row>
-                <DataTable.Cell style={styles.iconCell}>
-                  <Icon source="cards" size={20} color={theme.colors.primary} />
-                </DataTable.Cell>
-                <DataTable.Cell>Total cards</DataTable.Cell>
-                <DataTable.Cell numeric>
-                  <CustomText variant="bodyMedium" style={styles.statValue}>
-                    {stats.totalCards}
-                  </CustomText>
-                </DataTable.Cell>
-              </DataTable.Row>
-
-              <DataTable.Row>
-                <DataTable.Cell style={styles.iconCell}>
-                  <Icon
-                    source="counter"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </DataTable.Cell>
-                <DataTable.Cell>Total attempts</DataTable.Cell>
-                <DataTable.Cell numeric>
-                  <CustomText variant="bodyMedium" style={styles.statValue}>
-                    {stats.totalAnswered}
-                  </CustomText>
-                </DataTable.Cell>
-              </DataTable.Row>
-
-              <DataTable.Row>
-                <DataTable.Cell style={styles.iconCell}>
-                  <Icon
-                    source="percent"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </DataTable.Cell>
-                <DataTable.Cell>Accuracy rate</DataTable.Cell>
-                <DataTable.Cell numeric>
-                  <CustomText
-                    variant="bodyMedium"
-                    style={[styles.statValue, { fontWeight: "bold" }]}
-                  >
-                    {stats.accuracy}%
-                  </CustomText>
-                </DataTable.Cell>
-              </DataTable.Row>
-
-              <DataTable.Row>
-                <DataTable.Cell style={styles.iconCell}>
-                  <Icon
-                    source="timer-outline"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </DataTable.Cell>
-                <DataTable.Cell>Session time</DataTable.Cell>
-                <DataTable.Cell numeric>
-                  <CustomText variant="bodyMedium" style={styles.statValue}>
-                    {stats.sessionDuration}
-                  </CustomText>
-                </DataTable.Cell>
-              </DataTable.Row>
-
-              <DataTable.Row>
-                <DataTable.Cell style={styles.iconCell}>
-                  <Icon source="fire" size={20} color={theme.colors.primary} />
-                </DataTable.Cell>
-                <DataTable.Cell>Best streak</DataTable.Cell>
-                <DataTable.Cell numeric>
-                  <CustomText variant="bodyMedium" style={styles.statValue}>
-                    {stats.bestStreak}
-                  </CustomText>
-                </DataTable.Cell>
-              </DataTable.Row>
-
-              <DataTable.Row>
-                <DataTable.Cell style={styles.iconCell}>
-                  <Icon
-                    source="speedometer"
-                    size={20}
-                    color={theme.colors.primary}
-                  />
-                </DataTable.Cell>
-                <DataTable.Cell>Learning pace</DataTable.Cell>
-                <DataTable.Cell numeric>
-                  <CustomText variant="bodyMedium" style={styles.statValue}>
-                    {stats.learningPace} cards/min
-                  </CustomText>
-                </DataTable.Cell>
-              </DataTable.Row>
-
-              {stats.hasResponseTimes && (
+              <DataTable style={styles.statsContainer}>
                 <DataTable.Row>
                   <DataTable.Cell style={styles.iconCell}>
                     <Icon
-                      source="clock-outline"
+                      source="cards"
                       size={20}
                       color={theme.colors.primary}
                     />
                   </DataTable.Cell>
-                  <DataTable.Cell>Avg. response time</DataTable.Cell>
+                  <DataTable.Cell>Total cards</DataTable.Cell>
                   <DataTable.Cell numeric>
                     <CustomText variant="bodyMedium" style={styles.statValue}>
-                      {stats.averageResponseTime} sec
+                      {stats.totalCards}
                     </CustomText>
                   </DataTable.Cell>
                 </DataTable.Row>
-              )}
-            </DataTable>
-          </Card.Content>
+
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="counter"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Total attempts</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText variant="bodyMedium" style={styles.statValue}>
+                      {stats.totalAnswered}
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="percent"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Accuracy rate</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText
+                      variant="bodyMedium"
+                      style={[styles.statValue, { fontWeight: "bold" }]}
+                    >
+                      {stats.accuracy}%
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="timer-outline"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Session time</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText variant="bodyMedium" style={styles.statValue}>
+                      {stats.sessionDuration}
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="fire"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Best streak</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText variant="bodyMedium" style={styles.statValue}>
+                      {stats.bestStreak}
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="speedometer"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Learning pace</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText variant="bodyMedium" style={styles.statValue}>
+                      {stats.learningPace} cards/min
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+
+                {stats.hasResponseTimes && (
+                  <DataTable.Row>
+                    <DataTable.Cell style={styles.iconCell}>
+                      <Icon
+                        source="clock-outline"
+                        size={20}
+                        color={theme.colors.primary}
+                      />
+                    </DataTable.Cell>
+                    <DataTable.Cell>Avg. response time</DataTable.Cell>
+                    <DataTable.Cell numeric>
+                      <CustomText variant="bodyMedium" style={styles.statValue}>
+                        {stats.averageResponseTime} sec
+                      </CustomText>
+                    </DataTable.Cell>
+                  </DataTable.Row>
+                )}
+              </DataTable>
+            </Card.Content>
+          </View>
         </Card>
 
         <View style={styles.buttonContainer}>
@@ -203,7 +213,10 @@ const styles = StyleSheet.create({
   completedCard: {
     borderRadius: 16,
     marginBottom: 16,
+  },
+  contentWrapper: {
     overflow: "hidden",
+    borderRadius: 16,
   },
   completedText: {
     textAlign: "center",

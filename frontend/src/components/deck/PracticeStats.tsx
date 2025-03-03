@@ -18,262 +18,275 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
   theme,
 }) => {
   return (
-    <Surface style={styles.statsPanel} elevation={1}>
-      <SegmentedButtons
-        value={statsTab}
-        onValueChange={setStatsTab}
-        buttons={[
-          { value: "main", label: "Main", icon: "star-outline" },
-          { value: "performance", label: "Performance", icon: "chart-line" },
-          { value: "time", label: "Time", icon: "clock-outline" },
-        ]}
-        style={styles.segmentedButtons}
-        density="small"
-      />
+    <Surface style={styles.statsSurface} elevation={1}>
+      <View style={styles.statsPanel}>
+        <SegmentedButtons
+          value={statsTab}
+          onValueChange={setStatsTab}
+          buttons={[
+            { value: "main", label: "Main", icon: "star-outline" },
+            { value: "performance", label: "Performance", icon: "chart-line" },
+            { value: "time", label: "Time", icon: "clock-outline" },
+          ]}
+          style={styles.segmentedButtons}
+          density="small"
+        />
 
-      {statsTab === "main" && (
-        <DataTable>
-          <DataTable.Row>
-            <DataTable.Cell style={styles.iconCell}>
-              <Icon source="fire" size={20} color={theme.colors.primary} />
-            </DataTable.Cell>
-            <DataTable.Cell>Current streak</DataTable.Cell>
-            <DataTable.Cell numeric>
-              <Chip
-                compact
-                mode="flat"
-                style={[
-                  styles.streakChip,
-                  { backgroundColor: theme.colors.primaryContainer },
-                ]}
-              >
-                <CustomText
-                  variant="bodySmall"
-                  style={{
-                    color: theme.colors.onPrimaryContainer,
-                    fontWeight: "bold",
-                  }}
+        {statsTab === "main" && (
+          <DataTable>
+            <DataTable.Row>
+              <DataTable.Cell style={styles.iconCell}>
+                <Icon source="fire" size={20} color={theme.colors.primary} />
+              </DataTable.Cell>
+              <DataTable.Cell>Current streak</DataTable.Cell>
+              <DataTable.Cell numeric>
+                <Chip
+                  compact
+                  mode="flat"
+                  style={[
+                    styles.streakChip,
+                    { backgroundColor: theme.colors.primaryContainer },
+                  ]}
                 >
-                  {stats.currentStreak}
-                </CustomText>
-              </Chip>
-            </DataTable.Cell>
-          </DataTable.Row>
+                  <CustomText
+                    variant="bodySmall"
+                    style={{
+                      color: theme.colors.onPrimaryContainer,
+                      fontWeight: "bold",
+                    }}
+                  >
+                    {stats.currentStreak}
+                  </CustomText>
+                </Chip>
+              </DataTable.Cell>
+            </DataTable.Row>
 
-          <DataTable.Row>
-            <DataTable.Cell style={styles.iconCell}>
-              <Icon
-                source="card-text-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-            </DataTable.Cell>
-            <DataTable.Cell>Cards to go</DataTable.Cell>
-            <DataTable.Cell numeric>
-              <Chip
-                compact
-                mode="flat"
-                style={[
-                  styles.remainingChip,
-                  {
-                    backgroundColor:
-                      stats.remainingCards <= 3
-                        ? theme.colors.secondaryContainer
-                        : theme.colors.surfaceVariant,
-                  },
-                ]}
-              >
-                <CustomText
-                  variant="bodySmall"
-                  style={{
-                    color:
-                      stats.remainingCards <= 3
-                        ? theme.colors.onSecondaryContainer
-                        : theme.colors.onSurfaceVariant,
-                    fontWeight: stats.remainingCards <= 3 ? "bold" : "normal",
-                  }}
-                >
-                  {stats.remainingCards}
-                </CustomText>
-              </Chip>
-            </DataTable.Cell>
-          </DataTable.Row>
-
-          {stats.totalAnswered > 0 && (
             <DataTable.Row>
               <DataTable.Cell style={styles.iconCell}>
                 <Icon
-                  source={stats.trendAnalysis.icon || "trending-neutral"}
+                  source="card-text-outline"
                   size={20}
-                  color={stats.trendAnalysis.color}
+                  color={theme.colors.primary}
                 />
               </DataTable.Cell>
-              <DataTable.Cell>Trend</DataTable.Cell>
+              <DataTable.Cell>Cards to go</DataTable.Cell>
               <DataTable.Cell numeric>
-                <CustomText
-                  variant="bodySmall"
+                <Chip
+                  compact
+                  mode="flat"
                   style={[
-                    styles.statValue,
-                    { color: stats.trendAnalysis.color },
+                    styles.remainingChip,
+                    {
+                      backgroundColor:
+                        stats.remainingCards <= 3
+                          ? theme.colors.secondaryContainer
+                          : theme.colors.surfaceVariant,
+                    },
                   ]}
                 >
-                  {stats.trendAnalysis.description}
-                </CustomText>
+                  <CustomText
+                    variant="bodySmall"
+                    style={{
+                      color:
+                        stats.remainingCards <= 3
+                          ? theme.colors.onSecondaryContainer
+                          : theme.colors.onSurfaceVariant,
+                      fontWeight: stats.remainingCards <= 3 ? "bold" : "normal",
+                    }}
+                  >
+                    {stats.remainingCards}
+                  </CustomText>
+                </Chip>
               </DataTable.Cell>
             </DataTable.Row>
-          )}
-        </DataTable>
-      )}
 
-      {statsTab === "performance" && (
-        <DataTable>
-          {stats.totalAnswered > 0 ? (
-            <>
+            {stats.totalAnswered > 0 && (
               <DataTable.Row>
                 <DataTable.Cell style={styles.iconCell}>
                   <Icon
-                    source="chart-line"
+                    source={stats.trendAnalysis.icon || "trending-neutral"}
                     size={20}
-                    color={theme.colors.primary}
+                    color={stats.trendAnalysis.color}
                   />
                 </DataTable.Cell>
-                <DataTable.Cell>Accuracy</DataTable.Cell>
-                <DataTable.Cell numeric>
-                  <CustomText
-                    variant="bodySmall"
-                    style={[styles.statValue, { fontWeight: "bold" }]}
-                  >
-                    {stats.accuracy}%
-                  </CustomText>
-                </DataTable.Cell>
-              </DataTable.Row>
-
-              <DataTable.Row>
-                <DataTable.Cell style={styles.iconCell}>
-                  <Icon source="star" size={20} color={theme.colors.primary} />
-                </DataTable.Cell>
-                <DataTable.Cell>Performance</DataTable.Cell>
+                <DataTable.Cell>Trend</DataTable.Cell>
                 <DataTable.Cell numeric>
                   <CustomText
                     variant="bodySmall"
                     style={[
                       styles.statValue,
-                      {
-                        color:
-                          stats.accuracyPercent >= 75
-                            ? theme.colors.primary
-                            : theme.colors.onSurfaceVariant,
-                      },
+                      { color: stats.trendAnalysis.color },
                     ]}
                   >
-                    {stats.performanceLabel}
+                    {stats.trendAnalysis.description}
                   </CustomText>
                 </DataTable.Cell>
               </DataTable.Row>
+            )}
+          </DataTable>
+        )}
 
+        {statsTab === "performance" && (
+          <DataTable>
+            {stats.totalAnswered > 0 ? (
+              <>
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="chart-line"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Accuracy</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText
+                      variant="bodySmall"
+                      style={[styles.statValue, { fontWeight: "bold" }]}
+                    >
+                      {stats.accuracy}%
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="star"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Performance</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText
+                      variant="bodySmall"
+                      style={[
+                        styles.statValue,
+                        {
+                          color:
+                            stats.accuracyPercent >= 75
+                              ? theme.colors.primary
+                              : theme.colors.onSurfaceVariant,
+                        },
+                      ]}
+                    >
+                      {stats.performanceLabel}
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+
+                <DataTable.Row>
+                  <DataTable.Cell style={styles.iconCell}>
+                    <Icon
+                      source="fire"
+                      size={20}
+                      color={theme.colors.primary}
+                    />
+                  </DataTable.Cell>
+                  <DataTable.Cell>Best streak</DataTable.Cell>
+                  <DataTable.Cell numeric>
+                    <CustomText variant="bodySmall" style={styles.statValue}>
+                      {stats.bestStreak}
+                    </CustomText>
+                  </DataTable.Cell>
+                </DataTable.Row>
+              </>
+            ) : (
+              <View style={styles.emptyStatsMessage}>
+                <CustomText
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  Answer cards to see performance stats
+                </CustomText>
+              </View>
+            )}
+          </DataTable>
+        )}
+
+        {statsTab === "time" && (
+          <DataTable>
+            <DataTable.Row>
+              <DataTable.Cell style={styles.iconCell}>
+                <Icon
+                  source="timer-outline"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+              </DataTable.Cell>
+              <DataTable.Cell>Session time</DataTable.Cell>
+              <DataTable.Cell numeric>
+                <CustomText variant="bodySmall" style={styles.statValue}>
+                  {stats.sessionDuration}
+                </CustomText>
+              </DataTable.Cell>
+            </DataTable.Row>
+
+            <DataTable.Row>
+              <DataTable.Cell style={styles.iconCell}>
+                <Icon
+                  source="speedometer"
+                  size={20}
+                  color={theme.colors.primary}
+                />
+              </DataTable.Cell>
+              <DataTable.Cell>Learning pace</DataTable.Cell>
+              <DataTable.Cell numeric>
+                <CustomText variant="bodySmall" style={styles.statValue}>
+                  {stats.learningPace} cards/min
+                </CustomText>
+              </DataTable.Cell>
+            </DataTable.Row>
+
+            {stats.hasResponseTimes && (
               <DataTable.Row>
                 <DataTable.Cell style={styles.iconCell}>
-                  <Icon source="fire" size={20} color={theme.colors.primary} />
+                  <Icon
+                    source="clock-outline"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
                 </DataTable.Cell>
-                <DataTable.Cell>Best streak</DataTable.Cell>
+                <DataTable.Cell>Avg. response time</DataTable.Cell>
                 <DataTable.Cell numeric>
                   <CustomText variant="bodySmall" style={styles.statValue}>
-                    {stats.bestStreak}
+                    {stats.averageResponseTime} sec
                   </CustomText>
                 </DataTable.Cell>
               </DataTable.Row>
-            </>
-          ) : (
-            <View style={styles.emptyStatsMessage}>
-              <CustomText
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                Answer cards to see performance stats
-              </CustomText>
-            </View>
-          )}
-        </DataTable>
-      )}
+            )}
 
-      {statsTab === "time" && (
-        <DataTable>
-          <DataTable.Row>
-            <DataTable.Cell style={styles.iconCell}>
-              <Icon
-                source="timer-outline"
-                size={20}
-                color={theme.colors.primary}
-              />
-            </DataTable.Cell>
-            <DataTable.Cell>Session time</DataTable.Cell>
-            <DataTable.Cell numeric>
-              <CustomText variant="bodySmall" style={styles.statValue}>
-                {stats.sessionDuration}
-              </CustomText>
-            </DataTable.Cell>
-          </DataTable.Row>
-
-          <DataTable.Row>
-            <DataTable.Cell style={styles.iconCell}>
-              <Icon
-                source="speedometer"
-                size={20}
-                color={theme.colors.primary}
-              />
-            </DataTable.Cell>
-            <DataTable.Cell>Learning pace</DataTable.Cell>
-            <DataTable.Cell numeric>
-              <CustomText variant="bodySmall" style={styles.statValue}>
-                {stats.learningPace} cards/min
-              </CustomText>
-            </DataTable.Cell>
-          </DataTable.Row>
-
-          {stats.hasResponseTimes && (
-            <DataTable.Row>
-              <DataTable.Cell style={styles.iconCell}>
-                <Icon
-                  source="clock-outline"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-              </DataTable.Cell>
-              <DataTable.Cell>Avg. response time</DataTable.Cell>
-              <DataTable.Cell numeric>
-                <CustomText variant="bodySmall" style={styles.statValue}>
-                  {stats.averageResponseTime} sec
-                </CustomText>
-              </DataTable.Cell>
-            </DataTable.Row>
-          )}
-
-          {stats.remainingCards > 0 && (
-            <DataTable.Row>
-              <DataTable.Cell style={styles.iconCell}>
-                <Icon
-                  source="timer-sand"
-                  size={20}
-                  color={theme.colors.primary}
-                />
-              </DataTable.Cell>
-              <DataTable.Cell>Est. time to finish</DataTable.Cell>
-              <DataTable.Cell numeric>
-                <CustomText variant="bodySmall" style={styles.statValue}>
-                  {stats.estimatedTimeToFinish}
-                </CustomText>
-              </DataTable.Cell>
-            </DataTable.Row>
-          )}
-        </DataTable>
-      )}
+            {stats.remainingCards > 0 && (
+              <DataTable.Row>
+                <DataTable.Cell style={styles.iconCell}>
+                  <Icon
+                    source="timer-sand"
+                    size={20}
+                    color={theme.colors.primary}
+                  />
+                </DataTable.Cell>
+                <DataTable.Cell>Est. time to finish</DataTable.Cell>
+                <DataTable.Cell numeric>
+                  <CustomText variant="bodySmall" style={styles.statValue}>
+                    {stats.estimatedTimeToFinish}
+                  </CustomText>
+                </DataTable.Cell>
+              </DataTable.Row>
+            )}
+          </DataTable>
+        )}
+      </View>
     </Surface>
   );
 };
 
 const styles = StyleSheet.create({
-  statsPanel: {
+  statsSurface: {
     marginVertical: 8,
+    borderRadius: 12,
+  },
+  statsPanel: {
     borderRadius: 12,
     overflow: "hidden",
   },
