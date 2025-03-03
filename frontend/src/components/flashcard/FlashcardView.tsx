@@ -107,46 +107,48 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       </CustomText>
                     </View>
 
-                    {/* Content section - will always have a minimum height */}
+                    {/* Content section - vertically centered with flex */}
                     <View style={styles.mainContentSection}>
-                      {/* Image section */}
-                      {cardData.imageUrl && (
-                        <Card.Cover
-                          source={{ uri: cardData.imageUrl }}
-                          style={styles.cardImage}
-                        />
-                      )}
+                      <View style={styles.centeredContent}>
+                        {/* Image section */}
+                        {cardData.imageUrl && (
+                          <Card.Cover
+                            source={{ uri: cardData.imageUrl }}
+                            style={styles.cardImage}
+                          />
+                        )}
 
-                      {/* Audio section */}
-                      {cardData.audioUrl && (
-                        <AudioControl
-                          url={cardData.audioUrl}
-                          style={styles.audioControl}
-                        />
-                      )}
+                        {/* Audio section */}
+                        {cardData.audioUrl && (
+                          <AudioControl
+                            url={cardData.audioUrl}
+                            style={styles.audioControl}
+                          />
+                        )}
 
-                      {/* Example section */}
-                      {cardData.exampleSentence ? (
-                        <View style={styles.exampleSection}>
-                          <CustomText
-                            variant="labelLarge"
-                            style={[
-                              styles.sectionTitle,
-                              { color: theme.colors.primary },
-                            ]}
-                          >
-                            Example:
-                          </CustomText>
-                          <CustomText
-                            variant="bodyLarge"
-                            style={styles.exampleText}
-                          >
-                            {cardData.exampleSentence}
-                          </CustomText>
-                        </View>
-                      ) : (
-                        <View style={styles.emptyContentPlaceholder} />
-                      )}
+                        {/* Example section */}
+                        {cardData.exampleSentence ? (
+                          <View style={styles.exampleSection}>
+                            <CustomText
+                              variant="labelLarge"
+                              style={[
+                                styles.sectionTitle,
+                                { color: theme.colors.primary },
+                              ]}
+                            >
+                              Example:
+                            </CustomText>
+                            <CustomText
+                              variant="bodyLarge"
+                              style={styles.exampleText}
+                            >
+                              {cardData.exampleSentence}
+                            </CustomText>
+                          </View>
+                        ) : (
+                          <View style={styles.emptyContentPlaceholder} />
+                        )}
+                      </View>
                     </View>
                   </View>
                 ) : (
@@ -170,76 +172,78 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                       </CustomText>
                     </View>
 
-                    {/* Content section - will always have a minimum height */}
+                    {/* Content section - vertically centered with flex */}
                     <View style={styles.mainContentSection}>
-                      {/* Image section */}
-                      {cardData.imageUrl && (
-                        <Card.Cover
-                          source={{ uri: cardData.imageUrl }}
-                          style={styles.cardImage}
-                        />
-                      )}
+                      <View style={styles.centeredContent}>
+                        {/* Image section */}
+                        {cardData.imageUrl && (
+                          <Card.Cover
+                            source={{ uri: cardData.imageUrl }}
+                            style={styles.cardImage}
+                          />
+                        )}
 
-                      {/* Audio section */}
-                      {cardData.audioUrl && (
-                        <AudioControl
-                          url={cardData.audioUrl}
-                          style={styles.audioControl}
-                        />
-                      )}
+                        {/* Audio section */}
+                        {cardData.audioUrl && (
+                          <AudioControl
+                            url={cardData.audioUrl}
+                            style={styles.audioControl}
+                          />
+                        )}
 
-                      {/* Example section */}
-                      {cardData.exampleSentence ? (
-                        <View style={styles.exampleSection}>
-                          <CustomText
-                            variant="labelLarge"
-                            style={[
-                              styles.sectionTitle,
-                              { color: theme.colors.primary },
-                            ]}
-                          >
-                            Example:
-                          </CustomText>
-                          <CustomText
-                            variant="bodyLarge"
-                            style={styles.exampleText}
-                          >
-                            {cardData.exampleSentence}
-                          </CustomText>
+                        {/* Example section */}
+                        {cardData.exampleSentence ? (
+                          <View style={styles.exampleSection}>
+                            <CustomText
+                              variant="labelLarge"
+                              style={[
+                                styles.sectionTitle,
+                                { color: theme.colors.primary },
+                              ]}
+                            >
+                              Example:
+                            </CustomText>
+                            <CustomText
+                              variant="bodyLarge"
+                              style={styles.exampleText}
+                            >
+                              {cardData.exampleSentence}
+                            </CustomText>
 
-                          {cardData.exampleSentenceTranslation && (
+                            {cardData.exampleSentenceTranslation && (
+                              <CustomText
+                                variant="bodyMedium"
+                                style={styles.translationText}
+                              >
+                                {cardData.exampleSentenceTranslation}
+                              </CustomText>
+                            )}
+                          </View>
+                        ) : (
+                          <View style={styles.emptyContentPlaceholder} />
+                        )}
+
+                        {/* Notes section */}
+                        {cardData.notes && (
+                          <View style={styles.notesSection}>
+                            <CustomText
+                              variant="labelLarge"
+                              style={[
+                                styles.sectionTitle,
+                                { color: theme.colors.primary },
+                              ]}
+                            >
+                              Notes:
+                            </CustomText>
                             <CustomText
                               variant="bodyMedium"
-                              style={styles.translationText}
+                              style={styles.notesText}
                             >
-                              {cardData.exampleSentenceTranslation}
+                              {cardData.notes}
                             </CustomText>
-                          )}
-                        </View>
-                      ) : (
-                        <View style={styles.emptyContentPlaceholder} />
-                      )}
-
-                      {/* Notes section */}
-                      {cardData.notes && (
-                        <View style={styles.notesSection}>
-                          <CustomText
-                            variant="labelLarge"
-                            style={[
-                              styles.sectionTitle,
-                              { color: theme.colors.primary },
-                            ]}
-                          >
-                            Notes:
-                          </CustomText>
-                          <CustomText
-                            variant="bodyMedium"
-                            style={styles.notesText}
-                          >
-                            {cardData.notes}
-                          </CustomText>
-                        </View>
-                      )}
+                          </View>
+                        )}
+                      </View>
                     </View>
                   </View>
                 )}
@@ -352,8 +356,12 @@ const styles = StyleSheet.create({
     padding: 0,
   },
   mainContentSection: {
-    minHeight: 120, // Ensure a minimum height for content area
-    paddingBottom: 16, // Add padding at the bottom for spacing
+    flex: 1,
+    minHeight: 180, // Increased minimum height for better spacing
+    justifyContent: "center", // Center content vertically
+  },
+  centeredContent: {
+    paddingVertical: 16,
   },
   wordContainer: {
     padding: 16,
