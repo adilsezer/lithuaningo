@@ -60,140 +60,142 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
         elevation={1}
         onPress={flipCard}
       >
-        <Animated.View style={[{ opacity: fadeAnim }, styles.animatedView]}>
-          {!flipped ? (
-            // Front of card
-            <View style={styles.cardContent}>
-              {/* Word section */}
-              <View
-                style={[
-                  styles.wordContainer,
-                  { backgroundColor: theme.colors.primary },
-                ]}
-              >
-                <CustomText
-                  variant="headlineSmall"
-                  style={[styles.mainText, { color: theme.colors.onPrimary }]}
+        <View style={styles.contentWrapper}>
+          <Animated.View style={[{ opacity: fadeAnim }, styles.animatedView]}>
+            {!flipped ? (
+              // Front of card
+              <View style={styles.cardContent}>
+                {/* Word section */}
+                <View
+                  style={[
+                    styles.wordContainer,
+                    { backgroundColor: theme.colors.primary },
+                  ]}
                 >
-                  {flashcard.frontWord}
-                </CustomText>
-              </View>
-
-              {/* Image section */}
-              {flashcard.imageUrl && (
-                <Card.Cover
-                  source={{ uri: flashcard.imageUrl }}
-                  style={styles.cardImage}
-                />
-              )}
-
-              {/* Audio section */}
-              {flashcard.audioUrl && (
-                <AudioControl
-                  url={flashcard.audioUrl}
-                  style={styles.audioControl}
-                />
-              )}
-
-              {/* Example section */}
-              {flashcard.exampleSentence && (
-                <View style={styles.exampleSection}>
                   <CustomText
-                    variant="labelLarge"
-                    style={[
-                      styles.sectionTitle,
-                      { color: theme.colors.primary },
-                    ]}
+                    variant="headlineSmall"
+                    style={[styles.mainText, { color: theme.colors.onPrimary }]}
                   >
-                    Example:
-                  </CustomText>
-                  <CustomText variant="bodyLarge" style={styles.exampleText}>
-                    {flashcard.exampleSentence}
+                    {flashcard.frontWord}
                   </CustomText>
                 </View>
-              )}
-            </View>
-          ) : (
-            // Back of card
-            <View style={styles.cardContent}>
-              {/* Word section */}
-              <View
-                style={[
-                  styles.wordContainer,
-                  { backgroundColor: theme.colors.primary },
-                ]}
-              >
-                <CustomText
-                  variant="headlineSmall"
-                  style={[styles.mainText, { color: theme.colors.onPrimary }]}
-                >
-                  {flashcard.backWord}
-                </CustomText>
-              </View>
 
-              {/* Image section */}
-              {flashcard.imageUrl && (
-                <Card.Cover
-                  source={{ uri: flashcard.imageUrl }}
-                  style={styles.cardImage}
-                />
-              )}
+                {/* Image section */}
+                {flashcard.imageUrl && (
+                  <Card.Cover
+                    source={{ uri: flashcard.imageUrl }}
+                    style={styles.cardImage}
+                  />
+                )}
 
-              {/* Audio section */}
-              {flashcard.audioUrl && (
-                <AudioControl
-                  url={flashcard.audioUrl}
-                  style={styles.audioControl}
-                />
-              )}
+                {/* Audio section */}
+                {flashcard.audioUrl && (
+                  <AudioControl
+                    url={flashcard.audioUrl}
+                    style={styles.audioControl}
+                  />
+                )}
 
-              {/* Example section */}
-              {flashcard.exampleSentence && (
-                <View style={styles.exampleSection}>
-                  <CustomText
-                    variant="labelLarge"
-                    style={[
-                      styles.sectionTitle,
-                      { color: theme.colors.primary },
-                    ]}
-                  >
-                    Example:
-                  </CustomText>
-                  <CustomText variant="bodyLarge" style={styles.exampleText}>
-                    {flashcard.exampleSentence}
-                  </CustomText>
-
-                  {flashcard.exampleSentenceTranslation && (
+                {/* Example section */}
+                {flashcard.exampleSentence && (
+                  <View style={styles.exampleSection}>
                     <CustomText
-                      variant="bodyMedium"
-                      style={styles.translationText}
+                      variant="labelLarge"
+                      style={[
+                        styles.sectionTitle,
+                        { color: theme.colors.primary },
+                      ]}
                     >
-                      {flashcard.exampleSentenceTranslation}
+                      Example:
                     </CustomText>
-                  )}
-                </View>
-              )}
-
-              {/* Notes section */}
-              {flashcard.notes && (
-                <View style={styles.notesSection}>
+                    <CustomText variant="bodyLarge" style={styles.exampleText}>
+                      {flashcard.exampleSentence}
+                    </CustomText>
+                  </View>
+                )}
+              </View>
+            ) : (
+              // Back of card
+              <View style={styles.cardContent}>
+                {/* Word section */}
+                <View
+                  style={[
+                    styles.wordContainer,
+                    { backgroundColor: theme.colors.primary },
+                  ]}
+                >
                   <CustomText
-                    variant="labelLarge"
-                    style={[
-                      styles.sectionTitle,
-                      { color: theme.colors.primary },
-                    ]}
+                    variant="headlineSmall"
+                    style={[styles.mainText, { color: theme.colors.onPrimary }]}
                   >
-                    Notes:
-                  </CustomText>
-                  <CustomText variant="bodyMedium" style={styles.notesText}>
-                    {flashcard.notes}
+                    {flashcard.backWord}
                   </CustomText>
                 </View>
-              )}
-            </View>
-          )}
-        </Animated.View>
+
+                {/* Image section */}
+                {flashcard.imageUrl && (
+                  <Card.Cover
+                    source={{ uri: flashcard.imageUrl }}
+                    style={styles.cardImage}
+                  />
+                )}
+
+                {/* Audio section */}
+                {flashcard.audioUrl && (
+                  <AudioControl
+                    url={flashcard.audioUrl}
+                    style={styles.audioControl}
+                  />
+                )}
+
+                {/* Example section */}
+                {flashcard.exampleSentence && (
+                  <View style={styles.exampleSection}>
+                    <CustomText
+                      variant="labelLarge"
+                      style={[
+                        styles.sectionTitle,
+                        { color: theme.colors.primary },
+                      ]}
+                    >
+                      Example:
+                    </CustomText>
+                    <CustomText variant="bodyLarge" style={styles.exampleText}>
+                      {flashcard.exampleSentence}
+                    </CustomText>
+
+                    {flashcard.exampleSentenceTranslation && (
+                      <CustomText
+                        variant="bodyMedium"
+                        style={styles.translationText}
+                      >
+                        {flashcard.exampleSentenceTranslation}
+                      </CustomText>
+                    )}
+                  </View>
+                )}
+
+                {/* Notes section */}
+                {flashcard.notes && (
+                  <View style={styles.notesSection}>
+                    <CustomText
+                      variant="labelLarge"
+                      style={[
+                        styles.sectionTitle,
+                        { color: theme.colors.primary },
+                      ]}
+                    >
+                      Notes:
+                    </CustomText>
+                    <CustomText variant="bodyMedium" style={styles.notesText}>
+                      {flashcard.notes}
+                    </CustomText>
+                  </View>
+                )}
+              </View>
+            )}
+          </Animated.View>
+        </View>
 
         {/* Bottom info bar with level and flip indicator */}
         <View style={styles.bottomInfoBar}>
@@ -267,10 +269,13 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     borderWidth: 1,
-    overflow: "hidden",
     marginBottom: 12,
     minHeight: 280,
     position: "relative",
+  },
+  contentWrapper: {
+    overflow: "hidden",
+    borderRadius: 12,
   },
   animatedView: {
     width: "100%",
