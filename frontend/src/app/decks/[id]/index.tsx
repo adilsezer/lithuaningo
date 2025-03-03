@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
@@ -14,6 +14,12 @@ export default function PracticeScreen() {
   const { getDeckFlashcards, flashcards, error, isLoading } = useFlashcards();
   const theme = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    if (id) {
+      getDeckFlashcards(id as string);
+    }
+  }, [id, getDeckFlashcards]);
 
   const handleAnswer = async (isCorrect: boolean) => {
     try {
