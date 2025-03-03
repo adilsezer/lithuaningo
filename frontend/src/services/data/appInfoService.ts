@@ -51,6 +51,7 @@ export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
  */
 export const getCurrentVersion = (): string => {
   const version = Constants.expoConfig?.version;
+  console.log("[appInfoService] Current version:", version);
   if (!version || !isValidVersion(version)) {
     console.warn(
       "[appInfoService] Invalid or missing app version in Expo config"

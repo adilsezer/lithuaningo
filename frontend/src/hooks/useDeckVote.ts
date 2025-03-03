@@ -19,13 +19,10 @@ export const useDeckVote = (deckId?: string) => {
     async (request: CreateDeckVoteRequest) => {
       if (!deckId) return false;
       try {
-        console.log("[useDeckVote] Voting for deck:", request);
         setLoading(true);
         setError(null);
         const result = await voteService.voteDeck(request);
-        console.log("[useDeckVote] Vote result:", result);
         if (result) {
-          console.log("[useDeckVote] Fetching updated user vote");
           await fetchUserVote(request.userId);
         }
         return result;
@@ -44,15 +41,8 @@ export const useDeckVote = (deckId?: string) => {
     async (userId: string) => {
       if (!deckId) return;
       try {
-        console.log(
-          "[useDeckVote] Fetching user vote for deck:",
-          deckId,
-          "user:",
-          userId
-        );
         setLoading(true);
         const vote = await voteService.getUserVote(deckId, userId);
-        console.log("[useDeckVote] Received user vote:", vote);
         setUserVote(vote);
       } catch (err) {
         console.error("[useDeckVote] Error fetching user vote:", err);

@@ -29,7 +29,6 @@ class DeckService {
     timeRange: "all" | "week" | "month" = "all"
   ): Promise<DeckWithRatingResponse[]> {
     try {
-      console.log(`[DeckService] Getting decks with timeRange: ${timeRange}`);
       return await apiClient.getTopRatedDecks(limit, timeRange);
     } catch (error) {
       console.error("[DeckService.getTopRatedDecks] Error:", error);

@@ -83,7 +83,6 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
 
     setLoading(true);
     try {
-      console.log("[useDecks] Fetching deck by ID:", deckId);
       const fetchedDeck = await deckService.getDeck(deckId);
       setDeck(fetchedDeck);
 
@@ -113,17 +112,12 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
     }
 
     try {
-      console.log("[useDecks] Starting to fetch decks", {
-        selectedCategory,
-        searchQuery,
-      });
       setLoading(true);
       clearError();
 
       let fetchedDecks: (Deck | DeckWithRatingResponse)[] = [];
 
       // All categories now use getTopRatedDecks with timeRange: "all"
-      console.log("[useDecks] Fetching decks for category:", selectedCategory);
       fetchedDecks = await deckService.getTopRatedDecks(10, "all");
 
       // Filter by category if needed
@@ -144,7 +138,6 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
 
       // Filter by search query if present
       if (searchQuery.trim()) {
-        console.log("[useDecks] Filtering by search query:", searchQuery);
         const query = searchQuery.toLowerCase();
         fetchedDecks = fetchedDecks.filter(
           (deck) =>
@@ -153,7 +146,6 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
         );
       }
 
-      console.log("[useDecks] Setting final decks:", fetchedDecks);
       setDecks(fetchedDecks);
     } catch (error) {
       console.error("[useDecks] Error fetching decks:", error);
@@ -175,7 +167,6 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
   const getDeckById = useCallback(
     async (id: string) => {
       try {
-        console.log("[useDecks] Fetching deck by ID:", id);
         const deck = await deckService.getDeck(id);
         return deck;
       } catch (error) {
@@ -193,7 +184,6 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
       if (!checkAuth()) return;
 
       try {
-        console.log("[useDecks] Creating new deck:", formData.title);
         setLoading(true);
         clearError();
 
@@ -245,7 +235,6 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
       if (!checkAuth() || !deckId || !deck) return false;
 
       try {
-        console.log("[useDecks] Updating deck:", deckId);
         setLoading(true);
         clearError();
 
