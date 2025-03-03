@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { View, StyleSheet, Animated, ScrollView } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
@@ -44,6 +50,8 @@ export default function PracticeScreen() {
   const [finalSessionDuration, setFinalSessionDuration] = useState<string>("");
   const [finalLearningPace, setFinalLearningPace] = useState<number>(0);
   const [finalResponseTime, setFinalResponseTime] = useState<number>(0);
+  const scrollViewRef = useRef<ScrollView>(null);
+  const [shouldAutoScroll, setShouldAutoScroll] = useState(false);
 
   // Force a refresh of time-based stats every second
   useEffect(() => {
@@ -72,6 +80,17 @@ export default function PracticeScreen() {
       });
     }
   }, [id, getDeckFlashcards]);
+
+  // Auto-scroll when shouldAutoScroll is set to true
+  useEffect(() => {
+    if (shouldAutoScroll && scrollViewRef.current) {
+      // Scroll to make buttons visible
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+        setShouldAutoScroll(false);
+      }, 300);
+    }
+  }, [shouldAutoScroll]);
 
   const animateTransition = () => {
     Animated.sequence([
@@ -363,6 +382,7 @@ export default function PracticeScreen() {
 
   return (
     <ScrollView
+      ref={scrollViewRef}
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <HeaderWithBackButton title="Practice" />
@@ -413,6 +433,7 @@ export default function PracticeScreen() {
           <FlashcardView
             flashcard={remainingCards[currentIndex]}
             onAnswer={handleAnswer}
+            onFlip={() => setShouldAutoScroll(true)}
           />
         )}
       </Animated.View>

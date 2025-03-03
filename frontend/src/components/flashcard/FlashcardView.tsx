@@ -16,11 +16,13 @@ import CustomText from "@components/ui/CustomText";
 interface FlashcardViewProps {
   flashcard: Flashcard;
   onAnswer: (isCorrect: boolean) => void;
+  onFlip?: () => void;
 }
 
 export const FlashcardView: React.FC<FlashcardViewProps> = ({
   flashcard,
   onAnswer,
+  onFlip,
 }) => {
   const [flipped, setFlipped] = useState(false);
   const theme = useTheme();
@@ -33,6 +35,10 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       useNativeDriver: true,
     }).start(() => {
       setFlipped((prev) => !prev);
+      // Call the onFlip callback if provided
+      if (!flipped && onFlip) {
+        onFlip();
+      }
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 150,
