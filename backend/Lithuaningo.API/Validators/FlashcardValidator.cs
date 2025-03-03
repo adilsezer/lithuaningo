@@ -1,6 +1,5 @@
 using FluentValidation;
 using Lithuaningo.API.DTOs.Flashcard;
-using Lithuaningo.API.DTOs.UserFlashcardStats;
 using System;
 
 namespace Lithuaningo.API.Validators;
@@ -83,22 +82,3 @@ public class UpdateFlashcardValidator : AbstractValidator<UpdateFlashcardRequest
             .MaximumLength(5).WithMessage("Level must not exceed 5 characters");
     }
 }
-
-public class TrackProgressValidator : AbstractValidator<TrackProgressRequest>
-{
-    public TrackProgressValidator()
-    {
-        RuleFor(x => x.UserId)
-            .NotEmpty().WithMessage("User ID is required")
-            .Must(id => BeValidGuid(id.ToString())).WithMessage("User ID must be a valid GUID");
-
-        RuleFor(x => x.FlashcardId)
-            .NotEmpty().WithMessage("Flashcard ID is required")
-            .Must(id => BeValidGuid(id.ToString())).WithMessage("Flashcard ID must be a valid GUID");
-    }
-
-    private bool BeValidGuid(string guid)
-    {
-        return Guid.TryParse(guid, out _);
-    }
-} 

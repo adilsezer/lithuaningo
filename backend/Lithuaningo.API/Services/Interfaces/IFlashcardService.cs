@@ -11,7 +11,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<string> CreateFlashcardAsync(CreateFlashcardRequest request);
         Task<FlashcardResponse> UpdateFlashcardAsync(string id, UpdateFlashcardRequest request);
         Task DeleteFlashcardAsync(string id);
-        Task<List<FlashcardResponse>> GetDueForReviewAsync(string userId, int limit = 20);
         Task UpdateReviewStatusAsync(string id, bool wasCorrect);
         Task<List<FlashcardResponse>> GetRandomFlashcardsAsync(int limit = 10);
         Task<List<FlashcardResponse>> SearchFlashcardsAsync(string query);

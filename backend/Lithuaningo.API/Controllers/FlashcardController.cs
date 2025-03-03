@@ -96,62 +96,6 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves flashcards due for review.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     GET /api/v1/Flashcard/review/{userId}?limit=20
-        /// 
-        /// Returns flashcards that are:
-        /// - Due for review based on spaced repetition algorithm
-        /// - Not reviewed in the last 24 hours
-        /// - Ordered by priority (most overdue first)
-        /// </remarks>
-        /// <param name="userId">The user identifier</param>
-        /// <param name="limit">Maximum number of flashcards (range: 1-100, default: 20)</param>
-        /// <returns>List of flashcards due for review</returns>
-        /// <response code="200">Returns the list of flashcards due for review</response>
-        /// <response code="400">If user ID is empty or limit is invalid</response>
-        /// <response code="500">If there was an internal error during retrieval</response>
-        [HttpGet("review/{userId}")]
-        [SwaggerOperation(
-            Summary = "Retrieves review flashcards",
-            Description = "Gets flashcards that are due for review based on spaced repetition",
-            OperationId = "GetDueForReview",
-            Tags = new[] { "Flashcard" }
-        )]
-        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<FlashcardResponse>>> GetDueForReview(
-            string userId,
-            [FromQuery] int limit = 20)
-        {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                _logger.LogWarning("User ID is empty");
-                return BadRequest("User ID cannot be empty");
-            }
-
-            if (limit <= 0 || limit > 100)
-            {
-                _logger.LogWarning("Invalid limit parameter: {Limit}", limit);
-                return BadRequest("Limit must be between 1 and 100");
-            }
-
-            try
-            {
-                var flashcards = await _flashcardService.GetDueForReviewAsync(userId, limit);
-                return Ok(flashcards);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving flashcards due for review for user {UserId}", userId);
-                return StatusCode(500, "Internal server error");
-            }
-        }
-
-        /// <summary>
         /// Creates a new flashcard.
         /// </summary>
         /// <remarks>

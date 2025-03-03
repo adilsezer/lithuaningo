@@ -11,8 +11,6 @@ import {
   DeckComment,
   UserChallengeStats,
   DeckReport,
-  UserFlashcardStats,
-  TrackProgressRequest,
   QuizResult,
   CreateQuizQuestionRequest,
   UpdateUserProfileRequest,
@@ -519,34 +517,6 @@ class ApiClient {
     return this.request(`/api/v1/DeckReport/${id}`, {
       method: "DELETE",
     });
-  }
-
-  async trackProgress(
-    deckId: string,
-    request: TrackProgressRequest
-  ): Promise<void> {
-    return this.request(`/api/v1/UserFlashcardStats/${deckId}/track`, {
-      method: "POST",
-      data: request,
-    });
-  }
-
-  async getUserFlashcardStats(
-    deckId: string,
-    userId: string
-  ): Promise<UserFlashcardStats> {
-    return this.request<UserFlashcardStats>(
-      `/api/v1/UserFlashcardStats/${deckId}/stats`,
-      {
-        params: { userId },
-      }
-    );
-  }
-
-  async getUserFlashcardHistory(userId: string): Promise<UserFlashcardStats[]> {
-    return this.request<UserFlashcardStats[]>(
-      `/api/v1/UserFlashcardStats/user/${userId}/history`
-    );
   }
 
   // Leaderboard Controller

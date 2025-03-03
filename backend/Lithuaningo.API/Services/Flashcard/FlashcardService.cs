@@ -230,63 +230,6 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        public async Task<List<FlashcardResponse>> GetDueForReviewAsync(string userId, int limit = 20)
-        {
-            if (!Guid.TryParse(userId, out var userGuid))
-            {
-                throw new ArgumentException("Invalid user ID format", nameof(userId));
-            }
-
-            if (limit <= 0)
-            {
-                throw new ArgumentException("Limit must be greater than 0", nameof(limit));
-            }
-
-            var cacheKey = $"{CacheKeyPrefix}due:{userGuid}:{limit}";
-            var cached = await _cache.GetAsync<List<FlashcardResponse>>(cacheKey);
-
-            if (cached != null)
-            {
-                _logger.LogInformation("Retrieved due flashcards from cache for user {UserId}", userId);
-                return cached;
-            }
-
-            try
-            {
-                // First get the user's flashcard stats that are due for review
-                var statsResponse = await _supabaseClient
-                    .From<UserFlashcardStats>()
-                    .Where(s => s.UserId == userGuid)
-                    .Where(s => s.NextReviewDue <= DateTime.UtcNow)
-                    .Limit(limit)
-                    .Get();
-
-                var dueFlashcardIds = statsResponse.Models.Select(s => s.FlashcardId).ToList();
-
-                // Then get the actual flashcards
-                var response = await _supabaseClient
-                    .From<Flashcard>()
-                    .Filter("id", Operator.In, dueFlashcardIds)
-                    .Get();
-
-                var flashcards = response.Models;
-                var flashcardResponses = _mapper.Map<List<FlashcardResponse>>(flashcards);
-
-                // Cache for a shorter duration since this is time-sensitive
-                await _cache.SetAsync(cacheKey, flashcardResponses,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} due flashcards for user {UserId}", 
-                    flashcards.Count, userId);
-
-                return flashcardResponses;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error retrieving flashcards due for review for user {UserId}", userId);
-                throw;
-            }
-        }
-
         public async Task UpdateReviewStatusAsync(string id, bool wasCorrect)
         {
             if (!Guid.TryParse(id, out var flashcardId))

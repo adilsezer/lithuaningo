@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { View, StyleSheet, SafeAreaView, ScrollView } from "react-native";
+import React, { useState } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useFlashcards } from "@hooks/useFlashcards";
 import { FlashcardView } from "@components/flashcard/FlashcardView";
-import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
-import { useFlashcardStats } from "@hooks/useFlashcardStats";
-import { useTheme, ProgressBar, Button, IconButton } from "react-native-paper";
+import { useTheme, ProgressBar, Button } from "react-native-paper";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
@@ -15,35 +13,10 @@ export default function PracticeScreen() {
   const { id } = useLocalSearchParams();
   const { getDeckFlashcards, flashcards, error, isLoading } = useFlashcards();
   const theme = useTheme();
-  const userData = useUserData();
-  const { trackProgress, getUserFlashcardStats, stats } = useFlashcardStats();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [startTime] = useState(Date.now());
-
-  useEffect(() => {
-    if (id) {
-      getDeckFlashcards(id as string);
-    }
-    if (userData?.id && id) {
-      getUserFlashcardStats(id as string, userData.id);
-    }
-  }, [id, userData?.id, getUserFlashcardStats]);
 
   const handleAnswer = async (isCorrect: boolean) => {
-    if (!userData?.id || !id) return;
-
     try {
-      const timeTakenSeconds = Math.round((Date.now() - startTime) / 1000);
-
-      // Track progress for the current flashcard
-      await trackProgress(id as string, {
-        userId: userData.id,
-        flashcardId: flashcards[currentIndex].id,
-        isCorrect,
-        timeTakenSeconds,
-        confidenceLevel: isCorrect ? 4 : 2,
-      });
-
       // Move to next card
       if (currentIndex < flashcards.length - 1) {
         setCurrentIndex(currentIndex + 1);

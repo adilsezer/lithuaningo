@@ -280,7 +280,6 @@ To authorize in Swagger UI:
 
     // Core Services
     services.AddScoped<IUserProfileService, UserProfileService>();
-    services.AddScoped<IUserFlashcardStatsService, UserFlashcardStatsService>();
     services.AddScoped<IAnnouncementService, AnnouncementService>();
     services.AddScoped<IAppInfoService, AppInfoService>();
     services.AddScoped<IDeckService, DeckService>();
@@ -341,7 +340,6 @@ To authorize in Swagger UI:
     .AddApplicationPart(typeof(AppInfoController).Assembly)
     .AddApplicationPart(typeof(DeckController).Assembly)
     .AddApplicationPart(typeof(FlashcardController).Assembly)
-    .AddApplicationPart(typeof(UserFlashcardStatsController).Assembly)
     .AddApplicationPart(typeof(StorageService).Assembly);
 
     // Add Authentication Services

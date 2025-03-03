@@ -2,7 +2,6 @@ using System;
 using AutoMapper;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Flashcard;
-using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Utils;
 
 namespace Lithuaningo.API.Mappings
@@ -42,20 +41,6 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioUrl))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
-
-            // UserFlashcardStats mappings
-            CreateMap<UserFlashcardStats, UserFlashcardStatsResponse>()
-                .ForMember(dest => dest.AccuracyRate, opt => opt.MapFrom(src => src.AccuracyRate))
-                .ForMember(dest => dest.TotalReviewed, opt => opt.MapFrom(src => src.TotalReviewed))
-                .ForMember(dest => dest.CorrectAnswers, opt => opt.MapFrom(src => src.CorrectAnswers))
-                .ForMember(dest => dest.LastReviewedAt, opt => opt.MapFrom(src => src.LastReviewedAt))
-                .ForMember(dest => dest.NextReviewDue, opt => opt.MapFrom(src => 
-                    src.NextReviewDue.HasValue ? TimeFormatUtils.GetTimeRemaining(src.NextReviewDue.Value) : null));
-
-            CreateMap<TrackProgressRequest, UserFlashcardStats>()
-                .ForMember(dest => dest.FlashcardId, opt => opt.MapFrom(src => Guid.Parse(src.FlashcardId)))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.LastReviewedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
         }
     }
 } 

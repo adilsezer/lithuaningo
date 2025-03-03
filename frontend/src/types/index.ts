@@ -3,7 +3,6 @@ export * from "./UserProfile";
 export * from "./Deck";
 export * from "./LeaderboardModels";
 export * from "./UserChallengeStats";
-export * from "./UserFlashcardStats";
 export * from "./Flashcard";
 export * from "./QuizQuestion";
 export * from "./QuestionType";
