@@ -68,15 +68,12 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               <View
                 style={[
                   styles.wordContainer,
-                  { backgroundColor: theme.colors.primaryContainer },
+                  { backgroundColor: theme.colors.primary },
                 ]}
               >
                 <CustomText
                   variant="headlineSmall"
-                  style={[
-                    styles.mainText,
-                    { color: theme.colors.onPrimaryContainer },
-                  ]}
+                  style={[styles.mainText, { color: theme.colors.onPrimary }]}
                 >
                   {flashcard.frontWord}
                 </CustomText>
@@ -115,24 +112,6 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
                   </CustomText>
                 </View>
               )}
-
-              {/* Notes section */}
-              {flashcard.notes && (
-                <View style={styles.notesSection}>
-                  <CustomText
-                    variant="labelLarge"
-                    style={[
-                      styles.sectionTitle,
-                      { color: theme.colors.primary },
-                    ]}
-                  >
-                    Notes:
-                  </CustomText>
-                  <CustomText variant="bodyMedium" style={styles.notesText}>
-                    {flashcard.notes}
-                  </CustomText>
-                </View>
-              )}
             </View>
           ) : (
             // Back of card
@@ -141,15 +120,12 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
               <View
                 style={[
                   styles.wordContainer,
-                  { backgroundColor: theme.colors.secondaryContainer },
+                  { backgroundColor: theme.colors.primary },
                 ]}
               >
                 <CustomText
                   variant="headlineSmall"
-                  style={[
-                    styles.mainText,
-                    { color: theme.colors.onSecondaryContainer },
-                  ]}
+                  style={[styles.mainText, { color: theme.colors.onPrimary }]}
                 >
                   {flashcard.backWord}
                 </CustomText>
