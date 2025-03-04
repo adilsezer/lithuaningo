@@ -296,12 +296,15 @@ export const FlashcardView: React.FC<FlashcardViewProps> = ({
       {flipped && (
         <View style={styles.actions}>
           <Button
-            mode="outlined"
+            mode="contained"
             onPress={() => handleAnswer(false)}
-            style={[styles.actionButton, { borderColor: theme.colors.error }]}
+            style={[
+              styles.actionButton,
+              { backgroundColor: theme.colors.error },
+            ]}
             contentStyle={styles.buttonContent}
             icon="close"
-            textColor={theme.colors.error}
+            textColor={theme.colors.onError}
           >
             Incorrect
           </Button>

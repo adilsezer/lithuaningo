@@ -18,7 +18,10 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
   theme,
 }) => {
   return (
-    <Surface style={styles.statsSurface} elevation={1}>
+    <Surface
+      style={[styles.statsSurface, { backgroundColor: theme.colors.surface }]}
+      elevation={1}
+    >
       <View style={styles.statsPanel}>
         <SegmentedButtons
           value={statsTab}
@@ -28,12 +31,12 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
             { value: "performance", label: "Performance", icon: "chart-line" },
             { value: "time", label: "Time", icon: "clock-outline" },
           ]}
-          style={styles.segmentedButtons}
+          style={[styles.segmentedButtons]}
           density="small"
         />
 
         {statsTab === "main" && (
-          <DataTable>
+          <DataTable style={{ backgroundColor: theme.colors.surface }}>
             <DataTable.Row>
               <DataTable.Cell style={styles.iconCell}>
                 <Icon source="fire" size={20} color={theme.colors.primary} />
@@ -127,7 +130,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
         )}
 
         {statsTab === "performance" && (
-          <DataTable>
+          <DataTable style={{ backgroundColor: theme.colors.surface }}>
             {stats.totalAnswered > 0 ? (
               <>
                 <DataTable.Row>
@@ -206,7 +209,7 @@ export const StatsPanel: React.FC<StatsPanelProps> = ({
         )}
 
         {statsTab === "time" && (
-          <DataTable>
+          <DataTable style={{ backgroundColor: theme.colors.surface }}>
             <DataTable.Row>
               <DataTable.Cell style={styles.iconCell}>
                 <Icon

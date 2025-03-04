@@ -66,7 +66,7 @@ export const darkThemeColors: ThemeColors = {
   error: "#d5304f",
   surface: "#37474F",
   onSurface: "#FAFAFA",
-  onSurfaceVariant: "#607D8B",
+  onSurfaceVariant: "#B0BEC5",
   primaryContainer: "#d3f8d3",
   onPrimaryContainer: "#263238",
   secondaryContainer: "#d3f8d3",

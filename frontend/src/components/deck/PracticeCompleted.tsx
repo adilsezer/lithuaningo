@@ -23,8 +23,18 @@ export const CompletedScreen: React.FC<CompletedScreenProps> = ({
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <HeaderWithBackButton title="Practice Complete" />
-      <View style={styles.completedContainer}>
-        <Card style={styles.completedCard}>
+      <View
+        style={[
+          styles.completedContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
+        <Card
+          style={[
+            styles.completedCard,
+            { backgroundColor: theme.colors.surface },
+          ]}
+        >
           <View style={styles.contentWrapper}>
             <Card.Content>
               <View style={styles.successIconContainer}>
@@ -53,7 +63,12 @@ export const CompletedScreen: React.FC<CompletedScreenProps> = ({
 
               <Divider style={styles.divider} />
 
-              <DataTable style={styles.statsContainer}>
+              <DataTable
+                style={[
+                  styles.statsContainer,
+                  { backgroundColor: theme.colors.surface },
+                ]}
+              >
                 <DataTable.Row>
                   <DataTable.Cell style={styles.iconCell}>
                     <Icon
