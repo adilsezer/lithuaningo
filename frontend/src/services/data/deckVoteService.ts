@@ -1,6 +1,5 @@
-import apiClient from "@services/api/apiClient";
+import { apiClient, ApiError } from "@services/api/apiClient";
 import { DeckVote, CreateDeckVoteRequest } from "@src/types";
-import { ApiError } from "@services/api/apiClient";
 
 class DeckVoteService {
   async voteDeck(request: CreateDeckVoteRequest): Promise<boolean> {

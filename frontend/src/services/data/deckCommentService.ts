@@ -1,10 +1,9 @@
-import apiClient from "../api/apiClient";
+import { apiClient, ApiError } from "../api/apiClient";
 import {
   DeckComment,
   CreateDeckCommentRequest,
   UpdateDeckCommentRequest,
 } from "@src/types";
-import { ApiError } from "@services/api/apiClient";
 
 class DeckCommentService {
   async getDeckComments(deckId: string): Promise<DeckComment[]> {

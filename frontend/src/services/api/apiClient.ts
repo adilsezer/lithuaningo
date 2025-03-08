@@ -627,6 +627,43 @@ class ApiClient {
       throw error;
     }
   }
+
+  // AI API methods
+  async processAIRequest(
+    prompt: string,
+    serviceType: string = "chat",
+    context?: Record<string, string>
+  ): Promise<string> {
+    const data = await this.request<{
+      response: string;
+      timestamp: string;
+      serviceType: string;
+    }>(`/api/v1/ai/process`, {
+      method: "POST",
+      data: {
+        prompt,
+        serviceType,
+        context,
+      },
+    });
+    return data.response;
+  }
+
+  async sendChatMessage(
+    message: string,
+    context?: Record<string, string>
+  ): Promise<string> {
+    return this.processAIRequest(message, "chat", context);
+  }
+
+  async translateText(text: string, targetLanguage: string): Promise<string> {
+    return this.processAIRequest(text, "translation", { targetLanguage });
+  }
+
+  async checkGrammar(text: string): Promise<string> {
+    return this.processAIRequest(text, "grammar");
+  }
 }
 
-export default ApiClient.getInstance();
+// Export a singleton instance
+export const apiClient = ApiClient.getInstance();

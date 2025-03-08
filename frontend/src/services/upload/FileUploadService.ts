@@ -1,5 +1,5 @@
 import { MediaFile, ImageFile, AudioFile } from "@src/types";
-import apiClient from "@services/api/apiClient";
+import { apiClient } from "@services/api/apiClient";
 import { createFormDataFromFile } from "@utils/formUtils";
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB in bytes

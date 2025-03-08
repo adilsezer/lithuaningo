@@ -1,4 +1,4 @@
-import apiClient from "@services/api/apiClient";
+import { apiClient, ApiError } from "@services/api/apiClient";
 import { fileUploadService } from "@services/upload/FileUploadService";
 import {
   Deck,
@@ -7,7 +7,6 @@ import {
   ImageFile,
   DeckWithRatingResponse,
 } from "@src/types";
-import { ApiError } from "@services/api/apiClient";
 
 interface CreateDeckParams {
   request: Omit<CreateDeckRequest, "imageUrl">;

@@ -1,10 +1,9 @@
-import apiClient from "@services/api/apiClient";
+import { apiClient, ApiError } from "@services/api/apiClient";
 import {
   DeckReport,
   CreateDeckReportRequest,
   UpdateDeckReportRequest,
 } from "@src/types";
-import { ApiError } from "@services/api/apiClient";
 
 class DeckReportService {
   async submitReport(request: CreateDeckReportRequest): Promise<void> {

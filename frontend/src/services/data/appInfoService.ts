@@ -1,5 +1,5 @@
 import Constants from "expo-constants";
-import apiClient from "@services/api/apiClient";
+import { apiClient } from "@services/api/apiClient";
 import { AppInfo, VERSION_REGEX } from "@src/types";
 import { Platform } from "react-native";
 

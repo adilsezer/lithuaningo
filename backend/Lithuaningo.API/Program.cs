@@ -19,7 +19,9 @@ using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationM
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Lithuaningo.API.Services.Auth;
+using Lithuaningo.API.Services.AI;
 using System.Text;
+using Lithuaningo.API.Services.OpenAI;
 
 // TODO: Add HTTPS to the API when deploying to production
 
@@ -292,6 +294,10 @@ To authorize in Swagger UI:
     services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
     // Quiz Related Services
     services.AddScoped<IQuizService, QuizService>();
+    
+    // OpenAI Services
+    services.Configure<OpenAISettings>(configuration.GetSection(OpenAISettings.SectionName));
+    services.AddScoped<IAIService, AIService>();
 
     // CORS Configuration with secure defaults
     services.Configure<CorsSettings>(configuration.GetSection("CorsSettings"));

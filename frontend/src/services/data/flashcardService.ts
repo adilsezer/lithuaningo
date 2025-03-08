@@ -1,4 +1,4 @@
-import apiClient from "../api/apiClient";
+import { apiClient } from "../api/apiClient";
 import { fileUploadService } from "../upload/FileUploadService";
 import {
   Flashcard,

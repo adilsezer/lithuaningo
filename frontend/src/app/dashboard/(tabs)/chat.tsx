@@ -5,12 +5,15 @@ import {
   StyleSheet,
   ListRenderItem,
   Image,
+  ActivityIndicator,
 } from "react-native";
 import { Card, IconButton, useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import CustomDivider from "@components/ui/CustomDivider";
-import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
+import { apiClient } from "@services/api/apiClient";
+import { useIsAuthenticated } from "@stores/useUserStore";
+
 // Define a TypeScript interface for our messages.
 interface Message {
   id: string;
@@ -18,19 +21,24 @@ interface Message {
   sender: "user" | "ai";
 }
 
-const dummyMessages: Message[] = [
-  { id: "1", text: "Sveiki! Kaip galiu jums padėti?", sender: "ai" },
-  { id: "2", text: "Kaip šiandien jautiesi?", sender: "user" },
+const initialMessages: Message[] = [
+  {
+    id: "1",
+    text: "Hello! How can I help you learn Lithuanian?",
+    sender: "ai",
+  },
 ];
 
 export default function ChatScreen(): JSX.Element {
-  const [messages, setMessages] = useState<Message[]>(dummyMessages);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputText, setInputText] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const isAuthenticated = useIsAuthenticated();
 
   const theme = useTheme();
 
-  const handleSend = (): void => {
-    if (inputText.trim() === "") return;
+  const handleSend = async (): Promise<void> => {
+    if (inputText.trim() === "" || !isAuthenticated) return;
 
     // Add the user's message to the chat.
     const newMessage: Message = {
@@ -39,17 +47,35 @@ export default function ChatScreen(): JSX.Element {
       sender: "user",
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
-    setInputText("");
 
-    // Simulate an AI response after a short delay.
-    setTimeout(() => {
+    const userMessage = inputText;
+    setInputText("");
+    setIsLoading(true);
+
+    try {
+      // Send the message to the API and get the response
+      const aiResponseText = await apiClient.sendChatMessage(userMessage);
+
+      // Add the AI's response to the chat
       const aiResponse: Message = {
         id: Date.now().toString() + "_ai",
-        text: "Atsakymas: Dėkoju už jūsų klausimą!",
+        text: aiResponseText,
         sender: "ai",
       };
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
-    }, 1000);
+    } catch (error) {
+      console.error("Error getting AI response:", error);
+
+      // Add an error message
+      const errorMessage: Message = {
+        id: Date.now().toString() + "_error",
+        text: "Sorry, an error occurred. Please try again later.",
+        sender: "ai",
+      };
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const renderItem: ListRenderItem<Message> = ({ item }) => (
@@ -60,7 +86,9 @@ export default function ChatScreen(): JSX.Element {
       ]}
     >
       <Card.Content>
-        <CustomText>{item.text}</CustomText>
+        <CustomText style={{ color: theme.colors.onPrimaryContainer }}>
+          {item.text}
+        </CustomText>
       </Card.Content>
     </Card>
   );
@@ -82,16 +110,37 @@ export default function ChatScreen(): JSX.Element {
         renderItem={renderItem}
         contentContainerStyle={styles.chatContainer}
       />
+      {isLoading && (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+          <CustomText style={styles.loadingText}>
+            AI is typing a response...
+          </CustomText>
+        </View>
+      )}
       <View style={styles.inputContainer}>
         <CustomTextInput
           mode="outlined"
-          placeholder="Rašykite žinutę..."
+          placeholder="Type a message..."
           value={inputText}
           onChangeText={setInputText}
           style={styles.textInput}
+          disabled={isLoading || !isAuthenticated}
         />
-        <IconButton icon="send" size={28} onPress={handleSend} />
+        <IconButton
+          icon="send"
+          size={28}
+          onPress={handleSend}
+          disabled={isLoading || inputText.trim() === "" || !isAuthenticated}
+        />
       </View>
+      {!isAuthenticated && (
+        <View style={styles.authWarning}>
+          <CustomText style={styles.authWarningText}>
+            Please log in to use the AI assistant.
+          </CustomText>
+        </View>
+      )}
     </View>
   );
 }
@@ -134,5 +183,27 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 10,
     marginVertical: 10,
+  },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 10,
+  },
+  loadingText: {
+    marginLeft: 10,
+    fontSize: 14,
+  },
+  authWarning: {
+    backgroundColor: "#FFF3CD",
+    padding: 10,
+    margin: 10,
+    borderRadius: 5,
+    borderWidth: 1,
+    borderColor: "#FFEEBA",
+  },
+  authWarningText: {
+    color: "#856404",
+    textAlign: "center",
   },
 });

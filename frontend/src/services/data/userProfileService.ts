@@ -1,4 +1,4 @@
-import apiClient from "@services/api/apiClient";
+import { apiClient } from "@services/api/apiClient";
 import { UserProfile, UpdateUserProfileRequest } from "@src/types";
 
 const fetchUserProfile = async (

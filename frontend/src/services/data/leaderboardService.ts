@@ -1,4 +1,4 @@
-import apiClient, { ApiError } from "@services/api/apiClient";
+import { apiClient, ApiError } from "@services/api/apiClient";
 import { LeaderboardEntry, UpdateLeaderboardEntryRequest } from "@src/types";
 
 class LeaderboardService {
