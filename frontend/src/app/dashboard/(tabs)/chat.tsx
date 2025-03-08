@@ -116,12 +116,11 @@ export default function ChatScreen(): JSX.Element {
           justifyContent: isUser ? "flex-end" : "flex-start",
           alignItems: "flex-start",
           marginVertical: 8,
-          paddingHorizontal: 16,
         }}
       >
         {!isUser && (
           <Avatar.Image
-            size={30}
+            size={35}
             source={require("assets/images/icon-transparent.png")}
             style={{ marginRight: 8, marginTop: 6 }}
           />
@@ -185,7 +184,7 @@ export default function ChatScreen(): JSX.Element {
 
         {isUser && userData?.fullName && (
           <Avatar.Text
-            size={30}
+            size={35}
             label={userData.fullName[0].toUpperCase()}
             style={{
               marginLeft: 8,
