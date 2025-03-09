@@ -75,6 +75,50 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
     }
   }, [isCorrectAnswer]);
 
+  // Helper function to get button styles based on option state
+  const getOptionButtonProps = (option: string) => {
+    // Determine button state
+    const isCorrect = option === currentQuestion?.correctAnswer;
+    const isSelected = option === selectedAnswer;
+    const isIncorrectSelection = isCorrectAnswer === false && isSelected;
+    const isRevealedCorrect = isCorrectAnswer !== null && isCorrect;
+
+    // Determine mode
+    const mode:
+      | "text"
+      | "contained"
+      | "outlined"
+      | "elevated"
+      | "contained-tonal" =
+      isRevealedCorrect || isIncorrectSelection ? "contained" : "outlined";
+
+    // Determine style
+    const buttonStyle = [
+      styles.optionButton,
+      {
+        borderColor: isIncorrectSelection
+          ? theme.colors.error
+          : theme.colors.primary,
+      },
+      isRevealedCorrect && { backgroundColor: theme.colors.primary },
+      isIncorrectSelection && { backgroundColor: theme.colors.error },
+    ];
+
+    // Determine label style
+    const labelStyle = [
+      styles.optionButtonLabel,
+      {
+        color: isIncorrectSelection
+          ? theme.colors.onError
+          : isRevealedCorrect
+          ? theme.colors.onPrimary
+          : theme.colors.onBackground,
+      },
+    ];
+
+    return { mode, buttonStyle, labelStyle };
+  };
+
   // Loading state
   if (loading) {
     return (
@@ -336,55 +380,26 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             </View>
 
             <View style={styles.optionsContainer}>
-              {currentQuestion.options.map((option) => (
-                <Button
-                  key={option}
-                  mode={
-                    (isCorrectAnswer !== null &&
-                      option === currentQuestion.correctAnswer) ||
-                    (isCorrectAnswer === false && option === selectedAnswer)
-                      ? "contained"
-                      : "outlined"
-                  }
-                  style={[
-                    styles.optionButton,
-                    {
-                      borderColor:
-                        isCorrectAnswer === false && option === selectedAnswer
-                          ? theme.colors.error
-                          : theme.colors.primary,
-                    },
-                    isCorrectAnswer !== null &&
-                      option === currentQuestion.correctAnswer && {
-                        backgroundColor: theme.colors.primary,
-                      },
-                    isCorrectAnswer === false &&
-                      option === selectedAnswer && {
-                        backgroundColor: theme.colors.error,
-                      },
-                  ]}
-                  labelStyle={[
-                    styles.optionButtonLabel,
-                    {
-                      color:
-                        isCorrectAnswer === false && option === selectedAnswer
-                          ? theme.colors.onError
-                          : isCorrectAnswer !== null &&
-                            option === currentQuestion.correctAnswer
-                          ? theme.colors.onPrimary
-                          : theme.colors.onBackground,
-                    },
-                  ]}
-                  contentStyle={styles.optionButtonContent}
-                  disabled={isCorrectAnswer !== null}
-                  onPress={() => {
-                    setSelectedAnswer(option);
-                    onAnswer(option);
-                  }}
-                >
-                  {option}
-                </Button>
-              ))}
+              {currentQuestion.options.map((option) => {
+                const { mode, buttonStyle, labelStyle } =
+                  getOptionButtonProps(option);
+                return (
+                  <Button
+                    key={option}
+                    mode={mode}
+                    style={buttonStyle}
+                    labelStyle={labelStyle}
+                    contentStyle={styles.optionButtonContent}
+                    disabled={isCorrectAnswer !== null}
+                    onPress={() => {
+                      setSelectedAnswer(option);
+                      onAnswer(option);
+                    }}
+                  >
+                    {option}
+                  </Button>
+                );
+              })}
             </View>
 
             {isCorrectAnswer !== null && (
