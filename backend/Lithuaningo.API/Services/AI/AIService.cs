@@ -1,6 +1,5 @@
 using System.Collections.Concurrent;
 using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.Services.OpenAI;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
 using OpenAI.Chat;
@@ -10,29 +9,44 @@ namespace Lithuaningo.API.Services.AI;
 /// <summary>
 /// Unified service for handling AI interactions with OpenAI
 /// </summary>
-public class AIService : BaseOpenAIService, IAIService
+public class AIService : IAIService
 {
     // Store conversation history for sessions
-    private readonly ConcurrentDictionary<string, List<ChatMessage>> _conversationHistories = new();
+    protected readonly ConcurrentDictionary<string, List<ChatMessage>> _conversationHistories = new();
     
     // The chat client instance for this service
     private readonly ChatClient _chatClient;
     
     // The model name used by this service
     private readonly string _modelName;
+    
+    // Logger instance
+    private readonly ILogger<AIService> _logger;
+    
+    // Configuration settings
+    private readonly OpenAISettings _openAiSettings;
 
     /// <summary>
     /// Initializes a new instance of the <see cref="AIService"/> class.
     /// </summary>
     /// <param name="openAiSettings">The OpenAI settings</param>
     /// <param name="logger">The logger</param>
+    /// <param name="chatClient">Optional chat client for testing</param>
     public AIService(
         IOptions<OpenAISettings> openAiSettings,
-        ILogger<AIService> logger)
-        : base(openAiSettings, logger)
+        ILogger<AIService> logger,
+        ChatClient? chatClient = null)
     {
+        _logger = logger;
+        _openAiSettings = openAiSettings.Value;
+        
+        // Set the model name from settings
         _modelName = _openAiSettings.ChatModelName;
-        _chatClient = GetChatClient(_modelName);
+        
+        // Use provided client or create a new one
+        _chatClient = chatClient ?? CreateChatClient(_modelName);
+        
+        _logger.LogInformation("AIService initialized with model: {ModelName}", _modelName);
     }
 
     /// <summary>
@@ -48,6 +62,17 @@ public class AIService : BaseOpenAIService, IAIService
     public string GetModelName() => _modelName;
 
     /// <summary>
+    /// Creates a new ChatClient with the configured API key
+    /// </summary>
+    /// <param name="modelName">Model name to use</param>
+    /// <returns>A configured ChatClient instance</returns>
+    protected virtual ChatClient CreateChatClient(string modelName)
+    {
+        _logger.LogInformation("Creating ChatClient with model: {Model}", modelName);
+        return new ChatClient(modelName, _openAiSettings.ApiKey);
+    }
+
+    /// <summary>
     /// Processes an AI request and returns a response
     /// </summary>
     /// <param name="prompt">The text prompt to send to the AI</param>
@@ -58,20 +83,30 @@ public class AIService : BaseOpenAIService, IAIService
     {
         try
         {
-            // Different handling based on service type
-            return serviceType.ToLowerInvariant() switch
-            {
-                "chat" => await HandleChatRequestAsync(prompt, context),
-                "translation" => await HandleTranslationRequestAsync(prompt, context),
-                "grammar" => await HandleGrammarRequestAsync(prompt, context),
-                _ => await HandleChatRequestAsync(prompt, context) // Default to chat
-            };
+            // Delegate to the appropriate handler based on service type
+            return await GetServiceHandler(serviceType.ToLowerInvariant())(prompt, context);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing AI request: {Message}", ex.Message);
             return "I'm sorry, I'm having trouble processing your request right now. Please try again later.";
         }
+    }
+    
+    /// <summary>
+    /// Returns the appropriate handler function for the given service type
+    /// </summary>
+    /// <param name="serviceType">The type of AI service</param>
+    /// <returns>A function that handles the specified service type</returns>
+    protected virtual Func<string, Dictionary<string, string>?, Task<string>> GetServiceHandler(string serviceType)
+    {
+        return serviceType switch
+        {
+            "chat" => HandleChatRequestAsync,
+            "translation" => HandleTranslationRequestAsync,
+            "grammar" => HandleGrammarRequestAsync,
+            _ => HandleChatRequestAsync // Default to chat
+        };
     }
 
     /// <summary>
@@ -174,5 +209,21 @@ public class AIService : BaseOpenAIService, IAIService
         }
 
         return correctedText;
+    }
+
+    /// <summary>
+    /// Clears conversation history for testing purposes
+    /// </summary>
+    /// <param name="sessionId">Optional specific session ID to clear, or all if null</param>
+    public virtual void ClearConversationHistory(string? sessionId = null)
+    {
+        if (sessionId != null)
+        {
+            _conversationHistories.TryRemove(sessionId, out _);
+        }
+        else
+        {
+            _conversationHistories.Clear();
+        }
     }
 } 

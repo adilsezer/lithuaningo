@@ -21,7 +21,6 @@ using Microsoft.IdentityModel.Tokens;
 using Lithuaningo.API.Services.Auth;
 using Lithuaningo.API.Services.AI;
 using System.Text;
-using Lithuaningo.API.Services.OpenAI;
 
 // TODO: Add HTTPS to the API when deploying to production
 
