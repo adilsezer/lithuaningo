@@ -1,4 +1,8 @@
 using System.Collections.Concurrent;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.RegularExpressions;
+using Lithuaningo.API.DTOs.Quiz;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
@@ -11,6 +15,72 @@ namespace Lithuaningo.API.Services.AI;
 /// </summary>
 public class AIService : IAIService
 {
+    #region Constants
+    
+    // Supported service types - only include what we actually use
+    public const string CHAT_SERVICE = "chat";
+    public const string QUIZ_SERVICE = "quiz";
+    
+    // Chat system instructions
+    private const string CHAT_SYSTEM_INSTRUCTIONS = 
+        "You are a Lithuanian language learning assistant named Lithuaningo AI. " +
+        "Only answer questions related to Lithuanian language, culture, history, or travel in Lithuania. " +
+        "For any questions not related to Lithuanian topics, politely explain that you can only help with Lithuanian-related topics. " +
+        "Always incorporate at least one Lithuanian word or fact in your responses to help the user learn. " +
+        "Use friendly, conversational language suitable for a language learning app.";
+    
+    // Quiz system instructions with complete format requirements
+    private const string QUIZ_SYSTEM_INSTRUCTIONS = @"You are a teaching assistant specialized in creating Lithuanian language quizzes.
+
+Your task is to generate 5 Lithuanian language quiz questions for our learning app.
+
+FORMAT REQUIREMENTS: 
+- Return a valid JSON array of quiz questions
+- Do NOT include any explanations, comments, or markdown formatting like triple backticks
+- Return ONLY the JSON array
+
+EACH QUESTION MUST HAVE:
+- question: A Lithuanian phrase or word with English translation in parentheses
+- options: An array of exactly 4 possible answers in Lithuanian
+- correctAnswer: The correct option (must match exactly one of the options)
+- exampleSentence: An example usage in Lithuanian
+- type: MUST be one of these EXACT values (no quotes): 0 for MultipleChoice, 1 for TrueFalse, 2 for FillInTheBlank
+
+EXAMPLE OF EXPECTED JSON STRUCTURE (do not copy these examples, create new ones):
+[
+  {
+    ""question"": ""Labas (Hello)"",
+    ""options"": [""Labas"", ""Viso gero"", ""Ačiū"", ""Prašau""],
+    ""correctAnswer"": ""Labas"",
+    ""exampleSentence"": ""Labas, kaip sekasi?"",
+    ""type"": 0
+  },
+  {
+    ""question"": ""Ar tu kalbi lietuviškai? (Do you speak Lithuanian?)"",
+    ""options"": [""Taip"", ""Ne""],
+    ""correctAnswer"": ""Taip"",
+    ""exampleSentence"": ""Ar tu kalbi lietuviškai? Taip, kalbu."",
+    ""type"": 1
+  },
+  {
+    ""question"": ""Aš esu (I am) ______."",
+    ""options"": [""studentas"", ""mokytojas"", ""gydytojas"", ""inžinierius""],
+    ""correctAnswer"": ""studentas"",
+    ""exampleSentence"": ""Aš esu studentas universitete."",
+    ""type"": 2
+  }
+]
+
+CONTENT GUIDELINES:
+- Focus on common Lithuanian phrases, vocabulary, and basic grammar
+- Include a mix of greetings, daily expressions, and basic vocabulary
+- Make questions appropriate for beginners to intermediate learners
+- Ensure all text in Lithuanian uses correct characters and spelling";
+
+    #endregion
+    
+    #region Private Fields
+    
     // Store conversation history for sessions
     protected readonly ConcurrentDictionary<string, List<ChatMessage>> _conversationHistories = new();
     
@@ -25,7 +95,11 @@ public class AIService : IAIService
     
     // Configuration settings
     private readonly OpenAISettings _openAiSettings;
-
+    
+    #endregion
+    
+    #region Constructor
+    
     /// <summary>
     /// Initializes a new instance of the <see cref="AIService"/> class.
     /// </summary>
@@ -48,7 +122,11 @@ public class AIService : IAIService
         
         _logger.LogInformation("AIService initialized with model: {ModelName}", _modelName);
     }
-
+    
+    #endregion
+    
+    #region Public Methods
+    
     /// <summary>
     /// Gets the service name
     /// </summary>
@@ -60,7 +138,127 @@ public class AIService : IAIService
     /// </summary>
     /// <returns>The name of the AI model</returns>
     public string GetModelName() => _modelName;
-
+    
+    /// <summary>
+    /// Processes an AI request and returns a response
+    /// </summary>
+    /// <param name="prompt">The text prompt to send to the AI</param>
+    /// <param name="context">Optional context parameters for the request</param>
+    /// <param name="serviceType">The type of AI service to use (chat or quiz)</param>
+    /// <returns>The AI's response text</returns>
+    public async Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat")
+    {
+        try
+        {
+            // Log the type of request being processed
+            _logger.LogInformation("Processing {ServiceType} request", serviceType);
+            
+            // Use our simplified service handler - only chat and quiz are supported
+            return serviceType.ToLowerInvariant() switch
+            {
+                CHAT_SERVICE => await HandleChatRequestAsync(prompt, context),
+                QUIZ_SERVICE => await HandleQuizRequestAsync(),
+                _ => await HandleChatRequestAsync(prompt, context) // Default to chat
+            };
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing AI request: {Message}", ex.Message);
+            return "I'm sorry, I'm having trouble processing your request right now. Please try again later.";
+        }
+    }
+    
+    /// <summary>
+    /// Generates quiz questions using AI
+    /// </summary>
+    /// <returns>A list of quiz questions</returns>
+    public async Task<List<CreateQuizQuestionRequest>> GenerateQuizQuestionsAsync()
+    {
+        // Retry up to 3 times if necessary
+        for (int attempt = 1; attempt <= 3; attempt++)
+        {
+            try
+            {
+                _logger.LogInformation("Generating quiz questions with AI, attempt {Attempt}", attempt);
+                
+                // Get raw JSON response from the AI
+                var jsonResponse = await HandleQuizRequestAsync();
+                
+                if (string.IsNullOrEmpty(jsonResponse))
+                {
+                    _logger.LogWarning("AI returned empty response on attempt {Attempt}", attempt);
+                    continue;
+                }
+                
+                // Extract and clean up JSON content
+                var jsonContent = ExtractJsonFromAiResponse(jsonResponse);
+                
+                // Convert string enum values to integers if needed
+                if (!string.IsNullOrEmpty(jsonContent))
+                {
+                    jsonContent = ConvertStringTypeToIntIfNeeded(jsonContent);
+                }
+                
+                // Try to deserialize the JSON
+                List<CreateQuizQuestionRequest>? generatedQuestions = null;
+                try
+                {
+                    // Parse the JSON response into quiz question models
+                    generatedQuestions = JsonSerializer.Deserialize<List<CreateQuizQuestionRequest>>(
+                        jsonContent ?? string.Empty,
+                        new JsonSerializerOptions { 
+                            PropertyNameCaseInsensitive = true,
+                            AllowTrailingCommas = true,
+                            ReadCommentHandling = JsonCommentHandling.Skip,
+                            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                        }
+                    );
+                }
+                catch (JsonException ex)
+                {
+                    _logger.LogError(ex, "JSON deserialization error on attempt {Attempt}", attempt);
+                    continue;
+                }
+                
+                // Validate the questions
+                if (generatedQuestions != null && ValidateGeneratedQuestions(generatedQuestions))
+                {
+                    _logger.LogInformation("Successfully generated {Count} valid quiz questions", generatedQuestions.Count);
+                    return generatedQuestions;
+                }
+                
+                _logger.LogWarning("Generated questions failed validation on attempt {Attempt}", attempt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating quiz questions on attempt {Attempt}", attempt);
+            }
+        }
+        
+        // If we reach here, all attempts failed
+        throw new InvalidOperationException("Failed to generate valid quiz questions after multiple attempts");
+    }
+    
+    /// <summary>
+    /// Clears conversation history for testing purposes
+    /// </summary>
+    /// <param name="sessionId">Optional specific session ID to clear, or all if null</param>
+    public virtual void ClearConversationHistory(string? sessionId = null)
+    {
+        if (sessionId != null)
+        {
+            _conversationHistories.TryRemove(sessionId, out _);
+        }
+        else
+        {
+            _conversationHistories.Clear();
+        }
+    }
+    
+    #endregion
+    
+    #region Protected Methods
+    
     /// <summary>
     /// Creates a new ChatClient with the configured API key
     /// </summary>
@@ -71,44 +269,11 @@ public class AIService : IAIService
         _logger.LogInformation("Creating ChatClient with model: {Model}", modelName);
         return new ChatClient(modelName, _openAiSettings.ApiKey);
     }
-
-    /// <summary>
-    /// Processes an AI request and returns a response
-    /// </summary>
-    /// <param name="prompt">The text prompt to send to the AI</param>
-    /// <param name="context">Optional context parameters for the request</param>
-    /// <param name="serviceType">The type of AI service to use (e.g., "chat", "translation")</param>
-    /// <returns>The AI's response text</returns>
-    public async Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat")
-    {
-        try
-        {
-            // Delegate to the appropriate handler based on service type
-            return await GetServiceHandler(serviceType.ToLowerInvariant())(prompt, context);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error processing AI request: {Message}", ex.Message);
-            return "I'm sorry, I'm having trouble processing your request right now. Please try again later.";
-        }
-    }
     
-    /// <summary>
-    /// Returns the appropriate handler function for the given service type
-    /// </summary>
-    /// <param name="serviceType">The type of AI service</param>
-    /// <returns>A function that handles the specified service type</returns>
-    protected virtual Func<string, Dictionary<string, string>?, Task<string>> GetServiceHandler(string serviceType)
-    {
-        return serviceType switch
-        {
-            "chat" => HandleChatRequestAsync,
-            "translation" => HandleTranslationRequestAsync,
-            "grammar" => HandleGrammarRequestAsync,
-            _ => HandleChatRequestAsync // Default to chat
-        };
-    }
-
+    #endregion
+    
+    #region Private Methods
+    
     /// <summary>
     /// Handles a chat request
     /// </summary>
@@ -124,7 +289,7 @@ public class AIService : IAIService
         // Get or create conversation history for this session
         var conversationHistory = _conversationHistories.GetOrAdd(sessionId, _ => new List<ChatMessage>
         {
-            new SystemChatMessage(_openAiSettings.SystemMessage)
+            new SystemChatMessage(CHAT_SYSTEM_INSTRUCTIONS)
         });
 
         // Add the user's message to the conversation history
@@ -150,80 +315,142 @@ public class AIService : IAIService
 
         // Add the AI's response to the conversation history
         conversationHistory.Add(new AssistantChatMessage(aiResponse));
-
+        
         return aiResponse;
     }
-
+    
     /// <summary>
-    /// Handles a translation request
+    /// Handles a quiz generation request
     /// </summary>
-    private async Task<string> HandleTranslationRequestAsync(string text, Dictionary<string, string>? context)
+    private async Task<string> HandleQuizRequestAsync()
     {
-        // Extract target language from context, default to English
-        string targetLanguage = "English";
-        if (context != null && context.TryGetValue("targetLanguage", out var language))
+        // For quiz generation, we use detailed system instructions and a simple prompt
+        var messages = new List<ChatMessage>
         {
-            targetLanguage = language;
-        }
-
-        // Create a one-time prompt for translation
-        var messages = new ChatMessage[]
-        {
-            new SystemChatMessage("You are a helpful translation assistant. Translate the text to the specified language accurately."),
-            new UserChatMessage($"Translate the following text to {targetLanguage}: {text}")
+            new SystemChatMessage(QUIZ_SYSTEM_INSTRUCTIONS),
+            new UserChatMessage("Generate 5 Lithuanian language quiz questions following the format specified in your instructions.")
         };
 
         // Send the request to OpenAI
-        var completion = await _chatClient.CompleteChatAsync(messages);
+        var completion = await _chatClient.CompleteChatAsync(messages.ToArray());
         
         // Extract the response text from the completion
-        var translation = completion.Value.Content[0].Text;
-        if (string.IsNullOrEmpty(translation))
+        var jsonResponse = completion.Value.Content[0].Text;
+        if (string.IsNullOrEmpty(jsonResponse))
         {
-            translation = "I'm sorry, I couldn't translate the text.";
+            return "[]"; // Return empty JSON array if no response
+        }
+        
+        return jsonResponse;
+    }
+    
+    /// <summary>
+    /// Validates the generated quiz questions
+    /// </summary>
+    private bool ValidateGeneratedQuestions(List<CreateQuizQuestionRequest> questions)
+    {
+        if (questions == null || !questions.Any())
+        {
+            _logger.LogWarning("No questions were generated");
+            return false;
         }
 
-        return translation;
-    }
-
-    /// <summary>
-    /// Handles a grammar check request
-    /// </summary>
-    private async Task<string> HandleGrammarRequestAsync(string text, Dictionary<string, string>? context)
-    {
-        // Create a one-time prompt for grammar checking
-        var messages = new ChatMessage[]
+        foreach (var question in questions)
         {
-            new SystemChatMessage("You are a helpful grammar assistant. Check and correct the grammar of the provided text."),
-            new UserChatMessage($"Check and correct the grammar of the following text: {text}")
+            // Check required fields
+            if (string.IsNullOrWhiteSpace(question.Question))
+            {
+                _logger.LogWarning("Question text is missing");
+                return false;
+            }
+
+            if (string.IsNullOrWhiteSpace(question.CorrectAnswer))
+            {
+                _logger.LogWarning("CorrectAnswer is missing");
+                return false;
+            }
+
+            // Check options
+            if (question.Options == null || !question.Options.Any())
+            {
+                _logger.LogWarning("Options array is missing or empty");
+                return false;
+            }
+
+            // Make sure correct answer is in the options
+            if (!question.Options.Contains(question.CorrectAnswer))
+            {
+                _logger.LogWarning("CorrectAnswer is not found in the options array");
+                return false;
+            }
+
+            // Validate question type
+            if (!Enum.IsDefined(typeof(QuizQuestionType), question.Type))
+            {
+                _logger.LogWarning("Invalid question type value: {Type}", question.Type);
+                return false;
+            }
+        }
+
+        return true;
+    }
+    
+    /// <summary>
+    /// Extracts JSON content from potential markdown code blocks
+    /// </summary>
+    private string ExtractJsonFromAiResponse(string aiResponse)
+    {
+        if (string.IsNullOrEmpty(aiResponse))
+        {
+            return string.Empty;
+        }
+
+        // Check if the response is a markdown code block and extract the JSON content
+        var jsonBlockPattern = @"```(?:json)?\s*\n([\s\S]*?)\n```";
+        var jsonBlockMatch = Regex.Match(aiResponse, jsonBlockPattern);
+
+        if (jsonBlockMatch.Success && jsonBlockMatch.Groups.Count > 1)
+        {
+            return jsonBlockMatch.Groups[1].Value.Trim();
+        }
+
+        // If no markdown code block, try to find a JSON array directly
+        var jsonArrayPattern = @"^\s*\[\s*\{[\s\S]*\}\s*\]\s*$";
+        var jsonArrayMatch = Regex.Match(aiResponse, jsonArrayPattern);
+
+        if (jsonArrayMatch.Success)
+        {
+            return jsonArrayMatch.Value.Trim();
+        }
+
+        // If no direct JSON array, return the full response (which might be JSON or might need more cleanup)
+        return aiResponse.Trim();
+    }
+    
+    /// <summary>
+    /// Converts string type values to integers if needed (to handle AI sometimes returning string enum values)
+    /// </summary>
+    private string ConvertStringTypeToIntIfNeeded(string jsonContent)
+    {
+        // Try to handle cases where the type is provided as a string like "0", "1", "2"
+        // or as words like "MultipleChoice", "TrueFalse", "FillInTheBlank"
+        var typePatterns = new Dictionary<string, string>
+        {
+            { @"""type""\s*:\s*""0""", @"""type"":0" },
+            { @"""type""\s*:\s*""1""", @"""type"":1" },
+            { @"""type""\s*:\s*""2""", @"""type"":2" },
+            { @"""type""\s*:\s*""MultipleChoice""", @"""type"":0" },
+            { @"""type""\s*:\s*""TrueFalse""", @"""type"":1" },
+            { @"""type""\s*:\s*""FillInTheBlank""", @"""type"":2" }
         };
 
-        // Send the request to OpenAI
-        var completion = await _chatClient.CompleteChatAsync(messages);
-        
-        // Extract the response text from the completion
-        var correctedText = completion.Value.Content[0].Text;
-        if (string.IsNullOrEmpty(correctedText))
+        foreach (var pattern in typePatterns)
         {
-            correctedText = "I'm sorry, I couldn't check the grammar of the text.";
+            jsonContent = Regex.Replace(jsonContent, pattern.Key, pattern.Value, RegexOptions.IgnoreCase);
         }
 
-        return correctedText;
+        return jsonContent;
     }
-
-    /// <summary>
-    /// Clears conversation history for testing purposes
-    /// </summary>
-    /// <param name="sessionId">Optional specific session ID to clear, or all if null</param>
-    public virtual void ClearConversationHistory(string? sessionId = null)
-    {
-        if (sessionId != null)
-        {
-            _conversationHistories.TryRemove(sessionId, out _);
-        }
-        else
-        {
-            _conversationHistories.Clear();
-        }
-    }
+    
+    #endregion
 } 

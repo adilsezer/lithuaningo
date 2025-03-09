@@ -7,6 +7,7 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Quiz;
 using Swashbuckle.AspNetCore.Annotations;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -80,65 +81,35 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Creates new daily quiz questions for the current date
+        /// Generates new quiz questions using AI.
         /// </summary>
         /// <remarks>
-        /// Sample request:
-        /// 
-        ///     POST /api/v1/Quiz/daily
-        ///     [
-        ///       {
-        ///         "questionText": "Kaip sekasi?",
-        ///         "englishTranslation": "How are you?",
-        ///         "options": ["Gerai", "Blogai", "Normaliai", "Puikiai"],
-        ///         "correctAnswerIndex": 0,
-        ///         "difficulty": "Beginner"
-        ///       }
-        ///     ]
-        /// 
-        /// Notes:
-        /// - Questions are set for the current UTC date
-        /// - Existing questions for the date will be replaced
-        /// - All questions are set as multiple choice type
+        /// This endpoint triggers the AI to generate new quiz questions. 
+        /// It will replace any existing questions for the current date.
         /// </remarks>
-        /// <param name="requests">The list of quiz questions to create</param>
-        /// <returns>The created quiz questions with their assigned IDs</returns>
-        /// <response code="200">Returns the created quiz questions</response>
-        /// <response code="400">If the request model is invalid</response>
-        /// <response code="501">If the quiz creation feature is not implemented</response>
-        /// <response code="500">If there was an internal error while creating the questions</response>
-        [HttpPost("daily")]
+        /// <returns>The generated quiz questions</returns>
+        /// <response code="200">Returns the generated quiz questions</response>
+        /// <response code="500">If there was an internal error while generating the questions</response>
+        [HttpPost("generate")]
         [SwaggerOperation(
-            Summary = "Creates daily quiz questions",
-            Description = "Creates new quiz questions for the current date",
-            OperationId = "CreateDailyQuiz",
+            Summary = "Generates quiz questions using AI",
+            Description = "Generates new quiz questions using AI for the current date",
+            OperationId = "GenerateAIQuiz",
             Tags = new[] { "Quiz" }
         )]
         [ProducesResponseType(typeof(IEnumerable<QuizQuestionResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status501NotImplemented)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<QuizQuestionResponse>>> CreateDailyQuiz([FromBody] List<CreateQuizQuestionRequest> requests)
+        public async Task<ActionResult<IEnumerable<QuizQuestionResponse>>> GenerateAIQuiz()
         {
-            if (!ModelState.IsValid)
-            {
-                return BadRequest(ModelState);
-            }
-
             try
             {
-                var questions = await _quizService.CreateDailyQuizQuestionsAsync(requests);
+                var questions = await _quizService.GenerateAIQuizQuestionsAsync();
                 return Ok(questions);
-            }
-            catch (NotImplementedException nie)
-            {
-                _logger.LogWarning(nie, "Quiz creation not implemented.");
-                return StatusCode(501, "Quiz creation functionality is not implemented yet.");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating daily quiz questions.");
-                return StatusCode(500, "An error occurred while creating the daily quiz questions.");
+                _logger.LogError(ex, "Error generating AI quiz questions.");
+                return StatusCode(500, "An error occurred while generating AI quiz questions.");
             }
         }
     }

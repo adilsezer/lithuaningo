@@ -51,6 +51,12 @@ class ApiClient {
   private axiosInstance: AxiosInstance;
   private baseURL: string;
 
+  // AI service types - only include what we actually use
+  static readonly SERVICE_TYPE = {
+    CHAT: "chat",
+    QUIZ: "quiz",
+  };
+
   private constructor() {
     this.baseURL = getBaseUrl() || "http://localhost:7016";
     this.axiosInstance = axios.create({
@@ -166,6 +172,13 @@ class ApiClient {
     });
   }
 
+  async generateAIQuiz(): Promise<QuizQuestion[]> {
+    return this.request<QuizQuestion[]>(`/api/v1/Quiz/generate`, {
+      method: "POST",
+      timeout: 120000, // AI-generated content might take longer
+    });
+  }
+
   async submitQuizResult(
     result: Omit<QuizResult, "completedAt">
   ): Promise<void> {
@@ -177,15 +190,6 @@ class ApiClient {
 
   async getQuizHistory(userId: string): Promise<QuizResult[]> {
     return this.request<QuizResult[]>(`/api/v1/Quiz/history/${userId}`);
-  }
-
-  async createDailyQuiz(
-    questions: CreateQuizQuestionRequest[]
-  ): Promise<QuizQuestion[]> {
-    return this.request<QuizQuestion[]>(`/api/v1/Quiz/daily`, {
-      method: "POST",
-      data: questions,
-    });
   }
 
   // User Profile Controller
@@ -633,7 +637,7 @@ class ApiClient {
   // AI API methods
   async processAIRequest(
     prompt: string,
-    serviceType: string = "chat",
+    serviceType: string = ApiClient.SERVICE_TYPE.CHAT,
     context?: Record<string, string>
   ): Promise<string> {
     const data = await this.request<{
@@ -655,15 +659,15 @@ class ApiClient {
     message: string,
     context?: Record<string, string>
   ): Promise<string> {
-    return this.processAIRequest(message, "chat", context);
+    return this.processAIRequest(message, ApiClient.SERVICE_TYPE.CHAT, context);
   }
 
-  async translateText(text: string, targetLanguage: string): Promise<string> {
-    return this.processAIRequest(text, "translation", { targetLanguage });
-  }
+  // We'll add back translation and grammar when they're actually implemented
 
-  async checkGrammar(text: string): Promise<string> {
-    return this.processAIRequest(text, "grammar");
+  // Quiz service is still used by the backend
+  async generateQuiz(prompt: string): Promise<string> {
+    // The backend handles the quiz format, so we don't need to send context
+    return this.processAIRequest(prompt, ApiClient.SERVICE_TYPE.QUIZ);
   }
 }
 

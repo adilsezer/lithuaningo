@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.AI;
+using Lithuaningo.API.DTOs.Quiz;
 
 namespace Lithuaningo.API.Services.Interfaces;
 
@@ -28,4 +29,16 @@ public interface IAIService
     /// <param name="serviceType">The type of AI service to use (e.g., "chat", "translation")</param>
     /// <returns>The AI's response text</returns>
     Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat");
+    
+    /// <summary>
+    /// Generates quiz questions using AI
+    /// </summary>
+    /// <returns>A list of quiz questions</returns>
+    Task<List<CreateQuizQuestionRequest>> GenerateQuizQuestionsAsync();
+    
+    /// <summary>
+    /// Clears conversation history for testing purposes
+    /// </summary>
+    /// <param name="sessionId">Optional specific session ID to clear, or all if null</param>
+    void ClearConversationHistory(string? sessionId = null);
 } 

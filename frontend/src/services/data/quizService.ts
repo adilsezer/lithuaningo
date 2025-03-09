@@ -1,9 +1,5 @@
 import { apiClient } from "../api/apiClient";
-import {
-  QuizQuestion,
-  QuizResult,
-  CreateQuizQuestionRequest,
-} from "@src/types";
+import { QuizQuestion, QuizResult } from "@src/types";
 
 class QuizService {
   // More patient retry logic with up to 10 retries (can handle longer AI generation)
@@ -64,10 +60,28 @@ class QuizService {
     }
   }
 
-  async createDailyQuiz(
-    questions: CreateQuizQuestionRequest[]
+  // Generate new quiz questions using AI
+  async generateNewQuiz(
+    retryCount = 0,
+    maxRetries = 3
   ): Promise<QuizQuestion[]> {
-    return apiClient.createDailyQuiz(questions);
+    try {
+      console.log("Requesting AI to generate new quiz questions");
+      const questions = await apiClient.generateAIQuiz();
+      return questions;
+    } catch (error: any) {
+      console.error("Error generating new quiz:", error);
+
+      // If we haven't reached max retries, try again with exponential backoff
+      if (retryCount < maxRetries) {
+        const waitTime = Math.min(3000 * Math.pow(2, retryCount), 30000);
+        console.log(`Retrying AI quiz generation in ${waitTime / 1000}s...`);
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+        return this.generateNewQuiz(retryCount + 1, maxRetries);
+      }
+
+      throw error;
+    }
   }
 
   async submitQuizResult(

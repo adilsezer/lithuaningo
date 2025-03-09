@@ -3,6 +3,7 @@ import { FlatList } from "react-native";
 import { apiClient } from "@services/api/apiClient";
 import { useIsAuthenticated, useIsPremium } from "@stores/useUserStore";
 import { storeData, retrieveData } from "@utils/storageUtils";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Message interface
 export interface Message {
@@ -15,6 +16,9 @@ export interface Message {
 
 // Storage key for daily chat usage
 const DAILY_CHAT_USAGE_KEY = "chat_daily_usage";
+
+// Session ID storage key
+const SESSION_ID_KEY = "lithuaningo:chat:session_id";
 
 // Maximum messages for free users per day
 export const MAX_FREE_MESSAGES_PER_DAY = 10;
@@ -43,6 +47,7 @@ export const useChat = () => {
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [showExamples, setShowExamples] = useState<boolean>(true);
   const [dailyMessageCount, setDailyMessageCount] = useState<number>(0);
+  const [sessionId, setSessionId] = useState<string | null>(null);
 
   const isAuthenticated = useIsAuthenticated();
   const isPremium = useIsPremium();
@@ -61,6 +66,30 @@ export const useChat = () => {
       }, 200);
     }
   }, [messages]);
+
+  // Initialize session ID on component mount
+  useEffect(() => {
+    const initSessionId = async () => {
+      try {
+        // Try to retrieve existing session ID
+        const storedSessionId = await AsyncStorage.getItem(SESSION_ID_KEY);
+        if (storedSessionId) {
+          setSessionId(storedSessionId);
+        } else {
+          // Create a new session ID if none exists
+          const newSessionId = `session_${Date.now()}`;
+          await AsyncStorage.setItem(SESSION_ID_KEY, newSessionId);
+          setSessionId(newSessionId);
+        }
+      } catch (error) {
+        console.error("Error initializing chat session ID:", error);
+        // Fallback to a temporary session ID
+        setSessionId(`temp_session_${Date.now()}`);
+      }
+    };
+
+    initSessionId();
+  }, []);
 
   const loadDailyCount = async (): Promise<void> => {
     try {
@@ -136,17 +165,13 @@ export const useChat = () => {
         )
       );
 
-      // Create context for the AI request to enforce Lithuanian content
+      // Minimal context - just provide session ID for conversation continuity
+      // The backend will handle the system instructions
       const context = {
-        appName: "Lithuaningo",
-        purpose: "language learning",
-        language: "Lithuanian",
-        // Important instruction to enforce Lithuanian focus
-        instructions:
-          "You are a Lithuanian language learning assistant named Lithuaningo AI. Only answer questions related to Lithuanian language, culture, history, or travel in Lithuania. For any questions not related to Lithuanian topics, politely explain that you can only help with Lithuanian-related topics. Always incorporate at least one Lithuanian word or fact in your responses to help the user learn. Use friendly, conversational language suitable for a language learning app.",
+        sessionId: sessionId || Date.now().toString(),
       };
 
-      // Send the message to the API and get the response
+      // Send the message to the API
       const aiResponseText = await apiClient.sendChatMessage(message, context);
 
       // Update message status to "delivered"
@@ -158,12 +183,12 @@ export const useChat = () => {
 
       // Add the AI's response to the chat
       const aiResponse: Message = {
-        id: Date.now().toString() + "_ai",
+        id: `ai-${Date.now()}`,
         text: aiResponseText,
         sender: "ai",
         timestamp: new Date(),
-        status: "delivered",
       };
+
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
     } catch (error) {
       console.error("Error sending message:", error);
@@ -175,15 +200,15 @@ export const useChat = () => {
         )
       );
 
-      // Add error message
-      const errorResponse: Message = {
-        id: Date.now().toString() + "_error",
+      // Add an error message from the AI
+      const errorMessage: Message = {
+        id: `error-${Date.now()}`,
         text: "Sorry, I couldn't process your message. Please try again later.",
         sender: "ai",
         timestamp: new Date(),
-        status: "delivered",
       };
-      setMessages((prevMessages) => [...prevMessages, errorResponse]);
+
+      setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
       setIsLoading(false);
     }
@@ -205,6 +230,23 @@ export const useChat = () => {
     return !isPremium && dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY;
   };
 
+  // Clear chat session (for logout or reset)
+  const clearChatSession = async (): Promise<void> => {
+    try {
+      // Generate a new session ID
+      const newSessionId = `session_${Date.now()}`;
+      await AsyncStorage.setItem(SESSION_ID_KEY, newSessionId);
+      setSessionId(newSessionId);
+
+      // Clear messages and reset state
+      setMessages(initialMessages);
+      setInputText("");
+      setShowExamples(true);
+    } catch (error) {
+      console.error("Error clearing chat session:", error);
+    }
+  };
+
   return {
     // State
     messages,
@@ -216,6 +258,7 @@ export const useChat = () => {
     isAuthenticated,
     isPremium,
     flatListRef,
+    sessionId,
 
     // Data operations
     formatTimestamp,
@@ -226,5 +269,6 @@ export const useChat = () => {
     setInputText,
     clearInput,
     checkDailyLimit,
+    clearChatSession,
   };
 };

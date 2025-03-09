@@ -1,4 +1,5 @@
 using Lithuaningo.API.DTOs.AI;
+using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -52,6 +53,12 @@ public class AIController : BaseApiController
                 return BadRequest("Prompt cannot be empty");
             }
 
+            // Validate service type
+            if (string.IsNullOrWhiteSpace(request.ServiceType))
+            {
+                request.ServiceType = AIService.CHAT_SERVICE;
+            }
+
             // Process the request
             var response = await _aiService.ProcessRequestAsync(
                 request.Prompt,
@@ -69,14 +76,15 @@ public class AIController : BaseApiController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing AI request: {Message}", ex.Message);
-            return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while processing your request");
+            return StatusCode(StatusCodes.Status500InternalServerError, 
+                "An error occurred processing your request.");
         }
     }
 
     /// <summary>
     /// Sends a message to the AI assistant
     /// </summary>
-    /// <param name="request">The AI request with the message to send</param>
+    /// <param name="request">The chat request</param>
     /// <returns>The AI's response</returns>
     [HttpPost("chat")]
     [Authorize]
@@ -93,12 +101,12 @@ public class AIController : BaseApiController
     public async Task<ActionResult<AIResponse>> SendChatMessage([FromBody] AIRequest request)
     {
         // Override the service type to ensure it's processed as a chat request
-        request.ServiceType = "chat";
+        request.ServiceType = AIService.CHAT_SERVICE;
         return await ProcessRequest(request);
     }
 
     // Place for future AI endpoints:
     // [HttpPost("translation")]
     // [HttpPost("grammar-check")]
-    // [HttpPost("vocabulary-help")]
+    // [HttpPost("quiz")]
 } 

@@ -11,7 +11,7 @@ import CustomDivider from "@components/ui/CustomDivider";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 
-export default function LearnScreen() {
+export default function ChallengeScreen() {
   const handleNavigation = (route: string) => {
     router.push(route);
   };
@@ -36,7 +36,7 @@ export default function LearnScreen() {
   return (
     <ScrollView style={styles.container}>
       <Image
-        source={require("assets/images/learn_screen.png")}
+        source={require("assets/images/challenge_screen.png")}
         style={styles.image}
         resizeMode="contain"
       />
@@ -52,7 +52,7 @@ export default function LearnScreen() {
 
       <CustomButton
         title="Start Daily Challenge"
-        onPress={() => handleNavigation("/learning/quiz")}
+        onPress={() => handleNavigation("/challenge/index")}
       />
       <CustomDivider />
       <Leaderboard entries={entries} />

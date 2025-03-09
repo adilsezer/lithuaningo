@@ -16,6 +16,7 @@ import quizService from "@services/data/quizService";
 import { router } from "expo-router";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
+
 const QuizScreen: React.FC = () => {
   const theme = useTheme();
   const userData = useUserData();
@@ -29,6 +30,7 @@ const QuizScreen: React.FC = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [generationTime, setGenerationTime] = useState(0);
+  const [generatingNewQuiz, setGeneratingNewQuiz] = useState(false);
   const { stats, updateStats, updateDailyStreak, incrementQuizzesCompleted } =
     useUserChallengeStats(userData?.id);
 
@@ -137,6 +139,54 @@ const QuizScreen: React.FC = () => {
     }
   };
 
+  const handleGenerateNewQuiz = async () => {
+    try {
+      setGeneratingNewQuiz(true);
+      setError(null);
+      setLoading(true);
+
+      // Reset the quiz state
+      setCurrentIndex(0);
+      setScore(0);
+      setShowExplanation(false);
+      setSelectedAnswer(null);
+      setIsCompleted(false);
+
+      // Generate new questions
+      const newQuestions = await quizService.generateNewQuiz();
+
+      if (newQuestions.length === 0) {
+        setError("Failed to generate new quiz questions. Please try again.");
+      } else {
+        setQuestions(newQuestions);
+        console.log(`Generated ${newQuestions.length} new quiz questions`);
+      }
+    } catch (error: any) {
+      console.error("Error generating new quiz:", error);
+      setError(error?.message || "Failed to generate new quiz questions");
+    } finally {
+      setGeneratingNewQuiz(false);
+      setLoading(false);
+    }
+  };
+
+  // Add this function outside all conditional blocks to provide feedback on quiz completion
+  const getCompletionMessage = () => {
+    const percentage = (score / questions.length) * 100;
+
+    if (percentage >= 90) {
+      return "Puiku! (Excellent!) Your Lithuanian skills are impressive!";
+    } else if (percentage >= 75) {
+      return "Labai gerai! (Very good!) You're making great progress!";
+    } else if (percentage >= 60) {
+      return "Gerai! (Good!) Keep practicing to improve your skills.";
+    } else if (percentage >= 40) {
+      return "Neblogai. (Not bad.) More practice will help you improve.";
+    } else {
+      return "Keep learning! Practice makes perfect in Lithuanian.";
+    }
+  };
+
   if (loading) {
     // Format the time as mm:ss
     const minutes = Math.floor(generationTime / 60);
@@ -239,24 +289,45 @@ const QuizScreen: React.FC = () => {
 
   if (isCompleted) {
     return (
-      <View style={styles.container}>
-        <HeaderWithBackButton title="Quiz" />
-        <View style={styles.content}>
-          <CustomText variant="titleMedium" style={styles.title}>
-            Quiz Completed!
-          </CustomText>
-          <CustomText variant="bodyLarge" style={styles.score}>
-            Your Score: {score}/{questions.length}
-          </CustomText>
-          <Button
-            mode="contained"
-            onPress={() => router.push("/dashboard/challenge")}
-            style={styles.button}
-          >
-            Return to Challenge
-          </Button>
-        </View>
-      </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        style={styles.container}
+      >
+        <HeaderWithBackButton title="Daily Quiz" />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          <View style={styles.completionContainer}>
+            <CustomText variant="headlineMedium" style={styles.completionTitle}>
+              Quiz Completed!
+            </CustomText>
+            <CustomText variant="titleLarge" style={styles.scoreText}>
+              Your Score: {score}/{questions.length}
+            </CustomText>
+            <CustomText variant="bodyLarge" style={styles.feedbackText}>
+              {getCompletionMessage()}
+            </CustomText>
+
+            <View style={styles.buttonGroup}>
+              <Button
+                mode="contained"
+                style={styles.button}
+                onPress={() => router.back()}
+              >
+                Return to Home
+              </Button>
+
+              <Button
+                mode="outlined"
+                style={styles.button}
+                onPress={handleGenerateNewQuiz}
+                loading={generatingNewQuiz}
+                disabled={generatingNewQuiz}
+              >
+                Generate New Quiz
+              </Button>
+            </View>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     );
   }
 
@@ -352,7 +423,8 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   button: {
-    marginTop: 16,
+    marginVertical: 8,
+    borderRadius: 8,
   },
   loadingContainer: {
     flex: 1,
@@ -378,6 +450,32 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 4,
     opacity: 0.7,
+  },
+  scrollContent: {
+    flexGrow: 1,
+    padding: 16,
+  },
+  completionContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  completionTitle: {
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  scoreText: {
+    marginBottom: 16,
+    textAlign: "center",
+  },
+  feedbackText: {
+    marginBottom: 24,
+    textAlign: "center",
+  },
+  buttonGroup: {
+    width: "100%",
+    marginTop: 16,
   },
 });
 

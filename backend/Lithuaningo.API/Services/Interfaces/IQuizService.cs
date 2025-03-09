@@ -10,14 +10,15 @@ namespace Lithuaningo.API.Services.Interfaces
     public interface IQuizService
     {
         /// <summary>
-        /// Retrieves the quiz questions for the current day. If none exist, they are automatically created.
+        /// Retrieves the quiz questions for the current day. If none exist, they are automatically created using AI.
         /// </summary>
         /// <returns>A list of quiz questions.</returns>
         Task<IEnumerable<QuizQuestionResponse>> GetDailyQuizQuestionsAsync();
-
+        
         /// <summary>
-        /// Generates new quiz questions for the day using the ChatGPT 4o mini API and stores them in Supabase.
+        /// Generates new quiz questions using AI without checking if questions already exist.
         /// </summary>
-        Task<IEnumerable<QuizQuestionResponse>> CreateDailyQuizQuestionsAsync(IEnumerable<CreateQuizQuestionRequest> questions);
+        /// <returns>The generated quiz questions</returns>
+        Task<IEnumerable<QuizQuestionResponse>> GenerateAIQuizQuestionsAsync();
     }
 }
