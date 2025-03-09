@@ -91,8 +91,8 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             }
 
             var statsResponse = _mapper.Map<UserChallengeStatsResponse>(stats);
-            statsResponse.HasCompletedTodayChallenge = stats.LastChallengeDate.Date == DateTime.UtcNow.Date;
-
+            // HasCompletedTodayChallenge is now set in the mapper
+            
             await _cache.SetAsync(cacheKey, statsResponse,
                 TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
             _logger.LogInformation("Retrieved and cached challenge stats for user {UserId}", userId);
@@ -126,10 +126,28 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                 throw new InvalidOperationException($"No stats found for user {userId}");
             }
 
-            stats.CurrentStreak = request.CurrentStreak;
-            stats.LongestStreak = request.LongestStreak;
-            stats.TodayCorrectAnswerCount = request.TodayCorrectAnswers;
-            stats.TodayIncorrectAnswerCount = request.TodayIncorrectAnswers;
+            bool isNewDay = stats.LastChallengeDate.Date != DateTime.UtcNow.Date;
+            
+            // Update streak logic
+            if (isNewDay)
+            {
+                // If it's a new day, increment current streak
+                // and reset today's counters since we're treating this as the first activity of the day
+                stats.CurrentStreak = request.CurrentStreak;
+                stats.LongestStreak = request.LongestStreak;
+                stats.LastChallengeDate = DateTime.UtcNow;
+                stats.TodayCorrectAnswerCount = request.TodayCorrectAnswers;
+                stats.TodayIncorrectAnswerCount = request.TodayIncorrectAnswers;
+            }
+            else
+            {
+                // Same day, just update the values
+                stats.CurrentStreak = request.CurrentStreak;
+                stats.LongestStreak = request.LongestStreak;
+                stats.TodayCorrectAnswerCount = request.TodayCorrectAnswers;
+                stats.TodayIncorrectAnswerCount = request.TodayIncorrectAnswers;
+            }
+            
             stats.TotalChallengesCompleted = request.TotalChallengesCompleted;
             stats.TotalCorrectAnswers = request.TotalCorrectAnswers;
             stats.TotalIncorrectAnswers = request.TotalIncorrectAnswers;
@@ -167,7 +185,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                 _logger.LogInformation("Challenge stats already exist for user {UserId}, returning existing stats", request.UserId);
                 var existingStat = existingStats.Models.First();
                 var existingStatsResponse = _mapper.Map<UserChallengeStatsResponse>(existingStat);
-                existingStatsResponse.HasCompletedTodayChallenge = existingStat.LastChallengeDate.Date == DateTime.UtcNow.Date;
+                // HasCompletedTodayChallenge is now set in the mapper
                 
                 // Refresh the cache with existing stats
                 var existingCacheKey = $"{CacheKeyPrefix}{request.UserId}";
@@ -201,7 +219,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             _logger.LogInformation("Created challenge stats for user {UserId}", request.UserId);
 
             var statsResponse = _mapper.Map<UserChallengeStatsResponse>(stats);
-            statsResponse.HasCompletedTodayChallenge = stats.LastChallengeDate.Date == DateTime.UtcNow.Date;
+            // HasCompletedTodayChallenge is now set in the mapper
 
             // Cache the newly created stats
             var cacheKey = $"{CacheKeyPrefix}{request.UserId}";

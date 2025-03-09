@@ -83,6 +83,12 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
+                _logger.LogInformation("Retrieved stats for user {UserId}: LastChallengeDate={LastChallengeDate}, TodayCorrectAnswers={TodayCorrectAnswers}, TodayIncorrectAnswers={TodayIncorrectAnswers}", 
+                    userId, 
+                    stats.LastChallengeDate, 
+                    stats.TodayCorrectAnswers, 
+                    stats.TodayIncorrectAnswers);
+                
                 return Ok(stats);
             }
             catch (Exception ex)

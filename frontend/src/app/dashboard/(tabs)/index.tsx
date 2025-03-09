@@ -102,6 +102,7 @@ const DashboardScreen: React.FC = () => {
   // Fetch stats when the component mounts or when the user ID changes
   useEffect(() => {
     if (userData?.id) {
+      console.log("Fetching user challenge stats for userId:", userData.id);
       fetchStats();
     }
   }, [userData?.id, fetchStats]);
@@ -109,6 +110,20 @@ const DashboardScreen: React.FC = () => {
   const handleVoted = useCallback(async () => {
     await fetchDecks();
   }, [fetchDecks]);
+
+  // Log stats data when it changes to help with debugging
+  useEffect(() => {
+    if (stats) {
+      console.log("Stats data received:", stats);
+      console.log("Current date (local):", new Date().toLocaleString());
+      console.log("Current date (UTC):", new Date().toISOString());
+      console.log("Last challenge date:", stats.lastChallengeDate);
+      console.log(
+        "Has completed today challenge:",
+        stats.hasCompletedTodayChallenge
+      );
+    }
+  }, [stats]);
 
   // Don't render content if not authenticated
   if (!isAuthenticated) {

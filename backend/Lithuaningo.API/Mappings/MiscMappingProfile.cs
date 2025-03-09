@@ -34,7 +34,13 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
             // User Challenge Stats mappings
-            CreateMap<UserChallengeStats, UserChallengeStatsResponse>();
+            CreateMap<UserChallengeStats, UserChallengeStatsResponse>()
+                .ForMember(dest => dest.HasCompletedTodayChallenge, opt => opt.MapFrom(src => 
+                    src.LastChallengeDate.Date == DateTime.UtcNow.Date))
+                .ForMember(dest => dest.TodayCorrectAnswers, opt => opt.MapFrom(src => 
+                    src.TodayCorrectAnswerCount))
+                .ForMember(dest => dest.TodayIncorrectAnswers, opt => opt.MapFrom(src => 
+                    src.TodayIncorrectAnswerCount));
 
             // Deck Comment mappings
             CreateMap<DeckComment, DeckCommentResponse>()
