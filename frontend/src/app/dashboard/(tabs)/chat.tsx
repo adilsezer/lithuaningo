@@ -48,6 +48,7 @@ export default function ChatScreen(): JSX.Element {
     setInputText,
     clearInput,
     checkDailyLimit,
+    clearChatSession,
   } = useChat();
 
   const userData = useUserData();
@@ -98,6 +99,17 @@ export default function ChatScreen(): JSX.Element {
 
   const handleExamplePress = (example: string) => {
     setInputText(example);
+  };
+
+  const handleClearChat = () => {
+    alertDialog.showConfirm({
+      title: "Clear Chat",
+      message: "Are you sure you want to clear all chat messages?",
+      confirmText: "Clear",
+      cancelText: "Cancel",
+      onConfirm: () => clearChatSession(),
+      onCancel: () => {},
+    });
   };
 
   // UI Rendering functions
@@ -336,11 +348,13 @@ export default function ChatScreen(): JSX.Element {
         <CustomText variant="titleLarge" bold>
           Lithuaningo AI Assistant
         </CustomText>
-        <IconButton
-          icon="help-circle-outline"
-          size={24}
-          onPress={showHelpDialog}
-        />
+        <View style={{ flexDirection: "row" }}>
+          <IconButton
+            icon="help-circle-outline"
+            size={24}
+            onPress={showHelpDialog}
+          />
+        </View>
       </View>
       <Divider />
 
@@ -405,6 +419,20 @@ export default function ChatScreen(): JSX.Element {
           borderColor: theme.colors.primary,
         }}
         disabled={isLoading || !isAuthenticated}
+        left={
+          messages.length > 0 && isAuthenticated ? (
+            <TextInput.Icon
+              icon="trash-can-outline"
+              color={theme.colors.secondary}
+              onPress={handleClearChat}
+              style={{
+                marginTop: "auto",
+                marginBottom: "auto",
+                alignSelf: "center",
+              }}
+            />
+          ) : null
+        }
         right={
           <TextInput.Icon
             icon="send"
