@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { ChallengeQuestion } from "@src/types";
 import { useUserData } from "@stores/useUserStore";
 import challengeService from "@src/services/data/challengeService";
@@ -42,7 +42,7 @@ export const useChallenge = (): UseChallengeReturn => {
   }, []);
 
   // Main function to fetch challenge questions
-  const fetchChallenge = async (isNew = false) => {
+  const fetchChallenge = useCallback(async (isNew = false) => {
     try {
       setLoading(true);
       setError(null);
@@ -60,54 +60,65 @@ export const useChallenge = (): UseChallengeReturn => {
         ? await challengeService.generateNewChallenge()
         : await challengeService.getDailyChannel();
 
-      if (challengeQuestions.length === 0) {
+      if (!challengeQuestions || challengeQuestions.length === 0) {
         setError("No questions available. Please try again later.");
         return;
       }
 
       setQuestions(challengeQuestions);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to load challenge:", err);
-      setError(
-        "Failed to load challenge. Please check your connection and try again."
-      );
+      const errorMessage =
+        err?.message ||
+        "Failed to load challenge. Please check your connection and try again.";
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Handle user's answer selection
-  const handleAnswer = async (answer: string) => {
-    const currentQuestion = questions[currentIndex];
-    const isCorrect = answer === currentQuestion.correctAnswer;
+  const handleAnswer = useCallback(
+    async (answer: string) => {
+      if (!questions[currentIndex]) return;
 
-    setIsCorrectAnswer(isCorrect);
+      const currentQuestion = questions[currentIndex];
+      const isCorrect = answer === currentQuestion.correctAnswer;
 
-    if (isCorrect) {
-      setScore((prev) => prev + 1);
-    }
+      setIsCorrectAnswer(isCorrect);
 
-    // Update stats if user is logged in
-    if (stats && userData?.id) {
-      await updateStats({
-        todayCorrectAnswers: isCorrect
-          ? stats.todayCorrectAnswers + 1
-          : stats.todayCorrectAnswers,
-        todayIncorrectAnswers: !isCorrect
-          ? stats.todayIncorrectAnswers + 1
-          : stats.todayIncorrectAnswers,
-        totalCorrectAnswers: isCorrect
-          ? stats.totalCorrectAnswers + 1
-          : stats.totalCorrectAnswers,
-        totalIncorrectAnswers: !isCorrect
-          ? stats.totalIncorrectAnswers + 1
-          : stats.totalIncorrectAnswers,
-      });
-    }
-  };
+      if (isCorrect) {
+        setScore((prev) => prev + 1);
+      }
+
+      // Update stats if user is logged in
+      if (stats && userData?.id) {
+        try {
+          await updateStats({
+            todayCorrectAnswers: isCorrect
+              ? stats.todayCorrectAnswers + 1
+              : stats.todayCorrectAnswers,
+            todayIncorrectAnswers: !isCorrect
+              ? stats.todayIncorrectAnswers + 1
+              : stats.todayIncorrectAnswers,
+            totalCorrectAnswers: isCorrect
+              ? stats.totalCorrectAnswers + 1
+              : stats.totalCorrectAnswers,
+            totalIncorrectAnswers: !isCorrect
+              ? stats.totalIncorrectAnswers + 1
+              : stats.totalIncorrectAnswers,
+          });
+        } catch (error) {
+          console.error("Error updating stats:", error);
+          // We don't set an error state here to avoid disrupting the user experience
+        }
+      }
+    },
+    [currentIndex, questions, stats, userData?.id, updateStats]
+  );
 
   // Move to next question or complete the challenge
-  const handleNextQuestion = async () => {
+  const handleNextQuestion = useCallback(async () => {
     setIsCorrectAnswer(null);
 
     // If more questions, move to next
@@ -117,23 +128,35 @@ export const useChallenge = (): UseChallengeReturn => {
     // Otherwise complete the challenge
     else {
       if (userData?.id) {
-        await Promise.all([
-          challengeService.submitChallengeResult({
-            userId: userData.id,
-            deckId: "daily",
-            score,
-            totalQuestions: questions.length,
-          }),
-          updateDailyStreak(),
-          incrementChallengesCompleted(),
-        ]);
+        try {
+          await Promise.all([
+            challengeService.submitChallengeResult({
+              userId: userData.id,
+              deckId: "daily",
+              score,
+              totalQuestions: questions.length,
+            }),
+            updateDailyStreak(),
+            incrementChallengesCompleted(),
+          ]);
+        } catch (error) {
+          console.error("Error completing challenge:", error);
+          // We continue to mark as completed even if saving results fails
+        }
       }
       setIsCompleted(true);
     }
-  };
+  }, [
+    currentIndex,
+    questions.length,
+    userData?.id,
+    score,
+    updateDailyStreak,
+    incrementChallengesCompleted,
+  ]);
 
   // Get feedback message based on score
-  const getCompletionMessage = () => {
+  const getCompletionMessage = useCallback(() => {
     const percentage =
       questions.length > 0 ? (score / questions.length) * 100 : 0;
 
@@ -146,7 +169,7 @@ export const useChallenge = (): UseChallengeReturn => {
     if (percentage >= 40)
       return "Neblogai. (Not bad.) More practice will help you improve.";
     return "Keep learning! Practice makes perfect in Lithuanian.";
-  };
+  }, [score, questions.length]);
 
   return {
     questions,
