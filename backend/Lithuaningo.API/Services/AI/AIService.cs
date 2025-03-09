@@ -2,7 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using Lithuaningo.API.DTOs.Quiz;
+using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
@@ -19,7 +19,7 @@ public class AIService : IAIService
     
     // Supported service types - only include what we actually use
     public const string CHAT_SERVICE = "chat";
-    public const string QUIZ_SERVICE = "quiz";
+    public const string CHALLENGE_SERVICE = "challenge";
     
     // Chat system instructions
     private const string CHAT_SYSTEM_INSTRUCTIONS = 
@@ -29,13 +29,13 @@ public class AIService : IAIService
         "Always incorporate at least one Lithuanian word or fact in your responses to help the user learn. " +
         "Use friendly, conversational language suitable for a language learning app.";
     
-    // Quiz system instructions with complete format requirements
-    private const string QUIZ_SYSTEM_INSTRUCTIONS = @"You are a teaching assistant specialized in creating Lithuanian language quizzes.
+    // Challenge system instructions with complete format requirements
+    private const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are a teaching assistant specialized in creating Lithuanian language challenges.
 
-Your task is to generate 5 Lithuanian language quiz questions for our learning app.
+Your task is to generate 5 Lithuanian language challenges for our learning app.
 
 FORMAT REQUIREMENTS: 
-- Return a valid JSON array of quiz questions
+- Return a valid JSON array of challenges
 - Do NOT include any explanations, comments, or markdown formatting like triple backticks
 - Return ONLY the JSON array
 
@@ -144,7 +144,7 @@ CONTENT GUIDELINES:
     /// </summary>
     /// <param name="prompt">The text prompt to send to the AI</param>
     /// <param name="context">Optional context parameters for the request</param>
-    /// <param name="serviceType">The type of AI service to use (chat or quiz)</param>
+    /// <param name="serviceType">The type of AI service to use (chat or challenge)</param>
     /// <returns>The AI's response text</returns>
     public async Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat")
     {
@@ -153,11 +153,11 @@ CONTENT GUIDELINES:
             // Log the type of request being processed
             _logger.LogInformation("Processing {ServiceType} request", serviceType);
             
-            // Use our simplified service handler - only chat and quiz are supported
+            // Use our simplified service handler - only chat and challenge are supported
             return serviceType.ToLowerInvariant() switch
             {
                 CHAT_SERVICE => await HandleChatRequestAsync(prompt, context),
-                QUIZ_SERVICE => await HandleQuizRequestAsync(),
+                CHALLENGE_SERVICE => await HandleChallengeRequestAsync(),
                 _ => await HandleChatRequestAsync(prompt, context) // Default to chat
             };
         }
@@ -169,20 +169,20 @@ CONTENT GUIDELINES:
     }
     
     /// <summary>
-    /// Generates quiz questions using AI
+    /// Generates challenges using AI
     /// </summary>
-    /// <returns>A list of quiz questions</returns>
-    public async Task<List<CreateQuizQuestionRequest>> GenerateQuizQuestionsAsync()
+    /// <returns>A list of challenges</returns>
+    public async Task<List<CreateChallengeQuestionRequest>> GenerateChallengeQuestionsAsync()
     {
         // Retry up to 3 times if necessary
         for (int attempt = 1; attempt <= 3; attempt++)
         {
             try
             {
-                _logger.LogInformation("Generating quiz questions with AI, attempt {Attempt}", attempt);
+                _logger.LogInformation("Generating challenges with AI, attempt {Attempt}", attempt);
                 
                 // Get raw JSON response from the AI
-                var jsonResponse = await HandleQuizRequestAsync();
+                var jsonResponse = await HandleChallengeRequestAsync();
                 
                 if (string.IsNullOrEmpty(jsonResponse))
                 {
@@ -200,11 +200,11 @@ CONTENT GUIDELINES:
                 }
                 
                 // Try to deserialize the JSON
-                List<CreateQuizQuestionRequest>? generatedQuestions = null;
+                List<CreateChallengeQuestionRequest>? generatedQuestions = null;
                 try
                 {
-                    // Parse the JSON response into quiz question models
-                    generatedQuestions = JsonSerializer.Deserialize<List<CreateQuizQuestionRequest>>(
+                    // Parse the JSON response into challenge question models
+                    generatedQuestions = JsonSerializer.Deserialize<List<CreateChallengeQuestionRequest>>(
                         jsonContent ?? string.Empty,
                         new JsonSerializerOptions { 
                             PropertyNameCaseInsensitive = true,
@@ -221,22 +221,22 @@ CONTENT GUIDELINES:
                 }
                 
                 // Validate the questions
-                if (generatedQuestions != null && ValidateGeneratedQuestions(generatedQuestions))
+                if (generatedQuestions != null && ValidateGeneratedChallenges(generatedQuestions))
                 {
-                    _logger.LogInformation("Successfully generated {Count} valid quiz questions", generatedQuestions.Count);
+                    _logger.LogInformation("Successfully generated {Count} valid challenges", generatedQuestions.Count);
                     return generatedQuestions;
                 }
                 
-                _logger.LogWarning("Generated questions failed validation on attempt {Attempt}", attempt);
+                _logger.LogWarning("Generated challenges failed validation on attempt {Attempt}", attempt);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating quiz questions on attempt {Attempt}", attempt);
+                _logger.LogError(ex, "Error generating challenges on attempt {Attempt}", attempt);
             }
         }
         
         // If we reach here, all attempts failed
-        throw new InvalidOperationException("Failed to generate valid quiz questions after multiple attempts");
+        throw new InvalidOperationException("Failed to generate valid challenges after multiple attempts");
     }
     
     /// <summary>
@@ -320,15 +320,15 @@ CONTENT GUIDELINES:
     }
     
     /// <summary>
-    /// Handles a quiz generation request
+    /// Handles a challenge generation request
     /// </summary>
-    private async Task<string> HandleQuizRequestAsync()
+    private async Task<string> HandleChallengeRequestAsync()
     {
-        // For quiz generation, we use detailed system instructions and a simple prompt
+        // For challenge generation, we use detailed system instructions and a simple prompt
         var messages = new List<ChatMessage>
         {
-            new SystemChatMessage(QUIZ_SYSTEM_INSTRUCTIONS),
-            new UserChatMessage("Generate 5 Lithuanian language quiz questions following the format specified in your instructions.")
+            new SystemChatMessage(CHALLENGE_SYSTEM_INSTRUCTIONS),
+            new UserChatMessage("Generate 5 Lithuanian language challenges following the format specified in your instructions.")
         };
 
         // Send the request to OpenAI
@@ -345,13 +345,13 @@ CONTENT GUIDELINES:
     }
     
     /// <summary>
-    /// Validates the generated quiz questions
+    /// Validates the generated challenges
     /// </summary>
-    private bool ValidateGeneratedQuestions(List<CreateQuizQuestionRequest> questions)
+    private bool ValidateGeneratedChallenges(List<CreateChallengeQuestionRequest> questions)
     {
         if (questions == null || !questions.Any())
         {
-            _logger.LogWarning("No questions were generated");
+            _logger.LogWarning("No challenges were generated");
             return false;
         }
 
@@ -385,7 +385,7 @@ CONTENT GUIDELINES:
             }
 
             // Validate question type
-            if (!Enum.IsDefined(typeof(QuizQuestionType), question.Type))
+            if (!Enum.IsDefined(typeof(ChallengeQuestionType), question.Type))
             {
                 _logger.LogWarning("Invalid question type value: {Type}", question.Type);
                 return false;

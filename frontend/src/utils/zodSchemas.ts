@@ -153,7 +153,7 @@ export const reportFormSchema = z.object({
   details: z.string().min(1, "Please provide details about the issue"),
 });
 
-export const quizFormSchema = z.object({
+export const challengeFormSchema = z.object({
   answer: z.string().min(1, "Please enter your answer"),
 });
 

@@ -3,13 +3,13 @@ import { View, StyleSheet, Image, Dimensions, Platform } from "react-native";
 import RenderClickableWords from "@components/learning/RenderClickableWords";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
-import { quizFormSchema } from "@utils/zodSchemas";
+import { challengeFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
 const { width } = Dimensions.get("window");
 const isTablet = (Platform.OS === "ios" && Platform.isPad) || width >= 768;
 
-interface FillInTheBlankQuizProps {
+interface FillInTheBlankProps {
   sentenceText: string;
   questionText: string;
   questionWord: string;
@@ -19,7 +19,7 @@ interface FillInTheBlankQuizProps {
   onAnswer: (isCorrect: boolean) => void;
 }
 
-const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
+const FillInTheBlank: React.FC<FillInTheBlankProps> = ({
   sentenceText,
   questionText,
   correctAnswerText,
@@ -80,7 +80,7 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
     return sentenceText.replace("[...]", adjustedAnswer);
   };
 
-  const quizFields: FormField[] = [
+  const fillInTheBlankFields: FormField[] = [
     {
       name: "answer",
       label: "Answer",
@@ -151,11 +151,11 @@ const FillInTheBlankQuiz: React.FC<FillInTheBlankQuizProps> = ({
 
       {!isSubmitPressed && (
         <Form
-          fields={quizFields}
+          fields={fillInTheBlankFields}
           onSubmit={handleFormSubmit}
           submitButtonText="Submit"
           style={styles.form}
-          zodSchema={quizFormSchema}
+          zodSchema={challengeFormSchema}
         />
       )}
     </View>
@@ -195,4 +195,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FillInTheBlankQuiz;
+export default FillInTheBlank;

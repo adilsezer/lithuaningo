@@ -4,7 +4,7 @@ export * from "./Deck";
 export * from "./LeaderboardModels";
 export * from "./UserChallengeStats";
 export * from "./Flashcard";
-export * from "./QuizQuestion";
+export * from "./ChallengeQuestion";
 export * from "./QuestionType";
 export * from "./DeckVote";
 export * from "./DeckReport";

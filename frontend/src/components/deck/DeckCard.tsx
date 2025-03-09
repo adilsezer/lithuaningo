@@ -17,7 +17,7 @@ export interface DeckActions {
   onVote: (isUpvote: boolean) => void;
   onReport: () => void;
   onComment: (deckId: string) => void;
-  onQuiz: (deckId: string) => void;
+  onChallenge: (deckId: string) => void;
   onPractice: (deckId: string) => void;
   onEdit: (deckId: string) => void;
 }
@@ -179,13 +179,13 @@ export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
               </Button>
               <Button
                 mode="contained"
-                onPress={() => actions.onQuiz(deck.id)}
+                onPress={() => actions.onChallenge(deck.id)}
                 style={{ flex: 1 }}
                 contentStyle={{ height: 44, borderRadius: 22 }}
                 icon="brain"
                 buttonColor={theme.colors.secondary}
               >
-                Quiz
+                Challenge
               </Button>
             </View>
           </View>

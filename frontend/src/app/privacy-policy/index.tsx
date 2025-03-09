@@ -82,15 +82,15 @@ const PrivacyPolicy = () => {
         {...paragraphProps}
         style={[paragraphProps.style, styles.nestedList]}
       >
-        ○ Quiz responses and performance metrics
+        ○ Challenge responses and performance metrics
       </CustomText>
       <CustomText {...paragraphProps}>
         • Customer Support Data: Data generated during customer support
         requests.
       </CustomText>
       <CustomText {...paragraphProps}>
-        • User Content: User-generated content such as quiz answers and learning
-        interactions.
+        • User Content: User-generated content such as challenge answers and
+        learning interactions.
       </CustomText>
       <CustomText {...paragraphProps}>
         • Performance Data: Technical information about app performance,

@@ -40,9 +40,9 @@ namespace Lithuaningo.API.Services.Interfaces
         Task AddLearnedWordAsync(string userId, string wordId);
 
         /// <summary>
-        /// Increments the total number of quizzes completed by the user.
+        /// Increments the total number of challenges completed by the user.
         /// </summary>
         /// <param name="userId">The ID of the user.</param>
-        Task IncrementTotalQuizzesCompletedAsync(string userId);
+        Task IncrementTotalChallengesCompletedAsync(string userId);
     }
 } 

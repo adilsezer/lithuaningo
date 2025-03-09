@@ -41,7 +41,7 @@ const WelcomeText = () => (
     </CustomText>
     <CustomText variant="bodyLarge">
       Learn Lithuanian with daily sentences, flashcards, and reinforcing
-      quizzes.
+      challenges.
     </CustomText>
     <CustomText variant="bodyLarge">
       Join now and compete on our leaderboard!

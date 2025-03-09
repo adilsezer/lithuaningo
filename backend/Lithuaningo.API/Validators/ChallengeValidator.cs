@@ -1,11 +1,11 @@
 using FluentValidation;
-using Lithuaningo.API.DTOs.Quiz;
+using Lithuaningo.API.DTOs.Challenge;
 
 namespace Lithuaningo.API.Validators;
 
-public class CreateQuizQuestionValidator : AbstractValidator<CreateQuizQuestionRequest>
+public class CreateChallengeQuestionValidator : AbstractValidator<CreateChallengeQuestionRequest>
 {
-    public CreateQuizQuestionValidator()
+    public CreateChallengeQuestionValidator()
     {
         RuleFor(x => x.Question)
             .NotEmpty().WithMessage("Question is required")

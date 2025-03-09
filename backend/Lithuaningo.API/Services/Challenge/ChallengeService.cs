@@ -10,8 +10,8 @@ using System.Text.RegularExpressions;
 using System.Text.Unicode;
 using System.Threading.Tasks;
 using AutoMapper;
-using Lithuaningo.API.DTOs.Quiz;
-using Lithuaningo.API.Models.Quiz;
+using Lithuaningo.API.DTOs.Challenge;
+using Lithuaningo.API.Models.Challenge;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
@@ -24,25 +24,25 @@ using Lithuaningo.API.Services.AI;
 namespace Lithuaningo.API.Services
 {
     /// <summary>
-    /// A service for generating and retrieving daily quiz questions.
+    /// A service for generating and retrieving daily challenge questions.
     /// If no questions exist for today, they are automatically created.
     /// </summary>
-    public class QuizService : IQuizService
+    public class ChallengeService : IChallengeService
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
         private readonly CacheSettings _cacheSettings;
-        private const string CacheKeyPrefix = "quiz:";
-        private readonly ILogger<QuizService> _logger;
+        private const string CacheKeyPrefix = "challenge:";
+        private readonly ILogger<ChallengeService> _logger;
         private readonly IMapper _mapper;
         private readonly CacheInvalidator _cacheInvalidator;
         private readonly IAIService _aiService;
 
-        public QuizService(
+        public ChallengeService(
             ISupabaseService supabaseService,
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
-            ILogger<QuizService> logger,
+            ILogger<ChallengeService> logger,
             IMapper mapper,
             CacheInvalidator cacheInvalidator,
             IAIService aiService)
@@ -57,17 +57,17 @@ namespace Lithuaningo.API.Services
         }
 
         /// <summary>
-        /// Retrieves quiz questions for the current day from Supabase.
+        /// Retrieves challenge questions for the current day from Supabase.
         /// </summary>
-        public async Task<IEnumerable<QuizQuestionResponse>> GetDailyQuizQuestionsAsync()
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GetDailyChallengeQuestionsAsync()
         {
             var today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
             var cacheKey = $"{CacheKeyPrefix}daily:{today}";
-            var cached = await _cache.GetAsync<IEnumerable<QuizQuestionResponse>>(cacheKey);
+            var cached = await _cache.GetAsync<IEnumerable<ChallengeQuestionResponse>>(cacheKey);
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved daily quiz questions from cache for {Date}", today);
+                _logger.LogInformation("Retrieved daily challenge questions from cache for {Date}", today);
                 return cached;
             }
 
@@ -78,7 +78,7 @@ namespace Lithuaningo.API.Services
                 var endOfDay = todayDate.AddDays(1).AddTicks(-1);
 
                 var response = await _supabaseClient
-                    .From<QuizQuestion>()
+                    .From<ChallengeQuestion>()
                     .Where(q => q.CreatedAt >= startOfDay && q.CreatedAt <= endOfDay)
                     .Get();
 
@@ -86,39 +86,39 @@ namespace Lithuaningo.API.Services
                 
                 if (questions == null || !questions.Any())
                 {
-                    _logger.LogInformation("No quiz questions found for {Date}, generating new ones using AI", today);
-                    return await GenerateAIQuizQuestionsAsync();
+                    _logger.LogInformation("No challenge questions found for {Date}, generating new ones using AI", today);
+                    return await GenerateAIChallengeQuestionsAsync();
                 }
                 
-                var questionResponses = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
+                var questionResponses = _mapper.Map<IEnumerable<ChallengeQuestionResponse>>(questions);
 
                 await _cache.SetAsync(cacheKey, questionResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                _logger.LogInformation("Retrieved {Count} quiz questions for {Date}", questions.Count, today);
+                _logger.LogInformation("Retrieved {Count} challenge questions for {Date}", questions.Count, today);
 
                 return questionResponses;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving daily quiz questions for {Date}", today);
+                _logger.LogError(ex, "Error retrieving daily challenge questions for {Date}", today);
                 throw;
             }
         }
 
         /// <summary>
-        /// Generates new quiz questions using AI without checking if questions already exist.
+        /// Generates new challenge questions using AI without checking if questions already exist.
         /// </summary>
-        public async Task<IEnumerable<QuizQuestionResponse>> GenerateAIQuizQuestionsAsync()
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync()
         {
             try
             {
-                _logger.LogInformation("Generating quiz questions using AI service");
+                _logger.LogInformation("Generating challenge questions using AI service");
                 
                 // Use the AIService to generate questions
-                var generatedQuestions = await _aiService.GenerateQuizQuestionsAsync();
+                var generatedQuestions = await _aiService.GenerateChallengeQuestionsAsync();
                 
                 // Convert the generated questions to database entities
-                var questions = generatedQuestions.Select(q => new QuizQuestion
+                var questions = generatedQuestions.Select(q => new ChallengeQuestion
                 {
                     Id = Guid.NewGuid(),
                     Question = q.Question,
@@ -131,11 +131,11 @@ namespace Lithuaningo.API.Services
 
                 // Insert the questions into the database
                 await _supabaseClient
-                    .From<QuizQuestion>()
+                    .From<ChallengeQuestion>()
                     .Insert(questions);
 
                 // Map the questions to DTOs
-                var responses = _mapper.Map<IEnumerable<QuizQuestionResponse>>(questions);
+                var responses = _mapper.Map<IEnumerable<ChallengeQuestionResponse>>(questions);
 
                 // Set today's date for the generated questions
                 var today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
@@ -151,7 +151,7 @@ namespace Lithuaningo.API.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating quiz questions using AI");
+                _logger.LogError(ex, "Error generating challenge questions using AI");
                 throw;
             }
         }

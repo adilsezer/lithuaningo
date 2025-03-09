@@ -45,7 +45,7 @@ export default function ChallengeScreen() {
       </CustomText>
       <CustomText>
         Ready for today's Lithuaningo challenge? Test your skills with a daily
-        quiz or warm up with flashcards.
+        challenge or warm up with flashcards.
       </CustomText>
 
       {stats && <UserChallengeStatsCard stats={stats} />}

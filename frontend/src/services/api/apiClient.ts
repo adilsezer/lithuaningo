@@ -2,7 +2,7 @@ import { Platform } from "react-native";
 import axios, { AxiosInstance } from "axios";
 import { API_KEYS } from "@config/constants";
 import {
-  QuizQuestion,
+  ChallengeQuestion,
   UserProfile,
   Announcement,
   AppInfo,
@@ -11,8 +11,8 @@ import {
   DeckComment,
   UserChallengeStats,
   DeckReport,
-  QuizResult,
-  CreateQuizQuestionRequest,
+  ChallengeResult,
+  CreateChallengeQuestionRequest,
   UpdateUserProfileRequest,
   UpdateAppInfoRequest,
   CreateAnnouncementRequest,
@@ -54,7 +54,7 @@ class ApiClient {
   // AI service types - only include what we actually use
   static readonly SERVICE_TYPE = {
     CHAT: "chat",
-    QUIZ: "quiz",
+    CHALLENGE: "challenge",
   };
 
   private constructor() {
@@ -165,31 +165,33 @@ class ApiClient {
     }
   }
 
-  // Quiz Controller
-  async getDailyQuiz(): Promise<QuizQuestion[]> {
-    return this.request<QuizQuestion[]>(`/api/v1/Quiz/daily`, {
+  // Challenge Controller
+  async getDailyChallenge(): Promise<ChallengeQuestion[]> {
+    return this.request<ChallengeQuestion[]>(`/api/v1/Challenge/daily`, {
       timeout: 120000,
     });
   }
 
-  async generateAIQuiz(): Promise<QuizQuestion[]> {
-    return this.request<QuizQuestion[]>(`/api/v1/Quiz/generate`, {
+  async generateAIChallenge(): Promise<ChallengeQuestion[]> {
+    return this.request<ChallengeQuestion[]>(`/api/v1/Challenge/generate`, {
       method: "POST",
       timeout: 120000, // AI-generated content might take longer
     });
   }
 
-  async submitQuizResult(
-    result: Omit<QuizResult, "completedAt">
+  async submitChallengeResult(
+    result: Omit<ChallengeResult, "completedAt">
   ): Promise<void> {
-    return this.request(`/api/v1/quiz/result`, {
+    return this.request(`/api/v1/challenge/result`, {
       method: "POST",
       data: result,
     });
   }
 
-  async getQuizHistory(userId: string): Promise<QuizResult[]> {
-    return this.request<QuizResult[]>(`/api/v1/Quiz/history/${userId}`);
+  async getChallengeHistory(userId: string): Promise<ChallengeResult[]> {
+    return this.request<ChallengeResult[]>(
+      `/api/v1/Challenge/history/${userId}`
+    );
   }
 
   // User Profile Controller
@@ -370,9 +372,9 @@ class ApiClient {
     });
   }
 
-  async incrementQuizzesCompleted(userId: string): Promise<void> {
+  async incrementChallengesCompleted(userId: string): Promise<void> {
     return this.request(
-      `/api/v1/UserChallengeStats/${userId}/stats/quiz-completed`,
+      `/api/v1/UserChallengeStats/${userId}/stats/challenge-completed`,
       {
         method: "POST",
       }
@@ -660,14 +662,6 @@ class ApiClient {
     context?: Record<string, string>
   ): Promise<string> {
     return this.processAIRequest(message, ApiClient.SERVICE_TYPE.CHAT, context);
-  }
-
-  // We'll add back translation and grammar when they're actually implemented
-
-  // Quiz service is still used by the backend
-  async generateQuiz(prompt: string): Promise<string> {
-    // The backend handles the quiz format, so we don't need to send context
-    return this.processAIRequest(prompt, ApiClient.SERVICE_TYPE.QUIZ);
   }
 }
 

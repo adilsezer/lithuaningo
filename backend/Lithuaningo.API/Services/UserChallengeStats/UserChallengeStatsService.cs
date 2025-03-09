@@ -264,7 +264,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         }
     }
 
-    public async Task IncrementTotalQuizzesCompletedAsync(string userId)
+    public async Task IncrementTotalChallengesCompletedAsync(string userId)
     {
         if (!Guid.TryParse(userId, out var userGuid))
         {
@@ -286,11 +286,11 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             };
 
             await UpdateUserChallengeStatsAsync(userId, updateRequest);
-            _logger.LogInformation("Incremented total quizzes completed for user {UserId}", userId);
+            _logger.LogInformation("Incremented total challenges completed for user {UserId}", userId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error incrementing total quizzes for user {UserId}", userId);
+            _logger.LogError(ex, "Error incrementing total challenges for user {UserId}", userId);
             throw;
         }
     }

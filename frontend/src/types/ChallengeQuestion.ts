@@ -1,6 +1,6 @@
 import { QuestionType } from "./QuestionType";
 
-export interface QuizQuestion {
+export interface ChallengeQuestion {
   id: string;
   question: string;
   options: string[];
@@ -11,7 +11,7 @@ export interface QuizQuestion {
   updatedAt: string;
 }
 
-export interface CreateQuizQuestionRequest {
+export interface CreateChallengeQuestionRequest {
   question: string;
   options: string[];
   correctAnswer: string;
@@ -19,7 +19,7 @@ export interface CreateQuizQuestionRequest {
   type: QuestionType;
 }
 
-export interface QuizResult {
+export interface ChallengeResult {
   deckId: string;
   userId: string;
   score: number;

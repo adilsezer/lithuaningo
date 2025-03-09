@@ -108,5 +108,5 @@ public class AIController : BaseApiController
     // Place for future AI endpoints:
     // [HttpPost("translation")]
     // [HttpPost("grammar-check")]
-    // [HttpPost("quiz")]
+    // [HttpPost("challenge")]
 } 

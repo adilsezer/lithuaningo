@@ -291,8 +291,8 @@ To authorize in Swagger UI:
     services.AddScoped<IDeckReportService, DeckReportService>();
     services.AddScoped<ILeaderboardService, LeaderboardService>();
     services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
-    // Quiz Related Services
-    services.AddScoped<IQuizService, QuizService>();
+    // Challenge Related Services
+    services.AddScoped<IChallengeService, ChallengeService>();
     
     // OpenAI Services
     services.Configure<OpenAISettings>(configuration.GetSection(OpenAISettings.SectionName));
@@ -341,7 +341,7 @@ To authorize in Swagger UI:
         };
     })
     .AddApplicationPart(typeof(UserProfileController).Assembly)
-    .AddApplicationPart(typeof(QuizController).Assembly)
+    .AddApplicationPart(typeof(ChallengeController).Assembly)
     .AddApplicationPart(typeof(AnnouncementController).Assembly)
     .AddApplicationPart(typeof(AppInfoController).Assembly)
     .AddApplicationPart(typeof(DeckController).Assembly)

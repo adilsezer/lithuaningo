@@ -53,14 +53,14 @@ export class UserChallengeStatsService {
   }
 
   /**
-   * Increments the total number of quizzes completed by a user
+   * Increments the total number of challenges completed by a user
    * @param userId The ID of the user
    */
-  static async incrementQuizzesCompleted(userId: string): Promise<void> {
+  static async incrementChallengesCompleted(userId: string): Promise<void> {
     try {
-      await apiClient.incrementQuizzesCompleted(userId);
+      await apiClient.incrementChallengesCompleted(userId);
     } catch (error) {
-      console.error("Error in incrementQuizzesCompleted:", error);
+      console.error("Error in incrementChallengesCompleted:", error);
       throw error;
     }
   }

@@ -3,9 +3,9 @@ using System.Linq;
 using System.Collections.Generic;
 using AutoMapper;
 using Lithuaningo.API.Models;
-using Lithuaningo.API.Models.Quiz;
+using Lithuaningo.API.Models.Challenge;
 using Lithuaningo.API.DTOs.Announcement;
-using Lithuaningo.API.DTOs.Quiz;
+using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.DTOs.AppInfo;
 using Lithuaningo.API.DTOs.UserChallengeStats;
@@ -58,9 +58,9 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.Content, opt => opt.MapFrom(src => src.Content))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
 
-            // Quiz mappings
-            CreateMap<QuizQuestion, QuizQuestionResponse>();
-            CreateMap<CreateQuizQuestionRequest, QuizQuestion>()
+            // Challenge mappings
+            CreateMap<ChallengeQuestion, ChallengeQuestionResponse>();
+            CreateMap<CreateChallengeQuestionRequest, ChallengeQuestion>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "multiple_choice"));

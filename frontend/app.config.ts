@@ -26,7 +26,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
     privacyPolicyUrl: "https://adilsezer.github.io/lithuaningo/privacy-policy",
     keywords:
-      "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language quizzes, Interactive learning",
+      "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language challenges, Interactive learning",
   };
 
   return {

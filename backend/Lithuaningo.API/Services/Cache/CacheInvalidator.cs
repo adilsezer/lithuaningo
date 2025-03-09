@@ -162,19 +162,19 @@ public class CacheInvalidator
     }
 
     /// <summary>
-    /// Invalidates all cache entries related to quizzes
+    /// Invalidates all cache entries related to challenge questions
     /// </summary>
-    public async Task InvalidateQuizCacheAsync(string? category = null)
+    public async Task InvalidateChallengeCacheAsync(string? category = null)
     {
         if (!string.IsNullOrEmpty(category))
         {
-            _logger.LogInformation("Invalidating cache for quiz category {Category}", category);
-            await _cache.RemoveByPrefixAsync($"quiz:category:{category.ToLowerInvariant()}");
+            _logger.LogInformation("Invalidating cache for challenge category {Category}", category);
+            await _cache.RemoveByPrefixAsync($"challenge:category:{category.ToLowerInvariant()}");
         }
         else
         {
-            _logger.LogInformation("Invalidating all quiz cache");
-            await _cache.RemoveByPrefixAsync("quiz:");
+            _logger.LogInformation("Invalidating all challenge cache");
+            await _cache.RemoveByPrefixAsync("challenge:");
         }
     }
 

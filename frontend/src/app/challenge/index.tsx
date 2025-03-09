@@ -10,17 +10,17 @@ import { useTheme, Button } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { LoadingIndicator } from "@components/ui/LoadingIndicator";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
-import { QuizQuestion } from "@src/types";
+import { ChallengeQuestion } from "@src/types";
 import { useUserData } from "@stores/useUserStore";
-import quizService from "@services/data/quizService";
+import challengeService from "@src/services/data/challengeService";
 import { router } from "expo-router";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
-const QuizScreen: React.FC = () => {
+const ChallengeScreen: React.FC = () => {
   const theme = useTheme();
   const userData = useUserData();
-  const [questions, setQuestions] = useState<QuizQuestion[]>([]);
+  const [questions, setQuestions] = useState<ChallengeQuestion[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +30,16 @@ const QuizScreen: React.FC = () => {
   const [isCompleted, setIsCompleted] = useState(false);
   const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
   const [generationTime, setGenerationTime] = useState(0);
-  const [generatingNewQuiz, setGeneratingNewQuiz] = useState(false);
-  const { stats, updateStats, updateDailyStreak, incrementQuizzesCompleted } =
-    useUserChallengeStats(userData?.id);
+  const [generatingNewChallenge, setGeneratingNewChallenge] = useState(false);
+  const {
+    stats,
+    updateStats,
+    updateDailyStreak,
+    incrementChallengesCompleted: incrementChallengesCompleted,
+  } = useUserChallengeStats(userData?.id);
 
   useEffect(() => {
-    fetchDailyQuiz();
+    fetchDailyChallenge();
   }, []);
 
   // Effect for tracking generation time
@@ -54,28 +58,28 @@ const QuizScreen: React.FC = () => {
     };
   }, [isGeneratingQuestions]);
 
-  const fetchDailyQuiz = async () => {
+  const fetchDailyChallenge = async () => {
     try {
       setLoading(true);
       setError(null); // Clear any previous errors
 
       // First API call might trigger question generation
       setIsGeneratingQuestions(true);
-      const dailyQuestions = await quizService.getDailyQuiz();
+      const dailyQuestions = await challengeService.getDailyChannel();
       setIsGeneratingQuestions(false);
 
       if (dailyQuestions.length === 0) {
         setError(
-          "No quiz questions available for today. Please try again later."
+          "No challenge questions available for today. Please try again later."
         );
         return;
       }
 
       setQuestions(dailyQuestions);
     } catch (err) {
-      console.error("Failed to load quiz questions:", err);
+      console.error("Failed to load challenge questions:", err);
       setError(
-        "Failed to load quiz questions. Please check your internet connection and try again."
+        "Failed to load challenge questions. Please check your internet connection and try again."
       );
     } finally {
       setLoading(false);
@@ -125,27 +129,27 @@ const QuizScreen: React.FC = () => {
     } else {
       if (userData?.id) {
         await Promise.all([
-          quizService.submitQuizResult({
+          challengeService.submitChallengeResult({
             userId: userData.id,
             deckId: "daily",
             score,
             totalQuestions: questions.length,
           }),
           updateDailyStreak(),
-          incrementQuizzesCompleted(),
+          incrementChallengesCompleted(),
         ]);
       }
       setIsCompleted(true);
     }
   };
 
-  const handleGenerateNewQuiz = async () => {
+  const handleGenerateNewChallenge = async () => {
     try {
-      setGeneratingNewQuiz(true);
+      setGeneratingNewChallenge(true);
       setError(null);
       setLoading(true);
 
-      // Reset the quiz state
+      // Reset the challenge state
       setCurrentIndex(0);
       setScore(0);
       setShowExplanation(false);
@@ -153,24 +157,26 @@ const QuizScreen: React.FC = () => {
       setIsCompleted(false);
 
       // Generate new questions
-      const newQuestions = await quizService.generateNewQuiz();
+      const newQuestions = await challengeService.generateNewChallenge();
 
       if (newQuestions.length === 0) {
-        setError("Failed to generate new quiz questions. Please try again.");
+        setError(
+          "Failed to generate new challenge questions. Please try again."
+        );
       } else {
         setQuestions(newQuestions);
-        console.log(`Generated ${newQuestions.length} new quiz questions`);
+        console.log(`Generated ${newQuestions.length} new challenge questions`);
       }
     } catch (error: any) {
-      console.error("Error generating new quiz:", error);
-      setError(error?.message || "Failed to generate new quiz questions");
+      console.error("Error generating new challenge:", error);
+      setError(error?.message || "Failed to generate new challenge questions");
     } finally {
-      setGeneratingNewQuiz(false);
+      setGeneratingNewChallenge(false);
       setLoading(false);
     }
   };
 
-  // Add this function outside all conditional blocks to provide feedback on quiz completion
+  // Add this function outside all conditional blocks to provide feedback on challenge completion
   const getCompletionMessage = () => {
     const percentage = (score / questions.length) * 100;
 
@@ -195,24 +201,24 @@ const QuizScreen: React.FC = () => {
 
     // Get message based on generation time
     const getMessage = () => {
-      if (!isGeneratingQuestions) return "Loading quiz questions...";
+      if (!isGeneratingQuestions) return "Loading challenge questions...";
 
       if (generationTime < 10) {
-        return "Creating today's quiz questions with AI...";
+        return "Creating today's challenge questions with AI...";
       } else if (generationTime < 30) {
         return "Our AI is crafting challenging Lithuanian questions for you...";
       } else if (generationTime < 60) {
-        return "Creating personalized quiz questions. This may take a moment...";
+        return "Creating personalized challenge questions. This may take a moment...";
       } else if (generationTime < 90) {
-        return "Still working on your quiz. AI generation can take some time...";
+        return "Still working on your challenge. AI generation can take some time...";
       } else {
-        return "Almost there! Finalizing your quiz questions...";
+        return "Almost there! Finalizing your challenge questions...";
       }
     };
 
     return (
       <View style={styles.container}>
-        <HeaderWithBackButton title="Quiz" />
+        <HeaderWithBackButton title="Challenge" />
         <View style={styles.loadingContainer}>
           <LoadingIndicator size="large" color={theme.colors.primary} />
           <CustomText
@@ -263,10 +269,10 @@ const QuizScreen: React.FC = () => {
   if (error) {
     return (
       <View style={styles.container}>
-        <HeaderWithBackButton title="Quiz" />
+        <HeaderWithBackButton title="Challenge" />
         <ErrorMessage
           message={error}
-          onRetry={fetchDailyQuiz}
+          onRetry={fetchDailyChallenge}
           fullScreen
           buttonText="Try Again"
         />
@@ -279,7 +285,7 @@ const QuizScreen: React.FC = () => {
   if (!currentQuestion && !isCompleted) {
     return (
       <View style={styles.container}>
-        <HeaderWithBackButton title="Quiz" />
+        <HeaderWithBackButton title="Challenge" />
         <CustomText variant="titleMedium" style={styles.title}>
           No questions available
         </CustomText>
@@ -293,11 +299,11 @@ const QuizScreen: React.FC = () => {
         behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.container}
       >
-        <HeaderWithBackButton title="Daily Quiz" />
+        <HeaderWithBackButton title="Daily Challenge" />
         <ScrollView contentContainerStyle={styles.scrollContent}>
           <View style={styles.completionContainer}>
             <CustomText variant="headlineMedium" style={styles.completionTitle}>
-              Quiz Completed!
+              Challenge Completed!
             </CustomText>
             <CustomText variant="titleLarge" style={styles.scoreText}>
               Your Score: {score}/{questions.length}
@@ -318,11 +324,11 @@ const QuizScreen: React.FC = () => {
               <Button
                 mode="outlined"
                 style={styles.button}
-                onPress={handleGenerateNewQuiz}
-                loading={generatingNewQuiz}
-                disabled={generatingNewQuiz}
+                onPress={handleGenerateNewChallenge}
+                loading={generatingNewChallenge}
+                disabled={generatingNewChallenge}
               >
-                Generate New Quiz
+                Generate New Challenge
               </Button>
             </View>
           </View>
@@ -337,10 +343,10 @@ const QuizScreen: React.FC = () => {
       style={styles.container}
     >
       <ScrollView>
-        <HeaderWithBackButton title="Quiz" />
+        <HeaderWithBackButton title="Challenge" />
         <View style={styles.content}>
           <CustomText variant="titleMedium" style={styles.title}>
-            Daily Quiz
+            Daily Challenge
           </CustomText>
 
           <CustomText variant="bodyLarge" style={styles.question}>
@@ -479,4 +485,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default QuizScreen;
+export default ChallengeScreen;

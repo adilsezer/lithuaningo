@@ -11,7 +11,7 @@ namespace Lithuaningo.API.Controllers
 {
     /// <summary>
     /// Handles operations related to challenge statistics for users. These include retrieving stats,
-    /// updating daily streaks, adding experience points, marking words as learned, and incrementing quiz completion counts.
+    /// updating daily streaks, adding experience points, marking words as learned, and incrementing challenge completion counts.
     /// </summary>
     [Authorize]
     [ApiVersion("1.0")]
@@ -40,7 +40,7 @@ namespace Lithuaningo.API.Controllers
         /// - Daily streak information
         /// - Experience points
         /// - Learned words count
-        /// - Total quizzes completed
+        /// - Total challenges completed
         /// </remarks>
         /// <param name="userId">The user's unique identifier (should be a valid GUID)</param>
         /// <returns>The user's challenge statistics</returns>
@@ -141,30 +141,30 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Increments the total number of quizzes completed by a user.
+        /// Increments the total number of challenges completed by a user.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     POST /api/v1/UserChallengeStats/{userId}/stats/quiz-completed
+        ///     POST /api/v1/UserChallengeStats/{userId}/stats/challenge-completed
         /// 
-        /// This endpoint should be called each time a user completes a quiz,
+        /// This endpoint should be called each time a user completes a challenge,
         /// regardless of their performance.
         /// </remarks>
         /// <param name="userId">The user's unique identifier</param>
-        /// <response code="204">Quiz count incremented successfully</response>
+        /// <response code="204">Challenge count incremented successfully</response>
         /// <response code="400">User ID is empty</response>
         /// <response code="500">An error occurred while updating the stats</response>
-        [HttpPost("{userId}/stats/quiz-completed")]
+        [HttpPost("{userId}/stats/challenge-completed")]
         [SwaggerOperation(
-            Summary = "Increments completed quizzes",
-            Description = "Increments the total number of quizzes completed by a user",
-            OperationId = "IncrementQuizzesCompleted",
+            Summary = "Increments completed challenges",
+            Description = "Increments the total number of challenges completed by a user",
+            OperationId = "IncrementChallengesCompleted",
             Tags = new[] { "UserChallengeStats" }
         )]
         [ProducesResponseType(StatusCodes.Status204NoContent)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> IncrementQuizzesCompleted(string userId)
+        public async Task<IActionResult> IncrementChallengesCompleted(string userId)
         {
             if (string.IsNullOrWhiteSpace(userId))
             {
@@ -174,7 +174,7 @@ namespace Lithuaningo.API.Controllers
 
             try
             {
-                await _userChallengeStatsService.IncrementTotalQuizzesCompletedAsync(userId);
+                await _userChallengeStatsService.IncrementTotalChallengesCompletedAsync(userId);
                 return NoContent();
             }
             catch (ArgumentException ex)
@@ -184,7 +184,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error incrementing quizzes completed for user {UserId}", userId);
+                _logger.LogError(ex, "Error incrementing challenges completed for user {UserId}", userId);
                 return StatusCode(500, "Internal server error");
             }
         }

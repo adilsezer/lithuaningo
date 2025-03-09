@@ -1,4 +1,4 @@
-public enum QuizQuestionType
+public enum ChallengeQuestionType
 {
     MultipleChoice,
     TrueFalse,

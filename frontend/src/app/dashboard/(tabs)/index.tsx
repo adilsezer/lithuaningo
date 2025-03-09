@@ -56,7 +56,7 @@ const TopRatedDeckCard: React.FC<{
     },
     onReport: () => router.push(`/decks/${deck.id}/report`),
     onComment: () => router.push(`/decks/${deck.id}/comments`),
-    onQuiz: () => router.push(`/decks/${deck.id}/quiz`),
+    onChallenge: () => router.push(`/decks/${deck.id}/challenge`),
     onPractice: () => router.push(`/decks/${deck.id}`),
     onEdit: () => router.push(`/decks/${deck.id}/edit`),
   };

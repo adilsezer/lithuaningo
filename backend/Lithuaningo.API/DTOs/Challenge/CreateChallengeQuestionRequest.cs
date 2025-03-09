@@ -1,9 +1,9 @@
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
-namespace Lithuaningo.API.DTOs.Quiz
+namespace Lithuaningo.API.DTOs.Challenge
 {
-    public class CreateQuizQuestionRequest
+    public class CreateChallengeQuestionRequest
     {
         [Required(ErrorMessage = "Question is required")]
         [StringLength(500, MinimumLength = 10, ErrorMessage = "Question must be between 10 and 500 characters")]
@@ -21,6 +21,6 @@ namespace Lithuaningo.API.DTOs.Quiz
         public string? ExampleSentence { get; set; }
 
         [Required(ErrorMessage = "Question type is required")]
-        public QuizQuestionType Type { get; set; }
+        public ChallengeQuestionType Type { get; set; }
     }
 } 

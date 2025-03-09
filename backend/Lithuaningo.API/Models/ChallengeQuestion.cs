@@ -3,10 +3,10 @@ using System.Collections.Generic;
 using Supabase.Postgrest.Models;
 using Supabase.Postgrest.Attributes;
 
-namespace Lithuaningo.API.Models.Quiz
+namespace Lithuaningo.API.Models.Challenge
 {
-    [Table("quiz_questions")]
-    public class QuizQuestion : BaseModel
+    [Table("challenge_questions")]
+    public class ChallengeQuestion : BaseModel
     {
         [PrimaryKey("id")]
         [Column("id")]
@@ -25,7 +25,7 @@ namespace Lithuaningo.API.Models.Quiz
         public string? ExampleSentence { get; set; }
         
         [Column("type")]
-        public QuizQuestionType Type { get; set; }
+        public ChallengeQuestionType Type { get; set; }
     
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }

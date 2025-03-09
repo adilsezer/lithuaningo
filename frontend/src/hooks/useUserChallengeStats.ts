@@ -84,13 +84,13 @@ export const useUserChallengeStats = (userId?: string) => {
     }
   }, [userId, fetchStats]);
 
-  const incrementQuizzesCompleted = useCallback(async () => {
+  const incrementChallengesCompleted = useCallback(async () => {
     if (!userId) return;
     try {
-      await UserChallengeStatsService.incrementQuizzesCompleted(userId);
+      await UserChallengeStatsService.incrementChallengesCompleted(userId);
       await fetchStats(); // Refresh stats after increment
     } catch (error) {
-      console.error("Error incrementing quizzes completed:", error);
+      console.error("Error incrementing challenges completed:", error);
       throw error;
     }
   }, [userId, fetchStats]);
@@ -102,6 +102,6 @@ export const useUserChallengeStats = (userId?: string) => {
     fetchStats,
     updateStats,
     updateDailyStreak,
-    incrementQuizzesCompleted,
+    incrementChallengesCompleted,
   };
 };
