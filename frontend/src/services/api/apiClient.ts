@@ -12,7 +12,6 @@ import {
   UserChallengeStats,
   DeckReport,
   ChallengeResult,
-  CreateChallengeQuestionRequest,
   UpdateUserProfileRequest,
   UpdateAppInfoRequest,
   CreateAnnouncementRequest,
@@ -50,12 +49,6 @@ class ApiClient {
   private static instance: ApiClient;
   private axiosInstance: AxiosInstance;
   private baseURL: string;
-
-  // AI service types - only include what we actually use
-  static readonly SERVICE_TYPE = {
-    CHAT: "chat",
-    CHALLENGE: "challenge",
-  };
 
   private constructor() {
     this.baseURL = getBaseUrl() || "http://localhost:7016";
@@ -639,7 +632,7 @@ class ApiClient {
   // AI API methods
   async processAIRequest(
     prompt: string,
-    serviceType: string = ApiClient.SERVICE_TYPE.CHAT,
+    serviceType: string = "chat",
     context?: Record<string, string>
   ): Promise<string> {
     const data = await this.request<{
@@ -661,7 +654,7 @@ class ApiClient {
     message: string,
     context?: Record<string, string>
   ): Promise<string> {
-    return this.processAIRequest(message, ApiClient.SERVICE_TYPE.CHAT, context);
+    return this.processAIRequest(message, "chat", context);
   }
 }
 
