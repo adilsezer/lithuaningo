@@ -11,7 +11,7 @@ import CustomDivider from "@components/ui/CustomDivider";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import challengeService from "@src/services/data/challengeService";
-import { ActivityIndicator, Card } from "react-native-paper";
+import { ActivityIndicator, Card, useTheme } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
 
 export default function ChallengeScreen() {
@@ -22,6 +22,7 @@ export default function ChallengeScreen() {
   const userData = useUserData();
   const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
+  const theme = useTheme();
 
   const {
     entries,
@@ -126,7 +127,10 @@ export default function ChallengeScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.contentContainer}
+    >
       <Image
         source={require("assets/images/challenge_screen.png")}
         style={styles.image}
@@ -148,7 +152,15 @@ export default function ChallengeScreen() {
           </CustomText>
         </View>
       ) : dailyChallengeCompleted ? (
-        <Card style={styles.completedCard}>
+        <Card
+          style={[
+            styles.completedCard,
+            {
+              backgroundColor: theme.colors.background,
+              borderColor: theme.colors.primary,
+            },
+          ]}
+        >
           <Card.Content>
             <CustomText variant="titleMedium" style={styles.completedText}>
               You've completed today's challenge!
@@ -169,6 +181,7 @@ export default function ChallengeScreen() {
 
       <CustomDivider />
       <Leaderboard entries={entries} />
+      <View style={styles.bottomSpacing} />
     </ScrollView>
   );
 }
@@ -177,6 +190,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
+  },
+  contentContainer: {
+    paddingBottom: 30,
   },
   image: {
     width: "100%",
@@ -192,6 +208,7 @@ const styles = StyleSheet.create({
   },
   completedCard: {
     marginVertical: 16,
+    borderWidth: 1,
   },
   completedText: {
     textAlign: "center",
@@ -200,5 +217,8 @@ const styles = StyleSheet.create({
   completedSubtext: {
     textAlign: "center",
     marginTop: 8,
+  },
+  bottomSpacing: {
+    height: 20,
   },
 });

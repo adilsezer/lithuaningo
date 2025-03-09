@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { DataTable, useTheme } from "react-native-paper";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import CustomText from "./CustomText";
@@ -33,7 +33,7 @@ const Leaderboard = ({ entries }: LeaderboardProps) => {
   const theme = useTheme();
 
   return (
-    <ScrollView>
+    <View>
       <DataTable
         style={[styles.tableContainer, { borderColor: theme.colors.primary }]}
       >
@@ -84,7 +84,7 @@ const Leaderboard = ({ entries }: LeaderboardProps) => {
           </DataTable.Row>
         )}
       </DataTable>
-    </ScrollView>
+    </View>
   );
 };
 

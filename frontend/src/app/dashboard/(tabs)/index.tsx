@@ -186,7 +186,7 @@ const DashboardScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
+    padding: 24,
     flex: 1,
   },
   emptyState: {

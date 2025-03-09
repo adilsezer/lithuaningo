@@ -55,7 +55,15 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
       : 0;
 
   return (
-    <Card style={[styles.container, { borderColor: theme.colors.primary }]}>
+    <Card
+      style={[
+        styles.container,
+        {
+          borderColor: theme.colors.primary,
+          backgroundColor: theme.colors.background,
+        },
+      ]}
+    >
       <Card.Content>
         <View style={styles.statsContainer}>
           <UserChallengeStatItem
@@ -126,7 +134,6 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    margin: 16,
     borderRadius: 12,
     borderWidth: 1,
   },
