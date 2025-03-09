@@ -77,7 +77,11 @@ const DashboardScreen: React.FC = () => {
     clearError,
   } = useDashboard();
 
-  const { stats, error: statsError } = useUserChallengeStats();
+  const {
+    stats,
+    error: statsError,
+    fetchStats,
+  } = useUserChallengeStats(userData?.id);
 
   const { decks: topRatedDecks = [], fetchDecks } = useDecks({
     userId: userData?.id,
@@ -94,6 +98,13 @@ const DashboardScreen: React.FC = () => {
   useEffect(() => {
     fetchDecks();
   }, [fetchDecks]);
+
+  // Fetch stats when the component mounts or when the user ID changes
+  useEffect(() => {
+    if (userData?.id) {
+      fetchStats();
+    }
+  }, [userData?.id, fetchStats]);
 
   const handleVoted = useCallback(async () => {
     await fetchDecks();
@@ -121,6 +132,7 @@ const DashboardScreen: React.FC = () => {
         <DailyChallengeCard
           answeredQuestions={stats?.todayTotalAnswers ?? 0}
           correctAnswers={stats?.todayCorrectAnswers ?? 0}
+          isLoading={useIsLoading()}
         />
         <CustomButton
           title="Start Daily Challenge"

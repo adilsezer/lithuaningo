@@ -33,18 +33,32 @@ export const useUserChallengeStats = (userId?: string) => {
 
   // Fetch stats only once when the hook is initialized
   const fetchStats = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      console.log(
+        "No userId provided to useUserChallengeStats, cannot fetch stats"
+      );
+      return;
+    }
 
     setLoading(true);
+    console.log(`[useUserChallengeStats] Fetching stats for userId: ${userId}`);
+
     try {
       const data = await UserChallengeStatsService.getUserChallengeStats(
         userId
+      );
+      console.log(
+        `[useUserChallengeStats] Successfully fetched stats for userId: ${userId}`,
+        data
       );
       setStats(data);
       setError(null);
       setHasCheckedExistence(true);
     } catch (error) {
-      console.error("Error fetching user challenge stats:", error);
+      console.error(
+        `[useUserChallengeStats] Error fetching stats for userId: ${userId}:`,
+        error
+      );
       setError(
         error instanceof Error ? error.message : "Failed to fetch stats"
       );
