@@ -4,6 +4,12 @@ import { useUserData } from "@stores/useUserStore";
 import challengeService from "@src/services/data/challengeService";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 
+interface UseChallengeOptions {
+  customQuestions?: ChallengeQuestion[];
+  onComplete?: (score: number, totalQuestions: number) => void;
+  skipInitialFetch?: boolean;
+}
+
 interface UseChallengeReturn {
   questions: ChallengeQuestion[];
   currentIndex: number;
@@ -16,14 +22,27 @@ interface UseChallengeReturn {
   fetchChallenge: (isNew?: boolean) => Promise<void>;
   handleAnswer: (answer: string) => Promise<void>;
   handleNextQuestion: () => Promise<void>;
+  resetChallenge: () => void;
+  setQuestions: (questions: ChallengeQuestion[]) => void;
   getCompletionMessage: () => string;
 }
 
-export const useChallenge = (): UseChallengeReturn => {
+/**
+ * Hook to manage challenge state, supports both daily challenges and custom questions
+ *
+ * @param options Optional configuration for the challenge
+ * @returns State and handlers for the challenge
+ */
+export const useChallenge = (
+  options: UseChallengeOptions = {}
+): UseChallengeReturn => {
+  const { customQuestions, onComplete, skipInitialFetch = false } = options;
   const userData = useUserData();
-  const [questions, setQuestions] = useState<ChallengeQuestion[]>([]);
+  const [questions, setQuestions] = useState<ChallengeQuestion[]>(
+    customQuestions || []
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!customQuestions);
   const [error, setError] = useState<string | null>(null);
   const [score, setScore] = useState(0);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
@@ -36,46 +55,66 @@ export const useChallenge = (): UseChallengeReturn => {
     incrementChallengesCompleted,
   } = useUserChallengeStats(userData?.id);
 
-  // Load challenge questions on mount
+  // Load challenge questions on mount, but only if customQuestions is not provided
+  // and skipInitialFetch is false
   useEffect(() => {
-    fetchChallenge();
+    if (!customQuestions && !skipInitialFetch) {
+      fetchChallenge();
+    }
+  }, [customQuestions, skipInitialFetch]);
+
+  // Reset the challenge states
+  const resetChallenge = useCallback(() => {
+    setCurrentIndex(0);
+    setScore(0);
+    setIsCorrectAnswer(null);
+    setIsCompleted(false);
+    setError(null);
   }, []);
 
   // Main function to fetch challenge questions
-  const fetchChallenge = useCallback(async (isNew = false) => {
-    try {
-      setLoading(true);
-      setError(null);
-
-      // Reset states for new challenges
-      if (isNew) {
-        setCurrentIndex(0);
-        setScore(0);
-        setIsCorrectAnswer(null);
-        setIsCompleted(false);
-      }
-
-      // Fetch questions from API
-      const challengeQuestions = isNew
-        ? await challengeService.generateNewChallenge()
-        : await challengeService.getDailyChannel();
-
-      if (!challengeQuestions || challengeQuestions.length === 0) {
-        setError("No questions available. Please try again later.");
+  const fetchChallenge = useCallback(
+    async (isNew = false) => {
+      // If custom questions are provided, just reset and use them
+      if (customQuestions) {
+        resetChallenge();
+        setQuestions(customQuestions);
+        setLoading(false);
         return;
       }
 
-      setQuestions(challengeQuestions);
-    } catch (err: any) {
-      console.error("Failed to load challenge:", err);
-      const errorMessage =
-        err?.message ||
-        "Failed to load challenge. Please check your connection and try again.";
-      setError(errorMessage);
-    } finally {
-      setLoading(false);
-    }
-  }, []);
+      try {
+        setLoading(true);
+        setError(null);
+
+        // Reset states for new challenges
+        if (isNew) {
+          resetChallenge();
+        }
+
+        // Fetch questions from API
+        const challengeQuestions = isNew
+          ? await challengeService.generateNewChallenge()
+          : await challengeService.getDailyChannel();
+
+        if (!challengeQuestions || challengeQuestions.length === 0) {
+          setError("No questions available. Please try again later.");
+          return;
+        }
+
+        setQuestions(challengeQuestions);
+      } catch (err: any) {
+        console.error("Failed to load challenge:", err);
+        const errorMessage =
+          err?.message ||
+          "Failed to load challenge. Please check your connection and try again.";
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [customQuestions, resetChallenge]
+  );
 
   // Handle user's answer selection
   const handleAnswer = useCallback(
@@ -91,8 +130,8 @@ export const useChallenge = (): UseChallengeReturn => {
         setScore((prev) => prev + 1);
       }
 
-      // Update stats if user is logged in
-      if (stats && userData?.id) {
+      // Only update stats for non-custom challenges and if user is logged in
+      if (!customQuestions && stats && userData?.id) {
         try {
           await updateStats({
             todayCorrectAnswers: isCorrect
@@ -114,7 +153,7 @@ export const useChallenge = (): UseChallengeReturn => {
         }
       }
     },
-    [currentIndex, questions, stats, userData?.id, updateStats]
+    [currentIndex, questions, stats, userData?.id, updateStats, customQuestions]
   );
 
   // Move to next question or complete the challenge
@@ -127,7 +166,8 @@ export const useChallenge = (): UseChallengeReturn => {
     }
     // Otherwise complete the challenge
     else {
-      if (userData?.id) {
+      // For daily challenges, update stats and submit results
+      if (!customQuestions && userData?.id) {
         try {
           await Promise.all([
             challengeService.submitChallengeResult({
@@ -144,7 +184,13 @@ export const useChallenge = (): UseChallengeReturn => {
           // We continue to mark as completed even if saving results fails
         }
       }
+
       setIsCompleted(true);
+
+      // Call onComplete callback if provided
+      if (onComplete) {
+        onComplete(score, questions.length);
+      }
     }
   }, [
     currentIndex,
@@ -153,6 +199,8 @@ export const useChallenge = (): UseChallengeReturn => {
     score,
     updateDailyStreak,
     incrementChallengesCompleted,
+    customQuestions,
+    onComplete,
   ]);
 
   // Get feedback message based on score
@@ -183,6 +231,8 @@ export const useChallenge = (): UseChallengeReturn => {
     fetchChallenge,
     handleAnswer,
     handleNextQuestion,
+    resetChallenge,
+    setQuestions,
     getCompletionMessage,
   };
 };
