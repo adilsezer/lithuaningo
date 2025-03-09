@@ -150,147 +150,69 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             throw;
         }
     }
-
-    public async Task UpdateDailyStreakAsync(string userId)
+    
+    public async Task<UserChallengeStatsResponse> CreateUserChallengeStatsAsync(CreateUserChallengeStatsRequest request)
     {
-        if (!Guid.TryParse(userId, out var userGuid))
-        {
-            throw new ArgumentException("Invalid user ID format", nameof(userId));
-        }
-
         try
         {
-            var stats = await GetUserChallengeStatsAsync(userId);
-            var today = DateTime.UtcNow.Date;
+            // Check if stats already exist for the user
+            var existingStats = await _supabaseClient
+                .From<UserChallengeStats>()
+                .Where(u => u.UserId == request.UserId)
+                .Get();
 
-            if (!stats.HasCompletedTodayChallenge)
+            if (existingStats.Models.Any())
             {
-                var updateRequest = new UpdateUserChallengeStatsRequest
-                {
-                    CurrentStreak = stats.CurrentStreak,
-                    LongestStreak = stats.LongestStreak,
-                    TodayCorrectAnswers = stats.TodayCorrectAnswers,
-                    TodayIncorrectAnswers = stats.TodayIncorrectAnswers,
-                    TotalChallengesCompleted = stats.TotalChallengesCompleted,
-                    TotalCorrectAnswers = stats.TotalCorrectAnswers,
-                    TotalIncorrectAnswers = stats.TotalIncorrectAnswers
-                };
-
-                // Update streak logic
-                if (stats.LastChallengeDate.Date.AddDays(1) == today)
-                {
-                    // Consecutive day
-                    updateRequest.CurrentStreak = stats.CurrentStreak + 1;
-                    updateRequest.LongestStreak = Math.Max(updateRequest.CurrentStreak, stats.LongestStreak);
-                    _logger.LogInformation("Increased streak to {Streak} for user {UserId}", 
-                        updateRequest.CurrentStreak, userId);
-                }
-                else
-                {
-                    // Streak broken
-                    updateRequest.CurrentStreak = 1;
-                    _logger.LogInformation("Reset streak for user {UserId}", userId);
-                }
-
-                await UpdateUserChallengeStatsAsync(userId, updateRequest);
+                // Instead of throwing an exception, return the existing stats
+                _logger.LogInformation("Challenge stats already exist for user {UserId}, returning existing stats", request.UserId);
+                var existingStat = existingStats.Models.First();
+                var existingStatsResponse = _mapper.Map<UserChallengeStatsResponse>(existingStat);
+                existingStatsResponse.HasCompletedTodayChallenge = existingStat.LastChallengeDate.Date == DateTime.UtcNow.Date;
+                
+                // Refresh the cache with existing stats
+                var existingCacheKey = $"{CacheKeyPrefix}{request.UserId}";
+                await _cache.SetAsync(existingCacheKey, existingStatsResponse,
+                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                
+                return existingStatsResponse;
             }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error updating daily streak for user {UserId}", userId);
-            throw;
-        }
-    }
 
-    public async Task AddExperiencePointsAsync(string userId, int amount)
-    {
-        if (!Guid.TryParse(userId, out var userGuid))
-        {
-            throw new ArgumentException("Invalid user ID format", nameof(userId));
-        }
-
-        try
-        {
-            var stats = await GetUserChallengeStatsAsync(userId);
-            var updateRequest = new UpdateUserChallengeStatsRequest
+            var stats = new UserChallengeStats
             {
-                CurrentStreak = stats.CurrentStreak,
-                LongestStreak = stats.LongestStreak,
-                TodayCorrectAnswers = stats.TodayCorrectAnswers,
-                TodayIncorrectAnswers = stats.TodayIncorrectAnswers,
-                TotalChallengesCompleted = stats.TotalChallengesCompleted + 1,
-                TotalCorrectAnswers = stats.TotalCorrectAnswers,
-                TotalIncorrectAnswers = stats.TotalIncorrectAnswers
+                Id = Guid.NewGuid(),
+                UserId = request.UserId,
+                CurrentStreak = request.CurrentStreak,
+                LongestStreak = request.LongestStreak,
+                LastChallengeDate = DateTime.UtcNow,
+                TodayCorrectAnswerCount = request.TodayCorrectAnswers,
+                TodayIncorrectAnswerCount = request.TodayIncorrectAnswers,
+                TotalChallengesCompleted = request.TotalChallengesCompleted,
+                TotalCorrectAnswers = request.TotalCorrectAnswers,
+                TotalIncorrectAnswers = request.TotalIncorrectAnswers,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow
             };
 
-            await UpdateUserChallengeStatsAsync(userId, updateRequest);
-            _logger.LogInformation("Added {Amount} experience points for user {UserId}", amount, userId);
+            var createResponse = await _supabaseClient
+                .From<UserChallengeStats>()
+                .Insert(stats);
+
+            stats = createResponse.Models.First();
+            _logger.LogInformation("Created challenge stats for user {UserId}", request.UserId);
+
+            var statsResponse = _mapper.Map<UserChallengeStatsResponse>(stats);
+            statsResponse.HasCompletedTodayChallenge = stats.LastChallengeDate.Date == DateTime.UtcNow.Date;
+
+            // Cache the newly created stats
+            var cacheKey = $"{CacheKeyPrefix}{request.UserId}";
+            await _cache.SetAsync(cacheKey, statsResponse,
+                TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+
+            return statsResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error adding experience points for user {UserId}", userId);
-            throw;
-        }
-    }
-
-    public async Task AddLearnedWordAsync(string userId, string wordId)
-    {
-        if (!Guid.TryParse(userId, out var userGuid))
-        {
-            throw new ArgumentException("Invalid user ID format", nameof(userId));
-        }
-
-        try
-        {
-            var stats = await GetUserChallengeStatsAsync(userId);
-            var updateRequest = new UpdateUserChallengeStatsRequest
-            {
-                CurrentStreak = stats.CurrentStreak,
-                LongestStreak = stats.LongestStreak,
-                TodayCorrectAnswers = stats.TodayCorrectAnswers + 1,
-                TodayIncorrectAnswers = stats.TodayIncorrectAnswers,
-                TotalChallengesCompleted = stats.TotalChallengesCompleted,
-                TotalCorrectAnswers = stats.TotalCorrectAnswers + 1,
-                TotalIncorrectAnswers = stats.TotalIncorrectAnswers
-            };
-
-            await UpdateUserChallengeStatsAsync(userId, updateRequest);
-            _logger.LogInformation("Added learned word for user {UserId}, word {WordId}", userId, wordId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error adding learned word for user {UserId}", userId);
-            throw;
-        }
-    }
-
-    public async Task IncrementTotalChallengesCompletedAsync(string userId)
-    {
-        if (!Guid.TryParse(userId, out var userGuid))
-        {
-            throw new ArgumentException("Invalid user ID format", nameof(userId));
-        }
-
-        try
-        {
-            var stats = await GetUserChallengeStatsAsync(userId);
-            var updateRequest = new UpdateUserChallengeStatsRequest
-            {
-                CurrentStreak = stats.CurrentStreak,
-                LongestStreak = stats.LongestStreak,
-                TodayCorrectAnswers = stats.TodayCorrectAnswers,
-                TodayIncorrectAnswers = stats.TodayIncorrectAnswers,
-                TotalChallengesCompleted = stats.TotalChallengesCompleted + 1,
-                TotalCorrectAnswers = stats.TotalCorrectAnswers,
-                TotalIncorrectAnswers = stats.TotalIncorrectAnswers
-            };
-
-            await UpdateUserChallengeStatsAsync(userId, updateRequest);
-            _logger.LogInformation("Incremented total challenges completed for user {UserId}", userId);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error incrementing total challenges for user {UserId}", userId);
+            _logger.LogError(ex, "Error creating challenge stats for user {UserId}", request.UserId);
             throw;
         }
     }

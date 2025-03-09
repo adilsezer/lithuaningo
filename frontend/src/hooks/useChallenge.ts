@@ -25,6 +25,8 @@ interface UseChallengeReturn {
   resetChallenge: () => void;
   setQuestions: (questions: ChallengeQuestion[]) => void;
   getCompletionMessage: () => string;
+  dailyChallengeCompleted: boolean;
+  checkDailyChallengeStatus: () => Promise<boolean>;
 }
 
 /**
@@ -47,21 +49,43 @@ export const useChallenge = (
   const [score, setScore] = useState(0);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
 
-  const {
-    stats,
-    updateStats,
-    updateDailyStreak,
-    incrementChallengesCompleted,
-  } = useUserChallengeStats(userData?.id);
+  const { stats, updateStats, createStats } = useUserChallengeStats(
+    userData?.id
+  );
+
+  // Check if the user has completed today's challenge
+  const checkDailyChallengeStatus = useCallback(async () => {
+    if (!userData?.id) return false;
+
+    try {
+      const isCompleted = await challengeService.hasDailyChallengeCompleted(
+        userData.id
+      );
+      setDailyChallengeCompleted(isCompleted);
+      return isCompleted;
+    } catch (error) {
+      console.error("Error checking daily challenge status:", error);
+      return false;
+    }
+  }, [userData?.id]);
 
   // Load challenge questions on mount, but only if customQuestions is not provided
   // and skipInitialFetch is false
   useEffect(() => {
     if (!customQuestions && !skipInitialFetch) {
-      fetchChallenge();
+      const init = async () => {
+        // Check if the daily challenge is already completed
+        if (!userData?.id || customQuestions) return;
+
+        await checkDailyChallengeStatus();
+        // Removed automatic fetchChallenge here as we'll do it in the Challenge screen
+      };
+
+      init();
     }
-  }, [customQuestions, skipInitialFetch]);
+  }, [customQuestions, skipInitialFetch, userData?.id]);
 
   // Reset the challenge states
   const resetChallenge = useCallback(() => {
@@ -81,6 +105,18 @@ export const useChallenge = (
         setQuestions(customQuestions);
         setLoading(false);
         return;
+      }
+
+      // Check if the daily challenge is already completed (for non-custom challenges)
+      if (!customQuestions && userData?.id) {
+        const isCompleted = await checkDailyChallengeStatus();
+        if (isCompleted) {
+          setError(
+            "You've already completed today's challenge. Come back tomorrow for a new one!"
+          );
+          setLoading(false);
+          return;
+        }
       }
 
       try {
@@ -113,7 +149,7 @@ export const useChallenge = (
         setLoading(false);
       }
     },
-    [customQuestions, resetChallenge]
+    [customQuestions, resetChallenge, userData?.id, checkDailyChallengeStatus]
   );
 
   // Handle user's answer selection
@@ -131,8 +167,19 @@ export const useChallenge = (
       }
 
       // Only update stats for non-custom challenges and if user is logged in
-      if (!customQuestions && stats && userData?.id) {
+      if (!customQuestions && userData?.id) {
         try {
+          if (!stats) {
+            // If stats don't exist yet, check if they really don't exist before creating
+            try {
+              await createStats();
+            } catch (error) {
+              console.error("Error handling user challenge stats:", error);
+              // Continue with the challenge even if stats creation fails
+            }
+            return;
+          }
+
           await updateStats({
             todayCorrectAnswers: isCorrect
               ? stats.todayCorrectAnswers + 1
@@ -153,7 +200,15 @@ export const useChallenge = (
         }
       }
     },
-    [currentIndex, questions, stats, userData?.id, updateStats, customQuestions]
+    [
+      currentIndex,
+      questions,
+      stats,
+      userData?.id,
+      updateStats,
+      customQuestions,
+      createStats,
+    ]
   );
 
   // Move to next question or complete the challenge
@@ -166,19 +221,13 @@ export const useChallenge = (
     }
     // Otherwise complete the challenge
     else {
-      // For daily challenges, update stats and submit results
+      // For non-custom challenges, update stats and submit results
       if (!customQuestions && userData?.id) {
         try {
-          await Promise.all([
-            challengeService.submitChallengeResult({
-              userId: userData.id,
-              deckId: "daily",
-              score,
-              totalQuestions: questions.length,
-            }),
-            updateDailyStreak(),
-            incrementChallengesCompleted(),
-          ]);
+          // Mark the daily challenge as completed
+          // For non-custom challenges, always mark as daily challenge
+          await challengeService.setDailyChallengeCompleted(userData.id);
+          setDailyChallengeCompleted(true);
         } catch (error) {
           console.error("Error completing challenge:", error);
           // We continue to mark as completed even if saving results fails
@@ -194,11 +243,9 @@ export const useChallenge = (
     }
   }, [
     currentIndex,
-    questions.length,
+    questions,
     userData?.id,
     score,
-    updateDailyStreak,
-    incrementChallengesCompleted,
     customQuestions,
     onComplete,
   ]);
@@ -234,5 +281,7 @@ export const useChallenge = (
     resetChallenge,
     setQuestions,
     getCompletionMessage,
+    dailyChallengeCompleted,
+    checkDailyChallengeStatus,
   };
 };

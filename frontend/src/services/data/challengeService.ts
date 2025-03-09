@@ -1,7 +1,11 @@
 import { apiClient } from "../api/apiClient";
 import { ChallengeQuestion, ChallengeResult } from "@src/types";
+import { storeData, retrieveData } from "@src/utils/storageUtils";
 
 class ChallengeService {
+  // Storage key for the daily challenge completion
+  private DAILY_CHALLENGE_KEY = "daily_challenge_completion";
+
   // More patient retry logic with up to 10 retries (can handle longer AI generation)
   async getDailyChannel(
     retryCount = 0,
@@ -89,14 +93,42 @@ class ChallengeService {
     }
   }
 
-  async submitChallengeResult(
-    result: Omit<ChallengeResult, "completedAt">
-  ): Promise<void> {
-    return apiClient.submitChallengeResult(result);
-  }
-
   async getQuizHistory(userId: string): Promise<ChallengeResult[]> {
     return apiClient.getChallengeHistory(userId);
+  }
+
+  // Check if the user has completed today's challenge
+  async hasDailyChallengeCompleted(userId: string): Promise<boolean> {
+    try {
+      const completionData = await retrieveData<Record<string, string>>(
+        this.DAILY_CHALLENGE_KEY
+      );
+      if (!completionData) return false;
+
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+      const userLastCompletion = completionData[userId];
+
+      return userLastCompletion === today;
+    } catch (error) {
+      console.error("Error checking daily challenge status:", error);
+      return false;
+    }
+  }
+
+  // Set the daily challenge as completed for today
+  async setDailyChallengeCompleted(userId: string): Promise<void> {
+    try {
+      const completionData =
+        (await retrieveData<Record<string, string>>(
+          this.DAILY_CHALLENGE_KEY
+        )) || {};
+      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
+
+      completionData[userId] = today;
+      await storeData(this.DAILY_CHALLENGE_KEY, completionData);
+    } catch (error) {
+      console.error("Error setting daily challenge completion:", error);
+    }
   }
 }
 

@@ -30,11 +30,27 @@ export class UserChallengeStatsService {
   static async updateUserChallengeStats(
     userId: string,
     request: UpdateUserChallengeStatsRequest
-  ): Promise<UserChallengeStats> {
+  ): Promise<void> {
     try {
-      return await apiClient.updateUserChallengeStats(userId, request);
+      await apiClient.updateUserChallengeStats(userId, request);
     } catch (error) {
       console.error("Error in updateUserChallengeStats:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Creates challenge statistics for a user
+   * @param request The challenge stats to create
+   * @returns Promise<UserChallengeStats>
+   */
+  static async createUserChallengeStats(
+    request: CreateUserChallengeStatsRequest
+  ): Promise<UserChallengeStats> {
+    try {
+      return await apiClient.createUserChallengeStats(request);
+    } catch (error) {
+      console.error("Error in createUserChallengeStats:", error);
       throw error;
     }
   }

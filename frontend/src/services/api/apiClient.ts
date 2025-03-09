@@ -25,6 +25,8 @@ import {
   UpdateLeaderboardEntryRequest,
   LeaderboardEntry,
   DeckWithRatingResponse,
+  UpdateUserChallengeStatsRequest,
+  CreateUserChallengeStatsRequest,
 } from "@src/types";
 import { supabase } from "@services/supabase/supabaseClient";
 import { useUserStore } from "@stores/useUserStore";
@@ -172,15 +174,6 @@ class ApiClient {
     });
   }
 
-  async submitChallengeResult(
-    result: Omit<ChallengeResult, "completedAt">
-  ): Promise<void> {
-    return this.request(`/api/v1/challenge/result`, {
-      method: "POST",
-      data: result,
-    });
-  }
-
   async getChallengeHistory(userId: string): Promise<ChallengeResult[]> {
     return this.request<ChallengeResult[]>(
       `/api/v1/Challenge/history/${userId}`
@@ -320,15 +313,21 @@ class ApiClient {
 
   async updateUserChallengeStats(
     userId: string,
-    stats: Partial<UserChallengeStats>
+    stats: UpdateUserChallengeStatsRequest
+  ): Promise<void> {
+    return this.request<void>(`/api/v1/UserChallengeStats/${userId}`, {
+      method: "PUT",
+      data: stats,
+    });
+  }
+
+  async createUserChallengeStats(
+    request: CreateUserChallengeStatsRequest
   ): Promise<UserChallengeStats> {
-    return this.request<UserChallengeStats>(
-      `/api/v1/UserChallengeStats/${userId}/stats`,
-      {
-        method: "PUT",
-        data: stats,
-      }
-    );
+    return this.request<UserChallengeStats>(`/api/v1/UserChallengeStats`, {
+      method: "POST",
+      data: request,
+    });
   }
 
   async updateWeeklyGoal(userId: string, goal: number): Promise<void> {
