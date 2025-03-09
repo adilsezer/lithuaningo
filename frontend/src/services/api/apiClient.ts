@@ -161,7 +161,9 @@ class ApiClient {
 
   // Quiz Controller
   async getDailyQuiz(): Promise<QuizQuestion[]> {
-    return this.request<QuizQuestion[]>(`/api/v1/Quiz/daily`);
+    return this.request<QuizQuestion[]>(`/api/v1/Quiz/daily`, {
+      timeout: 120000,
+    });
   }
 
   async submitQuizResult(

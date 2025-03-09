@@ -27,6 +27,8 @@ const QuizScreen: React.FC = () => {
   const [showExplanation, setShowExplanation] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
   const [isCompleted, setIsCompleted] = useState(false);
+  const [isGeneratingQuestions, setIsGeneratingQuestions] = useState(false);
+  const [generationTime, setGenerationTime] = useState(0);
   const { stats, updateStats, updateDailyStreak, incrementQuizzesCompleted } =
     useUserChallengeStats(userData?.id);
 
@@ -34,15 +36,48 @@ const QuizScreen: React.FC = () => {
     fetchDailyQuiz();
   }, []);
 
+  // Effect for tracking generation time
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (isGeneratingQuestions) {
+      timer = setInterval(() => {
+        setGenerationTime((prev) => prev + 1);
+      }, 1000);
+    } else {
+      setGenerationTime(0);
+    }
+
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isGeneratingQuestions]);
+
   const fetchDailyQuiz = async () => {
     try {
       setLoading(true);
+      setError(null); // Clear any previous errors
+
+      // First API call might trigger question generation
+      setIsGeneratingQuestions(true);
       const dailyQuestions = await quizService.getDailyQuiz();
+      setIsGeneratingQuestions(false);
+
+      if (dailyQuestions.length === 0) {
+        setError(
+          "No quiz questions available for today. Please try again later."
+        );
+        return;
+      }
+
       setQuestions(dailyQuestions);
     } catch (err) {
-      setError("Failed to load quiz questions");
+      console.error("Failed to load quiz questions:", err);
+      setError(
+        "Failed to load quiz questions. Please check your internet connection and try again."
+      );
     } finally {
       setLoading(false);
+      setIsGeneratingQuestions(false);
     }
   };
 
@@ -103,11 +138,90 @@ const QuizScreen: React.FC = () => {
   };
 
   if (loading) {
-    return <LoadingIndicator />;
+    // Format the time as mm:ss
+    const minutes = Math.floor(generationTime / 60);
+    const seconds = generationTime % 60;
+    const formattedTime = `${minutes}:${seconds < 10 ? "0" : ""}${seconds}`;
+
+    // Get message based on generation time
+    const getMessage = () => {
+      if (!isGeneratingQuestions) return "Loading quiz questions...";
+
+      if (generationTime < 10) {
+        return "Creating today's quiz questions with AI...";
+      } else if (generationTime < 30) {
+        return "Our AI is crafting challenging Lithuanian questions for you...";
+      } else if (generationTime < 60) {
+        return "Creating personalized quiz questions. This may take a moment...";
+      } else if (generationTime < 90) {
+        return "Still working on your quiz. AI generation can take some time...";
+      } else {
+        return "Almost there! Finalizing your quiz questions...";
+      }
+    };
+
+    return (
+      <View style={styles.container}>
+        <HeaderWithBackButton title="Quiz" />
+        <View style={styles.loadingContainer}>
+          <LoadingIndicator size="large" color={theme.colors.primary} />
+          <CustomText
+            variant="bodyLarge"
+            style={[styles.loadingText, { color: theme.colors.primary }]}
+          >
+            {getMessage()}
+          </CustomText>
+          {isGeneratingQuestions && (
+            <>
+              <CustomText
+                variant="bodyMedium"
+                style={[
+                  styles.loadingSubtext,
+                  { color: theme.colors.onSurfaceVariant },
+                ]}
+              >
+                We're preparing unique questions to help you practice
+                Lithuanian!
+              </CustomText>
+
+              {generationTime > 15 && (
+                <View style={styles.timerContainer}>
+                  <CustomText variant="bodySmall" style={styles.timerText}>
+                    Time elapsed: {formattedTime}
+                  </CustomText>
+                  {generationTime > 45 && (
+                    <CustomText variant="bodySmall" style={styles.timerText}>
+                      AI generation can take some time. Thank you for your
+                      patience.
+                    </CustomText>
+                  )}
+                  {generationTime > 90 && (
+                    <CustomText variant="bodySmall" style={styles.timerText}>
+                      Still working... You can try again later if this
+                      continues.
+                    </CustomText>
+                  )}
+                </View>
+              )}
+            </>
+          )}
+        </View>
+      </View>
+    );
   }
 
   if (error) {
-    return <ErrorMessage message={error} onRetry={fetchDailyQuiz} fullScreen />;
+    return (
+      <View style={styles.container}>
+        <HeaderWithBackButton title="Quiz" />
+        <ErrorMessage
+          message={error}
+          onRetry={fetchDailyQuiz}
+          fullScreen
+          buttonText="Try Again"
+        />
+      </View>
+    );
   }
 
   const currentQuestion = questions[currentIndex];
@@ -239,6 +353,31 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 16,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    textAlign: "center",
+    fontWeight: "500",
+  },
+  loadingSubtext: {
+    marginTop: 8,
+    textAlign: "center",
+    opacity: 0.8,
+  },
+  timerContainer: {
+    marginTop: 24,
+    alignItems: "center",
+  },
+  timerText: {
+    textAlign: "center",
+    marginTop: 4,
+    opacity: 0.7,
   },
 });
 
