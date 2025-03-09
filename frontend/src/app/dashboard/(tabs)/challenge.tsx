@@ -52,7 +52,7 @@ export default function ChallengeScreen() {
 
       <CustomButton
         title="Start Daily Challenge"
-        onPress={() => handleNavigation("/challenge/index")}
+        onPress={() => handleNavigation("/challenge")}
       />
       <CustomDivider />
       <Leaderboard entries={entries} />
