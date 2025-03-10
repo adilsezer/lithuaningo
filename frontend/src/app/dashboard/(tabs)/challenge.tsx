@@ -177,13 +177,6 @@ export default function ChallengeScreen() {
         />
       )}
 
-      <CustomButton
-        title="Start Practice Challenge"
-        onPress={handleStartChallenge}
-        style={{ backgroundColor: theme.colors.secondary, marginTop: 0 }}
-        textColor={theme.colors.onSecondary}
-      />
-
       {stats && <UserChallengeStatsCard stats={stats} />}
 
       <CustomDivider />

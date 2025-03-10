@@ -47,7 +47,7 @@ const DeckCardWithVotes: React.FC<{
     },
     onReport: () => handleNavigation(`/decks/${deck.id}/report`),
     onComment: () => handleNavigation(`/decks/${deck.id}/comments`),
-    onChallenge: () => handleNavigation(`/decks/${deck.id}/challenge`),
+    onChallenge: () => handleNavigation(`/decks/${deck.id}/deck-challenge`),
     onPractice: () => handleNavigation(`/decks/${deck.id}`),
     onEdit: () => handleNavigation(`/decks/${deck.id}/edit`),
   };

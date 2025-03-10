@@ -18,6 +18,7 @@ export interface DeckActions {
   onReport: () => void;
   onComment: (deckId: string) => void;
   onPractice: (deckId: string) => void;
+  onChallenge: (deckId: string) => void;
   onEdit: (deckId: string) => void;
 }
 
@@ -165,15 +166,28 @@ export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
               </View>
             </View>
 
-            <Button
-              mode="contained"
-              onPress={() => actions.onPractice(deck.id)}
-              style={{ paddingVertical: 8, marginHorizontal: 16 }}
-              icon="school"
-              buttonColor={theme.colors.primary}
-            >
-              Practice
-            </Button>
+            <View style={{ flexDirection: "row", gap: 12 }}>
+              <Button
+                mode="contained"
+                onPress={() => actions.onPractice(deck.id)}
+                style={{ flex: 1 }}
+                contentStyle={{ height: 44, borderRadius: 22 }}
+                icon="school"
+                buttonColor={theme.colors.primary}
+              >
+                Practice
+              </Button>
+              <Button
+                mode="contained"
+                onPress={() => actions.onChallenge(deck.id)}
+                style={{ flex: 1 }}
+                contentStyle={{ height: 44, borderRadius: 22 }}
+                icon="brain"
+                buttonColor={theme.colors.secondary}
+              >
+                Challenge
+              </Button>
+            </View>
           </View>
 
           <View
