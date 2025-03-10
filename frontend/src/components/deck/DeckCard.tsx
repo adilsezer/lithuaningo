@@ -168,8 +168,7 @@ export const DeckCard = memo<DeckCardProps>(({ deck, actions }) => {
             <Button
               mode="contained"
               onPress={() => actions.onPractice(deck.id)}
-              style={{ flex: 1, paddingVertical: 8 }}
-              contentStyle={{ height: 44, borderRadius: 22 }}
+              style={{ paddingVertical: 8, marginHorizontal: 16 }}
               icon="school"
               buttonColor={theme.colors.primary}
             >

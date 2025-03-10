@@ -7,6 +7,8 @@ interface CustomButtonProps {
   title: string;
   icon?: string;
   style?: StyleProp<ViewStyle>;
+  contentStyle?: StyleProp<ViewStyle>;
+  textColor?: string;
   mode?: "text" | "outlined" | "contained" | "contained-tonal" | "elevated";
   loading?: boolean;
   disabled?: boolean;
@@ -17,12 +19,12 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   title,
   icon,
   style,
+  contentStyle,
+  textColor,
   mode = "contained",
   loading = false,
   disabled = false,
 }) => {
-  const theme = useTheme();
-
   return (
     <Button
       mode={mode}
@@ -31,7 +33,8 @@ const CustomButton: React.FC<CustomButtonProps> = ({
       style={[style, { marginVertical: 12, borderRadius: 8 }]}
       loading={loading}
       disabled={disabled}
-      contentStyle={{ height: 60 }}
+      contentStyle={[contentStyle, { height: 60 }]}
+      textColor={textColor}
     >
       {title}
     </Button>

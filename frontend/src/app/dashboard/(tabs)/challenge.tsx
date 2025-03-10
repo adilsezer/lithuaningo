@@ -141,7 +141,7 @@ export default function ChallengeScreen() {
       </CustomText>
       <CustomText>
         Ready for today's Lithuaningo challenge? Test your skills with a daily
-        challenge or warm up with flashcards.
+        challenge or warm up with practice challenges.
       </CustomText>
 
       {checkingStatus ? (
@@ -176,6 +176,13 @@ export default function ChallengeScreen() {
           onPress={handleStartChallenge}
         />
       )}
+
+      <CustomButton
+        title="Start Practice Challenge"
+        onPress={handleStartChallenge}
+        style={{ backgroundColor: theme.colors.secondary, marginTop: 0 }}
+        textColor={theme.colors.onSecondary}
+      />
 
       {stats && <UserChallengeStatsCard stats={stats} />}
 
