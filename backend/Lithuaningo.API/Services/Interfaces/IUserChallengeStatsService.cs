@@ -14,6 +14,7 @@ namespace Lithuaningo.API.Services.Interfaces
 
         /// <summary>
         /// Updates the challenge statistics for a user.
+        /// Also updates the user's leaderboard entry if there are new correct answers.
         /// </summary>
         /// <param name="userId">The ID of the user to update stats for.</param>
         /// <param name="request">The updated user challenge statistics.</param>

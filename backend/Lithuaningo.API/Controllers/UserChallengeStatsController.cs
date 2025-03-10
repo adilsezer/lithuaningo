@@ -202,7 +202,7 @@ namespace Lithuaningo.API.Controllers
         [HttpPut("{userId}")]
         [SwaggerOperation(
             Summary = "Updates challenge statistics for a user",
-            Description = "Updates existing challenge statistics for a specified user",
+            Description = "Updates existing challenge statistics for a specified user and updates their leaderboard entry when correct answers are added",
             OperationId = "UpdateChallengeStats",
             Tags = new[] { "UserChallengeStats" }
         )]
