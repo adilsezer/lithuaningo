@@ -212,7 +212,12 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
     return (
       <Surface style={styles.centeredContainer} elevation={0}>
-        <Card style={styles.completionCard}>
+        <Card
+          style={[
+            styles.completionCard,
+            { backgroundColor: theme.colors.background },
+          ]}
+        >
           <Card.Content style={styles.completionContent}>
             <Avatar.Icon
               size={80}
