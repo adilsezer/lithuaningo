@@ -7,6 +7,7 @@ import { Card, Button } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { router } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
+import DebugButtons from "@components/debug/DebugButtons";
 
 const ChallengeScreen: React.FC = () => {
   const userData = useUserData();
@@ -26,6 +27,7 @@ const ChallengeScreen: React.FC = () => {
     getCompletionMessage,
     dailyChallengeCompleted,
     checkDailyChallengeStatus,
+    resetDailyChallenge,
   } = useChallenge();
 
   // Check daily challenge status immediately on mount
@@ -65,6 +67,16 @@ const ChallengeScreen: React.FC = () => {
               >
                 Back to Home
               </Button>
+
+              {/* Debug buttons only visible in dev mode */}
+              <DebugButtons
+                actions={[
+                  {
+                    title: "Reset Daily Challenge",
+                    onPress: resetDailyChallenge,
+                  },
+                ]}
+              />
             </Card.Content>
           </Card>
         </View>

@@ -31,10 +31,11 @@ public interface IAIService
     Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat");
     
     /// <summary>
-    /// Generates challenge questions using AI
+    /// Generates challenge questions using AI based on provided flashcards
     /// </summary>
+    /// <param name="flashcards">List of flashcards to use for generating questions</param>
     /// <returns>A list of challenge questions</returns>
-    Task<List<CreateChallengeQuestionRequest>> GenerateChallengeQuestionsAsync();
+    Task<List<CreateChallengeQuestionRequest>> GenerateChallengeQuestionsAsync(List<Models.Flashcard> flashcards);
     
     /// <summary>
     /// Clears conversation history for testing purposes

@@ -27,6 +27,7 @@ interface UseChallengeReturn {
   getCompletionMessage: () => string;
   dailyChallengeCompleted: boolean;
   checkDailyChallengeStatus: () => Promise<boolean>;
+  resetDailyChallenge: () => Promise<void>;
 }
 
 /**
@@ -266,6 +267,32 @@ export const useChallenge = (
     return "Keep learning! Practice makes perfect in Lithuanian.";
   }, [score, questions.length]);
 
+  // Reset daily challenge status
+  const resetDailyChallenge = useCallback(async () => {
+    if (!userData?.id) return;
+
+    try {
+      // Only allow reset in development mode
+      if (!__DEV__) {
+        console.warn(
+          "Reset daily challenge is only available in development mode"
+        );
+        return;
+      }
+
+      // Reset the status in storage
+      await challengeService.resetDailyChallengeStatus(userData.id);
+
+      // Update local state
+      setDailyChallengeCompleted(false);
+
+      // Log success
+      console.log("Daily challenge status has been reset");
+    } catch (error) {
+      console.error("Error resetting daily challenge status:", error);
+    }
+  }, [userData?.id]);
+
   return {
     questions,
     currentIndex,
@@ -283,5 +310,6 @@ export const useChallenge = (
     getCompletionMessage,
     dailyChallengeCompleted,
     checkDailyChallengeStatus,
+    resetDailyChallenge,
   };
 };

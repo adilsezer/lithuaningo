@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
+using System.Text;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
@@ -17,10 +18,6 @@ public class AIService : IAIService
 {
     #region Constants
     
-    // Supported service types - only include what we actually use
-    public const string CHAT_SERVICE = "chat";
-    public const string CHALLENGE_SERVICE = "challenge";
-    
     // Chat system instructions
     private const string CHAT_SYSTEM_INSTRUCTIONS = 
         "You are a Lithuanian language learning assistant named Lithuaningo AI. " +
@@ -30,52 +27,57 @@ public class AIService : IAIService
         "Use friendly, conversational language suitable for a language learning app.";
     
     // Challenge system instructions with complete format requirements
-    private const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are a teaching assistant specialized in creating Lithuanian language challenges.
+    private const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language challenges based on flashcard data.
 
-Your task is to generate 5 Lithuanian language challenges for our learning app.
+FORMAT: Return a JSON array of 5 challenge objects with these properties:
+- question: A clear question using the template formats provided below
+- options: Array of 4 possible answers (or 2 for true/false)
+- correctAnswer: Must match exactly one option from the options array
+- exampleSentence: Use the flashcard's example sentence
+- type: Integer value (0=MultipleChoice, 1=TrueFalse, 2=FillInTheBlank)
 
-FORMAT REQUIREMENTS: 
-- Return a valid JSON array of challenges
-- Do NOT include any explanations, comments, or markdown formatting like triple backticks
-- Return ONLY the JSON array
+RULES:
+1. USE ONLY words and phrases from the provided flashcards
+2. Create 5 questions total: 2 multiple-choice, 2 true/false, and 1 fill-in-blank
+3. For each question, use appropriate template from below
 
-EACH QUESTION MUST HAVE:
-- question: A Lithuanian phrase or word with English translation in parentheses
-- options: An array of exactly 4 possible answers in Lithuanian
-- correctAnswer: The correct option (must match exactly one of the options)
-- exampleSentence: An example usage in Lithuanian
-- type: MUST be one of these EXACT values (no quotes): 0 for MultipleChoice, 1 for TrueFalse, 2 for FillInTheBlank
+QUESTION TEMPLATES:
+- For Multiple Choice (type=0):
+  * ""What does the word '{0}' mean?"" [options are English translations]
+  * ""What is the grammatical form of '{0}'?""
+  * ""Put the words in the correct order: {scrambled words}"" [options are different possible word orders]
 
-EXAMPLE OF EXPECTED JSON STRUCTURE (do not copy these examples, create new ones):
+- For True/False (type=1):
+  * ""The word '{0}' means '{1}' (True or False)""
+  * ""The grammatical form of '{0}' is {1} (True or False)""
+
+- For Fill in the Blank (type=2):
+  * ""Fill in the blank: {sentence with blank}""
+
+EXAMPLE OUTPUT:
 [
   {
-    ""question"": ""Labas (Hello)"",
-    ""options"": [""Labas"", ""Viso gero"", ""Ačiū"", ""Prašau""],
-    ""correctAnswer"": ""Labas"",
+    ""question"": ""What does the word 'Labas' mean?"",
+    ""options"": [""Hello"", ""Goodbye"", ""Thank you"", ""Please""],
+    ""correctAnswer"": ""Hello"",
     ""exampleSentence"": ""Labas, kaip sekasi?"",
     ""type"": 0
   },
   {
-    ""question"": ""Ar tu kalbi lietuviškai? (Do you speak Lithuanian?)"",
-    ""options"": [""Taip"", ""Ne""],
-    ""correctAnswer"": ""Taip"",
-    ""exampleSentence"": ""Ar tu kalbi lietuviškai? Taip, kalbu."",
-    ""type"": 1
+    ""question"": ""Put the words in the correct order: kaip labas sekasi"",
+    ""options"": [""Labas, kaip sekasi?"", ""Kaip labas sekasi?"", ""Sekasi kaip labas?"", ""Kaip sekasi labas?""],
+    ""correctAnswer"": ""Labas, kaip sekasi?"",
+    ""exampleSentence"": ""Labas, kaip sekasi?"",
+    ""type"": 0
   },
   {
-    ""question"": ""Aš esu (I am) ______."",
-    ""options"": [""studentas"", ""mokytojas"", ""gydytojas"", ""inžinierius""],
-    ""correctAnswer"": ""studentas"",
-    ""exampleSentence"": ""Aš esu studentas universitete."",
-    ""type"": 2
+    ""question"": ""The word 'Ačiū' means 'Thank you' (True or False)"",
+    ""options"": [""True"", ""False""],
+    ""correctAnswer"": ""True"",
+    ""exampleSentence"": ""Ačiū už pagalbą."",
+    ""type"": 1
   }
-]
-
-CONTENT GUIDELINES:
-- Focus on common Lithuanian phrases, vocabulary, and basic grammar
-- Include a mix of greetings, daily expressions, and basic vocabulary
-- Make questions appropriate for beginners to intermediate learners
-- Ensure all text in Lithuanian uses correct characters and spelling";
+]";
 
     #endregion
     
@@ -148,41 +150,40 @@ CONTENT GUIDELINES:
     /// <returns>The AI's response text</returns>
     public async Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat")
     {
+        serviceType = serviceType.ToLowerInvariant();
+        
+        _logger.LogInformation("Processing AI request using service type: {ServiceType}", serviceType);
+        
         try
         {
-            // Log the type of request being processed
-            _logger.LogInformation("Processing {ServiceType} request", serviceType);
-            
-            // Use our simplified service handler - only chat and challenge are supported
-            return serviceType.ToLowerInvariant() switch
-            {
-                CHAT_SERVICE => await HandleChatRequestAsync(prompt, context),
-                CHALLENGE_SERVICE => await HandleChallengeRequestAsync(),
-                _ => await HandleChatRequestAsync(prompt, context) // Default to chat
-            };
+            // Process based on service type
+            var aiResponse = await HandleChatRequestAsync(prompt, context);
+            return aiResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing AI request: {Message}", ex.Message);
-            return "I'm sorry, I'm having trouble processing your request right now. Please try again later.";
+            _logger.LogError(ex, "Error processing AI request with service type {ServiceType}", serviceType);
+            throw;
         }
     }
     
     /// <summary>
-    /// Generates challenges using AI
+    /// Generates challenge questions using AI based on provided flashcards
     /// </summary>
-    /// <returns>A list of challenges</returns>
-    public async Task<List<CreateChallengeQuestionRequest>> GenerateChallengeQuestionsAsync()
+    /// <param name="flashcards">List of flashcards to use for generating questions</param>
+    /// <returns>A list of challenge questions</returns>
+    public async Task<List<CreateChallengeQuestionRequest>> GenerateChallengeQuestionsAsync(List<Models.Flashcard> flashcards)
     {
         // Retry up to 3 times if necessary
         for (int attempt = 1; attempt <= 3; attempt++)
         {
             try
             {
-                _logger.LogInformation("Generating challenges with AI, attempt {Attempt}", attempt);
+                _logger.LogInformation("Generating challenges with AI from {Count} flashcards, attempt {Attempt}", 
+                    flashcards.Count, attempt);
                 
                 // Get raw JSON response from the AI
-                var jsonResponse = await HandleChallengeRequestAsync();
+                var jsonResponse = await HandleFlashcardChallengeRequestAsync(flashcards);
                 
                 if (string.IsNullOrEmpty(jsonResponse))
                 {
@@ -220,23 +221,35 @@ CONTENT GUIDELINES:
                     continue;
                 }
                 
-                // Validate the questions
-                if (generatedQuestions != null && ValidateGeneratedChallenges(generatedQuestions))
+                // Verify the deserialized data
+                if (generatedQuestions == null || generatedQuestions.Count == 0)
                 {
-                    _logger.LogInformation("Successfully generated {Count} valid challenges", generatedQuestions.Count);
-                    return generatedQuestions;
+                    _logger.LogWarning("No valid questions were deserialized from AI response, attempt {Attempt}", attempt);
+                    continue;
                 }
                 
-                _logger.LogWarning("Generated challenges failed validation on attempt {Attempt}", attempt);
+                // Validate the questions
+                if (!ValidateGeneratedChallenges(generatedQuestions))
+                {
+                    _logger.LogWarning("Generated questions failed validation, attempt {Attempt}", attempt);
+                    continue;
+                }
+                
+                return generatedQuestions;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating challenges on attempt {Attempt}", attempt);
+                _logger.LogError(ex, "Error generating challenges from flashcards, attempt {Attempt}", attempt);
+                
+                if (attempt >= 3)
+                {
+                    throw;
+                }
             }
         }
         
-        // If we reach here, all attempts failed
-        throw new InvalidOperationException("Failed to generate valid challenges after multiple attempts");
+        // If we get here, all attempts have failed
+        throw new Exception("Failed to generate challenge questions from flashcards after multiple attempts");
     }
     
     /// <summary>
@@ -320,15 +333,47 @@ CONTENT GUIDELINES:
     }
     
     /// <summary>
-    /// Handles a challenge generation request
+    /// Handles AI request for generating challenge questions based on flashcards
     /// </summary>
-    private async Task<string> HandleChallengeRequestAsync()
+    /// <param name="flashcards">The flashcards to use for generating questions</param>
+    /// <returns>The AI response as a string</returns>
+    private async Task<string> HandleFlashcardChallengeRequestAsync(List<Models.Flashcard> flashcards)
     {
-        // For challenge generation, we use detailed system instructions and a simple prompt
+        if (flashcards == null || flashcards.Count == 0)
+        {
+            _logger.LogWarning("No flashcards provided for challenge generation");
+            return "[]";
+        }
+        
+        // Prepare flashcard data for the prompt
+        var flashcardData = new StringBuilder();
+        flashcardData.AppendLine("Here are the flashcards to use for generating questions:");
+        
+        foreach (var flashcard in flashcards)
+        {
+            flashcardData.AppendLine($"- Lithuanian word: {flashcard.FrontWord}");
+            flashcardData.AppendLine($"  Translation: {flashcard.BackWord}");
+            
+            if (!string.IsNullOrEmpty(flashcard.ExampleSentence))
+            {
+                flashcardData.AppendLine($"  Example sentence: {flashcard.ExampleSentence}");
+                
+                if (!string.IsNullOrEmpty(flashcard.ExampleSentenceTranslation))
+                {
+                    flashcardData.AppendLine($"  Example translation: {flashcard.ExampleSentenceTranslation}");
+                }
+            }
+            
+            flashcardData.AppendLine();
+        }
+        
+        // For challenge generation, we use detailed system instructions and flashcard data
         var messages = new List<ChatMessage>
         {
             new SystemChatMessage(CHALLENGE_SYSTEM_INSTRUCTIONS),
-            new UserChatMessage("Generate 5 Lithuanian language challenges following the format specified in your instructions.")
+            new UserChatMessage($@"Create Lithuanian language challenges using these flashcards:
+
+{flashcardData}")
         };
 
         // Send the request to OpenAI

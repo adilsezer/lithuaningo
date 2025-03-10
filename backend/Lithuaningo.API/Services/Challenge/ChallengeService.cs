@@ -37,6 +37,7 @@ namespace Lithuaningo.API.Services
         private readonly IMapper _mapper;
         private readonly CacheInvalidator _cacheInvalidator;
         private readonly IAIService _aiService;
+        private readonly IDeckService _deckService;
 
         public ChallengeService(
             ISupabaseService supabaseService,
@@ -45,7 +46,8 @@ namespace Lithuaningo.API.Services
             ILogger<ChallengeService> logger,
             IMapper mapper,
             CacheInvalidator cacheInvalidator,
-            IAIService aiService)
+            IAIService aiService,
+            IDeckService deckService)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
@@ -54,6 +56,7 @@ namespace Lithuaningo.API.Services
             _mapper = mapper;
             _cacheInvalidator = cacheInvalidator;
             _aiService = aiService;
+            _deckService = deckService;
         }
 
         /// <summary>
@@ -87,7 +90,15 @@ namespace Lithuaningo.API.Services
                 if (questions == null || !questions.Any())
                 {
                     _logger.LogInformation("No challenge questions found for {Date}, generating new ones using AI", today);
-                    return await GenerateAIChallengeQuestionsAsync();
+                    var generatedQuestions = await GenerateAIChallengeQuestionsAsync();
+                    
+                    if (!generatedQuestions.Any())
+                    {
+                        _logger.LogWarning("Could not generate questions from flashcards for {Date}", today);
+                        return Enumerable.Empty<ChallengeQuestionResponse>();
+                    }
+                    
+                    return generatedQuestions;
                 }
                 
                 var questionResponses = _mapper.Map<IEnumerable<ChallengeQuestionResponse>>(questions);
@@ -112,10 +123,45 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                _logger.LogInformation("Generating challenge questions using AI service");
+                _logger.LogInformation("Generating challenge questions using AI service with flashcards");
                 
-                // Use the AIService to generate questions
-                var generatedQuestions = await _aiService.GenerateChallengeQuestionsAsync();
+                // Get 10 random deck IDs
+                var randomDeckIds = await _deckService.GetRandomDeckIdsAsync(10);
+                if (randomDeckIds.Count == 0)
+                {
+                    _logger.LogWarning("No deck IDs found for flashcard-based challenge generation");
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
+                }
+                
+                // Collect flashcards from all random decks
+                var allFlashcards = new List<Models.Flashcard>();
+                foreach (var deckId in randomDeckIds)
+                {
+                    var deckFlashcards = await _deckService.GetDeckFlashcardsAsync(deckId);
+                    if (deckFlashcards.Any())
+                    {
+                        allFlashcards.AddRange(deckFlashcards);
+                    }
+                }
+                
+                if (allFlashcards.Count == 0)
+                {
+                    _logger.LogWarning("No flashcards found in the selected decks");
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
+                }
+                
+                // Randomize and take up to 20 flashcards to avoid overwhelming the AI
+                var random = new Random();
+                var selectedFlashcards = allFlashcards
+                    .OrderBy(x => random.Next())
+                    .Take(20)
+                    .ToList();
+                
+                _logger.LogInformation("Selected {Count} flashcards from {DeckCount} decks for challenge generation", 
+                    selectedFlashcards.Count, randomDeckIds.Count);
+                
+                // Use the AIService to generate questions based on the selected flashcards
+                var generatedQuestions = await _aiService.GenerateChallengeQuestionsAsync(selectedFlashcards);
                 
                 // Convert the generated questions to database entities
                 var questions = generatedQuestions.Select(q => new ChallengeQuestion
@@ -133,25 +179,12 @@ namespace Lithuaningo.API.Services
                 await _supabaseClient
                     .From<ChallengeQuestion>()
                     .Insert(questions);
-
-                // Map the questions to DTOs
-                var responses = _mapper.Map<IEnumerable<ChallengeQuestionResponse>>(questions);
-
-                // Set today's date for the generated questions
-                var today = DateTime.UtcNow.Date.ToString("yyyy-MM-dd");
-                
-                // Store in cache
-                await _cache.SetAsync(
-                    $"{CacheKeyPrefix}{today}",
-                    responses,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes)
-                );
-
-                return responses;
+                    
+                return _mapper.Map<IEnumerable<ChallengeQuestionResponse>>(questions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating challenge questions using AI");
+                _logger.LogError(ex, "Error generating AI challenge questions from flashcards");
                 throw;
             }
         }

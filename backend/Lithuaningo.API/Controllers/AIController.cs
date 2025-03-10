@@ -56,7 +56,7 @@ public class AIController : BaseApiController
             // Validate service type
             if (string.IsNullOrWhiteSpace(request.ServiceType))
             {
-                request.ServiceType = AIService.CHAT_SERVICE;
+                request.ServiceType = "chat";
             }
 
             // Process the request
@@ -101,7 +101,7 @@ public class AIController : BaseApiController
     public async Task<ActionResult<AIResponse>> SendChatMessage([FromBody] AIRequest request)
     {
         // Override the service type to ensure it's processed as a chat request
-        request.ServiceType = AIService.CHAT_SERVICE;
+        request.ServiceType = "chat";
         return await ProcessRequest(request);
     }
 

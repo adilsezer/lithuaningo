@@ -19,5 +19,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<List<Flashcard>> GetDeckFlashcardsAsync(string deckId);
         Task ReportDeckAsync(string id, string userId, string reason);
         Task<string> UploadDeckImageAsync(IFormFile file);
+        Task<List<string>> GetRandomDeckIdsAsync(int limit = 10);
     }
 }

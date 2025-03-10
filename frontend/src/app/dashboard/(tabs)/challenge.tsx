@@ -10,9 +10,10 @@ import { UserChallengeStatsCard } from "@components/challenge/UserChallengeStats
 import CustomDivider from "@components/ui/CustomDivider";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
-import challengeService from "@src/services/data/challengeService";
+import { useChallenge } from "@src/hooks/useChallenge";
 import { ActivityIndicator, Card, useTheme } from "react-native-paper";
 import { useFocusEffect } from "@react-navigation/native";
+import DebugButtons from "@components/debug/DebugButtons";
 
 export default function ChallengeScreen() {
   const handleNavigation = (route: string) => {
@@ -23,6 +24,10 @@ export default function ChallengeScreen() {
   const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
   const [checkingStatus, setCheckingStatus] = useState(false);
   const theme = useTheme();
+
+  const { checkDailyChallengeStatus, resetDailyChallenge } = useChallenge({
+    skipInitialFetch: true,
+  });
 
   const {
     entries,
@@ -40,15 +45,12 @@ export default function ChallengeScreen() {
     hasCheckedExistence,
   } = useUserChallengeStats(userData?.id);
 
-  // Check daily challenge status
-  const checkDailyChallengeStatus = async () => {
+  const checkDailyChallengeStatusWrapper = async () => {
     if (!userData?.id) return;
 
     try {
       setCheckingStatus(true);
-      const isCompleted = await challengeService.hasDailyChallengeCompleted(
-        userData.id
-      );
+      const isCompleted = await checkDailyChallengeStatus();
       setDailyChallengeCompleted(isCompleted);
     } catch (error) {
       console.error("Error checking daily challenge status:", error);
@@ -57,11 +59,9 @@ export default function ChallengeScreen() {
     }
   };
 
-  // Check status when component mounts
   useEffect(() => {
-    checkDailyChallengeStatus();
+    checkDailyChallengeStatusWrapper();
 
-    // If user is logged in but stats are missing, attempt to fetch them
     if (userData?.id) {
       if (!hasCheckedExistence) {
         checkStatsExistence().then((exists) => {
@@ -82,17 +82,15 @@ export default function ChallengeScreen() {
     hasCheckedExistence,
   ]);
 
-  // Also check status whenever screen comes into focus
   useFocusEffect(
     React.useCallback(() => {
-      checkDailyChallengeStatus();
+      checkDailyChallengeStatusWrapper();
 
-      // If user is logged in but stats are missing, attempt to fetch them again
       if (userData?.id && !stats && !isLoading && hasCheckedExistence) {
         fetchStats();
       }
 
-      return () => {}; // Cleanup function
+      return () => {};
     }, [userData?.id, stats, isLoading, fetchStats, hasCheckedExistence])
   );
 
@@ -100,26 +98,35 @@ export default function ChallengeScreen() {
     fetchLeaderboard();
   }, [fetchLeaderboard]);
 
-  // Handle creating stats if they don't exist
   const handleStartChallenge = async () => {
     if (userData?.id && !stats) {
       try {
-        // First check if stats exist before trying to create
         const statsExist = await checkStatsExistence();
 
         if (statsExist) {
-          // If stats exist but not loaded, just fetch them
           await fetchStats();
         } else {
-          // Create new stats if they don't exist
           await createStats();
         }
       } catch (error) {
         console.error("Error handling challenge stats:", error);
-        // Continue to challenge anyway - stats will be handled there if needed
       }
     }
     handleNavigation("/challenge");
+  };
+
+  const resetDailyChallengeWrapper = async () => {
+    if (!userData?.id) return;
+
+    try {
+      if (!__DEV__) return;
+
+      await resetDailyChallenge();
+      setDailyChallengeCompleted(false);
+      console.log("Daily challenge status has been reset");
+    } catch (error) {
+      console.error("Error resetting daily challenge status:", error);
+    }
   };
 
   if (error) {
@@ -168,6 +175,15 @@ export default function ChallengeScreen() {
             <CustomText style={styles.completedSubtext}>
               Come back tomorrow for a new challenge.
             </CustomText>
+
+            <DebugButtons
+              actions={[
+                {
+                  title: "Reset Daily Challenge",
+                  onPress: resetDailyChallengeWrapper,
+                },
+              ]}
+            />
           </Card.Content>
         </Card>
       ) : (

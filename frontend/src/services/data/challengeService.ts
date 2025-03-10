@@ -130,6 +130,25 @@ class ChallengeService {
       console.error("Error setting daily challenge completion:", error);
     }
   }
+
+  // Reset the daily challenge completion status for debugging purposes
+  async resetDailyChallengeStatus(userId: string): Promise<void> {
+    try {
+      const completionData = await retrieveData<Record<string, string>>(
+        this.DAILY_CHALLENGE_KEY
+      );
+      if (!completionData) return;
+
+      // Remove user's entry if it exists
+      if (completionData[userId]) {
+        delete completionData[userId];
+        await storeData(this.DAILY_CHALLENGE_KEY, completionData);
+        console.log("Daily challenge status reset for user:", userId);
+      }
+    } catch (error) {
+      console.error("Error resetting daily challenge status:", error);
+    }
+  }
 }
 
 export default new ChallengeService();

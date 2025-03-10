@@ -550,6 +550,43 @@ namespace Lithuaningo.API.Services
             }
         }
 
+        /// <summary>
+        /// Gets a specified number of random deck IDs
+        /// </summary>
+        /// <param name="limit">Maximum number of deck IDs to return</param>
+        /// <returns>List of random deck IDs</returns>
+        public async Task<List<string>> GetRandomDeckIdsAsync(int limit = 10)
+        {
+            try
+            {
+                _logger.LogInformation("Retrieving {Limit} random deck IDs", limit);
+
+                // We can't use random() directly, so we'll get a larger sample and randomize in memory
+                // This approach still limits the data transfer compared to the original implementation
+                var maxSampleSize = Math.Min(limit * 3, 100); // Get more than we need but cap it
+                
+                var response = await _supabaseClient
+                    .From<Models.Deck>()
+                    .Where(d => d.IsPublic == true && d.FlashcardsCount > 0)
+                    .Limit(maxSampleSize)
+                    .Get();
+                    
+                // Randomize in memory and take the requested number
+                // This is more efficient than fetching all decks
+                var random = new Random();
+                return response.Models
+                    .OrderBy(x => random.Next())
+                    .Take(Math.Min(limit, response.Models.Count))
+                    .Select(d => d.Id.ToString())
+                    .ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving random deck IDs");
+                throw;
+            }
+        }
+
         private async Task InvalidateDeckCacheAsync(DeckResponse deck)
         {
             // Use the centralized CacheInvalidator instead of manual cache removal
