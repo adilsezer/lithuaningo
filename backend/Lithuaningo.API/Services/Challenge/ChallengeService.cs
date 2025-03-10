@@ -188,5 +188,72 @@ namespace Lithuaningo.API.Services
                 throw;
             }
         }
+
+        /// <summary>
+        /// Generates challenge questions for a specific deck using its flashcards.
+        /// </summary>
+        /// <param name="deckId">The ID of the deck to generate questions for</param>
+        /// <returns>The generated challenge questions for the specific deck</returns>
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateDeckChallengeQuestionsAsync(string deckId)
+        {
+            try
+            {
+                _logger.LogInformation("Generating challenge questions for deck {DeckId}", deckId);
+                
+                // Validate deck ID
+                if (string.IsNullOrEmpty(deckId))
+                {
+                    _logger.LogWarning("Invalid deck ID provided");
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
+                }
+                
+                // Get the flashcards for this specific deck
+                var flashcards = await _deckService.GetDeckFlashcardsAsync(deckId);
+                
+                if (flashcards == null || !flashcards.Any())
+                {
+                    _logger.LogWarning("No flashcards found for deck {DeckId}", deckId);
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
+                }
+                
+                _logger.LogInformation("Found {Count} flashcards for deck {DeckId}", flashcards.Count, deckId);
+                
+                // If there are too many flashcards, select a subset to avoid overwhelming the AI
+                var selectedFlashcards = flashcards;
+                if (flashcards.Count > 20)
+                {
+                    var random = new Random();
+                    selectedFlashcards = flashcards
+                        .OrderBy(x => random.Next())
+                        .Take(20)
+                        .ToList();
+                    
+                    _logger.LogInformation("Selected {Count} flashcards from {TotalCount} for deck {DeckId}", 
+                        selectedFlashcards.Count, flashcards.Count, deckId);
+                }
+                
+                // Use the AIService to generate questions based on the selected flashcards
+                var generatedQuestions = await _aiService.GenerateChallengeQuestionsAsync(selectedFlashcards);
+                
+                // Convert the generated questions to database entities
+                var questions = generatedQuestions.Select(q => new ChallengeQuestion
+                {
+                    Id = Guid.NewGuid(),
+                    Question = q.Question,
+                    Options = q.Options,
+                    CorrectAnswer = q.CorrectAnswer,
+                    ExampleSentence = q.ExampleSentence,
+                    Type = q.Type,
+                    CreatedAt = DateTime.UtcNow,
+                }).ToList();
+                    
+                return _mapper.Map<IEnumerable<ChallengeQuestionResponse>>(questions);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating challenge questions for deck {DeckId}", deckId);
+                throw;
+            }
+        }
     }
 }

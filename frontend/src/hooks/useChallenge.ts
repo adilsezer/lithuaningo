@@ -8,6 +8,7 @@ interface UseChallengeOptions {
   customQuestions?: ChallengeQuestion[];
   onComplete?: (score: number, totalQuestions: number) => void;
   skipInitialFetch?: boolean;
+  deckId?: string;
 }
 
 interface UseChallengeReturn {
@@ -20,6 +21,7 @@ interface UseChallengeReturn {
   isCorrectAnswer: boolean | null;
   isCompleted: boolean;
   fetchChallenge: (isNew?: boolean) => Promise<void>;
+  fetchDeckChallenge: (deckId: string) => Promise<void>;
   handleAnswer: (answer: string) => Promise<void>;
   handleNextQuestion: () => Promise<void>;
   resetChallenge: () => void;
@@ -39,7 +41,12 @@ interface UseChallengeReturn {
 export const useChallenge = (
   options: UseChallengeOptions = {}
 ): UseChallengeReturn => {
-  const { customQuestions, onComplete, skipInitialFetch = false } = options;
+  const {
+    customQuestions,
+    onComplete,
+    skipInitialFetch = false,
+    deckId,
+  } = options;
   const userData = useUserData();
   const [questions, setQuestions] = useState<ChallengeQuestion[]>(
     customQuestions || []
@@ -151,6 +158,45 @@ export const useChallenge = (
       }
     },
     [customQuestions, resetChallenge, userData?.id, checkDailyChallengeStatus]
+  );
+
+  // Fetch deck-specific challenge questions
+  const fetchDeckChallenge = useCallback(
+    async (deckId: string) => {
+      if (!deckId) {
+        setError("No deck ID provided.");
+        return;
+      }
+
+      try {
+        setLoading(true);
+        setError(null);
+        resetChallenge(); // Reset state for new challenge
+
+        // Fetch deck-specific questions
+        const deckQuestions = await challengeService.generateDeckChallenge(
+          deckId
+        );
+
+        if (!deckQuestions || deckQuestions.length === 0) {
+          setError(
+            "No questions could be generated for this deck. Make sure the deck has flashcards."
+          );
+          return;
+        }
+
+        setQuestions(deckQuestions);
+      } catch (err: any) {
+        console.error(`Failed to load deck challenge for deck ${deckId}:`, err);
+        const errorMessage =
+          err?.message ||
+          "Failed to load deck challenge. Please check your connection and try again.";
+        setError(errorMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [resetChallenge]
   );
 
   // Handle user's answer selection
@@ -293,6 +339,7 @@ export const useChallenge = (
     }
   }, [userData?.id]);
 
+  // Return the hook's API
   return {
     questions,
     currentIndex,
@@ -303,6 +350,7 @@ export const useChallenge = (
     isCorrectAnswer,
     isCompleted,
     fetchChallenge,
+    fetchDeckChallenge,
     handleAnswer,
     handleNextQuestion,
     resetChallenge,

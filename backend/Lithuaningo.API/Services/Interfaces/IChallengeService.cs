@@ -20,5 +20,12 @@ namespace Lithuaningo.API.Services.Interfaces
         /// </summary>
         /// <returns>The generated challenge questions</returns>
         Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync();
+        
+        /// <summary>
+        /// Generates challenge questions for a specific deck using its flashcards.
+        /// </summary>
+        /// <param name="deckId">The ID of the deck to generate questions for</param>
+        /// <returns>The generated challenge questions for the specific deck</returns>
+        Task<IEnumerable<ChallengeQuestionResponse>> GenerateDeckChallengeQuestionsAsync(string deckId);
     }
 }

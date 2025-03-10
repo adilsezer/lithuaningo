@@ -93,6 +93,36 @@ class ChallengeService {
     }
   }
 
+  // Generate deck-specific challenge questions
+  async generateDeckChallenge(
+    deckId: string,
+    retryCount = 0,
+    maxRetries = 3
+  ): Promise<ChallengeQuestion[]> {
+    try {
+      console.log(`Generating challenge questions for deck: ${deckId}`);
+      const questions = await apiClient.generateDeckChallenge(deckId);
+      return questions;
+    } catch (error: any) {
+      console.error(
+        `Error generating deck challenge for deck ${deckId}:`,
+        error
+      );
+
+      // If we haven't reached max retries, try again with exponential backoff
+      if (retryCount < maxRetries) {
+        const waitTime = Math.min(3000 * Math.pow(2, retryCount), 30000);
+        console.log(
+          `Retrying deck challenge generation in ${waitTime / 1000}s...`
+        );
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+        return this.generateDeckChallenge(deckId, retryCount + 1, maxRetries);
+      }
+
+      throw error;
+    }
+  }
+
   async getQuizHistory(userId: string): Promise<ChallengeResult[]> {
     return apiClient.getChallengeHistory(userId);
   }

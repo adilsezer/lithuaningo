@@ -174,6 +174,16 @@ class ApiClient {
     });
   }
 
+  async generateDeckChallenge(deckId: string): Promise<ChallengeQuestion[]> {
+    return this.request<ChallengeQuestion[]>(
+      `/api/v1/Challenge/deck/${deckId}`,
+      {
+        method: "POST",
+        timeout: 120000, // AI-generated content might take longer
+      }
+    );
+  }
+
   async getChallengeHistory(userId: string): Promise<ChallengeResult[]> {
     return this.request<ChallengeResult[]>(
       `/api/v1/Challenge/history/${userId}`
