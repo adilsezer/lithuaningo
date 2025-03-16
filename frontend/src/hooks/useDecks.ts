@@ -53,6 +53,9 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
   const [selectedCategory, setSelectedCategory] = useState<DeckCategory>(
     options?.initialCategory || "All Decks"
   );
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const pageSize = options?.limit || 10;
 
   // Error handling
   const handleError = useCallback(
@@ -106,73 +109,84 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
   }, [deckId, setLoading, userData, router, showError, handleError]);
 
   // Fetch decks based on category and search query
-  const fetchDecks = useCallback(async () => {
-    if (!isAuthenticated) {
-      setDecks([]);
-      return;
-    }
-
-    try {
-      setLoading(true);
-      clearError();
-
-      let fetchedDecks: (Deck | DeckWithRatingResponse)[] = [];
-
-      // Use different endpoint based on category
-      if (selectedCategory === "Top Rated") {
-        // Continue using getTopRatedDecks for "Top Rated" category
-        fetchedDecks = await deckService.getTopRatedDecks(
-          options?.limit || 10,
-          "all"
-        );
-      } else {
-        // Use getPublicDecks for all other categories
-        fetchedDecks = await deckService.getPublicDecks(options?.limit || 10);
+  const fetchDecks = useCallback(
+    async (page: number = 1) => {
+      if (!isAuthenticated) {
+        setDecks([]);
+        return;
       }
 
-      // Filter by category if needed
-      if (
-        selectedCategory !== "All Decks" &&
-        selectedCategory !== "Top Rated"
-      ) {
-        if (selectedCategory === "My Decks") {
-          fetchedDecks = fetchedDecks.filter(
-            (deck) => deck.userId === userData?.id
-          );
+      try {
+        setLoading(true);
+        clearError();
+
+        let fetchedDecks: (Deck | DeckWithRatingResponse)[] = [];
+
+        // Use different endpoint based on category
+        if (selectedCategory === "Top Rated") {
+          // Continue using getTopRatedDecks for "Top Rated" category
+          fetchedDecks = await deckService.getTopRatedDecks(pageSize, "all");
         } else {
+          // Use getPublicDecks for all other categories
+          fetchedDecks = await deckService.getPublicDecks(pageSize, page);
+        }
+
+        // Filter by category if needed
+        if (
+          selectedCategory !== "All Decks" &&
+          selectedCategory !== "Top Rated"
+        ) {
+          if (selectedCategory === "My Decks") {
+            fetchedDecks = fetchedDecks.filter(
+              (deck) => deck.userId === userData?.id
+            );
+          } else {
+            fetchedDecks = fetchedDecks.filter(
+              (deck) => deck.category === selectedCategory
+            );
+          }
+        }
+
+        // Filter by search query if present
+        if (searchQuery.trim()) {
+          const query = searchQuery.toLowerCase();
           fetchedDecks = fetchedDecks.filter(
-            (deck) => deck.category === selectedCategory
+            (deck) =>
+              deck.title.toLowerCase().includes(query) ||
+              deck.description.toLowerCase().includes(query)
           );
         }
-      }
 
-      // Filter by search query if present
-      if (searchQuery.trim()) {
-        const query = searchQuery.toLowerCase();
-        fetchedDecks = fetchedDecks.filter(
-          (deck) =>
-            deck.title.toLowerCase().includes(query) ||
-            deck.description.toLowerCase().includes(query)
-        );
-      }
+        setDecks(fetchedDecks);
+        setCurrentPage(page);
 
-      setDecks(fetchedDecks);
-    } catch (error) {
-      console.error("[useDecks] Error fetching decks:", error);
-      handleError(error, "Failed to fetch decks");
-    } finally {
-      setLoading(false);
-    }
-  }, [
-    selectedCategory,
-    searchQuery,
-    userData?.id,
-    setLoading,
-    clearError,
-    handleError,
-    isAuthenticated,
-    options?.limit,
-  ]);
+        // Estimate total pages based on results
+        // If we got fewer results than requested, we're on the last page
+        // If we got exactly the number requested, there might be more
+        if (fetchedDecks.length < pageSize) {
+          setTotalPages(page);
+        } else {
+          // Assume there's at least one more page
+          setTotalPages(page + 1);
+        }
+      } catch (error) {
+        console.error("[useDecks] Error fetching decks:", error);
+        handleError(error, "Failed to fetch decks");
+      } finally {
+        setLoading(false);
+      }
+    },
+    [
+      selectedCategory,
+      searchQuery,
+      userData?.id,
+      setLoading,
+      clearError,
+      handleError,
+      isAuthenticated,
+      pageSize,
+    ]
+  );
 
   // Get a specific deck by ID
   const getDeckById = useCallback(
@@ -329,6 +343,7 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
   // Effects
   useEffect(() => {
     setSearchQuery("");
+    setCurrentPage(1);
   }, [selectedCategory]);
 
   // If deckId is provided, fetch the deck on mount
@@ -359,6 +374,8 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
     isEmpty,
     emptyMessage,
     isAuthenticated: !!userData?.id,
+    currentPage,
+    totalPages,
 
     // Actions
     setSearchQuery,
@@ -370,5 +387,6 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
     getDeckById,
     updateDeck,
     deleteDeck,
+    setCurrentPage,
   };
 };

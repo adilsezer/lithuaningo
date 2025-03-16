@@ -8,7 +8,7 @@ namespace Lithuaningo.API.Services.Interfaces
 {
     public interface IDeckService
     {
-        Task<List<DeckResponse>> GetDecksAsync(string? category = null, int? limit = null);
+        Task<List<DeckResponse>> GetDecksAsync(string? category = null, int? limit = null, int? page = null);
         Task<DeckResponse?> GetDeckByIdAsync(string id);
         Task<List<DeckResponse>> GetUserDecksAsync(string userId);
         Task<List<DeckWithRatingResponse>> GetTopRatedDecksAsync(int limit = 10, string timeRange = "all");

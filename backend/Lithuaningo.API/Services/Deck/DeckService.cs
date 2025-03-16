@@ -53,44 +53,57 @@ namespace Lithuaningo.API.Services
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
-        public async Task<List<DeckResponse>> GetDecksAsync(string? category = null, int? limit = null)
+        public async Task<List<DeckResponse>> GetDecksAsync(string? category = null, int? limit = null, int? page = null)
         {
-            var cacheKey = $"{CacheKeyPrefix}list:{category ?? "all"}:{limit ?? 0}";
+            // Default values if not provided
+            int pageSize = limit ?? 10;
+            int pageNumber = page ?? 1;
+            
+            var cacheKey = $"{CacheKeyPrefix}list:{category ?? "all"}:{pageSize}:{pageNumber}";
             var cached = await _cache.GetAsync<List<DeckResponse>>(cacheKey);
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved decks from cache with category: {Category} and limit: {Limit}", 
-                    category, limit);
+                _logger.LogInformation("Retrieved decks from cache with category: {Category}, limit: {Limit}, page: {Page}", 
+                    category, pageSize, pageNumber);
                 return cached;
             }
 
             try
             {
-                var response = await _supabaseClient
+                var query = _supabaseClient
                     .From<Deck>()
                     .Filter("is_public", Operator.Equals, "true")
                     .Select("*")
-                    .Order("created_at", Ordering.Descending)
-                    .Get();
+                    .Order("created_at", Ordering.Descending);
+                    
+                // Apply pagination - skip previous pages
+                if (pageNumber > 1)
+                {
+                    int skip = (pageNumber - 1) * pageSize;
+                    query = query.Range(skip, skip + pageSize - 1);
+                }
+                else
+                {
+                    // For the first page, just take the first pageSize items
+                    query = query.Limit(pageSize);
+                }
+                
+                var response = await query.Get();
 
                 var decks = response.Models;
                 var deckResponses = _mapper.Map<List<DeckResponse>>(decks);
 
+                // Apply additional filtering if category is specified
                 if (!string.IsNullOrEmpty(category))
                 {
                     deckResponses = deckResponses.Where(d => d.Category == category).ToList();
                 }
 
-                if (limit.HasValue)
-                {
-                    deckResponses = deckResponses.Take(limit.Value).ToList();
-                }
-
                 await _cache.SetAsync(cacheKey, deckResponses,
                     TimeSpan.FromMinutes(_cacheSettings.DeckCacheMinutes));
-                _logger.LogInformation("Retrieved and cached {Count} decks with category: {Category} and limit: {Limit}",
-                    decks.Count, category, limit);
+                _logger.LogInformation("Retrieved and cached {Count} decks with category: {Category}, limit: {Limit}, page: {Page}",
+                    decks.Count, category, pageSize, pageNumber);
 
                 return deckResponses;
             }

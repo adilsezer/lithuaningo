@@ -43,11 +43,11 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all public decks with optional limit.
+        /// Retrieves all public decks with optional limit and pagination.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/Deck?limit=10
+        ///     GET /api/v1/Deck?limit=10&page=1
         /// 
         /// Returns a list of public decks, including:
         /// - Basic deck information
@@ -55,22 +55,23 @@ namespace Lithuaningo.API.Controllers
         /// - Rating statistics
         /// - Flashcard count
         /// </remarks>
-        /// <param name="limit">Optional maximum number of decks to return</param>
+        /// <param name="limit">Optional maximum number of decks to return per page</param>
+        /// <param name="page">Optional page number for pagination (1-based)</param>
         /// <returns>List of public decks</returns>
         /// <response code="200">Returns the list of public decks</response>
-        /// <response code="400">If limit parameter is invalid</response>
+        /// <response code="400">If limit or page parameter is invalid</response>
         /// <response code="500">If there was an internal error while retrieving decks</response>
         [HttpGet]
         [SwaggerOperation(
             Summary = "Retrieves all public decks",
-            Description = "Gets a list of all publicly available decks with optional limit",
+            Description = "Gets a list of all publicly available decks with optional limit and pagination",
             OperationId = "GetPublicDecks",
             Tags = new[] { "Deck" }
         )]
         [ProducesResponseType(typeof(List<DeckResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<DeckResponse>>> GetPublicDecks([FromQuery] int? limit = null)
+        public async Task<ActionResult<List<DeckResponse>>> GetPublicDecks([FromQuery] int? limit = null, [FromQuery] int? page = null)
         {
             if (limit.HasValue && (limit <= 0 || limit > 100))
             {
@@ -78,9 +79,15 @@ namespace Lithuaningo.API.Controllers
                 return BadRequest("Limit must be between 1 and 100");
             }
 
+            if (page.HasValue && page <= 0)
+            {
+                _logger.LogWarning("Invalid page parameter: {Page}", page);
+                return BadRequest("Page must be greater than 0");
+            }
+
             try
             {
-                var decks = await _deckService.GetDecksAsync(null, limit);
+                var decks = await _deckService.GetDecksAsync(null, limit, page);
                 return Ok(decks);
             }
             catch (Exception ex)

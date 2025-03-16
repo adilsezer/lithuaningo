@@ -1,5 +1,11 @@
 import React, { useEffect, useCallback } from "react";
-import { View, StyleSheet, FlatList, Text } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Text,
+  TouchableOpacity,
+} from "react-native";
 import { DeckCard } from "@components/deck/DeckCard";
 import { useDecks } from "@hooks/useDecks";
 import { useUserData } from "@stores/useUserStore";
@@ -14,6 +20,8 @@ import { CustomPicker } from "@components/ui/CustomPicker";
 import { useDeckVote } from "@src/hooks/useDeckVote";
 import { Deck, DeckWithRatingResponse } from "@src/types";
 import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
+import Pagination from "@components/ui/Pagination";
+
 // Separate component for DeckCard with votes
 const DeckCardWithVotes: React.FC<{
   deck: Deck | DeckWithRatingResponse;
@@ -67,19 +75,30 @@ export default function DecksScreen() {
     selectedCategory,
     emptyMessage,
     isAuthenticated,
+    currentPage,
+    totalPages,
     setSearchQuery,
     setSelectedCategory,
     clearError,
     fetchDecks,
-  } = useDecks({ userId: userData?.id });
+    setCurrentPage,
+  } = useDecks({ userId: userData?.id, limit: 10 });
 
   useEffect(() => {
-    fetchDecks();
-  }, [fetchDecks]);
+    fetchDecks(1);
+  }, [fetchDecks, selectedCategory]);
 
   const handleVoted = useCallback(async () => {
-    await fetchDecks();
-  }, [fetchDecks]);
+    await fetchDecks(currentPage);
+  }, [fetchDecks, currentPage]);
+
+  const handlePageChange = useCallback(
+    (page: number) => {
+      setCurrentPage(page);
+      fetchDecks(page);
+    },
+    [fetchDecks, setCurrentPage]
+  );
 
   const handleNavigation = useCallback(
     (route: string) => {
@@ -129,13 +148,25 @@ export default function DecksScreen() {
     ]
   );
 
+  const renderFooter = useCallback(() => {
+    if (decks.length === 0) return null;
+
+    return (
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={handlePageChange}
+      />
+    );
+  }, [currentPage, totalPages, handlePageChange, decks.length]);
+
   if (error) {
     return (
       <ErrorMessage
         message={error}
         onRetry={useCallback(() => {
           clearError();
-          fetchDecks();
+          fetchDecks(1);
         }, [clearError, fetchDecks])}
         fullScreen
       />
@@ -154,6 +185,7 @@ export default function DecksScreen() {
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
         ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
         ListEmptyComponent={
           <CustomText style={[styles.emptyText]}>{emptyMessage}</CustomText>
         }
