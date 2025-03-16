@@ -16,9 +16,6 @@ class ChallengeService {
 
       // Return immediately if we have questions
       if (questions && questions.length > 0) {
-        console.log(
-          `Successfully fetched ${questions.length} challenge questions`
-        );
         return questions;
       } else {
         // Empty array - log and continue to retry
@@ -26,11 +23,6 @@ class ChallengeService {
         if (retryCount < maxRetries) {
           // More patient backoff for empty arrays - could be generating questions
           const waitTime = Math.min(3000 * Math.pow(1.5, retryCount), 30000);
-          console.log(
-            `No questions found. Retrying (${
-              retryCount + 1
-            }/${maxRetries}) after ${waitTime / 1000}s...`
-          );
           await new Promise((resolve) => setTimeout(resolve, waitTime));
           return this.getDailyChannel(retryCount + 1, maxRetries);
         } else {
@@ -41,7 +33,6 @@ class ChallengeService {
       console.error("Error fetching daily quiz:", error);
 
       const errorMessage = error?.data || error?.message || "Unknown error";
-      console.log(`Error details: ${errorMessage}`);
 
       // If the server returned a 500/503 error and we haven't reached max retries,
       // it likely means the AI is still generating questions
@@ -52,12 +43,6 @@ class ChallengeService {
         // Exponential backoff - wait longer between each retry
         // Base wait: 3 seconds, then exponential growth capped at 30s
         const waitTime = Math.min(3000 * Math.pow(1.5, retryCount), 30000);
-
-        console.log(
-          `AI likely generating questions. Retrying (${
-            retryCount + 1
-          }/${maxRetries}) after ${waitTime / 1000}s...`
-        );
 
         // Wait with exponential backoff before retrying
         await new Promise((resolve) => setTimeout(resolve, waitTime));
@@ -75,7 +60,6 @@ class ChallengeService {
     maxRetries = 3
   ): Promise<ChallengeQuestion[]> {
     try {
-      console.log("Requesting AI to generate new quiz questions");
       const questions = await apiClient.generateAIChallenge();
       return questions;
     } catch (error: any) {
@@ -84,7 +68,6 @@ class ChallengeService {
       // If we haven't reached max retries, try again with exponential backoff
       if (retryCount < maxRetries) {
         const waitTime = Math.min(3000 * Math.pow(2, retryCount), 30000);
-        console.log(`Retrying AI quiz generation in ${waitTime / 1000}s...`);
         await new Promise((resolve) => setTimeout(resolve, waitTime));
         return this.generateNewChallenge(retryCount + 1, maxRetries);
       }
@@ -100,7 +83,6 @@ class ChallengeService {
     maxRetries = 3
   ): Promise<ChallengeQuestion[]> {
     try {
-      console.log(`Generating challenge questions for deck: ${deckId}`);
       const questions = await apiClient.generateDeckChallenge(deckId);
       return questions;
     } catch (error: any) {
@@ -112,9 +94,6 @@ class ChallengeService {
       // If we haven't reached max retries, try again with exponential backoff
       if (retryCount < maxRetries) {
         const waitTime = Math.min(3000 * Math.pow(2, retryCount), 30000);
-        console.log(
-          `Retrying deck challenge generation in ${waitTime / 1000}s...`
-        );
         await new Promise((resolve) => setTimeout(resolve, waitTime));
         return this.generateDeckChallenge(deckId, retryCount + 1, maxRetries);
       }
@@ -173,7 +152,6 @@ class ChallengeService {
       if (completionData[userId]) {
         delete completionData[userId];
         await storeData(this.DAILY_CHALLENGE_KEY, completionData);
-        console.log("Daily challenge status reset for user:", userId);
       }
     } catch (error) {
       console.error("Error resetting daily challenge status:", error);

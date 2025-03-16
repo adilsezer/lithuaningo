@@ -35,10 +35,6 @@ export const compareVersions = (v1: string, v2: string): number => {
  */
 export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
   try {
-    console.log(
-      "[appInfoService] Fetching app info for platform:",
-      Platform.OS
-    );
     return await apiClient.getAppInfo(Platform.OS);
   } catch (error) {
     console.error("[appInfoService] Failed to fetch app info:", error);
@@ -51,11 +47,7 @@ export const getLatestAppInfo = async (): Promise<AppInfo | null> => {
  */
 export const getCurrentVersion = (): string => {
   const version = Constants.expoConfig?.version;
-  console.log("[appInfoService] Current version:", version);
   if (!version || !isValidVersion(version)) {
-    console.warn(
-      "[appInfoService] Invalid or missing app version in Expo config"
-    );
     return "0.0.0";
   }
   return version;

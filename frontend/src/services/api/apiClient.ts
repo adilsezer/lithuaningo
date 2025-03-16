@@ -286,7 +286,6 @@ class ApiClient {
       const response = await this.request<AppInfo>(
         `/api/v1/AppInfo/${platform}`
       );
-      console.log("[ApiClient.getAppInfo] Response:", response);
       return response;
     } catch (error) {
       console.error("[getAppInfo] Error", {

@@ -3,6 +3,7 @@ import { ChallengeQuestion } from "@src/types";
 import { useUserData } from "@stores/useUserStore";
 import challengeService from "@src/services/data/challengeService";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
+import { UserChallengeStatsService } from "@src/services/data/userChallengeStatsService";
 
 interface UseChallengeOptions {
   customQuestions?: ChallengeQuestion[];
@@ -62,6 +63,18 @@ export const useChallenge = (
   const { stats, updateStats, createStats } = useUserChallengeStats(
     userData?.id
   );
+
+  // Function to fetch latest stats
+  const fetchStats = useCallback(async () => {
+    if (!userData?.id) return;
+    try {
+      const freshStats = await UserChallengeStatsService.getUserChallengeStats(
+        userData.id
+      );
+    } catch (error) {
+      console.error(`[useChallenge] Error fetching stats:`, error);
+    }
+  }, [userData?.id]);
 
   // Check if the user has completed today's challenge
   const checkDailyChallengeStatus = useCallback(async () => {
@@ -202,7 +215,9 @@ export const useChallenge = (
   // Handle user's answer selection
   const handleAnswer = useCallback(
     async (answer: string) => {
-      if (!questions[currentIndex]) return;
+      if (!questions[currentIndex]) {
+        return;
+      }
 
       const currentQuestion = questions[currentIndex];
       const isCorrect = answer === currentQuestion.correctAnswer;
@@ -216,46 +231,57 @@ export const useChallenge = (
       // Only update stats for non-custom challenges and if user is logged in
       if (!customQuestions && userData?.id) {
         try {
-          if (!stats) {
-            // If stats don't exist yet, check if they really don't exist before creating
-            try {
-              await createStats();
-            } catch (error) {
-              console.error("Error handling user challenge stats:", error);
-              // Continue with the challenge even if stats creation fails
-            }
-            return;
-          }
+          // STEP 1: EXPLICITLY CREATE STATS FIRST (This will return existing stats if they already exist)
 
-          await updateStats({
-            todayCorrectAnswers: isCorrect
-              ? stats.todayCorrectAnswers + 1
-              : stats.todayCorrectAnswers,
-            todayIncorrectAnswers: !isCorrect
-              ? stats.todayIncorrectAnswers + 1
-              : stats.todayIncorrectAnswers,
-            totalCorrectAnswers: isCorrect
-              ? stats.totalCorrectAnswers + 1
-              : stats.totalCorrectAnswers,
-            totalIncorrectAnswers: !isCorrect
-              ? stats.totalIncorrectAnswers + 1
-              : stats.totalIncorrectAnswers,
-          });
+          const createRequest = {
+            userId: userData.id,
+            currentStreak: 0,
+            longestStreak: 0,
+            todayCorrectAnswers: 0,
+            todayIncorrectAnswers: 0,
+            totalChallengesCompleted: 0,
+            totalCorrectAnswers: 0,
+            totalIncorrectAnswers: 0,
+          };
+
+          const createdOrExistingStats =
+            await UserChallengeStatsService.createUserChallengeStats(
+              createRequest
+            );
+
+          // STEP 2: NOW UPDATE WITH INCREMENTED VALUES
+          // Use the retrieved stats to ensure we have the correct base values
+          const updatedStats = {
+            currentStreak: createdOrExistingStats.currentStreak,
+            longestStreak: createdOrExistingStats.longestStreak,
+            todayCorrectAnswers:
+              createdOrExistingStats.todayCorrectAnswers + (isCorrect ? 1 : 0),
+            todayIncorrectAnswers:
+              createdOrExistingStats.todayIncorrectAnswers +
+              (!isCorrect ? 1 : 0),
+            totalChallengesCompleted:
+              createdOrExistingStats.totalChallengesCompleted,
+            totalCorrectAnswers:
+              createdOrExistingStats.totalCorrectAnswers + (isCorrect ? 1 : 0),
+            totalIncorrectAnswers:
+              createdOrExistingStats.totalIncorrectAnswers +
+              (!isCorrect ? 1 : 0),
+          };
+
+          // Use the regular update method since we KNOW the stats exist now
+          await UserChallengeStatsService.updateUserChallengeStats(
+            userData.id,
+            updatedStats
+          );
+
+          // Update local state
+          await fetchStats();
         } catch (error) {
-          console.error("Error updating stats:", error);
-          // We don't set an error state here to avoid disrupting the user experience
+          // Continue with the challenge even if stats update fails
         }
       }
     },
-    [
-      currentIndex,
-      questions,
-      stats,
-      userData?.id,
-      updateStats,
-      customQuestions,
-      createStats,
-    ]
+    [currentIndex, questions, score, userData?.id, customQuestions, fetchStats]
   );
 
   // Move to next question or complete the challenge
@@ -271,12 +297,72 @@ export const useChallenge = (
       // For non-custom challenges, update stats and submit results
       if (!customQuestions && userData?.id) {
         try {
-          // Mark the daily challenge as completed
-          // For non-custom challenges, always mark as daily challenge
+          // Step 1: Mark the daily challenge as completed
           await challengeService.setDailyChallengeCompleted(userData.id);
           setDailyChallengeCompleted(true);
+
+          // Step 2: Update challenge completion stats directly
+          try {
+            // Create a direct update request with the completion data
+
+            // Get current stats if they exist (for reference only, not dependent on them)
+            let currentStats;
+            try {
+              currentStats =
+                await UserChallengeStatsService.getUserChallengeStats(
+                  userData.id
+                );
+            } catch (error) {}
+
+            // Create a new stats object if none exists
+            if (!currentStats) {
+              const createRequest = {
+                userId: userData.id,
+                currentStreak: 0,
+                longestStreak: 0,
+                todayCorrectAnswers: score,
+                todayIncorrectAnswers: questions.length - score,
+                totalChallengesCompleted: 1,
+                totalCorrectAnswers: score,
+                totalIncorrectAnswers: questions.length - score,
+              };
+
+              await UserChallengeStatsService.createUserChallengeStats(
+                createRequest
+              );
+            }
+            // If stats exist, update them with explicit values
+            else {
+              const updateRequest = {
+                currentStreak: currentStats.currentStreak,
+                longestStreak: currentStats.longestStreak,
+                // Explicitly update with the new totals - don't rely on increments
+                todayCorrectAnswers: currentStats.todayCorrectAnswers + score,
+                todayIncorrectAnswers:
+                  currentStats.todayIncorrectAnswers +
+                  (questions.length - score),
+                totalChallengesCompleted:
+                  currentStats.totalChallengesCompleted + 1,
+                totalCorrectAnswers: currentStats.totalCorrectAnswers + score,
+                totalIncorrectAnswers:
+                  currentStats.totalIncorrectAnswers +
+                  (questions.length - score),
+              };
+
+              await UserChallengeStatsService.updateUserChallengeStats(
+                userData.id,
+                updateRequest
+              );
+            }
+
+            // Step 3: Update daily streak
+            await UserChallengeStatsService.updateDailyStreak(userData.id);
+          } catch (error) {
+            console.error(`[useChallenge] Error updating stats:`, error);
+            // Continue with the challenge even if stats update fails
+          }
         } catch (error) {
-          console.error("Error completing challenge:", error);
+          console.error(`[useChallenge] Error completing challenge:`, error);
           // We continue to mark as completed even if saving results fails
         }
       }
@@ -331,9 +417,6 @@ export const useChallenge = (
 
       // Update local state
       setDailyChallengeCompleted(false);
-
-      // Log success
-      console.log("Daily challenge status has been reset");
     } catch (error) {
       console.error("Error resetting daily challenge status:", error);
     }

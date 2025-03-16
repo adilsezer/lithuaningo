@@ -123,7 +123,6 @@ export default function ChallengeScreen() {
 
       await resetDailyChallenge();
       setDailyChallengeCompleted(false);
-      console.log("Daily challenge status has been reset");
     } catch (error) {
       console.error("Error resetting daily challenge status:", error);
     }

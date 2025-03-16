@@ -16,9 +16,6 @@ export const useAppInfo = () => {
   const versionInfo = useMemo(() => {
     const latest = appInfo?.currentVersion;
     const minimum = appInfo?.minimumVersion;
-    console.log("[useAppInfo] Current version:", currentVersion);
-    console.log("[useAppInfo] Latest version:", latest);
-    console.log("[useAppInfo] Minimum version:", minimum);
 
     return {
       current: currentVersion,

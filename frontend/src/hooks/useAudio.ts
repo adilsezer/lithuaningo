@@ -51,7 +51,6 @@ export const useAudio = () => {
             await sound.unloadAsync();
           } catch (error) {
             // Silently handle errors during cleanup
-            console.log("Cleanup sound error (expected):", error);
           }
         })();
       }
@@ -63,7 +62,6 @@ export const useAudio = () => {
             await recording.stopAndUnloadAsync();
           } catch (error) {
             // Silently handle errors during cleanup
-            console.log("Cleanup recording error (expected):", error);
           }
         })();
       }
@@ -87,9 +85,7 @@ export const useAudio = () => {
       if (recording) {
         try {
           await recording.stopAndUnloadAsync();
-        } catch (error) {
-          console.log("Error stopping previous recording:", error);
-        }
+        } catch (error) {}
         setRecording(null);
       }
 
@@ -98,9 +94,7 @@ export const useAudio = () => {
         try {
           await sound.stopAsync();
           await sound.unloadAsync();
-        } catch (error) {
-          console.log("Error stopping sound before recording:", error);
-        }
+        } catch (error) {}
         setSound(null);
         setPlayingUrl(null);
       }
@@ -190,9 +184,7 @@ export const useAudio = () => {
           try {
             await sound.pauseAsync();
             await sound.unloadAsync();
-          } catch (error) {
-            console.log("Error unloading previous sound:", error);
-          }
+          } catch (error) {}
           if (isMounted.current) {
             setSound(null);
           }
