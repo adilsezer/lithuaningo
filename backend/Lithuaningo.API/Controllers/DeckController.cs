@@ -47,7 +47,7 @@ namespace Lithuaningo.API.Controllers
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/Deck?limit=10&page=1
+        ///     GET /api/v1/Deck?limit=10&amp;page=1
         /// 
         /// Returns a list of public decks, including:
         /// - Basic deck information
