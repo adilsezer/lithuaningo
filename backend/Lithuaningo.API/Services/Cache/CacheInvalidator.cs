@@ -33,23 +33,38 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateDeckAsync(string deckId, string userId)
     {
-        _logger.LogInformation("Invalidating cache for deck {DeckId}", deckId);
+        _logger.LogInformation("Starting cache invalidation for deck {DeckId}", deckId);
 
-        // Use the prefix invalidation to remove all deck-related cache entries
-        await _cache.RemoveByPrefixAsync($"{DeckCachePrefix}{deckId}");
-        
-        // Also invalidate user-specific deck cache
-        if (!string.IsNullOrEmpty(userId))
-        {
-            await _cache.RemoveByPrefixAsync($"{DeckCachePrefix}user:{userId}");
+        try {
+            // Generate all cache keys to invalidate
+            var keys = new List<string>
+            {
+                $"{DeckCachePrefix}{deckId}", // Specific deck
+                $"{DeckCachePrefix}list:", // General deck lists
+                $"{DeckCachePrefix}top:", // Top rated decks 
+                $"{DeckCachePrefix}random:" // Random deck IDs
+            };
+            
+            // User-specific deck cache if userId provided
+            if (!string.IsNullOrEmpty(userId))
+            {
+                keys.Add($"{DeckCachePrefix}user:{userId}");
+            }
+            
+            // Log the keys we're about to invalidate
+            _logger.LogInformation("Invalidating the following cache keys: {@Keys}", keys);
+            
+            // Invalidate all keys in parallel
+            var tasks = keys.Select(key => _cache.RemoveByPrefixAsync(key));
+            await Task.WhenAll(tasks);
+            
+            _logger.LogInformation("Successfully completed cache invalidation for deck {DeckId}", deckId);
         }
-        
-        // And general deck lists
-        await _cache.RemoveByPrefixAsync($"{DeckCachePrefix}list:");
-        
-        // Explicitly invalidate top rated decks cache since that's the most common view
-        _logger.LogInformation("Invalidating cache for top-rated decks");
-        await _cache.RemoveByPrefixAsync($"{DeckCachePrefix}top:");
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error during cache invalidation for deck {DeckId}", deckId);
+            throw; // Rethrow to allow calling code to handle the error
+        }
     }
 
     /// <summary>

@@ -51,7 +51,7 @@ public class InMemoryCacheService : ICacheService
     public Task RemoveByPrefixAsync(string prefix)
     {
         var keysToRemove = _cacheKeys.Keys
-            .Where(k => k.StartsWith(prefix))
+            .Where(k => k.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             .ToList();
 
         foreach (var key in keysToRemove)

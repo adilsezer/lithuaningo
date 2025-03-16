@@ -277,6 +277,7 @@ namespace Lithuaningo.API.Services
                 deck.Id = Guid.NewGuid();
                 deck.CreatedAt = DateTime.UtcNow;
                 deck.UpdatedAt = DateTime.UtcNow;
+                deck.FlashcardsCount = 0; // Initialize with zero cards
 
                 var response = await _supabaseClient
                     .From<Deck>()
@@ -285,9 +286,12 @@ namespace Lithuaningo.API.Services
                 var createdDeck = response.Models.First();
                 var deckResponse = _mapper.Map<DeckResponse>(createdDeck);
 
+                // Log deck details before invalidating cache
+                _logger.LogInformation("Created new deck with ID {Id}, Title: {Title}, Public: {IsPublic}, UserId: {UserId}", 
+                    createdDeck.Id, createdDeck.Title, createdDeck.IsPublic, createdDeck.UserId);
+
                 // Invalidate relevant cache entries
                 await InvalidateDeckCacheAsync(deckResponse);
-                _logger.LogInformation("Created new deck with ID {Id}", createdDeck.Id);
 
                 return deckResponse;
             }
@@ -570,6 +574,15 @@ namespace Lithuaningo.API.Services
         /// <returns>List of random deck IDs</returns>
         public async Task<List<string>> GetRandomDeckIdsAsync(int limit = 10)
         {
+            var cacheKey = $"{CacheKeyPrefix}random:{limit}";
+            var cached = await _cache.GetAsync<List<string>>(cacheKey);
+
+            if (cached != null)
+            {
+                _logger.LogInformation("Retrieved {Count} random deck IDs from cache", cached.Count);
+                return cached;
+            }
+            
             try
             {
                 _logger.LogInformation("Retrieving {Limit} random deck IDs", limit);
@@ -587,11 +600,17 @@ namespace Lithuaningo.API.Services
                 // Randomize in memory and take the requested number
                 // This is more efficient than fetching all decks
                 var random = new Random();
-                return response.Models
+                var randomDeckIds = response.Models
                     .OrderBy(x => random.Next())
                     .Take(Math.Min(limit, response.Models.Count))
                     .Select(d => d.Id.ToString())
                     .ToList();
+                
+                // Cache the results for a short time (5 minutes)
+                await _cache.SetAsync(cacheKey, randomDeckIds, TimeSpan.FromMinutes(5));
+                _logger.LogInformation("Cached {Count} random deck IDs", randomDeckIds.Count);
+                
+                return randomDeckIds;
             }
             catch (Exception ex)
             {
@@ -602,8 +621,21 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateDeckCacheAsync(DeckResponse deck)
         {
-            // Use the centralized CacheInvalidator instead of manual cache removal
-            await _cacheInvalidator.InvalidateDeckAsync(deck.Id.ToString(), deck.UserId.ToString());
+            try
+            {
+                // Log the deck details we're about to invalidate
+                _logger.LogInformation(
+                    "Invalidating cache for deck: Id={Id}, UserId={UserId}, IsPublic={IsPublic}, Title={Title}", 
+                    deck.Id, deck.UserId, deck.IsPublic, deck.Title);
+                
+                // Use the centralized CacheInvalidator instead of manual cache removal
+                await _cacheInvalidator.InvalidateDeckAsync(deck.Id.ToString(), deck.UserId.ToString());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error invalidating cache for deck {Id}", deck?.Id);
+                // Don't rethrow - cache errors shouldn't block the main operation
+            }
         }
     }
 }
