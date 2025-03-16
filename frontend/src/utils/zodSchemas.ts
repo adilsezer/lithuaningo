@@ -127,7 +127,7 @@ export const deckFormSchema = z.object({
     }),
   tags: z.string().optional().default(""),
   isPublic: z.boolean().default(true),
-  imageFile: imageFileSchema.optional(),
+  imageFile: imageFileSchema.nullable().optional(),
   consent: z.boolean().refine((val) => val === true, {
     message: "You must agree to the terms",
   }),

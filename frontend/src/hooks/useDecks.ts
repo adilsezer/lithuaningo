@@ -219,7 +219,7 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
 
         const deck = await deckService.createDeck({
           request,
-          imageFile: formData.imageFile,
+          imageFile: formData.imageFile || undefined,
         });
 
         showSuccess("Deck created! Add flashcards to help everyone learn");
@@ -263,7 +263,11 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
           isPublic: formData.isPublic ?? true,
         };
 
-        await deckService.updateDeck(deckId, request, formData.imageFile);
+        await deckService.updateDeck(
+          deckId,
+          request,
+          formData.imageFile || undefined
+        );
         showSuccess("Deck updated successfully");
 
         if (onSuccess) {

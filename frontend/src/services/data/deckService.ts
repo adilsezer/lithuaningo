@@ -100,7 +100,7 @@ class DeckService {
   async updateDeck(
     id: string,
     request: Omit<UpdateDeckRequest, "imageUrl">,
-    imageFile?: ImageFile
+    imageFile?: ImageFile | null
   ): Promise<Deck> {
     try {
       // First handle image upload if provided

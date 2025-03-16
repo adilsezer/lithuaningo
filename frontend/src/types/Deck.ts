@@ -47,7 +47,7 @@ export interface DeckFormData {
   category: DeckCategory;
   tags?: string;
   isPublic?: boolean;
-  imageFile?: ImageFile;
+  imageFile?: ImageFile | null;
   consent: boolean;
 }
 
