@@ -36,6 +36,20 @@ class DeckService {
   }
 
   /**
+   * Get all public decks
+   * @param limit Maximum number of decks to return
+   * @returns Promise with array of decks
+   */
+  async getPublicDecks(limit?: number): Promise<Deck[]> {
+    try {
+      return await apiClient.getPublicDecks(limit);
+    } catch (error) {
+      console.error("[DeckService.getPublicDecks] Error:", error);
+      throw this.formatError(error, "Failed to get public decks");
+    }
+  }
+
+  /**
    * Get a specific deck by ID
    * @param id Deck ID
    * @returns Promise with deck data

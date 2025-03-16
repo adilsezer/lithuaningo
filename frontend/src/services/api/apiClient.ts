@@ -425,8 +425,10 @@ class ApiClient {
   }
 
   // Deck Controller
-  async getPublicDecks(): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/Deck`);
+  async getPublicDecks(limit?: number): Promise<Deck[]> {
+    return this.request<Deck[]>(`/api/v1/Deck`, {
+      params: limit ? { limit } : undefined,
+    });
   }
 
   async getDeck(id: string): Promise<Deck> {

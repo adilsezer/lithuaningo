@@ -23,6 +23,7 @@ import { DeckCategory } from "@src/types/DeckCategory";
 interface UseDecksOptions {
   initialCategory?: DeckCategory;
   userId?: string;
+  limit?: number;
 }
 
 /**
@@ -117,8 +118,17 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
 
       let fetchedDecks: (Deck | DeckWithRatingResponse)[] = [];
 
-      // All categories now use getTopRatedDecks with timeRange: "all"
-      fetchedDecks = await deckService.getTopRatedDecks(10, "all");
+      // Use different endpoint based on category
+      if (selectedCategory === "Top Rated") {
+        // Continue using getTopRatedDecks for "Top Rated" category
+        fetchedDecks = await deckService.getTopRatedDecks(
+          options?.limit || 10,
+          "all"
+        );
+      } else {
+        // Use getPublicDecks for all other categories
+        fetchedDecks = await deckService.getPublicDecks(options?.limit || 10);
+      }
 
       // Filter by category if needed
       if (
@@ -161,6 +171,7 @@ export const useDecks = (deckIdOrOptions?: string | UseDecksOptions) => {
     clearError,
     handleError,
     isAuthenticated,
+    options?.limit,
   ]);
 
   // Get a specific deck by ID

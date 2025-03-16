@@ -43,35 +43,44 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves all public decks.
+        /// Retrieves all public decks with optional limit.
         /// </summary>
         /// <remarks>
         /// Sample request:
-        ///     GET /api/v1/Deck
+        ///     GET /api/v1/Deck?limit=10
         /// 
-        /// Returns a list of all public decks, including:
+        /// Returns a list of public decks, including:
         /// - Basic deck information
         /// - Creator details
         /// - Rating statistics
         /// - Flashcard count
         /// </remarks>
+        /// <param name="limit">Optional maximum number of decks to return</param>
         /// <returns>List of public decks</returns>
         /// <response code="200">Returns the list of public decks</response>
+        /// <response code="400">If limit parameter is invalid</response>
         /// <response code="500">If there was an internal error while retrieving decks</response>
         [HttpGet]
         [SwaggerOperation(
             Summary = "Retrieves all public decks",
-            Description = "Gets a list of all publicly available decks",
+            Description = "Gets a list of all publicly available decks with optional limit",
             OperationId = "GetPublicDecks",
             Tags = new[] { "Deck" }
         )]
         [ProducesResponseType(typeof(List<DeckResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<DeckResponse>>> GetPublicDecks()
+        public async Task<ActionResult<List<DeckResponse>>> GetPublicDecks([FromQuery] int? limit = null)
         {
+            if (limit.HasValue && (limit <= 0 || limit > 100))
+            {
+                _logger.LogWarning("Invalid limit parameter: {Limit}", limit);
+                return BadRequest("Limit must be between 1 and 100");
+            }
+
             try
             {
-                var decks = await _deckService.GetDecksAsync();
+                var decks = await _deckService.GetDecksAsync(null, limit);
                 return Ok(decks);
             }
             catch (Exception ex)

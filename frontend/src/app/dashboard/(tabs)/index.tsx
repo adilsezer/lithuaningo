@@ -86,6 +86,7 @@ const DashboardScreen: React.FC = () => {
   const { decks: topRatedDecks = [], fetchDecks } = useDecks({
     userId: userData?.id,
     initialCategory: "Top Rated",
+    limit: 1,
   });
 
   // Set global error state when component-specific errors occur
