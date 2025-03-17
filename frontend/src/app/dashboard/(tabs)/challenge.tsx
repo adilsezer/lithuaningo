@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import { ScrollView, Image, StyleSheet, View } from "react-native";
 import CustomButton from "@components/ui/CustomButton";
 import { router } from "expo-router";
@@ -12,7 +12,6 @@ import { ErrorMessage } from "@components/ui/ErrorMessage";
 import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
 import { useChallenge } from "@src/hooks/useChallenge";
 import { ActivityIndicator, Card, useTheme } from "react-native-paper";
-import { useFocusEffect } from "@react-navigation/native";
 import DebugButtons from "@components/debug/DebugButtons";
 
 export default function ChallengeScreen() {
@@ -22,105 +21,66 @@ export default function ChallengeScreen() {
 
   const userData = useUserData();
   const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
-  const [checkingStatus, setCheckingStatus] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const loadingRef = useRef(false);
   const theme = useTheme();
 
   const { checkDailyChallengeStatus, resetDailyChallenge } = useChallenge({
     skipInitialFetch: true,
   });
 
-  const {
-    entries,
-    loading,
-    error: leaderboardError,
-    fetchLeaderboard,
-  } = useLeaderboard();
-  const {
-    stats,
-    error,
-    isLoading,
-    fetchStats,
-    createStats,
-    checkStatsExistence,
-    hasCheckedExistence,
-  } = useUserChallengeStats(userData?.id);
+  const { entries, fetchLeaderboard } = useLeaderboard();
 
-  const checkDailyChallengeStatusWrapper = async () => {
-    if (!userData?.id) return;
-
-    try {
-      setCheckingStatus(true);
-      const isCompleted = await checkDailyChallengeStatus();
-      setDailyChallengeCompleted(isCompleted);
-    } catch (error) {
-      console.error("Error checking daily challenge status:", error);
-    } finally {
-      setCheckingStatus(false);
-    }
-  };
-
-  useEffect(() => {
-    checkDailyChallengeStatusWrapper();
-
-    if (userData?.id) {
-      if (!hasCheckedExistence) {
-        checkStatsExistence().then((exists) => {
-          if (exists) {
-            fetchStats();
-          }
-        });
-      } else if (!stats && !isLoading) {
-        fetchStats();
-      }
-    }
-  }, [
-    userData?.id,
-    fetchStats,
-    stats,
-    isLoading,
-    checkStatsExistence,
-    hasCheckedExistence,
-  ]);
-
-  useFocusEffect(
-    React.useCallback(() => {
-      checkDailyChallengeStatusWrapper();
-
-      if (userData?.id && !stats && !isLoading && hasCheckedExistence) {
-        fetchStats();
-      }
-
-      return () => {};
-    }, [userData?.id, stats, isLoading, fetchStats, hasCheckedExistence])
+  const { stats, error, fetchStats, createStats } = useUserChallengeStats(
+    userData?.id
   );
 
-  React.useEffect(() => {
-    fetchLeaderboard();
-  }, [fetchLeaderboard]);
+  // Load data using a ref to prevent duplicate requests
+  const loadData = useCallback(async () => {
+    if (!userData?.id || loadingRef.current) return;
+
+    loadingRef.current = true;
+    setIsLoading(true);
+
+    try {
+      // Fetch all data in parallel
+      const [challengeStatus] = await Promise.all([
+        checkDailyChallengeStatus(),
+        fetchStats(),
+        fetchLeaderboard(),
+      ]);
+
+      setDailyChallengeCompleted(challengeStatus);
+    } catch (error) {
+      console.error("Error loading challenge data:", error);
+    } finally {
+      setIsLoading(false);
+      loadingRef.current = false;
+    }
+  }, [userData?.id, checkDailyChallengeStatus, fetchStats, fetchLeaderboard]);
+
+  // Single effect to load data when component mounts or user changes
+  useEffect(() => {
+    if (userData?.id) {
+      loadData();
+    }
+  }, [userData?.id, loadData]);
 
   const handleStartChallenge = async () => {
     if (userData?.id && !stats) {
       try {
-        const statsExist = await checkStatsExistence();
-
-        if (statsExist) {
-          await fetchStats();
-        } else {
-          await createStats();
-        }
+        await createStats();
       } catch (error) {
-        console.error("Error handling challenge stats:", error);
+        console.error("Error creating stats:", error);
       }
     }
     handleNavigation("/challenge");
   };
 
   const resetDailyChallengeWrapper = async () => {
-    if (!userData?.id) return;
+    if (!userData?.id || !__DEV__) return;
 
     try {
-      if (!__DEV__) return;
-
       await resetDailyChallenge();
       setDailyChallengeCompleted(false);
     } catch (error) {
@@ -150,11 +110,11 @@ export default function ChallengeScreen() {
         challenge or warm up with practice challenges.
       </CustomText>
 
-      {checkingStatus ? (
+      {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" />
           <CustomText style={styles.loadingText}>
-            Checking challenge status...
+            Loading challenge data...
           </CustomText>
         </View>
       ) : dailyChallengeCompleted ? (
