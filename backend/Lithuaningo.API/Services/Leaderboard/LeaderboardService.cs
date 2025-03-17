@@ -47,7 +47,27 @@ namespace Lithuaningo.API.Services
             try
             {
                 var currentWeek = DateUtils.GetCurrentWeekPeriod();
-                return await GetWeekLeaderboardAsync(currentWeek);
+                
+                // Use a dedicated current week cache key
+                var cacheKey = $"{CacheKeyPrefix}current";
+                var cached = await _cache.GetAsync<List<LeaderboardEntryResponse>>(cacheKey);
+                
+                if (cached != null)
+                {
+                    _logger.LogInformation("Retrieved current week leaderboard from cache for week {WeekId}", currentWeek);
+                    return cached;
+                }
+                
+                // Get the actual data
+                var leaderboard = await GetWeekLeaderboardAsync(currentWeek);
+                
+                // Cache under the current week key as well
+                await _cache.SetAsync(cacheKey, leaderboard,
+                    TimeSpan.FromMinutes(_cacheSettings.LeaderboardCacheMinutes));
+                    
+                _logger.LogInformation("Cached current week leaderboard for week {WeekId}", currentWeek);
+                
+                return leaderboard;
             }
             catch (Exception ex)
             {
