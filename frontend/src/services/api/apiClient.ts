@@ -138,8 +138,15 @@ class ApiClient {
       timeout?: number;
     }
   ): Promise<T> {
+    const requestId = `req_${Date.now()}_${Math.random()
+      .toString(36)
+      .substring(2, 9)}`;
+    console.log(
+      `[API] [${requestId}] START ${options?.method || "GET"} ${endpoint}`
+    );
+
     try {
-      const { data } = await this.axiosInstance({
+      const response = await this.axiosInstance({
         url: endpoint,
         method: options?.method || "GET",
         data: options?.data,
@@ -147,16 +154,16 @@ class ApiClient {
         headers: options?.headers,
         timeout: options?.timeout || this.axiosInstance.defaults.timeout,
       });
-      return data;
+      console.log(
+        `[API] [${requestId}] COMPLETE ${options?.method || "GET"} ${endpoint}`
+      );
+      return response.data;
     } catch (error) {
-      console.error("[ApiClient] Request failed:", {
-        endpoint,
-        error,
-      });
-      if (error instanceof ApiError) {
-        throw error;
-      }
-      throw error;
+      console.log(
+        `[API] [${requestId}] ERROR ${options?.method || "GET"} ${endpoint}`,
+        error
+      );
+      throw this.handleError(error);
     }
   }
 

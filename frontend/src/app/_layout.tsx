@@ -22,7 +22,7 @@ const APP_ROUTES = [
   "decks/[id]/comments",
   "decks/[id]/edit",
   "decks/[id]/index",
-  "decks/[id]/challenge",
+  "decks/[id]/deck-challenge",
   "decks/[id]/report",
   "flashcards/new",
   "flashcards/[id]/edit",
