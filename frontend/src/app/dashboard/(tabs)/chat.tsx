@@ -30,7 +30,7 @@ import {
 import CustomText from "@components/ui/CustomText";
 import { useUserData } from "@stores/useUserStore";
 import CustomDivider from "@components/ui/CustomDivider";
-
+import { router } from "expo-router";
 export default function ChatScreen(): JSX.Element {
   const {
     messages,
@@ -292,7 +292,7 @@ export default function ChatScreen(): JSX.Element {
             mode="text"
             compact
             onPress={() => {
-              /* Navigate to premium page */
+              router.push("/premium/premium-features");
             }}
             style={{ marginLeft: 8 }}
             textColor={theme.colors.primary}
