@@ -62,7 +62,9 @@ bld/
 project.lock.json
 project.fragment.lock.json
 artifacts/
-**/keys/  # Data Protection keys directory
+# Explicitly ignore Data Protection keys
+**/keys/*.xml
+**/keys/
 
 # Configuration and sensitive files
 **/appsettings.json
