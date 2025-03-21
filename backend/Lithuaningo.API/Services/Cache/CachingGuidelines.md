@@ -15,12 +15,8 @@ Our caching system uses a simple but effective in-memory approach with the follo
 
 Each entity type has a specific prefix for its cache keys:
 
-- Decks: `deck:`
 - Flashcards: `flashcard:`
 - User Profiles: `user:`
-- Votes: `vote:`
-- Reports: `report:`
-- Announcements: `announcement:`
 - App Info: `appinfo:`
 
 ## Using the Cache
@@ -54,21 +50,13 @@ return result;
 
 Always use the `CacheInvalidator` to invalidate cache entries when data changes:
 
-```csharp
-// After updating an entity
-await _cacheInvalidator.InvalidateDeckAsync(deck.Id.ToString(), deck.UserId.ToString());
-```
-
 ## Cache Durations
 
 Cache durations are configured in `CacheSettings`:
 
 - Default: 10 minutes
-- Words: 60 minutes (change rarely)
-- Decks: 5 minutes (updated frequently)
 - Flashcards: 5 minutes
 - Leaderboard: 2 minutes (frequent updates)
-- Announcements: 30 minutes
 - App Info: 60 minutes
 
 ## Best Practices

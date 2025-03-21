@@ -8,7 +8,6 @@ import { useIsLoading } from "@stores/useUIStore";
 import { verifyEmailFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import CustomButton from "@components/ui/CustomButton";
-import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 const verifyEmailFields: FormField[] = [
   {
@@ -48,7 +47,6 @@ const EmailVerificationScreen: React.FC = () => {
   if (!email) {
     return (
       <ScrollView>
-        <HeaderWithBackButton title="Email Verification" />
         <View style={styles.container}>
           <CustomText variant="titleMedium" bold>
             Error
@@ -81,7 +79,6 @@ const EmailVerificationScreen: React.FC = () => {
 
   return (
     <ScrollView>
-      <HeaderWithBackButton title="Email Verification" />
       <View style={styles.container}>
         <CustomText variant="titleMedium" bold>
           Verify Your Email

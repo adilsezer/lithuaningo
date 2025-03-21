@@ -24,7 +24,6 @@ We collect the following types of information:
 - Quiz and flashcard performance
 - Practice session statistics
 - Achievement progress
-- Custom deck creation and management
 - Word and sentence learning history
 
 ### Technical Data
@@ -37,7 +36,7 @@ We collect the following types of information:
 
 ### Content Data
 
-- User-created flashcard decks
+- Flashcard
 - Custom practice sessions
 - Audio pronunciation recordings
 - Image attachments
@@ -53,7 +52,7 @@ We use the collected information for:
 - User authentication and account management
 - Progress tracking and statistics
 - Personalized learning experience
-- Flashcard and deck management
+- Flashcard management
 - Quiz generation and assessment
 
 ### Service Improvement

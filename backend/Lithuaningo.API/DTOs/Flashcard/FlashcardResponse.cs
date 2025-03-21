@@ -13,11 +13,6 @@ namespace Lithuaningo.API.DTOs.Flashcard
         public Guid Id { get; set; }
 
         /// <summary>
-        /// The deck identifier this flashcard belongs to
-        /// </summary>
-        public Guid DeckId { get; set; }
-
-        /// <summary>
         /// The front word of the flashcard (question)
         /// </summary>
         public string FrontWord { get; set; } = string.Empty;

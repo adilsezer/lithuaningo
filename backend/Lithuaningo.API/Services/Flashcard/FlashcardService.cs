@@ -219,7 +219,7 @@ namespace Lithuaningo.API.Services
                     await Task.WhenAll(deleteFileTasks);
 
                     // Invalidate cache entries
-                    await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString(), flashcard.DeckId.ToString());
+                    await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString());
 
                     _logger.LogInformation("Deleted flashcard {Id} with associated files", id);
                 }
@@ -278,7 +278,7 @@ namespace Lithuaningo.API.Services
 
         private async Task InvalidateFlashcardCacheAsync(Flashcard flashcard)
         {
-            await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString(), flashcard.DeckId.ToString());
+            await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString());
         }
 
         public async Task<string> UploadFlashcardFileAsync(IFormFile file)

@@ -1,36 +1,19 @@
+import axios, { AxiosInstance, AxiosError } from "axios";
 import { Platform } from "react-native";
-import axios, { AxiosInstance } from "axios";
-import { API_KEYS } from "@config/constants";
-import {
-  ChallengeQuestion,
-  UserProfile,
-  Announcement,
-  AppInfo,
-  Deck,
-  Flashcard,
-  DeckComment,
-  UserChallengeStats,
-  DeckReport,
-  ChallengeResult,
-  UpdateUserProfileRequest,
-  UpdateAppInfoRequest,
-  CreateAnnouncementRequest,
-  UpdateAnnouncementRequest,
-  CreateDeckReportRequest,
-  UpdateDeckReportRequest,
-  CreateDeckVoteRequest,
-  DeckVote,
-  CreateFlashcardRequest,
-  UpdateFlashcardRequest,
-  UpdateLeaderboardEntryRequest,
-  LeaderboardEntry,
-  DeckWithRatingResponse,
-  UpdateUserChallengeStatsRequest,
-  CreateUserChallengeStatsRequest,
-} from "@src/types";
-import { supabase } from "@services/supabase/supabaseClient";
-import { useUserStore } from "@stores/useUserStore";
+import { supabase } from "../../services/supabase/supabaseClient";
+import { useUserStore } from "../../stores/useUserStore";
+import Constants from "expo-constants";
+import { UpdateAppInfoRequest, AppInfo } from "@src/types/AppInfo";
 
+// Get the app version from Expo constants
+const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
+
+// API URL from environment variables
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:7016";
+
+/**
+ * Custom API error class to handle API errors with status and data
+ */
 export class ApiError extends Error {
   constructor(public status: number, public data: any, message?: string) {
     super(message || "API Error");
@@ -38,35 +21,43 @@ export class ApiError extends Error {
   }
 }
 
+/**
+ * Get the base URL for API requests, handling Android emulator localhost
+ */
 const getBaseUrl = () => {
-  const url = API_KEYS.API_URL;
   if (__DEV__ && Platform.OS === "android") {
-    const modifiedUrl = url?.replace("localhost", "10.0.2.2");
-    return modifiedUrl;
+    // Replace localhost with 10.0.2.2 for Android emulator
+    return API_URL.replace("localhost", "10.0.2.2");
   }
-  return url;
+  return API_URL;
 };
 
+/**
+ * API Client for managing HTTP requests
+ */
 class ApiClient {
   private static instance: ApiClient;
   private axiosInstance: AxiosInstance;
   private baseURL: string;
 
   private constructor() {
-    this.baseURL = getBaseUrl() || "http://localhost:7016";
+    this.baseURL = getBaseUrl();
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
-      timeout: 10000,
+      timeout: 15000, // 15 seconds
       headers: {
         "Content-Type": "application/json",
         "X-Platform": Platform.OS,
-        "X-App-Version": process.env.APP_VERSION || "1.0.0",
+        "X-App-Version": APP_VERSION,
       },
     });
 
-    this.setupAuthInterceptors();
+    this.setupInterceptors();
   }
 
+  /**
+   * Get singleton instance of ApiClient
+   */
   static getInstance(): ApiClient {
     if (!this.instance) {
       this.instance = new ApiClient();
@@ -74,60 +65,150 @@ class ApiClient {
     return this.instance;
   }
 
-  private setupAuthInterceptors() {
-    // Request interceptor for authentication
+  /**
+   * Setup request and response interceptors
+   */
+  private setupInterceptors() {
+    // Request interceptor for adding auth token
     this.axiosInstance.interceptors.request.use(
       async (config) => {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
-        const token = session?.access_token;
+        try {
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          const token = session?.access_token;
 
-        if (token) {
-          config.headers.Authorization = `Bearer ${token}`;
-        } else {
-          console.warn(
-            "[ApiClient] No auth token available for request:",
-            config.url
+          if (token) {
+            config.headers.Authorization = `Bearer ${token}`;
+          }
+        } catch (error) {
+          console.error(
+            "[ApiClient] Auth error in request interceptor:",
+            error
           );
         }
         return config;
       },
       (error) => {
-        console.error("[ApiClient] Request interceptor error:", {
-          message: error.message,
-          config: error.config,
-          url: error.config?.url,
-        });
+        console.error("[ApiClient] Request interceptor error:", error);
         return Promise.reject(error);
       }
     );
 
-    // Response interceptor for auth errors
+    // Response interceptor for error handling
     this.axiosInstance.interceptors.response.use(
-      (response) => {
-        return response;
-      },
+      (response) => response,
       async (error) => {
-        console.error("[ApiClient] Response error:", {
-          message: error.message,
-          status: error.response?.status,
-          url: error.config?.url,
-          data: error.response?.data,
-          headers: error.config?.headers,
-        });
+        // Log API errors
+        this.logApiError(error);
 
+        // Handle unauthorized errors (401)
         if (error.response?.status === 401) {
-          console.warn("[ApiClient] Unauthorized request, signing out user");
-          const { setAuthenticated } = useUserStore.getState();
-          await supabase.auth.signOut();
-          setAuthenticated(false);
+          try {
+            console.warn("[ApiClient] Unauthorized request, signing out user");
+            const { setAuthenticated } = useUserStore.getState();
+            await supabase.auth.signOut();
+            setAuthenticated(false);
+          } catch (signOutError) {
+            console.error("[ApiClient] Error during sign out:", signOutError);
+          }
         }
-        return Promise.reject(error);
+
+        return Promise.reject(this.handleError(error));
       }
     );
   }
 
+  /**
+   * Log API errors with detailed information
+   */
+  private logApiError(error: AxiosError) {
+    console.error("[ApiClient] Response error:", {
+      message: error.message,
+      status: error.response?.status,
+      url: error.config?.url,
+      method: error.config?.method?.toUpperCase(),
+      data: error.response?.data,
+    });
+  }
+
+  /**
+   * Convert Axios errors to ApiError instances
+   */
+  private handleError(error: any): ApiError | Error {
+    if (error.response) {
+      // Server responded with error status
+      const status = error.response.status;
+      const data = error.response.data;
+      const message = data?.message || `Error ${status}: Server error occurred`;
+      return new ApiError(status, data, message);
+    } else if (error.request) {
+      // Request made but no response received
+      return new Error("Network error: No response from server");
+    } else {
+      // Something else happened while setting up the request
+      return error instanceof Error ? error : new Error(String(error));
+    }
+  }
+
+  /**
+   * Make a GET request
+   */
+  async get<T>(
+    endpoint: string,
+    params?: any,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "GET", params, ...options });
+  }
+
+  /**
+   * Make a POST request
+   */
+  async post<T>(
+    endpoint: string,
+    data?: any,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "POST", data, ...options });
+  }
+
+  /**
+   * Make a PUT request
+   */
+  async put<T>(
+    endpoint: string,
+    data?: any,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "PUT", data, ...options });
+  }
+
+  /**
+   * Make a PATCH request
+   */
+  async patch<T>(
+    endpoint: string,
+    data?: any,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "PATCH", data, ...options });
+  }
+
+  /**
+   * Make a DELETE request
+   */
+  async delete<T>(
+    endpoint: string,
+    params?: any,
+    options?: RequestOptions
+  ): Promise<T> {
+    return this.request<T>(endpoint, { method: "DELETE", params, ...options });
+  }
+
+  /**
+   * Base method to make HTTP requests
+   */
   private async request<T>(
     endpoint: string,
     options?: {
@@ -141,150 +222,24 @@ class ApiClient {
     const requestId = `req_${Date.now()}_${Math.random()
       .toString(36)
       .substring(2, 9)}`;
-    console.log(
-      `[API] [${requestId}] START ${options?.method || "GET"} ${endpoint}`
-    );
+    const method = options?.method || "GET";
 
     try {
       const response = await this.axiosInstance({
         url: endpoint,
-        method: options?.method || "GET",
+        method,
         data: options?.data,
         params: options?.params,
         headers: options?.headers,
         timeout: options?.timeout || this.axiosInstance.defaults.timeout,
       });
-      console.log(
-        `[API] [${requestId}] COMPLETE ${options?.method || "GET"} ${endpoint}`
-      );
+
+      console.log(`[API] [${requestId}] COMPLETE ${method} ${endpoint}`);
       return response.data;
     } catch (error) {
-      console.log(
-        `[API] [${requestId}] ERROR ${options?.method || "GET"} ${endpoint}`,
-        error
-      );
+      console.log(`[API] [${requestId}] ERROR ${method} ${endpoint}`);
       throw this.handleError(error);
     }
-  }
-
-  // Challenge Controller
-  async getDailyChallenge(): Promise<ChallengeQuestion[]> {
-    return this.request<ChallengeQuestion[]>(`/api/v1/Challenge/daily`, {
-      timeout: 120000,
-    });
-  }
-
-  async generateAIChallenge(): Promise<ChallengeQuestion[]> {
-    return this.request<ChallengeQuestion[]>(`/api/v1/Challenge/generate`, {
-      method: "POST",
-      timeout: 120000, // AI-generated content might take longer
-    });
-  }
-
-  async generateDeckChallenge(deckId: string): Promise<ChallengeQuestion[]> {
-    return this.request<ChallengeQuestion[]>(
-      `/api/v1/Challenge/deck/${deckId}`,
-      {
-        method: "POST",
-        timeout: 120000, // AI-generated content might take longer
-      }
-    );
-  }
-
-  async getChallengeHistory(userId: string): Promise<ChallengeResult[]> {
-    return this.request<ChallengeResult[]>(
-      `/api/v1/Challenge/history/${userId}`
-    );
-  }
-
-  // User Profile Controller
-  async getUserProfile(userId: string): Promise<UserProfile> {
-    return this.request<UserProfile>(`/api/v1/UserProfile/${userId}`);
-  }
-
-  async updateUserProfile(
-    id: string,
-    profile: UpdateUserProfileRequest
-  ): Promise<UserProfile> {
-    try {
-      const updatedProfile = await this.request<UserProfile>(
-        `/api/v1/UserProfile/${id}`,
-        {
-          method: "PUT",
-          data: profile,
-        }
-      );
-      return updatedProfile;
-    } catch (error) {
-      console.error("[ApiClient] Failed to update user profile:", {
-        id,
-        profile,
-        error,
-      });
-      throw error;
-    }
-  }
-
-  async deleteUserProfile(id: string): Promise<void> {
-    try {
-      await this.request(`/api/v1/UserProfile/${id}`, {
-        method: "DELETE",
-      });
-    } catch (error) {
-      console.error("[ApiClient] Failed to delete user profile:", {
-        userId: id,
-        error,
-      });
-      throw error;
-    }
-  }
-
-  async updateLastLogin(id: string): Promise<void> {
-    try {
-      await this.request(`/api/v1/UserProfile/${id}/login`, {
-        method: "POST",
-      });
-    } catch (error) {
-      console.error("[ApiClient] Failed to update last login:", {
-        userId: id,
-        error,
-      });
-      throw error;
-    }
-  }
-
-  // Announcement Controller
-  async getAnnouncements(): Promise<Announcement[]> {
-    return this.request<Announcement[]>(`/api/v1/Announcement`);
-  }
-
-  async getAnnouncementById(id: string): Promise<Announcement> {
-    return this.request<Announcement>(`/api/v1/Announcement/${id}`);
-  }
-
-  async createAnnouncement(
-    request: CreateAnnouncementRequest
-  ): Promise<Announcement> {
-    return this.request<Announcement>(`/api/v1/Announcement`, {
-      method: "POST",
-      data: request,
-    });
-  }
-
-  async updateAnnouncement(
-    id: string,
-    request: UpdateAnnouncementRequest
-  ): Promise<Announcement> {
-    return this.request<Announcement>(`/api/v1/Announcement/${id}`, {
-      method: "PUT",
-      data: request,
-    });
-  }
-
-  async deleteAnnouncement(id: string): Promise<void> {
-    return this.request(`/api/v1/Announcement/${id}`, {
-      method: "DELETE",
-    });
   }
 
   // App Info Controller
@@ -319,363 +274,12 @@ class ApiClient {
       method: "DELETE",
     });
   }
+}
 
-  // User Challenge Stats Controller
-  async getUserChallengeStats(userId: string): Promise<UserChallengeStats> {
-    return this.request<UserChallengeStats>(
-      `/api/v1/UserChallengeStats/${userId}/stats`
-    );
-  }
-
-  async updateUserChallengeStats(
-    userId: string,
-    stats: UpdateUserChallengeStatsRequest
-  ): Promise<void> {
-    return this.request<void>(`/api/v1/UserChallengeStats/${userId}`, {
-      method: "PUT",
-      data: stats,
-    });
-  }
-
-  async createUserChallengeStats(
-    request: CreateUserChallengeStatsRequest
-  ): Promise<UserChallengeStats> {
-    return this.request<UserChallengeStats>(`/api/v1/UserChallengeStats`, {
-      method: "POST",
-      data: request,
-    });
-  }
-
-  async updateWeeklyGoal(userId: string, goal: number): Promise<void> {
-    return this.request(
-      `/api/v1/UserChallengeStats/${userId}/stats/weekly-goal`,
-      {
-        method: "PUT",
-        data: { goal },
-      }
-    );
-  }
-
-  async incrementCardsReviewed(userId: string): Promise<void> {
-    return this.request(
-      `/api/v1/UserChallengeStats/${userId}/stats/cards-reviewed`,
-      {
-        method: "POST",
-      }
-    );
-  }
-
-  async incrementCardsMastered(userId: string): Promise<void> {
-    return this.request(
-      `/api/v1/UserChallengeStats/${userId}/stats/cards-mastered`,
-      {
-        method: "POST",
-      }
-    );
-  }
-
-  async updateDailyStreak(userId: string): Promise<void> {
-    return this.request(`/api/v1/UserChallengeStats/${userId}/stats/streak`, {
-      method: "POST",
-    });
-  }
-
-  async incrementChallengesCompleted(userId: string): Promise<void> {
-    return this.request(
-      `/api/v1/UserChallengeStats/${userId}/stats/challenge-completed`,
-      {
-        method: "POST",
-      }
-    );
-  }
-
-  // Deck Comment Controller
-  async getDeckComments(deckId: string): Promise<DeckComment[]> {
-    return this.request<DeckComment[]>(`/api/v1/DeckComment/deck/${deckId}`);
-  }
-
-  async createDeckComment(comment: {
-    deckId: string;
-    userId: string;
-    content: string;
-    rating?: number;
-    tags?: string[];
-  }): Promise<DeckComment> {
-    return this.request<DeckComment>(`/api/v1/DeckComment`, {
-      method: "POST",
-      data: comment,
-    });
-  }
-
-  async getDeckComment(id: string): Promise<DeckComment> {
-    return this.request<DeckComment>(`/api/v1/DeckComment/${id}`);
-  }
-
-  async updateDeckComment(
-    id: string,
-    comment: Partial<DeckComment>
-  ): Promise<DeckComment> {
-    return this.request<DeckComment>(`/api/v1/DeckComment/${id}`, {
-      method: "PUT",
-      data: comment,
-    });
-  }
-
-  async deleteDeckComment(id: string): Promise<void> {
-    return this.request(`/api/v1/DeckComment/${id}`, {
-      method: "DELETE",
-    });
-  }
-
-  async getUserDeckComments(userId: string): Promise<DeckComment[]> {
-    return this.request<DeckComment[]>(`/api/v1/DeckComment/user/${userId}`);
-  }
-
-  // Deck Controller
-  async getPublicDecks(limit?: number, page?: number): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/Deck`, {
-      params: {
-        limit: limit || undefined,
-        page: page || undefined,
-      },
-    });
-  }
-
-  async getDeck(id: string): Promise<Deck> {
-    return this.request<Deck>(`/api/v1/Deck/${id}`);
-  }
-
-  async createDeck(deck: Partial<Deck>): Promise<Deck> {
-    return this.request<Deck>(`/api/v1/Deck`, {
-      method: "POST",
-      data: deck,
-    });
-  }
-
-  async updateDeck(id: string, deck: Partial<Deck>): Promise<Deck> {
-    return this.request<Deck>(`/api/v1/Deck/${id}`, {
-      method: "PUT",
-      data: deck,
-    });
-  }
-
-  async getUserDecks(userId: string): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/Deck/user/${userId}`);
-  }
-
-  async getTopRatedDecks(
-    limit: number = 10,
-    timeRange: "week" | "month" | "all" = "all"
-  ): Promise<DeckWithRatingResponse[]> {
-    const response = await this.request<DeckWithRatingResponse[]>(
-      `/api/v1/Deck/top-rated`,
-      {
-        params: { limit, timeRange },
-      }
-    );
-    return response;
-  }
-
-  async reportDeck(id: string, userId: string, reason: string): Promise<void> {
-    return this.request(`/api/v1/DeckReport/${id}`, {
-      method: "POST",
-      params: { userId },
-      data: reason,
-    });
-  }
-
-  async searchDecks(query: string, category?: string): Promise<Deck[]> {
-    return this.request<Deck[]>(`/api/v1/Deck/search`, {
-      params: { query, category },
-    });
-  }
-
-  async getDeckFlashcards(deckId: string): Promise<Flashcard[]> {
-    return this.request<Flashcard[]>(`/api/v1/Deck/${deckId}/flashcards`);
-  }
-
-  // Deck Report Controller
-  async createDeckReport(
-    request: CreateDeckReportRequest
-  ): Promise<DeckReport> {
-    return this.request<DeckReport>(`/api/v1/DeckReport`, {
-      method: "POST",
-      data: request,
-    });
-  }
-
-  async getDeckReports(
-    status: string = "pending",
-    limit: number = 50
-  ): Promise<DeckReport[]> {
-    return this.request<DeckReport[]>(`/api/v1/DeckReport`, {
-      params: { status, limit },
-    });
-  }
-
-  async getDeckReport(id: string): Promise<DeckReport> {
-    return this.request<DeckReport>(`/api/v1/DeckReport/${id}`);
-  }
-
-  async getDeckReportsByDeckId(deckId: string): Promise<DeckReport[]> {
-    return this.request<DeckReport[]>(`/api/v1/DeckReport/deck/${deckId}`);
-  }
-
-  async updateDeckReportStatus(
-    id: string,
-    request: UpdateDeckReportRequest
-  ): Promise<DeckReport> {
-    return this.request<DeckReport>(`/api/v1/DeckReport/${id}/status`, {
-      method: "PUT",
-      data: request,
-    });
-  }
-
-  async deleteDeckReport(id: string): Promise<void> {
-    return this.request(`/api/v1/DeckReport/${id}`, {
-      method: "DELETE",
-    });
-  }
-
-  // Leaderboard Controller
-  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntry[]> {
-    return this.request<LeaderboardEntry[]>(`/api/v1/Leaderboard/current`);
-  }
-
-  async updateLeaderboardEntry(
-    request: UpdateLeaderboardEntryRequest
-  ): Promise<LeaderboardEntry> {
-    return this.request<LeaderboardEntry>(`/api/v1/Leaderboard/entry`, {
-      method: "POST",
-      data: request,
-    });
-  }
-
-  // Deck Vote Controller
-  async createDeckVote(request: CreateDeckVoteRequest): Promise<boolean> {
-    return this.request<boolean>(`/api/v1/DeckVote`, {
-      method: "POST",
-      data: request,
-    });
-  }
-
-  async getUserVote(deckId: string, userId: string): Promise<DeckVote | null> {
-    return this.request<DeckVote | null>(
-      `/api/v1/DeckVote/${deckId}/user/${userId}`
-    );
-  }
-
-  async getDeckVotes(deckId: string): Promise<DeckVote[]> {
-    return this.request<DeckVote[]>(`/api/v1/DeckVote/${deckId}`);
-  }
-
-  async getVoteCounts(
-    deckId: string
-  ): Promise<{ upvotes: number; downvotes: number }> {
-    const response = await this.request<{ item1: number; item2: number }>(
-      `/api/v1/DeckVote/${deckId}/counts`
-    );
-    return {
-      upvotes: response.item1,
-      downvotes: response.item2,
-    };
-  }
-
-  // Flashcard Controller
-  async createFlashcard(flashcard: CreateFlashcardRequest): Promise<string> {
-    return this.request<string>(`/api/v1/Flashcard`, {
-      method: "POST",
-      data: flashcard,
-    });
-  }
-
-  async updateFlashcard(id: string, flashcard: UpdateFlashcardRequest) {
-    return this.request(`/api/v1/Flashcard/${id}`, {
-      method: "PUT",
-      data: flashcard,
-    });
-  }
-
-  async uploadFile(formData: FormData): Promise<string> {
-    return this.request<string>(`/api/v1/Flashcard/upload`, {
-      method: "POST",
-      data: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  }
-
-  async uploadDeckFile(formData: FormData): Promise<string> {
-    return this.request<string>(`/api/v1/Deck/upload`, {
-      method: "POST",
-      data: formData,
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-  }
-
-  DELETE_TIMEOUT = 30000; // 30 seconds for delete operations
-
-  async deleteFlashcard(id: string): Promise<void> {
-    return this.request(`/api/v1/Flashcard/${id}`, {
-      method: "DELETE",
-      timeout: this.DELETE_TIMEOUT,
-    });
-  }
-
-  async deleteDeck(id: string): Promise<void> {
-    return this.request(`/api/v1/Deck/${id}`, {
-      method: "DELETE",
-      timeout: this.DELETE_TIMEOUT,
-    });
-  }
-
-  async getFlashcardById(id: string): Promise<Flashcard> {
-    return this.request<Flashcard>(`/api/v1/Flashcard/${id}`);
-  }
-
-  private handleError(error: any) {
-    if (error.response) {
-      // Server responded with error
-      throw new Error(error.response.data?.message || "Server error occurred");
-    } else if (error.request) {
-      // Request made but no response
-      throw new Error("No response from server");
-    } else {
-      // Other errors
-      throw error;
-    }
-  }
-
-  // AI API methods
-  async processAIRequest(
-    prompt: string,
-    serviceType: string = "chat",
-    context?: Record<string, string>
-  ): Promise<string> {
-    const data = await this.request<{
-      response: string;
-      timestamp: string;
-      serviceType: string;
-    }>(`/api/v1/ai/process`, {
-      method: "POST",
-      data: {
-        prompt,
-        serviceType,
-        context,
-      },
-    });
-    return data.response;
-  }
-
-  async sendChatMessage(
-    message: string,
-    context?: Record<string, string>
-  ): Promise<string> {
-    return this.processAIRequest(message, "chat", context);
-  }
+// Request options type
+export interface RequestOptions {
+  headers?: Record<string, string>;
+  timeout?: number;
 }
 
 // Export a singleton instance

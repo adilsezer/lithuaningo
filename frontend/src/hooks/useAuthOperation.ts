@@ -1,9 +1,4 @@
-import {
-  useIsLoading,
-  useSetLoading,
-  useError,
-  useSetError,
-} from "@stores/useUIStore";
+import { useSetLoading, useSetError } from "@stores/useUIStore";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useCallback } from "react";
 import { AuthResponse } from "@src/types/auth.types";

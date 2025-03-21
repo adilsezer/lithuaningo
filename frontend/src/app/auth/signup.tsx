@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
@@ -9,7 +9,6 @@ import CustomText from "@components/ui/CustomText";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import { router } from "expo-router";
 import CustomDivider from "@components/ui/CustomDivider";
-import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 const signupFields: FormField[] = [
   {
     name: "displayName",
@@ -50,9 +49,7 @@ const SignUpScreen: React.FC = () => {
   const { signUp, signInWithSocial } = useAuth();
 
   return (
-    <ScrollView>
-      <HeaderWithBackButton title="Create Account" />
-
+    <ScrollView style={styles.container}>
       <Form
         fields={signupFields}
         onSubmit={async (data) => {
@@ -83,5 +80,11 @@ const SignUpScreen: React.FC = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+});
 
 export default SignUpScreen;

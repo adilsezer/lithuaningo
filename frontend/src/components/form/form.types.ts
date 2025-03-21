@@ -2,27 +2,9 @@ import { UseFormProps, FieldValues } from "react-hook-form";
 import { KeyboardType, ViewStyle } from "react-native";
 import { z } from "zod";
 
-export type FieldCategory =
-  | "text-input"
-  | "toggle"
-  | "selection"
-  | "datetime"
-  | "audio-input"
-  | "image-input"
-  | "link";
+export type FieldCategory = "text-input" | "toggle" | "link";
 
-export type FieldType =
-  | "text"
-  | "email"
-  | "password"
-  | "picker"
-  | "switch"
-  | "checkbox"
-  | "slider"
-  | "date"
-  | "audio"
-  | "image"
-  | "link";
+export type FieldType = "text" | "email" | "password" | "switch" | "link";
 
 export type FormField = {
   name: string;
@@ -42,16 +24,6 @@ export type FormField = {
 
   // Selection/Toggle
   options?: Array<{ label: string; value: any }>;
-
-  // DateTime
-  mode?: "date" | "time";
-  minDate?: Date;
-  maxDate?: Date;
-
-  // Image/Audio
-  maxSize?: number;
-  maxDuration?: number;
-  placeholderText?: string;
 
   // Link
   linkText?: string;

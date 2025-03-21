@@ -1,7 +1,6 @@
 import { create } from "zustand";
 import { Appearance } from "react-native";
 import { storeData, retrieveData } from "@utils/storageUtils";
-import { THEME_KEYS } from "@config/constants";
 
 interface ThemeState {
   isDarkMode: boolean;
@@ -14,6 +13,10 @@ interface ThemeActions {
   initializeTheme: () => Promise<void>;
   setManualMode: (manual: boolean) => void;
 }
+
+const THEME_KEYS = {
+  THEME: "theme",
+};
 
 const useThemeStore = create<ThemeState & ThemeActions>((set, get) => ({
   isDarkMode: false,

@@ -5,6 +5,8 @@ import { updateAuthState } from "@services/auth/authService";
 import { useAlertActions } from "@stores/useAlertStore";
 import { supabase } from "@services/supabase/supabaseClient";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
+import { useSetLoading } from "@stores/useUIStore";
+
 /**
  * Service component that listens to Supabase authentication state changes
  * and updates the app state accordingly.
@@ -13,6 +15,7 @@ const AuthInitializer: React.FC = () => {
   const { logOut } = useUserStore();
   const { showAlert } = useAlertActions();
   const router = useRouter();
+  const setLoading = useSetLoading();
   const isUpdatingRef = useRef(false);
 
   const handleAuthStateUpdate = async (session: Session | null) => {
@@ -22,11 +25,14 @@ const AuthInitializer: React.FC = () => {
 
     try {
       isUpdatingRef.current = true;
+      setLoading(true);
+
       if (session) {
         await updateAuthState(session);
+        // Navigation will be handled by the useProtectedRoutes hook
       } else {
         logOut();
-        router.replace("/");
+        // Navigation will be handled by the useProtectedRoutes hook
       }
     } catch (error) {
       console.error("[Auth] State update failed:", error);
@@ -38,10 +44,14 @@ const AuthInitializer: React.FC = () => {
       });
     } finally {
       isUpdatingRef.current = false;
+      setLoading(false);
     }
   };
 
   useEffect(() => {
+    // Show loading while initializing auth
+    setLoading(true);
+
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
@@ -56,24 +66,32 @@ const AuthInitializer: React.FC = () => {
   }, [logOut, router, showAlert]);
 
   useEffect(() => {
+    // Get the initial session when the component mounts
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         updateAuthState(session);
       }
+      // Done loading initial session
+      setLoading(false);
     });
   }, []);
 
   useEffect(() => {
     const refreshToken = async () => {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.refreshSession();
-      if (error) {
-        console.error("Error refreshing token:", error);
-        logOut();
-      } else if (session) {
-        await updateAuthState(session);
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.refreshSession();
+
+        if (error) {
+          console.error("Error refreshing token:", error);
+          logOut();
+        } else if (session) {
+          await updateAuthState(session);
+        }
+      } catch (error) {
+        console.error("Unexpected error during token refresh:", error);
       }
     };
 

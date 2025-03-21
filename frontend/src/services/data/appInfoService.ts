@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
-import { apiClient } from "@services/api/apiClient";
-import { AppInfo, VERSION_REGEX } from "@src/types";
+import { AppInfo, VERSION_REGEX } from "@src/types/AppInfo";
 import { Platform } from "react-native";
+import { apiClient } from "@services/api/apiClient";
 
 /**
  * Validates a version string against the X.Y.Z format

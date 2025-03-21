@@ -2,7 +2,6 @@ using System;
 using AutoMapper;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Flashcard;
-using Lithuaningo.API.Utils;
 
 namespace Lithuaningo.API.Mappings
 {

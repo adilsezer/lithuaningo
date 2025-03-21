@@ -1,4 +1,3 @@
-import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
 import {
   signUpWithEmail,
@@ -74,7 +73,7 @@ export const useAuth = () => {
         const response = await signInWithEmail(email, password);
 
         if (response.success) {
-          navigateAfterAuth("/dashboard");
+          navigateAfterAuth("/(app)");
           return response;
         }
 
@@ -111,7 +110,7 @@ export const useAuth = () => {
 
         if (response.success) {
           // crashlytics().log(`User signed in with ${provider}`);
-          navigateAfterAuth("/dashboard");
+          navigateAfterAuth("/(app)");
         }
         return response;
       }, `${provider} Login Failed`);
@@ -144,7 +143,7 @@ export const useAuth = () => {
             buttons: [
               {
                 text: "OK",
-                onPress: () => navigateAfterAuth("/dashboard/profile"),
+                onPress: () => navigateAfterAuth("/(app)/profile"),
               },
             ],
           });
@@ -167,7 +166,7 @@ export const useAuth = () => {
             buttons: [
               {
                 text: "OK",
-                onPress: () => navigateAfterAuth("/dashboard/profile"),
+                onPress: () => navigateAfterAuth("/(app)/profile"),
               },
             ],
           });

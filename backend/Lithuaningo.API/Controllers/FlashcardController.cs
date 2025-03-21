@@ -102,7 +102,6 @@ namespace Lithuaningo.API.Controllers
         /// Sample request:
         ///     POST /api/v1/Flashcard
         ///     {
-        ///         "deckId": "deck-guid",
         ///         "front": "Labas",
         ///         "back": "Hello",
         ///         "frontImageUrl": "https://storage.url/image.jpg",
@@ -140,7 +139,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating flashcard for deck {DeckId}", request.DeckId);
+                _logger.LogError(ex, "Error creating flashcard");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -220,7 +219,6 @@ namespace Lithuaningo.API.Controllers
         /// This operation:
         /// - Permanently removes the flashcard
         /// - Deletes associated media files
-        /// - Updates deck statistics
         /// - Cannot be undone
         /// </remarks>
         /// <param name="id">The flashcard identifier</param>
@@ -265,8 +263,6 @@ namespace Lithuaningo.API.Controllers
         ///     GET /api/v1/Flashcard/random?limit=10
         /// 
         /// Returns a random selection of flashcards:
-        /// - From public decks only
-        /// - Not previously seen by the user
         /// - Suitable for discovery and exploration
         /// </remarks>
         /// <param name="limit">Maximum number of flashcards (range: 1-100, default: 10)</param>

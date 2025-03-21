@@ -81,56 +81,6 @@ namespace Lithuaningo.API.Controllers
             }
         }
 
-        /// <summary>
-        /// Generates challenge questions for a specific deck
-        /// </summary>
-        /// <remarks>
-        /// This endpoint generates challenge questions based on the flashcards in a specific deck.
-        /// It uses AI to create questions that test the user's knowledge of the vocabulary and grammar
-        /// in the specified deck.
-        /// </remarks>
-        /// <param name="deckId">ID of the deck to generate questions for</param>
-        /// <returns>The generated challenge questions</returns>
-        /// <response code="200">Returns the generated challenge questions</response>
-        /// <response code="400">If the deck ID is invalid</response>
-        /// <response code="404">If the deck has no flashcards</response>
-        /// <response code="500">If there was an internal error while generating the questions</response>
-        [HttpPost("deck/{deckId}")]
-        [SwaggerOperation(
-            Summary = "Generates challenge questions for a specific deck",
-            Description = "Creates challenge questions based on the flashcards in the specified deck",
-            OperationId = "GenerateDeckChallenge",
-            Tags = new[] { "Challenge" }
-        )]
-        [ProducesResponseType(typeof(IEnumerable<ChallengeQuestionResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status404NotFound)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<ChallengeQuestionResponse>>> GenerateDeckChallenge(string deckId)
-        {
-            if (string.IsNullOrEmpty(deckId))
-            {
-                _logger.LogWarning("Invalid deck ID provided");
-                return BadRequest("A valid deck ID must be provided");
-            }
-            
-            try
-            {
-                var questions = await _challengeService.GenerateDeckChallengeQuestionsAsync(deckId);
-                
-                if (!questions.Any())
-                {
-                    return NotFound("No flashcards found in the specified deck to generate questions");
-                }
-                
-                return Ok(questions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating challenge questions for deck {DeckId}", deckId);
-                return StatusCode(500, "An error occurred while generating challenge questions for the deck");
-            }
-        }
 
         /// <summary>
         /// Generates new challenge questions using AI.

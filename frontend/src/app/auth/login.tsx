@@ -1,5 +1,5 @@
 import React, { useEffect, useCallback } from "react";
-import { ScrollView } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
@@ -10,7 +10,6 @@ import type { SocialProvider } from "@hooks/useAuth";
 import { loginFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { router } from "expo-router";
-import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
 
 const loginFields: FormField[] = [
   {
@@ -41,9 +40,7 @@ const LoginScreen: React.FC = () => {
   );
 
   return (
-    <ScrollView>
-      <HeaderWithBackButton title="Welcome Back" />
-
+    <ScrollView style={styles.container}>
       <Form
         fields={loginFields}
         onSubmit={async (data) => {
@@ -84,5 +81,11 @@ const LoginScreen: React.FC = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+});
 
 export default LoginScreen;

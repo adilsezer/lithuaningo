@@ -5,7 +5,7 @@ import {
   getCurrentVersion,
   compareVersions,
 } from "@services/data/appInfoService";
-import type { AppInfo } from "@src/types";
+import type { AppInfo } from "@src/types/AppInfo";
 
 interface AppInfoState {
   appInfo: AppInfo | null;

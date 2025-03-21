@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { AUTH_PATTERNS } from "./validationPatterns";
-import { deckCategories, DeckCategory } from "@src/types/DeckCategory";
 
 export const emailSchema = z
   .string()
@@ -93,72 +92,8 @@ export const deleteAccountFormSchema = z
     }
   );
 
-const mediaFileSchema = z.object({
-  uri: z.string().min(1, "File URI is required"),
-  type: z.string().min(1, "File type is required"),
-  name: z.string().min(1, "File name is required"),
-  size: z.number().optional(),
-});
-
-const imageFileSchema = mediaFileSchema.refine(
-  (file) => file.type.startsWith("image/"),
-  "Only image files are allowed"
-);
-
-const audioFileSchema = mediaFileSchema.refine(
-  (file) => file.type.startsWith("audio/"),
-  "Only audio files are allowed"
-);
-
-// New schemas for other forms
-export const deckFormSchema = z.object({
-  title: z
-    .string()
-    .min(1, "Title is required")
-    .max(100, "Title must not exceed 100 characters"),
-  description: z
-    .string()
-    .min(1, "Description is required")
-    .max(1000, "Description must not exceed 1000 characters"),
-  category: z
-    .enum(deckCategories as readonly [DeckCategory, ...DeckCategory[]])
-    .refine((cat) => !["All Decks", "My Decks", "Top Rated"].includes(cat), {
-      message: "Invalid category selected",
-    }),
-  tags: z.string().optional().default(""),
-  isPublic: z.boolean().default(true),
-  imageFile: imageFileSchema.nullable().optional(),
-  consent: z.boolean().refine((val) => val === true, {
-    message: "You must agree to the terms",
-  }),
-});
-
-export const flashcardFormSchema = z.object({
-  frontWord: z.string().min(1, "Front word is required"),
-  backWord: z.string().min(1, "Back word is required"),
-  exampleSentence: z.string().min(1, "Example sentence is required"),
-  exampleSentenceTranslation: z
-    .string()
-    .min(1, "Example sentence translation is required"),
-  imageFile: imageFileSchema.nullable().optional(),
-  audioFile: audioFileSchema.nullable().optional(),
-  notes: z.string().optional(),
-  level: z.string().optional(),
-});
-
-export const flashcardEditSchema = flashcardFormSchema;
-
-export const reportFormSchema = z.object({
-  reason: z.string().min(1, "Please select a reason"),
-  details: z.string().min(1, "Please provide details about the issue"),
-});
-
 export const challengeFormSchema = z.object({
   answer: z.string().min(1, "Please enter your answer"),
-});
-
-export const deckCommentFormSchema = z.object({
-  content: z.string().min(1, "Deck comment is required"),
 });
 
 export const verifyEmailFormSchema = z.object({

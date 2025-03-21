@@ -9,12 +9,6 @@ namespace Lithuaningo.API.DTOs.Flashcard
     public class CreateFlashcardRequest
     {
         /// <summary>
-        /// The deck identifier this flashcard belongs to
-        /// </summary>
-        [Required]
-        public Guid DeckId { get; set; }
-
-        /// <summary>
         /// The front word of the flashcard (question)
         /// </summary>
         [Required]

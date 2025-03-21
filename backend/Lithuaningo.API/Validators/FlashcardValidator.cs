@@ -8,9 +8,6 @@ public class CreateFlashcardValidator : AbstractValidator<CreateFlashcardRequest
 {
     public CreateFlashcardValidator()
     {
-        RuleFor(x => x.DeckId)
-            .NotEmpty().WithMessage("Deck ID is required");
-
         RuleFor(x => x.FrontWord)
             .NotEmpty().WithMessage("Front word is required")
             .MinimumLength(1).WithMessage("Front word must not be empty")

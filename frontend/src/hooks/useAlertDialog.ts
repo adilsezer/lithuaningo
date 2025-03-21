@@ -1,25 +1,36 @@
 // src/hooks/useAlertDialog.ts
 
-import { useMemo } from "react";
-import { useAlertActions } from "../stores/useAlertStore";
-import type {
-  AlertOptions,
-  ConfirmOptions,
-  ButtonOption,
-} from "../types/alert";
+import { useAlertActions } from "@stores/useAlertStore";
+
+export type AlertButton = {
+  text: string;
+  onPress?: () => void;
+};
+
+export type AlertOptions = {
+  title: string;
+  message: string;
+  buttons?: AlertButton[];
+};
+
+export type ConfirmOptions = {
+  title: string;
+  message: string;
+  confirmText?: string;
+  cancelText?: string;
+  onConfirm: () => void;
+  onCancel?: () => void;
+};
 
 export const useAlertDialog = () => {
-  const actions = useAlertActions();
+  const { showAlert, showConfirm, showSuccess, showError } = useAlertActions();
 
-  return useMemo(
-    () => ({
-      showAlert: actions.showAlert,
-      showConfirm: actions.showConfirm,
-      showSuccess: actions.showSuccess,
-      showError: actions.showError,
-    }),
-    [actions]
-  );
+  return {
+    showAlert,
+    showConfirm,
+    showSuccess,
+    showError,
+  };
 };
 
 export default useAlertDialog;

@@ -18,11 +18,6 @@ const getDefaultValueByCategory = (field: FormFieldType): any => {
   switch (field.category) {
     case "toggle":
       return false;
-    case "datetime":
-      return new Date();
-    case "audio-input":
-    case "image-input":
-      return null;
     default:
       return "";
   }

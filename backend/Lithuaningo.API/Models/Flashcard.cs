@@ -11,9 +11,6 @@ namespace Lithuaningo.API.Models
         [Column("id")]
         public Guid Id { get; set; }
 
-        [Column("deck_id")]
-        public Guid DeckId { get; set; }
-
         [Column("front_word")]
         public string FrontWord { get; set; } = string.Empty;
 

@@ -1,12 +1,12 @@
 import React from "react";
-import { ScrollView, View } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
-import { useForgotPassword } from "@hooks/useForgotPassword";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import HeaderWithBackButton from "@components/layout/HeaderWithBackButton";
+import { useAuth } from "@hooks/useAuth";
+
 const forgotPasswordFields: FormField[] = [
   {
     name: "email",
@@ -20,38 +20,37 @@ const forgotPasswordFields: FormField[] = [
 ];
 
 const ForgotPasswordScreen: React.FC = () => {
-  const { isLoading, handleResetPassword } = useForgotPassword();
+  const { resetPassword } = useAuth();
   const { showError } = useAlertDialog();
 
   const handleSubmit = async (data: { email: string }) => {
-    const result = await handleResetPassword(data.email);
+    const result = await resetPassword(data.email);
     if (!result.success && result.message) {
       showError(result.message);
     }
   };
 
   return (
-    <ScrollView>
-      <HeaderWithBackButton title="Reset Password" />
-      <View>
-        <CustomText variant="titleMedium" bold>
-          Reset Password
-        </CustomText>
-        <CustomText>
-          Enter your email and we will send you a code to reset your password.
-        </CustomText>
-      </View>
+    <ScrollView style={styles.container}>
+      <CustomText>
+        Enter your email and we will send you a code to reset your password.
+      </CustomText>
 
       <Form
         fields={forgotPasswordFields}
         onSubmit={handleSubmit}
         submitButtonText="Reset Password"
-        isLoading={isLoading}
         options={{ mode: "onBlur" }}
         zodSchema={forgotPasswordFormSchema}
       />
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    padding: 16,
+  },
+});
 
 export default ForgotPasswordScreen;

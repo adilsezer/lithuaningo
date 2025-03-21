@@ -21,13 +21,14 @@ using Microsoft.IdentityModel.Tokens;
 using Lithuaningo.API.Services.Auth;
 using Lithuaningo.API.Services.AI;
 using System.Text;
+using System.Security.Cryptography.X509Certificates;
 
 // TODO: Add HTTPS to the API when deploying to production
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configure Data Protection
-builder.Services.AddDataProtection()
+var dataProtection = builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys")))
     .SetApplicationName("Lithuaningo")
     .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
@@ -35,6 +36,41 @@ builder.Services.AddDataProtection()
         EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
         ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
     });
+
+// Try to protect with certificate if available
+var certificate = LoadCertificate(builder.Environment, builder.Configuration);
+if (certificate != null)
+{
+    dataProtection.ProtectKeysWithCertificate(certificate);
+}
+
+// Helper method to load certificate with proper error handling
+static X509Certificate2 LoadCertificate(IWebHostEnvironment environment, IConfiguration configuration)
+{
+    var certificatePath = Path.Combine(environment.ContentRootPath, "config", "certificate.pfx");
+    
+    try
+    {
+        // Try to get certificate password from configuration
+        var certPassword = configuration["DataProtection:CertificatePassword"];
+        
+        // If password exists, use it, otherwise try to load without password
+        if (!string.IsNullOrEmpty(certPassword))
+        {
+            return new X509Certificate2(certificatePath, certPassword, 
+                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+        }
+        
+        // Try loading without password
+        return new X509Certificate2(certificatePath, 
+            string.Empty, 
+            X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+    }
+    catch (Exception ex)
+    {
+        throw new InvalidOperationException($"Failed to load certificate: {ex.Message}", ex);
+    }
+}
 
 // Configure caching
 builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
@@ -55,7 +91,6 @@ builder.Services.AddControllers()
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<UserMappingProfile>();    // User-related mappings
-    cfg.AddProfile<DeckMappingProfile>();    // Deck-related mappings
     cfg.AddProfile<FlashcardMappingProfile>();// Flashcard-related mappings
     cfg.AddProfile<MiscMappingProfile>();    // Miscellaneous mappings
 });
@@ -282,13 +317,8 @@ To authorize in Swagger UI:
 
     // Core Services
     services.AddScoped<IUserProfileService, UserProfileService>();
-    services.AddScoped<IAnnouncementService, AnnouncementService>();
     services.AddScoped<IAppInfoService, AppInfoService>();
-    services.AddScoped<IDeckService, DeckService>();
-    services.AddScoped<IDeckVoteService, DeckVoteService>();
     services.AddScoped<IFlashcardService, FlashcardService>();
-    services.AddScoped<IDeckCommentService, DeckCommentService>();
-    services.AddScoped<IDeckReportService, DeckReportService>();
     services.AddScoped<ILeaderboardService, LeaderboardService>();
     services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
     // Challenge Related Services
@@ -342,9 +372,7 @@ To authorize in Swagger UI:
     })
     .AddApplicationPart(typeof(UserProfileController).Assembly)
     .AddApplicationPart(typeof(ChallengeController).Assembly)
-    .AddApplicationPart(typeof(AnnouncementController).Assembly)
     .AddApplicationPart(typeof(AppInfoController).Assembly)
-    .AddApplicationPart(typeof(DeckController).Assembly)
     .AddApplicationPart(typeof(FlashcardController).Assembly)
     .AddApplicationPart(typeof(StorageService).Assembly);
 
