@@ -79,7 +79,6 @@ export default function RootLayout() {
               styles.container,
               { backgroundColor: theme.colors.background },
             ]}
-            edges={["bottom", "left", "right"]}
           >
             {/* Core functionality components */}
             <LoadingIndicator />
@@ -92,7 +91,7 @@ export default function RootLayout() {
                 headerShown: false,
                 contentStyle: {
                   backgroundColor: theme.colors.background,
-                  paddingHorizontal: 28,
+                  paddingHorizontal: 32,
                 },
                 animation: "none",
               }}

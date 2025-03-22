@@ -24,6 +24,7 @@ export default function TabsLayout() {
     <Tabs
       screenOptions={{
         tabBarActiveTintColor: theme.colors.primary,
+        headerShown: false,
         tabBarStyle: styles.tabBarStyle,
         tabBarLabelStyle: {
           fontSize: isTablet ? 20 : 10,
@@ -31,6 +32,7 @@ export default function TabsLayout() {
         sceneStyle: {
           backgroundColor: "transparent",
           flex: 1,
+          paddingBottom: 12,
         },
       }}
       initialRouteName="index"
@@ -54,7 +56,7 @@ export default function TabsLayout() {
 
 const styles = StyleSheet.create({
   tabBarStyle: {
-    height: 60,
+    height: 50,
     paddingTop: 10,
     paddingBottom: 10,
     elevation: 0,

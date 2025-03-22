@@ -28,6 +28,7 @@ export default function AppLayout() {
       screenOptions={{
         contentStyle: {
           backgroundColor: theme.colors.background,
+          paddingVertical: 12,
         },
         headerStyle: {
           backgroundColor: theme.colors.background,
