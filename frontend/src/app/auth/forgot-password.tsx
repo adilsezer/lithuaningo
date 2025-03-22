@@ -31,7 +31,7 @@ const ForgotPasswordScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView>
       <CustomText>
         Enter your email and we will send you a code to reset your password.
       </CustomText>
@@ -46,11 +46,5 @@ const ForgotPasswordScreen: React.FC = () => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-});
 
 export default ForgotPasswordScreen;

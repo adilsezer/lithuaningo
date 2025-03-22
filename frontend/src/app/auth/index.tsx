@@ -36,9 +36,6 @@ const WelcomeImage = () => (
 
 const WelcomeText = () => (
   <View style={styles.textContainer}>
-    <CustomText variant="headlineMedium" bold>
-      Welcome to Lithuaningo
-    </CustomText>
     <CustomText variant="bodyLarge">
       Learn Lithuanian with daily sentences, flashcards, and reinforcing
       challenges.

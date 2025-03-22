@@ -63,7 +63,6 @@ const DeleteAccountScreen: React.FC = () => {
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
     gap: 16,
   },
   warning: {

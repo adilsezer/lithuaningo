@@ -49,7 +49,7 @@ const SignUpScreen: React.FC = () => {
   const { signUp, signInWithSocial } = useAuth();
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView>
       <Form
         fields={signupFields}
         onSubmit={async (data) => {
@@ -81,10 +81,6 @@ const SignUpScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-});
+const styles = StyleSheet.create({});
 
 export default SignUpScreen;

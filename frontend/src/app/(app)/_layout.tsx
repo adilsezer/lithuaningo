@@ -7,6 +7,18 @@ import { useIsDarkMode } from "@stores/useThemeStore";
  * Layout for authenticated screens
  * This is used for all screens within the (app) group
  */
+
+const AUTHENTICATED_SCREENS = [
+  { name: "profile/edit-profile", title: "Edit Profile" },
+  { name: "profile/settings", title: "Settings" },
+  { name: "profile/change-password", title: "Change Password" },
+  { name: "profile/delete-account", title: "Delete Account" },
+  { name: "premium/index", title: "Premium" },
+  { name: "about/index", title: "About" },
+  { name: "terms-of-service/index", title: "Terms of Service" },
+  { name: "privacy-policy/index", title: "Privacy Policy" },
+];
+
 export default function AppLayout() {
   const isDarkMode = useIsDarkMode();
   const theme = createTheme(isDarkMode);
@@ -14,40 +26,35 @@ export default function AppLayout() {
   return (
     <Stack
       screenOptions={{
-        headerStyle: {
-          backgroundColor: theme.colors.surface,
-        },
-        headerTintColor: theme.colors.onSurface,
         contentStyle: {
           backgroundColor: theme.colors.background,
         },
+        headerStyle: {
+          backgroundColor: theme.colors.background,
+        },
+        headerTitleStyle: {
+          fontFamily: theme.fonts.default.fontFamily,
+          color: theme.colors.onSurface,
+        },
+        headerTintColor: theme.colors.primary,
+        animation: "none",
       }}
     >
       <Stack.Screen
-        name="index"
+        name="(tabs)"
         options={{
-          title: "Home",
+          headerShown: false,
         }}
       />
-      <Stack.Screen
-        name="profile/index"
-        options={{
-          title: "Profile",
-        }}
-      />
-      <Stack.Screen
-        name="profile/edit-profile"
-        options={{
-          title: "Edit Profile",
-        }}
-      />
-      <Stack.Screen
-        name="profile/settings"
-        options={{
-          title: "Settings",
-        }}
-      />
-      {/* Add other authenticated screens here */}
+      {AUTHENTICATED_SCREENS.map((screen) => (
+        <Stack.Screen
+          key={screen.name}
+          name={screen.name}
+          options={{
+            title: screen.title,
+          }}
+        />
+      ))}
     </Stack>
   );
 }

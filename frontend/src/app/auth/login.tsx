@@ -40,7 +40,7 @@ const LoginScreen: React.FC = () => {
   );
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView>
       <Form
         fields={loginFields}
         onSubmit={async (data) => {
@@ -82,10 +82,6 @@ const LoginScreen: React.FC = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
-});
+const styles = StyleSheet.create({});
 
 export default LoginScreen;

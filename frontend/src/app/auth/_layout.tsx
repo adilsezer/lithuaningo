@@ -7,6 +7,34 @@ import { useIsDarkMode } from "@stores/useThemeStore";
  * Layout for authentication screens
  * This is used for all screens within the auth group
  */
+
+const AUTH_SCREENS = [
+  {
+    name: "index",
+    title: "Welcome to Lithuaningo",
+  },
+  {
+    name: "login",
+    title: "Login",
+  },
+  {
+    name: "signup",
+    title: "Signup",
+  },
+  {
+    name: "forgot-password",
+    title: "Forgot Password",
+  },
+  {
+    name: "email-verification",
+    title: "Email Verification",
+  },
+  {
+    name: "password-reset-verification",
+    title: "Password Reset Verification",
+  },
+];
+
 export default function AuthLayout() {
   const isDarkMode = useIsDarkMode();
   const theme = createTheme(isDarkMode);
@@ -16,6 +44,7 @@ export default function AuthLayout() {
       screenOptions={{
         contentStyle: {
           backgroundColor: theme.colors.background,
+          paddingVertical: 12,
         },
         headerStyle: {
           backgroundColor: theme.colors.background,
@@ -30,32 +59,15 @@ export default function AuthLayout() {
         animation: "none",
       }}
     >
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "Welcome",
-          headerShown: false,
-        }}
-      />
-      <Stack.Screen
-        name="login"
-        options={{
-          title: "Login",
-        }}
-      />
-      <Stack.Screen name="signup" options={{ title: "Signup" }} />
-      <Stack.Screen
-        name="forgot-password"
-        options={{ title: "Forgot Password" }}
-      />
-      <Stack.Screen
-        name="email-verification"
-        options={{ title: "Email Verification" }}
-      />
-      <Stack.Screen
-        name="password-reset-verification"
-        options={{ title: "Password Reset Verification" }}
-      />
+      {AUTH_SCREENS.map((screen) => (
+        <Stack.Screen
+          key={screen.name}
+          name={screen.name}
+          options={{
+            title: screen.title,
+          }}
+        />
+      ))}
     </Stack>
   );
 }

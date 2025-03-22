@@ -19,7 +19,7 @@ const TermsOfService = () => {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView>
       <CustomText {...paragraphProps}>Last updated: March 10, 2024</CustomText>
 
       <CustomText variant="titleMedium" bold>
@@ -217,9 +217,6 @@ const TermsOfService = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    padding: 16,
-  },
   justifiedText: {
     textAlign: "justify",
   },

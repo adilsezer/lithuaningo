@@ -77,8 +77,6 @@ export default function ProfileScreen() {
         label="Dark Mode"
       />
 
-      <CustomDivider />
-
       <ProfileHeader
         fullName={userData?.fullName || "No name"}
         email={userData?.email || "No email"}
@@ -94,6 +92,5 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 20,
   },
 });

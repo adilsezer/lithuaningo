@@ -16,7 +16,6 @@ export default function SettingsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
-      contentContainerStyle={styles.contentContainer}
     >
       <Card style={styles.card}>
         <List.Section>
@@ -94,9 +93,6 @@ export default function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
-  contentContainer: {
-    padding: 16,
   },
   card: {
     marginBottom: 20,

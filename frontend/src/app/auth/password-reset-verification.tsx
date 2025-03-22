@@ -130,7 +130,6 @@ const PasswordResetVerificationScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     gap: 16,
-    padding: 16,
   },
   description: {
     marginTop: 8,

@@ -11,9 +11,7 @@ export default function HomeScreen() {
   const theme = createTheme(isDarkMode);
 
   return (
-    <View
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
+    <View style={[styles.container]}>
       <Text style={[styles.title, { color: theme.colors.onBackground }]}>
         Welcome to Lithuaningo
       </Text>
@@ -36,7 +34,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    padding: 16,
   },
   title: {
     fontSize: 24,

@@ -45,6 +45,8 @@ function useProtectedRoutes() {
   }, [isAuthenticated, segments, isLoading, router]);
 }
 
+const ROOT_SCREENS = [{ name: "index" }, { name: "auth" }, { name: "(app)" }];
+
 /**
  * Root layout component that sets up the app's providers and core UI structure.
  * Provider order is important for proper functionality:
@@ -77,6 +79,7 @@ export default function RootLayout() {
               styles.container,
               { backgroundColor: theme.colors.background },
             ]}
+            edges={["bottom", "left", "right"]}
           >
             {/* Core functionality components */}
             <LoadingIndicator />
@@ -89,13 +92,14 @@ export default function RootLayout() {
                 headerShown: false,
                 contentStyle: {
                   backgroundColor: theme.colors.background,
+                  paddingHorizontal: 28,
                 },
                 animation: "none",
               }}
             >
-              <Stack.Screen name="index" />
-              <Stack.Screen name="auth" />
-              <Stack.Screen name="(app)" />
+              {ROOT_SCREENS.map((screen) => (
+                <Stack.Screen key={screen.name} name={screen.name} />
+              ))}
             </Stack>
 
             {/* Global UI components */}
@@ -110,7 +114,5 @@ export default function RootLayout() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 12,
   },
 });
