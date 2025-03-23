@@ -1,56 +1,81 @@
-import React from "react";
-import { View, Text, StyleSheet } from "react-native";
-import { Button } from "react-native-paper";
-import { useAuth } from "@hooks/useAuth";
-import { createTheme } from "@src/styles/theme";
-import { useIsDarkMode } from "@stores/useThemeStore";
+import React, { useEffect } from "react";
+import { View, StyleSheet, ScrollView } from "react-native";
+import { useUserData } from "@stores/useUserStore";
+import CustomText from "@components/ui/CustomText";
+import { useSetError } from "@src/stores/useUIStore";
+import { useUserChallengeStats } from "@hooks/useUserChallengeStats";
+import { DailyChallengeCard } from "@components/ui/DailyChallengeCard";
+import { router } from "expo-router";
+import CustomButton from "@components/ui/CustomButton";
+import Leaderboard from "@components/ui/Leaderboard";
+import { useLeaderboard } from "@src/hooks/useLeaderboard";
 
 export default function HomeScreen() {
-  const { signOut } = useAuth();
-  const isDarkMode = useIsDarkMode();
-  const theme = createTheme(isDarkMode);
+  const userData = useUserData();
+  const setError = useSetError();
+
+  const { entries, fetchLeaderboard } = useLeaderboard();
+
+  const {
+    stats,
+    error: statsError,
+    fetchStats,
+    isLoading: statsLoading,
+  } = useUserChallengeStats(userData?.id);
+
+  useEffect(() => {
+    if (userData?.id) {
+      fetchLeaderboard();
+    }
+  }, [userData?.id, fetchLeaderboard]);
+
+  // Set global error state when component-specific errors occur
+  useEffect(() => {
+    if (statsError) {
+      setError(statsError);
+    }
+  }, [statsError, setError]);
+
+  // Fetch stats when the component mounts or when the user ID changes
+  useEffect(() => {
+    if (userData?.id) {
+      fetchStats();
+    }
+  }, [userData?.id, fetchStats]);
 
   return (
-    <View style={[styles.container]}>
-      <Text style={[styles.title, { color: theme.colors.onBackground }]}>
-        Welcome to Lithuaningo
-      </Text>
+    <ScrollView style={[styles.container]} showsVerticalScrollIndicator={false}>
+      <CustomText variant="titleLarge" bold>
+        Hi, {userData?.fullName || "there"} 👋
+      </CustomText>
 
-      <Text style={[styles.description, { color: theme.colors.onBackground }]}>
-        You are now signed in to your account.
-      </Text>
+      <DailyChallengeCard
+        answeredQuestions={stats?.todayTotalAnswers}
+        correctAnswers={stats?.todayCorrectAnswers}
+        isLoading={statsLoading}
+      />
 
-      <View style={styles.buttonContainer}>
-        <Button mode="contained" onPress={signOut} style={styles.button}>
-          Sign Out
-        </Button>
-      </View>
-    </View>
+      <CustomText variant="bodyMedium">
+        Practice flashcards with our AI assistant.
+      </CustomText>
+      <CustomButton
+        title="Browse Flashcards"
+        onPress={() => router.push("(app)/(tabs)/flashcard")}
+      />
+      <CustomText variant="bodyMedium">
+        Join the Daily Challenge and compete on the leaderboard!
+      </CustomText>
+      <CustomButton
+        title="Start Daily Challenge"
+        onPress={() => router.push("(app)/(tabs)/challenge")}
+      />
+      <Leaderboard entries={entries} />
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    marginBottom: 16,
-    textAlign: "center",
-  },
-  description: {
-    fontSize: 16,
-    marginBottom: 24,
-    textAlign: "center",
-  },
-  buttonContainer: {
-    width: "100%",
-    maxWidth: 300,
-  },
-  button: {
-    marginVertical: 8,
   },
 });

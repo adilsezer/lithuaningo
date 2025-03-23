@@ -80,39 +80,5 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(500, "An error occurred while retrieving the daily challenge questions.");
             }
         }
-
-
-        /// <summary>
-        /// Generates new challenge questions using AI.
-        /// </summary>
-        /// <remarks>
-        /// This endpoint triggers the AI to generate new challenge questions. 
-        /// It will replace any existing questions for the current date.
-        /// </remarks>
-        /// <returns>The generated challenge questions</returns>
-        /// <response code="200">Returns the generated challenge questions</response>
-        /// <response code="500">If there was an internal error while generating the questions</response>
-        [HttpPost("generate")]
-        [SwaggerOperation(
-            Summary = "Generates challenge questions using AI",
-            Description = "Generates new challenge questions using AI for the current date",
-            OperationId = "GenerateAIChallenge",
-            Tags = new[] { "Challenge" }
-        )]
-        [ProducesResponseType(typeof(IEnumerable<ChallengeQuestionResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<ChallengeQuestionResponse>>> GenerateAIChallenge()
-        {
-            try
-            {
-                var questions = await _challengeService.GenerateAIChallengeQuestionsAsync();
-                return Ok(questions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating AI challenge questions.");
-                return StatusCode(500, "An error occurred while generating AI challenge questions.");
-            }
-        }
     }
 }

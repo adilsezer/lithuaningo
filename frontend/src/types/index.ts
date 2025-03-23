@@ -2,3 +2,6 @@ export * from "./AppInfo";
 export * from "./UserProfile";
 export * from "./alert";
 export * from "./auth.types";
+export * from "./UserChallengeStats";
+export * from "./Leaderboard";
+export * from "./ChallengeQuestion";

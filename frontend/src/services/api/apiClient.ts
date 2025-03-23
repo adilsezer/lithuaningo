@@ -4,6 +4,14 @@ import { supabase } from "../../services/supabase/supabaseClient";
 import { useUserStore } from "../../stores/useUserStore";
 import Constants from "expo-constants";
 import { UpdateAppInfoRequest, AppInfo } from "@src/types/AppInfo";
+import { UpdateUserChallengeStatsRequest } from "@src/types/UserChallengeStats";
+import { CreateUserChallengeStatsRequest } from "@src/types/UserChallengeStats";
+import { UserChallengeStats } from "@src/types/UserChallengeStats";
+import {
+  LeaderboardEntry,
+  UpdateLeaderboardEntryRequest,
+} from "@src/types/Leaderboard";
+import { ChallengeQuestion } from "@src/types/ChallengeQuestion";
 
 // Get the app version from Expo constants
 const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
@@ -301,6 +309,58 @@ class ApiClient {
     context?: Record<string, string>
   ): Promise<string> {
     return this.processAIRequest(message, "chat", context);
+  }
+
+  // User Challenge Stats Controller
+  async getUserChallengeStats(userId: string): Promise<UserChallengeStats> {
+    return this.request<UserChallengeStats>(
+      `/api/v1/UserChallengeStats/${userId}/stats`
+    );
+  }
+
+  async updateUserChallengeStats(
+    userId: string,
+    stats: UpdateUserChallengeStatsRequest
+  ): Promise<void> {
+    return this.request<void>(`/api/v1/UserChallengeStats/${userId}`, {
+      method: "PUT",
+      data: stats,
+    });
+  }
+
+  async createUserChallengeStats(
+    request: CreateUserChallengeStatsRequest
+  ): Promise<UserChallengeStats> {
+    return this.request<UserChallengeStats>(`/api/v1/UserChallengeStats`, {
+      method: "POST",
+      data: request,
+    });
+  }
+
+  async updateDailyStreak(userId: string): Promise<void> {
+    return this.request(`/api/v1/UserChallengeStats/${userId}/stats/streak`, {
+      method: "POST",
+    });
+  }
+
+  // Leaderboard Controller
+  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntry[]> {
+    return this.request<LeaderboardEntry[]>(`/api/v1/Leaderboard/current`);
+  }
+
+  async updateLeaderboardEntry(
+    request: UpdateLeaderboardEntryRequest
+  ): Promise<LeaderboardEntry> {
+    return this.request<LeaderboardEntry>(`/api/v1/Leaderboard/entry`, {
+      method: "POST",
+      data: request,
+    });
+  }
+  // Challenge Controller
+  async getDailyChallenge(): Promise<ChallengeQuestion[]> {
+    return this.request<ChallengeQuestion[]>(`/api/v1/Challenge/daily`, {
+      timeout: 120000,
+    });
   }
 }
 

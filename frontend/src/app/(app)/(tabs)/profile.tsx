@@ -7,7 +7,6 @@ import { useRouter } from "expo-router";
 import CustomSwitch from "@components/ui/CustomSwitch";
 import CustomText from "@components/ui/CustomText";
 import { useIsDarkMode, useThemeActions } from "@stores/useThemeStore";
-import CustomDivider from "@components/ui/CustomDivider";
 
 const PROFILE_ACTIONS = [
   { title: "Edit Profile", path: "/profile/edit-profile" },
