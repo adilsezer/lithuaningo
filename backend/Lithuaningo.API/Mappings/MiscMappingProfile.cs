@@ -31,7 +31,7 @@ namespace Lithuaningo.API.Mappings
 
             // Challenge mappings
             CreateMap<ChallengeQuestion, ChallengeQuestionResponse>();
-            CreateMap<CreateChallengeQuestionRequest, ChallengeQuestion>()
+            CreateMap<CreateChallengeRequest, ChallengeQuestion>()
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "multiple_choice"));

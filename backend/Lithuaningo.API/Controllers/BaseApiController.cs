@@ -1,11 +1,11 @@
-using Lithuaningo.API.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Lithuaningo.API.Authorization;
 
 namespace Lithuaningo.API.Controllers;
 
 [ApiController]
-[Route("api/v{version:apiVersion}/[controller]")]
-[Microsoft.AspNetCore.Mvc.IgnoreAntiforgeryToken]
+[Route("api/v1/[controller]")]
+[Authorize]
 public abstract class BaseApiController : ControllerBase
 {
 } 

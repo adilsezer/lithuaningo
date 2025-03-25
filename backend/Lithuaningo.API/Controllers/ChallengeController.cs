@@ -6,9 +6,9 @@ using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Challenge;
 using Swashbuckle.AspNetCore.Annotations;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using System.Linq;
+using Lithuaningo.API.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -39,45 +39,30 @@ namespace Lithuaningo.API.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        /// <summary>
-        /// Retrieves the daily challenge questions for the current date
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        /// 
-        ///     GET /api/v1/Challenge/daily
-        /// 
-        /// The response includes:
-        /// - Question text in both Lithuanian and English
-        /// - Multiple choice options
-        /// - Correct answer indicator
-        /// - Question difficulty level
-        /// 
-        /// Questions are automatically generated if none exist for the current date.
-        /// </remarks>
-        /// <returns>A collection of challenge questions for the current day</returns>
-        /// <response code="200">Returns the list of daily challenge questions</response>
-        /// <response code="500">If there was an internal error while retrieving the questions</response>
-        [HttpGet("daily")]
+        [HttpPost("generate")]
+        [ProducesResponseType(typeof(List<ChallengeQuestionResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
-            Summary = "Retrieves daily challenge questions",
-            Description = "Gets or generates the challenge questions for the current date",
-            OperationId = "GetDailyChallenge",
+            Summary = "Generates challenge questions",
+            Description = "Generates challenge questions using AI based on the provided description and count",
+            OperationId = "GenerateChallengeQuestions",
             Tags = new[] { "Challenge" }
         )]
-        [ProducesResponseType(typeof(IEnumerable<ChallengeQuestionResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<IEnumerable<ChallengeQuestionResponse>>> GetDailyChallenge()
+        [SwaggerResponse(StatusCodes.Status200OK, "The challenge questions were generated successfully", typeof(List<ChallengeQuestionResponse>))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "The request parameters are invalid")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while generating the challenge questions")]
+        public async Task<ActionResult<List<ChallengeQuestionResponse>>> GenerateChallengeQuestions([FromBody] CreateChallengeRequest request)
         {
             try
             {
-                var questions = await _challengeService.GetDailyChallengeQuestionsAsync();
+                var questions = await _challengeService.GenerateAIChallengeQuestionsAsync(request);
                 return Ok(questions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving daily challenge questions.");
-                return StatusCode(500, "An error occurred while retrieving the daily challenge questions.");
+                _logger.LogError(ex, "Error generating challenge questions");
+                return StatusCode(500, "An error occurred while generating challenge questions");
             }
         }
     }

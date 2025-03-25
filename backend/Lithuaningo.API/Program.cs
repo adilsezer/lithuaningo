@@ -91,7 +91,6 @@ builder.Services.AddControllers()
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<UserMappingProfile>();    // User-related mappings
-    cfg.AddProfile<FlashcardMappingProfile>();// Flashcard-related mappings
     cfg.AddProfile<MiscMappingProfile>();    // Miscellaneous mappings
 });
 

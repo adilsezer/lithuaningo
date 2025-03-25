@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.AppInfo;
 using Swashbuckle.AspNetCore.Annotations;
+using Lithuaningo.API.Authorization;
 using Microsoft.AspNetCore.Authorization;
 
 namespace Lithuaningo.API.Controllers
@@ -102,7 +103,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="200">Returns the updated app information</response>
         /// <response code="400">Platform parameter is empty or ModelState errors exist</response>
         /// <response code="500">An error occurred during the update</response>
-        [Authorize(Roles = "Admin")]
+        [RequireAdmin]
         [HttpPut("{platform}")]
         [SwaggerOperation(
             Summary = "Updates application information",
@@ -149,7 +150,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="204">App info successfully deleted</response>
         /// <response code="400">Invalid id format</response>
         /// <response code="500">An error occurred while deleting the information</response>
-        [Authorize(Roles = "Admin")]
+        [RequireAdmin]
         [HttpDelete("{id}")]
         [SwaggerOperation(
             Summary = "Deletes application information",

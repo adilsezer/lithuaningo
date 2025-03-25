@@ -7,7 +7,7 @@ using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Swashbuckle.AspNetCore.Annotations;
-using Microsoft.AspNetCore.Authorization;
+using Lithuaningo.API.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {

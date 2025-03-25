@@ -3,6 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Lithuaningo.API.Services.Auth;
 using System.IdentityModel.Tokens.Jwt;
+using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Logging;
 
 namespace Lithuaningo.API.Authorization;
 
@@ -19,8 +21,20 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
         if (allowAnonymous)
             return;
 
+        // Get environment service
+        var env = context.HttpContext.RequestServices
+            .GetRequiredService<IHostEnvironment>();
+
+        // Skip authentication in development
+        if (env.IsDevelopment())
+            return;
+
         var authService = context.HttpContext.RequestServices
             .GetRequiredService<IAuthService>();
+
+        // Get logger
+        var logger = context.HttpContext.RequestServices
+            .GetRequiredService<ILogger<AuthorizeAttribute>>();
 
         // Check for Authorization header
         var authHeader = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault();
@@ -99,12 +113,13 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
         }
         catch (Exception ex)
         {
+            logger.LogError(ex, "Error processing authentication token");
             context.Result = new UnauthorizedObjectResult(new
             {
-                message = "Token validation failed",
-                error = ex.Message,
-                code = "validation_failed"
+                message = "An error occurred while processing the token",
+                code = "token_processing_error"
             });
+            return;
         }
     }
 } 

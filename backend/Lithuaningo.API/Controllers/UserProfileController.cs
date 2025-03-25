@@ -2,10 +2,14 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Http;
+using System.Collections.Generic;
 using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Settings;
 using Lithuaningo.API.DTOs.UserProfile;
 using Swashbuckle.AspNetCore.Annotations;
-using Microsoft.AspNetCore.Authorization;
+using Lithuaningo.API.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {

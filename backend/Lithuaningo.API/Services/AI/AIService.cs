@@ -4,6 +4,7 @@ using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Text;
 using Lithuaningo.API.DTOs.Challenge;
+using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
@@ -79,12 +80,30 @@ EXAMPLE OUTPUT:
   }
 ]";
 
+    // Flashcard generation system instructions
+    private const string FLASHCARD_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language flashcards based on the given topic and parameters.
+
+FORMAT: Return a JSON array of flashcard objects with these properties:
+- frontWord: The Lithuanian word or phrase
+- backWord: The English translation
+- exampleSentence: A practical example sentence in Lithuanian using the word
+- exampleSentenceTranslation: English translation of the example sentence
+- notes: Brief usage notes or tips about the word/phrase
+
+RULES:
+1. Create accurate Lithuanian flashcards with correct grammar and spelling
+2. Focus on the requested topic, difficulty level and category
+3. Include common, useful vocabulary appropriate for the specified level
+4. Provide realistic, practical example sentences
+5. Add helpful context notes for language learners
+6. Include appropriate tags that categorize the content well";
+
     #endregion
     
     #region Private Fields
     
     // Store conversation history for sessions
-    protected readonly ConcurrentDictionary<string, List<ChatMessage>> _conversationHistories = new();
+    private readonly ConcurrentDictionary<string, List<ChatMessage>> _conversationHistories = new();
     
     // The chat client instance for this service
     private readonly ChatClient _chatClient;
@@ -150,15 +169,9 @@ EXAMPLE OUTPUT:
     /// <returns>The AI's response text</returns>
     public async Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat")
     {
-        serviceType = serviceType.ToLowerInvariant();
-        
-        _logger.LogInformation("Processing AI request using service type: {ServiceType}", serviceType);
-        
         try
         {
-            // Process based on service type
-            var aiResponse = await HandleChatRequestAsync(prompt, context);
-            return aiResponse;
+            return await HandleChatRequestAsync(prompt, context);
         }
         catch (Exception ex)
         {
@@ -168,88 +181,165 @@ EXAMPLE OUTPUT:
     }
     
     /// <summary>
-    /// Generates challenge questions using AI based on provided flashcards
+    /// Generates a set of challenge questions using AI based on the provided parameters
     /// </summary>
-    /// <param name="flashcards">List of flashcards to use for generating questions</param>
-    /// <returns>A list of challenge questions</returns>
-    public async Task<List<CreateChallengeQuestionRequest>> GenerateChallengeQuestionsAsync(List<Models.Flashcard> flashcards)
+    /// <param name="request">The parameters for challenge generation, including topic and difficulty</param>
+    /// <returns>A list of challenge questions with multiple choice, true/false, and fill-in-blank options</returns>
+    /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails</exception>
+    public async Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync(CreateChallengeRequest request)
     {
-        // Retry up to 3 times if necessary
-        for (int attempt = 1; attempt <= 3; attempt++)
+        if (request == null)
         {
-            try
-            {
-                _logger.LogInformation("Generating challenges with AI from {Count} flashcards, attempt {Attempt}", 
-                    flashcards.Count, attempt);
-                
-                // Get raw JSON response from the AI
-                var jsonResponse = await HandleFlashcardChallengeRequestAsync(flashcards);
-                
-                if (string.IsNullOrEmpty(jsonResponse))
-                {
-                    _logger.LogWarning("AI returned empty response on attempt {Attempt}", attempt);
-                    continue;
-                }
-                
-                // Extract and clean up JSON content
-                var jsonContent = ExtractJsonFromAiResponse(jsonResponse);
-                
-                // Convert string enum values to integers if needed
-                if (!string.IsNullOrEmpty(jsonContent))
-                {
-                    jsonContent = ConvertStringTypeToIntIfNeeded(jsonContent);
-                }
-                
-                // Try to deserialize the JSON
-                List<CreateChallengeQuestionRequest>? generatedQuestions = null;
-                try
-                {
-                    // Parse the JSON response into challenge question models
-                    generatedQuestions = JsonSerializer.Deserialize<List<CreateChallengeQuestionRequest>>(
-                        jsonContent ?? string.Empty,
-                        new JsonSerializerOptions { 
-                            PropertyNameCaseInsensitive = true,
-                            AllowTrailingCommas = true,
-                            ReadCommentHandling = JsonCommentHandling.Skip,
-                            Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-                        }
-                    );
-                }
-                catch (JsonException ex)
-                {
-                    _logger.LogError(ex, "JSON deserialization error on attempt {Attempt}", attempt);
-                    continue;
-                }
-                
-                // Verify the deserialized data
-                if (generatedQuestions == null || generatedQuestions.Count == 0)
-                {
-                    _logger.LogWarning("No valid questions were deserialized from AI response, attempt {Attempt}", attempt);
-                    continue;
-                }
-                
-                // Validate the questions
-                if (!ValidateGeneratedChallenges(generatedQuestions))
-                {
-                    _logger.LogWarning("Generated questions failed validation, attempt {Attempt}", attempt);
-                    continue;
-                }
-                
-                return generatedQuestions;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating challenges from flashcards, attempt {Attempt}", attempt);
-                
-                if (attempt >= 3)
-                {
-                    throw;
-                }
-            }
+            throw new ArgumentNullException(nameof(request));
         }
-        
-        // If we get here, all attempts have failed
-        throw new Exception("Failed to generate challenge questions from flashcards after multiple attempts");
+
+        return await RetryWithBackoffAsync(async (attempt) =>
+        {
+            _logger.LogInformation("Generating challenges with AI for description '{Description}', attempt {Attempt}", 
+                request.Description, attempt);
+
+            var prompt = new StringBuilder()
+                .AppendLine($"Create {request.Count} Lithuanian language challenges.")
+                .AppendLine($"Description: {request.Description}")
+                .ToString();
+
+            var messages = new List<ChatMessage>
+            {
+                new SystemChatMessage(CHALLENGE_SYSTEM_INSTRUCTIONS),
+                new UserChatMessage(prompt.ToString())
+            };
+
+            var completion = await _chatClient.CompleteChatAsync(messages.ToArray());
+            var jsonResponse = completion.Value.Content[0].Text;
+
+            if (string.IsNullOrEmpty(jsonResponse))
+            {
+                throw new InvalidOperationException("AI returned empty response");
+            }
+
+            var jsonContent = ExtractJsonFromAiResponse(jsonResponse);
+            if (string.IsNullOrEmpty(jsonContent))
+            {
+                throw new InvalidOperationException("Failed to extract JSON content from AI response");
+            }
+
+            jsonContent = ConvertStringTypeToIntIfNeeded(jsonContent);
+            var questions = JsonSerializer.Deserialize<List<ChallengeQuestionResponse>>(
+                jsonContent,
+                new JsonSerializerOptions { 
+                    PropertyNameCaseInsensitive = true,
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip,
+                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
+                }
+            );
+
+            if (questions == null || !questions.Any() || !ValidateGeneratedChallenges(questions))
+            {
+                throw new InvalidOperationException("Generated questions failed validation");
+            }
+
+            // Generate IDs for each question
+            foreach (var question in questions)
+            {
+                question.Id = Guid.NewGuid();
+            }
+
+            return questions;
+        });
+    }
+
+    /// <summary>
+    /// Validates the generated flashcards
+    /// </summary>
+    private bool ValidateGeneratedFlashcards(List<FlashcardResponse> flashcards)
+    {
+        if (flashcards == null || !flashcards.Any())
+        {
+            _logger.LogWarning("No flashcards were generated");
+            return false;
+        }
+
+        return flashcards.All(flashcard =>
+            !string.IsNullOrWhiteSpace(flashcard.FrontWord) &&
+            !string.IsNullOrWhiteSpace(flashcard.BackWord) &&
+            !string.IsNullOrWhiteSpace(flashcard.ExampleSentence) &&
+            !string.IsNullOrWhiteSpace(flashcard.ExampleSentenceTranslation));
+    }
+
+    /// <summary>
+    /// Generates a set of flashcards using AI based on the provided parameters
+    /// </summary>
+    /// <param name="request">The parameters for flashcard generation, including description and count</param>
+    /// <returns>A list of generated flashcards</returns>
+    /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
+    public async Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+
+        return await RetryWithBackoffAsync(async (attempt) =>
+        {
+            _logger.LogInformation("Generating flashcards with AI for description '{Description}', attempt {Attempt}", 
+                request.Description, attempt);
+
+            var prompt = new StringBuilder()
+                .AppendLine($"Create {request.Count} Lithuanian language flashcards.")
+                .AppendLine($"Description: {request.Description}")
+                .ToString();
+
+            var messages = new List<ChatMessage>
+            {
+                new SystemChatMessage(FLASHCARD_SYSTEM_INSTRUCTIONS),
+                new UserChatMessage(prompt)
+            };
+
+            var completion = await _chatClient.CompleteChatAsync(messages.ToArray());
+            var jsonResponse = completion.Value.Content[0].Text;
+
+            if (string.IsNullOrEmpty(jsonResponse))
+            {
+                throw new InvalidOperationException("AI returned empty response");
+            }
+
+            var jsonContent = ExtractJsonFromAiResponse(jsonResponse);
+            if (string.IsNullOrEmpty(jsonContent))
+            {
+                throw new InvalidOperationException("Failed to extract JSON content from AI response");
+            }
+
+            var flashcards = JsonSerializer.Deserialize<List<FlashcardResponse>>(
+                jsonContent,
+                new JsonSerializerOptions { 
+                    PropertyNameCaseInsensitive = true,
+                    AllowTrailingCommas = true,
+                    ReadCommentHandling = JsonCommentHandling.Skip
+                }
+            );
+
+            if (flashcards == null || !flashcards.Any() || !ValidateGeneratedFlashcards(flashcards))
+            {
+                throw new InvalidOperationException("Generated flashcards failed validation");
+            }
+
+            // Generate IDs for each flashcard
+            foreach (var flashcard in flashcards)
+            {
+                flashcard.Id = Guid.NewGuid();
+            }
+
+            // Limit to the requested count
+            var limitedFlashcards = flashcards.Take(request.Count).ToList();
+
+            _logger.LogInformation("Successfully generated {Count} flashcards for description '{Description}'", 
+                limitedFlashcards.Count, request.Description);
+
+            return limitedFlashcards;
+        });
     }
     
     /// <summary>
@@ -292,23 +382,16 @@ EXAMPLE OUTPUT:
     /// </summary>
     private async Task<string> HandleChatRequestAsync(string message, Dictionary<string, string>? context)
     {
-        // Generate a session ID from context if available, otherwise use a default
-        string sessionId = "default_session";
-        if (context != null && context.TryGetValue("sessionId", out var id))
-        {
-            sessionId = id;
-        }
+        // Ensure sessionId is never null by using a default value
+        var sessionId = context?.GetValueOrDefault("sessionId") ?? "default_session";
+        
+        var conversationHistory = _conversationHistories.GetOrAdd(
+            sessionId,
+            _ => new List<ChatMessage> { new SystemChatMessage(CHAT_SYSTEM_INSTRUCTIONS) }
+        );
 
-        // Get or create conversation history for this session
-        var conversationHistory = _conversationHistories.GetOrAdd(sessionId, _ => new List<ChatMessage>
-        {
-            new SystemChatMessage(CHAT_SYSTEM_INSTRUCTIONS)
-        });
-
-        // Add the user's message to the conversation history
         conversationHistory.Add(new UserChatMessage(message));
 
-        // If conversation is too long, keep only the last 10 messages plus system prompt
         if (conversationHistory.Count > 11)
         {
             var systemMessage = conversationHistory[0];
@@ -316,83 +399,17 @@ EXAMPLE OUTPUT:
             conversationHistory.Insert(0, systemMessage);
         }
 
-        // Send the request to OpenAI
         var completion = await _chatClient.CompleteChatAsync(conversationHistory.ToArray());
+        var aiResponse = completion.Value.Content[0].Text ?? "I'm sorry, I couldn't generate a response.";
         
-        // Extract the response text from the completion
-        var aiResponse = completion.Value.Content[0].Text;
-        if (string.IsNullOrEmpty(aiResponse))
-        {
-            aiResponse = "I'm sorry, I couldn't generate a response.";
-        }
-
-        // Add the AI's response to the conversation history
         conversationHistory.Add(new AssistantChatMessage(aiResponse));
-        
         return aiResponse;
-    }
-    
-    /// <summary>
-    /// Handles AI request for generating challenge questions based on flashcards
-    /// </summary>
-    /// <param name="flashcards">The flashcards to use for generating questions</param>
-    /// <returns>The AI response as a string</returns>
-    private async Task<string> HandleFlashcardChallengeRequestAsync(List<Models.Flashcard> flashcards)
-    {
-        if (flashcards == null || flashcards.Count == 0)
-        {
-            _logger.LogWarning("No flashcards provided for challenge generation");
-            return "[]";
-        }
-        
-        // Prepare flashcard data for the prompt
-        var flashcardData = new StringBuilder();
-        flashcardData.AppendLine("Here are the flashcards to use for generating questions:");
-        
-        foreach (var flashcard in flashcards)
-        {
-            flashcardData.AppendLine($"- Lithuanian word: {flashcard.FrontWord}");
-            flashcardData.AppendLine($"  Translation: {flashcard.BackWord}");
-            
-            if (!string.IsNullOrEmpty(flashcard.ExampleSentence))
-            {
-                flashcardData.AppendLine($"  Example sentence: {flashcard.ExampleSentence}");
-                
-                if (!string.IsNullOrEmpty(flashcard.ExampleSentenceTranslation))
-                {
-                    flashcardData.AppendLine($"  Example translation: {flashcard.ExampleSentenceTranslation}");
-                }
-            }
-            
-            flashcardData.AppendLine();
-        }
-        
-        // For challenge generation, we use detailed system instructions and flashcard data
-        var messages = new List<ChatMessage>
-        {
-            new SystemChatMessage(CHALLENGE_SYSTEM_INSTRUCTIONS),
-            new UserChatMessage($@"Create Lithuanian language challenges using these flashcards:
-
-{flashcardData}")
-        };
-
-        // Send the request to OpenAI
-        var completion = await _chatClient.CompleteChatAsync(messages.ToArray());
-        
-        // Extract the response text from the completion
-        var jsonResponse = completion.Value.Content[0].Text;
-        if (string.IsNullOrEmpty(jsonResponse))
-        {
-            return "[]"; // Return empty JSON array if no response
-        }
-        
-        return jsonResponse;
     }
     
     /// <summary>
     /// Validates the generated challenges
     /// </summary>
-    private bool ValidateGeneratedChallenges(List<CreateChallengeQuestionRequest> questions)
+    private bool ValidateGeneratedChallenges(List<ChallengeQuestionResponse> questions)
     {
         if (questions == null || !questions.Any())
         {
@@ -400,44 +417,12 @@ EXAMPLE OUTPUT:
             return false;
         }
 
-        foreach (var question in questions)
-        {
-            // Check required fields
-            if (string.IsNullOrWhiteSpace(question.Question))
-            {
-                _logger.LogWarning("Question text is missing");
-                return false;
-            }
-
-            if (string.IsNullOrWhiteSpace(question.CorrectAnswer))
-            {
-                _logger.LogWarning("CorrectAnswer is missing");
-                return false;
-            }
-
-            // Check options
-            if (question.Options == null || !question.Options.Any())
-            {
-                _logger.LogWarning("Options array is missing or empty");
-                return false;
-            }
-
-            // Make sure correct answer is in the options
-            if (!question.Options.Contains(question.CorrectAnswer))
-            {
-                _logger.LogWarning("CorrectAnswer is not found in the options array");
-                return false;
-            }
-
-            // Validate question type
-            if (!Enum.IsDefined(typeof(ChallengeQuestionType), question.Type))
-            {
-                _logger.LogWarning("Invalid question type value: {Type}", question.Type);
-                return false;
-            }
-        }
-
-        return true;
+        return questions.All(question =>
+            !string.IsNullOrWhiteSpace(question.Question) &&
+            !string.IsNullOrWhiteSpace(question.CorrectAnswer) &&
+            question.Options?.Any() == true &&
+            question.Options.Contains(question.CorrectAnswer) &&
+            Enum.IsDefined(typeof(ChallengeQuestionType), question.Type));
     }
     
     /// <summary>
@@ -489,12 +474,29 @@ EXAMPLE OUTPUT:
             { @"""type""\s*:\s*""FillInTheBlank""", @"""type"":2" }
         };
 
-        foreach (var pattern in typePatterns)
+        return typePatterns.Aggregate(jsonContent, (current, pattern) => 
+            current.Replace(pattern.Key, pattern.Value));
+    }
+    
+    private async Task<T> RetryWithBackoffAsync<T>(Func<int, Task<T>> operation, int maxAttempts = 3)
+    {
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
-            jsonContent = Regex.Replace(jsonContent, pattern.Key, pattern.Value, RegexOptions.IgnoreCase);
+            try
+            {
+                return await operation(attempt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Operation failed on attempt {Attempt}", attempt);
+                if (attempt >= maxAttempts)
+                {
+                    throw;
+                }
+                await Task.Delay(100 * attempt); // Simple exponential backoff
+            }
         }
-
-        return jsonContent;
+        throw new InvalidOperationException($"Operation failed after {maxAttempts} attempts");
     }
     
     #endregion

@@ -46,10 +46,5 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// Additional notes for the flashcard
         /// </summary>
         public string Notes { get; set; } = string.Empty;
-        
-        /// <summary>
-        /// Language proficiency level (A1, A2, B1, B2, etc.)
-        /// </summary>
-        public string Level { get; set; } = string.Empty;
     }
 } 
