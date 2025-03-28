@@ -104,9 +104,4 @@ public class AIController : BaseApiController
         request.ServiceType = "chat";
         return await ProcessRequest(request);
     }
-
-    // Place for future AI endpoints:
-    // [HttpPost("translation")]
-    // [HttpPost("grammar-check")]
-    // [HttpPost("challenge")]
 } 

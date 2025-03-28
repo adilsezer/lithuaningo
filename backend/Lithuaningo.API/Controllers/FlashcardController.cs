@@ -108,18 +108,8 @@ namespace Lithuaningo.API.Controllers
         {
             try
             {
-                _logger.LogInformation("Generating flashcards with description: {Description}", request.Description);
-
-                // Validate the request
-                if (!ModelState.IsValid)
-                {
-                    return BadRequest(ModelState);
-                }
-
                 // Generate flashcards using AI
                 var flashcards = await _flashcardService.GenerateFlashcardsAsync(request);
-
-                _logger.LogInformation("Successfully generated {Count} flashcards", flashcards.Count);
                 return Ok(flashcards);
             }
             catch (Exception ex)

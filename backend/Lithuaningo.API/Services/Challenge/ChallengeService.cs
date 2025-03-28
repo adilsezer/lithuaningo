@@ -63,6 +63,11 @@ namespace Lithuaningo.API.Services
         /// </summary>
         public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync(CreateChallengeRequest request)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+            
             try
             {
                 _logger.LogInformation("Generating challenge questions using AI service");

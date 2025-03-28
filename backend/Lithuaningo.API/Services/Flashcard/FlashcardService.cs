@@ -67,7 +67,7 @@ namespace Lithuaningo.API.Services
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
         /// <returns>A list of generated flashcards</returns>
-        public async Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request)
+        public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request)
         {
             if (request == null)
             {
@@ -81,15 +81,6 @@ namespace Lithuaningo.API.Services
                 // Get generated flashcards from the AI service
                 var flashcards = await _aiService.GenerateFlashcardsAsync(request);
                 
-                if (flashcards == null || !flashcards.Any())
-                {
-                    _logger.LogWarning("No flashcards were generated from AI service for description '{Description}'", request.Description);
-                    return new List<FlashcardResponse>();
-                }
-                
-                _logger.LogInformation("Successfully generated {Count} flashcards for description '{Description}'", 
-                    flashcards.Count, request.Description);
-                    
                 return flashcards;
             }
             catch (Exception ex)

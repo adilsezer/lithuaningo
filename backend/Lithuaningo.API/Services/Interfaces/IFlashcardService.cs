@@ -13,7 +13,7 @@ namespace Lithuaningo.API.Services.Interfaces
         /// Generates flashcards using AI based on provided parameters without saving them
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
-        /// <returns>A list of generated flashcards</returns>
-        Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request);
+        /// <returns>A collection of generated flashcards</returns>
+        Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request);
     }
 }
