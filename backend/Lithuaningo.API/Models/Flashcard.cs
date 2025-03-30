@@ -2,6 +2,7 @@ using System;
 using Supabase.Postgrest.Models;
 using Supabase.Postgrest.Attributes;
 using Lithuaningo.API.DTOs.Flashcard;
+using System.Collections.Generic;
 
 namespace Lithuaningo.API.Models
 {
@@ -33,13 +34,10 @@ namespace Lithuaningo.API.Models
         [Column("notes")]
         public string Notes { get; set; } = string.Empty;
 
-        [Column("topic")]
-        public string Topic { get; set; } = string.Empty;
+        [Column("categories")]
+        public List<int> Categories { get; set; } = new();
 
         [Column("difficulty")]
         public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
-
-        [Column("shown_to_users")]
-        public List<string> ShownToUsers { get; set; } = new();
     }
 }

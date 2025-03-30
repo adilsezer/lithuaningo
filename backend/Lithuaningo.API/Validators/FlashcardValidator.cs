@@ -8,16 +8,21 @@ public class CreateFlashcardValidator : AbstractValidator<FlashcardRequest>
 {
     public CreateFlashcardValidator()
     {
-        // Required properties
-        RuleFor(x => x.Topic)
-            .NotEmpty().WithMessage("Description is required")
-            .MinimumLength(2).WithMessage("Description must be at least 2 characters")
-            .MaximumLength(500).WithMessage("Description must not exceed 500 characters");
-
+        // Required property
+        RuleFor(x => x.PrimaryCategory)
+            .IsInEnum().WithMessage("Primary category must be a valid value");
+            
+        // Validate count
         RuleFor(x => x.Count)
             .InclusiveBetween(1, 10).WithMessage("Count must be between 1 and 10");
             
+        // Validate difficulty
         RuleFor(x => x.Difficulty)
             .IsInEnum().WithMessage("Difficulty must be a valid value (Basic, Intermediate, or Advanced)");
+
+        // Validate hint if provided
+        RuleFor(x => x.Hint)
+            .MaximumLength(100).When(x => !string.IsNullOrEmpty(x.Hint))
+            .WithMessage("Hint must not exceed 100 characters");
     }
 }

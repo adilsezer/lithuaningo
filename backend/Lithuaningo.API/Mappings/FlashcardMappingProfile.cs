@@ -1,6 +1,7 @@
 using AutoMapper;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.Flashcard;
+using System.Linq;
 
 namespace Lithuaningo.API.Mappings
 {
@@ -18,7 +19,11 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioUrl))
                 .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Notes))
-                .ForMember(dest => dest.Topic, opt => opt.MapFrom(src => src.Topic));
+                .ForMember(dest => dest.Categories, 
+                    opt => opt.MapFrom(src => src.Categories != null 
+                        ? src.Categories.Select(c => (WordCategory)c).ToList() 
+                        : new List<WordCategory>()))
+                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty));
 
             CreateMap<FlashcardResponse, Flashcard>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -30,7 +35,11 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.ImageUrl, opt => opt.MapFrom(src => src.ImageUrl))
                 .ForMember(dest => dest.AudioUrl, opt => opt.MapFrom(src => src.AudioUrl))
                 .ForMember(dest => dest.Notes, opt => opt.MapFrom(src => src.Notes))
-                .ForMember(dest => dest.Topic, opt => opt.MapFrom(src => src.Topic));
+                .ForMember(dest => dest.Categories, 
+                    opt => opt.MapFrom(src => src.Categories != null 
+                        ? src.Categories.Select(c => (int)c).ToList() 
+                        : new List<int>()))
+                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty));
         }
     }
 } 

@@ -11,6 +11,8 @@ using Lithuaningo.API.DTOs.Flashcard;
 using Swashbuckle.AspNetCore.Annotations;
 using Lithuaningo.API.Authorization;
 using System.Security.Claims;
+using System.Linq;
+using AutoMapper;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -34,9 +36,9 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Gets flashcards for a topic, generating new ones if needed
+        /// Gets flashcards for a category, generating new ones if needed
         /// </summary>
-        /// <param name="request">The request object containing the count and user ID</param>
+        /// <param name="request">The request object containing the category, difficulty, and count</param>
         /// <returns>A list of flashcards</returns>
         /// <response code="200">Returns the list of flashcards</response>
         /// <response code="400">If the request parameters are invalid</response>
@@ -44,8 +46,8 @@ namespace Lithuaningo.API.Controllers
         /// <response code="500">If there was an error processing the request</response>
         [HttpGet]
         [SwaggerOperation(
-            Summary = "Get flashcards for a topic",
-            Description = "Retrieves flashcards for the specified topic and difficulty level. If there are not enough unseen flashcards, generates new ones using AI.",
+            Summary = "Get flashcards for a category",
+            Description = "Retrieves flashcards for the specified category and difficulty level. If there are not enough unseen flashcards, generates new ones using AI.",
             OperationId = "GetFlashcards",
             Tags = new[] { "Flashcard" }
         )]
@@ -68,15 +70,21 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting flashcards for topic '{Topic}' with difficulty '{Difficulty}'", 
-                    request.Topic, request.Difficulty);
+                _logger.LogInformation("Getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}", 
+                    request.PrimaryCategory, 
+                    request.Difficulty,
+                    !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty);
 
-                var flashcards = await _flashcardService.GetFlashcardsAsync(request.Topic, effectiveUserId, request.Count, request.Difficulty);
-                return Ok(flashcards);
+                var flashcardResponses = await _flashcardService.GetFlashcardsAsync(request, effectiveUserId);
+                
+                return Ok(flashcardResponses);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcards for topic '{Topic}'", request.Topic);
+                _logger.LogError(ex, "Error getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}", 
+                    request.PrimaryCategory, 
+                    request.Difficulty,
+                    !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty);
                 return StatusCode(500, "An error occurred while getting flashcards");
             }
         }

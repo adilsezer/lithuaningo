@@ -321,6 +321,7 @@ To authorize in Swagger UI:
     services.AddScoped<IUserProfileService, UserProfileService>();
     services.AddScoped<IAppInfoService, AppInfoService>();
     services.AddScoped<IFlashcardService, FlashcardService>();
+    services.AddScoped<IUserFlashcardStatService, UserFlashcardStatService>();
     services.AddScoped<ILeaderboardService, LeaderboardService>();
     services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
     // Challenge Related Services

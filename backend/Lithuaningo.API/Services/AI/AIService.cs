@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using System.Text;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
+using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
@@ -81,63 +82,59 @@ EXAMPLE OUTPUT:
 ]";
 
     // Flashcard generation system instructions
-    private const string FLASHCARD_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language flashcards based on the given topic and parameters.
+    private const string FLASHCARD_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language flashcards based on the given category and parameters.
 
 FORMAT: Return a JSON array of flashcard objects with these properties:
 {
-  ""frontWord"": ""The Lithuanian word or phrase"",
+  ""frontWord"": ""The Lithuanian word or phrase in Lithuanian"",
   ""backWord"": ""The English translation"",
   ""exampleSentence"": ""A practical example sentence in Lithuanian using the word"",
   ""exampleSentenceTranslation"": ""English translation of the example sentence"",
   ""notes"": ""Brief usage notes or tips about the word/phrase"",
-  ""difficulty"": Integer representing difficulty level (0=Basic, 1=Intermediate, 2=Advanced)
+  ""difficulty"": Integer (0=Basic, 1=Intermediate, 2=Advanced),
+  ""categories"": Array of integers representing word categories
 }
 
 RULES:
 1. Create accurate Lithuanian flashcards with correct grammar and spelling
-2. Focus on the requested topic
-3. Include common, useful vocabulary appropriate for the specified difficulty level
-4. Provide realistic, practical example sentences
-5. Add helpful context notes for language learners
-6. DO NOT create flashcards that are similar to the existing ones provided in the prompt
-7. Each flashcard should be unique and different from any existing ones
-8. ALWAYS set the ""difficulty"" property to match the requested difficulty level
+2. Focus on the requested primary category and hint
+3. Include vocabulary appropriate for the specified difficulty level
+4. Provide practical, natural example sentences
+5. ALWAYS use the exact difficulty level requested (0, 1, or 2)
+6. ALWAYS include the primary category in the categories array
+7. Do NOT create flashcards similar to existing words provided
+8. Each flashcard must be unique in the set
+
+CATEGORIES (Always use these numeric codes):
+# Grammar Categories
+0 = Verb (eiti, kalbėti)
+1 = Noun (namas, šalis)
+2 = Adjective (gražus, didelis)
+3 = Adverb (greitai, labai)
+4 = Pronoun (aš, tu, jis, ji)
+5 = Connector (prepositions, conjunctions)
+
+# Thematic Categories
+100 = Greeting (labas, sveiki)
+101 = Phrase (atsiprašau, prašom, ačiū)
+102 = Number (counting words)
+103 = TimeWord (vakar, šiandien, rytoj)
+104 = Food (food and dining terms)
+105 = Travel (travel-related terms)
+106 = Family (family-related terms)
+107 = Work (profession related terms)
+108 = Nature (weather, nature terms)
+999 = Other (miscellaneous terms)
 
 DIFFICULTY GUIDELINES:
-- Basic (0): 
-  * Common, everyday words and phrases (e.g., labas, ačiū, namas, eiti, būti)
-  * Regular conjugation patterns and simple present tense for verbs
-  * High-frequency vocabulary found in beginner textbooks
-  * Words with transparent meaning and regular spelling
+- Basic (0): Common everyday terms, regular forms, beginner vocabulary
+- Intermediate (1): Less common words, irregular forms, multiple meanings
+- Advanced (2): Specialized vocabulary, idioms, complex grammatical forms
 
-- Intermediate (1):
-  * Less common vocabulary not encountered in everyday basic conversations
-  * Irregular verbs or those with challenging conjugation patterns
-  * Words with multiple context-dependent meanings
-  * Compound words, prefixed/suffixed forms of basic vocabulary
-  * Perfect and future tense verb forms
-
-- Advanced (2):
-  * Specialized/technical/literary vocabulary
-  * Archaic terms, idioms, and culturally-specific expressions
-  * Complex grammatical forms (subjunctive, passive constructions)
-  * Abstract concepts and words rarely used in everyday speech
-  * Words with subtle connotations or specialized usage contexts
-
-EXAMPLES BY CATEGORY:
-- Verbs: 
-  * Basic: būti (to be), eiti (to go), turėti (to have), norėti (to want)
-  * Intermediate: pasitikėti (to trust), įgyvendinti (to implement), svarstyti (to consider)
-  * Advanced: puoselėti (to nurture), įžvelgti (to discern), išsklaidyti (to disperse)
-
-CAPITALIZATION STANDARDS:
-- For Lithuanian words in the ""frontWord"" field:
-  * Capitalize proper nouns (names of people, places, etc.)
-  * Use lowercase for common nouns, verbs, adjectives, and other parts of speech
-  * This follows standard Lithuanian orthography rules
-- For example sentences, follow standard Lithuanian capitalization rules (capitalize first letter of sentences)
-- For English translations in ""backWord"", use lowercase unless the word is a proper noun
-- Ensure consistency across all flashcards
+CAPITALIZATION:
+- Lowercase all Lithuanian words unless they're proper nouns
+- Capitalize first letter of example sentences
+- Lowercase English translations unless proper nouns
 
 EXAMPLE OUTPUT:
 [
@@ -147,7 +144,8 @@ EXAMPLE OUTPUT:
     ""exampleSentence"": ""Labas, kaip sekasi?"",
     ""exampleSentenceTranslation"": ""Hello, how are you?"",
     ""notes"": ""Used as a general greeting. Can be used at any time of day."",
-    ""difficulty"": 0
+    ""difficulty"": 0,
+    ""categories"": [100, 101]
   },
   {
     ""frontWord"": ""susitikimas"",
@@ -155,26 +153,10 @@ EXAMPLE OUTPUT:
     ""exampleSentence"": ""Šiandien turiu svarbų susitikimą su klientu."",
     ""exampleSentenceTranslation"": ""Today I have an important meeting with a client."",
     ""notes"": ""Used in professional contexts for scheduled gatherings."",
-    ""difficulty"": 1
-  },
-  {
-    ""frontWord"": ""įžvalgumas"",
-    ""backWord"": ""perceptiveness"",
-    ""exampleSentence"": ""Jo įžvalgumas leido jam numatyti rinkos pokyčius."",
-    ""exampleSentenceTranslation"": ""His perceptiveness allowed him to anticipate market changes."",
-    ""notes"": ""Abstract concept used to describe insightful thinking or foresight."",
-    ""difficulty"": 2
+    ""difficulty"": 1,
+    ""categories"": [1, 107]
   }
-]
-
-IMPORTANT:
-- Ensure all JSON properties are properly quoted
-- Include all required fields for each flashcard
-- Make example sentences natural and practical
-- Keep notes concise but informative
-- Avoid creating flashcards with similar words or phrases to existing ones
-- Maintain consistent capitalization according to the standards above
-- SET THE DIFFICULTY PROPERTY TO MATCH THE REQUESTED DIFFICULTY LEVEL";
+]";
 
     #endregion
     
@@ -331,7 +313,7 @@ IMPORTANT:
     /// <summary>
     /// Validates the generated flashcards
     /// </summary>
-    private bool ValidateGeneratedFlashcards(List<FlashcardResponse> flashcards)
+    private bool ValidateGeneratedFlashcards(List<Flashcard> flashcards)
     {
         if (flashcards == null || !flashcards.Any())
         {
@@ -350,12 +332,12 @@ IMPORTANT:
     /// <summary>
     /// Generates a set of flashcards using AI based on the provided parameters
     /// </summary>
-    /// <param name="request">The parameters for flashcard generation, including description and count</param>
+    /// <param name="request">The parameters for flashcard generation, including primary category and difficulty</param>
     /// <param name="existingWords">Optional existing words to avoid in the generated flashcards</param>
     /// <returns>A list of generated flashcards</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
-    public async Task<List<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingWords = null)
+    public async Task<List<Flashcard>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingWords = null)
     {
         if (request == null)
         {
@@ -364,14 +346,21 @@ IMPORTANT:
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating flashcards with AI for topic '{Topic}' with difficulty '{Difficulty}', attempt {Attempt}", 
-                request.Topic, request.Difficulty, attempt);
+            _logger.LogInformation("Generating flashcards with AI for category '{Category}' with difficulty '{Difficulty}', attempt {Attempt}", 
+                request.PrimaryCategory, request.Difficulty, attempt);
 
             var prompt = new StringBuilder()
                 .AppendLine($"Create {request.Count} Lithuanian language flashcards.")
-                .AppendLine($"Topic: {request.Topic}")
-                .AppendLine($"Difficulty: {request.Difficulty}");
-                
+                .AppendLine($"Category: {request.PrimaryCategory}")
+                .AppendLine($"Difficulty: {request.Difficulty}")
+                .AppendLine($"Primary Category: {request.PrimaryCategory} (category code: {(int)request.PrimaryCategory})");
+
+            // Add the hint if provided
+            if (!string.IsNullOrEmpty(request.Hint))
+            {
+                prompt.AppendLine($"Hint: {request.Hint}");
+            }
+
             // Add a limited set of existing words to avoid duplicates
             if (existingWords?.Any() == true)
             {
@@ -402,32 +391,47 @@ IMPORTANT:
                 throw new InvalidOperationException("Failed to extract JSON content from AI response");
             }
 
-            var flashcards = JsonSerializer.Deserialize<List<FlashcardResponse>>(
-                jsonContent,
-                new JsonSerializerOptions { 
-                    PropertyNameCaseInsensitive = true,
-                    AllowTrailingCommas = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip
-                }
-            );
+            // Use standard JSON deserialization with property name case insensitivity
+            var serializerOptions = new JsonSerializerOptions { 
+                PropertyNameCaseInsensitive = true,
+                AllowTrailingCommas = true,
+                ReadCommentHandling = JsonCommentHandling.Skip
+            };
+            
+            var flashcards = JsonSerializer.Deserialize<List<Flashcard>>(jsonContent, serializerOptions);
 
-            if (flashcards == null || !flashcards.Any() || !ValidateGeneratedFlashcards(flashcards))
+            if (flashcards == null || !flashcards.Any())
             {
                 throw new InvalidOperationException("Generated flashcards failed validation");
             }
 
-            // Generate IDs and set topic for each flashcard
+            // Post-process the flashcards to ensure they have required properties
             foreach (var flashcard in flashcards)
             {
+                // Set a unique ID
                 flashcard.Id = Guid.NewGuid();
-                flashcard.Topic = request.Topic; // Ensure topic is set correctly
+                
+                // Ensure categories list exists
+                flashcard.Categories ??= new List<int>();
+                
+                // Ensure primary category is included
+                int primaryCategoryValue = (int)request.PrimaryCategory;
+                if (!flashcard.Categories.Contains(primaryCategoryValue))
+                {
+                    flashcard.Categories.Add(primaryCategoryValue);
+                }
+            }
+
+            if (!ValidateGeneratedFlashcards(flashcards))
+            {
+                throw new InvalidOperationException("Generated flashcards failed validation");
             }
 
             // Limit to the requested count
             var limitedFlashcards = flashcards.Take(request.Count).ToList();
 
-            _logger.LogInformation("Successfully generated {Count} flashcards for topic '{Topic}'", 
-                limitedFlashcards.Count, request.Topic);
+            _logger.LogInformation("Successfully generated {Count} flashcards for category '{Category}'", 
+                limitedFlashcards.Count, request.PrimaryCategory);
 
             return limitedFlashcards;
         });

@@ -1,9 +1,11 @@
 using System;
+using System.Collections.Generic;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.DTOs.Flashcard
 {
     /// <summary>
-    /// Response containing flashcard information
+    /// Response containing flashcard information to be sent to frontend
     /// </summary>
     public class FlashcardResponse
     {
@@ -46,11 +48,11 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// Additional notes for the flashcard
         /// </summary>
         public string Notes { get; set; } = string.Empty;
-
+        
         /// <summary>
-        /// The topic or category this flashcard belongs to
+        /// Categories this flashcard belongs to
         /// </summary>
-        public string Topic { get; set; } = string.Empty;
+        public List<WordCategory> Categories { get; set; } = new();
         
         /// <summary>
         /// The difficulty level of the flashcard

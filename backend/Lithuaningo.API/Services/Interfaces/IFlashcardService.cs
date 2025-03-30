@@ -3,28 +3,32 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Lithuaningo.API.DTOs.Flashcard;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Services.Interfaces
 {
     public interface IFlashcardService
     {
+        /// <summary>
+        /// Uploads a file for a flashcard and returns the URL
+        /// </summary>
+        /// <param name="file">The file to upload</param>
+        /// <returns>The URL of the uploaded file</returns>
         Task<string> UploadFlashcardFileAsync(IFormFile file);
         
         /// <summary>
         /// Generates flashcards using AI based on provided parameters without saving them
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
-        /// <returns>A collection of generated flashcards</returns>
+        /// <returns>A collection of generated flashcard DTOs</returns>
         Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request);
-
+        
         /// <summary>
-        /// Gets flashcards for a topic, generating new ones if needed
+        /// Gets flashcards for a category, generating new ones if needed
         /// </summary>
-        /// <param name="topic">The topic to get flashcards for</param>
+        /// <param name="request">The flashcard request details</param>
         /// <param name="userId">The ID of the user requesting flashcards</param>
-        /// <param name="count">Number of flashcards to return (default: 10)</param>
-        /// <param name="difficulty">The difficulty level of flashcards (default: Basic)</param>
-        /// <returns>A list of flashcards</returns>
-        Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(string topic, string userId, int count = 10, DifficultyLevel difficulty = DifficultyLevel.Basic);
+        /// <returns>A list of flashcard DTOs</returns>
+        Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(FlashcardRequest request, string userId);
     }
 }
