@@ -8,16 +8,23 @@ namespace Lithuaningo.API.DTOs.Flashcard
     public class CreateFlashcardRequest
     {
         /// <summary>
-        /// Description of what kind of flashcards to generate (can include topic, difficulty level, language level, and category)
+        /// Topic or category of the flashcards (e.g., "Basic Vocabulary", "Grammar", "Common Phrases")
         /// </summary>
         [Required]
-        [StringLength(500, MinimumLength = 2)]
-        public string Description { get; set; } = string.Empty;
+        [StringLength(100)]
+        public string Topic { get; set; } = string.Empty;
 
         /// <summary>
-        /// Number of flashcards to generate (1-10)
+        /// Number of flashcards to generate (1-50)
         /// </summary>
-        [Range(1, 10)]
-        public int Count { get; set; } = 5;
+        [Required]
+        [Range(1, 50)]
+        public int Count { get; set; }
+
+        /// <summary>
+        /// ID of the user requesting the flashcards
+        /// </summary>
+        [Required]
+        public string UserId { get; set; } = string.Empty;
     }
 } 

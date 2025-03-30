@@ -46,5 +46,10 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// Additional notes for the flashcard
         /// </summary>
         public string Notes { get; set; } = string.Empty;
+
+        /// <summary>
+        /// The topic or category this flashcard belongs to
+        /// </summary>
+        public string Topic { get; set; } = string.Empty;
     }
 } 

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
@@ -15,5 +16,7 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <param name="request">Parameters for flashcard generation</param>
         /// <returns>A collection of generated flashcards</returns>
         Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request);
+
+        Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(string topic, string userId, int count = 10);
     }
 }

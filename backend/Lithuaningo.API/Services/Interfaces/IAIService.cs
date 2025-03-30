@@ -47,10 +47,11 @@ public interface IAIService
     /// Generates a set of flashcards using AI based on the provided parameters
     /// </summary>
     /// <param name="request">The parameters for flashcard generation, including description and count</param>
+    /// <param name="existingWords">Optional existing words to avoid in the generated flashcards</param>
     /// <returns>A list of generated flashcards</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
-    Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request);
+    Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request, IEnumerable<string>? existingWords = null);
     
     /// <summary>
     /// Clears the conversation history for testing or session management purposes

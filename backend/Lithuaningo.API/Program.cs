@@ -92,6 +92,7 @@ builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<UserMappingProfile>();    // User-related mappings
     cfg.AddProfile<MiscMappingProfile>();    // Miscellaneous mappings
+    cfg.AddProfile<FlashcardMappingProfile>(); // Flashcard mappings
 });
 
 builder.Services.AddControllers();
@@ -197,6 +198,8 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Basic Services
     services.AddControllers();
     services.AddEndpointsApiExplorer();
+    // Register Random as a singleton to ensure thread safety
+    services.AddSingleton<Random>(sp => new Random());
     // API Versioning
     services.AddApiVersioning(options =>
     {

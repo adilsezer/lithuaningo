@@ -10,6 +10,9 @@ using Microsoft.AspNetCore.Http;
 using Lithuaningo.API.Settings;
 using Lithuaningo.API.DTOs.Flashcard;
 using System.Text.Json.Serialization;
+using AutoMapper;
+using Lithuaningo.API.Models;
+using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services
 {
@@ -19,17 +22,26 @@ namespace Lithuaningo.API.Services
         private readonly IStorageService _storageService;
         private readonly IOptions<StorageSettings> _storageSettings;
         private readonly IAIService _aiService;
+        private readonly ISupabaseService _supabaseService;
+        private readonly IMapper _mapper;
+        private readonly Random _random;
 
         public FlashcardService(
             IStorageService storageService,
             IOptions<StorageSettings> storageSettings,
             IAIService aiService,
-            ILogger<FlashcardService> logger)
+            ISupabaseService supabaseService,
+            IMapper mapper,
+            ILogger<FlashcardService> logger,
+            Random random)
         {
             _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
             _storageSettings = storageSettings ?? throw new ArgumentNullException(nameof(storageSettings));
             _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
+            _supabaseService = supabaseService ?? throw new ArgumentNullException(nameof(supabaseService));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _random = random ?? throw new ArgumentNullException(nameof(random));
         }
 
         public async Task<string> UploadFlashcardFileAsync(IFormFile file)
@@ -63,31 +75,237 @@ namespace Lithuaningo.API.Services
         }
         
         /// <summary>
-        /// Generates flashcards using AI based on provided parameters without saving them
+        /// Generates flashcards using AI based on provided parameters and saves them to the database
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
         /// <returns>A list of generated flashcards</returns>
         public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-            
             try
             {
-                _logger.LogInformation("Generating flashcards with AI for description '{Description}'", request.Description);
-                
-                // Get generated flashcards from the AI service
-                var flashcards = await _aiService.GenerateFlashcardsAsync(request);
-                
+                // Fetch only the front words we need for comparison
+                var existingWords = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Select("front_word")
+                    .Where(f => f.Topic == request.Topic)
+                    .Get();
+
+                // Create HashSet for O(1) lookups and case-insensitive comparison
+                var existingWordSet = new HashSet<string>(
+                    existingWords.Models.Select(f => f.FrontWord),
+                    StringComparer.OrdinalIgnoreCase
+                );
+
+                // Generate flashcards with randomization
+                var flashcards = await GenerateUniqueFlashcardsAsync(
+                    request.Topic,
+                    request.Count,
+                    request.UserId,
+                    existingWordSet
+                );
+
+                // Save the generated flashcards to Supabase
+                await SaveFlashcardsToSupabaseAsync(flashcards);
+
                 return flashcards;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating flashcards for description '{Description}'", request.Description);
+                _logger.LogError(ex, "Error generating flashcards for topic {Topic}", request.Topic);
                 throw;
             }
         }
-    }
+
+        private async Task<List<FlashcardResponse>> GenerateUniqueFlashcardsAsync(
+            string topic,
+            int count,
+            string userId,
+            HashSet<string> existingWords)
+        {
+            var flashcards = new List<FlashcardResponse>(count); // Pre-allocate capacity
+            var maxAttempts = 3;
+            var currentAttempt = 0;
+
+            while (flashcards.Count < count && currentAttempt < maxAttempts)
+            {
+                currentAttempt++;
+                var remainingCount = count - flashcards.Count;
+                var requestCount = Math.Min(remainingCount + 2, 10); // Request a few extra to account for duplicates
+
+                // Get a random subset of existing words to avoid duplicates
+                var randomExistingWords = existingWords
+                    .OrderBy(x => _random.Next())
+                    .Take(5)
+                    .ToList();
+
+                var aiFlashcards = await _aiService.GenerateFlashcardsAsync(new CreateFlashcardRequest
+                {
+                    Topic = topic,
+                    Count = requestCount,
+                    UserId = userId
+                }, randomExistingWords);
+
+                // Filter and add unique flashcards in a single pass
+                foreach (var flashcard in aiFlashcards)
+                {
+                    if (flashcards.Count >= count) break;
+
+                    if (!existingWords.Contains(flashcard.FrontWord))
+                    {
+                        flashcards.Add(flashcard);
+                        existingWords.Add(flashcard.FrontWord);
+                    }
+                }
+            }
+
+            return flashcards;
+        }
+
+        /// <summary>
+        /// Saves the generated flashcards to Supabase
+        /// </summary>
+        private async Task SaveFlashcardsToSupabaseAsync(List<FlashcardResponse> flashcards)
+        {
+            try
+            {
+                var flashcardModels = _mapper.Map<List<Flashcard>>(flashcards);
+
+                // Set additional fields that aren't in the DTO
+                foreach (var model in flashcardModels)
+                {
+                    model.ShownToUsers = new List<string>();
+                    model.CreatedAt = DateTime.UtcNow;
+                    model.UpdatedAt = DateTime.UtcNow;
+                }
+
+                var result = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Insert(flashcardModels);
+
+                if (result.Models == null || result.Models.Count != flashcardModels.Count)
+                {
+                    throw new InvalidOperationException("Failed to save all flashcards to the database");
+                }
+
+                _logger.LogInformation("Successfully saved {Count} flashcards to Supabase", flashcardModels.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving flashcards to Supabase");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Gets flashcards for a topic, generating new ones if needed
+        /// </summary>
+        /// <param name="topic">The topic to get flashcards for</param>
+        /// <param name="userId">The ID of the user requesting flashcards</param>
+        /// <param name="count">Number of flashcards to return (default: 10)</param>
+        /// <returns>A list of flashcards</returns>
+        public async Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(string topic, string userId, int count = 10)
+        {
+            try
+            {
+                // Get flashcards that haven't been shown to the user
+                var existingFlashcards = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Where(f => f.Topic == topic && !f.ShownToUsers.Contains(userId))
+                    .Get();
+
+                var availableFlashcards = existingFlashcards.Models?.Count ?? 0;
+
+                // If we have enough flashcards, return them
+                if (availableFlashcards >= count && existingFlashcards.Models != null)
+                {
+                    _logger.LogInformation("Returning {Count} existing flashcards for topic '{Topic}'", 
+                        count, topic);
+                    var flashcards = existingFlashcards.Models.Take(count).ToList();
+                    
+                    // Mark flashcards as shown to the user
+                    await MarkFlashcardsAsShownAsync(flashcards, userId);
+                    
+                    return _mapper.Map<IEnumerable<FlashcardResponse>>(flashcards);
+                }
+
+                // Calculate how many new flashcards we need
+                var neededCount = count - availableFlashcards;
+                _logger.LogInformation("Generating {Count} new flashcards for topic '{Topic}'", 
+                    neededCount, topic);
+
+                // Generate new flashcards
+                var newFlashcards = await GenerateFlashcardsAsync(new CreateFlashcardRequest
+                {
+                    Topic = topic,
+                    Count = neededCount,
+                    UserId = userId
+                });
+
+                // Combine existing and new flashcards
+                var allFlashcards = new List<FlashcardResponse>();
+                
+                if (existingFlashcards.Models != null)
+                {
+                    allFlashcards.AddRange(_mapper.Map<IEnumerable<FlashcardResponse>>(
+                        existingFlashcards.Models
+                    ));
+                }
+                
+                allFlashcards.AddRange(newFlashcards);
+
+                var result = allFlashcards.Take(count).ToList();
+
+                // Mark all returned flashcards as shown to the user
+                var flashcardModels = _mapper.Map<List<Flashcard>>(result);
+                await MarkFlashcardsAsShownAsync(flashcardModels, userId);
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting flashcards for topic '{Topic}'", topic);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Marks multiple flashcards as shown to a user
+        /// </summary>
+        /// <param name="flashcards">The flashcards to mark as shown</param>
+        /// <param name="userId">The ID of the user who has seen the flashcards</param>
+        private async Task MarkFlashcardsAsShownAsync(List<Flashcard> flashcards, string userId)
+        {
+            try
+            {
+                foreach (var flashcard in flashcards)
+                {
+                    if (!flashcard.ShownToUsers.Contains(userId))
+                    {
+                        flashcard.ShownToUsers.Add(userId);
+                        flashcard.UpdatedAt = DateTime.UtcNow;
+                    }
+                }
+
+                // Update all flashcards in a single batch
+                var result = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Upsert(flashcards);
+
+                if (result.Models == null || result.Models.Count != flashcards.Count)
+                {
+                    _logger.LogWarning("Failed to update ShownToUsers for some flashcards");
+                }
+                else
+                {
+                    _logger.LogInformation("Successfully marked {Count} flashcards as shown to user {UserId}", 
+                        flashcards.Count, userId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error marking flashcards as shown to user {UserId}", userId);
+                throw;
+            }
+        }
+    }   
 }

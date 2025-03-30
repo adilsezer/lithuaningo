@@ -10,6 +10,7 @@ using Lithuaningo.API.Settings;
 using Lithuaningo.API.DTOs.Flashcard;
 using Swashbuckle.AspNetCore.Annotations;
 using Lithuaningo.API.Authorization;
+using System.Security.Claims;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -116,6 +117,46 @@ namespace Lithuaningo.API.Controllers
             {
                 _logger.LogError(ex, "Error generating flashcards");
                 return StatusCode(500, "An error occurred while generating the flashcards");
+            }
+        }
+
+        /// <summary>
+        /// Gets flashcards for a topic, generating new ones if needed
+        /// </summary>
+        /// <param name="topic">The topic to get flashcards for</param>
+        /// <param name="count">Number of flashcards to return (default: 10)</param>
+        /// <returns>A list of flashcards</returns>
+        [HttpGet("topic/{topic}")]
+        [ProducesResponseType(typeof(IEnumerable<FlashcardResponse>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetFlashcards(string topic, [FromQuery] int count = 10)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(topic))
+                {
+                    return BadRequest("Topic cannot be empty");
+                }
+
+                if (count < 1 || count > 50)
+                {
+                    return BadRequest("Count must be between 1 and 50");
+                }
+
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(userId))
+                {
+                    return Unauthorized();
+                }
+
+                var flashcards = await _flashcardService.GetFlashcardsAsync(topic, userId, count);
+                return Ok(flashcards);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting flashcards for topic '{Topic}'", topic);
+                return StatusCode(500, "An error occurred while getting flashcards");
             }
         }
     }

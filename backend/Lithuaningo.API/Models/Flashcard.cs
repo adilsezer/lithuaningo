@@ -32,6 +32,12 @@ namespace Lithuaningo.API.Models
         [Column("notes")]
         public string Notes { get; set; } = string.Empty;
 
+        [Column("topic")]
+        public string Topic { get; set; } = string.Empty;
+
+        [Column("shown_to_users")]
+        public List<string> ShownToUsers { get; set; } = new();
+
         [Column("created_at")]
         public DateTime CreatedAt { get; set; }
 

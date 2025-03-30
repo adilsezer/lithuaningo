@@ -84,19 +84,47 @@ EXAMPLE OUTPUT:
     private const string FLASHCARD_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language flashcards based on the given topic and parameters.
 
 FORMAT: Return a JSON array of flashcard objects with these properties:
-- frontWord: The Lithuanian word or phrase
-- backWord: The English translation
-- exampleSentence: A practical example sentence in Lithuanian using the word
-- exampleSentenceTranslation: English translation of the example sentence
-- notes: Brief usage notes or tips about the word/phrase
+{
+  ""frontWord"": ""The Lithuanian word or phrase"",
+  ""backWord"": ""The English translation"",
+  ""exampleSentence"": ""A practical example sentence in Lithuanian using the word"",
+  ""exampleSentenceTranslation"": ""English translation of the example sentence"",
+  ""notes"": ""Brief usage notes or tips about the word/phrase""
+}
 
 RULES:
 1. Create accurate Lithuanian flashcards with correct grammar and spelling
-2. Focus on the requested topic, difficulty level and category
+2. Focus on the requested topic
 3. Include common, useful vocabulary appropriate for the specified level
 4. Provide realistic, practical example sentences
 5. Add helpful context notes for language learners
-6. Include appropriate tags that categorize the content well";
+6. DO NOT create flashcards that are similar to the existing ones provided in the prompt
+7. Each flashcard should be unique and different from any existing ones
+
+EXAMPLE OUTPUT:
+[
+  {
+    ""frontWord"": ""Labas"",
+    ""backWord"": ""Hello"",
+    ""exampleSentence"": ""Labas, kaip sekasi?"",
+    ""exampleSentenceTranslation"": ""Hello, how are you?"",
+    ""notes"": ""Used as a general greeting. Can be used at any time of day.""
+  },
+  {
+    ""frontWord"": ""Ačiū"",
+    ""backWord"": ""Thank you"",
+    ""exampleSentence"": ""Ačiū už pagalbą!"",
+    ""exampleSentenceTranslation"": ""Thank you for your help!"",
+    ""notes"": ""Common way to express gratitude. Can be used in both formal and informal situations.""
+  }
+]
+
+IMPORTANT:
+- Ensure all JSON properties are properly quoted
+- Include all required fields for each flashcard
+- Make example sentences natural and practical
+- Keep notes concise but informative
+- Avoid creating flashcards with similar words or phrases to existing ones";
 
     #endregion
     
@@ -116,6 +144,9 @@ RULES:
     
     // Configuration settings
     private readonly OpenAISettings _openAiSettings;
+    
+    // Maximum number of existing flashcards to include in the prompt
+    private const int MAX_EXISTING_FLASHCARDS = 10;
     
     #endregion
     
@@ -272,10 +303,11 @@ RULES:
     /// Generates a set of flashcards using AI based on the provided parameters
     /// </summary>
     /// <param name="request">The parameters for flashcard generation, including description and count</param>
+    /// <param name="existingWords">Optional existing words to avoid in the generated flashcards</param>
     /// <returns>A list of generated flashcards</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
-    public async Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request)
+    public async Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request, IEnumerable<string>? existingWords = null)
     {
         if (request == null)
         {
@@ -284,18 +316,27 @@ RULES:
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating flashcards with AI for description '{Description}', attempt {Attempt}", 
-                request.Description, attempt);
+            _logger.LogInformation("Generating flashcards with AI for topic '{Topic}', attempt {Attempt}", 
+                request.Topic, attempt);
 
             var prompt = new StringBuilder()
                 .AppendLine($"Create {request.Count} Lithuanian language flashcards.")
-                .AppendLine($"Description: {request.Description}")
-                .ToString();
+                .AppendLine($"Topic: {request.Topic}");
+
+            // Add a limited set of existing words to avoid duplicates
+            if (existingWords?.Any() == true)
+            {
+                prompt.AppendLine("\nAvoid creating flashcards similar to these existing words:");
+                foreach (var word in existingWords.Take(MAX_EXISTING_FLASHCARDS))
+                {
+                    prompt.AppendLine($"- {word}");
+                }
+            }
 
             var messages = new List<ChatMessage>
             {
                 new SystemChatMessage(FLASHCARD_SYSTEM_INSTRUCTIONS),
-                new UserChatMessage(prompt)
+                new UserChatMessage(prompt.ToString())
             };
 
             var completion = await _chatClient.CompleteChatAsync(messages.ToArray());
@@ -326,17 +367,18 @@ RULES:
                 throw new InvalidOperationException("Generated flashcards failed validation");
             }
 
-            // Generate IDs for each flashcard
+            // Generate IDs and set topic for each flashcard
             foreach (var flashcard in flashcards)
             {
                 flashcard.Id = Guid.NewGuid();
+                flashcard.Topic = request.Topic; // Ensure topic is set correctly
             }
 
             // Limit to the requested count
             var limitedFlashcards = flashcards.Take(request.Count).ToList();
 
-            _logger.LogInformation("Successfully generated {Count} flashcards for description '{Description}'", 
-                limitedFlashcards.Count, request.Description);
+            _logger.LogInformation("Successfully generated {Count} flashcards for topic '{Topic}'", 
+                limitedFlashcards.Count, request.Topic);
 
             return limitedFlashcards;
         });
