@@ -220,7 +220,8 @@ namespace Lithuaningo.API.Services
                 // Get flashcards that haven't been shown to the user
                 var existingFlashcards = await _supabaseService.Client
                     .From<Flashcard>()
-                    .Where(f => f.Topic == topic && !f.ShownToUsers.Contains(userId))
+                    .Where(f => f.Topic == topic)
+                    .Not(f => f.ShownToUsers, Operator.Contains, new List<object> { userId })
                     .Get();
 
                 var availableFlashcards = existingFlashcards.Models?.Count ?? 0;
