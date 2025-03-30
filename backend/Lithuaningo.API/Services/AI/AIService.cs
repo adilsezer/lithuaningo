@@ -89,17 +89,46 @@ FORMAT: Return a JSON array of flashcard objects with these properties:
   ""backWord"": ""The English translation"",
   ""exampleSentence"": ""A practical example sentence in Lithuanian using the word"",
   ""exampleSentenceTranslation"": ""English translation of the example sentence"",
-  ""notes"": ""Brief usage notes or tips about the word/phrase""
+  ""notes"": ""Brief usage notes or tips about the word/phrase"",
+  ""difficulty"": Integer representing difficulty level (0=Basic, 1=Intermediate, 2=Advanced)
 }
 
 RULES:
 1. Create accurate Lithuanian flashcards with correct grammar and spelling
 2. Focus on the requested topic
-3. Include common, useful vocabulary appropriate for the specified level
+3. Include common, useful vocabulary appropriate for the specified difficulty level
 4. Provide realistic, practical example sentences
 5. Add helpful context notes for language learners
 6. DO NOT create flashcards that are similar to the existing ones provided in the prompt
 7. Each flashcard should be unique and different from any existing ones
+8. ALWAYS set the ""difficulty"" property to match the requested difficulty level
+
+DIFFICULTY GUIDELINES:
+- Basic (0): 
+  * Common, everyday words and phrases (e.g., labas, ačiū, namas, eiti, būti)
+  * Regular conjugation patterns and simple present tense for verbs
+  * High-frequency vocabulary found in beginner textbooks
+  * Words with transparent meaning and regular spelling
+
+- Intermediate (1):
+  * Less common vocabulary not encountered in everyday basic conversations
+  * Irregular verbs or those with challenging conjugation patterns
+  * Words with multiple context-dependent meanings
+  * Compound words, prefixed/suffixed forms of basic vocabulary
+  * Perfect and future tense verb forms
+
+- Advanced (2):
+  * Specialized/technical/literary vocabulary
+  * Archaic terms, idioms, and culturally-specific expressions
+  * Complex grammatical forms (subjunctive, passive constructions)
+  * Abstract concepts and words rarely used in everyday speech
+  * Words with subtle connotations or specialized usage contexts
+
+EXAMPLES BY CATEGORY:
+- Verbs: 
+  * Basic: būti (to be), eiti (to go), turėti (to have), norėti (to want)
+  * Intermediate: pasitikėti (to trust), įgyvendinti (to implement), svarstyti (to consider)
+  * Advanced: puoselėti (to nurture), įžvelgti (to discern), išsklaidyti (to disperse)
 
 CAPITALIZATION STANDARDS:
 - For Lithuanian words in the ""frontWord"" field:
@@ -117,14 +146,24 @@ EXAMPLE OUTPUT:
     ""backWord"": ""hello"",
     ""exampleSentence"": ""Labas, kaip sekasi?"",
     ""exampleSentenceTranslation"": ""Hello, how are you?"",
-    ""notes"": ""Used as a general greeting. Can be used at any time of day.""
+    ""notes"": ""Used as a general greeting. Can be used at any time of day."",
+    ""difficulty"": 0
   },
   {
-    ""frontWord"": ""ačiū"",
-    ""backWord"": ""thank you"",
-    ""exampleSentence"": ""Ačiū už pagalbą!"",
-    ""exampleSentenceTranslation"": ""Thank you for your help!"",
-    ""notes"": ""Common way to express gratitude. Can be used in both formal and informal situations.""
+    ""frontWord"": ""susitikimas"",
+    ""backWord"": ""meeting"",
+    ""exampleSentence"": ""Šiandien turiu svarbų susitikimą su klientu."",
+    ""exampleSentenceTranslation"": ""Today I have an important meeting with a client."",
+    ""notes"": ""Used in professional contexts for scheduled gatherings."",
+    ""difficulty"": 1
+  },
+  {
+    ""frontWord"": ""įžvalgumas"",
+    ""backWord"": ""perceptiveness"",
+    ""exampleSentence"": ""Jo įžvalgumas leido jam numatyti rinkos pokyčius."",
+    ""exampleSentenceTranslation"": ""His perceptiveness allowed him to anticipate market changes."",
+    ""notes"": ""Abstract concept used to describe insightful thinking or foresight."",
+    ""difficulty"": 2
   }
 ]
 
@@ -134,7 +173,8 @@ IMPORTANT:
 - Make example sentences natural and practical
 - Keep notes concise but informative
 - Avoid creating flashcards with similar words or phrases to existing ones
-- Maintain consistent capitalization according to the standards above";
+- Maintain consistent capitalization according to the standards above
+- SET THE DIFFICULTY PROPERTY TO MATCH THE REQUESTED DIFFICULTY LEVEL";
 
     #endregion
     
@@ -303,7 +343,8 @@ IMPORTANT:
             !string.IsNullOrWhiteSpace(flashcard.FrontWord) &&
             !string.IsNullOrWhiteSpace(flashcard.BackWord) &&
             !string.IsNullOrWhiteSpace(flashcard.ExampleSentence) &&
-            !string.IsNullOrWhiteSpace(flashcard.ExampleSentenceTranslation));
+            !string.IsNullOrWhiteSpace(flashcard.ExampleSentenceTranslation) &&
+            Enum.IsDefined(typeof(DifficultyLevel), flashcard.Difficulty));
     }
 
     /// <summary>
@@ -323,13 +364,14 @@ IMPORTANT:
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating flashcards with AI for topic '{Topic}', attempt {Attempt}", 
-                request.Topic, attempt);
+            _logger.LogInformation("Generating flashcards with AI for topic '{Topic}' with difficulty '{Difficulty}', attempt {Attempt}", 
+                request.Topic, request.Difficulty, attempt);
 
             var prompt = new StringBuilder()
                 .AppendLine($"Create {request.Count} Lithuanian language flashcards.")
-                .AppendLine($"Topic: {request.Topic}");
-
+                .AppendLine($"Topic: {request.Topic}")
+                .AppendLine($"Difficulty: {request.Difficulty}");
+                
             // Add a limited set of existing words to avoid duplicates
             if (existingWords?.Any() == true)
             {

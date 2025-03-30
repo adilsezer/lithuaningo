@@ -17,6 +17,14 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <returns>A collection of generated flashcards</returns>
         Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request);
 
-        Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(string topic, string userId, int count = 10);
+        /// <summary>
+        /// Gets flashcards for a topic, generating new ones if needed
+        /// </summary>
+        /// <param name="topic">The topic to get flashcards for</param>
+        /// <param name="userId">The ID of the user requesting flashcards</param>
+        /// <param name="count">Number of flashcards to return (default: 10)</param>
+        /// <param name="difficulty">The difficulty level of flashcards (default: Basic)</param>
+        /// <returns>A list of flashcards</returns>
+        Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(string topic, string userId, int count = 10, DifficultyLevel difficulty = DifficultyLevel.Basic);
     }
 }

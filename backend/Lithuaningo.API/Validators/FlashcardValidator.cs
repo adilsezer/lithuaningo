@@ -16,5 +16,8 @@ public class CreateFlashcardValidator : AbstractValidator<FlashcardRequest>
 
         RuleFor(x => x.Count)
             .InclusiveBetween(1, 10).WithMessage("Count must be between 1 and 10");
+            
+        RuleFor(x => x.Difficulty)
+            .IsInEnum().WithMessage("Difficulty must be a valid value (Basic, Intermediate, or Advanced)");
     }
 }

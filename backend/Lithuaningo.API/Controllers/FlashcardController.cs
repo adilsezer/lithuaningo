@@ -45,7 +45,7 @@ namespace Lithuaningo.API.Controllers
         [HttpGet]
         [SwaggerOperation(
             Summary = "Get flashcards for a topic",
-            Description = "Retrieves flashcards for the specified topic. If there are not enough unseen flashcards, generates new ones using AI.",
+            Description = "Retrieves flashcards for the specified topic and difficulty level. If there are not enough unseen flashcards, generates new ones using AI.",
             OperationId = "GetFlashcards",
             Tags = new[] { "Flashcard" }
         )]
@@ -68,7 +68,10 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                var flashcards = await _flashcardService.GetFlashcardsAsync(request.Topic, effectiveUserId, request.Count);
+                _logger.LogInformation("Getting flashcards for topic '{Topic}' with difficulty '{Difficulty}'", 
+                    request.Topic, request.Difficulty);
+
+                var flashcards = await _flashcardService.GetFlashcardsAsync(request.Topic, effectiveUserId, request.Count, request.Difficulty);
                 return Ok(flashcards);
             }
             catch (Exception ex)

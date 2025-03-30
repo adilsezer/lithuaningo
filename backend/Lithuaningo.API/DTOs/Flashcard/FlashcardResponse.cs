@@ -51,5 +51,10 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// The topic or category this flashcard belongs to
         /// </summary>
         public string Topic { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// The difficulty level of the flashcard
+        /// </summary>
+        public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
     }
 } 

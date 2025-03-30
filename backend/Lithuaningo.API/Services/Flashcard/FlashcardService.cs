@@ -111,7 +111,8 @@ namespace Lithuaningo.API.Services
                     request.Topic,
                     request.Count,
                     request.UserId,
-                    existingWordSet
+                    existingWordSet,
+                    request.Difficulty
                 );
 
                 // Save the generated flashcards to Supabase
@@ -130,7 +131,8 @@ namespace Lithuaningo.API.Services
             string topic,
             int count,
             string userId,
-            HashSet<string> existingWords)
+            HashSet<string> existingWords,
+            DifficultyLevel difficulty = DifficultyLevel.Basic)
         {
             var flashcards = new List<FlashcardResponse>(count); // Pre-allocate capacity
             var maxAttempts = 3;
@@ -152,7 +154,8 @@ namespace Lithuaningo.API.Services
                 {
                     Topic = topic,
                     Count = requestCount,
-                    UserId = userId
+                    UserId = userId,
+                    Difficulty = difficulty
                 }, randomExistingWords);
 
                 // Filter and add unique flashcards in a single pass
@@ -184,6 +187,7 @@ namespace Lithuaningo.API.Services
                 foreach (var model in flashcardModels)
                 {
                     model.ShownToUsers = new List<string>();
+                    // Ensure difficulty level is preserved from the response
                     // Let the database handle CreatedAt with its triggers
                 }
 
@@ -211,15 +215,20 @@ namespace Lithuaningo.API.Services
         /// <param name="topic">The topic to get flashcards for</param>
         /// <param name="userId">The ID of the user requesting flashcards</param>
         /// <param name="count">Number of flashcards to return (default: 10)</param>
+        /// <param name="difficulty">The difficulty level of flashcards (default: Basic)</param>
         /// <returns>A list of flashcards</returns>
-        public async Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(string topic, string userId, int count = 10)
+        public async Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(string topic, string userId, int count = 10, DifficultyLevel difficulty = DifficultyLevel.Basic)
         {
             try
             {
                 // Get flashcards that haven't been shown to the user
+                // Cast the enum to its integer value for Supabase query
+                int difficultyValue = (int)difficulty;
+                
                 var existingFlashcards = await _supabaseService.Client
                     .From<Flashcard>()
                     .Where(f => f.Topic == topic)
+                    .Filter(f => f.Difficulty, Operator.Equals, difficultyValue)
                     .Not(f => f.ShownToUsers, Operator.Contains, new List<object> { userId })
                     .Get();
 
@@ -228,8 +237,8 @@ namespace Lithuaningo.API.Services
                 // If we have enough flashcards, return them
                 if (availableFlashcards >= count && existingFlashcards.Models != null)
                 {
-                    _logger.LogInformation("Returning {Count} existing flashcards for topic '{Topic}'", 
-                        count, topic);
+                    _logger.LogInformation("Returning {Count} existing flashcards for topic '{Topic}' with difficulty '{Difficulty}'", 
+                        count, topic, difficulty);
                     var flashcards = existingFlashcards.Models.Take(count).ToList();
                     
                     // Mark flashcards as shown to the user
@@ -240,15 +249,16 @@ namespace Lithuaningo.API.Services
 
                 // Calculate how many new flashcards we need
                 var neededCount = count - availableFlashcards;
-                _logger.LogInformation("Generating {Count} new flashcards for topic '{Topic}'", 
-                    neededCount, topic);
+                _logger.LogInformation("Generating {Count} new flashcards for topic '{Topic}' with difficulty '{Difficulty}'", 
+                    neededCount, topic, difficulty);
 
                 // Generate new flashcards
                 var newFlashcards = await GenerateFlashcardsAsync(new FlashcardRequest
                 {
                     Topic = topic,
                     Count = neededCount,
-                    UserId = userId
+                    UserId = userId,
+                    Difficulty = difficulty
                 });
 
                 // Combine existing and new flashcards
@@ -273,7 +283,7 @@ namespace Lithuaningo.API.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcards for topic '{Topic}'", topic);
+                _logger.LogError(ex, "Error getting flashcards for topic '{Topic}' with difficulty '{Difficulty}'", topic, difficulty);
                 throw;
             }
         }
