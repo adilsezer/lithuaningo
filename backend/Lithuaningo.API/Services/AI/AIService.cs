@@ -100,10 +100,15 @@ RULES:
 2. Focus on the requested primary category and hint
 3. Include vocabulary appropriate for the specified difficulty level
 4. Provide practical, natural example sentences
-5. ALWAYS use the exact difficulty level requested (0, 1, or 2)
+5. ALWAYS use the EXACT difficulty level requested by the user (0, 1, or 2)
 6. ALWAYS include the primary category in the categories array
 7. Do NOT create flashcards similar to existing words provided
 8. Each flashcard must be unique in the set
+
+DIFFICULTY SPECIFICATIONS - USE EXACTLY AS REQUESTED:
+- Basic (0): Most common everyday words (top 500-1000 frequency), concepts learned in first 1-3 months
+- Intermediate (1): Less common vocabulary (1000-3000 frequency), specialized contexts, idioms
+- Advanced (2): Rare or technical vocabulary, literary terms, specialized jargon, abstract concepts
 
 CATEGORIES (Always use these numeric codes):
 # Grammar Categories
@@ -126,11 +131,6 @@ CATEGORIES (Always use these numeric codes):
 108 = Nature (weather, nature terms)
 999 = Other (miscellaneous terms)
 
-DIFFICULTY GUIDELINES:
-- Basic (0): Common everyday terms, regular forms, beginner vocabulary
-- Intermediate (1): Less common words, irregular forms, multiple meanings
-- Advanced (2): Specialized vocabulary, idioms, complex grammatical forms
-
 CAPITALIZATION:
 - Lowercase all Lithuanian words unless they're proper nouns
 - Capitalize first letter of example sentences
@@ -139,22 +139,31 @@ CAPITALIZATION:
 EXAMPLE OUTPUT:
 [
   {
-    ""frontWord"": ""labas"",
-    ""backWord"": ""hello"",
-    ""exampleSentence"": ""Labas, kaip sekasi?"",
-    ""exampleSentenceTranslation"": ""Hello, how are you?"",
-    ""notes"": ""Used as a general greeting. Can be used at any time of day."",
+    ""frontWord"": ""duona"",
+    ""backWord"": ""bread"",
+    ""exampleSentence"": ""Man labai patinka šviežia duona."",
+    ""exampleSentenceTranslation"": ""I really like fresh bread."",
+    ""notes"": ""One of the most common food words, used daily in Lithuanian households."",
     ""difficulty"": 0,
-    ""categories"": [100, 101]
+    ""categories"": [104, 1]
   },
   {
-    ""frontWord"": ""susitikimas"",
-    ""backWord"": ""meeting"",
-    ""exampleSentence"": ""Šiandien turiu svarbų susitikimą su klientu."",
-    ""exampleSentenceTranslation"": ""Today I have an important meeting with a client."",
-    ""notes"": ""Used in professional contexts for scheduled gatherings."",
+    ""frontWord"": ""bendradarbis"",
+    ""backWord"": ""colleague"",
+    ""exampleSentence"": ""Mano bendradarbis padėjo man užbaigti projektą laiku."",
+    ""exampleSentenceTranslation"": ""My colleague helped me finish the project on time."",
+    ""notes"": ""Used in professional settings to refer to people you work with."",
     ""difficulty"": 1,
-    ""categories"": [1, 107]
+    ""categories"": [107, 1]
+  },
+  {
+    ""frontWord"": ""įžvalgumas"",
+    ""backWord"": ""perceptiveness"",
+    ""exampleSentence"": ""Jo įžvalgumas padėjo išspręsti sudėtingą problemą."",
+    ""exampleSentenceTranslation"": ""His perceptiveness helped solve the complex problem."",
+    ""notes"": ""Abstract concept used in intellectual or psychological contexts."",
+    ""difficulty"": 2,
+    ""categories"": [2, 999]
   }
 ]";
 
