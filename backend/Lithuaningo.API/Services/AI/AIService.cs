@@ -145,9 +145,6 @@ IMPORTANT:
     // Configuration settings
     private readonly OpenAISettings _openAiSettings;
     
-    // Maximum number of existing flashcards to include in the prompt
-    private const int MAX_EXISTING_FLASHCARDS = 10;
-    
     #endregion
     
     #region Constructor
@@ -327,7 +324,7 @@ IMPORTANT:
             if (existingWords?.Any() == true)
             {
                 prompt.AppendLine("\nAvoid creating flashcards similar to these existing words:");
-                foreach (var word in existingWords.Take(MAX_EXISTING_FLASHCARDS))
+                foreach (var word in existingWords)
                 {
                     prompt.AppendLine($"- {word}");
                 }

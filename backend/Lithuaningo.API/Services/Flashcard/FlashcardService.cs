@@ -145,7 +145,7 @@ namespace Lithuaningo.API.Services
                 // Get a random subset of existing words to avoid duplicates
                 var randomExistingWords = existingWords
                     .OrderBy(x => _random.Next())
-                    .Take(5)
+                    .Take(100)
                     .ToList();
 
                 var aiFlashcards = await _aiService.GenerateFlashcardsAsync(new FlashcardRequest
