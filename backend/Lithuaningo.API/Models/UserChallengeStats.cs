@@ -37,10 +37,4 @@ public class UserChallengeStats : BaseModel
 
     [Column("total_incorrect_answers")]
     public int TotalIncorrectAnswers { get; set; }
-
-    [Column("created_at")]
-    public DateTime CreatedAt { get; set; }
-
-    [Column("updated_at")]
-    public DateTime UpdatedAt { get; set; }
 } 

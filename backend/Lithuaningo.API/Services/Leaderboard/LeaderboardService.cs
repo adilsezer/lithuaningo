@@ -161,7 +161,6 @@ namespace Lithuaningo.API.Services
                         .From<LeaderboardEntry>()
                         .Where(l => l.Id == existingResponse.Id)
                         .Set(l => l.Score, existingResponse.Score + score)
-                        .Set(l => l.UpdatedAt, DateTime.UtcNow)
                         .Update();
 
                     updatedEntry = response.Models.First();
@@ -177,8 +176,6 @@ namespace Lithuaningo.API.Services
                         UserId = userGuid,
                         WeekId = currentWeek,
                         Score = score, // Initial score for new entry
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
                     };
 
                     var response = await _supabaseClient

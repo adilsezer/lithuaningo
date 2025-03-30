@@ -109,7 +109,6 @@ namespace Lithuaningo.API.Services
                 }
 
                 _mapper.Map(request, profile);
-                profile.UpdatedAt = DateTime.UtcNow;
 
                 var response = await _supabaseClient
                     .From<UserProfile>()
@@ -177,15 +176,13 @@ namespace Lithuaningo.API.Services
                 var profile = new UserProfile
                 {
                     Id = userGuid,
-                    LastLoginAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
+                    LastLoginAt = DateTime.UtcNow
                 };
 
                 await _supabaseClient
                     .From<UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Set(u => u.LastLoginAt, DateTime.UtcNow)
-                    .Set(u => u.UpdatedAt, DateTime.UtcNow)
                     .Update();
 
                 await _cacheInvalidator.InvalidateUserProfileAsync(userId);

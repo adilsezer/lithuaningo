@@ -81,8 +81,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                     TotalChallengesCompleted = 0,
                     TotalCorrectAnswers = 0,
                     TotalIncorrectAnswers = 0,
-                    CreatedAt = DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
                 };
 
                 var createResponse = await _supabaseClient
@@ -161,7 +159,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             statsEntity.TotalChallengesCompleted = request.TotalChallengesCompleted;
             statsEntity.TotalCorrectAnswers = request.TotalCorrectAnswers;
             statsEntity.TotalIncorrectAnswers = request.TotalIncorrectAnswers;
-            statsEntity.UpdatedAt = DateTime.UtcNow;
 
             var updateResponse = await _supabaseClient
                 .From<UserChallengeStats>()
@@ -226,8 +223,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                 TotalChallengesCompleted = request.TotalChallengesCompleted,
                 TotalCorrectAnswers = request.TotalCorrectAnswers,
                 TotalIncorrectAnswers = request.TotalIncorrectAnswers,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
             };
 
             var createResponse = await _supabaseClient

@@ -78,8 +78,6 @@ namespace Lithuaningo.API.Services
                         ForceUpdate = false,
                         UpdateUrl = null,
                         ReleaseNotes = null,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
                     };
                 }
 
@@ -132,8 +130,6 @@ namespace Lithuaningo.API.Services
                     IsMaintenance = request.IsMaintenance,
                     MaintenanceMessage = request.MaintenanceMessage,
                     ReleaseNotes = request.ReleaseNotes,
-                    CreatedAt = existingAppInfo?.CreatedAt ?? DateTime.UtcNow,
-                    UpdatedAt = DateTime.UtcNow
                 };
 
                 // Perform upsert operation

@@ -42,18 +42,6 @@ namespace Lithuaningo.API.Models
         public string WeekId { get; set; } = string.Empty;
 
         /// <summary>
-        /// When the entry was created, used to determine the week_id
-        /// </summary>
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// When the entry was last updated
-        /// </summary>
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
-
-        /// <summary>
         /// The username of the user
         /// </summary>
         [Column("username")]

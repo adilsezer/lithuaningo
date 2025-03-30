@@ -17,8 +17,7 @@ namespace Lithuaningo.API.Mappings
         {
             // AppInfo mappings
             CreateMap<AppInfo, AppInfoResponse>();
-            CreateMap<UpdateAppInfoRequest, AppInfo>()
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+            CreateMap<UpdateAppInfoRequest, AppInfo>();
 
             // User Challenge Stats mappings
             CreateMap<UserChallengeStats, UserChallengeStatsResponse>()
@@ -32,8 +31,6 @@ namespace Lithuaningo.API.Mappings
             // Challenge mappings
             CreateMap<ChallengeQuestion, ChallengeQuestionResponse>();
             CreateMap<CreateChallengeRequest, ChallengeQuestion>()
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow))
                 .ForMember(dest => dest.Type, opt => opt.MapFrom(src => "multiple_choice"));
 
             // Leaderboard mappings

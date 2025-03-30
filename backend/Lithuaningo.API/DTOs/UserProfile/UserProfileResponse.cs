@@ -56,15 +56,5 @@ namespace Lithuaningo.API.DTOs.UserProfile
         /// The provider of the user's authentication
         /// </summary>
         public string AuthProvider { get; set; } = string.Empty;
-
-        /// <summary>
-        /// When this profile was created
-        /// </summary>
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// When this profile was last updated
-        /// </summary>
-        public DateTime UpdatedAt { get; set; }
     }
 } 

@@ -37,11 +37,5 @@ namespace Lithuaningo.API.Models
 
         [Column("auth_provider")]
         public string AuthProvider { get; set; } = string.Empty;
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
     }
 }

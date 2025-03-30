@@ -19,9 +19,7 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.IsAdmin, opt => opt.MapFrom(src => src.IsAdmin))
                 .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src => src.IsPremium))
                 .ForMember(dest => dest.PremiumExpiresAt, opt => opt.MapFrom(src => src.PremiumExpiresAt))
-                .ForMember(dest => dest.AuthProvider, opt => opt.MapFrom(src => src.AuthProvider))
-                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+                .ForMember(dest => dest.AuthProvider, opt => opt.MapFrom(src => src.AuthProvider));
 
             CreateMap<UpdateUserProfileRequest, UserProfile>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
@@ -30,8 +28,7 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarUrl))
                 .ForMember(dest => dest.IsAdmin, opt => opt.MapFrom(src => src.IsAdmin))
                 .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src => src.IsPremium))
-                .ForMember(dest => dest.PremiumExpiresAt, opt => opt.MapFrom(src => src.PremiumExpiresAt))
-                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => DateTime.UtcNow));
+                .ForMember(dest => dest.PremiumExpiresAt, opt => opt.MapFrom(src => src.PremiumExpiresAt));
         }
     }
 } 

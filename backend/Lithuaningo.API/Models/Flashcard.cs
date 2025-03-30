@@ -37,11 +37,5 @@ namespace Lithuaningo.API.Models
 
         [Column("shown_to_users")]
         public List<string> ShownToUsers { get; set; } = new();
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
     }
 }

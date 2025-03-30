@@ -31,15 +31,5 @@ namespace Lithuaningo.API.DTOs.Leaderboard
         /// The week identifier in YYYY-WW format
         /// </summary>
         public string WeekId { get; set; } = string.Empty;
-
-        /// <summary>
-        /// When the entry was created
-        /// </summary>
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// When the entry was last updated
-        /// </summary>
-        public DateTime UpdatedAt { get; set; }
     }
 } 

@@ -34,11 +34,5 @@ namespace Lithuaningo.API.Models
 
         [Column("release_notes")]
         public string? ReleaseNotes { get; set; }
-
-        [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
-
-        [Column("updated_at")]
-        public DateTime UpdatedAt { get; set; }
     }
 }

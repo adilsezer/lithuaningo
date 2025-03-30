@@ -184,8 +184,7 @@ namespace Lithuaningo.API.Services
                 foreach (var model in flashcardModels)
                 {
                     model.ShownToUsers = new List<string>();
-                    model.CreatedAt = DateTime.UtcNow;
-                    model.UpdatedAt = DateTime.UtcNow;
+                    // Let the database handle CreatedAt with its triggers
                 }
 
                 var result = await _supabaseService.Client
@@ -293,7 +292,6 @@ namespace Lithuaningo.API.Services
                     if (!flashcard.ShownToUsers.Contains(userId))
                     {
                         flashcard.ShownToUsers.Add(userId);
-                        flashcard.UpdatedAt = DateTime.UtcNow;
                     }
                 }
 

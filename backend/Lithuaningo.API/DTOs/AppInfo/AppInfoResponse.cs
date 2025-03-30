@@ -51,15 +51,5 @@ namespace Lithuaningo.API.DTOs.AppInfo
         /// Release notes for the current version
         /// </summary>
         public string? ReleaseNotes { get; set; }
-
-        /// <summary>
-        /// When the app info was created
-        /// </summary>
-        public DateTime CreatedAt { get; set; }
-
-        /// <summary>
-        /// When the app info was last updated
-        /// </summary>
-        public DateTime UpdatedAt { get; set; }
     }
 } 
