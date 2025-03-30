@@ -101,18 +101,27 @@ RULES:
 6. DO NOT create flashcards that are similar to the existing ones provided in the prompt
 7. Each flashcard should be unique and different from any existing ones
 
+CAPITALIZATION STANDARDS:
+- For Lithuanian words in the ""frontWord"" field:
+  * Capitalize proper nouns (names of people, places, etc.)
+  * Use lowercase for common nouns, verbs, adjectives, and other parts of speech
+  * This follows standard Lithuanian orthography rules
+- For example sentences, follow standard Lithuanian capitalization rules (capitalize first letter of sentences)
+- For English translations in ""backWord"", use lowercase unless the word is a proper noun
+- Ensure consistency across all flashcards
+
 EXAMPLE OUTPUT:
 [
   {
-    ""frontWord"": ""Labas"",
-    ""backWord"": ""Hello"",
+    ""frontWord"": ""labas"",
+    ""backWord"": ""hello"",
     ""exampleSentence"": ""Labas, kaip sekasi?"",
     ""exampleSentenceTranslation"": ""Hello, how are you?"",
     ""notes"": ""Used as a general greeting. Can be used at any time of day.""
   },
   {
-    ""frontWord"": ""Ačiū"",
-    ""backWord"": ""Thank you"",
+    ""frontWord"": ""ačiū"",
+    ""backWord"": ""thank you"",
     ""exampleSentence"": ""Ačiū už pagalbą!"",
     ""exampleSentenceTranslation"": ""Thank you for your help!"",
     ""notes"": ""Common way to express gratitude. Can be used in both formal and informal situations.""
@@ -124,7 +133,8 @@ IMPORTANT:
 - Include all required fields for each flashcard
 - Make example sentences natural and practical
 - Keep notes concise but informative
-- Avoid creating flashcards with similar words or phrases to existing ones";
+- Avoid creating flashcards with similar words or phrases to existing ones
+- Maintain consistent capitalization according to the standards above";
 
     #endregion
     
