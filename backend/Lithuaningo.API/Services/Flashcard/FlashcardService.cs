@@ -13,6 +13,7 @@ using System.Text.Json.Serialization;
 using AutoMapper;
 using Lithuaningo.API.Models;
 using static Supabase.Postgrest.Constants;
+using Supabase.Postgrest;
 
 namespace Lithuaningo.API.Services
 {
@@ -44,171 +45,6 @@ namespace Lithuaningo.API.Services
             _random = random ?? throw new ArgumentNullException(nameof(random));
         }
 
-        public async Task<string> UploadFlashcardFileAsync(IFormFile file)
-        {
-            if (file == null)
-            {
-                throw new ArgumentNullException(nameof(file));
-            }
-
-            try
-            {
-                var subfolder = file.ContentType.StartsWith("audio/")
-                    ? _storageSettings.Value.Paths.Audio
-                    : file.ContentType.StartsWith("image/")
-                        ? _storageSettings.Value.Paths.Images
-                        : _storageSettings.Value.Paths.Other;
-
-                var url = await _storageService.UploadFileAsync(
-                    file,
-                    _storageSettings.Value.Paths.Flashcards,
-                    subfolder
-                );
-
-                return url;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error uploading flashcard file");
-                throw;
-            }
-        }
-        
-        /// <summary>
-        /// Generates flashcards using AI based on provided parameters and saves them to the database
-        /// </summary>
-        /// <param name="request">Parameters for flashcard generation</param>
-        /// <returns>A list of generated flashcards</returns>
-        public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request)
-        {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            if (string.IsNullOrEmpty(request.UserId))
-            {
-                throw new ArgumentNullException(nameof(request.UserId), "UserId is required for flashcard generation");
-            }
-
-            try
-            {
-                // Fetch only the front words we need for comparison
-                var existingWords = await _supabaseService.Client
-                    .From<Flashcard>()
-                    .Select("front_word")
-                    .Where(f => f.Topic == request.Topic)
-                    .Get();
-
-                // Create HashSet for O(1) lookups and case-insensitive comparison
-                var existingWordSet = new HashSet<string>(
-                    existingWords.Models.Select(f => f.FrontWord),
-                    StringComparer.OrdinalIgnoreCase
-                );
-
-                // Generate flashcards with randomization
-                var flashcards = await GenerateUniqueFlashcardsAsync(
-                    request.Topic,
-                    request.Count,
-                    request.UserId,
-                    existingWordSet,
-                    request.Difficulty
-                );
-
-                // Save the generated flashcards to Supabase
-                await SaveFlashcardsToSupabaseAsync(flashcards);
-
-                return flashcards;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating flashcards for topic {Topic}", request.Topic);
-                throw;
-            }
-        }
-
-        private async Task<List<FlashcardResponse>> GenerateUniqueFlashcardsAsync(
-            string topic,
-            int count,
-            string userId,
-            HashSet<string> existingWords,
-            DifficultyLevel difficulty = DifficultyLevel.Basic)
-        {
-            var flashcards = new List<FlashcardResponse>(count); // Pre-allocate capacity
-            var maxAttempts = 3;
-            var currentAttempt = 0;
-
-            while (flashcards.Count < count && currentAttempt < maxAttempts)
-            {
-                currentAttempt++;
-                var remainingCount = count - flashcards.Count;
-                var requestCount = Math.Min(remainingCount + 2, 10); // Request a few extra to account for duplicates
-
-                // Get a random subset of existing words to avoid duplicates
-                var randomExistingWords = existingWords
-                    .OrderBy(x => _random.Next())
-                    .Take(100)
-                    .ToList();
-
-                var aiFlashcards = await _aiService.GenerateFlashcardsAsync(new FlashcardRequest
-                {
-                    Topic = topic,
-                    Count = requestCount,
-                    UserId = userId,
-                    Difficulty = difficulty
-                }, randomExistingWords);
-
-                // Filter and add unique flashcards in a single pass
-                foreach (var flashcard in aiFlashcards)
-                {
-                    if (flashcards.Count >= count) break;
-
-                    if (!existingWords.Contains(flashcard.FrontWord))
-                    {
-                        flashcards.Add(flashcard);
-                        existingWords.Add(flashcard.FrontWord);
-                    }
-                }
-            }
-
-            return flashcards;
-        }
-
-        /// <summary>
-        /// Saves the generated flashcards to Supabase
-        /// </summary>
-        private async Task SaveFlashcardsToSupabaseAsync(List<FlashcardResponse> flashcards)
-        {
-            try
-            {
-                var flashcardModels = _mapper.Map<List<Flashcard>>(flashcards);
-
-                // Set additional fields that aren't in the DTO
-                foreach (var model in flashcardModels)
-                {
-                    model.ShownToUsers = new List<string>();
-                    // Ensure difficulty level is preserved from the response
-                    // Let the database handle CreatedAt with its triggers
-                }
-
-                var result = await _supabaseService.Client
-                    .From<Flashcard>()
-                    .Insert(flashcardModels);
-
-                if (result.Models == null || result.Models.Count != flashcardModels.Count)
-                {
-                    throw new InvalidOperationException("Failed to save all flashcards to the database");
-                }
-
-                _logger.LogInformation("Successfully saved {Count} flashcards to Supabase", flashcardModels.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving flashcards to Supabase");
-                throw;
-            }
-        }
-
         /// <summary>
         /// Gets flashcards for a topic, generating new ones if needed
         /// </summary>
@@ -221,10 +57,12 @@ namespace Lithuaningo.API.Services
         {
             try
             {
-                // Get flashcards that haven't been shown to the user
+                _logger.LogInformation("Getting flashcards for topic '{Topic}' with difficulty '{Difficulty}'", topic, difficulty);
+                
                 // Cast the enum to its integer value for Supabase query
                 int difficultyValue = (int)difficulty;
                 
+                // Get flashcards for the specific topic and difficulty that haven't been shown to the user
                 var existingFlashcards = await _supabaseService.Client
                     .From<Flashcard>()
                     .Where(f => f.Topic == topic)
@@ -233,6 +71,8 @@ namespace Lithuaningo.API.Services
                     .Get();
 
                 var availableFlashcards = existingFlashcards.Models?.Count ?? 0;
+                _logger.LogInformation("Found {Count} existing flashcards for topic '{Topic}' with difficulty '{Difficulty}'", 
+                    availableFlashcards, topic, difficulty);
 
                 // If we have enough flashcards, return them
                 if (availableFlashcards >= count && existingFlashcards.Models != null)
@@ -289,6 +129,155 @@ namespace Lithuaningo.API.Services
         }
 
         /// <summary>
+        /// Generates flashcards using AI based on provided parameters and saves them to the database
+        /// </summary>
+        /// <param name="request">Parameters for flashcard generation</param>
+        /// <returns>A list of generated flashcards</returns>
+        public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (string.IsNullOrEmpty(request.UserId))
+            {
+                throw new ArgumentNullException(nameof(request.UserId), "UserId is required for flashcard generation");
+            }
+
+            try
+            {
+                // Fetch all flashcards to check for duplicates across topics
+                var existingFlashcardsResult = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Select("front_word, topic")
+                    .Get();
+
+                // Create collections for uniqueness checking
+                var compositeKeysSet = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+                var existingWords = new List<string>();
+                
+                if (existingFlashcardsResult.Models != null)
+                {
+                    foreach (var flashcard in existingFlashcardsResult.Models)
+                    {
+                        // Keep track of existing words for AI service
+                        existingWords.Add(flashcard.FrontWord);
+                        
+                        // Create and store composite key for uniqueness checking
+                        string compositeKey = $"{flashcard.FrontWord.ToLowerInvariant()}_{flashcard.Topic.ToLowerInvariant()}";
+                        compositeKeysSet.Add(compositeKey);
+                    }
+                }
+
+                // Generate flashcards with randomization
+                var generatedFlashcards = await GenerateUniqueFlashcardsAsync(
+                    request.Topic,
+                    request.Count,
+                    request.UserId,
+                    existingWords,
+                    compositeKeysSet,
+                    request.Difficulty
+                );
+
+                // Save the generated flashcards to Supabase
+                await SaveFlashcardsToSupabaseAsync(generatedFlashcards);
+
+                return generatedFlashcards;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating flashcards for topic {Topic}", request.Topic);
+                throw;
+            }
+        }
+
+        private async Task<List<FlashcardResponse>> GenerateUniqueFlashcardsAsync(
+            string topic,
+            int count,
+            string userId,
+            List<string> existingWords,
+            HashSet<string> compositeKeysSet,
+            DifficultyLevel difficulty = DifficultyLevel.Basic)
+        {
+            var generatedFlashcards = new List<FlashcardResponse>(count); // Pre-allocate capacity
+            var maxAttempts = 3;
+            var currentAttempt = 0;
+
+            while (generatedFlashcards.Count < count && currentAttempt < maxAttempts)
+            {
+                currentAttempt++;
+                var remainingCount = count - generatedFlashcards.Count;
+                var requestCount = Math.Min(remainingCount + 2, 10); // Request a few extra to account for duplicates
+
+                // Get a random subset of existing words to avoid duplicates
+                var sampleExistingWords = existingWords
+                    .OrderBy(x => _random.Next())
+                    .Take(Math.Min(100, existingWords.Count))
+                    .ToList();
+
+                var aiFlashcards = await _aiService.GenerateFlashcardsAsync(new FlashcardRequest
+                {
+                    Topic = topic,
+                    Count = requestCount,
+                    UserId = userId,
+                    Difficulty = difficulty
+                }, sampleExistingWords);
+
+                // Filter and add unique flashcards in a single pass
+                foreach (var flashcard in aiFlashcards)
+                {
+                    if (generatedFlashcards.Count >= count) break;
+
+                    // Create composite key combining front word and topic to check uniqueness
+                    string compositeKey = $"{flashcard.FrontWord.ToLowerInvariant()}_{topic.ToLowerInvariant()}";
+                    
+                    // Only check against the composite key - this allows the same word
+                    // to appear in different topics
+                    if (!compositeKeysSet.Contains(compositeKey))
+                    {
+                        generatedFlashcards.Add(flashcard);
+                        compositeKeysSet.Add(compositeKey);
+                    }
+                }
+            }
+
+            return generatedFlashcards;
+        }
+
+        /// <summary>
+        /// Saves the generated flashcards to Supabase
+        /// </summary>
+        private async Task SaveFlashcardsToSupabaseAsync(List<FlashcardResponse> flashcards)
+        {
+            try
+            {
+                var flashcardModels = _mapper.Map<List<Flashcard>>(flashcards);
+
+                // Set additional fields that aren't in the DTO
+                foreach (var model in flashcardModels)
+                {
+                    model.ShownToUsers = new List<string>();
+                    // Ensure difficulty level is preserved from the response
+                    // Let the database handle CreatedAt with its triggers
+                }
+
+                // Try to insert all flashcards and ignore duplicates
+                var result = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Insert(flashcardModels);
+
+                int insertedCount = result.Models?.Count ?? 0;
+                _logger.LogInformation("Successfully saved {Count} flashcards to Supabase", insertedCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving flashcards to Supabase");
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Marks multiple flashcards as shown to a user
         /// </summary>
         /// <param name="flashcards">The flashcards to mark as shown</param>
@@ -323,6 +312,36 @@ namespace Lithuaningo.API.Services
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error marking flashcards as shown to user {UserId}", userId);
+                throw;
+            }
+        }
+
+        public async Task<string> UploadFlashcardFileAsync(IFormFile file)
+        {
+            if (file == null)
+            {
+                throw new ArgumentNullException(nameof(file));
+            }
+
+            try
+            {
+                var subfolder = file.ContentType.StartsWith("audio/")
+                    ? _storageSettings.Value.Paths.Audio
+                    : file.ContentType.StartsWith("image/")
+                        ? _storageSettings.Value.Paths.Images
+                        : _storageSettings.Value.Paths.Other;
+
+                var url = await _storageService.UploadFileAsync(
+                    file,
+                    _storageSettings.Value.Paths.Flashcards,
+                    subfolder
+                );
+
+                return url;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error uploading flashcard file");
                 throw;
             }
         }
