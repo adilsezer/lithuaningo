@@ -307,7 +307,7 @@ IMPORTANT:
     /// <returns>A list of generated flashcards</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
-    public async Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request, IEnumerable<string>? existingWords = null)
+    public async Task<List<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingWords = null)
     {
         if (request == null)
         {

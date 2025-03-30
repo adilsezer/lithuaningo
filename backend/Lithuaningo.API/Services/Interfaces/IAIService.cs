@@ -51,7 +51,7 @@ public interface IAIService
     /// <returns>A list of generated flashcards</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
-    Task<List<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request, IEnumerable<string>? existingWords = null);
+    Task<List<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingWords = null);
     
     /// <summary>
     /// Clears the conversation history for testing or session management purposes

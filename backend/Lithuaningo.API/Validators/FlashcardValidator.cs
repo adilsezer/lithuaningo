@@ -4,7 +4,7 @@ using System;
 
 namespace Lithuaningo.API.Validators;
 
-public class CreateFlashcardValidator : AbstractValidator<CreateFlashcardRequest>
+public class CreateFlashcardValidator : AbstractValidator<FlashcardRequest>
 {
     public CreateFlashcardValidator()
     {

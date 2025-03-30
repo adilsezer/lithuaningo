@@ -79,8 +79,18 @@ namespace Lithuaningo.API.Services
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
         /// <returns>A list of generated flashcards</returns>
-        public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(CreateFlashcardRequest request)
+        public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            if (string.IsNullOrEmpty(request.UserId))
+            {
+                throw new ArgumentNullException(nameof(request.UserId), "UserId is required for flashcard generation");
+            }
+
             try
             {
                 // Fetch only the front words we need for comparison
@@ -138,7 +148,7 @@ namespace Lithuaningo.API.Services
                     .Take(5)
                     .ToList();
 
-                var aiFlashcards = await _aiService.GenerateFlashcardsAsync(new CreateFlashcardRequest
+                var aiFlashcards = await _aiService.GenerateFlashcardsAsync(new FlashcardRequest
                 {
                     Topic = topic,
                     Count = requestCount,
@@ -234,7 +244,7 @@ namespace Lithuaningo.API.Services
                     neededCount, topic);
 
                 // Generate new flashcards
-                var newFlashcards = await GenerateFlashcardsAsync(new CreateFlashcardRequest
+                var newFlashcards = await GenerateFlashcardsAsync(new FlashcardRequest
                 {
                     Topic = topic,
                     Count = neededCount,

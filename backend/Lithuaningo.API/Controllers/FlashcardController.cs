@@ -34,128 +34,46 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Uploads a file for a flashcard.
-        /// </summary>
-        /// <remarks>
-        /// Sample request:
-        ///     POST /api/v1/Flashcard/upload
-        /// 
-        /// The request should be a multipart/form-data request with a file field.
-        /// Supported file types:
-        /// - Images (jpg, png, gif)
-        /// - Audio (mp3, wav)
-        /// 
-        /// Maximum file sizes:
-        /// - Images: 5MB
-        /// - Audio: 10MB
-        /// </remarks>
-        /// <param name="file">The file to upload</param>
-        /// <returns>The URL of the uploaded file</returns>
-        /// <response code="200">Returns the URL of the uploaded file</response>
-        /// <response code="400">If file is missing or invalid</response>
-        /// <response code="500">If there was an internal error during upload</response>
-        [HttpPost("upload")]
-        [SwaggerOperation(
-            Summary = "Uploads a file",
-            Description = "Uploads an image or audio file for a flashcard",
-            OperationId = "UploadFlashcardFile",
-            Tags = new[] { "Flashcard" }
-        )]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<string>> UploadFlashcardFile(IFormFile file)
-        {
-            if (file == null)
-            {
-                _logger.LogWarning("No file provided for upload");
-                return BadRequest("File is required");
-            }
-
-            try
-            {
-                var url = await _flashcardService.UploadFlashcardFileAsync(file);
-                return Ok(url);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error uploading flashcard file");
-                return StatusCode(500, "Error uploading flashcard file");
-            }
-        }
-        
-        /// <summary>
-        /// Generates flashcards using AI based on the provided parameters
-        /// </summary>
-        /// <param name="request">The parameters for flashcard generation</param>
-        /// <returns>A list of generated flashcards</returns>
-        /// <response code="200">Returns the list of generated flashcards</response>
-        /// <response code="400">If the request is invalid</response>
-        /// <response code="500">If there was an error generating the flashcards</response>
-        [HttpPost("generate")]
-        [ProducesResponseType(typeof(List<FlashcardResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [SwaggerOperation(
-            Summary = "Generates flashcards",
-            Description = "Generates flashcards using AI based on the provided description and count",
-            OperationId = "GenerateFlashcards",
-            Tags = new[] { "Flashcard" }
-        )]
-        [SwaggerResponse(StatusCodes.Status200OK, "The flashcards were generated successfully", typeof(List<FlashcardResponse>))]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "The request parameters are invalid")]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while generating the flashcards")]
-        public async Task<ActionResult<List<FlashcardResponse>>> GenerateFlashcards([FromBody] CreateFlashcardRequest request)
-        {
-            try
-            {
-                // Generate flashcards using AI
-                var flashcards = await _flashcardService.GenerateFlashcardsAsync(request);
-                return Ok(flashcards);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating flashcards");
-                return StatusCode(500, "An error occurred while generating the flashcards");
-            }
-        }
-
-        /// <summary>
         /// Gets flashcards for a topic, generating new ones if needed
         /// </summary>
-        /// <param name="topic">The topic to get flashcards for</param>
-        /// <param name="count">Number of flashcards to return (default: 10)</param>
+        /// <param name="request">The request object containing the count and user ID</param>
         /// <returns>A list of flashcards</returns>
-        [HttpGet("topic/{topic}")]
+        /// <response code="200">Returns the list of flashcards</response>
+        /// <response code="400">If the request parameters are invalid</response>
+        /// <response code="401">If the user is not authenticated</response>
+        /// <response code="500">If there was an error processing the request</response>
+        [HttpGet]
+        [SwaggerOperation(
+            Summary = "Get flashcards for a topic",
+            Description = "Retrieves flashcards for the specified topic. If there are not enough unseen flashcards, generates new ones using AI.",
+            OperationId = "GetFlashcards",
+            Tags = new[] { "Flashcard" }
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "The flashcards were successfully retrieved", typeof(IEnumerable<FlashcardResponse>))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid input parameters")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while processing the request")]
         [ProducesResponseType(typeof(IEnumerable<FlashcardResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> GetFlashcards(string topic, [FromQuery] int count = 10)
+        public async Task<IActionResult> GetFlashcards([FromQuery] FlashcardRequest request)
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(topic))
-                {
-                    return BadRequest("Topic cannot be empty");
-                }
-
-                if (count < 1 || count > 50)
-                {
-                    return BadRequest("Count must be between 1 and 50");
-                }
-
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (string.IsNullOrEmpty(userId))
+                // Use provided userId for development/testing, otherwise use authenticated user's ID
+                var effectiveUserId = request.UserId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(effectiveUserId))
                 {
                     return Unauthorized();
                 }
 
-                var flashcards = await _flashcardService.GetFlashcardsAsync(topic, userId, count);
+                var flashcards = await _flashcardService.GetFlashcardsAsync(request.Topic, effectiveUserId, request.Count);
                 return Ok(flashcards);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcards for topic '{Topic}'", topic);
+                _logger.LogError(ex, "Error getting flashcards for topic '{Topic}'", request.Topic);
                 return StatusCode(500, "An error occurred while getting flashcards");
             }
         }

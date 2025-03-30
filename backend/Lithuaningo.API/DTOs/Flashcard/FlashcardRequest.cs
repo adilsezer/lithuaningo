@@ -1,0 +1,28 @@
+using System.ComponentModel.DataAnnotations;
+
+namespace Lithuaningo.API.DTOs.Flashcard
+{
+    /// <summary>
+    /// Request for flashcard operations (generation and retrieval)
+    /// </summary>
+    public class FlashcardRequest
+    {
+        /// <summary>
+        /// The topic to get flashcards for
+        /// </summary>
+        [Required]
+        [StringLength(100)]
+        public string Topic { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Number of flashcards to return (1-50)
+        /// </summary>
+        [Range(1, 50)]
+        public int Count { get; set; } = 10;
+
+        /// <summary>
+        /// Optional user ID for development/testing. If not provided, uses the authenticated user's ID.
+        /// </summary>
+        public string? UserId { get; set; }
+    }
+} 
