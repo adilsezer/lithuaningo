@@ -34,7 +34,7 @@ namespace Lithuaningo.API.Services
 
                 var userFlashcardStatsQuery = _supabaseService.Client
                     .From<UserFlashcardStat>()
-                    .Filter(s => s.UserId, Operator.Equals, userId)
+                    .Filter("user_id", Operator.Equals, userId.ToString())
                     .Select("flashcard_id");
                 
                 var userFlashcardStats = await userFlashcardStatsQuery.Get();
@@ -116,8 +116,8 @@ namespace Lithuaningo.API.Services
                 // Find the existing stat
                 var existingStatQuery = _supabaseService.Client
                     .From<UserFlashcardStat>()
-                    .Filter(s => s.UserId, Operator.Equals, userId)
-                    .Filter(s => s.FlashcardId, Operator.Equals, flashcardId);
+                    .Filter("user_id", Operator.Equals, userId.ToString())
+                    .Filter("flashcard_id", Operator.Equals, flashcardId.ToString());
                 
                 var existingStatResult = await existingStatQuery.Get();
                 

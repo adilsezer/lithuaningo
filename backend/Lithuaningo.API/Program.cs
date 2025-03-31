@@ -7,6 +7,7 @@ using Lithuaningo.API.Filters;
 using Lithuaningo.API.Swagger;
 using Microsoft.AspNetCore.Http.Features;
 using Lithuaningo.API.Mappings;
+using Lithuaningo.API.Mapping;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Lithuaningo.API.Middleware;
@@ -93,6 +94,7 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<UserMappingProfile>();    // User-related mappings
     cfg.AddProfile<MiscMappingProfile>();    // Miscellaneous mappings
     cfg.AddProfile<FlashcardMappingProfile>(); // Flashcard mappings
+    cfg.AddProfile<UserFlashcardStatMappingProfile>(); // User flashcard stat mappings
 });
 
 builder.Services.AddControllers();
@@ -377,6 +379,7 @@ To authorize in Swagger UI:
     .AddApplicationPart(typeof(ChallengeController).Assembly)
     .AddApplicationPart(typeof(AppInfoController).Assembly)
     .AddApplicationPart(typeof(FlashcardController).Assembly)
+    .AddApplicationPart(typeof(UserFlashcardStatsController).Assembly)
     .AddApplicationPart(typeof(StorageService).Assembly);
 
     // Add Authentication Services
