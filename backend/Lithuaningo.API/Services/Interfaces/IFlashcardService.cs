@@ -36,6 +36,10 @@ namespace Lithuaningo.API.Services.Interfaces
         /// </summary>
         /// <param name="flashcardId">ID of the flashcard to generate audio for</param>
         /// <returns>The URL of the generated audio file</returns>
+        /// <remarks>
+        /// The audio will contain both the front word and the example sentence with a pause between them,
+        /// providing a comprehensive audio experience for the user.
+        /// </remarks>
         Task<string> GenerateFlashcardAudioAsync(Guid flashcardId);
     }
 }

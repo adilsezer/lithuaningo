@@ -72,8 +72,9 @@ public interface IAIService
     /// Generates audio using OpenAI's text-to-speech service
     /// </summary>
     /// <param name="flashcardWord">The Lithuanian word to convert to speech</param>
+    /// <param name="exampleSentence">Optional example sentence to include after the word</param>
     /// <returns>URL to the generated audio file stored in cloud storage</returns>
     /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
-    Task<string> GenerateAudioAsync(string flashcardWord);
+    Task<string> GenerateAudioAsync(string flashcardWord, string exampleSentence);
 } 

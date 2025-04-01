@@ -388,15 +388,16 @@ EXAMPLE OUTPUT:
     /// Generates audio using OpenAI's text-to-speech service
     /// </summary>
     /// <param name="flashcardWord">The Lithuanian word to convert to speech</param>
+    /// <param name="exampleSentence">Optional example sentence to include after the word</param>
     /// <returns>URL to the generated audio file stored in cloud storage</returns>
     /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
-    public async Task<string> GenerateAudioAsync(string flashcardWord)
+    public async Task<string> GenerateAudioAsync(string flashcardWord, string exampleSentence)
     {
-        if (string.IsNullOrEmpty(flashcardWord))
+        if (string.IsNullOrEmpty(flashcardWord) || string.IsNullOrEmpty(exampleSentence))
         {
-            _logger.LogError("Flashcard word cannot be null or empty");
-            throw new ArgumentNullException(nameof(flashcardWord), "Flashcard word cannot be null or empty");
+            _logger.LogError("Flashcard word or example sentence cannot be null or empty");
+            throw new ArgumentNullException(nameof(flashcardWord), "Flashcard word or example sentence cannot be null or empty");
         }
 
         try
@@ -424,9 +425,11 @@ EXAMPLE OUTPUT:
             
             _logger.LogInformation("Using voice: {Voice} for text-to-speech", ttsVoice);
             
-            // Generate speech with just the word itself
-            _logger.LogDebug("Generating audio for: {Word}", flashcardWord);
-            BinaryData speech = await audioClient.GenerateSpeechAsync(flashcardWord, ttsVoice, options);
+            _logger.LogDebug("Generating audio with word and example sentence: {Word} - {Sentence}", flashcardWord, exampleSentence);
+            string textToSpeak = $"{flashcardWord}. \n\n{exampleSentence}";
+            
+            // Generate speech with the prepared text
+            BinaryData speech = await audioClient.GenerateSpeechAsync(textToSpeak, ttsVoice, options);
             
             if (speech == null)
             {

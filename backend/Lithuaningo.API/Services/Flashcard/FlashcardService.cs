@@ -189,6 +189,10 @@ namespace Lithuaningo.API.Services
         /// </summary>
         /// <param name="flashcardId">ID of the flashcard to generate audio for</param>
         /// <returns>The URL of the generated audio file</returns>
+        /// <remarks>
+        /// The audio will contain both the front word and the example sentence with a pause between them,
+        /// providing a comprehensive audio experience for the user.
+        /// </remarks>
         public async Task<string> GenerateFlashcardAudioAsync(Guid flashcardId)
         {
             try
@@ -206,8 +210,16 @@ namespace Lithuaningo.API.Services
                     throw new InvalidOperationException($"Flashcard with ID {flashcardId} not found");
                 }
                 
-                // Generate the audio using the front word (Lithuanian word)
-                var audioUrl = await _aiService.GenerateAudioAsync(flashcard.FrontWord);
+                // Make sure we have a valid front word and example sentence
+                if (string.IsNullOrEmpty(flashcard.FrontWord) || string.IsNullOrEmpty(flashcard.ExampleSentence))
+                {
+                    throw new InvalidOperationException($"Flashcard with ID {flashcardId} has no front word or example sentence");
+                }
+                
+                // Generate the audio using both the front word and example sentence
+                var audioUrl = await _aiService.GenerateAudioAsync(
+                    flashcard.FrontWord,
+                    flashcard.ExampleSentence);
                 
                 // Update the flashcard with the audio URL
                 flashcard.AudioUrl = audioUrl;
@@ -217,8 +229,8 @@ namespace Lithuaningo.API.Services
                     .From<Flashcard>()
                     .Update(flashcard);
                 
-                _logger.LogInformation("Generated and set audio for flashcard {Id} with word '{Word}'", 
-                    flashcardId, flashcard.FrontWord);
+                _logger.LogInformation("Generated and set audio for flashcard {Id} with word '{Word}' and example sentence '{ExampleSentence}'", 
+                    flashcardId, flashcard.FrontWord, flashcard.ExampleSentence);
                 
                 return audioUrl;
             }
