@@ -1,10 +1,10 @@
-using Lithuaningo.API.Models;
-using Lithuaningo.API.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Interfaces;
+using Microsoft.Extensions.Logging;
 using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services
@@ -36,9 +36,9 @@ namespace Lithuaningo.API.Services
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId.ToString())
                     .Select("flashcard_id");
-                
+
                 var userFlashcardStats = await userFlashcardStatsQuery.Get();
-                
+
                 // Get the set of flashcard IDs to exclude (ones user has already seen)
                 return userFlashcardStats.Models?
                     .Select(s => s.FlashcardId)
@@ -92,7 +92,7 @@ namespace Lithuaningo.API.Services
                 }
                 else
                 {
-                    _logger.LogInformation("Successfully marked {Count} flashcards as shown to user {UserId}", 
+                    _logger.LogInformation("Successfully marked {Count} flashcards as shown to user {UserId}",
                         flashcards.Count, userId);
                 }
             }
@@ -118,9 +118,9 @@ namespace Lithuaningo.API.Services
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId.ToString())
                     .Filter("flashcard_id", Operator.Equals, flashcardId.ToString());
-                
+
                 var existingStatResult = await existingStatQuery.Get();
-                
+
                 // Create or update the stat
                 if (existingStatResult.Models == null || !existingStatResult.Models.Any())
                 {
@@ -136,21 +136,21 @@ namespace Lithuaningo.API.Services
                         LastAnsweredCorrectly = wasCorrect,
                         MasteryLevel = wasCorrect ? 1 : 0
                     };
-                    
+
                     var insertResult = await _supabaseService.Client
                         .From<UserFlashcardStat>()
                         .Insert(newStat);
-                    
+
                     return insertResult.Models?.FirstOrDefault() ?? newStat;
                 }
                 else
                 {
                     // Update the existing stat
                     var existingStat = existingStatResult.Models.First();
-                    
+
                     existingStat.ViewCount++;
                     existingStat.LastAnsweredCorrectly = wasCorrect;
-                    
+
                     if (wasCorrect)
                     {
                         existingStat.CorrectCount++;
@@ -167,20 +167,58 @@ namespace Lithuaningo.API.Services
                             existingStat.MasteryLevel--;
                         }
                     }
-                    
+
                     var updateResult = await _supabaseService.Client
                         .From<UserFlashcardStat>()
                         .Update(existingStat);
-                    
+
                     return updateResult.Models?.FirstOrDefault() ?? existingStat;
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating flashcard stats for user {UserId} and flashcard {FlashcardId}", 
+                _logger.LogError(ex, "Error updating flashcard stats for user {UserId} and flashcard {FlashcardId}",
                     userId, flashcardId);
                 throw;
             }
         }
+
+        /// <inheritdoc />
+        public async Task<List<UserFlashcardStat>> GetFlashcardsDueForReviewAsync(string userId, IEnumerable<Guid>? flashcardIds = null, int limit = 20)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    throw new ArgumentNullException(nameof(userId));
+                }
+
+                var query = _supabaseService.Client
+                    .From<UserFlashcardStat>()
+                    .Filter("user_id", Operator.Equals, userId.ToString())
+                    .Order("mastery_level", Ordering.Ascending) // Prioritize lower mastery level cards
+                    .Order("view_count", Ordering.Ascending) // Then prioritize less viewed cards
+                    .Limit(limit);
+
+                // If specific flashcard IDs are provided, filter to only those
+                if (flashcardIds != null && flashcardIds.Any())
+                {
+                    var flashcardIdObjects = new List<object>();
+                    foreach (var id in flashcardIds)
+                    {
+                        flashcardIdObjects.Add(id.ToString());
+                    }
+                    query = query.Filter("flashcard_id", Operator.In, flashcardIdObjects);
+                }
+
+                var result = await query.Get();
+                return result.Models?.ToList() ?? new List<UserFlashcardStat>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting flashcards due for review for user {UserId}", userId);
+                throw;
+            }
+        }
     }
-} 
+}

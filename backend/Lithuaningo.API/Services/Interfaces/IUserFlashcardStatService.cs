@@ -20,7 +20,7 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <param name="flashcards">The flashcards to mark as shown</param>
         /// <param name="userId">The ID of the user who has seen the flashcards</param>
         Task MarkFlashcardsAsShownAsync(List<Flashcard> flashcards, string userId);
-        
+
         /// <summary>
         /// Updates the stats for a flashcard for a specific user after review
         /// </summary>
@@ -29,5 +29,14 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <param name="wasCorrect">Whether the user answered correctly</param>
         /// <returns>The updated user flashcard stat</returns>
         Task<UserFlashcardStat> UpdateFlashcardStatsAsync(Guid flashcardId, string userId, bool wasCorrect);
+
+        /// <summary>
+        /// Gets flashcard stats for cards that need to be reviewed by the user
+        /// </summary>
+        /// <param name="userId">The user ID</param>
+        /// <param name="flashcardIds">Optional list of flashcard IDs to filter by</param>
+        /// <param name="limit">Maximum number of stats to return</param>
+        /// <returns>List of flashcard stats prioritized for review</returns>
+        Task<List<UserFlashcardStat>> GetFlashcardsDueForReviewAsync(string userId, IEnumerable<Guid>? flashcardIds = null, int limit = 20);
     }
-} 
+}
