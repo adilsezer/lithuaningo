@@ -347,7 +347,8 @@ EXAMPLE OUTPUT:
             _logger.LogInformation("Calling OpenAI API to generate image with size: {0}", options.Size);
             string prompt = string.Format(IMAGE_GENERATION_PROMPT, flashcardWord);
             _logger.LogInformation("Prompt: {Prompt}", prompt);
-            GeneratedImage image = imageClient.GenerateImage(prompt, options);
+            
+            GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
             
             if (image == null)
             {
