@@ -67,4 +67,13 @@ public interface IAIService
     /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when image generation fails</exception>
     Task<string> GenerateImageAsync(string flashcardWord);
+    
+    /// <summary>
+    /// Generates audio using OpenAI's text-to-speech service
+    /// </summary>
+    /// <param name="flashcardWord">The Lithuanian word to convert to speech</param>
+    /// <returns>URL to the generated audio file stored in cloud storage</returns>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
+    /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
+    Task<string> GenerateAudioAsync(string flashcardWord);
 } 

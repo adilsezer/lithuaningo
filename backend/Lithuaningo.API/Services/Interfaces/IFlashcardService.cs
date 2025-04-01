@@ -30,5 +30,12 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <param name="flashcardId">ID of the flashcard to generate an image for</param>
         /// <returns>The URL of the generated image</returns>
         Task<string> GenerateFlashcardImageAsync(Guid flashcardId);
+        
+        /// <summary>
+        /// Generates audio for a flashcard using text-to-speech and updates the flashcard's AudioUrl
+        /// </summary>
+        /// <param name="flashcardId">ID of the flashcard to generate audio for</param>
+        /// <returns>The URL of the generated audio file</returns>
+        Task<string> GenerateFlashcardAudioAsync(Guid flashcardId);
     }
 }

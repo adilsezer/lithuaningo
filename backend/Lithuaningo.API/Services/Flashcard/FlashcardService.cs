@@ -184,6 +184,51 @@ namespace Lithuaningo.API.Services
             }
         }
         
+        /// <summary>
+        /// Generates audio for a flashcard using text-to-speech and updates the flashcard's AudioUrl
+        /// </summary>
+        /// <param name="flashcardId">ID of the flashcard to generate audio for</param>
+        /// <returns>The URL of the generated audio file</returns>
+        public async Task<string> GenerateFlashcardAudioAsync(Guid flashcardId)
+        {
+            try
+            {
+                // Fetch the flashcard
+                var flashcardQuery = _supabaseService.Client
+                    .From<Flashcard>()
+                    .Filter("id", Operator.Equals, flashcardId.ToString());
+                    
+                var result = await flashcardQuery.Get();
+                var flashcard = result.Models?.FirstOrDefault();
+                
+                if (flashcard == null)
+                {
+                    throw new InvalidOperationException($"Flashcard with ID {flashcardId} not found");
+                }
+                
+                // Generate the audio using the front word (Lithuanian word)
+                var audioUrl = await _aiService.GenerateAudioAsync(flashcard.FrontWord);
+                
+                // Update the flashcard with the audio URL
+                flashcard.AudioUrl = audioUrl;
+                
+                // Save the updated flashcard
+                await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Update(flashcard);
+                
+                _logger.LogInformation("Generated and set audio for flashcard {Id} with word '{Word}'", 
+                    flashcardId, flashcard.FrontWord);
+                
+                return audioUrl;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating audio for flashcard {Id}", flashcardId);
+                throw;
+            }
+        }
+        
         #region Helper Methods
         
         private void ValidateInputs(FlashcardRequest request, string userId)

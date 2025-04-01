@@ -11,6 +11,8 @@ using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
 using OpenAI.Chat;
 using OpenAI.Images;
+using OpenAI.Audio;
+using Microsoft.AspNetCore.Mvc;
 
 namespace Lithuaningo.API.Services.AI;
 
@@ -381,6 +383,75 @@ EXAMPLE OUTPUT:
             throw new InvalidOperationException($"Error generating image: {ex.Message}", ex);
         }
     }
+
+    /// <summary>
+    /// Generates audio using OpenAI's text-to-speech service
+    /// </summary>
+    /// <param name="flashcardWord">The Lithuanian word to convert to speech</param>
+    /// <returns>URL to the generated audio file stored in cloud storage</returns>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
+    /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
+    public async Task<string> GenerateAudioAsync(string flashcardWord)
+    {
+        if (string.IsNullOrEmpty(flashcardWord))
+        {
+            _logger.LogError("Flashcard word cannot be null or empty");
+            throw new ArgumentNullException(nameof(flashcardWord), "Flashcard word cannot be null or empty");
+        }
+
+        try
+        {
+            _logger.LogInformation("Generating audio for flashcard word: {FlashcardWord}", flashcardWord);
+            
+            // Create audio client with API key from settings
+            var audioClient = new AudioClient(_openAiSettings.AudioModelName, _openAiSettings.ApiKey);
+            
+            var options = new SpeechGenerationOptions
+            {
+                SpeedRatio = 1.0f,
+            };
+            // Get voice from settings or use Nova as default
+            var ttsVoice = _openAiSettings.DefaultVoice.ToLower() switch
+            {
+                "alloy" => GeneratedSpeechVoice.Alloy,
+                "echo" => GeneratedSpeechVoice.Echo,
+                "fable" => GeneratedSpeechVoice.Fable,
+                "onyx" => GeneratedSpeechVoice.Onyx,
+                "nova" => GeneratedSpeechVoice.Nova,
+                "shimmer" => GeneratedSpeechVoice.Shimmer,
+                _ => GeneratedSpeechVoice.Nova // Default to Nova voice
+            };
+            
+            _logger.LogInformation("Using voice: {Voice} for text-to-speech", ttsVoice);
+            
+            // Generate speech with just the word itself
+            _logger.LogDebug("Generating audio for: {Word}", flashcardWord);
+            BinaryData speech = await audioClient.GenerateSpeechAsync(flashcardWord, ttsVoice, options);
+            
+            if (speech == null)
+            {
+                _logger.LogError("Failed to generate audio: null response");
+                throw new InvalidOperationException("Failed to generate audio: null response");
+            }
+            
+            _logger.LogInformation("Audio generated successfully, uploading to storage");
+
+            // Upload to storage
+            var uploadedUrl = await _storageService.UploadBinaryDataAsync(
+                speech.ToArray(), 
+                "audio/mp3", 
+                _storageSettings.Paths.Flashcards, 
+                _storageSettings.Paths.Audio);
+
+            _logger.LogInformation("Audio uploaded to storage: {URL}", uploadedUrl);
+            return uploadedUrl;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating audio: {Message}", ex.Message);
+            throw new InvalidOperationException($"Error generating audio: {ex.Message}", ex);
+        }
+    }
     
     /// <summary>
     /// Generates a set of challenge questions using AI based on the provided parameters
@@ -594,6 +665,8 @@ EXAMPLE OUTPUT:
             _conversationHistories.Clear();
         }
     }
+    
+    
     
     #endregion
     

@@ -12,6 +12,7 @@ public class StorageService : IStorageService, IDisposable
     private readonly IAmazonS3 _s3Client;
     private readonly StorageSettings _settings;
     private readonly string _publicBucketUrl;
+    private readonly ILogger<StorageService> _logger;
     private bool _disposed;
 
     public StorageService(
@@ -19,13 +20,12 @@ public class StorageService : IStorageService, IDisposable
         ILogger<StorageService> logger)
     {
         _settings = storageConfiguration.LoadConfiguration();
+        _logger = logger;
         logger.LogInformation("Initializing storage service with bucket: {BucketName}", _settings.BucketName);
 
         _publicBucketUrl = storageConfiguration.GetPublicBucketUrl(_settings);
         _s3Client = storageConfiguration.CreateS3Client(_settings);
     }
-
-    
 
     /// <summary>
     /// Uploads binary data directly to storage
@@ -34,9 +34,9 @@ public class StorageService : IStorageService, IDisposable
     /// <param name="contentType">The content type (MIME type) of the file</param>
     /// <param name="folder">The folder to store the file in</param>
     /// <param name="subfolder">The subfolder to store the file in</param>
-    /// <param name="fileExtension">The file extension (with dot, e.g. ".png")</param>
+    /// <param name="fileExtension">Optional file extension override (with dot, e.g. ".png")</param>
     /// <returns>The URL of the uploaded file</returns>
-    public async Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string fileExtension = ".png")
+    public async Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string? fileExtension = null)
     {
         if (_disposed)
         {
@@ -50,7 +50,22 @@ public class StorageService : IStorageService, IDisposable
 
         try
         {
-            var fileName = $"{folder}/{subfolder}/{Guid.NewGuid()}{fileExtension}";
+            _logger.LogInformation("Uploading binary data to storage with content type: {ContentType}", contentType);
+            // Simple extension mapping for image/png and audio/mp3
+            string extension = contentType.ToLowerInvariant() switch
+            {
+                "audio/mp3" => ".mp3",
+                "audio/mpeg" => ".mp3",
+                _ => ".png" // Default to png for images and anything else
+            };
+            
+            // Override with explicit extension if provided
+            if (!string.IsNullOrEmpty(fileExtension))
+            {
+                extension = fileExtension;
+            }
+            
+            var fileName = $"{folder}/{subfolder}/{Guid.NewGuid()}{extension}";
             
             using var memoryStream = new MemoryStream(data);
 

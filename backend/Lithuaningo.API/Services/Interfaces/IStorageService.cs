@@ -11,7 +11,7 @@ public interface IStorageService
     /// <param name="subfolder">The subfolder to store the file in</param>
     /// <param name="fileExtension">The file extension (with dot, e.g. ".png")</param>
     /// <returns>The URL of the uploaded file</returns>
-    Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string fileExtension = ".png");
+    Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string? fileExtension = null);
     
     Task DeleteFileAsync(string fileUrl);
 } 

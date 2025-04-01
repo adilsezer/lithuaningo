@@ -36,6 +36,16 @@ public class OpenAISettings
     public string ImageQuality { get; set; } = "standard";
     
     /// <summary>
+    /// The model to use for text-to-speech (e.g., "tts-1")
+    /// </summary>
+    public string AudioModelName { get; set; } = "gpt-4o-mini-tts";
+    
+    /// <summary>
+    /// Default voice to use for text-to-speech
+    /// </summary>
+    public string DefaultVoice { get; set; } = "alloy";
+    
+    /// <summary>
     /// Maximum number of tokens to generate in the chat completion
     /// </summary>
     public int MaxTokens { get; set; } = 200;
