@@ -58,5 +58,10 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// The difficulty level of the flashcard
         /// </summary>
         public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
+        
+        /// <summary>
+        /// Indicates whether the flashcard has been verified by an admin
+        /// </summary>
+        public bool IsVerified { get; set; } = false;
     }
 } 

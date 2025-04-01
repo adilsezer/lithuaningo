@@ -23,7 +23,8 @@ namespace Lithuaningo.API.Mappings
                     opt => opt.MapFrom(src => src.Categories != null 
                         ? src.Categories.Select(c => (WordCategory)c).ToList() 
                         : new List<WordCategory>()))
-                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty));
+                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty))
+                .ForMember(dest => dest.IsVerified, opt => opt.MapFrom(src => src.IsVerified));
 
             CreateMap<FlashcardResponse, Flashcard>()
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -39,7 +40,8 @@ namespace Lithuaningo.API.Mappings
                     opt => opt.MapFrom(src => src.Categories != null 
                         ? src.Categories.Select(c => (int)c).ToList() 
                         : new List<int>()))
-                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty));
+                .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty))
+                .ForMember(dest => dest.IsVerified, opt => opt.MapFrom(src => src.IsVerified));
         }
     }
 } 

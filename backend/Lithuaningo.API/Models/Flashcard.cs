@@ -39,5 +39,8 @@ namespace Lithuaningo.API.Models
 
         [Column("difficulty")]
         public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
+        
+        [Column("is_verified")]
+        public bool IsVerified { get; set; } = false;
     }
 }
