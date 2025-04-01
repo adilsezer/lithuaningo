@@ -100,13 +100,87 @@ namespace Lithuaningo.API.Services
                 // Get existing words and track category-specific words
                 var (existingWords, wordCategoryMap) = await GetExistingWordsAsync(primaryCategoryValue);
 
-                // Select a random subset for AI context
-                var randomWords = SelectRandomWords(existingWords, 100);
+                // Maximum retry attempts
+                const int maxAttempts = 3;
+                int attemptCount = 0;
+                List<Flashcard> flashcards = new List<Flashcard>();
 
-                LogGenerationDetails(request, randomWords.Count, existingWords.Count);
+                // Retry generation until we have enough flashcards or reach max attempts
+                while (flashcards.Count < request.Count && attemptCount < maxAttempts)
+                {
+                    attemptCount++;
 
-                // Generate and filter flashcards
-                var flashcards = await GenerateUniqueFlashcardsAsync(request, randomWords, wordCategoryMap, primaryCategoryValue);
+                    // Select random words for context (different set each time)
+                    var randomWords = SelectRandomWords(existingWords, 100);
+
+                    // For first attempt, log the initial generation details
+                    if (attemptCount == 1)
+                    {
+                        LogGenerationDetails(request, randomWords.Count, existingWords.Count);
+                    }
+                    else
+                    {
+                        // For retry attempts, log more detailed information
+                        _logger.LogInformation(
+                            "Generated only {Current} unique flashcards out of {Requested}, retrying with new random words (attempt {Attempt}/{MaxAttempts})",
+                            flashcards.Count, request.Count, attemptCount, maxAttempts);
+                    }
+
+                    // Calculate how many to request (for retries, request extra to account for duplicates)
+                    int countToRequest = request.Count;
+                    if (attemptCount > 1)
+                    {
+                        int remaining = request.Count - flashcards.Count;
+                        countToRequest = remaining * 2;
+                    }
+
+                    // Prepare the request for this attempt
+                    var currentRequest = new FlashcardRequest
+                    {
+                        PrimaryCategory = request.PrimaryCategory,
+                        Count = countToRequest,
+                        UserId = request.UserId,
+                        Difficulty = request.Difficulty,
+                        Hint = request.Hint
+                    };
+
+                    // Generate flashcards for this attempt
+                    var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, randomWords);
+
+                    // Filter out duplicates
+                    var uniqueNewFlashcards = newFlashcards
+                        .Where(f => !wordCategoryMap.Contains($"{f.FrontWord.ToLowerInvariant()}:{primaryCategoryValue}"))
+                        .ToList();
+
+                    // Add unique flashcards to our collection
+                    flashcards.AddRange(uniqueNewFlashcards);
+
+                    // Update word category map with the new flashcards to avoid duplicates in next attempt
+                    foreach (var card in uniqueNewFlashcards)
+                    {
+                        wordCategoryMap.Add($"{card.FrontWord.ToLowerInvariant()}:{primaryCategoryValue}");
+                    }
+
+                    // If we got enough flashcards, break early
+                    if (flashcards.Count >= request.Count)
+                    {
+                        break;
+                    }
+                }
+
+                // Log the final result
+                if (flashcards.Count < request.Count)
+                {
+                    _logger.LogWarning(
+                        "Could only generate {Count} flashcards out of {Requested} after {Attempts} attempts",
+                        flashcards.Count, request.Count, attemptCount);
+                }
+
+                // Trim if we got more than requested
+                if (flashcards.Count > request.Count)
+                {
+                    flashcards = flashcards.Take(request.Count).ToList();
+                }
 
                 // Save and return
                 await SaveFlashcardsToSupabaseAsync(flashcards, request.UserId);
@@ -300,17 +374,6 @@ namespace Lithuaningo.API.Services
         #endregion
 
         #region Flashcard Generation Methods
-
-        private async Task<List<Flashcard>> GenerateUniqueFlashcardsAsync(
-            FlashcardRequest request, List<string> randomWords,
-            HashSet<string> wordCategoryMap, int categoryValue)
-        {
-            var generatedFlashcards = await _aiService.GenerateFlashcardsAsync(request, randomWords);
-
-            return generatedFlashcards
-                .Where(f => !wordCategoryMap.Contains($"{f.FrontWord.ToLowerInvariant()}:{categoryValue}"))
-                .ToList();
-        }
 
         #endregion
 
