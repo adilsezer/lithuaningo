@@ -25,26 +25,41 @@ public class StorageService : IStorageService, IDisposable
         _s3Client = storageConfiguration.CreateS3Client(_settings);
     }
 
-    public async Task<string> UploadFileAsync(IFormFile file, string folder, string subfolder)
+    
+
+    /// <summary>
+    /// Uploads binary data directly to storage
+    /// </summary>
+    /// <param name="data">The binary data to upload</param>
+    /// <param name="contentType">The content type (MIME type) of the file</param>
+    /// <param name="folder">The folder to store the file in</param>
+    /// <param name="subfolder">The subfolder to store the file in</param>
+    /// <param name="fileExtension">The file extension (with dot, e.g. ".png")</param>
+    /// <returns>The URL of the uploaded file</returns>
+    public async Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string fileExtension = ".png")
     {
         if (_disposed)
         {
             throw new ObjectDisposedException(nameof(StorageService));
         }
 
+        if (data == null || data.Length == 0)
+        {
+            throw new ArgumentException("Data cannot be null or empty", nameof(data));
+        }
+
         try
         {
-            var fileName = $"{folder}/{subfolder}/{Guid.NewGuid()}{Path.GetExtension(file.FileName)}";
-            using var memoryStream = new MemoryStream();
-            await file.CopyToAsync(memoryStream);
-            memoryStream.Position = 0;
+            var fileName = $"{folder}/{subfolder}/{Guid.NewGuid()}{fileExtension}";
+            
+            using var memoryStream = new MemoryStream(data);
 
             var putRequest = new PutObjectRequest
             {
                 BucketName = _settings.BucketName,
                 Key = fileName,
                 InputStream = memoryStream,
-                ContentType = file.ContentType,
+                ContentType = contentType,
                 DisablePayloadSigning = true,
             };
 

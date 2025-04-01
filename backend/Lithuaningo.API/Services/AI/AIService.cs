@@ -10,6 +10,7 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
 using OpenAI.Chat;
+using OpenAI.Images;
 
 namespace Lithuaningo.API.Services.AI;
 
@@ -167,6 +168,26 @@ EXAMPLE OUTPUT:
   }
 ]";
 
+    // Image generation system prompt
+    private const string IMAGE_GENERATION_PROMPT = 
+        "[TEXT_FREE=TRUE] Create a colorful, vivid visual representation of '{0}' for a language learning flashcard with these specifications:\n\n" +
+        "1. CONTENT: Single clear concept that represents the word's meaning instantly\n" +
+        "2. STYLE: Bold, vibrant illustration with strong visual impact\n" +
+        "3. COLOR: Rich color palette (2-5 colors) with high contrast\n" +
+        "4. COMPOSITION: Centered subject with clean edges against simple background\n" +
+        "5. CLARITY: Must be immediately recognizable at small sizes\n\n" +
+        "CRITICAL REQUIREMENTS:\n" +
+        "- NO TEXT, LETTERS, NUMBERS OR SYMBOLS OF ANY KIND\n" +
+        "- NO WRITTEN WORDS IN ANY LANGUAGE\n" +
+        "- NO BORDERS, LABELS OR ANNOTATIONS\n" +
+        "- PURE VISUAL IMAGERY ONLY\n\n" +
+        "TYPE-BASED GUIDANCE:\n" +
+        "- For concrete nouns → show the exact object (e.g., 'bread' → loaf of bread)\n" +
+        "- For verbs → show action being performed (e.g., 'run' → person running)\n" +
+        "- For adjectives → show object with that quality (e.g., 'tall' → tall building)\n" +
+        "- For abstract concepts → use clear metaphor (e.g., 'freedom' → bird flying)\n\n" +
+        "Create a DALL-E optimized image that helps language learners instantly associate the visual with the meaning of '{0}'.";
+
     #endregion
     
     #region Private Fields
@@ -186,6 +207,12 @@ EXAMPLE OUTPUT:
     // Configuration settings
     private readonly OpenAISettings _openAiSettings;
     
+    // Storage service
+    private readonly IStorageService _storageService;
+    
+    // Storage settings
+    private readonly StorageSettings _storageSettings;
+    
     #endregion
     
     #region Constructor
@@ -195,14 +222,19 @@ EXAMPLE OUTPUT:
     /// </summary>
     /// <param name="openAiSettings">The OpenAI settings</param>
     /// <param name="logger">The logger</param>
+    /// <param name="storageService">The storage service</param>
+    /// <param name="storageSettings">The storage settings</param>
     /// <param name="chatClient">Optional chat client for testing</param>
     public AIService(
         IOptions<OpenAISettings> openAiSettings,
         ILogger<AIService> logger,
+        IStorageService storageService,
+        IOptions<StorageSettings> storageSettings,
         ChatClient? chatClient = null)
     {
         _logger = logger;
         _openAiSettings = openAiSettings.Value;
+        _storageSettings = storageSettings.Value;
         
         // Set the model name from settings
         _modelName = _openAiSettings.ChatModelName;
@@ -211,6 +243,8 @@ EXAMPLE OUTPUT:
         _chatClient = chatClient ?? CreateChatClient(_modelName);
         
         _logger.LogInformation("AIService initialized with model: {ModelName}", _modelName);
+        
+        _storageService = storageService;
     }
     
     #endregion
@@ -246,6 +280,104 @@ EXAMPLE OUTPUT:
         {
             _logger.LogError(ex, "Error processing AI request with service type {ServiceType}", serviceType);
             throw;
+        }
+    }
+    
+    /// <summary>
+    /// Generates an image using DALL-E based on the provided prompt
+    /// </summary>
+    /// <param name="flashcardWord">The Lithuanian word to illustrate</param>
+    /// <returns>URL to the generated image stored in Cloudflare R2</returns>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
+    /// <exception cref="InvalidOperationException">Thrown when image generation fails</exception>
+    public async Task<string> GenerateImageAsync(string flashcardWord)
+    {
+        if (string.IsNullOrEmpty(flashcardWord))
+        {
+            _logger.LogError("Flashcard word cannot be null or empty");
+            throw new ArgumentNullException(nameof(flashcardWord), "Flashcard word cannot be null or empty");
+        }
+
+        try
+        {
+            _logger.LogInformation("Generating image with flashcard word: {FlashcardWord}", flashcardWord);
+            
+            // Create image client with API key from settings
+            var imageClient = new ImageClient(_openAiSettings.ImageModelName, _openAiSettings.ApiKey);
+
+            // Configure image generation options
+            var options = new ImageGenerationOptions
+            {
+                ResponseFormat = GeneratedImageFormat.Bytes, // Request direct bytes instead of URL
+                Style = GeneratedImageStyle.Vivid
+            };
+
+            // Set image quality based on the settings
+            switch (_openAiSettings.ImageQuality)
+            {
+                case "standard":
+                    options.Quality = GeneratedImageQuality.Standard;
+                    break;
+                case "hd":
+                    options.Quality = GeneratedImageQuality.High;
+                    break;
+                default:
+                    options.Quality = GeneratedImageQuality.Standard;
+                    break;
+            }
+
+            // Set image size based on the settings
+            switch (_openAiSettings.DefaultImageSize)
+            {
+                case "256x256":
+                    options.Size = GeneratedImageSize.W256xH256;
+                    break;
+                case "512x512":
+                    options.Size = GeneratedImageSize.W512xH512;
+                    break;
+                case "1024x1024":
+                    options.Size = GeneratedImageSize.W1024xH1024;
+                    break;
+                default:
+                    options.Size = GeneratedImageSize.W256xH256;
+                    break;
+            }
+            
+            // Generate the image and get bytes directly
+            _logger.LogInformation("Calling OpenAI API to generate image with size: {0}", options.Size);
+            string prompt = string.Format(IMAGE_GENERATION_PROMPT, flashcardWord);
+            _logger.LogInformation("Prompt: {Prompt}", prompt);
+            GeneratedImage image = imageClient.GenerateImage(prompt, options);
+            
+            if (image == null)
+            {
+                _logger.LogError("Failed to generate image: null response");
+                throw new InvalidOperationException("Failed to generate image: null response");
+            }
+
+            // Get the image bytes directly
+            if (image.ImageBytes == null)
+            {
+                _logger.LogError("Generated image bytes are null");
+                throw new InvalidOperationException("Generated image bytes are null");
+            }
+            
+            _logger.LogInformation("Image generated successfully, uploading to storage");
+
+            // Upload directly to R2 storage using the binary upload method
+            var uploadedUrl = await _storageService.UploadBinaryDataAsync(
+                image.ImageBytes.ToArray(), 
+                "image/png", 
+                _storageSettings.Paths.Flashcards, 
+                _storageSettings.Paths.Images);
+
+            _logger.LogInformation("Image uploaded to storage: {URL}", uploadedUrl);
+            return uploadedUrl;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating image: {Message}", ex.Message);
+            throw new InvalidOperationException($"Error generating image: {ex.Message}", ex);
         }
     }
     
@@ -509,7 +641,7 @@ EXAMPLE OUTPUT:
         conversationHistory.Add(new AssistantChatMessage(aiResponse));
         return aiResponse;
     }
-    
+
     /// <summary>
     /// Validates the generated challenges
     /// </summary>

@@ -26,9 +26,9 @@ public class StorageSettings
 
 public class StoragePaths
 {
-    public string Flashcards { get; set; } = string.Empty;
-    public string Users { get; set; } = string.Empty;
-    public string Images { get; set; } = string.Empty;
-    public string Audio { get; set; } = string.Empty;
-    public string Other { get; set; } = string.Empty;
+    public string Flashcards { get; set; } = "flashcards";
+    public string Users { get; set; } = "users";
+    public string Images { get; set; } = "images";
+    public string Audio { get; set; } = "audio";
+    public string Other { get; set; } = "other";
 } 

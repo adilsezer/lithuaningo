@@ -21,6 +21,21 @@ public class OpenAISettings
     public string ChatModelName { get; set; } = "gpt-4o-mini";
     
     /// <summary>
+    /// The model to use for image generation (e.g., "dall-e-3")
+    /// </summary>
+    public string ImageModelName { get; set; } = "dall-e-3";
+    
+    /// <summary>
+    /// Default image size for DALL-E generation
+    /// </summary>
+    public string DefaultImageSize { get; set; } = "1024x1024";
+
+    /// <summary>
+    /// The quality of the image to generate
+    /// </summary>
+    public string ImageQuality { get; set; } = "standard";
+    
+    /// <summary>
     /// Maximum number of tokens to generate in the chat completion
     /// </summary>
     public int MaxTokens { get; set; } = 200;

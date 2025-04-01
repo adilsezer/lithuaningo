@@ -88,5 +88,68 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(500, "An error occurred while getting flashcards");
             }
         }
+        
+        /// <summary>
+        /// Generates an image for a flashcard using AI and updates the flashcard
+        /// </summary>
+        /// <param name="id">The ID of the flashcard</param>
+        /// <param name="userId">Optional user ID for development/testing</param>
+        /// <returns>The URL of the generated image</returns>
+        /// <response code="200">Returns the URL of the generated image</response>
+        /// <response code="400">If the flashcard ID is invalid</response>
+        /// <response code="401">If the user is not authenticated</response>
+        /// <response code="404">If the flashcard was not found</response>
+        /// <response code="500">If there was an error processing the request</response>
+        [HttpPost("{id}/generate-image")]
+        [SwaggerOperation(
+            Summary = "Generate an image for a flashcard",
+            Description = "Uses AI to generate an image based on the flashcard's front word and updates the flashcard.",
+            OperationId = "GenerateFlashcardImage",
+            Tags = new[] { "Flashcard" }
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "The image was successfully generated", typeof(string))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid flashcard ID")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "Flashcard not found")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while generating the image")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GenerateFlashcardImage([FromRoute] Guid id, [FromQuery] string? userId = null)
+        {
+            try
+            {
+                if (id == Guid.Empty)
+                {
+                    return BadRequest("Invalid flashcard ID");
+                }
+                
+                // Use provided userId for development/testing, otherwise use authenticated user's ID
+                var effectiveUserId = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(effectiveUserId))
+                {
+                    return Unauthorized();
+                }
+                
+                _logger.LogInformation("Generating image for flashcard {Id} for user {UserId}", id, effectiveUserId);
+                
+                try
+                {
+                    var imageUrl = await _flashcardService.GenerateFlashcardImageAsync(id);
+                    return Ok(imageUrl);
+                }
+                catch (InvalidOperationException ex) when (ex.Message.Contains("not found"))
+                {
+                    return NotFound($"Flashcard with ID {id} not found");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating image for flashcard {Id}", id);
+                return StatusCode(500, "An error occurred while generating the image");
+            }
+        }
     }
 }

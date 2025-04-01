@@ -138,26 +138,48 @@ namespace Lithuaningo.API.Services
                 throw;
             }
         }
-
-        public async Task<string> UploadFlashcardFileAsync(IFormFile file)
+        
+        /// <summary>
+        /// Generates an image for a flashcard using AI and updates the flashcard's ImageUrl
+        /// </summary>
+        /// <param name="flashcardId">ID of the flashcard to generate an image for</param>
+        /// <returns>The URL of the generated image</returns>
+        public async Task<string> GenerateFlashcardImageAsync(Guid flashcardId)
         {
-            if (file == null)
-            {
-                throw new ArgumentNullException(nameof(file));
-            }
-
             try
             {
-                var subfolder = DetermineSubfolder(file.ContentType);
-                return await _storageService.UploadFileAsync(
-                    file,
-                    _storageSettings.Value.Paths.Flashcards,
-                    subfolder
-                );
+                // Fetch the flashcard
+                var flashcardQuery = _supabaseService.Client
+                    .From<Flashcard>()
+                    .Filter("id", Operator.Equals, flashcardId.ToString());
+                    
+                var result = await flashcardQuery.Get();
+                var flashcard = result.Models?.FirstOrDefault();
+                
+                if (flashcard == null)
+                {
+                    throw new InvalidOperationException($"Flashcard with ID {flashcardId} not found");
+                }
+                
+                // Generate the image using the word directly, passing any custom prompt
+                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackWord);
+                
+                // Update the flashcard with the image URL
+                flashcard.ImageUrl = imageUrl;
+                
+                // Save the updated flashcard
+                await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Update(flashcard);
+                
+                _logger.LogInformation("Generated and set image for flashcard {Id} with word '{Word}'", 
+                    flashcardId, flashcard.BackWord);
+                
+                return imageUrl;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error uploading flashcard file");
+                _logger.LogError(ex, "Error generating image for flashcard {Id}", flashcardId);
                 throw;
             }
         }
@@ -358,15 +380,6 @@ namespace Lithuaningo.API.Services
         private string FormatHintMessage(string? hint)
         {
             return !string.IsNullOrEmpty(hint) ? $" and hint '{hint}'" : string.Empty;
-        }
-        
-        private string DetermineSubfolder(string contentType)
-        {
-            return contentType.StartsWith("audio/")
-                ? _storageSettings.Value.Paths.Audio
-                : contentType.StartsWith("image/")
-                    ? _storageSettings.Value.Paths.Images
-                    : _storageSettings.Value.Paths.Other;
         }
         
         #endregion

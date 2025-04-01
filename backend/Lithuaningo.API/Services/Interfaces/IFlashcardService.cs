@@ -8,14 +8,7 @@ using Lithuaningo.API.Models;
 namespace Lithuaningo.API.Services.Interfaces
 {
     public interface IFlashcardService
-    {
-        /// <summary>
-        /// Uploads a file for a flashcard and returns the URL
-        /// </summary>
-        /// <param name="file">The file to upload</param>
-        /// <returns>The URL of the uploaded file</returns>
-        Task<string> UploadFlashcardFileAsync(IFormFile file);
-        
+    {   
         /// <summary>
         /// Generates flashcards using AI based on provided parameters without saving them
         /// </summary>
@@ -30,5 +23,12 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <param name="userId">The ID of the user requesting flashcards</param>
         /// <returns>A list of flashcard DTOs</returns>
         Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(FlashcardRequest request, string userId);
+        
+        /// <summary>
+        /// Generates an image for a flashcard using AI and updates the flashcard's ImageUrl
+        /// </summary>
+        /// <param name="flashcardId">ID of the flashcard to generate an image for</param>
+        /// <returns>The URL of the generated image</returns>
+        Task<string> GenerateFlashcardImageAsync(Guid flashcardId);
     }
 }

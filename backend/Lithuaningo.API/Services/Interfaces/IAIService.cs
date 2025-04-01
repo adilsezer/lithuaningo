@@ -58,4 +58,13 @@ public interface IAIService
     /// </summary>
     /// <param name="sessionId">Optional specific session ID to clear. If null, clears all conversation histories</param>
     void ClearConversationHistory(string? sessionId = null);
+
+    /// <summary>
+    /// Generates an image using DALL-E based on the provided prompt
+    /// </summary>
+    /// <param name="flashcardWord">The Lithuanian word to illustrate</param>
+    /// <returns>URL to the generated image stored in Cloudflare R2</returns>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
+    /// <exception cref="InvalidOperationException">Thrown when image generation fails</exception>
+    Task<string> GenerateImageAsync(string flashcardWord);
 } 
