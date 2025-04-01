@@ -66,7 +66,6 @@ namespace Lithuaningo.API.Services
                     throw new ArgumentNullException(nameof(userId));
                 }
 
-                var now = DateTime.UtcNow;
                 var userFlashcardStats = new List<UserFlashcardStat>();
 
                 foreach (var flashcard in flashcards)
