@@ -13,8 +13,9 @@ namespace Lithuaningo.API.Services.Interfaces
         /// Generates flashcards using AI based on provided parameters without saving them
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
+        /// <param name="contextSampleSize">Size of the sample of existing flashcards to use for context (defaults to 100)</param>
         /// <returns>A collection of generated flashcard DTOs</returns>
-        Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request);
+        Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request, int contextSampleSize = 100);
 
         /// <summary>
         /// Gets flashcards for a category, generating new ones if needed

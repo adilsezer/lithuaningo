@@ -1,14 +1,14 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
+using Lithuaningo.API.Authorization;
+using Lithuaningo.API.DTOs.Challenge;
+using Lithuaningo.API.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.DTOs.Challenge;
 using Swashbuckle.AspNetCore.Annotations;
-using Microsoft.AspNetCore.Http;
-using System.Linq;
-using Lithuaningo.API.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -45,18 +45,18 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
             Summary = "Generates challenge questions",
-            Description = "Generates challenge questions using AI based on the provided description and count",
+            Description = "Generates challenge questions using AI",
             OperationId = "GenerateChallengeQuestions",
             Tags = new[] { "Challenge" }
         )]
         [SwaggerResponse(StatusCodes.Status200OK, "The challenge questions were generated successfully", typeof(List<ChallengeQuestionResponse>))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "The request parameters are invalid")]
         [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while generating the challenge questions")]
-        public async Task<ActionResult<List<ChallengeQuestionResponse>>> GenerateChallengeQuestions([FromBody] CreateChallengeRequest request)
+        public async Task<ActionResult<List<ChallengeQuestionResponse>>> GenerateChallengeQuestions()
         {
             try
             {
-                var questions = await _challengeService.GenerateAIChallengeQuestionsAsync(request);
+                var questions = await _challengeService.GenerateAIChallengeQuestionsAsync();
                 return Ok(questions);
             }
             catch (Exception ex)

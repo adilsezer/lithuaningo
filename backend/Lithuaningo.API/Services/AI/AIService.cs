@@ -132,7 +132,6 @@ CATEGORIES (Always use these numeric codes):
 106 = Family (family-related terms)
 107 = Work (profession related terms)
 108 = Nature (weather, nature terms)
-999 = Other (miscellaneous terms)
 
 CAPITALIZATION:
 - Lowercase all Lithuanian front and back texts unless they're proper nouns
@@ -166,7 +165,7 @@ EXAMPLE OUTPUT:
     ""exampleSentenceTranslation"": ""His perceptiveness helped solve the complex problem."",
     ""notes"": ""Abstract concept used in intellectual or psychological contexts."",
     ""difficulty"": 2,
-    ""categories"": [2, 999]
+    ""categories"": [2]
   }
 ]";
 
@@ -459,25 +458,17 @@ EXAMPLE OUTPUT:
     /// <summary>
     /// Generates a set of challenge questions using AI based on the provided parameters
     /// </summary>
-    /// <param name="request">The parameters for challenge generation, including topic and difficulty</param>
     /// <returns>A list of challenge questions with multiple choice, true/false, and fill-in-blank options</returns>
-    /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails</exception>
-    public async Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync(CreateChallengeRequest request)
+    public async Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync()
     {
-        if (request == null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating challenges with AI for description '{Description}', attempt {Attempt}",
-                request.Description, attempt);
+            _logger.LogInformation("Generating challenges with AI, attempt {Attempt}", attempt);
 
             var prompt = new StringBuilder()
-                .AppendLine($"Create {request.Count} Lithuanian language challenges.")
-                .AppendLine($"Description: {request.Description}")
+                .AppendLine($"Create 10 Lithuanian language challenges.")
                 .ToString();
 
             var messages = new List<ChatMessage>

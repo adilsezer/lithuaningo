@@ -3,15 +3,17 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Text.Unicode;
 using System.Threading.Tasks;
 using AutoMapper;
 using Lithuaningo.API.DTOs.Challenge;
+using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models.Challenge;
+using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
@@ -19,8 +21,6 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Supabase;
 using static Supabase.Postgrest.Constants;
-using Lithuaningo.API.Services.AI;
-using Lithuaningo.API.DTOs.Flashcard;
 namespace Lithuaningo.API.Services
 {
     /// <summary>
@@ -61,20 +61,16 @@ namespace Lithuaningo.API.Services
         /// <summary>
         /// Generates new challenge questions using AI without checking if questions already exist.
         /// </summary>
-        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync(CreateChallengeRequest request)
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync()
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-            
+
             try
             {
                 _logger.LogInformation("Generating challenge questions using AI service");
-                
+
                 // Generate challenges using AI
-                var questions = await _aiService.GenerateChallengesAsync(request);
-                    
+                var questions = await _aiService.GenerateChallengesAsync();
+
                 return questions;
             }
             catch (Exception ex)

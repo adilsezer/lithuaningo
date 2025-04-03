@@ -37,11 +37,9 @@ public interface IAIService
     /// <summary>
     /// Generates a set of challenge questions using AI based on the provided parameters
     /// </summary>
-    /// <param name="request">The parameters for challenge generation, including topic and difficulty</param>
     /// <returns>A list of challenge questions with multiple choice, true/false, and fill-in-blank options</returns>
-    /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails</exception>
-    Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync(CreateChallengeRequest request);
+    Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync();
 
     /// <summary>
     /// Generates a set of flashcards using AI based on the provided parameters

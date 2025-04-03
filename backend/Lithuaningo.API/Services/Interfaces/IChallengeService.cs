@@ -8,11 +8,11 @@ namespace Lithuaningo.API.Services.Interfaces
     /// Provides functionality for generating and retrieving daily challenge questions.
     /// </summary>
     public interface IChallengeService
-    {       
+    {
         /// <summary>
         /// Generates new challenge questions using AI without checking if questions already exist.
         /// </summary>
         /// <returns>The generated challenge questions</returns>
-        Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync(CreateChallengeRequest request);
+        Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync();
     }
 }

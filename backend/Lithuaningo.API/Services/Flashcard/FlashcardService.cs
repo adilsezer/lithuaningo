@@ -100,7 +100,7 @@ namespace Lithuaningo.API.Services
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
         /// <returns>A list of generated flashcard DTOs</returns>
-        public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request)
+        public async Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request, int contextSampleSize = 100)
         {
             ValidateInputs(request, request.UserId ?? string.Empty);
 
@@ -109,7 +109,7 @@ namespace Lithuaningo.API.Services
                 int primaryCategoryValue = (int)request.PrimaryCategory;
 
                 // Get existing flashcard front texts and track category-specific texts
-                var (existingFrontTexts, frontTextCategoryMap) = await GetExistingFrontTextsAsync(primaryCategoryValue);
+                var (existingFrontTexts, frontTextCategoryMap) = await GetExistingFrontTextsAsync(primaryCategoryValue, contextSampleSize);
 
                 // Maximum retry attempts
                 const int maxAttempts = 3;
@@ -121,19 +121,16 @@ namespace Lithuaningo.API.Services
                 {
                     attemptCount++;
 
-                    // Select random front texts for context (different set each time)
-                    var randomFrontTexts = SelectRandomFrontTexts(existingFrontTexts, 100);
-
                     // For first attempt, log the initial generation details
                     if (attemptCount == 1)
                     {
-                        LogGenerationDetails(request, randomFrontTexts.Count, existingFrontTexts.Count);
+                        LogGenerationDetails(request, existingFrontTexts.Count);
                     }
                     else
                     {
                         // For retry attempts, log more detailed information
                         _logger.LogInformation(
-                            "Generated only {Current} unique flashcards out of {Requested}, retrying with new random front texts (attempt {Attempt}/{MaxAttempts})",
+                            "Generated only {Current} unique flashcards out of {Requested}, retrying (attempt {Attempt}/{MaxAttempts})",
                             flashcards.Count, request.Count, attemptCount, maxAttempts);
                     }
 
@@ -156,7 +153,7 @@ namespace Lithuaningo.API.Services
                     };
 
                     // Generate flashcards for this attempt
-                    var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, randomFrontTexts);
+                    var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, existingFrontTexts);
 
                     // Filter out duplicates
                     var uniqueNewFlashcards = newFlashcards
@@ -398,7 +395,9 @@ namespace Lithuaningo.API.Services
                 };
 
                 // Generate and combine
-                var newFlashcardResponses = await GenerateFlashcardsAsync(generationRequest);
+                var newFlashcardResponses = await GenerateFlashcardsAsync(
+                    request: generationRequest,
+                    contextSampleSize: 100);
                 var selectedResponses = _mapper.Map<IEnumerable<FlashcardResponse>>(selectedFlashcards);
                 return selectedResponses.Concat(newFlashcardResponses).ToList();
             }
@@ -491,9 +490,9 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private async Task<(List<string> FrontTexts, HashSet<string> CategoryMap)> GetExistingFrontTextsAsync(int categoryValue)
+        private async Task<(List<string> FrontTexts, HashSet<string> CategoryMap)> GetExistingFrontTextsAsync(int categoryValue, int sampleSize = 100)
         {
-            var cacheKey = $"{CacheKeyPrefix}front-texts:category:{categoryValue}";
+            var cacheKey = $"{CacheKeyPrefix}front-texts:category:{categoryValue}:sample:{sampleSize}";
             var cached = await _cache.GetAsync<(List<string> FrontTexts, HashSet<string> CategoryMap)>(cacheKey);
 
             if (cached.FrontTexts != null && cached.CategoryMap != null)
@@ -502,25 +501,37 @@ namespace Lithuaningo.API.Services
                 return cached;
             }
 
-            var existingFlashcardsResult = await _supabaseService.Client
+            // Fetch all front texts with matching category for category map
+            var categoryFlashcardsResult = await _supabaseService.Client
                 .From<Flashcard>()
                 .Select("front_text, categories")
+                .Filter(f => f.Categories, Operator.Contains, new List<object> { categoryValue })
+                .Get();
+
+            // Build the category map first
+            var categoryMap = new HashSet<string>();
+            if (categoryFlashcardsResult.Models != null)
+            {
+                foreach (var flashcard in categoryFlashcardsResult.Models)
+                {
+                    categoryMap.Add($"{flashcard.FrontText.ToLowerInvariant()}:{categoryValue}");
+                }
+            }
+
+            // Directly fetch a random sample of front texts using ORDER BY RANDOM()
+            var randomFrontTextsResult = await _supabaseService.Client
+                .From<Flashcard>()
+                .Select("front_text")
+                .Order("RANDOM()", Ordering.Ascending)
+                .Limit(sampleSize)
                 .Get();
 
             var frontTexts = new List<string>();
-            var categoryMap = new HashSet<string>();
-
-            if (existingFlashcardsResult.Models != null)
+            if (randomFrontTextsResult.Models != null)
             {
-                foreach (var flashcard in existingFlashcardsResult.Models)
-                {
-                    frontTexts.Add(flashcard.FrontText);
-
-                    if (flashcard.Categories.Contains(categoryValue))
-                    {
-                        categoryMap.Add($"{flashcard.FrontText.ToLowerInvariant()}:{categoryValue}");
-                    }
-                }
+                frontTexts = randomFrontTextsResult.Models
+                    .Select(f => f.FrontText)
+                    .ToList();
             }
 
             var result = (frontTexts, categoryMap);
@@ -528,7 +539,7 @@ namespace Lithuaningo.API.Services
             // Cache the result
             await _cache.SetAsync(cacheKey, result,
                 TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
-            _logger.LogInformation("Cached {Count} front texts for category {Category}",
+            _logger.LogInformation("Cached {Count} random front texts for category {Category}",
                 frontTexts.Count, categoryValue);
 
             return result;
@@ -551,22 +562,14 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private List<string> SelectRandomFrontTexts(List<string> frontTexts, int maxCount)
-        {
-            return frontTexts.Count <= maxCount
-                ? frontTexts
-                : frontTexts.OrderBy(_ => _random.Next()).Take(maxCount).ToList();
-        }
-
-        private void LogGenerationDetails(FlashcardRequest request, int randomCount, int totalCount)
+        private void LogGenerationDetails(FlashcardRequest request, int randomCount)
         {
             _logger.LogInformation(
-                "Generating flashcards for category '{Category}' with difficulty '{Difficulty}'{Hint} (using {RandomCount} random front texts from {TotalCount} total)",
+                "Generating flashcards for category '{Category}' with difficulty '{Difficulty}'{Hint} (using {RandomCount} random front texts)",
                 request.PrimaryCategory,
                 request.Difficulty,
                 FormatHintMessage(request.Hint),
-                randomCount,
-                totalCount);
+                randomCount);
         }
 
         private string FormatHintMessage(string? hint)

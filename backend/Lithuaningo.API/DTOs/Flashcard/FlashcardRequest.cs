@@ -28,6 +28,11 @@ namespace Lithuaningo.API.DTOs.Flashcard
     /// </summary>
     public enum FlashcardCategory
     {
+        /// <summary>
+        /// Special value to indicate that flashcards from all categories should be returned
+        /// </summary>
+        AllCategories = -1,
+
         // ===== Grammatical Categories =====
         /// <summary>
         /// Words that describe actions (e.g., eiti, kalbėti, valgyti)
@@ -104,11 +109,6 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// Weather and nature related terms
         /// </summary>
         Nature = 108,
-
-        /// <summary>
-        /// Other words that don't fit in the categories above
-        /// </summary>
-        Other = 999
     }
 
     /// <summary>
@@ -125,7 +125,7 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// The AI will generate flashcards that fit this category.
         /// </remarks>
         [Required]
-        public FlashcardCategory PrimaryCategory { get; set; } = FlashcardCategory.Other;
+        public FlashcardCategory PrimaryCategory { get; set; } = FlashcardCategory.AllCategories;
 
         /// <summary>
         /// Number of flashcards to return (1-50)
