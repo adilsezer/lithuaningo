@@ -1,5 +1,5 @@
-using Microsoft.Extensions.Logging;
 using Lithuaningo.API.Utilities;
+using Microsoft.Extensions.Logging;
 
 namespace Lithuaningo.API.Services.Cache;
 
@@ -14,7 +14,6 @@ public class CacheInvalidator
     // Prefixes used for different entity types
     private const string FlashcardCachePrefix = "flashcard:";
     private const string UserCachePrefix = "user:";
-    private const string AnnouncementCachePrefix = "announcement:";
     private const string AppInfoCachePrefix = "appinfo:";
 
     public CacheInvalidator(
@@ -31,24 +30,24 @@ public class CacheInvalidator
     public async Task InvalidateFlashcardAsync(string flashcardId)
     {
         _logger.LogInformation("Invalidating cache for flashcard {FlashcardId}", flashcardId);
-        
+
         // Invalidate specific flashcard cache
-        await _cache.RemoveByPrefixAsync($"{FlashcardCachePrefix}{flashcardId}");
+        await _cache.RemoveByPrefixAsync($"{FlashcardCachePrefix}id:{flashcardId}");
     }
 
     /// <summary>
-    /// Invalidates all cache entries related to announcements
+    /// Invalidates all flashcard caches related to a specific category
     /// </summary>
-    public async Task InvalidateAnnouncementsAsync(string? announcementId = null)
+    /// <param name="category">The category identifier</param>
+    public async Task InvalidateAllFlashcardCachesForCategoryAsync(int category)
     {
-        if (!string.IsNullOrEmpty(announcementId))
-        {
-            _logger.LogInformation("Invalidating cache for announcement {AnnouncementId}", announcementId);
-            await _cache.RemoveByPrefixAsync($"{AnnouncementCachePrefix}{announcementId}");
-        }
-        
-        // Always invalidate the list of all announcements
-        await _cache.RemoveByPrefixAsync($"{AnnouncementCachePrefix}all");
+        _logger.LogInformation("Invalidating all flashcard caches for category {Category}", category);
+
+        // Invalidate category-based caches (all difficulties)
+        await _cache.RemoveByPrefixAsync($"{FlashcardCachePrefix}category:{category}");
+
+        // Invalidate front texts cache for this category
+        await _cache.RemoveByPrefixAsync($"{FlashcardCachePrefix}front-texts:category:{category}");
     }
 
     /// <summary>
@@ -102,7 +101,7 @@ public class CacheInvalidator
     {
         _logger.LogInformation("Invalidating cache for leaderboard week {WeekId}", weekId);
         await _cache.RemoveByPrefixAsync($"leaderboard:week:{weekId}");
-        
+
         // Also invalidate current week cache if needed
         string currentWeekId = DateUtils.GetCurrentWeekPeriod();
         if (weekId == currentWeekId)
@@ -110,8 +109,10 @@ public class CacheInvalidator
             _logger.LogInformation("Invalidating current week leaderboard cache");
             await _cache.RemoveByPrefixAsync($"leaderboard:current");
         }
-        
+
         // Also clear any other leaderboard caches
         await _cache.RemoveByPrefixAsync($"leaderboard:");
     }
-} 
+
+
+}

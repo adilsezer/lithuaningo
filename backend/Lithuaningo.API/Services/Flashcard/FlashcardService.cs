@@ -1,6 +1,7 @@
 using AutoMapper;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
@@ -18,6 +19,10 @@ namespace Lithuaningo.API.Services
         private readonly IUserFlashcardStatService _userFlashcardStatService;
         private readonly IMapper _mapper;
         private readonly Random _random;
+        private readonly ICacheService _cache;
+        private readonly CacheSettings _cacheSettings;
+        private readonly CacheInvalidator _cacheInvalidator;
+        private const string CacheKeyPrefix = "flashcard:";
 
         private const double ReviewFlashcardsRatio = 0.3; // 30% review cards, 70% new cards
 
@@ -31,6 +36,9 @@ namespace Lithuaningo.API.Services
             IUserFlashcardStatService userFlashcardStatService,
             IMapper mapper,
             ILogger<FlashcardService> logger,
+            ICacheService cache,
+            IOptions<CacheSettings> cacheSettings,
+            CacheInvalidator cacheInvalidator,
             Random random)
         {
             _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
@@ -39,6 +47,9 @@ namespace Lithuaningo.API.Services
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _random = random ?? throw new ArgumentNullException(nameof(random));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _cacheSettings = cacheSettings.Value ?? throw new ArgumentNullException(nameof(cacheSettings));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         #endregion
@@ -267,6 +278,15 @@ namespace Lithuaningo.API.Services
 
         private async Task<Flashcard> GetFlashcardByIdAsync(Guid flashcardId)
         {
+            var cacheKey = $"{CacheKeyPrefix}id:{flashcardId}";
+            var cached = await _cache.GetAsync<Flashcard>(cacheKey);
+
+            if (cached != null)
+            {
+                _logger.LogInformation("Retrieved flashcard from cache for ID {Id}", flashcardId);
+                return cached;
+            }
+
             var flashcardQuery = _supabaseService.Client
                 .From<Flashcard>()
                 .Filter("id", Operator.Equals, flashcardId.ToString());
@@ -279,6 +299,11 @@ namespace Lithuaningo.API.Services
                 throw new InvalidOperationException($"Flashcard with ID {flashcardId} not found");
             }
 
+            // Cache the flashcard
+            await _cache.SetAsync(cacheKey, flashcard,
+                TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
+            _logger.LogInformation("Cached flashcard for ID {Id}", flashcardId);
+
             return flashcard;
         }
 
@@ -287,13 +312,31 @@ namespace Lithuaningo.API.Services
             int difficultyValue = (int)request.Difficulty;
             int categoryValue = (int)request.PrimaryCategory;
 
+            var cacheKey = $"{CacheKeyPrefix}category:{categoryValue}:difficulty:{difficultyValue}";
+            var cached = await _cache.GetAsync<List<Flashcard>>(cacheKey);
+
+            if (cached != null)
+            {
+                _logger.LogInformation("Retrieved flashcards from cache for category {Category} and difficulty {Difficulty}",
+                    request.PrimaryCategory, request.Difficulty);
+                return cached;
+            }
+
             var query = _supabaseService.Client
                 .From<Flashcard>()
                 .Filter(f => f.Categories, Operator.Contains, new List<object> { categoryValue })
                 .Filter(f => f.Difficulty, Operator.Equals, difficultyValue);
 
             var result = await query.Get();
-            return result.Models?.ToList() ?? new List<Flashcard>();
+            var flashcards = result.Models?.ToList() ?? new List<Flashcard>();
+
+            // Cache the flashcards
+            await _cache.SetAsync(cacheKey, flashcards,
+                TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
+            _logger.LogInformation("Cached {Count} flashcards for category {Category} and difficulty {Difficulty}",
+                flashcards.Count, request.PrimaryCategory, request.Difficulty);
+
+            return flashcards;
         }
 
         private async Task<IEnumerable<FlashcardResponse>> GetFlashcardsWithSpacedRepetitionAsync(
@@ -384,6 +427,18 @@ namespace Lithuaningo.API.Services
             await _supabaseService.Client
                 .From<Flashcard>()
                 .Update(flashcard);
+
+            // Invalidate the specific flashcard cache
+            await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString());
+
+            // Also invalidate category-based caches
+            if (flashcard.Categories != null && flashcard.Categories.Any())
+            {
+                foreach (var category in flashcard.Categories)
+                {
+                    await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
+                }
+            }
         }
 
         private async Task SaveFlashcardsToSupabaseAsync(List<Flashcard> flashcards, string? userId = null)
@@ -401,6 +456,33 @@ namespace Lithuaningo.API.Services
                 {
                     await _userFlashcardStatService.MarkFlashcardsAsShownAsync(result.Models.ToList(), userId);
                 }
+
+                // Invalidate relevant caches
+                if (result.Models?.Count > 0)
+                {
+                    // Use a HashSet to track unique categories
+                    var uniqueCategories = new HashSet<int>();
+
+                    // Collect all affected categories
+                    foreach (var flashcard in result.Models)
+                    {
+                        if (flashcard.Categories != null)
+                        {
+                            foreach (var category in flashcard.Categories)
+                            {
+                                uniqueCategories.Add(category);
+                            }
+                        }
+                    }
+
+                    // Invalidate caches for each affected category
+                    foreach (var category in uniqueCategories)
+                    {
+                        await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
+                    }
+
+                    _logger.LogInformation("Invalidated flashcard caches for {Count} categories", uniqueCategories.Count);
+                }
             }
             catch (Exception ex)
             {
@@ -411,6 +493,15 @@ namespace Lithuaningo.API.Services
 
         private async Task<(List<string> FrontTexts, HashSet<string> CategoryMap)> GetExistingFrontTextsAsync(int categoryValue)
         {
+            var cacheKey = $"{CacheKeyPrefix}front-texts:category:{categoryValue}";
+            var cached = await _cache.GetAsync<(List<string> FrontTexts, HashSet<string> CategoryMap)>(cacheKey);
+
+            if (cached.FrontTexts != null && cached.CategoryMap != null)
+            {
+                _logger.LogInformation("Retrieved front texts from cache for category {Category}", categoryValue);
+                return cached;
+            }
+
             var existingFlashcardsResult = await _supabaseService.Client
                 .From<Flashcard>()
                 .Select("front_text, categories")
@@ -432,7 +523,15 @@ namespace Lithuaningo.API.Services
                 }
             }
 
-            return (frontTexts, categoryMap);
+            var result = (frontTexts, categoryMap);
+
+            // Cache the result
+            await _cache.SetAsync(cacheKey, result,
+                TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
+            _logger.LogInformation("Cached {Count} front texts for category {Category}",
+                frontTexts.Count, categoryValue);
+
+            return result;
         }
 
         #endregion
