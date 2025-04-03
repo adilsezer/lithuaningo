@@ -1,18 +1,18 @@
 using System;
 using System.Threading.Tasks;
+using Lithuaningo.API.Authorization;
+using Lithuaningo.API.DTOs.UserChallengeStats;
+using Lithuaningo.API.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.DTOs.UserChallengeStats;
 using Swashbuckle.AspNetCore.Annotations;
-using Lithuaningo.API.Authorization;
-using Microsoft.AspNetCore.Http;
 
 namespace Lithuaningo.API.Controllers
 {
     /// <summary>
     /// Handles operations related to challenge statistics for users. These include retrieving stats,
-    /// updating daily streaks, adding experience points, marking words as learned, and incrementing challenge completion counts.
+    /// updating daily streaks, adding experience points, marking flashcards as learned, and incrementing challenge completion counts.
     /// </summary>
     [Authorize]
     [ApiVersion("1.0")]
@@ -40,7 +40,7 @@ namespace Lithuaningo.API.Controllers
         /// The response includes:
         /// - Daily streak information
         /// - Experience points
-        /// - Learned words count
+        /// - Learned flashcard count
         /// - Total challenges completed
         /// </remarks>
         /// <param name="userId">The user's unique identifier (should be a valid GUID)</param>
@@ -83,12 +83,12 @@ namespace Lithuaningo.API.Controllers
                     return NotFound();
                 }
 
-                _logger.LogInformation("Retrieved stats for user {UserId}: LastChallengeDate={LastChallengeDate}, TodayCorrectAnswers={TodayCorrectAnswers}, TodayIncorrectAnswers={TodayIncorrectAnswers}", 
-                    userId, 
-                    stats.LastChallengeDate, 
-                    stats.TodayCorrectAnswers, 
+                _logger.LogInformation("Retrieved stats for user {UserId}: LastChallengeDate={LastChallengeDate}, TodayCorrectAnswers={TodayCorrectAnswers}, TodayIncorrectAnswers={TodayIncorrectAnswers}",
+                    userId,
+                    stats.LastChallengeDate,
+                    stats.TodayCorrectAnswers,
                     stats.TodayIncorrectAnswers);
-                
+
                 return Ok(stats);
             }
             catch (Exception ex)
@@ -97,7 +97,7 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(500, "Internal server error");
             }
         }
-        
+
         /// <summary>
         /// Creates new challenge statistics for a user.
         /// </summary>
@@ -156,7 +156,7 @@ namespace Lithuaningo.API.Controllers
             {
                 // This case should rarely occur now since we're handling this in the service
                 _logger.LogWarning(ex, "Cannot create challenge stats: {Message}", ex.Message);
-                
+
                 // Try to get existing stats instead of returning an error
                 try
                 {
@@ -294,7 +294,7 @@ namespace Lithuaningo.API.Controllers
             {
                 // Get current stats
                 var currentStats = await _userChallengeStatsService.GetUserChallengeStatsAsync(userId);
-                
+
                 if (currentStats == null)
                 {
                     return NotFound();
@@ -303,7 +303,7 @@ namespace Lithuaningo.API.Controllers
                 // Update streak values
                 var newCurrentStreak = currentStats.CurrentStreak + 1;
                 var newLongestStreak = Math.Max(newCurrentStreak, currentStats.LongestStreak);
-                
+
                 // Create update request with valid streak values
                 var updateRequest = new UpdateUserChallengeStatsRequest
                 {
@@ -315,10 +315,10 @@ namespace Lithuaningo.API.Controllers
                     TotalCorrectAnswers = currentStats.TotalCorrectAnswers,
                     TotalIncorrectAnswers = currentStats.TotalIncorrectAnswers
                 };
-                
+
                 await _userChallengeStatsService.UpdateUserChallengeStatsAsync(userId, updateRequest);
                 _logger.LogInformation("Updated daily streak for user {UserId}", userId);
-                
+
                 return NoContent();
             }
             catch (InvalidOperationException ex)

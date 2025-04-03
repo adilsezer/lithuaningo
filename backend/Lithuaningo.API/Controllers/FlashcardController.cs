@@ -1,18 +1,18 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Claims;
+using System.Threading.Tasks;
+using AutoMapper;
+using Lithuaningo.API.Authorization;
+using Lithuaningo.API.DTOs.Flashcard;
+using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Settings;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Microsoft.AspNetCore.Http;
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.Settings;
-using Lithuaningo.API.DTOs.Flashcard;
 using Swashbuckle.AspNetCore.Annotations;
-using Lithuaningo.API.Authorization;
-using System.Security.Claims;
-using System.Linq;
-using AutoMapper;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -70,25 +70,25 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}", 
-                    request.PrimaryCategory, 
+                _logger.LogInformation("Getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}",
+                    request.PrimaryCategory,
                     request.Difficulty,
                     !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty);
 
                 var flashcardResponses = await _flashcardService.GetFlashcardsAsync(request, effectiveUserId);
-                
+
                 return Ok(flashcardResponses);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}", 
-                    request.PrimaryCategory, 
+                _logger.LogError(ex, "Error getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}",
+                    request.PrimaryCategory,
                     request.Difficulty,
                     !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty);
                 return StatusCode(500, "An error occurred while getting flashcards");
             }
         }
-        
+
         /// <summary>
         /// Generates an image for a flashcard using AI and updates the flashcard
         /// </summary>
@@ -103,7 +103,7 @@ namespace Lithuaningo.API.Controllers
         [HttpPost("{id}/generate-image")]
         [SwaggerOperation(
             Summary = "Generate an image for a flashcard",
-            Description = "Uses AI to generate an image based on the flashcard's front word and updates the flashcard.",
+            Description = "Uses AI to generate an image based on the flashcard's front text and updates the flashcard.",
             OperationId = "GenerateFlashcardImage",
             Tags = new[] { "Flashcard" }
         )]
@@ -125,16 +125,16 @@ namespace Lithuaningo.API.Controllers
                 {
                     return BadRequest("Invalid flashcard ID");
                 }
-                
+
                 // Use provided userId for development/testing, otherwise use authenticated user's ID
                 var effectiveUserId = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(effectiveUserId))
                 {
                     return Unauthorized();
                 }
-                
+
                 _logger.LogInformation("Generating image for flashcard {Id} for user {UserId}", id, effectiveUserId);
-                
+
                 try
                 {
                     var imageUrl = await _flashcardService.GenerateFlashcardImageAsync(id);
@@ -151,7 +151,7 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(500, "An error occurred while generating the image");
             }
         }
-        
+
         /// <summary>
         /// Generates audio for a flashcard using text-to-speech and updates the flashcard
         /// </summary>
@@ -166,7 +166,7 @@ namespace Lithuaningo.API.Controllers
         [HttpPost("{id}/generate-audio")]
         [SwaggerOperation(
             Summary = "Generate audio for a flashcard",
-            Description = "Uses text-to-speech to generate audio based on the flashcard's front word (Lithuanian word) and updates the flashcard.",
+            Description = "Uses text-to-speech to generate audio based on the flashcard's front text (Lithuanian) and example sentence (Lithuanian) and updates the flashcard.",
             OperationId = "GenerateFlashcardAudio",
             Tags = new[] { "Flashcard" }
         )]
@@ -188,16 +188,16 @@ namespace Lithuaningo.API.Controllers
                 {
                     return BadRequest("Invalid flashcard ID");
                 }
-                
+
                 // Use provided userId for development/testing, otherwise use authenticated user's ID
                 var effectiveUserId = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 if (string.IsNullOrEmpty(effectiveUserId))
                 {
                     return Unauthorized();
                 }
-                
+
                 _logger.LogInformation("Generating audio for flashcard {Id} for user {UserId}", id, effectiveUserId);
-                
+
                 try
                 {
                     var audioUrl = await _flashcardService.GenerateFlashcardAudioAsync(id);

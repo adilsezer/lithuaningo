@@ -97,8 +97,8 @@ namespace Lithuaningo.API.Services
             {
                 int primaryCategoryValue = (int)request.PrimaryCategory;
 
-                // Get existing words and track category-specific words
-                var (existingWords, wordCategoryMap) = await GetExistingWordsAsync(primaryCategoryValue);
+                // Get existing flashcard front texts and track category-specific texts
+                var (existingFrontTexts, frontTextCategoryMap) = await GetExistingFrontTextsAsync(primaryCategoryValue);
 
                 // Maximum retry attempts
                 const int maxAttempts = 3;
@@ -110,19 +110,19 @@ namespace Lithuaningo.API.Services
                 {
                     attemptCount++;
 
-                    // Select random words for context (different set each time)
-                    var randomWords = SelectRandomWords(existingWords, 100);
+                    // Select random front texts for context (different set each time)
+                    var randomFrontTexts = SelectRandomFrontTexts(existingFrontTexts, 100);
 
                     // For first attempt, log the initial generation details
                     if (attemptCount == 1)
                     {
-                        LogGenerationDetails(request, randomWords.Count, existingWords.Count);
+                        LogGenerationDetails(request, randomFrontTexts.Count, existingFrontTexts.Count);
                     }
                     else
                     {
                         // For retry attempts, log more detailed information
                         _logger.LogInformation(
-                            "Generated only {Current} unique flashcards out of {Requested}, retrying with new random words (attempt {Attempt}/{MaxAttempts})",
+                            "Generated only {Current} unique flashcards out of {Requested}, retrying with new random front texts (attempt {Attempt}/{MaxAttempts})",
                             flashcards.Count, request.Count, attemptCount, maxAttempts);
                     }
 
@@ -145,20 +145,20 @@ namespace Lithuaningo.API.Services
                     };
 
                     // Generate flashcards for this attempt
-                    var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, randomWords);
+                    var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, randomFrontTexts);
 
                     // Filter out duplicates
                     var uniqueNewFlashcards = newFlashcards
-                        .Where(f => !wordCategoryMap.Contains($"{f.FrontWord.ToLowerInvariant()}:{primaryCategoryValue}"))
+                        .Where(f => !frontTextCategoryMap.Contains($"{f.FrontText.ToLowerInvariant()}:{primaryCategoryValue}"))
                         .ToList();
 
                     // Add unique flashcards to our collection
                     flashcards.AddRange(uniqueNewFlashcards);
 
-                    // Update word category map with the new flashcards to avoid duplicates in next attempt
+                    // Update front text category map with the new flashcards to avoid duplicates in next attempt
                     foreach (var card in uniqueNewFlashcards)
                     {
-                        wordCategoryMap.Add($"{card.FrontWord.ToLowerInvariant()}:{primaryCategoryValue}");
+                        frontTextCategoryMap.Add($"{card.FrontText.ToLowerInvariant()}:{primaryCategoryValue}");
                     }
 
                     // If we got enough flashcards, break early
@@ -204,15 +204,15 @@ namespace Lithuaningo.API.Services
             {
                 var flashcard = await GetFlashcardByIdAsync(flashcardId);
 
-                // Generate the image using the word directly
-                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackWord);
+                // Generate the image using the back text (English) directly
+                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackText);
 
                 // Update the flashcard with the image URL
                 flashcard.ImageUrl = imageUrl;
                 await UpdateFlashcardAsync(flashcard);
 
-                _logger.LogInformation("Generated and set image for flashcard {Id} with word '{Word}'",
-                    flashcardId, flashcard.BackWord);
+                _logger.LogInformation("Generated and set image for flashcard {Id} with back text '{BackText}'",
+                    flashcardId, flashcard.BackText);
 
                 return imageUrl;
             }
@@ -234,23 +234,23 @@ namespace Lithuaningo.API.Services
             {
                 var flashcard = await GetFlashcardByIdAsync(flashcardId);
 
-                // Make sure we have a valid front word and example sentence
-                if (string.IsNullOrEmpty(flashcard.FrontWord) || string.IsNullOrEmpty(flashcard.ExampleSentence))
+                // Make sure we have a valid front text and example sentence
+                if (string.IsNullOrEmpty(flashcard.FrontText) || string.IsNullOrEmpty(flashcard.ExampleSentence))
                 {
-                    throw new InvalidOperationException($"Flashcard with ID {flashcardId} has no front word or example sentence");
+                    throw new InvalidOperationException($"Flashcard with ID {flashcardId} has no front text or example sentence");
                 }
 
-                // Generate the audio using both the front word and example sentence
+                // Generate the audio using both the front text and example sentence
                 var audioUrl = await _aiService.GenerateAudioAsync(
-                    flashcard.FrontWord,
+                    flashcard.FrontText,
                     flashcard.ExampleSentence);
 
                 // Update the flashcard with the audio URL
                 flashcard.AudioUrl = audioUrl;
                 await UpdateFlashcardAsync(flashcard);
 
-                _logger.LogInformation("Generated and set audio for flashcard {Id} with word '{Word}'",
-                    flashcardId, flashcard.FrontWord);
+                _logger.LogInformation("Generated and set audio for flashcard {Id} with front text '{FrontText}'",
+                    flashcardId, flashcard.FrontText);
 
                 return audioUrl;
             }
@@ -409,30 +409,30 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private async Task<(List<string> Words, HashSet<string> CategoryMap)> GetExistingWordsAsync(int categoryValue)
+        private async Task<(List<string> FrontTexts, HashSet<string> CategoryMap)> GetExistingFrontTextsAsync(int categoryValue)
         {
             var existingFlashcardsResult = await _supabaseService.Client
                 .From<Flashcard>()
-                .Select("front_word, categories")
+                .Select("front_text, categories")
                 .Get();
 
-            var words = new List<string>();
+            var frontTexts = new List<string>();
             var categoryMap = new HashSet<string>();
 
             if (existingFlashcardsResult.Models != null)
             {
                 foreach (var flashcard in existingFlashcardsResult.Models)
                 {
-                    words.Add(flashcard.FrontWord);
+                    frontTexts.Add(flashcard.FrontText);
 
                     if (flashcard.Categories.Contains(categoryValue))
                     {
-                        categoryMap.Add($"{flashcard.FrontWord.ToLowerInvariant()}:{categoryValue}");
+                        categoryMap.Add($"{flashcard.FrontText.ToLowerInvariant()}:{categoryValue}");
                     }
                 }
             }
 
-            return (words, categoryMap);
+            return (frontTexts, categoryMap);
         }
 
         #endregion
@@ -452,17 +452,17 @@ namespace Lithuaningo.API.Services
             }
         }
 
-        private List<string> SelectRandomWords(List<string> words, int maxCount)
+        private List<string> SelectRandomFrontTexts(List<string> frontTexts, int maxCount)
         {
-            return words.Count <= maxCount
-                ? words
-                : words.OrderBy(_ => _random.Next()).Take(maxCount).ToList();
+            return frontTexts.Count <= maxCount
+                ? frontTexts
+                : frontTexts.OrderBy(_ => _random.Next()).Take(maxCount).ToList();
         }
 
         private void LogGenerationDetails(FlashcardRequest request, int randomCount, int totalCount)
         {
             _logger.LogInformation(
-                "Generating flashcards for category '{Category}' with difficulty '{Difficulty}'{Hint} (using {RandomCount} random words from {TotalCount} total)",
+                "Generating flashcards for category '{Category}' with difficulty '{Difficulty}'{Hint} (using {RandomCount} random front texts from {TotalCount} total)",
                 request.PrimaryCategory,
                 request.Difficulty,
                 FormatHintMessage(request.Hint),

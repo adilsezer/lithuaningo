@@ -1,18 +1,18 @@
 using System.Collections.Concurrent;
+using System.Text;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
-using System.Text;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
+using OpenAI.Audio;
 using OpenAI.Chat;
 using OpenAI.Images;
-using OpenAI.Audio;
-using Microsoft.AspNetCore.Mvc;
 
 namespace Lithuaningo.API.Services.AI;
 
@@ -22,15 +22,15 @@ namespace Lithuaningo.API.Services.AI;
 public class AIService : IAIService
 {
     #region Constants
-    
+
     // Chat system instructions
-    private const string CHAT_SYSTEM_INSTRUCTIONS = 
+    private const string CHAT_SYSTEM_INSTRUCTIONS =
         "You are a Lithuanian language learning assistant named Lithuaningo AI. " +
         "Only answer questions related to Lithuanian language, culture, history, or travel in Lithuania. " +
         "For any questions not related to Lithuanian topics, politely explain that you can only help with Lithuanian-related topics. " +
         "Always incorporate at least one Lithuanian word or fact in your responses to help the user learn. " +
         "Use friendly, conversational language suitable for a language learning app.";
-    
+
     // Challenge system instructions with complete format requirements
     private const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language challenges based on flashcard data.
 
@@ -42,18 +42,18 @@ FORMAT: Return a JSON array of 5 challenge objects with these properties:
 - type: Integer value (0=MultipleChoice, 1=TrueFalse, 2=FillInTheBlank)
 
 RULES:
-1. USE ONLY words and phrases from the provided flashcards
+1. USE ONLY texts, words and phrases from the provided flashcards
 2. Create 5 questions total: 2 multiple-choice, 2 true/false, and 1 fill-in-blank
 3. For each question, use appropriate template from below
 
 QUESTION TEMPLATES:
 - For Multiple Choice (type=0):
-  * ""What does the word '{0}' mean?"" [options are English translations]
+  * ""What does '{0}' mean?"" [options are English translations]
   * ""What is the grammatical form of '{0}'?""
   * ""Put the words in the correct order: {scrambled words}"" [options are different possible word orders]
 
 - For True/False (type=1):
-  * ""The word '{0}' means '{1}' (True or False)""
+  * ""'{0}' means '{1}' (True or False)""
   * ""The grammatical form of '{0}' is {1} (True or False)""
 
 - For Fill in the Blank (type=2):
@@ -62,7 +62,7 @@ QUESTION TEMPLATES:
 EXAMPLE OUTPUT:
 [
   {
-    ""question"": ""What does the word 'Labas' mean?"",
+    ""question"": ""What does 'Labas' mean?"",
     ""options"": [""Hello"", ""Goodbye"", ""Thank you"", ""Please""],
     ""correctAnswer"": ""Hello"",
     ""exampleSentence"": ""Labas, kaip sekasi?"",
@@ -76,7 +76,7 @@ EXAMPLE OUTPUT:
     ""type"": 0
   },
   {
-    ""question"": ""The word 'Ačiū' means 'Thank you' (True or False)"",
+    ""question"": ""'Ačiū' means 'Thank you' (True or False)"",
     ""options"": [""True"", ""False""],
     ""correctAnswer"": ""True"",
     ""exampleSentence"": ""Ačiū už pagalbą."",
@@ -89,27 +89,27 @@ EXAMPLE OUTPUT:
 
 FORMAT: Return a JSON array of flashcard objects with these properties:
 {
-  ""frontWord"": ""The Lithuanian word or phrase in Lithuanian"",
-  ""backWord"": ""The English translation"",
-  ""exampleSentence"": ""A practical example sentence in Lithuanian using the word"",
+  ""frontText"": ""The Lithuanian text or phrase in Lithuanian"",
+  ""backText"": ""The English translation"",
+  ""exampleSentence"": ""A practical example sentence in Lithuanian using the text"",
   ""exampleSentenceTranslation"": ""English translation of the example sentence"",
-  ""notes"": ""Brief usage notes or tips about the word/phrase"",
+  ""notes"": ""Brief usage notes or tips about the text/phrase"",
   ""difficulty"": Integer (0=Basic, 1=Intermediate, 2=Advanced),
-  ""categories"": Array of integers representing word categories
+  ""categories"": Array of integers representing content categories
 }
 
 RULES:
 1. Create accurate Lithuanian flashcards with correct grammar and spelling
 2. Focus on the requested primary category and hint
-3. Include vocabulary appropriate for the specified difficulty level
+3. Include content appropriate for the specified difficulty level
 4. Provide practical, natural example sentences
 5. ALWAYS use the EXACT difficulty level requested by the user (0, 1, or 2)
 6. ALWAYS include the primary category in the categories array
-7. Do NOT create flashcards similar to existing words provided
+7. Do NOT create flashcards similar to existing flashcard texts provided
 8. Each flashcard must be unique in the set
 
 DIFFICULTY SPECIFICATIONS - USE EXACTLY AS REQUESTED:
-- Basic (0): Most common everyday words (top 500-1000 frequency), concepts learned in first 1-3 months
+- Basic (0): Most common everyday vocabulary (top 500-1000 frequency), concepts learned in first 1-3 months
 - Intermediate (1): Less common vocabulary (1000-3000 frequency), specialized contexts, idioms
 - Advanced (2): Rare or technical vocabulary, literary terms, specialized jargon, abstract concepts
 
@@ -125,7 +125,7 @@ CATEGORIES (Always use these numeric codes):
 # Thematic Categories
 100 = Greeting (labas, sveiki)
 101 = Phrase (atsiprašau, prašom, ačiū)
-102 = Number (counting words)
+102 = Number (counting expressions)
 103 = TimeWord (vakar, šiandien, rytoj)
 104 = Food (food and dining terms)
 105 = Travel (travel-related terms)
@@ -135,24 +135,24 @@ CATEGORIES (Always use these numeric codes):
 999 = Other (miscellaneous terms)
 
 CAPITALIZATION:
-- Lowercase all Lithuanian words unless they're proper nouns
+- Lowercase all Lithuanian front and back texts unless they're proper nouns
 - Capitalize first letter of example sentences
 - Lowercase English translations unless proper nouns
 
 EXAMPLE OUTPUT:
 [
   {
-    ""frontWord"": ""duona"",
-    ""backWord"": ""bread"",
+    ""frontText"": ""duona"",
+    ""backText"": ""bread"",
     ""exampleSentence"": ""Man labai patinka šviežia duona."",
     ""exampleSentenceTranslation"": ""I really like fresh bread."",
-    ""notes"": ""One of the most common food words, used daily in Lithuanian households."",
+    ""notes"": ""One of the most common food items, used daily in Lithuanian households."",
     ""difficulty"": 0,
     ""categories"": [104, 1]
   },
   {
-    ""frontWord"": ""bendradarbis"",
-    ""backWord"": ""colleague"",
+    ""frontText"": ""bendradarbis"",
+    ""backText"": ""colleague"",
     ""exampleSentence"": ""Mano bendradarbis padėjo man užbaigti projektą laiku."",
     ""exampleSentenceTranslation"": ""My colleague helped me finish the project on time."",
     ""notes"": ""Used in professional settings to refer to people you work with."",
@@ -160,8 +160,8 @@ EXAMPLE OUTPUT:
     ""categories"": [107, 1]
   },
   {
-    ""frontWord"": ""įžvalgumas"",
-    ""backWord"": ""perceptiveness"",
+    ""frontText"": ""įžvalgumas"",
+    ""backText"": ""perceptiveness"",
     ""exampleSentence"": ""Jo įžvalgumas padėjo išspręsti sudėtingą problemą."",
     ""exampleSentenceTranslation"": ""His perceptiveness helped solve the complex problem."",
     ""notes"": ""Abstract concept used in intellectual or psychological contexts."",
@@ -171,9 +171,9 @@ EXAMPLE OUTPUT:
 ]";
 
     // Image generation system prompt
-    private const string IMAGE_GENERATION_PROMPT = 
+    private const string IMAGE_GENERATION_PROMPT =
         "[TEXT_FREE=TRUE] Create a colorful, vivid visual representation of '{0}' for a language learning flashcard with these specifications:\n\n" +
-        "1. CONTENT: Single clear concept that represents the word's meaning instantly\n" +
+        "1. CONTENT: Single clear concept that represents the flashcard text meaning instantly\n" +
         "2. STYLE: Bold, vibrant illustration with strong visual impact\n" +
         "3. COLOR: Rich color palette (2-5 colors) with high contrast\n" +
         "4. COMPOSITION: Centered subject with clean edges against simple background\n" +
@@ -191,34 +191,34 @@ EXAMPLE OUTPUT:
         "Create a DALL-E optimized image that helps language learners instantly associate the visual with the meaning of '{0}'.";
 
     #endregion
-    
+
     #region Private Fields
-    
+
     // Store conversation history for sessions
     private readonly ConcurrentDictionary<string, List<ChatMessage>> _conversationHistories = new();
-    
+
     // The chat client instance for this service
     private readonly ChatClient _chatClient;
-    
+
     // The model name used by this service
     private readonly string _modelName;
-    
+
     // Logger instance
     private readonly ILogger<AIService> _logger;
-    
+
     // Configuration settings
     private readonly OpenAISettings _openAiSettings;
-    
+
     // Storage service
     private readonly IStorageService _storageService;
-    
+
     // Storage settings
     private readonly StorageSettings _storageSettings;
-    
+
     #endregion
-    
+
     #region Constructor
-    
+
     /// <summary>
     /// Initializes a new instance of the <see cref="AIService"/> class.
     /// </summary>
@@ -237,34 +237,34 @@ EXAMPLE OUTPUT:
         _logger = logger;
         _openAiSettings = openAiSettings.Value;
         _storageSettings = storageSettings.Value;
-        
+
         // Set the model name from settings
         _modelName = _openAiSettings.ChatModelName;
-        
+
         // Use provided client or create a new one
         _chatClient = chatClient ?? CreateChatClient(_modelName);
-        
+
         _logger.LogInformation("AIService initialized with model: {ModelName}", _modelName);
-        
+
         _storageService = storageService;
     }
-    
+
     #endregion
-    
+
     #region Public Methods
-    
+
     /// <summary>
     /// Gets the service name
     /// </summary>
     /// <returns>The name of the AI service</returns>
     public string GetServiceName() => "OpenAI";
-    
+
     /// <summary>
     /// Gets the model name used by this service
     /// </summary>
     /// <returns>The name of the AI model</returns>
     public string GetModelName() => _modelName;
-    
+
     /// <summary>
     /// Processes an AI request and returns a response
     /// </summary>
@@ -284,26 +284,26 @@ EXAMPLE OUTPUT:
             throw;
         }
     }
-    
+
     /// <summary>
     /// Generates an image using DALL-E based on the provided prompt
     /// </summary>
-    /// <param name="flashcardWord">The Lithuanian word to illustrate</param>
+    /// <param name="flashcardText">The Lithuanian text to illustrate</param>
     /// <returns>URL to the generated image stored in Cloudflare R2</returns>
-    /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardText is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when image generation fails</exception>
-    public async Task<string> GenerateImageAsync(string flashcardWord)
+    public async Task<string> GenerateImageAsync(string flashcardText)
     {
-        if (string.IsNullOrEmpty(flashcardWord))
+        if (string.IsNullOrEmpty(flashcardText))
         {
-            _logger.LogError("Flashcard word cannot be null or empty");
-            throw new ArgumentNullException(nameof(flashcardWord), "Flashcard word cannot be null or empty");
+            _logger.LogError("Flashcard text cannot be null or empty");
+            throw new ArgumentNullException(nameof(flashcardText), "Flashcard text cannot be null or empty");
         }
 
         try
         {
-            _logger.LogInformation("Generating image with flashcard word: {FlashcardWord}", flashcardWord);
-            
+            _logger.LogInformation("Generating image with flashcard text: {FlashcardText}", flashcardText);
+
             // Create image client with API key from settings
             var imageClient = new ImageClient(_openAiSettings.ImageModelName, _openAiSettings.ApiKey);
 
@@ -344,14 +344,14 @@ EXAMPLE OUTPUT:
                     options.Size = GeneratedImageSize.W256xH256;
                     break;
             }
-            
+
             // Generate the image and get bytes directly
             _logger.LogInformation("Calling OpenAI API to generate image with size: {0}", options.Size);
-            string prompt = string.Format(IMAGE_GENERATION_PROMPT, flashcardWord);
+            string prompt = string.Format(IMAGE_GENERATION_PROMPT, flashcardText);
             _logger.LogInformation("Prompt: {Prompt}", prompt);
-            
+
             GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
-            
+
             if (image == null)
             {
                 _logger.LogError("Failed to generate image: null response");
@@ -364,14 +364,14 @@ EXAMPLE OUTPUT:
                 _logger.LogError("Generated image bytes are null");
                 throw new InvalidOperationException("Generated image bytes are null");
             }
-            
+
             _logger.LogInformation("Image generated successfully, uploading to storage");
 
             // Upload directly to R2 storage using the binary upload method
             var uploadedUrl = await _storageService.UploadBinaryDataAsync(
-                image.ImageBytes.ToArray(), 
-                "image/png", 
-                _storageSettings.Paths.Flashcards, 
+                image.ImageBytes.ToArray(),
+                "image/png",
+                _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Images);
 
             _logger.LogInformation("Image uploaded to storage: {URL}", uploadedUrl);
@@ -387,26 +387,26 @@ EXAMPLE OUTPUT:
     /// <summary>
     /// Generates audio using OpenAI's text-to-speech service
     /// </summary>
-    /// <param name="flashcardWord">The Lithuanian word to convert to speech</param>
-    /// <param name="exampleSentence">Optional example sentence to include after the word</param>
+    /// <param name="flashcardText">The Lithuanian text to convert to speech</param>
+    /// <param name="exampleSentence">Optional example sentence to include after the text</param>
     /// <returns>URL to the generated audio file stored in cloud storage</returns>
-    /// <exception cref="ArgumentNullException">Thrown when flashcardWord is null or empty</exception>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardText is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
-    public async Task<string> GenerateAudioAsync(string flashcardWord, string exampleSentence)
+    public async Task<string> GenerateAudioAsync(string flashcardText, string exampleSentence)
     {
-        if (string.IsNullOrEmpty(flashcardWord) || string.IsNullOrEmpty(exampleSentence))
+        if (string.IsNullOrEmpty(flashcardText) || string.IsNullOrEmpty(exampleSentence))
         {
-            _logger.LogError("Flashcard word or example sentence cannot be null or empty");
-            throw new ArgumentNullException(nameof(flashcardWord), "Flashcard word or example sentence cannot be null or empty");
+            _logger.LogError("Flashcard text or example sentence cannot be null or empty");
+            throw new ArgumentNullException(nameof(flashcardText), "Flashcard text or example sentence cannot be null or empty");
         }
 
         try
         {
-            _logger.LogInformation("Generating audio for flashcard word: {FlashcardWord}", flashcardWord);
-            
+            _logger.LogInformation("Generating audio for flashcard text: {FlashcardText}", flashcardText);
+
             // Create audio client with API key from settings
             var audioClient = new AudioClient(_openAiSettings.AudioModelName, _openAiSettings.ApiKey);
-            
+
             var options = new SpeechGenerationOptions
             {
                 SpeedRatio = 1.0f,
@@ -422,28 +422,28 @@ EXAMPLE OUTPUT:
                 "shimmer" => GeneratedSpeechVoice.Shimmer,
                 _ => GeneratedSpeechVoice.Nova // Default to Nova voice
             };
-            
+
             _logger.LogInformation("Using voice: {Voice} for text-to-speech", ttsVoice);
-            
-            _logger.LogDebug("Generating audio with word and example sentence: {Word} - {Sentence}", flashcardWord, exampleSentence);
-            string textToSpeak = $"{flashcardWord}. \n\n{exampleSentence}";
-            
+
+            _logger.LogDebug("Generating audio with text and example sentence: {Text} - {Sentence}", flashcardText, exampleSentence);
+            string textToSpeak = $"{flashcardText}. \n\n{exampleSentence}";
+
             // Generate speech with the prepared text
             BinaryData speech = await audioClient.GenerateSpeechAsync(textToSpeak, ttsVoice, options);
-            
+
             if (speech == null)
             {
                 _logger.LogError("Failed to generate audio: null response");
                 throw new InvalidOperationException("Failed to generate audio: null response");
             }
-            
+
             _logger.LogInformation("Audio generated successfully, uploading to storage");
 
             // Upload to storage
             var uploadedUrl = await _storageService.UploadBinaryDataAsync(
-                speech.ToArray(), 
-                "audio/mp3", 
-                _storageSettings.Paths.Flashcards, 
+                speech.ToArray(),
+                "audio/mp3",
+                _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Audio);
 
             _logger.LogInformation("Audio uploaded to storage: {URL}", uploadedUrl);
@@ -455,7 +455,7 @@ EXAMPLE OUTPUT:
             throw new InvalidOperationException($"Error generating audio: {ex.Message}", ex);
         }
     }
-    
+
     /// <summary>
     /// Generates a set of challenge questions using AI based on the provided parameters
     /// </summary>
@@ -472,7 +472,7 @@ EXAMPLE OUTPUT:
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating challenges with AI for description '{Description}', attempt {Attempt}", 
+            _logger.LogInformation("Generating challenges with AI for description '{Description}', attempt {Attempt}",
                 request.Description, attempt);
 
             var prompt = new StringBuilder()
@@ -503,7 +503,8 @@ EXAMPLE OUTPUT:
             jsonContent = ConvertStringTypeToIntIfNeeded(jsonContent);
             var questions = JsonSerializer.Deserialize<List<ChallengeQuestionResponse>>(
                 jsonContent,
-                new JsonSerializerOptions { 
+                new JsonSerializerOptions
+                {
                     PropertyNameCaseInsensitive = true,
                     AllowTrailingCommas = true,
                     ReadCommentHandling = JsonCommentHandling.Skip,
@@ -538,8 +539,8 @@ EXAMPLE OUTPUT:
         }
 
         return flashcards.All(flashcard =>
-            !string.IsNullOrWhiteSpace(flashcard.FrontWord) &&
-            !string.IsNullOrWhiteSpace(flashcard.BackWord) &&
+            !string.IsNullOrWhiteSpace(flashcard.FrontText) &&
+            !string.IsNullOrWhiteSpace(flashcard.BackText) &&
             !string.IsNullOrWhiteSpace(flashcard.ExampleSentence) &&
             !string.IsNullOrWhiteSpace(flashcard.ExampleSentenceTranslation) &&
             Enum.IsDefined(typeof(DifficultyLevel), flashcard.Difficulty));
@@ -549,11 +550,11 @@ EXAMPLE OUTPUT:
     /// Generates a set of flashcards using AI based on the provided parameters
     /// </summary>
     /// <param name="request">The parameters for flashcard generation, including primary category and difficulty</param>
-    /// <param name="existingWords">Optional existing words to avoid in the generated flashcards</param>
+    /// <param name="existingFlashcardFrontTexts">Optional existing flashcard front texts to avoid in the generated flashcards</param>
     /// <returns>A list of generated flashcards</returns>
     /// <exception cref="ArgumentNullException">Thrown when request is null</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
-    public async Task<List<Flashcard>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingWords = null)
+    public async Task<List<Flashcard>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingFlashcardFrontTexts = null)
     {
         if (request == null)
         {
@@ -562,7 +563,7 @@ EXAMPLE OUTPUT:
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating flashcards with AI for category '{Category}' with difficulty '{Difficulty}', attempt {Attempt}", 
+            _logger.LogInformation("Generating flashcards with AI for category '{Category}' with difficulty '{Difficulty}', attempt {Attempt}",
                 request.PrimaryCategory, request.Difficulty, attempt);
 
             var prompt = new StringBuilder()
@@ -577,13 +578,13 @@ EXAMPLE OUTPUT:
                 prompt.AppendLine($"Hint: {request.Hint}");
             }
 
-            // Add a limited set of existing words to avoid duplicates
-            if (existingWords?.Any() == true)
+            // Add a limited set of existing content to avoid duplicates
+            if (existingFlashcardFrontTexts?.Any() == true)
             {
-                prompt.AppendLine("\nAvoid creating flashcards similar to these existing words:");
-                foreach (var word in existingWords)
+                prompt.AppendLine("\nAvoid creating flashcards similar to these existing content:");
+                foreach (var text in existingFlashcardFrontTexts)
                 {
-                    prompt.AppendLine($"- {word}");
+                    prompt.AppendLine($"- {text}");
                 }
             }
 
@@ -608,12 +609,13 @@ EXAMPLE OUTPUT:
             }
 
             // Use standard JSON deserialization with property name case insensitivity
-            var serializerOptions = new JsonSerializerOptions { 
+            var serializerOptions = new JsonSerializerOptions
+            {
                 PropertyNameCaseInsensitive = true,
                 AllowTrailingCommas = true,
                 ReadCommentHandling = JsonCommentHandling.Skip
             };
-            
+
             var flashcards = JsonSerializer.Deserialize<List<Flashcard>>(jsonContent, serializerOptions);
 
             if (flashcards == null || !flashcards.Any())
@@ -626,10 +628,10 @@ EXAMPLE OUTPUT:
             {
                 // Set a unique ID
                 flashcard.Id = Guid.NewGuid();
-                
+
                 // Ensure categories list exists
                 flashcard.Categories ??= new List<int>();
-                
+
                 // Ensure primary category is included
                 int primaryCategoryValue = (int)request.PrimaryCategory;
                 if (!flashcard.Categories.Contains(primaryCategoryValue))
@@ -646,13 +648,13 @@ EXAMPLE OUTPUT:
             // Limit to the requested count
             var limitedFlashcards = flashcards.Take(request.Count).ToList();
 
-            _logger.LogInformation("Successfully generated {Count} flashcards for category '{Category}'", 
+            _logger.LogInformation("Successfully generated {Count} flashcards for category '{Category}'",
                 limitedFlashcards.Count, request.PrimaryCategory);
 
             return limitedFlashcards;
         });
     }
-    
+
     /// <summary>
     /// Clears conversation history for testing purposes
     /// </summary>
@@ -668,13 +670,11 @@ EXAMPLE OUTPUT:
             _conversationHistories.Clear();
         }
     }
-    
-    
-    
+
     #endregion
-    
+
     #region Protected Methods
-    
+
     /// <summary>
     /// Creates a new ChatClient with the configured API key
     /// </summary>
@@ -685,11 +685,11 @@ EXAMPLE OUTPUT:
         _logger.LogInformation("Creating ChatClient with model: {Model}", modelName);
         return new ChatClient(modelName, _openAiSettings.ApiKey);
     }
-    
+
     #endregion
-    
+
     #region Private Methods
-    
+
     /// <summary>
     /// Handles a chat request
     /// </summary>
@@ -697,7 +697,7 @@ EXAMPLE OUTPUT:
     {
         // Ensure sessionId is never null by using a default value
         var sessionId = context?.GetValueOrDefault("sessionId") ?? "default_session";
-        
+
         var conversationHistory = _conversationHistories.GetOrAdd(
             sessionId,
             _ => new List<ChatMessage> { new SystemChatMessage(CHAT_SYSTEM_INSTRUCTIONS) }
@@ -714,7 +714,7 @@ EXAMPLE OUTPUT:
 
         var completion = await _chatClient.CompleteChatAsync(conversationHistory.ToArray());
         var aiResponse = completion.Value.Content[0].Text ?? "I'm sorry, I couldn't generate a response.";
-        
+
         conversationHistory.Add(new AssistantChatMessage(aiResponse));
         return aiResponse;
     }
@@ -737,7 +737,7 @@ EXAMPLE OUTPUT:
             question.Options.Contains(question.CorrectAnswer) &&
             Enum.IsDefined(typeof(ChallengeQuestionType), question.Type));
     }
-    
+
     /// <summary>
     /// Extracts JSON content from potential markdown code blocks
     /// </summary>
@@ -769,7 +769,7 @@ EXAMPLE OUTPUT:
         // If no direct JSON array, return the full response (which might be JSON or might need more cleanup)
         return aiResponse.Trim();
     }
-    
+
     /// <summary>
     /// Converts string type values to integers if needed (to handle AI sometimes returning string enum values)
     /// </summary>
@@ -787,10 +787,10 @@ EXAMPLE OUTPUT:
             { @"""type""\s*:\s*""FillInTheBlank""", @"""type"":2" }
         };
 
-        return typePatterns.Aggregate(jsonContent, (current, pattern) => 
+        return typePatterns.Aggregate(jsonContent, (current, pattern) =>
             current.Replace(pattern.Key, pattern.Value));
     }
-    
+
     private async Task<T> RetryWithBackoffAsync<T>(Func<int, Task<T>> operation, int maxAttempts = 3)
     {
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
@@ -811,6 +811,6 @@ EXAMPLE OUTPUT:
         }
         throw new InvalidOperationException($"Operation failed after {maxAttempts} attempts");
     }
-    
+
     #endregion
-} 
+}

@@ -11,12 +11,12 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// Basic vocabulary and grammar
         /// </summary>
         Basic = 0,
-        
+
         /// <summary>
         /// Intermediate vocabulary and grammar
         /// </summary>
         Intermediate = 1,
-        
+
         /// <summary>
         /// Advanced vocabulary and grammar
         /// </summary>
@@ -24,87 +24,87 @@ namespace Lithuaningo.API.DTOs.Flashcard
     }
 
     /// <summary>
-    /// Categories for flashcards representing word types and themes
+    /// Categories for flashcards representing different types of language elements
     /// </summary>
-    public enum WordCategory
+    public enum FlashcardCategory
     {
         // ===== Grammatical Categories =====
         /// <summary>
         /// Words that describe actions (e.g., eiti, kalbėti, valgyti)
         /// </summary>
         Verb = 0,
-        
+
         /// <summary>
         /// Words that name people, places, things (e.g., namas, šalis, žmogus)
         /// </summary>
         Noun = 1,
-        
+
         /// <summary>
         /// Words that describe nouns (e.g., gražus, didelis, mažas)
         /// </summary>
         Adjective = 2,
-        
+
         /// <summary>
         /// Words that modify verbs, adjectives or other adverbs (e.g., greitai, labai)
         /// </summary>
         Adverb = 3,
-        
+
         /// <summary>
         /// Words that replace nouns (e.g., aš, tu, jis, ji)
         /// </summary>
         Pronoun = 4,
-        
+
         /// <summary>
         /// Prepositions and conjunctions
         /// </summary>
         Connector = 5,
-        
+
         // ===== Thematic Categories =====
         /// <summary>
         /// Common expressions used in greeting (e.g., labas, sveiki)
         /// </summary>
         Greeting = 100,
-        
+
         /// <summary>
         /// Common useful phrases (e.g., atsiprašau, prašom, ačiū)
         /// </summary>
         Phrase = 101,
-        
+
         /// <summary>
         /// Numbers and counting words
         /// </summary>
         Number = 102,
-        
+
         /// <summary>
         /// Words related to time (e.g., vakar, šiandien, rytoj)
         /// </summary>
         TimeWord = 103,
-        
+
         /// <summary>
         /// Words related to food and dining
         /// </summary>
         Food = 104,
-        
+
         /// <summary>
         /// Words related to travel
         /// </summary>
         Travel = 105,
-        
+
         /// <summary>
         /// Family-related terms
         /// </summary>
         Family = 106,
-        
+
         /// <summary>
         /// Work and profession related terms
         /// </summary>
         Work = 107,
-        
+
         /// <summary>
         /// Weather and nature related terms
         /// </summary>
         Nature = 108,
-        
+
         /// <summary>
         /// Other words that don't fit in the categories above
         /// </summary>
@@ -125,7 +125,7 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// The AI will generate flashcards that fit this category.
         /// </remarks>
         [Required]
-        public WordCategory PrimaryCategory { get; set; } = WordCategory.Other;
+        public FlashcardCategory PrimaryCategory { get; set; } = FlashcardCategory.Other;
 
         /// <summary>
         /// Number of flashcards to return (1-50)
@@ -137,7 +137,7 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// Optional user ID for development/testing. If not provided, uses the authenticated user's ID.
         /// </summary>
         public string? UserId { get; set; }
-        
+
         /// <summary>
         /// The difficulty level of flashcards to generate
         /// </summary>
@@ -152,4 +152,4 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// </remarks>
         public string? Hint { get; set; }
     }
-} 
+}

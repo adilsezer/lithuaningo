@@ -15,14 +15,14 @@ namespace Lithuaningo.API.DTOs.Flashcard
         public Guid Id { get; set; }
 
         /// <summary>
-        /// The front word of the flashcard (question)
+        /// The front text of the flashcard (question)
         /// </summary>
-        public string FrontWord { get; set; } = string.Empty;
+        public string FrontText { get; set; } = string.Empty;
 
         /// <summary>
-        /// The back word of the flashcard (answer)
+        /// The back text of the flashcard (answer)
         /// </summary>
-        public string BackWord { get; set; } = string.Empty;
+        public string BackText { get; set; } = string.Empty;
 
         /// <summary>
         /// The example sentence of the flashcard
@@ -33,7 +33,7 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// The example sentence translation of the flashcard
         /// </summary>
         public string ExampleSentenceTranslation { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// URL to the flashcard's image
         /// </summary>
@@ -43,25 +43,25 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// URL to the flashcard's audio
         /// </summary>
         public string AudioUrl { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Additional notes for the flashcard
         /// </summary>
         public string Notes { get; set; } = string.Empty;
-        
+
         /// <summary>
         /// Categories this flashcard belongs to
         /// </summary>
-        public List<WordCategory> Categories { get; set; } = new();
-        
+        public List<FlashcardCategory> Categories { get; set; } = new();
+
         /// <summary>
         /// The difficulty level of the flashcard
         /// </summary>
         public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
-        
+
         /// <summary>
         /// Indicates whether the flashcard has been verified by an admin
         /// </summary>
         public bool IsVerified { get; set; } = false;
     }
-} 
+}

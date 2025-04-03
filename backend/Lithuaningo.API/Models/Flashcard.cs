@@ -1,8 +1,8 @@
 using System;
-using Supabase.Postgrest.Models;
-using Supabase.Postgrest.Attributes;
-using Lithuaningo.API.DTOs.Flashcard;
 using System.Collections.Generic;
+using Lithuaningo.API.DTOs.Flashcard;
+using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace Lithuaningo.API.Models
 {
@@ -13,11 +13,11 @@ namespace Lithuaningo.API.Models
         [Column("id")]
         public Guid Id { get; set; }
 
-        [Column("front_word")]
-        public string FrontWord { get; set; } = string.Empty;
+        [Column("front_text")]
+        public string FrontText { get; set; } = string.Empty;
 
-        [Column("back_word")]
-        public string BackWord { get; set; } = string.Empty;
+        [Column("back_text")]
+        public string BackText { get; set; } = string.Empty;
 
         [Column("example_sentence")]
         public string ExampleSentence { get; set; } = string.Empty;
@@ -39,7 +39,7 @@ namespace Lithuaningo.API.Models
 
         [Column("difficulty")]
         public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
-        
+
         [Column("is_verified")]
         public bool IsVerified { get; set; } = false;
     }
