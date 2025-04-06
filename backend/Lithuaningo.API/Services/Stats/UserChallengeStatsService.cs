@@ -122,8 +122,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             var updatedStatsResponse = _mapper.Map<UserChallengeStatsResponse>(statsEntity);
 
             // Set calculated fields and cache result
-            updatedStatsResponse.HasCompletedTodayChallenge = statsEntity.TodayCorrectAnswerCount + statsEntity.TodayIncorrectAnswerCount >= 10;
-            updatedStatsResponse.TotalChallengesCompleted += updatedStatsResponse.HasCompletedTodayChallenge ? 1 : 0;
             await SaveStatsToCacheAsync(userGuid, updatedStatsResponse);
 
             _logger.LogInformation("Successfully updated challenge stats for user {UserId}, total challenges: {Total}",
@@ -263,6 +261,9 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             stats.TodayIncorrectAnswerCount += 1;
             stats.TotalIncorrectAnswers += 1;
         }
+
+        // Increment total challenges completed
+        stats.TotalChallengesCompleted += stats.TodayCorrectAnswerCount + stats.TodayIncorrectAnswerCount >= 10 ? 1 : 0;
     }
 
     /// <summary>

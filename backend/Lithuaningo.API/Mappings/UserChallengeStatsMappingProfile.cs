@@ -12,11 +12,13 @@ namespace Lithuaningo.API.Mappings
             // User Challenge Stats mappings
             CreateMap<UserChallengeStats, UserChallengeStatsResponse>()
                 .ForMember(dest => dest.HasCompletedTodayChallenge, opt => opt.MapFrom(src =>
-                    src.LastChallengeDate.Date == DateTime.UtcNow.Date))
+                    src.TodayCorrectAnswerCount + src.TodayIncorrectAnswerCount >= 10))
                 .ForMember(dest => dest.TodayCorrectAnswers, opt => opt.MapFrom(src =>
                     src.TodayCorrectAnswerCount))
                 .ForMember(dest => dest.TodayIncorrectAnswers, opt => opt.MapFrom(src =>
-                    src.TodayIncorrectAnswerCount));
+                    src.TodayIncorrectAnswerCount))
+                .ForMember(dest => dest.TotalChallengesCompleted, opt => opt.MapFrom(src =>
+                    src.TotalChallengesCompleted));
         }
     }
 }
