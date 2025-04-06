@@ -92,7 +92,10 @@ builder.Services.AddControllers()
 builder.Services.AddAutoMapper(cfg =>
 {
     cfg.AddProfile<UserMappingProfile>();    // User-related mappings
-    cfg.AddProfile<MiscMappingProfile>();    // Miscellaneous mappings
+    cfg.AddProfile<AppInfoMappingProfile>();  // App info mappings
+    cfg.AddProfile<UserChallengeStatsMappingProfile>();  // User challenge stats mappings
+    cfg.AddProfile<ChallengeMappingProfile>();  // Challenge mappings
+    cfg.AddProfile<LeaderboardMappingProfile>();  // Leaderboard mappings
     cfg.AddProfile<FlashcardMappingProfile>(); // Flashcard mappings
     cfg.AddProfile<UserFlashcardStatMappingProfile>(); // User flashcard stat mappings
 });
