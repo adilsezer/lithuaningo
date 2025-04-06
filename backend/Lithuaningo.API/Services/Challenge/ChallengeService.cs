@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
+using Lithuaningo.API.Models;
 using Lithuaningo.API.Models.Challenge;
 using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
@@ -38,6 +39,8 @@ namespace Lithuaningo.API.Services
         private readonly CacheInvalidator _cacheInvalidator;
         private readonly IAIService _aiService;
         private readonly IFlashcardService _flashcardService;
+        private readonly Random _random;
+
         public ChallengeService(
             ISupabaseService supabaseService,
             ICacheService cache,
@@ -46,7 +49,8 @@ namespace Lithuaningo.API.Services
             IMapper mapper,
             CacheInvalidator cacheInvalidator,
             IAIService aiService,
-            IFlashcardService flashcardService)
+            IFlashcardService flashcardService,
+            Random random)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
@@ -56,20 +60,87 @@ namespace Lithuaningo.API.Services
             _cacheInvalidator = cacheInvalidator;
             _aiService = aiService;
             _flashcardService = flashcardService;
+            _random = random;
         }
 
         /// <summary>
-        /// Generates new challenge questions using AI without checking if questions already exist.
+        /// Gets or generates daily challenge questions. Will retrieve from cache if available 
+        /// for the current day, otherwise will generate new ones.
+        /// </summary>
+        /// <returns>The daily challenge questions</returns>
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GetDailyChallengeQuestionsAsync()
+        {
+            // Create a daily cache key in the format "challenge:daily:YYYY-MM-DD"
+            string cacheKey = $"{CacheKeyPrefix}daily:{DateTime.UtcNow:yyyy-MM-dd}";
+
+            // Try to get from cache first
+            var cachedQuestions = await _cache.GetAsync<List<ChallengeQuestionResponse>>(cacheKey);
+            if (cachedQuestions != null && cachedQuestions.Any())
+            {
+                _logger.LogInformation("Retrieved {Count} daily challenge questions from cache", cachedQuestions.Count);
+                return cachedQuestions;
+            }
+
+            // Check if we already have questions for today in the database
+            var today = DateTime.UtcNow.Date;
+            var tomorrow = today.AddDays(1);
+
+            var existingQuestions = await _supabaseClient
+                .From<ChallengeQuestion>()
+                .Filter("created_at", Operator.GreaterThanOrEqual, today.ToString("yyyy-MM-dd"))
+                .Filter("created_at", Operator.LessThan, tomorrow.ToString("yyyy-MM-dd"))
+                .Order("created_at", Ordering.Descending)
+                .Limit(10)
+                .Get();
+
+            if (existingQuestions.Models != null && existingQuestions.Models.Any())
+            {
+                var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(existingQuestions.Models);
+
+                // Cache the results
+                await _cache.SetAsync(cacheKey, questionResponses,
+                    TimeSpan.FromHours(_cacheSettings.DefaultExpirationMinutes));
+
+                _logger.LogInformation("Retrieved {Count} daily challenge questions from database", questionResponses.Count);
+                return questionResponses;
+            }
+
+            // If we get here, we need to generate new questions
+            var newQuestions = await GenerateAIChallengeQuestionsAsync();
+
+            // Cache the results for today
+            await _cache.SetAsync(cacheKey, newQuestions.ToList(),
+                TimeSpan.FromHours(_cacheSettings.DefaultExpirationMinutes));
+
+            return newQuestions;
+        }
+
+        /// <summary>
+        /// Generates new challenge questions using AI based on random flashcards as context.
         /// </summary>
         public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync()
         {
-
             try
             {
-                _logger.LogInformation("Generating challenge questions using AI service");
+                _logger.LogInformation("Getting random flashcards to use as context for challenge generation");
 
-                // Generate challenges using AI
-                var questions = await _aiService.GenerateChallengesAsync();
+                // Get random flashcards from the database for context
+                var flashcards = await _flashcardService.RetrieveFlashcardModelsAsync(
+                    limit: 10);
+
+                if (!flashcards.Any())
+                {
+                    _logger.LogWarning("No flashcards found to use as context for challenge generation. Generating challenges without context.");
+                    return await _aiService.GenerateChallengesAsync();
+                }
+
+                _logger.LogInformation("Retrieved {Count} flashcards to use as context for challenge generation", flashcards.Count());
+
+                // Generate challenges based on the flashcard data
+                var questions = await _aiService.GenerateChallengesAsync(flashcards);
+
+                // Save the generated questions to the database
+                await SaveChallengeQuestionsToDatabase(questions);
 
                 return questions;
             }
@@ -80,5 +151,35 @@ namespace Lithuaningo.API.Services
             }
         }
 
+        /// <summary>
+        /// Saves challenge questions to the Supabase database
+        /// </summary>
+        private async Task SaveChallengeQuestionsToDatabase(IEnumerable<ChallengeQuestionResponse> questions)
+        {
+            try
+            {
+                // Map DTO responses to database models
+                var questionModels = _mapper.Map<List<ChallengeQuestion>>(questions);
+
+                // Save to database
+                var result = await _supabaseClient
+                    .From<ChallengeQuestion>()
+                    .Insert(questionModels);
+
+                if (result.Models != null)
+                {
+                    _logger.LogInformation("Successfully saved {Count} challenge questions to database", result.Models.Count);
+                }
+                else
+                {
+                    _logger.LogWarning("No challenge questions were saved to the database");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving challenge questions to database");
+                // Don't rethrow - treat database save as best-effort
+            }
+        }
     }
 }

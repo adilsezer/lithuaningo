@@ -32,9 +32,9 @@ public class AIService : IAIService
         "Use friendly, conversational language suitable for a language learning app.";
 
     // Challenge system instructions with complete format requirements
-    private const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language challenges based on flashcard data.
+    private const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language challenges based on provided flashcard data.
 
-FORMAT: Return a JSON array of 5 challenge objects with these properties:
+FORMAT: Return a JSON array of 10 challenge objects with these properties:
 - question: A clear question using the template formats provided below
 - options: Array of 4 possible answers (or 2 for true/false)
 - correctAnswer: Must match exactly one option from the options array
@@ -42,22 +42,28 @@ FORMAT: Return a JSON array of 5 challenge objects with these properties:
 - type: Integer value (0=MultipleChoice, 1=TrueFalse, 2=FillInTheBlank)
 
 RULES:
-1. USE ONLY texts, words and phrases from the provided flashcards
-2. Create 5 questions total: 2 multiple-choice, 2 true/false, and 1 fill-in-blank
+1. USE ONLY texts, words and phrases from the provided flashcards in the user message
+2. Create 10 questions total: 4 multiple-choice, 4 true/false, and 2 fill-in-blank
 3. For each question, use appropriate template from below
+4. ONLY create challenges based on the flashcard data provided, not from general knowledge
+5. Each challenge should test vocabulary comprehension, grammatical form, or sentence structure
+6. Return valid, well-formed JSON that can be parsed
 
 QUESTION TEMPLATES:
 - For Multiple Choice (type=0):
-  * ""What does '{0}' mean?"" [options are English translations]
-  * ""What is the grammatical form of '{0}'?""
-  * ""Put the words in the correct order: {scrambled words}"" [options are different possible word orders]
+  * ""What does '{Lithuanian word}' mean?"" [options are English translations]
+  * ""What is the correct Lithuanian word for '{English word}'?"" [options are Lithuanian words]
+  * ""What is the grammatical form of '{Lithuanian word}'?""
+  * ""Put the words in the correct order: {scrambled words from example sentence}"" [options are different possible word orders]
 
 - For True/False (type=1):
-  * ""'{0}' means '{1}' (True or False)""
-  * ""The grammatical form of '{0}' is {1} (True or False)""
+  * ""'{Lithuanian word}' means '{English word}' (True or False)""
+  * ""The grammatical form of '{Lithuanian word}' is {form} (True or False)""
+  * ""The correct translation of '{example sentence}' is '{translation}' (True or False)""
 
 - For Fill in the Blank (type=2):
   * ""Fill in the blank: {sentence with blank}""
+  * ""Complete the translation: {partial translation with blank}""
 
 EXAMPLE OUTPUT:
 [
@@ -69,10 +75,17 @@ EXAMPLE OUTPUT:
     ""type"": 0
   },
   {
-    ""question"": ""Put the words in the correct order: kaip labas sekasi"",
-    ""options"": [""Labas, kaip sekasi?"", ""Kaip labas sekasi?"", ""Sekasi kaip labas?"", ""Kaip sekasi labas?""],
-    ""correctAnswer"": ""Labas, kaip sekasi?"",
-    ""exampleSentence"": ""Labas, kaip sekasi?"",
+    ""question"": ""What is the correct Lithuanian word for 'bread'?"",
+    ""options"": [""duona"", ""vanduo"", ""pienas"", ""mėsa""],
+    ""correctAnswer"": ""duona"",
+    ""exampleSentence"": ""Man patinka šviežia duona."",
+    ""type"": 0
+  },
+  {
+    ""question"": ""Put the words in the correct order: rytą kiekvieną mankštą darau"",
+    ""options"": [""Kiekvieną rytą darau mankštą."", ""Darau mankštą kiekvieną rytą."", ""Mankštą darau kiekvieną rytą."", ""Rytą kiekvieną darau mankštą.""],
+    ""correctAnswer"": ""Kiekvieną rytą darau mankštą."",
+    ""exampleSentence"": ""Kiekvieną rytą darau mankštą."",
     ""type"": 0
   },
   {
@@ -81,6 +94,20 @@ EXAMPLE OUTPUT:
     ""correctAnswer"": ""True"",
     ""exampleSentence"": ""Ačiū už pagalbą."",
     ""type"": 1
+  },
+  {
+    ""question"": ""The correct translation of 'Aš gyvenu Vilniuje' is 'I live in Vilnius' (True or False)"",
+    ""options"": [""True"", ""False""],
+    ""correctAnswer"": ""True"",
+    ""exampleSentence"": ""Aš gyvenu Vilniuje jau penkerius metus."",
+    ""type"": 1
+  },
+  {
+    ""question"": ""Fill in the blank: Aš _____ į parduotuvę pirkti duonos."",
+    ""options"": [""einu"", ""valgo"", ""miega"", ""kalba""],
+    ""correctAnswer"": ""einu"",
+    ""exampleSentence"": ""Aš einu į parduotuvę pirkti duonos."",
+    ""type"": 2
   }
 ]";
 
@@ -458,23 +485,47 @@ EXAMPLE OUTPUT:
     /// <summary>
     /// Generates a set of challenge questions using AI based on the provided parameters
     /// </summary>
+    /// <param name="flashcards">Optional collection of flashcards to use as context for challenge generation</param>
     /// <returns>A list of challenge questions with multiple choice, true/false, and fill-in-blank options</returns>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails</exception>
-    public async Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync()
+    public async Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync(IEnumerable<Flashcard>? flashcards = null)
     {
-
         return await RetryWithBackoffAsync(async (attempt) =>
         {
             _logger.LogInformation("Generating challenges with AI, attempt {Attempt}", attempt);
 
-            var prompt = new StringBuilder()
-                .AppendLine($"Create 10 Lithuanian language challenges.")
-                .ToString();
+            var userPrompt = new StringBuilder();
+
+            // If flashcards are provided, use them as context
+            if (flashcards != null && flashcards.Any())
+            {
+                userPrompt.AppendLine("Create Lithuanian language challenges based on these flashcards:");
+
+                // Add the flashcard data to the prompt in a structured format
+                int counter = 0;
+                foreach (var card in flashcards)
+                {
+                    counter++;
+                    userPrompt.AppendLine($"\nFlashcard #{counter}:");
+                    userPrompt.AppendLine($"- Lithuanian: {card.FrontText}");
+                    userPrompt.AppendLine($"- English: {card.BackText}");
+                    userPrompt.AppendLine($"- Example: {card.ExampleSentence}");
+                    userPrompt.AppendLine($"- Example Translation: {card.ExampleSentenceTranslation}");
+
+                    // Limit the number of flashcards included to avoid hitting token limits
+                    if (counter >= 10) break;
+                }
+            }
+            else
+            {
+                _logger.LogWarning("No flashcards provided for challenge generation. Creating generic challenges.");
+                userPrompt.AppendLine("Create 10 Lithuanian language challenges with generic vocabulary suitable for beginners.");
+            }
 
             var messages = new List<ChatMessage>
             {
                 new SystemChatMessage(CHALLENGE_SYSTEM_INSTRUCTIONS),
-                new UserChatMessage(prompt.ToString())
+                new UserChatMessage(userPrompt.ToString())
             };
 
             var completion = await _chatClient.CompleteChatAsync(messages.ToArray());

@@ -30,7 +30,7 @@ namespace Lithuaningo.API.Mappings
 
             // Challenge mappings
             CreateMap<ChallengeQuestion, ChallengeQuestionResponse>();
-
+            CreateMap<ChallengeQuestionResponse, ChallengeQuestion>();
 
             // Leaderboard mappings
             CreateMap<LeaderboardEntry, LeaderboardEntryResponse>()

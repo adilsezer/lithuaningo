@@ -14,5 +14,12 @@ namespace Lithuaningo.API.Services.Interfaces
         /// </summary>
         /// <returns>The generated challenge questions</returns>
         Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync();
+
+        /// <summary>
+        /// Gets or generates daily challenge questions. Will retrieve from cache if available 
+        /// for the current day, otherwise will generate new ones.
+        /// </summary>
+        /// <returns>The daily challenge questions</returns>
+        Task<IEnumerable<ChallengeQuestionResponse>> GetDailyChallengeQuestionsAsync();
     }
 }

@@ -39,30 +39,29 @@ namespace Lithuaningo.API.Controllers
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        [HttpPost("generate")]
+        [HttpGet("daily")]
         [ProducesResponseType(typeof(List<ChallengeQuestionResponse>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
-            Summary = "Generates challenge questions",
-            Description = "Generates challenge questions using AI",
-            OperationId = "GenerateChallengeQuestions",
+            Summary = "Gets daily challenge questions",
+            Description = "Retrieves or generates the daily challenge questions for today",
+            OperationId = "GetDailyChallengeQuestions",
             Tags = new[] { "Challenge" }
         )]
-        [SwaggerResponse(StatusCodes.Status200OK, "The challenge questions were generated successfully", typeof(List<ChallengeQuestionResponse>))]
-        [SwaggerResponse(StatusCodes.Status400BadRequest, "The request parameters are invalid")]
-        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while generating the challenge questions")]
-        public async Task<ActionResult<List<ChallengeQuestionResponse>>> GenerateChallengeQuestions()
+        [SwaggerResponse(StatusCodes.Status200OK, "The daily challenge questions were retrieved successfully", typeof(List<ChallengeQuestionResponse>))]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while retrieving the challenge questions")]
+        public async Task<ActionResult<List<ChallengeQuestionResponse>>> GetDailyChallengeQuestions()
         {
             try
             {
-                var questions = await _challengeService.GenerateAIChallengeQuestionsAsync();
+                var questions = await _challengeService.GetDailyChallengeQuestionsAsync();
                 return Ok(questions);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating challenge questions");
-                return StatusCode(500, "An error occurred while generating challenge questions");
+                _logger.LogError(ex, "Error retrieving daily challenge questions");
+                return StatusCode(500, "An error occurred while retrieving daily challenge questions");
             }
         }
     }
