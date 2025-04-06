@@ -8,7 +8,8 @@ namespace Lithuaningo.API.Mapping
     {
         public UserFlashcardStatMappingProfile()
         {
-            CreateMap<UserFlashcardStat, UpdateFlashcardStatsRequest>().ReverseMap();
+            CreateMap<UserFlashcardStat, SubmitFlashcardAnswerRequest>().ReverseMap();
+            CreateMap<UserFlashcardStat, UserFlashcardStatResponse>();
         }
     }
-} 
+}

@@ -103,7 +103,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         }
     }
 
-    public async Task UpdateUserChallengeStatsAsync(string userId, UpdateUserChallengeStatsRequest request)
+    public async Task<UserChallengeStatsResponse> SubmitChallengeAnswerAsync(string userId, SubmitChallengeAnswerRequest request)
     {
         if (!Guid.TryParse(userId, out var userGuid))
         {
@@ -112,8 +112,8 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
         try
         {
-            // Get the current stats DTO to calculate score difference for leaderboard
-            var currentStatsDto = await GetUserChallengeStatsAsync(userId);
+            // Get current stats
+            var currentStatsResponse = await GetUserChallengeStatsAsync(userId);
 
             // Get the entity from the database for updating
             var databaseResponse = await _supabaseClient
@@ -129,33 +129,40 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             bool isNewDay = statsEntity.LastChallengeDate.Date != DateTime.UtcNow.Date;
 
-            // Calculate the number of new correct answers
-            int newCorrectAnswers = request.TodayCorrectAnswers - currentStatsDto.TodayCorrectAnswers;
-
-            // Update streak logic
+            // Handle streak calculation
             if (isNewDay)
             {
-                // If it's a new day, increment current streak
-                // and reset today's counters since we're treating this as the first activity of the day
-                statsEntity.CurrentStreak = request.CurrentStreak;
-                statsEntity.LongestStreak = request.LongestStreak;
+                // It's a new day
+                statsEntity.CurrentStreak += 1;
                 statsEntity.LastChallengeDate = DateTime.UtcNow;
-                statsEntity.TodayCorrectAnswerCount = request.TodayCorrectAnswers;
-                statsEntity.TodayIncorrectAnswerCount = request.TodayIncorrectAnswers;
+
+                // Reset today's counters since it's a new day
+                statsEntity.TodayCorrectAnswerCount = 0;
+                statsEntity.TodayIncorrectAnswerCount = 0;
+            }
+
+            // Update longest streak if needed
+            if (statsEntity.CurrentStreak > statsEntity.LongestStreak)
+            {
+                statsEntity.LongestStreak = statsEntity.CurrentStreak;
+            }
+
+            // Update answer counts based on whether the answer was correct
+            if (request.WasCorrect)
+            {
+                statsEntity.TodayCorrectAnswerCount += 1;
+                statsEntity.TotalCorrectAnswers += 1;
             }
             else
             {
-                // Same day, just update the values
-                statsEntity.CurrentStreak = request.CurrentStreak;
-                statsEntity.LongestStreak = request.LongestStreak;
-                statsEntity.TodayCorrectAnswerCount = request.TodayCorrectAnswers;
-                statsEntity.TodayIncorrectAnswerCount = request.TodayIncorrectAnswers;
+                statsEntity.TodayIncorrectAnswerCount += 1;
+                statsEntity.TotalIncorrectAnswers += 1;
             }
 
-            statsEntity.TotalChallengesCompleted = request.TotalChallengesCompleted;
-            statsEntity.TotalCorrectAnswers = request.TotalCorrectAnswers;
-            statsEntity.TotalIncorrectAnswers = request.TotalIncorrectAnswers;
+            // Increment total challenges completed
+            statsEntity.TotalChallengesCompleted += 1;
 
+            // Update the stats in the database
             var updateResponse = await _supabaseClient
                 .From<UserChallengeStats>()
                 .Where(u => u.Id == statsEntity.Id)
@@ -164,83 +171,23 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             // Invalidate cache
             await _cacheInvalidator.InvalidateUserChallengeStatsAsync(userId);
 
-            // If there are new correct answers, update the leaderboard
-            if (newCorrectAnswers > 0)
+            // If the answer was correct, update the leaderboard
+            if (request.WasCorrect)
             {
-                // Add points to leaderboard (1 point per correct answer)
-                await _leaderboardService.UpdateLeaderboardEntryAsync(userId, newCorrectAnswers);
-                _logger.LogInformation("Updated leaderboard for user {UserId} with {Points} points", userId, newCorrectAnswers);
+                // Add 1 point to leaderboard per correct answer
+                await _leaderboardService.UpdateLeaderboardEntryAsync(userId, 1);
+                _logger.LogInformation("Updated leaderboard for user {UserId} with 1 point", userId);
             }
 
-            _logger.LogInformation("Updated challenge stats for user {UserId}", userId);
+            _logger.LogInformation("Updated challenge stats for user {UserId} after challenge {ChallengeId}",
+                userId, request.ChallengeId);
+
+            // Get and return the updated stats
+            return await GetUserChallengeStatsAsync(userId);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error updating challenge stats for user {UserId}", userId);
-            throw;
-        }
-    }
-
-    public async Task<UserChallengeStatsResponse> CreateUserChallengeStatsAsync(CreateUserChallengeStatsRequest request)
-    {
-        try
-        {
-            // Check if stats already exist for the user
-            var existingStats = await _supabaseClient
-                .From<UserChallengeStats>()
-                .Where(u => u.UserId == request.UserId)
-                .Get();
-
-            if (existingStats.Models.Any())
-            {
-                // Instead of throwing an exception, return the existing stats
-                _logger.LogInformation("Challenge stats already exist for user {UserId}, returning existing stats", request.UserId);
-                var existingStat = existingStats.Models.First();
-                var existingStatsResponse = _mapper.Map<UserChallengeStatsResponse>(existingStat);
-                // HasCompletedTodayChallenge is now set in the mapper
-
-                // Refresh the cache with existing stats
-                var existingCacheKey = $"{CacheKeyPrefix}{request.UserId}";
-                await _cache.SetAsync(existingCacheKey, existingStatsResponse,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-
-                return existingStatsResponse;
-            }
-
-            var stats = new UserChallengeStats
-            {
-                Id = Guid.NewGuid(),
-                UserId = request.UserId,
-                CurrentStreak = request.CurrentStreak,
-                LongestStreak = request.LongestStreak,
-                LastChallengeDate = DateTime.UtcNow,
-                TodayCorrectAnswerCount = request.TodayCorrectAnswers,
-                TodayIncorrectAnswerCount = request.TodayIncorrectAnswers,
-                TotalChallengesCompleted = request.TotalChallengesCompleted,
-                TotalCorrectAnswers = request.TotalCorrectAnswers,
-                TotalIncorrectAnswers = request.TotalIncorrectAnswers,
-            };
-
-            var createResponse = await _supabaseClient
-                .From<UserChallengeStats>()
-                .Insert(stats);
-
-            stats = createResponse.Models.First();
-            _logger.LogInformation("Created challenge stats for user {UserId}", request.UserId);
-
-            var statsResponse = _mapper.Map<UserChallengeStatsResponse>(stats);
-            // HasCompletedTodayChallenge is now set in the mapper
-
-            // Cache the newly created stats
-            var cacheKey = $"{CacheKeyPrefix}{request.UserId}";
-            await _cache.SetAsync(cacheKey, statsResponse,
-                TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-
-            return statsResponse;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error creating challenge stats for user {UserId}", request.UserId);
+            _logger.LogError(ex, "Error submitting challenge answer for user {UserId}", userId);
             throw;
         }
     }

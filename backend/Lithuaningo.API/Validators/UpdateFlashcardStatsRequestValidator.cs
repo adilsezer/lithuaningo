@@ -3,7 +3,7 @@ using Lithuaningo.API.DTOs.UserFlashcardStats;
 
 namespace Lithuaningo.API.Validators
 {
-    public class UpdateFlashcardStatsRequestValidator : AbstractValidator<UpdateFlashcardStatsRequest>
+    public class UpdateFlashcardStatsRequestValidator : AbstractValidator<SubmitFlashcardAnswerRequest>
     {
         public UpdateFlashcardStatsRequestValidator()
         {
@@ -12,4 +12,4 @@ namespace Lithuaningo.API.Validators
                 .WithMessage("FlashcardId is required");
         }
     }
-} 
+}

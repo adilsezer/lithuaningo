@@ -1,3 +1,5 @@
+using AutoMapper;
+using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Supabase;
 using static Supabase.Postgrest.Constants;
@@ -8,13 +10,16 @@ namespace Lithuaningo.API.Services.Stats
     {
         private readonly ILogger<UserFlashcardStatService> _logger;
         private readonly ISupabaseService _supabaseService;
+        private readonly IMapper _mapper;
 
         public UserFlashcardStatService(
             ISupabaseService supabaseService,
-            ILogger<UserFlashcardStatService> logger)
+            ILogger<UserFlashcardStatService> logger,
+            IMapper mapper)
         {
             _supabaseService = supabaseService ?? throw new ArgumentNullException(nameof(supabaseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         }
 
         /// <inheritdoc />
@@ -98,7 +103,7 @@ namespace Lithuaningo.API.Services.Stats
         }
 
         /// <inheritdoc />
-        public async Task<UserFlashcardStat> UpdateFlashcardStatsAsync(Guid flashcardId, string userId, bool wasCorrect)
+        public async Task<UserFlashcardStatResponse> SubmitFlashcardAnswerAsync(string userId, SubmitFlashcardAnswerRequest request)
         {
             try
             {
@@ -111,7 +116,7 @@ namespace Lithuaningo.API.Services.Stats
                 var existingStatQuery = _supabaseService.Client
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId.ToString())
-                    .Filter("flashcard_id", Operator.Equals, flashcardId.ToString());
+                    .Filter("flashcard_id", Operator.Equals, request.FlashcardId.ToString());
 
                 var existingStatResult = await existingStatQuery.Get();
 
@@ -123,19 +128,20 @@ namespace Lithuaningo.API.Services.Stats
                     {
                         Id = Guid.NewGuid(),
                         UserId = userId,
-                        FlashcardId = flashcardId,
+                        FlashcardId = request.FlashcardId,
                         ViewCount = 1,
-                        CorrectCount = wasCorrect ? 1 : 0,
-                        IncorrectCount = wasCorrect ? 0 : 1,
-                        LastAnsweredCorrectly = wasCorrect,
-                        MasteryLevel = wasCorrect ? 1 : 0
+                        CorrectCount = request.WasCorrect ? 1 : 0,
+                        IncorrectCount = request.WasCorrect ? 0 : 1,
+                        LastAnsweredCorrectly = request.WasCorrect,
+                        MasteryLevel = request.WasCorrect ? 1 : 0
                     };
 
                     var insertResult = await _supabaseService.Client
                         .From<UserFlashcardStat>()
                         .Insert(newStat);
 
-                    return insertResult.Models?.FirstOrDefault() ?? newStat;
+                    var resultStat = insertResult.Models?.FirstOrDefault() ?? newStat;
+                    return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
                 else
                 {
@@ -143,9 +149,9 @@ namespace Lithuaningo.API.Services.Stats
                     var existingStat = existingStatResult.Models.First();
 
                     existingStat.ViewCount++;
-                    existingStat.LastAnsweredCorrectly = wasCorrect;
+                    existingStat.LastAnsweredCorrectly = request.WasCorrect;
 
-                    if (wasCorrect)
+                    if (request.WasCorrect)
                     {
                         existingStat.CorrectCount++;
                         if (existingStat.MasteryLevel < 5)
@@ -166,19 +172,20 @@ namespace Lithuaningo.API.Services.Stats
                         .From<UserFlashcardStat>()
                         .Update(existingStat);
 
-                    return updateResult.Models?.FirstOrDefault() ?? existingStat;
+                    var resultStat = updateResult.Models?.FirstOrDefault() ?? existingStat;
+                    return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error updating flashcard stats for user {UserId} and flashcard {FlashcardId}",
-                    userId, flashcardId);
+                    userId, request.FlashcardId);
                 throw;
             }
         }
 
         /// <inheritdoc />
-        public async Task<List<UserFlashcardStat>> GetFlashcardsDueForReviewAsync(string userId, IEnumerable<Guid>? flashcardIds = null, int limit = 20)
+        public async Task<List<UserFlashcardStatResponse>> GetFlashcardsDueForReviewAsync(string userId, IEnumerable<Guid>? flashcardIds = null, int limit = 20)
         {
             try
             {
@@ -206,7 +213,10 @@ namespace Lithuaningo.API.Services.Stats
                 }
 
                 var result = await query.Get();
-                return result.Models?.ToList() ?? new List<UserFlashcardStat>();
+                var models = result.Models?.ToList() ?? new List<UserFlashcardStat>();
+
+                // Map to response DTOs
+                return _mapper.Map<List<UserFlashcardStatResponse>>(models);
             }
             catch (Exception ex)
             {

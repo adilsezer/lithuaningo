@@ -34,22 +34,22 @@ namespace Lithuaningo.API.Controllers
         /// <response code="400">If the request parameters are invalid</response>
         /// <response code="401">If the user is not authenticated</response>
         /// <response code="500">If there was an error processing the request</response>
-        [HttpPost("update")]
+        [HttpPost("submit-answer")]
         [SwaggerOperation(
-            Summary = "Update flashcard statistics",
-            Description = "Updates the statistics for a flashcard after user review, tracking correct/incorrect answers and mastery level.",
-            OperationId = "UpdateFlashcardStats",
+            Summary = "Submit flashcard answer",
+            Description = "Submits a flashcard answer and automatically updates all relevant statistics including streak, answer counts, and leaderboard",
+            OperationId = "SubmitFlashcardAnswer",
             Tags = new[] { "UserFlashcardStats" }
         )]
-        [SwaggerResponse(StatusCodes.Status200OK, "The flashcard statistics were successfully updated", typeof(UserFlashcardStat))]
+        [SwaggerResponse(StatusCodes.Status200OK, "The flashcard statistics were successfully updated", typeof(UserFlashcardStatResponse))]
         [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid input parameters")]
         [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
         [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while processing the request")]
-        [ProducesResponseType(typeof(UserFlashcardStat), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(UserFlashcardStatResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<UserFlashcardStat>> UpdateFlashcardStats([FromBody] UpdateFlashcardStatsRequest request)
+        public async Task<ActionResult<UserFlashcardStatResponse>> SubmitFlashcardAnswer([FromBody] SubmitFlashcardAnswerRequest request)
         {
             try
             {
@@ -63,10 +63,9 @@ namespace Lithuaningo.API.Controllers
                 _logger.LogInformation("Updating flashcard stats for flashcard {FlashcardId} and user {UserId}",
                     request.FlashcardId, effectiveUserId);
 
-                var result = await _userFlashcardStatService.UpdateFlashcardStatsAsync(
-                    request.FlashcardId,
+                var result = await _userFlashcardStatService.SubmitFlashcardAnswerAsync(
                     effectiveUserId,
-                    request.WasCorrect);
+                    request);
 
                 return Ok(result);
             }
