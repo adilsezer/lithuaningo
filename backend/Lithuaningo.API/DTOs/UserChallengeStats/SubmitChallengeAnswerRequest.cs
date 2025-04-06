@@ -1,5 +1,6 @@
 using System;
 using System.ComponentModel.DataAnnotations;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.DTOs.UserChallengeStats;
 
@@ -21,7 +22,8 @@ public class SubmitChallengeAnswerRequest
     public Guid ChallengeId { get; set; }
 
     /// <summary>
-    /// Optional user ID override (primarily for testing/development)
+    /// Optional user ID override (primarily for testing/development).
+    /// If not provided, the authenticated user's ID will be used.
     /// </summary>
     public string? UserId { get; set; }
 }
