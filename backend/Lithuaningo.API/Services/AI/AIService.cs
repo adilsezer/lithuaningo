@@ -100,7 +100,7 @@ FORMAT: Return a JSON array of flashcard objects with these properties:
 
 RULES:
 1. Create accurate Lithuanian flashcards with correct grammar and spelling
-2. Focus on the requested primary category and hint
+2. Focus on the requested primary category
 3. Include content appropriate for the specified difficulty level
 4. Provide practical, natural example sentences
 5. ALWAYS use the EXACT difficulty level requested by the user (0, 1, or 2)
@@ -562,12 +562,6 @@ EXAMPLE OUTPUT:
                 .AppendLine($"Category: {request.PrimaryCategory}")
                 .AppendLine($"Difficulty: {request.Difficulty}")
                 .AppendLine($"Primary Category: {request.PrimaryCategory} (category code: {(int)request.PrimaryCategory})");
-
-            // Add the hint if provided
-            if (!string.IsNullOrEmpty(request.Hint))
-            {
-                prompt.AppendLine($"Hint: {request.Hint}");
-            }
 
             // Add existing content to avoid duplicates
             if (existingFlashcardFrontTexts?.Any() == true)

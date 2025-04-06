@@ -142,14 +142,5 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// The difficulty level of flashcards to generate
         /// </summary>
         public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
-
-        /// <summary>
-        /// Optional more specific description to guide the AI (e.g. "Kitchen" for Food category)
-        /// </summary>
-        /// <remarks>
-        /// This helps narrow down the generated flashcards within the selected category.
-        /// For example, with PrimaryCategory=Food, you might set Hint="Restaurant" or "Breakfast".
-        /// </remarks>
-        public string? Hint { get; set; }
     }
 }

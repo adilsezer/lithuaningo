@@ -179,11 +179,10 @@ namespace Lithuaningo.API.Services
             try
             {
                 _logger.LogInformation(
-                    "Getting learning flashcards for user {UserId}, category '{Category}' with difficulty '{Difficulty}'{Hint}",
+                    "Getting learning flashcards for user {UserId}, category '{Category}' with difficulty '{Difficulty}'",
                     userId,
                     request.PrimaryCategory,
-                    request.Difficulty,
-                    !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty);
+                    request.Difficulty);
 
                 // Get existing flashcards matching criteria directly
                 var existingFlashcards = await RetrieveFlashcardModelsAsync(
@@ -380,8 +379,7 @@ namespace Lithuaningo.API.Services
                     PrimaryCategory = request.PrimaryCategory,
                     Count = remainingCount,
                     UserId = userId,
-                    Difficulty = request.Difficulty,
-                    Hint = request.Hint
+                    Difficulty = request.Difficulty
                 };
 
                 // Generate new flashcards
@@ -492,8 +490,7 @@ namespace Lithuaningo.API.Services
                 PrimaryCategory = request.PrimaryCategory,
                 Count = request.Count * 2,
                 UserId = request.UserId,
-                Difficulty = request.Difficulty,
-                Hint = request.Hint
+                Difficulty = request.Difficulty
             };
 
             // Retry generation until we have enough flashcards or reach max attempts
@@ -505,10 +502,9 @@ namespace Lithuaningo.API.Services
                 if (attemptCount == 1)
                 {
                     _logger.LogInformation(
-                        "Generating flashcards for category '{Category}' with difficulty '{Difficulty}'{Hint} (using {RandomCount} random front texts)",
+                        "Generating flashcards for category '{Category}' with difficulty '{Difficulty}' (using {RandomCount} random front texts)",
                         request.PrimaryCategory,
                         request.Difficulty,
-                        !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty,
                         existingFrontTexts.Count);
                 }
                 else
