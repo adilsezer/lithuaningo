@@ -18,7 +18,7 @@ public class UserChallengeStatsResponse
     public int LongestStreak { get; set; }
 
     /// <summary>
-    /// Date of last completed challenge
+    /// Date of last active challenge
     /// </summary>
     public DateTime LastChallengeDate { get; set; }
 

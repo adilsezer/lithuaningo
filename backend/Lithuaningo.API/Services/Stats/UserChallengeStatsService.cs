@@ -97,6 +97,10 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             // Get or create stats entity
             var statsEntity = await GetOrCreateStatsEntityAsync(userGuid);
 
+            // Log current date info for debugging
+            _logger.LogInformation("Date comparison - Last challenge: {LastDate}, Current: {CurrentDate}",
+                statsEntity.LastChallengeDate.ToString("yyyy-MM-dd"), DateTime.UtcNow.ToString("yyyy-MM-dd"));
+
             // Update the stats based on the challenge answer
             UpdateStatsForChallengeAnswer(statsEntity, request.WasCorrect);
 
@@ -119,6 +123,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             // Set calculated fields and cache result
             updatedStatsResponse.HasCompletedTodayChallenge = statsEntity.TodayCorrectAnswerCount + statsEntity.TodayIncorrectAnswerCount >= 10;
+            updatedStatsResponse.TotalChallengesCompleted += updatedStatsResponse.HasCompletedTodayChallenge ? 1 : 0;
             await SaveStatsToCacheAsync(userGuid, updatedStatsResponse);
 
             _logger.LogInformation("Successfully updated challenge stats for user {UserId}, total challenges: {Total}",
@@ -212,12 +217,18 @@ public class UserChallengeStatsService : IUserChallengeStatsService
     /// </summary>
     private void UpdateStatsForChallengeAnswer(UserChallengeStats stats, bool wasCorrect)
     {
-        // Check if it's a new day
-        bool isNewDay = stats.LastChallengeDate.Date != DateTime.UtcNow.Date;
+        // Get current date in UTC
+        DateTime currentDateUtc = DateTime.UtcNow.Date;
+        // Convert LastChallengeDate to date only for comparison
+        DateTime lastChallengeDateUtc = stats.LastChallengeDate.Date;
+
+        // Check if it's a new day by comparing dates without time
+        bool isNewDay = lastChallengeDateUtc < currentDateUtc;
+
         if (isNewDay)
         {
-            _logger.LogInformation("New day detected for user {UserId}, updating streak from {OldStreak}",
-                stats.UserId, stats.CurrentStreak);
+            _logger.LogInformation("New day detected for user {UserId}, last challenge: {LastDate}, current date: {CurrentDate}",
+                stats.UserId, lastChallengeDateUtc.ToString("yyyy-MM-dd"), currentDateUtc.ToString("yyyy-MM-dd"));
 
             // It's a new day
             stats.CurrentStreak += 1;
@@ -226,6 +237,11 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             // Reset today's counters since it's a new day
             stats.TodayCorrectAnswerCount = 0;
             stats.TodayIncorrectAnswerCount = 0;
+        }
+        else
+        {
+            _logger.LogInformation("Same day activity for user {UserId}, last challenge: {LastDate}, current date: {CurrentDate}",
+                stats.UserId, lastChallengeDateUtc.ToString("yyyy-MM-dd"), currentDateUtc.ToString("yyyy-MM-dd"));
         }
 
         // Update longest streak if needed
@@ -247,9 +263,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             stats.TodayIncorrectAnswerCount += 1;
             stats.TotalIncorrectAnswers += 1;
         }
-
-        // Increment total challenges completed
-        stats.TotalChallengesCompleted += 1;
     }
 
     /// <summary>
