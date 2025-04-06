@@ -10,6 +10,32 @@ namespace Lithuaningo.API.Services.Interfaces
     public interface IFlashcardService
     {
         /// <summary>
+        /// Retrieves a specific flashcard by its ID
+        /// </summary>
+        /// <param name="flashcardId">The ID of the flashcard to retrieve</param>
+        /// <returns>The flashcard model if found, otherwise throws an exception</returns>
+        Task<Flashcard> GetFlashcardByIdAsync(Guid flashcardId);
+
+        /// <summary>
+        /// Retrieves multiple flashcards by their IDs
+        /// </summary>
+        /// <param name="flashcardIds">Collection of flashcard IDs to retrieve</param>
+        /// <returns>Collection of found flashcards (may not include all requested IDs if some weren't found)</returns>
+        Task<IEnumerable<Flashcard>> GetFlashcardsByIdsAsync(IEnumerable<Guid> flashcardIds);
+
+        /// <summary>
+        /// Retrieves flashcards based on specified criteria as model objects for internal use
+        /// </summary>
+        /// <param name="category">The flashcard category</param>
+        /// <param name="difficulty">The difficulty level</param>
+        /// <param name="limit">Maximum number of flashcards to retrieve</param>
+        /// <returns>A collection of Flashcard model objects</returns>
+        Task<IEnumerable<Flashcard>> RetrieveFlashcardModelsAsync(
+            FlashcardCategory? category = null,
+            DifficultyLevel? difficulty = null,
+            int? limit = null);
+
+        /// <summary>
         /// Generates flashcards using AI based on provided parameters without saving them
         /// </summary>
         /// <param name="request">Parameters for flashcard generation</param>
@@ -18,12 +44,12 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<IEnumerable<FlashcardResponse>> GenerateFlashcardsAsync(FlashcardRequest request, int contextSampleSize = 100);
 
         /// <summary>
-        /// Gets flashcards for a category, generating new ones if needed
+        /// Gets flashcards for a category, generating new ones if needed, with spaced repetition for users
         /// </summary>
         /// <param name="request">The flashcard request details</param>
         /// <param name="userId">The ID of the user requesting flashcards</param>
         /// <returns>A list of flashcard DTOs</returns>
-        Task<IEnumerable<FlashcardResponse>> GetFlashcardsAsync(FlashcardRequest request, string userId);
+        Task<IEnumerable<FlashcardResponse>> GetUserLearningFlashcardsAsync(FlashcardRequest request, string userId);
 
         /// <summary>
         /// Generates an image for a flashcard using AI and updates the flashcard's ImageUrl

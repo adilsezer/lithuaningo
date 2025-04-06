@@ -46,9 +46,9 @@ namespace Lithuaningo.API.Controllers
         /// <response code="500">If there was an error processing the request</response>
         [HttpGet]
         [SwaggerOperation(
-            Summary = "Get flashcards for a category",
-            Description = "Retrieves flashcards for the specified category and difficulty level. If there are not enough unseen flashcards, generates new ones using AI.",
-            OperationId = "GetFlashcards",
+            Summary = "Get learning flashcards for a user",
+            Description = "Retrieves flashcards for the specified category and difficulty level with spaced repetition. If there are not enough unseen flashcards, generates new ones using AI.",
+            OperationId = "GetUserLearningFlashcards",
             Tags = new[] { "Flashcard" }
         )]
         [SwaggerResponse(StatusCodes.Status200OK, "The flashcards were successfully retrieved", typeof(IEnumerable<FlashcardResponse>))]
@@ -70,18 +70,19 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}",
+                _logger.LogInformation("Getting learning flashcards for user {UserId}, category '{Category}', difficulty '{Difficulty}'{Hint}",
+                    effectiveUserId,
                     request.PrimaryCategory,
                     request.Difficulty,
                     !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty);
 
-                var flashcardResponses = await _flashcardService.GetFlashcardsAsync(request, effectiveUserId);
+                var flashcardResponses = await _flashcardService.GetUserLearningFlashcardsAsync(request, effectiveUserId);
 
                 return Ok(flashcardResponses);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}",
+                _logger.LogError(ex, "Error getting learning flashcards for category '{Category}', difficulty '{Difficulty}'{Hint}",
                     request.PrimaryCategory,
                     request.Difficulty,
                     !string.IsNullOrEmpty(request.Hint) ? $" and hint '{request.Hint}'" : string.Empty);

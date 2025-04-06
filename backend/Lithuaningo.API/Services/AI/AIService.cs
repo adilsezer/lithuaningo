@@ -105,8 +105,8 @@ RULES:
 4. Provide practical, natural example sentences
 5. ALWAYS use the EXACT difficulty level requested by the user (0, 1, or 2)
 6. ALWAYS include the primary category in the categories array
-7. Do NOT create flashcards similar to existing flashcard texts provided
-8. Each flashcard must be unique in the set
+7. CRITICAL: Each flashcard must be SEMANTICALLY DISTINCT from any existing flashcards shown to you. Do not create variations or forms of the same word/concept
+8. Ensure variety within each category (not just similar words/concepts)
 
 DIFFICULTY SPECIFICATIONS - USE EXACTLY AS REQUESTED:
 - Basic (0): Most common everyday vocabulary (top 500-1000 frequency), concepts learned in first 1-3 months
@@ -569,14 +569,20 @@ EXAMPLE OUTPUT:
                 prompt.AppendLine($"Hint: {request.Hint}");
             }
 
-            // Add a limited set of existing content to avoid duplicates
+            // Add existing content to avoid duplicates
             if (existingFlashcardFrontTexts?.Any() == true)
             {
-                prompt.AppendLine("\nAvoid creating flashcards similar to these existing content:");
-                foreach (var text in existingFlashcardFrontTexts)
-                {
-                    prompt.AppendLine($"- {text}");
-                }
+                prompt.AppendLine("\nIMPORTANT: Do NOT create flashcards similar to these existing words:");
+
+                // Format existing words in a clean comma-separated list
+                var existingWords = string.Join(", ",
+                    existingFlashcardFrontTexts
+                    .Where(t => !string.IsNullOrEmpty(t))
+                    .OrderBy(t => t)
+                    .Select(t => t.Trim()));
+
+                prompt.AppendLine(existingWords);
+                prompt.AppendLine("\nCreate only flashcards that are conceptually distinct from these.");
             }
 
             var messages = new List<ChatMessage>
