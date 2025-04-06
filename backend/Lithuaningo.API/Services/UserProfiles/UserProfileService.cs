@@ -1,16 +1,10 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Lithuaningo.API.Models;
+using AutoMapper;
 using Lithuaningo.API.DTOs.UserProfile;
+using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using static Supabase.Postgrest.Constants;
 using Supabase;
-using AutoMapper;
 
 namespace Lithuaningo.API.Services
 {

@@ -1,13 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Logging;
-using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.DTOs.Leaderboard;
-using Swashbuckle.AspNetCore.Annotations;
 using Lithuaningo.API.Authorization;
+using Lithuaningo.API.DTOs.Leaderboard;
+using Lithuaningo.API.Services.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {

@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services

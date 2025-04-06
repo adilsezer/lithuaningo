@@ -1,17 +1,8 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Security.Claims;
-using System.Threading.Tasks;
-using AutoMapper;
 using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.Settings;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers

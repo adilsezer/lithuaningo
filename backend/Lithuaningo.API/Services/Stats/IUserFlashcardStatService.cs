@@ -1,6 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Services.Interfaces

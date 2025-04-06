@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.UserProfile;
 
 namespace Lithuaningo.API.Services.Interfaces

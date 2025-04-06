@@ -1,15 +1,10 @@
-using Lithuaningo.API.Models;
+using AutoMapper;
 using Lithuaningo.API.DTOs.UserChallengeStats;
+using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using static Supabase.Postgrest.Constants;
 using Supabase;
-using AutoMapper;
 
 namespace Lithuaningo.API.Services;
 
@@ -93,7 +88,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             var statsResponse = _mapper.Map<UserChallengeStatsResponse>(stats);
             // HasCompletedTodayChallenge is now set in the mapper
-            
+
             await _cache.SetAsync(cacheKey, statsResponse,
                 TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
             _logger.LogInformation("Retrieved and cached challenge stats for user {UserId}", userId);
@@ -118,7 +113,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         {
             // Get the current stats DTO to calculate score difference for leaderboard
             var currentStatsDto = await GetUserChallengeStatsAsync(userId);
-            
+
             // Get the entity from the database for updating
             var databaseResponse = await _supabaseClient
                 .From<UserChallengeStats>()
@@ -132,10 +127,10 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             }
 
             bool isNewDay = statsEntity.LastChallengeDate.Date != DateTime.UtcNow.Date;
-            
+
             // Calculate the number of new correct answers
             int newCorrectAnswers = request.TodayCorrectAnswers - currentStatsDto.TodayCorrectAnswers;
-            
+
             // Update streak logic
             if (isNewDay)
             {
@@ -155,7 +150,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                 statsEntity.TodayCorrectAnswerCount = request.TodayCorrectAnswers;
                 statsEntity.TodayIncorrectAnswerCount = request.TodayIncorrectAnswers;
             }
-            
+
             statsEntity.TotalChallengesCompleted = request.TotalChallengesCompleted;
             statsEntity.TotalCorrectAnswers = request.TotalCorrectAnswers;
             statsEntity.TotalIncorrectAnswers = request.TotalIncorrectAnswers;
@@ -167,7 +162,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             // Invalidate cache
             await _cacheInvalidator.InvalidateUserChallengeStatsAsync(userId);
-            
+
             // If there are new correct answers, update the leaderboard
             if (newCorrectAnswers > 0)
             {
@@ -175,7 +170,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                 await _leaderboardService.UpdateLeaderboardEntryAsync(userId, newCorrectAnswers);
                 _logger.LogInformation("Updated leaderboard for user {UserId} with {Points} points", userId, newCorrectAnswers);
             }
-            
+
             _logger.LogInformation("Updated challenge stats for user {UserId}", userId);
         }
         catch (Exception ex)
@@ -184,7 +179,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             throw;
         }
     }
-    
+
     public async Task<UserChallengeStatsResponse> CreateUserChallengeStatsAsync(CreateUserChallengeStatsRequest request)
     {
         try
@@ -202,12 +197,12 @@ public class UserChallengeStatsService : IUserChallengeStatsService
                 var existingStat = existingStats.Models.First();
                 var existingStatsResponse = _mapper.Map<UserChallengeStatsResponse>(existingStat);
                 // HasCompletedTodayChallenge is now set in the mapper
-                
+
                 // Refresh the cache with existing stats
                 var existingCacheKey = $"{CacheKeyPrefix}{request.UserId}";
                 await _cache.SetAsync(existingCacheKey, existingStatsResponse,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-                
+
                 return existingStatsResponse;
             }
 
@@ -248,4 +243,4 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             throw;
         }
     }
-} 
+}

@@ -1,17 +1,12 @@
-using Lithuaningo.API.Models;
+using AutoMapper;
 using Lithuaningo.API.DTOs.Leaderboard;
+using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Lithuaningo.API.Utilities;
-using static Supabase.Postgrest.Constants;
+using Microsoft.Extensions.Options;
 using Supabase;
-using AutoMapper;
+using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services
 {
@@ -47,26 +42,26 @@ namespace Lithuaningo.API.Services
             try
             {
                 var currentWeek = DateUtils.GetCurrentWeekPeriod();
-                
+
                 // Use a dedicated current week cache key
                 var cacheKey = $"{CacheKeyPrefix}current";
                 var cached = await _cache.GetAsync<List<LeaderboardEntryResponse>>(cacheKey);
-                
+
                 if (cached != null)
                 {
                     _logger.LogInformation("Retrieved current week leaderboard from cache for week {WeekId}", currentWeek);
                     return cached;
                 }
-                
+
                 // Get the actual data
                 var leaderboard = await GetWeekLeaderboardAsync(currentWeek);
-                
+
                 // Cache under the current week key as well
                 await _cache.SetAsync(cacheKey, leaderboard,
                     TimeSpan.FromMinutes(_cacheSettings.LeaderboardCacheMinutes));
-                    
+
                 _logger.LogInformation("Cached current week leaderboard for week {WeekId}", currentWeek);
-                
+
                 return leaderboard;
             }
             catch (Exception ex)
@@ -107,7 +102,7 @@ namespace Lithuaningo.API.Services
                 await _cache.SetAsync(cacheKey, mappedEntries,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
 
-                _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries", 
+                _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries",
                     weekId, entriesResponse.Models.Count);
 
                 return mappedEntries;
@@ -164,7 +159,7 @@ namespace Lithuaningo.API.Services
                         .Update();
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}, added {Score} points", 
+                    _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}, added {Score} points",
                         updatedEntry.Id, userId, score);
                 }
                 else
@@ -183,7 +178,7 @@ namespace Lithuaningo.API.Services
                         .Insert(newEntry);
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId} with initial score {Score}", 
+                    _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId} with initial score {Score}",
                         updatedEntry.Id, userId, score);
                 }
 

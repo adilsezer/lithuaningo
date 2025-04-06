@@ -14,7 +14,6 @@ using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Services.Storage;
 using Lithuaningo.API.Settings;
 using Lithuaningo.API.Swagger;
-using Microsoft.AspNetCore.Antiforgery;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;

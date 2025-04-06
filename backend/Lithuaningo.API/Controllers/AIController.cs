@@ -1,7 +1,6 @@
-using Lithuaningo.API.DTOs.AI;
-using Lithuaningo.API.Services.AI;
-using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Authorization;
+using Lithuaningo.API.DTOs.AI;
+using Lithuaningo.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -62,7 +61,7 @@ public class AIController : BaseApiController
             // Process the request
             var response = await _aiService.ProcessRequestAsync(
                 request.Prompt,
-                request.Context, 
+                request.Context,
                 request.ServiceType);
 
             // Return the response
@@ -76,7 +75,7 @@ public class AIController : BaseApiController
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error processing AI request: {Message}", ex.Message);
-            return StatusCode(StatusCodes.Status500InternalServerError, 
+            return StatusCode(StatusCodes.Status500InternalServerError,
                 "An error occurred processing your request.");
         }
     }
@@ -104,4 +103,4 @@ public class AIController : BaseApiController
         request.ServiceType = "chat";
         return await ProcessRequest(request);
     }
-} 
+}

@@ -1,15 +1,10 @@
-using System;
-using System.Threading.Tasks;
-using AutoMapper;
 using FluentValidation;
 using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.Annotations;
 using System.Security.Claims;
-using Microsoft.AspNetCore.Http;
 using Lithuaningo.API.Authorization;
 
 namespace Lithuaningo.API.Controllers

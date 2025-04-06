@@ -2,8 +2,6 @@ using Amazon.S3;
 using Amazon.S3.Model;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
-using Microsoft.Extensions.Options;
-using Microsoft.Extensions.Logging;
 
 namespace Lithuaningo.API.Services.Storage;
 
@@ -58,15 +56,15 @@ public class StorageService : IStorageService, IDisposable
                 "audio/mpeg" => ".mp3",
                 _ => ".png" // Default to png for images and anything else
             };
-            
+
             // Override with explicit extension if provided
             if (!string.IsNullOrEmpty(fileExtension))
             {
                 extension = fileExtension;
             }
-            
+
             var fileName = $"{folder}/{subfolder}/{Guid.NewGuid()}{extension}";
-            
+
             using var memoryStream = new MemoryStream(data);
 
             var putRequest = new PutObjectRequest
@@ -110,7 +108,7 @@ public class StorageService : IStorageService, IDisposable
             // Extract the file key from the URL
             // The URL format is: https://customdomain.com/folder/subfolder/filename.ext
             string key = ExtractKeyFromUrl(fileUrl);
-            
+
             if (string.IsNullOrEmpty(key))
             {
                 return; // Invalid URL format, nothing to delete

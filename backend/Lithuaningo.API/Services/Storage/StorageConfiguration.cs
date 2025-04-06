@@ -2,9 +2,6 @@ using Amazon.Runtime;
 using Amazon.S3;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
-using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.WebEncoders;
 
 namespace Lithuaningo.API.Services.Storage;
 
@@ -27,7 +24,7 @@ public class StorageConfiguration : IStorageConfiguration
     public StorageSettings LoadConfiguration()
     {
         var settings = _configuration.GetSection("Storage").Get<StorageSettings>();
-        
+
         if (settings == null)
         {
             throw new InvalidOperationException(
@@ -37,10 +34,10 @@ public class StorageConfiguration : IStorageConfiguration
         }
 
         settings.Validate();
-        
-        _logger.LogInformation("Storage configuration loaded successfully from {Environment} environment", 
+
+        _logger.LogInformation("Storage configuration loaded successfully from {Environment} environment",
             _environment.EnvironmentName);
-            
+
         return settings;
     }
 
@@ -67,4 +64,4 @@ public class StorageConfiguration : IStorageConfiguration
             s3Config
         );
     }
-} 
+}
