@@ -17,13 +17,6 @@ namespace Lithuaningo.API.Services.Interfaces
         Task<Flashcard> GetFlashcardByIdAsync(Guid flashcardId);
 
         /// <summary>
-        /// Retrieves multiple flashcards by their IDs
-        /// </summary>
-        /// <param name="flashcardIds">Collection of flashcard IDs to retrieve</param>
-        /// <returns>Collection of found flashcards (may not include all requested IDs if some weren't found)</returns>
-        Task<IEnumerable<Flashcard>> GetFlashcardsByIdsAsync(IEnumerable<Guid> flashcardIds);
-
-        /// <summary>
         /// Retrieves flashcards based on specified criteria as model objects for internal use
         /// </summary>
         /// <param name="category">The flashcard category</param>
