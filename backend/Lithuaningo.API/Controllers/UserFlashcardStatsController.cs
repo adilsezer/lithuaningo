@@ -36,7 +36,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="500">If there was an error processing the request</response>
         [HttpPost("submit-answer")]
         [SwaggerOperation(
-            Summary = "Submit flashcard answer",
+            Summary = "Submits a flashcard answer",
             Description = "Submits a flashcard answer and automatically updates all relevant statistics including streak, answer counts, and leaderboard",
             OperationId = "SubmitFlashcardAnswer",
             Tags = new[] { "UserFlashcardStats" }
