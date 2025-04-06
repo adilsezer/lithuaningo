@@ -19,4 +19,9 @@ public class SubmitChallengeAnswerRequest
     /// </summary>
     [Required]
     public Guid ChallengeId { get; set; }
+
+    /// <summary>
+    /// Optional user ID override (primarily for testing/development)
+    /// </summary>
+    public string? UserId { get; set; }
 }
