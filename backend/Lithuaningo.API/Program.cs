@@ -1,28 +1,28 @@
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Lithuaningo.API.Controllers;
+using Lithuaningo.API.Filters;
+using Lithuaningo.API.Mapping;
+using Lithuaningo.API.Mappings;
+using Lithuaningo.API.Middleware;
 using Lithuaningo.API.Services;
+using Lithuaningo.API.Services.AI;
+using Lithuaningo.API.Services.Auth;
+using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Services.Storage;
 using Lithuaningo.API.Settings;
-using Lithuaningo.API.Filters;
 using Lithuaningo.API.Swagger;
-using Microsoft.AspNetCore.Http.Features;
-using Lithuaningo.API.Mappings;
-using Lithuaningo.API.Mapping;
-using FluentValidation;
-using FluentValidation.AspNetCore;
-using Lithuaningo.API.Middleware;
 using Microsoft.AspNetCore.Antiforgery;
-using Microsoft.AspNetCore.Mvc;
-using Lithuaningo.API.Services.Cache;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
-using Lithuaningo.API.Services.Auth;
-using Lithuaningo.API.Services.AI;
-using System.Text;
-using System.Security.Cryptography.X509Certificates;
 
 // TODO: Add HTTPS to the API when deploying to production
 
@@ -49,22 +49,22 @@ if (certificate != null)
 static X509Certificate2 LoadCertificate(IWebHostEnvironment environment, IConfiguration configuration)
 {
     var certificatePath = Path.Combine(environment.ContentRootPath, "config", "certificate.pfx");
-    
+
     try
     {
         // Try to get certificate password from configuration
         var certPassword = configuration["DataProtection:CertificatePassword"];
-        
+
         // If password exists, use it, otherwise try to load without password
         if (!string.IsNullOrEmpty(certPassword))
         {
-            return new X509Certificate2(certificatePath, certPassword, 
+            return new X509Certificate2(certificatePath, certPassword,
                 X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
         }
-        
+
         // Try loading without password
-        return new X509Certificate2(certificatePath, 
-            string.Empty, 
+        return new X509Certificate2(certificatePath,
+            string.Empty,
             X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
     }
     catch (Exception ex)
@@ -328,9 +328,12 @@ To authorize in Swagger UI:
     services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
     // Challenge Related Services
     services.AddScoped<IChallengeService, ChallengeService>();
-    
+
     // OpenAI Services
-    services.Configure<OpenAISettings>(configuration.GetSection(OpenAISettings.SectionName));
+    services.AddOptions<OpenAISettings>()
+        .Bind(configuration.GetSection(OpenAISettings.SectionName))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
     services.AddScoped<IAIService, AIService>();
 
     // CORS Configuration with secure defaults
