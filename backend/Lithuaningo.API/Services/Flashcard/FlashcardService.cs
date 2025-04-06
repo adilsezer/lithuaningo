@@ -223,12 +223,10 @@ namespace Lithuaningo.API.Services
                 int primaryCategoryValue = (int)request.PrimaryCategory;
 
                 // Get existing flashcard data for context
-                var (existingFrontTexts, frontTextCategoryMap) = await GetExistingFrontTextsAsync(
-                    primaryCategoryValue, contextSampleSize);
+                var existingFrontTexts = await GetExistingFrontTextsAsync(primaryCategoryValue, contextSampleSize);
 
                 // Generate flashcards with retries if needed
-                var flashcards = await GenerateUniqueFlashcardsAsync(
-                    request, existingFrontTexts, frontTextCategoryMap, primaryCategoryValue);
+                var flashcards = await GenerateUniqueFlashcardsAsync(request, existingFrontTexts);
 
                 // Save and return the generated flashcards
                 await SaveFlashcardsToSupabaseAsync(flashcards, request.UserId);
@@ -403,37 +401,24 @@ namespace Lithuaningo.API.Services
                 selectedFlashcards.OrderBy(_ => _random.Next()).ToList());
         }
 
-        private async Task<(List<string> FrontTexts, HashSet<string> CategoryMap)> GetExistingFrontTextsAsync(
+        private async Task<List<string>> GetExistingFrontTextsAsync(
             int categoryValue,
             int sampleSize = 100)
         {
             var cacheKey = $"{CacheKeyPrefix}front-texts:category:{categoryValue}:sample:{sampleSize}";
 
             // Try to get from cache first
-            var cached = await _cache.GetAsync<(List<string> FrontTexts, HashSet<string> CategoryMap)>(cacheKey);
-            if (cached.FrontTexts != null && cached.CategoryMap != null)
+            var cached = await _cache.GetAsync<List<string>>(cacheKey);
+            if (cached != null)
             {
-                _logger.LogInformation("Retrieved front texts from cache for category {Category}", categoryValue);
+                _logger.LogInformation("Retrieved {Count} front texts from cache for category {Category}",
+                    cached.Count, categoryValue);
                 return cached;
             }
 
-            // Build the category map - fetch all front texts with matching category
-            var categoryFlashcardsResult = await _supabaseService.Client
-                .From<Flashcard>()
-                .Select("front_text, categories")
-                .Filter(f => f.Categories, Operator.Contains, new List<object> { categoryValue })
-                .Get();
+            var frontTexts = new List<string>();
 
-            var categoryMap = new HashSet<string>();
-            if (categoryFlashcardsResult.Models != null)
-            {
-                foreach (var flashcard in categoryFlashcardsResult.Models)
-                {
-                    categoryMap.Add($"{flashcard.FrontText.ToLowerInvariant()}:{categoryValue}");
-                }
-            }
-
-            // First, count the total number of available flashcards
+            // First, count the total number of available flashcards (needed for random offset)
             var totalFlashcards = await _supabaseService.Client
                 .From<Flashcard>()
                 .Count(Supabase.Postgrest.Constants.CountType.Exact);
@@ -447,27 +432,55 @@ namespace Lithuaningo.API.Services
             _logger.LogInformation("Using random offset {Offset} from maximum {MaxOffset} possible (total: {Total} flashcards)",
                 offset, maxOffset, totalFlashcards);
 
-            var frontTextsResult = await _supabaseService.Client
+            // First, get the specific category flashcards
+            var categoryFlashcards = await _supabaseService.Client
                 .From<Flashcard>()
                 .Select("front_text")
-                .Limit(sampleSize)
-                .Offset(offset)
+                .Filter(f => f.Categories, Operator.Contains, new List<object> { categoryValue })
                 .Get();
 
-            var frontTexts = frontTextsResult.Models?
-                .Select(f => f.FrontText)
-                .ToList() ?? new List<string>();
+            // Process front texts
+            if (categoryFlashcards.Models != null)
+            {
+                frontTexts.AddRange(categoryFlashcards.Models.Select(f => f.FrontText));
+                _logger.LogInformation("Retrieved {Count} flashcards for category {Category}",
+                    categoryFlashcards.Models.Count, categoryValue);
+            }
 
-            var result = (frontTexts, categoryMap);
+            // Get random sample of front texts from all flashcards using the offset
+            // Only fetch what we need if we don't already have enough front texts
+            if (frontTexts.Count < sampleSize)
+            {
+                var remainingSampleSize = sampleSize - frontTexts.Count;
+
+                if (remainingSampleSize > 0)
+                {
+                    var randomSample = await _supabaseService.Client
+                        .From<Flashcard>()
+                        .Select("front_text")
+                        .Limit(remainingSampleSize)
+                        .Offset(offset)
+                        .Get();
+
+                    if (randomSample.Models != null)
+                    {
+                        // Add the random sample front texts
+                        frontTexts.AddRange(randomSample.Models.Select(f => f.FrontText));
+                    }
+                }
+            }
+
+            // Remove duplicates and take only what we need
+            frontTexts = frontTexts.Distinct().Take(sampleSize).ToList();
 
             // Cache the result
-            await _cache.SetAsync(cacheKey, result,
+            await _cache.SetAsync(cacheKey, frontTexts,
                 TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
 
             _logger.LogInformation("Cached {Count} random front texts for category {Category}",
                 frontTexts.Count, categoryValue);
 
-            return result;
+            return frontTexts;
         }
 
         #endregion
@@ -476,13 +489,16 @@ namespace Lithuaningo.API.Services
 
         private async Task<List<Flashcard>> GenerateUniqueFlashcardsAsync(
             FlashcardRequest request,
-            List<string> existingFrontTexts,
-            HashSet<string> frontTextCategoryMap,
-            int primaryCategoryValue)
+            List<string> existingFrontTexts)
         {
             const int maxAttempts = 3;
             int attemptCount = 0;
             List<Flashcard> flashcards = new List<Flashcard>();
+
+            // Create a case-insensitive HashSet of front texts to efficiently check for duplicates
+            var frontTextLookup = new HashSet<string>(
+                existingFrontTexts.Select(text => text.ToLowerInvariant()),
+                StringComparer.OrdinalIgnoreCase);
 
             // Create request
             var currentRequest = new FlashcardRequest
@@ -517,9 +533,9 @@ namespace Lithuaningo.API.Services
                 // Generate flashcards
                 var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, existingFrontTexts);
 
-                // Filter out duplicates
+                // Filter out duplicates based on front text only
                 var uniqueNewFlashcards = newFlashcards
-                    .Where(f => !frontTextCategoryMap.Contains($"{f.FrontText.ToLowerInvariant()}:{primaryCategoryValue}"))
+                    .Where(f => !frontTextLookup.Contains(f.FrontText.ToLowerInvariant()))
                     .ToList();
 
                 // Add unique flashcards to our collection
@@ -528,7 +544,7 @@ namespace Lithuaningo.API.Services
                 // Update tracking to avoid duplicates in next attempt
                 foreach (var card in uniqueNewFlashcards)
                 {
-                    frontTextCategoryMap.Add($"{card.FrontText.ToLowerInvariant()}:{primaryCategoryValue}");
+                    frontTextLookup.Add(card.FrontText.ToLowerInvariant());
                 }
 
                 // If we got enough flashcards, break early
