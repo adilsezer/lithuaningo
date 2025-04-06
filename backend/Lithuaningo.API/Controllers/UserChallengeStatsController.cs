@@ -8,7 +8,7 @@ namespace Lithuaningo.API.Controllers
 {
     /// <summary>
     /// Handles operations related to challenge statistics for users. These include retrieving stats,
-    /// updating daily streaks, adding experience points, marking flashcards as learned, and incrementing challenge completion counts.
+    /// updating daily streaks, tracking correct and incorrect answers, and managing challenge completion counts.
     /// </summary>
     [Authorize]
     [ApiVersion("1.0")]
@@ -34,10 +34,11 @@ namespace Lithuaningo.API.Controllers
         ///     GET /api/v1/UserChallengeStats/{userId}/stats
         /// 
         /// The response includes:
-        /// - Daily streak information
-        /// - Experience points
-        /// - Learned flashcard count
+        /// - Daily streak information (current and longest)
+        /// - Today's correct and incorrect answer counts
+        /// - Whether today's challenge is completed
         /// - Total challenges completed
+        /// - Total correct and incorrect answers
         /// </remarks>
         /// <param name="userId">The user's unique identifier (should be a valid GUID)</param>
         /// <returns>The user's challenge statistics</returns>
@@ -48,7 +49,7 @@ namespace Lithuaningo.API.Controllers
         [HttpGet("{userId}/stats")]
         [SwaggerOperation(
             Summary = "Retrieves challenge statistics for a user",
-            Description = "Gets detailed challenge statistics for a specified user",
+            Description = "Gets detailed challenge statistics for a specified user including streak information, answer counts, and completion status",
             OperationId = "GetChallengeStats",
             Tags = new[] { "UserChallengeStats" }
         )]
@@ -105,11 +106,17 @@ namespace Lithuaningo.API.Controllers
         ///         "challengeId": "00000000-0000-0000-0000-000000000000"
         ///     }
         /// 
-        /// This endpoint:
-        /// - Updates the daily streak
+        /// This endpoint automatically:
+        /// - Updates the daily streak (increments on first answer of a new day)
         /// - Increments correct/incorrect answer counts
+        /// - Updates longest streak if needed
         /// - Increments total challenges completed
         /// - Updates the leaderboard if the answer was correct
+        /// 
+        /// Notes:
+        /// - The userId must be a valid GUID
+        /// - The challengeId identifies which challenge was answered
+        /// - WasCorrect indicates if the user's answer was correct
         /// </remarks>
         /// <param name="userId">The ID of the user submitting the answer</param>
         /// <param name="request">The challenge answer details</param>
@@ -121,7 +128,7 @@ namespace Lithuaningo.API.Controllers
         [HttpPost("{userId}/submit-answer")]
         [SwaggerOperation(
             Summary = "Submits a challenge answer",
-            Description = "Submits a challenge answer and automatically updates all relevant statistics including streak, answer counts, and leaderboard",
+            Description = "Submits a challenge answer and automatically updates all relevant statistics including streak, answer counts, and leaderboard position",
             OperationId = "SubmitChallengeAnswer",
             Tags = new[] { "UserChallengeStats" }
         )]

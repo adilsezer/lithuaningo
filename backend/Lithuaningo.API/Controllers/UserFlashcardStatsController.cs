@@ -9,6 +9,9 @@ using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.Controllers
 {
+    /// <summary>
+    /// Manages user statistics for flashcards, including tracking views, correct/incorrect answers, and mastery levels.
+    /// </summary>
     [Authorize]
     [ApiVersion("1.0")]
     [SwaggerTag("User Flashcard Statistics management endpoints")]
@@ -28,6 +31,21 @@ namespace Lithuaningo.API.Controllers
         /// <summary>
         /// Updates the statistics for a flashcard after user review
         /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/v1/UserFlashcardStats/submit-answer
+        ///     {
+        ///         "flashcardId": "0000000-0000-0000-0000-0000000000",
+        ///         "wasCorrect": true,
+        ///         "userId": null
+        ///     }
+        /// 
+        /// Notes:
+        /// - FlashcardId must be a valid GUID of an existing flashcard
+        /// - WasCorrect indicates if the user answered the flashcard correctly
+        /// - UserId can be left null (system will use the authenticated user's ID)
+        /// </remarks>
         /// <param name="request">The request object containing the flashcard ID, correctness, and optional user ID</param>
         /// <returns>The updated user flashcard statistics</returns>
         /// <response code="200">Returns the updated flashcard statistics</response>
@@ -37,7 +55,7 @@ namespace Lithuaningo.API.Controllers
         [HttpPost("submit-answer")]
         [SwaggerOperation(
             Summary = "Submits a flashcard answer",
-            Description = "Submits a flashcard answer and automatically updates all relevant statistics including streak, answer counts, and leaderboard",
+            Description = "Submits a flashcard answer and automatically updates all relevant statistics including answer counts and mastery level",
             OperationId = "SubmitFlashcardAnswer",
             Tags = new[] { "UserFlashcardStats" }
         )]
