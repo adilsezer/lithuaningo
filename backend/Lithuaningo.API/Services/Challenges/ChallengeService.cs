@@ -22,7 +22,6 @@ namespace Lithuaningo.API.Services.Challenges
         private const string CacheKeyPrefix = "challenge:";
         private readonly ILogger<ChallengeService> _logger;
         private readonly IMapper _mapper;
-        private readonly CacheInvalidator _cacheInvalidator;
         private readonly IAIService _aiService;
         private readonly IFlashcardService _flashcardService;
         private readonly Random _random;
@@ -33,7 +32,6 @@ namespace Lithuaningo.API.Services.Challenges
             IOptions<CacheSettings> cacheSettings,
             ILogger<ChallengeService> logger,
             IMapper mapper,
-            CacheInvalidator cacheInvalidator,
             IAIService aiService,
             IFlashcardService flashcardService,
             Random random)
@@ -43,7 +41,6 @@ namespace Lithuaningo.API.Services.Challenges
             _cacheSettings = cacheSettings.Value;
             _logger = logger;
             _mapper = mapper;
-            _cacheInvalidator = cacheInvalidator;
             _aiService = aiService;
             _flashcardService = flashcardService;
             _random = random;
