@@ -1,12 +1,11 @@
 using AutoMapper;
 using Lithuaningo.API.DTOs.UserProfile;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Supabase;
 using Microsoft.Extensions.Options;
 using Supabase;
 
-namespace Lithuaningo.API.Services
+namespace Lithuaningo.API.Services.UserProfile
 {
     public class UserProfileService : IUserProfileService
     {
@@ -53,7 +52,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var response = await _supabaseClient
-                    .From<UserProfile>()
+                    .From<Models.UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Get();
 
@@ -92,7 +91,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var existingProfile = await _supabaseClient
-                    .From<UserProfile>()
+                    .From<Models.UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Get();
 
@@ -105,7 +104,7 @@ namespace Lithuaningo.API.Services
                 _mapper.Map(request, profile);
 
                 var response = await _supabaseClient
-                    .From<UserProfile>()
+                    .From<Models.UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Update(profile);
 
@@ -142,7 +141,7 @@ namespace Lithuaningo.API.Services
                 }
 
                 await _supabaseClient
-                    .From<UserProfile>()
+                    .From<Models.UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Delete();
 
@@ -167,14 +166,14 @@ namespace Lithuaningo.API.Services
 
             try
             {
-                var profile = new UserProfile
+                var profile = new Models.UserProfile
                 {
                     Id = userGuid,
                     LastLoginAt = DateTime.UtcNow
                 };
 
                 await _supabaseClient
-                    .From<UserProfile>()
+                    .From<Models.UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Set(u => u.LastLoginAt, DateTime.UtcNow)
                     .Update();
@@ -204,7 +203,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var response = await _supabaseClient
-                    .From<UserProfile>()
+                    .From<Models.UserProfile>()
                     .Get();
 
                 var profiles = response.Models;

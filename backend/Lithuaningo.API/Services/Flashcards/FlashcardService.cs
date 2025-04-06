@@ -1,14 +1,14 @@
 using AutoMapper;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.Settings;
+using Lithuaningo.API.Services.Stats;
+using Lithuaningo.API.Services.Supabase;
 using Microsoft.Extensions.Options;
-using Supabase.Interfaces;
 using static Supabase.Postgrest.Constants;
 
-namespace Lithuaningo.API.Services
+namespace Lithuaningo.API.Services.Flashcards
 {
     /// <summary>
     /// Service for managing flashcards, including retrieval, generation, and media attachment
@@ -421,7 +421,7 @@ namespace Lithuaningo.API.Services
             // First, count the total number of available flashcards (needed for random offset)
             var totalFlashcards = await _supabaseService.Client
                 .From<Flashcard>()
-                .Count(Supabase.Postgrest.Constants.CountType.Exact);
+                .Count(CountType.Exact);
 
             // Calculate a safe maximum offset value - ensure we don't exceed available rows
             int maxOffset = Math.Max(0, totalFlashcards - sampleSize);

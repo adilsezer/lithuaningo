@@ -1,8 +1,8 @@
-using Lithuaningo.API.Models;
-using Lithuaningo.API.DTOs.AppInfo;
 using System.Threading.Tasks;
+using Lithuaningo.API.DTOs.AppInfo;
+using Lithuaningo.API.Models;
 
-namespace Lithuaningo.API.Services.Interfaces
+namespace Lithuaningo.API.Services.AppInfo
 {
     public interface IAppInfoService
     {

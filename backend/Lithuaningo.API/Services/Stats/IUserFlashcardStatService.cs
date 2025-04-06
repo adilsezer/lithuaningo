@@ -1,6 +1,6 @@
 using Lithuaningo.API.Models;
 
-namespace Lithuaningo.API.Services.Interfaces
+namespace Lithuaningo.API.Services.Stats
 {
     public interface IUserFlashcardStatService
     {

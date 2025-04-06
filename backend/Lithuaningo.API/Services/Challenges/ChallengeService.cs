@@ -1,28 +1,14 @@
-using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Text.Encodings.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.Text.RegularExpressions;
-using System.Text.Unicode;
-using System.Threading.Tasks;
 using AutoMapper;
 using Lithuaningo.API.DTOs.Challenge;
-using Lithuaningo.API.DTOs.Flashcard;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.Models.Challenge;
 using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Interfaces;
-using Lithuaningo.API.Settings;
-using Microsoft.Extensions.Logging;
+using Lithuaningo.API.Services.Flashcards;
+using Lithuaningo.API.Services.Supabase;
 using Microsoft.Extensions.Options;
 using Supabase;
 using static Supabase.Postgrest.Constants;
-namespace Lithuaningo.API.Services
+namespace Lithuaningo.API.Services.Challenges
 {
     /// <summary>
     /// A service for generating and retrieving daily challenge questions.

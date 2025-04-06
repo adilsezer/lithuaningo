@@ -1,7 +1,6 @@
-using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.UserChallengeStats;
 
-namespace Lithuaningo.API.Services.Interfaces
+namespace Lithuaningo.API.Services.Stats
 {
     public interface IUserChallengeStatsService
     {
@@ -19,7 +18,7 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <param name="userId">The ID of the user to update stats for.</param>
         /// <param name="request">The updated user challenge statistics.</param>
         Task UpdateUserChallengeStatsAsync(string userId, UpdateUserChallengeStatsRequest request);
-        
+
         /// <summary>
         /// Creates challenge statistics for a user.
         /// </summary>
@@ -27,4 +26,4 @@ namespace Lithuaningo.API.Services.Interfaces
         /// <returns>The created challenge statistics.</returns>
         Task<UserChallengeStatsResponse> CreateUserChallengeStatsAsync(CreateUserChallengeStatsRequest request);
     }
-} 
+}

@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.Challenge;
 
-namespace Lithuaningo.API.Services.Interfaces
+namespace Lithuaningo.API.Services.Challenges
 {
     /// <summary>
     /// Provides functionality for generating and retrieving daily challenge questions.

@@ -1,5 +1,8 @@
-public interface IRandomGenerator
+namespace Lithuaningo.API.Services.Shared
 {
-    int Next(int maxValue);
-    int Next(int minValue, int maxValue);
+    public interface IRandomGenerator
+    {
+        int Next(int maxValue);
+        int Next(int minValue, int maxValue);
+    }
 }

@@ -2,13 +2,12 @@ using AutoMapper;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Utilities;
 using Microsoft.Extensions.Options;
 using Supabase;
 using static Supabase.Postgrest.Constants;
-
-namespace Lithuaningo.API.Services
+namespace Lithuaningo.API.Services.Leaderboard
 {
     public class LeaderboardService : ILeaderboardService
     {
@@ -132,7 +131,7 @@ namespace Lithuaningo.API.Services
             {
                 // Get user info to verify user exists
                 var userResponse = await _supabaseClient
-                    .From<UserProfile>()
+                    .From<Models.UserProfile>()
                     .Where(u => u.Id == userGuid)
                     .Single();
 

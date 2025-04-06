@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Storage;
 using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Options;
 using OpenAI.Audio;

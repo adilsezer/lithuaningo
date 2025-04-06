@@ -8,4 +8,4 @@ public interface IAuthService
     string GetUserIdFromToken(string token);
     ClaimsPrincipal GetClaimsPrincipalFromToken(string token);
     bool IsAdmin(ClaimsPrincipal user);
-} 
+}

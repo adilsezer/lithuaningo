@@ -1,9 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
+using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Settings;
 using Microsoft.IdentityModel.Tokens;
 using Supabase;
-using Lithuaningo.API.Settings;
 
 namespace Lithuaningo.API.Services.Auth;
 
@@ -20,7 +21,7 @@ public class AuthService : IAuthService
     {
         _logger = logger;
         _settings = supabaseConfiguration.LoadConfiguration();
-        
+
         _logger.LogInformation("Initializing Supabase auth client with URL: {Url}", _settings.Url);
 
         var options = new SupabaseOptions
@@ -147,13 +148,13 @@ public class AuthService : IAuthService
         {
             var handler = new JwtSecurityTokenHandler();
             var principal = handler.ValidateToken(token, _tokenValidationParameters, out _);
-            
+
             var userId = principal.FindFirst("sub")?.Value;
             if (string.IsNullOrEmpty(userId))
             {
                 throw new InvalidOperationException("Token does not contain a user ID claim");
             }
-            
+
             return userId;
         }
         catch (Exception ex)
@@ -181,4 +182,4 @@ public class AuthService : IAuthService
     {
         return user.Claims.Any(c => c.Type == "role" && c.Value == "admin");
     }
-} 
+}

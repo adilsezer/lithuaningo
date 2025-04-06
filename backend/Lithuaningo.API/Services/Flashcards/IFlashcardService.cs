@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
-using Microsoft.AspNetCore.Http;
 
-namespace Lithuaningo.API.Services.Interfaces
+namespace Lithuaningo.API.Services.Flashcards
 {
     public interface IFlashcardService
     {

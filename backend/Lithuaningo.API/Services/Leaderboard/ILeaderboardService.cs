@@ -1,8 +1,6 @@
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.Leaderboard;
 
-namespace Lithuaningo.API.Services.Interfaces
+namespace Lithuaningo.API.Services.Leaderboard
 {
     public interface ILeaderboardService
     {

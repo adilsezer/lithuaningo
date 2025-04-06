@@ -1,7 +1,7 @@
 using System.Security.Claims;
 using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.Flashcard;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Flashcards;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 

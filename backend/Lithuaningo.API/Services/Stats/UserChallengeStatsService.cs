@@ -2,11 +2,12 @@ using AutoMapper;
 using Lithuaningo.API.DTOs.UserChallengeStats;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Leaderboard;
+using Lithuaningo.API.Services.Supabase;
 using Microsoft.Extensions.Options;
 using Supabase;
 
-namespace Lithuaningo.API.Services;
+namespace Lithuaningo.API.Services.Stats;
 
 public class UserChallengeStatsService : IUserChallengeStatsService
 {

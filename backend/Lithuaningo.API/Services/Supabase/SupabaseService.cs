@@ -1,7 +1,7 @@
 using Lithuaningo.API.Settings;
 using Supabase;
 
-namespace Lithuaningo.API.Services;
+namespace Lithuaningo.API.Services.Supabase;
 
 public interface ISupabaseService
 {
@@ -19,7 +19,7 @@ public class SupabaseService : ISupabaseService
         ILogger<SupabaseService> logger)
     {
         _logger = logger;
-        
+
         var settings = supabaseConfiguration.LoadConfiguration();
         _logger.LogInformation("Initializing Supabase client with URL: {Url}", settings.Url);
 
@@ -51,4 +51,4 @@ public class SupabaseService : ISupabaseService
             throw;
         }
     }
-} 
+}

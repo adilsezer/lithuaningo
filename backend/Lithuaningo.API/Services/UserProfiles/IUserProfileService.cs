@@ -1,6 +1,6 @@
 using Lithuaningo.API.DTOs.UserProfile;
 
-namespace Lithuaningo.API.Services.Interfaces
+namespace Lithuaningo.API.Services.UserProfile
 {
     public interface IUserProfileService
     {

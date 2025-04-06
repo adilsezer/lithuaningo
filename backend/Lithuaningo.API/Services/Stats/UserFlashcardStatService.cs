@@ -1,8 +1,8 @@
 using Lithuaningo.API.Models;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Supabase;
 using static Supabase.Postgrest.Constants;
 
-namespace Lithuaningo.API.Services
+namespace Lithuaningo.API.Services.Stats
 {
     public class UserFlashcardStatService : IUserFlashcardStatService
     {

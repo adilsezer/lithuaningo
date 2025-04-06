@@ -2,7 +2,7 @@ using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
 
-namespace Lithuaningo.API.Services.Interfaces;
+namespace Lithuaningo.API.Services.AI;
 
 /// <summary>
 /// Interface for handling AI interactions with OpenAI, providing functionality for chat, flashcard generation, and challenge creation.

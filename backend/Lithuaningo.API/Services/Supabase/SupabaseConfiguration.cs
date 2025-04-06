@@ -1,7 +1,7 @@
-using Lithuaningo.API.Settings;
 using System.Text.Json;
+using Lithuaningo.API.Settings;
 
-namespace Lithuaningo.API.Services;
+namespace Lithuaningo.API.Services.Supabase;
 
 public interface ISupabaseConfiguration
 {
@@ -27,7 +27,7 @@ public class SupabaseConfiguration : ISupabaseConfiguration
     public SupabaseSettings LoadConfiguration()
     {
         var settings = _configuration.GetSection("Supabase").Get<SupabaseSettings>();
-        
+
         if (settings == null)
         {
             throw new InvalidOperationException(
@@ -37,10 +37,10 @@ public class SupabaseConfiguration : ISupabaseConfiguration
         }
 
         settings.Validate();
-        
-        _logger.LogInformation("Supabase configuration loaded successfully from {Environment} environment", 
+
+        _logger.LogInformation("Supabase configuration loaded successfully from {Environment} environment",
             _environment.EnvironmentName);
-            
+
         return settings;
     }
-} 
+}

@@ -1,6 +1,6 @@
 using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.AppInfo;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.AppInfo;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;

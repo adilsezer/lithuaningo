@@ -2,25 +2,25 @@ using System;
 
 namespace Lithuaningo.API.Services.AI
 {
+  /// <summary>
+  /// Static class containing all AI prompt templates and instructions
+  /// </summary>
+  public static class AIPrompts
+  {
     /// <summary>
-    /// Static class containing all AI prompt templates and instructions
+    /// System instructions for chat interactions
     /// </summary>
-    public static class AIPrompts
-    {
-        /// <summary>
-        /// System instructions for chat interactions
-        /// </summary>
-        public const string CHAT_SYSTEM_INSTRUCTIONS =
-            "You are a Lithuanian language learning assistant named Lithuaningo AI. " +
-            "Only answer questions related to Lithuanian language, culture, history, or travel in Lithuania. " +
-            "For any questions not related to Lithuanian topics, politely explain that you can only help with Lithuanian-related topics. " +
-            "Always incorporate at least one Lithuanian word or fact in your responses to help the user learn. " +
-            "Use friendly, conversational language suitable for a language learning app.";
+    public const string CHAT_SYSTEM_INSTRUCTIONS =
+        "You are a Lithuanian language learning assistant named Lithuaningo AI. " +
+        "Only answer questions related to Lithuanian language, culture, history, or travel in Lithuania. " +
+        "For any questions not related to Lithuanian topics, politely explain that you can only help with Lithuanian-related topics. " +
+        "Always incorporate at least one Lithuanian word or fact in your responses to help the user learn. " +
+        "Use friendly, conversational language suitable for a language learning app.";
 
-        /// <summary>
-        /// System instructions for challenge generation
-        /// </summary>
-        public const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language challenges based on provided flashcard data.
+    /// <summary>
+    /// System instructions for challenge generation
+    /// </summary>
+    public const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language challenges based on provided flashcard data.
 
 FORMAT: Return a JSON array of 10 challenge objects with these properties:
 - question: A clear question using the template formats provided below
@@ -99,10 +99,10 @@ EXAMPLE OUTPUT:
   }
 ]";
 
-        /// <summary>
-        /// System instructions for flashcard generation
-        /// </summary>
-        public const string FLASHCARD_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language flashcards based on the given category and parameters.
+    /// <summary>
+    /// System instructions for flashcard generation
+    /// </summary>
+    public const string FLASHCARD_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language flashcards based on the given category and parameters.
 
 FORMAT: Return a JSON array of flashcard objects with these properties:
 {
@@ -186,26 +186,26 @@ EXAMPLE OUTPUT:
   }
 ]";
 
-        /// <summary>
-        /// Image generation prompt template
-        /// </summary>
-        public const string IMAGE_GENERATION_PROMPT =
-            "[TEXT_FREE=TRUE] Create a colorful, vivid visual representation of '{0}' for a language learning flashcard with these specifications:\n\n" +
-            "1. CONTENT: Single clear concept that represents the flashcard text meaning instantly\n" +
-            "2. STYLE: Bold, vibrant illustration with strong visual impact\n" +
-            "3. COLOR: Rich color palette (2-5 colors) with high contrast\n" +
-            "4. COMPOSITION: Centered subject with clean edges against simple background\n" +
-            "5. CLARITY: Must be immediately recognizable at small sizes\n\n" +
-            "CRITICAL REQUIREMENTS:\n" +
-            "- NO TEXT, LETTERS, NUMBERS OR SYMBOLS OF ANY KIND\n" +
-            "- NO WRITTEN WORDS IN ANY LANGUAGE\n" +
-            "- NO BORDERS, LABELS OR ANNOTATIONS\n" +
-            "- PURE VISUAL IMAGERY ONLY\n\n" +
-            "TYPE-BASED GUIDANCE:\n" +
-            "- For concrete nouns → show the exact object (e.g., 'bread' → loaf of bread)\n" +
-            "- For verbs → show action being performed (e.g., 'run' → person running)\n" +
-            "- For adjectives → show object with that quality (e.g., 'tall' → tall building)\n" +
-            "- For abstract concepts → use clear metaphor (e.g., 'freedom' → bird flying)\n\n" +
-            "Create a DALL-E optimized image that helps language learners instantly associate the visual with the meaning of '{0}'.";
-    }
+    /// <summary>
+    /// Image generation prompt template
+    /// </summary>
+    public const string IMAGE_GENERATION_PROMPT =
+        "[TEXT_FREE=TRUE] Create a colorful, vivid visual representation of '{0}' for a language learning flashcard with these specifications:\n\n" +
+        "1. CONTENT: Single clear concept that represents the flashcard text meaning instantly\n" +
+        "2. STYLE: Bold, vibrant illustration with strong visual impact\n" +
+        "3. COLOR: Rich color palette (2-5 colors) with high contrast\n" +
+        "4. COMPOSITION: Centered subject with clean edges against simple background\n" +
+        "5. CLARITY: Must be immediately recognizable at small sizes\n\n" +
+        "CRITICAL REQUIREMENTS:\n" +
+        "- NO TEXT, LETTERS, NUMBERS OR SYMBOLS OF ANY KIND\n" +
+        "- NO WRITTEN WORDS IN ANY LANGUAGE\n" +
+        "- NO BORDERS, LABELS OR ANNOTATIONS\n" +
+        "- PURE VISUAL IMAGERY ONLY\n\n" +
+        "TYPE-BASED GUIDANCE:\n" +
+        "- For concrete nouns → show the exact object (e.g., 'bread' → loaf of bread)\n" +
+        "- For verbs → show action being performed (e.g., 'run' → person running)\n" +
+        "- For adjectives → show object with that quality (e.g., 'tall' → tall building)\n" +
+        "- For abstract concepts → use clear metaphor (e.g., 'freedom' → bird flying)\n\n" +
+        "Create a DALL-E optimized image that helps language learners instantly associate the visual with the meaning of '{0}'.";
+  }
 }

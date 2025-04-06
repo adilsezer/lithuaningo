@@ -1,17 +1,11 @@
-using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Lithuaningo.API.Models;
+using AutoMapper;
 using Lithuaningo.API.DTOs.AppInfo;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Interfaces;
-using Microsoft.Extensions.Logging;
+using Lithuaningo.API.Services.Supabase;
 using Microsoft.Extensions.Options;
-using static Supabase.Postgrest.Constants;
 using Supabase;
-using AutoMapper;
 
-namespace Lithuaningo.API.Services
+namespace Lithuaningo.API.Services.AppInfo
 {
     public class AppInfoService : IAppInfoService
     {
@@ -59,7 +53,7 @@ namespace Lithuaningo.API.Services
             try
             {
                 var response = await _supabaseClient
-                    .From<AppInfo>()
+                    .From<Models.AppInfo>()
                     .Where(a => a.Platform == normalizedPlatform)
                     .Single();
 
@@ -67,7 +61,7 @@ namespace Lithuaningo.API.Services
                 if (appInfo == null)
                 {
                     // Create a default record if not found
-                    appInfo = new AppInfo
+                    appInfo = new Models.AppInfo
                     {
                         Id = Guid.NewGuid(),
                         Platform = normalizedPlatform,
@@ -114,12 +108,12 @@ namespace Lithuaningo.API.Services
             {
                 // Attempt to fetch an existing record
                 var response = await _supabaseClient
-                    .From<AppInfo>()
+                    .From<Models.AppInfo>()
                     .Where(a => a.Platform == normalizedPlatform)
                     .Single();
 
                 var existingAppInfo = response;
-                var appInfo = new AppInfo
+                var appInfo = new Models.AppInfo
                 {
                     Id = existingAppInfo?.Id ?? Guid.NewGuid(),
                     Platform = normalizedPlatform,
@@ -134,7 +128,7 @@ namespace Lithuaningo.API.Services
 
                 // Perform upsert operation
                 var upsertResponse = await _supabaseClient
-                    .From<AppInfo>()
+                    .From<Models.AppInfo>()
                     .Upsert(appInfo);
 
                 var upsertedAppInfo = upsertResponse.Models.First();
@@ -165,7 +159,7 @@ namespace Lithuaningo.API.Services
             {
                 // Get the app info first to know which cache key to invalidate
                 var response = await _supabaseClient
-                    .From<AppInfo>()
+                    .From<Models.AppInfo>()
                     .Where(a => a.Id == appInfoId)
                     .Get();
 
@@ -178,7 +172,7 @@ namespace Lithuaningo.API.Services
 
                 // Delete from database
                 await _supabaseClient
-                    .From<AppInfo>()
+                    .From<Models.AppInfo>()
                     .Where(a => a.Id == appInfoId)
                     .Delete();
 

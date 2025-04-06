@@ -6,12 +6,17 @@ using Lithuaningo.API.Controllers;
 using Lithuaningo.API.Mapping;
 using Lithuaningo.API.Mappings;
 using Lithuaningo.API.Middleware;
-using Lithuaningo.API.Services;
 using Lithuaningo.API.Services.AI;
+using Lithuaningo.API.Services.AppInfo;
 using Lithuaningo.API.Services.Auth;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Challenges;
+using Lithuaningo.API.Services.Flashcards;
+using Lithuaningo.API.Services.Leaderboard;
+using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Storage;
+using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Services.UserProfile;
 using Lithuaningo.API.Settings;
 using Lithuaningo.API.Swagger;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,6 +26,7 @@ using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationM
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+
 
 // TODO: Add HTTPS to the API when deploying to production
 

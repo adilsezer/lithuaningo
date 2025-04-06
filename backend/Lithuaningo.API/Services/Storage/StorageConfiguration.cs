@@ -1,6 +1,5 @@
 using Amazon.Runtime;
 using Amazon.S3;
-using Lithuaningo.API.Services.Interfaces;
 using Lithuaningo.API.Settings;
 
 namespace Lithuaningo.API.Services.Storage;

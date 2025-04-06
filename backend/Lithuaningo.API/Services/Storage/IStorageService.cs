@@ -1,4 +1,4 @@
-namespace Lithuaningo.API.Services.Interfaces;
+namespace Lithuaningo.API.Services.Storage;
 
 public interface IStorageService
 {
@@ -12,6 +12,10 @@ public interface IStorageService
     /// <param name="fileExtension">The file extension (with dot, e.g. ".png")</param>
     /// <returns>The URL of the uploaded file</returns>
     Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string? fileExtension = null);
-    
+
+    /// <summary>
+    /// Deletes a file from storage
+    /// </summary>
+    /// <param name="fileUrl">The URL of the file to delete</param>
     Task DeleteFileAsync(string fileUrl);
-} 
+}

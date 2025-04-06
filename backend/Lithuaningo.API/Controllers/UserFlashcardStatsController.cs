@@ -1,11 +1,11 @@
+using System.Security.Claims;
 using FluentValidation;
+using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Models;
-using Lithuaningo.API.Services.Interfaces;
+using Lithuaningo.API.Services.Stats;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
-using System.Security.Claims;
-using Lithuaningo.API.Authorization;
 
 namespace Lithuaningo.API.Controllers
 {
@@ -60,7 +60,7 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Updating flashcard stats for flashcard {FlashcardId} and user {UserId}", 
+                _logger.LogInformation("Updating flashcard stats for flashcard {FlashcardId} and user {UserId}",
                     request.FlashcardId, effectiveUserId);
 
                 var result = await _userFlashcardStatService.UpdateFlashcardStatsAsync(
@@ -82,4 +82,4 @@ namespace Lithuaningo.API.Controllers
             }
         }
     }
-} 
+}
