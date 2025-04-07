@@ -113,37 +113,26 @@ namespace Lithuaningo.API.Services.Leaderboard
             }
         }
 
-        public async Task<LeaderboardEntryResponse> UpdateLeaderboardEntryAsync(string userId, int score)
+        public async Task<LeaderboardEntryResponse> UpdateLeaderboardEntryAsync(UpdateLeaderboardEntryRequest request)
         {
-            if (!Guid.TryParse(userId, out var userGuid))
+            if (request == null)
             {
-                throw new ArgumentException("Invalid user ID format", nameof(userId));
+                throw new ArgumentNullException(nameof(request));
             }
 
-            if (score < 0)
+            if (request.ScoreToAdd < 0)
             {
-                throw new ArgumentException("Points to add cannot be negative", nameof(score));
+                throw new ArgumentException("Score to add cannot be negative", nameof(request.ScoreToAdd));
             }
 
             var currentWeek = DateUtils.GetCurrentWeekPeriod();
 
             try
             {
-                // Get user info to verify user exists
-                var userResponse = await _supabaseClient
-                    .From<Models.UserProfile>()
-                    .Where(u => u.Id == userGuid)
-                    .Single();
-
-                if (userResponse == null)
-                {
-                    throw new InvalidOperationException($"User {userId} not found");
-                }
-
                 // Try to find an existing entry for this user in the current week
                 var existingResponse = await _supabaseClient
                     .From<LeaderboardEntry>()
-                    .Where(l => l.UserId == userGuid)
+                    .Where(l => l.UserId == request.UserId)
                     .Where(l => l.WeekId == currentWeek)
                     .Single();
 
@@ -154,12 +143,12 @@ namespace Lithuaningo.API.Services.Leaderboard
                     var response = await _supabaseClient
                         .From<LeaderboardEntry>()
                         .Where(l => l.Id == existingResponse.Id)
-                        .Set(l => l.Score, existingResponse.Score + score)
+                        .Set(l => l.Score, existingResponse.Score + request.ScoreToAdd)
                         .Update();
 
                     updatedEntry = response.Models.First();
                     _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}, added {Score} points",
-                        updatedEntry.Id, userId, score);
+                        updatedEntry.Id, request.UserId, request.ScoreToAdd);
                 }
                 else
                 {
@@ -167,9 +156,9 @@ namespace Lithuaningo.API.Services.Leaderboard
                     var newEntry = new LeaderboardEntry
                     {
                         Id = Guid.NewGuid(),
-                        UserId = userGuid,
+                        UserId = request.UserId,
                         WeekId = currentWeek,
-                        Score = score, // Initial score for new entry
+                        Score = request.ScoreToAdd, // Initial score for new entry
                     };
 
                     var response = await _supabaseClient
@@ -178,12 +167,11 @@ namespace Lithuaningo.API.Services.Leaderboard
 
                     updatedEntry = response.Models.First();
                     _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId} with initial score {Score}",
-                        updatedEntry.Id, userId, score);
+                        updatedEntry.Id, request.UserId, request.ScoreToAdd);
                 }
 
                 // Map to response DTO
                 var dto = _mapper.Map<LeaderboardEntryResponse>(updatedEntry);
-                dto.Username = userResponse.FullName ?? "Unknown User";
 
                 // Invalidate cache since leaderboard has changed
                 await InvalidateLeaderboardCacheAsync(currentWeek);
@@ -192,7 +180,7 @@ namespace Lithuaningo.API.Services.Leaderboard
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}", userId);
+                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}", request.UserId);
                 throw;
             }
         }

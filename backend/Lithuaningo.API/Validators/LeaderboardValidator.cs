@@ -10,9 +10,9 @@ public class UpdateLeaderboardEntryValidator : AbstractValidator<UpdateLeaderboa
         RuleFor(x => x.UserId)
             .NotEmpty().WithMessage("User ID is required");
 
-        RuleFor(x => x.Score)
+        RuleFor(x => x.ScoreToAdd)
             .NotEmpty().WithMessage("Score is required")
             .GreaterThanOrEqualTo(0).WithMessage("Score must be non-negative")
             .LessThanOrEqualTo(int.MaxValue).WithMessage("Score must not exceed maximum value");
     }
-} 
+}

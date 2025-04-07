@@ -26,10 +26,5 @@ namespace Lithuaningo.API.DTOs.Leaderboard
         /// The user's score
         /// </summary>
         public int Score { get; set; }
-
-        /// <summary>
-        /// The week identifier in YYYY-WW format
-        /// </summary>
-        public string WeekId { get; set; } = string.Empty;
     }
-} 
+}

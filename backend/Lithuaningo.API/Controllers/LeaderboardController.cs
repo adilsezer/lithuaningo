@@ -56,48 +56,6 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
-        /// Retrieves a specific week's top 20 leaders sorted by score
-        /// </summary>
-        /// <param name="weekId">The week identifier in YYYY-WW format</param>
-        /// <returns>Specified week's top 20 leaderboard entries</returns>
-        /// <response code="200">Returns the week's leaderboard</response>
-        /// <response code="400">If week ID format is invalid</response>
-        /// <response code="500">If there was an internal error during retrieval</response>
-        [HttpGet("{weekId}")]
-        [SwaggerOperation(
-            Summary = "Retrieves week leaderboard",
-            Description = "Gets the top 20 users sorted by score for a specific week",
-            OperationId = "GetWeekLeaderboard",
-            Tags = new[] { "Leaderboard" }
-        )]
-        [ProducesResponseType(typeof(List<LeaderboardEntryResponse>), StatusCodes.Status200OK)]
-        [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<LeaderboardEntryResponse>>> GetWeekLeaderboard(string weekId)
-        {
-            if (string.IsNullOrWhiteSpace(weekId))
-            {
-                return BadRequest("Week ID cannot be empty");
-            }
-
-            if (!weekId.Contains('-') || weekId.Split('-').Length != 2)
-            {
-                return BadRequest("Week ID must be in YYYY-WW format");
-            }
-
-            try
-            {
-                var leaderboard = await _leaderboardService.GetWeekLeaderboardAsync(weekId);
-                return Ok(leaderboard);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error fetching leaderboard for week {WeekId}", weekId);
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error fetching week leaderboard");
-            }
-        }
-
-        /// <summary>
         /// Updates a user's score in the current week's leaderboard by adding the new points
         /// </summary>
         /// <param name="request">The leaderboard entry update request containing points to add</param>
@@ -126,9 +84,7 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 // The score parameter represents points to add to the existing score
-                var entry = await _leaderboardService.UpdateLeaderboardEntryAsync(
-                    request.UserId.ToString(),
-                    request.Score);
+                var entry = await _leaderboardService.UpdateLeaderboardEntryAsync(request);
                 return Ok(entry);
             }
             catch (Exception ex)

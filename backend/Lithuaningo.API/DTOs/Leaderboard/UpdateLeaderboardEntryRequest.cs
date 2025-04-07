@@ -15,9 +15,9 @@ namespace Lithuaningo.API.DTOs.Leaderboard
         public Guid UserId { get; set; }
 
         /// <summary>
-        /// The user's score
+        /// The score to be added to the user's current score
         /// </summary>
         [Range(0, int.MaxValue, ErrorMessage = "Score must be a non-negative number")]
-        public int Score { get; set; }
+        public int ScoreToAdd { get; set; }
     }
 }
