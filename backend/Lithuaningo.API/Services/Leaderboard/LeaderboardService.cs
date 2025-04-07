@@ -119,7 +119,7 @@ namespace Lithuaningo.API.Services.Leaderboard
 
             if (request.ScoreToAdd < 0)
             {
-                throw new ArgumentException("Score must be non-negative", nameof(request.ScoreToAdd));
+                throw new ArgumentException("Score must be non-negative", nameof(request));
             }
 
             var currentWeek = DateUtils.GetCurrentWeekPeriod();

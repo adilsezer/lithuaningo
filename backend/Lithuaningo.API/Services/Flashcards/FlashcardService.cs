@@ -579,7 +579,7 @@ namespace Lithuaningo.API.Services.Flashcards
             await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString());
 
             // Also invalidate category-based caches
-            if (flashcard.Categories?.Any() == true)
+            if (flashcard.Categories?.Count > 0)
             {
                 foreach (var category in flashcard.Categories)
                 {

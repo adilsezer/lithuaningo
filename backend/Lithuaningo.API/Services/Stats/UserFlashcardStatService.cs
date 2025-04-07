@@ -151,7 +151,7 @@ namespace Lithuaningo.API.Services.Stats
                     .Limit(limit);
 
                 // If specific flashcard IDs are provided, filter to only those
-                if (flashcardIds != null && flashcardIds.Count() > 0)
+                if (flashcardIds != null && flashcardIds.Any())
                 {
                     var flashcardIdObjects = new List<object>();
                     foreach (var id in flashcardIds)

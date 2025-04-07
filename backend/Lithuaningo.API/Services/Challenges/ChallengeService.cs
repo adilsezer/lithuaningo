@@ -111,7 +111,7 @@ namespace Lithuaningo.API.Services.Challenges
                 var flashcards = await _flashcardService.RetrieveFlashcardModelsAsync(
                     limit: 10);
 
-                if (flashcards.Count() > 0)
+                if (flashcards.Any())
                 {
                     _logger.LogInformation("Retrieved {Count} flashcards to use as context for challenge generation", flashcards.Count());
 
