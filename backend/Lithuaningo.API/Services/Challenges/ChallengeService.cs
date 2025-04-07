@@ -58,7 +58,7 @@ namespace Lithuaningo.API.Services.Challenges
 
             // Try to get from cache first
             var cachedQuestions = await _cache.GetAsync<List<ChallengeQuestionResponse>>(cacheKey);
-            if (cachedQuestions != null && cachedQuestions.Any())
+            if (cachedQuestions != null && cachedQuestions.Count > 0)
             {
                 _logger.LogInformation("Retrieved {Count} daily challenge questions from cache", cachedQuestions.Count);
                 return cachedQuestions;
@@ -76,7 +76,7 @@ namespace Lithuaningo.API.Services.Challenges
                 .Limit(10)
                 .Get();
 
-            if (existingQuestions.Models != null && existingQuestions.Models.Any())
+            if (existingQuestions.Models != null && existingQuestions.Models.Count > 0)
             {
                 var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(existingQuestions.Models);
 

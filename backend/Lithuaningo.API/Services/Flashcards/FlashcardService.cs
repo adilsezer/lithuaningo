@@ -637,7 +637,7 @@ namespace Lithuaningo.API.Services.Flashcards
                 await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
             }
 
-            if (uniqueCategories.Any())
+            if (uniqueCategories.Count > 0)
             {
                 _logger.LogInformation("Invalidated flashcard caches for {Count} categories", uniqueCategories.Count);
             }

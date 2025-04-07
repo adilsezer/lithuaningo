@@ -70,7 +70,7 @@ namespace Lithuaningo.API.Services.Stats
                 var existingStatResult = await existingStatQuery.Get();
 
                 // Create or update the stat
-                if (existingStatResult.Models == null || !existingStatResult.Models.Any())
+                if (existingStatResult.Models == null || existingStatResult.Models.Count == 0)
                 {
                     // Create new stat if it doesn't exist
                     var newStat = new UserFlashcardStat
@@ -151,7 +151,7 @@ namespace Lithuaningo.API.Services.Stats
                     .Limit(limit);
 
                 // If specific flashcard IDs are provided, filter to only those
-                if (flashcardIds != null && flashcardIds.Any())
+                if (flashcardIds != null && flashcardIds.Count() > 0)
                 {
                     var flashcardIdObjects = new List<object>();
                     foreach (var id in flashcardIds)

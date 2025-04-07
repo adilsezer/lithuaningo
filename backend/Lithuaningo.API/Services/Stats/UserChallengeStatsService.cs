@@ -202,7 +202,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             .From<UserChallengeStats>()
             .Insert(newStats);
 
-        if (createResponse.Models == null || !createResponse.Models.Any())
+        if (createResponse.Models == null || createResponse.Models.Count > 0)
         {
             throw new InvalidOperationException($"Failed to create stats for user {userGuid}");
         }
@@ -280,7 +280,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             .Where(u => u.Id == statsEntity.Id)
             .Update(statsEntity);
 
-        if (updateResponse.Models == null || !updateResponse.Models.Any())
+        if (updateResponse.Models == null || updateResponse.Models.Count > 0)
         {
             throw new InvalidOperationException($"Failed to update stats for user {statsEntity.UserId}");
         }
