@@ -1,4 +1,5 @@
 using AutoMapper;
+using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.DTOs.UserChallengeStats;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
@@ -114,7 +115,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             if (request.WasCorrect)
             {
                 // Add 1 point to leaderboard per correct answer
-                await _leaderboardService.UpdateLeaderboardEntryAsync(userId, 1);
+                await _leaderboardService.UpdateLeaderboardEntryAsync(new UpdateLeaderboardEntryRequest { UserId = userGuid, ScoreToAdd = 1 });
                 _logger.LogInformation("Updated leaderboard for user {UserId} with 1 point", userId);
             }
 
