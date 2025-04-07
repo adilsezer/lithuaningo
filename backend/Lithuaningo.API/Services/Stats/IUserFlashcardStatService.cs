@@ -28,5 +28,12 @@ namespace Lithuaningo.API.Services.Stats
         /// <param name="limit">Maximum number of stats to return</param>
         /// <returns>List of flashcard stats prioritized for review</returns>
         Task<List<UserFlashcardStatResponse>> GetFlashcardsDueForReviewAsync(string userId, IEnumerable<Guid>? flashcardIds = null, int limit = 20);
+
+        /// <summary>
+        /// Gets a summary of the user's flashcard statistics
+        /// </summary>
+        /// <param name="userId">The ID of the user</param>
+        /// <returns>A summary of the user's flashcard statistics</returns>
+        Task<UserFlashcardStatsSummaryResponse> GetUserFlashcardStatsSummaryAsync(string userId);
     }
 }

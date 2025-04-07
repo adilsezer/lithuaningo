@@ -3,7 +3,6 @@ using System.Text;
 using FluentValidation;
 using FluentValidation.AspNetCore;
 using Lithuaningo.API.Controllers;
-using Lithuaningo.API.Mapping;
 using Lithuaningo.API.Mappings;
 using Lithuaningo.API.Middleware;
 using Lithuaningo.API.Services.AI;

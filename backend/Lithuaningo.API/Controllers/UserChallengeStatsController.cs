@@ -59,29 +59,26 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status500InternalServerError)]
         public async Task<ActionResult<UserChallengeStatsResponse>> GetUserChallengeStats(string userId)
         {
-            if (string.IsNullOrWhiteSpace(userId))
-            {
-                _logger.LogWarning("User ID parameter is empty");
-                return BadRequest("User ID cannot be empty");
-            }
-
-            if (!Guid.TryParse(userId, out var _))
-            {
-                _logger.LogWarning("Invalid user ID format: {UserId}", userId);
-                return BadRequest("Invalid user ID format");
-            }
-
             try
             {
-                var stats = await _userChallengeStatsService.GetUserChallengeStatsAsync(userId);
+                // Use provided userId for development/testing, otherwise use authenticated user's ID
+                var effectiveUserId = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(effectiveUserId))
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation("Getting challenge stats for user {UserId}", effectiveUserId);
+
+                var stats = await _userChallengeStatsService.GetUserChallengeStatsAsync(effectiveUserId);
                 if (stats == null)
                 {
-                    _logger.LogInformation("Challenge stats not found for user {UserId}", userId);
+                    _logger.LogInformation("Challenge stats not found for user {UserId}", effectiveUserId);
                     return NotFound();
                 }
 
                 _logger.LogInformation("Retrieved stats for user {UserId}: LastChallengeDate={LastChallengeDate}, TodayCorrectAnswers={TodayCorrectAnswers}, TodayIncorrectAnswers={TodayIncorrectAnswers}",
-                    userId,
+                    effectiveUserId,
                     stats.LastChallengeDate,
                     stats.TodayCorrectAnswers,
                     stats.TodayIncorrectAnswers);
@@ -90,7 +87,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving user challenge stats for user {UserId}", userId);
+                _logger.LogError(ex, "Error retrieving user challenge stats for user");
                 return StatusCode(500, "Internal server error");
             }
         }
