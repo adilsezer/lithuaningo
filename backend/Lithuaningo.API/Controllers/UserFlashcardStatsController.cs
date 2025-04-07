@@ -31,11 +31,12 @@ namespace Lithuaningo.API.Controllers
         /// <summary>
         /// Gets a summary of the user's flashcard statistics
         /// </summary>
+        /// <param name="userId">The ID of the user to get stats for. If not provided, uses the authenticated user's ID.</param>
         /// <returns>A summary of the user's flashcard statistics</returns>
         /// <response code="200">Returns the user's flashcard statistics summary</response>
         /// <response code="401">If the user is not authenticated</response>
         /// <response code="500">If there was an error processing the request</response>
-        [HttpGet("summary-stats")]
+        [HttpGet("{userId}/summary-stats")]
         [SwaggerOperation(
             Summary = "Gets user flashcard statistics summary",
             Description = "Retrieves a summary of the user's flashcard usage and performance, including total counts, success rates, and mastery level distribution",
