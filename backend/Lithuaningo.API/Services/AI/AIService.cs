@@ -1,7 +1,6 @@
 using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
@@ -179,7 +178,7 @@ public class AIService : IAIService
             }
 
             // Generate the image and get bytes directly
-            _logger.LogInformation("Calling OpenAI API to generate image with size: {0}", options.Size);
+            _logger.LogInformation("Calling OpenAI API to generate image with size: {ImageSize}", options.Size);
             string prompt = string.Format(AIPrompts.IMAGE_GENERATION_PROMPT, flashcardText);
             _logger.LogInformation("Prompt: {Prompt}", prompt);
 
@@ -299,7 +298,7 @@ public class AIService : IAIService
     {
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating challenges with AI, attempt {Attempt}", attempt);
+            _logger.LogInformation("Generating challenges with AI, attempt {AttemptNumber}", attempt);
 
             var userPrompt = new StringBuilder();
 
@@ -352,16 +351,10 @@ public class AIService : IAIService
             jsonContent = ConvertStringTypeToIntIfNeeded(jsonContent);
             var questions = JsonSerializer.Deserialize<List<ChallengeQuestionResponse>>(
                 jsonContent,
-                new JsonSerializerOptions
-                {
-                    PropertyNameCaseInsensitive = true,
-                    AllowTrailingCommas = true,
-                    ReadCommentHandling = JsonCommentHandling.Skip,
-                    Converters = { new JsonStringEnumConverter(JsonNamingPolicy.CamelCase) }
-                }
+                JsonSettings.AiOptions
             );
 
-            if (questions == null || !questions.Any() || !ValidateGeneratedChallenges(questions))
+            if (questions == null || questions.Count == 0 || !ValidateGeneratedChallenges(questions))
             {
                 throw new InvalidOperationException("Generated questions failed validation");
             }
@@ -377,25 +370,6 @@ public class AIService : IAIService
     }
 
     /// <summary>
-    /// Validates the generated flashcards
-    /// </summary>
-    private bool ValidateGeneratedFlashcards(List<Flashcard> flashcards)
-    {
-        if (flashcards == null || !flashcards.Any())
-        {
-            _logger.LogWarning("No flashcards were generated");
-            return false;
-        }
-
-        return flashcards.All(flashcard =>
-            !string.IsNullOrWhiteSpace(flashcard.FrontText) &&
-            !string.IsNullOrWhiteSpace(flashcard.BackText) &&
-            !string.IsNullOrWhiteSpace(flashcard.ExampleSentence) &&
-            !string.IsNullOrWhiteSpace(flashcard.ExampleSentenceTranslation) &&
-            Enum.IsDefined(typeof(DifficultyLevel), flashcard.Difficulty));
-    }
-
-    /// <summary>
     /// Generates a set of flashcards using AI based on the provided parameters
     /// </summary>
     /// <param name="request">The parameters for flashcard generation, including primary category and difficulty</param>
@@ -405,14 +379,11 @@ public class AIService : IAIService
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
     public async Task<List<Flashcard>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingFlashcardFrontTexts = null)
     {
-        if (request == null)
-        {
-            throw new ArgumentNullException(nameof(request));
-        }
+        ArgumentNullException.ThrowIfNull(request);
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating flashcards with AI for category '{Category}' with difficulty '{Difficulty}', attempt {Attempt}",
+            _logger.LogInformation("Generating flashcards with AI for category '{Category}' with difficulty '{Difficulty}', attempt {AttemptNumber}",
                 request.PrimaryCategory, request.Difficulty, attempt);
 
             var prompt = new StringBuilder()
@@ -422,7 +393,7 @@ public class AIService : IAIService
                 .AppendLine($"Primary Category: {request.PrimaryCategory} (category code: {(int)request.PrimaryCategory})");
 
             // Add existing content to avoid duplicates
-            if (existingFlashcardFrontTexts?.Any() == true)
+            if (existingFlashcardFrontTexts != null && existingFlashcardFrontTexts.Any())
             {
                 prompt.AppendLine("\nIMPORTANT: Do NOT create flashcards similar to these existing words:");
 
@@ -457,17 +428,12 @@ public class AIService : IAIService
                 throw new InvalidOperationException("Failed to extract JSON content from AI response");
             }
 
-            // Use standard JSON deserialization with property name case insensitivity
-            var serializerOptions = new JsonSerializerOptions
-            {
-                PropertyNameCaseInsensitive = true,
-                AllowTrailingCommas = true,
-                ReadCommentHandling = JsonCommentHandling.Skip
-            };
+            var flashcards = JsonSerializer.Deserialize<List<Flashcard>>(
+                jsonContent,
+                JsonSettings.AiOptions
+            );
 
-            var flashcards = JsonSerializer.Deserialize<List<Flashcard>>(jsonContent, serializerOptions);
-
-            if (flashcards == null || !flashcards.Any())
+            if (flashcards == null || flashcards.Count == 0 || !ValidateGeneratedFlashcards(flashcards))
             {
                 throw new InvalidOperationException("Generated flashcards failed validation");
             }
@@ -487,11 +453,6 @@ public class AIService : IAIService
                 {
                     flashcard.Categories.Add(primaryCategoryValue);
                 }
-            }
-
-            if (!ValidateGeneratedFlashcards(flashcards))
-            {
-                throw new InvalidOperationException("Generated flashcards failed validation");
             }
 
             // Limit to the requested count
@@ -573,7 +534,7 @@ public class AIService : IAIService
     /// </summary>
     private bool ValidateGeneratedChallenges(List<ChallengeQuestionResponse> questions)
     {
-        if (questions == null || !questions.Any())
+        if (questions == null || questions.Count == 0)
         {
             _logger.LogWarning("No challenges were generated");
             return false;
@@ -582,7 +543,7 @@ public class AIService : IAIService
         return questions.All(question =>
             !string.IsNullOrWhiteSpace(question.Question) &&
             !string.IsNullOrWhiteSpace(question.CorrectAnswer) &&
-            question.Options?.Any() == true &&
+            question.Options?.Count > 0 &&
             question.Options.Contains(question.CorrectAnswer) &&
             Enum.IsDefined(typeof(ChallengeQuestionType), question.Type));
     }
@@ -590,7 +551,7 @@ public class AIService : IAIService
     /// <summary>
     /// Extracts JSON content from potential markdown code blocks
     /// </summary>
-    private string ExtractJsonFromAiResponse(string aiResponse)
+    private static string ExtractJsonFromAiResponse(string aiResponse)
     {
         if (string.IsNullOrEmpty(aiResponse))
         {
@@ -622,7 +583,7 @@ public class AIService : IAIService
     /// <summary>
     /// Converts string type values to integers if needed (to handle AI sometimes returning string enum values)
     /// </summary>
-    private string ConvertStringTypeToIntIfNeeded(string jsonContent)
+    private static string ConvertStringTypeToIntIfNeeded(string jsonContent)
     {
         // Try to handle cases where the type is provided as a string like "0", "1", "2"
         // or as words like "MultipleChoice", "TrueFalse", "FillInTheBlank"
@@ -659,6 +620,22 @@ public class AIService : IAIService
             }
         }
         throw new InvalidOperationException($"Operation failed after {maxAttempts} attempts");
+    }
+
+    private bool ValidateGeneratedFlashcards(List<Flashcard> flashcards)
+    {
+        if (flashcards == null || flashcards.Count == 0)
+        {
+            _logger.LogWarning("No flashcards were generated");
+            return false;
+        }
+
+        return flashcards.All(flashcard =>
+            !string.IsNullOrWhiteSpace(flashcard.FrontText) &&
+            !string.IsNullOrWhiteSpace(flashcard.BackText) &&
+            !string.IsNullOrWhiteSpace(flashcard.ExampleSentence) &&
+            !string.IsNullOrWhiteSpace(flashcard.ExampleSentenceTranslation) &&
+            Enum.IsDefined(typeof(DifficultyLevel), flashcard.Difficulty));
     }
 
     #endregion
