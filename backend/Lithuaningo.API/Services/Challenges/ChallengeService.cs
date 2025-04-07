@@ -1,6 +1,6 @@
 using AutoMapper;
 using Lithuaningo.API.DTOs.Challenge;
-using Lithuaningo.API.Models.Challenge;
+using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Flashcards;

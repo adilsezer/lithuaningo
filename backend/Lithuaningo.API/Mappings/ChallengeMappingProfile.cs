@@ -1,6 +1,6 @@
 using AutoMapper;
 using Lithuaningo.API.DTOs.Challenge;
-using Lithuaningo.API.Models.Challenge;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Mappings
 {

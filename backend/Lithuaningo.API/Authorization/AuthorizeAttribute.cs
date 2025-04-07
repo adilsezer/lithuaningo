@@ -1,10 +1,8 @@
+using System.IdentityModel.Tokens.Jwt;
+using Lithuaningo.API.Services.Auth;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Lithuaningo.API.Services.Auth;
-using System.IdentityModel.Tokens.Jwt;
-using Microsoft.Extensions.Hosting;
-using Microsoft.Extensions.Logging;
 
 namespace Lithuaningo.API.Authorization;
 
@@ -37,7 +35,7 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
             .GetRequiredService<ILogger<AuthorizeAttribute>>();
 
         // Check for Authorization header
-        var authHeader = context.HttpContext.Request.Headers["Authorization"].FirstOrDefault();
+        var authHeader = context.HttpContext.Request.Headers.Authorization.FirstOrDefault();
         if (string.IsNullOrEmpty(authHeader))
         {
             context.Result = new UnauthorizedObjectResult(new
@@ -122,4 +120,4 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
             return;
         }
     }
-} 
+}

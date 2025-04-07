@@ -1,6 +1,6 @@
 using System;
 using System.Collections.Generic;
-
+using Lithuaningo.API.Models;
 namespace Lithuaningo.API.DTOs.Challenge
 {
     public class ChallengeQuestionResponse
@@ -12,4 +12,4 @@ namespace Lithuaningo.API.DTOs.Challenge
         public string? ExampleSentence { get; set; }
         public ChallengeQuestionType Type { get; set; }
     }
-} 
+}

@@ -1,9 +1,12 @@
-public enum ChallengeQuestionType
+namespace Lithuaningo.API.Models
 {
-    MultipleChoice,
-    TrueFalse,
-    FillInTheBlank,
-    RearrangeTheSentence,
-    IdentifyTheError,
-    IdentifyThePartOfSpeech
+    public enum ChallengeQuestionType
+    {
+        MultipleChoice,
+        TrueFalse,
+        FillInTheBlank,
+        RearrangeTheSentence,
+        IdentifyTheError,
+        IdentifyThePartOfSpeech
+    }
 }
