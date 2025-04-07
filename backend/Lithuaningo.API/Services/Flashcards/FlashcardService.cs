@@ -390,13 +390,7 @@ namespace Lithuaningo.API.Services.Flashcards
                 return selectedResponses.Concat(newFlashcardResponses);
             }
 
-            // STEP 5: Mark newly seen flashcards
-            if (newFlashcards.Any())
-            {
-                await _userFlashcardStatService.MarkFlashcardsAsShownAsync(newFlashcards, userId);
-            }
-
-            // STEP 6: Shuffle and return the final selection
+            // STEP 5: Shuffle and return the final selection
             return _mapper.Map<IEnumerable<FlashcardResponse>>(
                 selectedFlashcards.OrderBy(_ => _random.Next()).ToList());
         }
@@ -610,11 +604,6 @@ namespace Lithuaningo.API.Services.Flashcards
 
                 int insertedCount = result.Models?.Count ?? 0;
                 _logger.LogInformation("Successfully saved {Count} flashcards to Supabase", insertedCount);
-
-                if (!string.IsNullOrEmpty(userId) && result.Models?.Count > 0)
-                {
-                    await _userFlashcardStatService.MarkFlashcardsAsShownAsync(result.Models.ToList(), userId);
-                }
 
                 // Invalidate relevant caches
                 await InvalidateCategoryCachesForFlashcardsAsync(result.Models);
