@@ -1,12 +1,13 @@
+using System.Text.RegularExpressions;
 using FluentValidation;
 using Lithuaningo.API.DTOs.AppInfo;
-using System.Text.RegularExpressions;
 
 namespace Lithuaningo.API.Validators;
 
-public class UpdateAppInfoValidator : AbstractValidator<UpdateAppInfoRequest>
+public partial class UpdateAppInfoValidator : AbstractValidator<UpdateAppInfoRequest>
 {
-    private static readonly Regex VersionRegex = new(@"^\d+\.\d+\.\d+$", RegexOptions.Compiled);
+    [GeneratedRegex(@"^\d+\.\d+\.\d+$")]
+    private static partial Regex VersionPattern();
 
     public UpdateAppInfoValidator()
     {
@@ -23,10 +24,10 @@ public class UpdateAppInfoValidator : AbstractValidator<UpdateAppInfoRequest>
 
     private bool BeValidVersion(string version)
     {
-        return VersionRegex.IsMatch(version);
+        return VersionPattern().IsMatch(version);
     }
 
-    private int CompareVersions(string version1, string version2)
+    private static int CompareVersions(string version1, string version2)
     {
         var v1Parts = version1.Split('.').Select(int.Parse).ToArray();
         var v2Parts = version2.Split('.').Select(int.Parse).ToArray();
@@ -41,4 +42,4 @@ public class UpdateAppInfoValidator : AbstractValidator<UpdateAppInfoRequest>
 
         return 0;
     }
-} 
+}

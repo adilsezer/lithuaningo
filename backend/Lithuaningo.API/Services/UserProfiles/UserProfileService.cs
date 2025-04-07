@@ -78,10 +78,7 @@ namespace Lithuaningo.API.Services.UserProfile
 
         public async Task<UserProfileResponse> UpdateUserProfileAsync(string userId, UpdateUserProfileRequest request)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+            ArgumentNullException.ThrowIfNull(request);
 
             if (!Guid.TryParse(userId, out var userGuid))
             {

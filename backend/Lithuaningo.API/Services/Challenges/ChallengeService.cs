@@ -111,21 +111,23 @@ namespace Lithuaningo.API.Services.Challenges
                 var flashcards = await _flashcardService.RetrieveFlashcardModelsAsync(
                     limit: 10);
 
-                if (!flashcards.Any())
+                if (flashcards.Count() > 0)
+                {
+                    _logger.LogInformation("Retrieved {Count} flashcards to use as context for challenge generation", flashcards.Count());
+
+                    // Generate challenges based on the flashcard data
+                    var questions = await _aiService.GenerateChallengesAsync(flashcards);
+
+                    // Save the generated questions to the database
+                    await SaveChallengeQuestionsToDatabase(questions);
+
+                    return questions;
+                }
+                else
                 {
                     _logger.LogWarning("No flashcards found to use as context for challenge generation. Generating challenges without context.");
                     return await _aiService.GenerateChallengesAsync();
                 }
-
-                _logger.LogInformation("Retrieved {Count} flashcards to use as context for challenge generation", flashcards.Count());
-
-                // Generate challenges based on the flashcard data
-                var questions = await _aiService.GenerateChallengesAsync(flashcards);
-
-                // Save the generated questions to the database
-                await SaveChallengeQuestionsToDatabase(questions);
-
-                return questions;
             }
             catch (Exception ex)
             {

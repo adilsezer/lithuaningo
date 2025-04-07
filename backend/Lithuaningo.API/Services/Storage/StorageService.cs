@@ -37,7 +37,7 @@ public class StorageService : IStorageService, IDisposable
     {
         if (_disposed)
         {
-            throw new ObjectDisposedException(nameof(StorageService));
+            ObjectDisposedException.ThrowIf(_disposed, this);
         }
 
         if (data == null || data.Length == 0)
@@ -94,7 +94,7 @@ public class StorageService : IStorageService, IDisposable
     {
         if (_disposed)
         {
-            throw new ObjectDisposedException(nameof(StorageService));
+            ObjectDisposedException.ThrowIf(_disposed, this);
         }
 
         if (string.IsNullOrEmpty(fileUrl))

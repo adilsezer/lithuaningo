@@ -655,12 +655,9 @@ namespace Lithuaningo.API.Services.Flashcards
 
         #region Private Helper Methods - Utilities
 
-        private void ValidateInputs(FlashcardRequest request, string userId)
+        private static void ValidateInputs(FlashcardRequest request, string userId)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+            ArgumentNullException.ThrowIfNull(request);
 
             if (string.IsNullOrEmpty(userId))
             {
@@ -668,7 +665,7 @@ namespace Lithuaningo.API.Services.Flashcards
             }
         }
 
-        private string BuildCacheKey(FlashcardCategory? category, DifficultyLevel? difficulty, int? limit)
+        private static string BuildCacheKey(FlashcardCategory? category, DifficultyLevel? difficulty, int? limit)
         {
             var components = new List<string> { CacheKeyPrefix };
 

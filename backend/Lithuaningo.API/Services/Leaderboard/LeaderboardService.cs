@@ -115,14 +115,11 @@ namespace Lithuaningo.API.Services.Leaderboard
 
         public async Task<LeaderboardEntryResponse> UpdateLeaderboardEntryAsync(UpdateLeaderboardEntryRequest request)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+            ArgumentNullException.ThrowIfNull(request);
 
             if (request.ScoreToAdd < 0)
             {
-                throw new ArgumentException("Score to add cannot be negative", nameof(request.ScoreToAdd));
+                throw new ArgumentException("Score must be non-negative", nameof(request.ScoreToAdd));
             }
 
             var currentWeek = DateUtils.GetCurrentWeekPeriod();

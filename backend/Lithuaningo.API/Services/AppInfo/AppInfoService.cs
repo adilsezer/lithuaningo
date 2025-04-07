@@ -96,10 +96,7 @@ namespace Lithuaningo.API.Services.AppInfo
                 throw new ArgumentException("Platform cannot be empty", nameof(platform));
             }
 
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
+            ArgumentNullException.ThrowIfNull(request);
 
             var normalizedPlatform = platform.ToLowerInvariant();
             var cacheKey = $"{CacheKeyPrefix}{normalizedPlatform}";
