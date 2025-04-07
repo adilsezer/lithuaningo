@@ -65,7 +65,7 @@ namespace Lithuaningo.API.Controllers
                 return BadRequest("User ID cannot be empty");
             }
 
-            if (!Guid.TryParse(userId, out var userGuid))
+            if (!Guid.TryParse(userId, out var _))
             {
                 _logger.LogWarning("Invalid user ID format: {UserId}", userId);
                 return BadRequest("Invalid user ID format");
