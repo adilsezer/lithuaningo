@@ -35,7 +35,7 @@ namespace Lithuaningo.API.Controllers
         /// <response code="400">If the request parameters are invalid</response>
         /// <response code="401">If the user is not authenticated</response>
         /// <response code="500">If there was an error processing the request</response>
-        [HttpGet]
+        [HttpGet("learning")]
         [SwaggerOperation(
             Summary = "Get learning flashcards for a user",
             Description = "Retrieves flashcards for the specified category and difficulty level with spaced repetition. If there are not enough unseen flashcards, generates new ones using AI.",
