@@ -313,15 +313,9 @@ namespace Lithuaningo.API.Services.Flashcards
 
         private async Task<List<Flashcard>> GetFlashcardsForReviewAsync(
             List<Flashcard> allFlashcards,
-            HashSet<Guid> shownFlashcardIds,
             string userId,
             int reviewCount)
         {
-            if (!shownFlashcardIds.Any())
-            {
-                _logger.LogInformation("No flashcards have been shown to user {UserId} yet", userId);
-                return new List<Flashcard>();
-            }
 
             // Get flashcard IDs that need review based on mastery level
             var flashcardsToReview = await _userFlashcardStatService.GetFlashcardsDueForReviewAsync(
@@ -348,7 +342,7 @@ namespace Lithuaningo.API.Services.Flashcards
 
             // STEP 1: Get flashcards for review based on mastery level
             int reviewCount = (int)Math.Ceiling(request.Count * ReviewFlashcardsRatio);
-            var reviewFlashcards = await GetFlashcardsForReviewAsync(allFlashcards, shownFlashcardIds, userId, reviewCount);
+            var reviewFlashcards = await GetFlashcardsForReviewAsync(allFlashcards, userId, reviewCount);
 
             // STEP 2: Fill the rest with new flashcards the user hasn't seen
             int newCardsNeeded = request.Count - reviewFlashcards.Count;

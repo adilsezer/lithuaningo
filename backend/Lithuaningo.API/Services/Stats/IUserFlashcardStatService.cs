@@ -13,13 +13,6 @@ namespace Lithuaningo.API.Services.Stats
         Task<HashSet<Guid>> GetShownFlashcardIdsAsync(string userId);
 
         /// <summary>
-        /// Marks flashcards as shown to a user
-        /// </summary>
-        /// <param name="flashcards">The flashcards to mark as shown</param>
-        /// <param name="userId">The ID of the user who has seen the flashcards</param>
-        Task MarkFlashcardsAsShownAsync(List<Flashcard> flashcards, string userId);
-
-        /// <summary>
         /// Submits a flashcard answer and updates the user's statistics
         /// </summary>
         /// <param name="userId">The ID of the user</param>

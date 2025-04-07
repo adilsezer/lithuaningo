@@ -52,57 +52,6 @@ namespace Lithuaningo.API.Services.Stats
         }
 
         /// <inheritdoc />
-        public async Task MarkFlashcardsAsShownAsync(List<Flashcard> flashcards, string userId)
-        {
-            try
-            {
-                if (flashcards == null || !flashcards.Any())
-                {
-                    return;
-                }
-
-                if (string.IsNullOrEmpty(userId))
-                {
-                    throw new ArgumentNullException(nameof(userId));
-                }
-
-                var userFlashcardStats = new List<UserFlashcardStat>();
-
-                foreach (var flashcard in flashcards)
-                {
-                    userFlashcardStats.Add(new UserFlashcardStat
-                    {
-                        Id = Guid.NewGuid(),
-                        UserId = userId,
-                        FlashcardId = flashcard.Id,
-                        ViewCount = 1,
-                        MasteryLevel = 0
-                    });
-                }
-
-                // Insert the user flashcard stats
-                var result = await _supabaseService.Client
-                    .From<UserFlashcardStat>()
-                    .Insert(userFlashcardStats);
-
-                if (result.Models == null || result.Models.Count != userFlashcardStats.Count)
-                {
-                    _logger.LogWarning("Failed to create user flashcard stats for some flashcards");
-                }
-                else
-                {
-                    _logger.LogInformation("Successfully marked {Count} flashcards as shown to user {UserId}",
-                        flashcards.Count, userId);
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error marking flashcards as shown to user {UserId}", userId);
-                throw;
-            }
-        }
-
-        /// <inheritdoc />
         public async Task<UserFlashcardStatResponse> SubmitFlashcardAnswerAsync(string userId, SubmitFlashcardAnswerRequest request)
         {
             try
