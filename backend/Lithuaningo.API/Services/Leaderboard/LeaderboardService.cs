@@ -98,6 +98,12 @@ namespace Lithuaningo.API.Services.Leaderboard
 
                 var mappedEntries = _mapper.Map<List<LeaderboardEntryResponse>>(entriesResponse.Models);
 
+                // Add rank to each entry
+                for (int i = 0; i < mappedEntries.Count; i++)
+                {
+                    mappedEntries[i].Rank = i + 1;
+                }
+
                 await _cache.SetAsync(cacheKey, mappedEntries,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
 

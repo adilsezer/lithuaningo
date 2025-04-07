@@ -18,6 +18,11 @@ namespace Lithuaningo.API.DTOs.Leaderboard
         public Guid UserId { get; set; }
 
         /// <summary>
+        /// The user's rank
+        /// </summary>
+        public int Rank { get; set; }
+
+        /// <summary>
         /// The user's username from their profile
         /// </summary>
         public string Username { get; set; } = string.Empty;

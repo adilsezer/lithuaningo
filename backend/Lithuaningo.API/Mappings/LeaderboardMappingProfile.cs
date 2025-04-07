@@ -13,7 +13,8 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
                 .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
                 .ForMember(dest => dest.Score, opt => opt.MapFrom(src => src.Score))
-                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username));
+                .ForMember(dest => dest.Username, opt => opt.MapFrom(src => src.Username))
+                .ForMember(dest => dest.Rank, opt => opt.Ignore()); // Rank is calculated in the service
         }
     }
 }
