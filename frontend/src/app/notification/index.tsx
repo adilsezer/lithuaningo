@@ -2,7 +2,6 @@ import React from "react";
 import { useAppInfo } from "@hooks/useAppInfo";
 import NotificationDisplay from "@components/ui/NotificationDisplay";
 import ErrorMessage from "@components/ui/ErrorMessage";
-import { useIsLoading, useError } from "@src/stores/useUIStore";
 
 const NOTIFICATION_CONFIGS = {
   maintenance: {
@@ -26,11 +25,9 @@ const NOTIFICATION_CONFIGS = {
 } as const;
 
 const NotificationScreen: React.FC = () => {
-  // Get loading and error from global UI store
-  const loading = useIsLoading();
-  const error = useError();
-
   const {
+    loading,
+    error,
     appInfo,
     isUnderMaintenance,
     maintenanceMessage,

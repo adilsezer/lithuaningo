@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from "react";
+import { useEffect } from "react";
 import { Linking } from "react-native";
 import useAppInfoStore from "@src/stores/useAppInfoStore";
 import { useIsLoading, useError } from "@src/stores/useUIStore";
@@ -22,12 +22,6 @@ export const useAppInfo = () => {
   useEffect(() => {
     checkAppStatus();
   }, [checkAppStatus]);
-
-  // Calculate force update status
-  const forceUpdate = useMemo(() => {
-    if (!appInfo) return false;
-    return needsUpdate && appInfo.forceUpdate;
-  }, [appInfo, needsUpdate]);
 
   // Handle update URL opening
   const openUpdateUrl = async () => {
@@ -61,7 +55,6 @@ export const useAppInfo = () => {
 
     // App state
     needsUpdate,
-    forceUpdate,
     isUnderMaintenance,
 
     // Content
