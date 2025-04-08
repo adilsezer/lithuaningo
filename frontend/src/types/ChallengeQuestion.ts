@@ -1,34 +1,17 @@
-export interface ChallengeQuestion {
+export enum ChallengeQuestionType {
+  MultipleChoice = 0,
+  TrueFalse = 1,
+  FillInTheBlank = 2,
+  RearrangeTheSentence = 3,
+  IdentifyTheError = 4,
+  IdentifyThePartOfSpeech = 5,
+}
+
+export interface ChallengeQuestionResponse {
   id: string;
   question: string;
   options: string[];
   correctAnswer: string;
   exampleSentence?: string;
-  type: QuestionType;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CreateChallengeQuestionRequest {
-  question: string;
-  options: string[];
-  correctAnswer: string;
-  exampleSentence?: string;
-  type: QuestionType;
-}
-
-export interface ChallengeResult {
-  userId: string;
-  score: number;
-  totalQuestions: number;
-  completedAt: string;
-}
-
-export enum QuestionType {
-  MultipleChoice = "MultipleChoice",
-  TrueFalse = "TrueFalse",
-  FillInTheBlank = "FillInTheBlank",
-  RearrangeTheSentence = "RearrangeTheSentence",
-  IdentifyTheError = "IdentifyTheError",
-  IdentifyThePartOfSpeech = "IdentifyThePartOfSpeech",
+  type: ChallengeQuestionType;
 }

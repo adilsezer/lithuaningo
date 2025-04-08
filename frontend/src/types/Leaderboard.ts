@@ -1,16 +1,12 @@
-export interface LeaderboardEntry {
-  id: string;
-  userId: string;
-  username: string;
-  score: number;
-  weekId: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
 export interface UpdateLeaderboardEntryRequest {
   userId: string;
-  score: number;
+  scoreToAdd: number;
 }
 
-export type LeaderboardTimeRange = "week" | "month" | "all";
+export interface LeaderboardEntryResponse {
+  id: string;
+  userId: string;
+  rank: number;
+  username: string;
+  score: number;
+}

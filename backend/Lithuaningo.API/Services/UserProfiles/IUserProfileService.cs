@@ -20,11 +20,6 @@ namespace Lithuaningo.API.Services.UserProfile
         Task<bool> DeleteUserProfileAsync(string userId);
 
         /// <summary>
-        /// Updates the last login timestamp for a user
-        /// </summary>
-        Task UpdateLastLoginAsync(string userId);
-
-        /// <summary>
         /// Gets all user profiles
         /// </summary>
         Task<IEnumerable<UserProfileResponse>> GetUserProfilesAsync();

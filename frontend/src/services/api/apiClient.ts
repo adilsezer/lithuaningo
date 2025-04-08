@@ -3,15 +3,27 @@ import { Platform } from "react-native";
 import { supabase } from "../../services/supabase/supabaseClient";
 import { useUserStore } from "../../stores/useUserStore";
 import Constants from "expo-constants";
-import { UpdateAppInfoRequest, AppInfo } from "@src/types/AppInfo";
-import { UpdateUserChallengeStatsRequest } from "@src/types/UserChallengeStats";
-import { CreateUserChallengeStatsRequest } from "@src/types/UserChallengeStats";
-import { UserChallengeStats } from "@src/types/UserChallengeStats";
+import { AppInfoResponse } from "@src/types/AppInfo";
 import {
-  LeaderboardEntry,
+  LeaderboardEntryResponse,
   UpdateLeaderboardEntryRequest,
 } from "@src/types/Leaderboard";
-import { ChallengeQuestion } from "@src/types/ChallengeQuestion";
+import { ChallengeQuestionResponse } from "@src/types/ChallengeQuestion";
+import { FlashcardRequest, FlashcardResponse } from "@src/types/Flashcard";
+import {
+  SubmitFlashcardAnswerRequest,
+  UserFlashcardStatResponse,
+  UserFlashcardStatsSummaryResponse,
+} from "@src/types/UserFlashcardStats";
+import {
+  SubmitChallengeAnswerRequest,
+  UserChallengeStatsResponse,
+} from "@src/types/UserChallengeStats";
+import {
+  UserProfileResponse,
+  UpdateUserProfileRequest,
+} from "@src/types/UserProfile";
+import { AIRequest, AIResponse } from "@src/types/AI";
 
 // Get the app version from Expo constants
 const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
@@ -251,9 +263,9 @@ class ApiClient {
   }
 
   // App Info Controller
-  async getAppInfo(platform: string = Platform.OS): Promise<AppInfo> {
+  async getAppInfo(platform: string = Platform.OS): Promise<AppInfoResponse> {
     try {
-      const response = await this.request<AppInfo>(
+      const response = await this.request<AppInfoResponse>(
         `/api/v1/AppInfo/${platform}`
       );
       return response;
@@ -267,99 +279,145 @@ class ApiClient {
     }
   }
 
-  async updateAppInfo(
-    platform: string,
-    info: UpdateAppInfoRequest
-  ): Promise<AppInfo> {
-    return this.request<AppInfo>(`/api/v1/AppInfo/${platform}`, {
-      method: "PUT",
-      data: info,
-    });
-  }
-
-  async deleteAppInfo(id: string): Promise<void> {
-    return this.request(`/api/v1/AppInfo/${id}`, {
-      method: "DELETE",
-    });
-  }
-
   // AI API methods
   async processAIRequest(
     prompt: string,
     serviceType: string = "chat",
     context?: Record<string, string>
   ): Promise<string> {
-    const data = await this.request<{
-      response: string;
-      timestamp: string;
-      serviceType: string;
-    }>(`/api/v1/ai/process`, {
+    const request: AIRequest = {
+      prompt,
+      serviceType,
+      context,
+    };
+
+    const response = await this.request<AIResponse>(`/api/v1/ai/process`, {
       method: "POST",
-      data: {
-        prompt,
-        serviceType,
-        context,
-      },
+      data: request,
     });
-    return data.response;
+    return response.response;
   }
 
   async sendChatMessage(
     message: string,
     context?: Record<string, string>
   ): Promise<string> {
-    return this.processAIRequest(message, "chat", context);
-  }
+    const request: AIRequest = {
+      prompt: message,
+      serviceType: "chat",
+      context,
+    };
 
-  // User Challenge Stats Controller
-  async getUserChallengeStats(userId: string): Promise<UserChallengeStats> {
-    return this.request<UserChallengeStats>(
-      `/api/v1/UserChallengeStats/${userId}/stats`
-    );
-  }
-
-  async updateUserChallengeStats(
-    userId: string,
-    stats: UpdateUserChallengeStatsRequest
-  ): Promise<void> {
-    return this.request<void>(`/api/v1/UserChallengeStats/${userId}`, {
-      method: "PUT",
-      data: stats,
-    });
-  }
-
-  async createUserChallengeStats(
-    request: CreateUserChallengeStatsRequest
-  ): Promise<UserChallengeStats> {
-    return this.request<UserChallengeStats>(`/api/v1/UserChallengeStats`, {
+    const response = await this.request<AIResponse>(`/api/v1/ai/chat`, {
       method: "POST",
       data: request,
     });
+    return response.response;
   }
 
-  async updateDailyStreak(userId: string): Promise<void> {
-    return this.request(`/api/v1/UserChallengeStats/${userId}/stats/streak`, {
-      method: "POST",
-    });
+  // User Challenge Stats Controller
+  async getUserChallengeStats(
+    userId: string
+  ): Promise<UserChallengeStatsResponse> {
+    return this.request<UserChallengeStatsResponse>(
+      `/api/v1/UserChallengeStats/${userId}/stats`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  async submitChallengeAnswer(
+    request: SubmitChallengeAnswerRequest
+  ): Promise<UserChallengeStatsResponse> {
+    return this.request<UserChallengeStatsResponse>(
+      `/api/v1/UserChallengeStats/submit-answer`,
+      {
+        method: "POST",
+        data: request,
+      }
+    );
   }
 
   // Leaderboard Controller
-  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntry[]> {
-    return this.request<LeaderboardEntry[]>(`/api/v1/Leaderboard/current`);
+  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntryResponse[]> {
+    return this.request<LeaderboardEntryResponse[]>(
+      `/api/v1/Leaderboard/current`,
+      {
+        method: "GET",
+      }
+    );
   }
 
   async updateLeaderboardEntry(
     request: UpdateLeaderboardEntryRequest
-  ): Promise<LeaderboardEntry> {
-    return this.request<LeaderboardEntry>(`/api/v1/Leaderboard/entry`, {
+  ): Promise<LeaderboardEntryResponse> {
+    return this.request<LeaderboardEntryResponse>(`/api/v1/Leaderboard/entry`, {
       method: "POST",
       data: request,
     });
   }
+
   // Challenge Controller
-  async getDailyChallenge(): Promise<ChallengeQuestion[]> {
-    return this.request<ChallengeQuestion[]>(`/api/v1/Challenge/daily`, {
-      timeout: 120000,
+  async getDailyChallengeQuestions(): Promise<ChallengeQuestionResponse[]> {
+    return this.request<ChallengeQuestionResponse[]>(
+      `/api/v1/Challenge/daily`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  // Flashcard Controller
+  async getFlashcards(request: FlashcardRequest): Promise<FlashcardResponse[]> {
+    return this.request<FlashcardResponse[]>(`/api/v1/Flashcard/learning`, {
+      method: "GET",
+      params: request,
+    });
+  }
+
+  // User Flashcard Stats Controller
+  async getUserFlashcardStatsSummary(
+    userId: string
+  ): Promise<UserFlashcardStatsSummaryResponse> {
+    return this.request<UserFlashcardStatsSummaryResponse>(
+      `/api/v1/UserFlashcardStats/${userId}/summary-stats`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  async submitFlashcardAnswer(
+    request: SubmitFlashcardAnswerRequest
+  ): Promise<UserFlashcardStatResponse> {
+    return this.request<UserFlashcardStatResponse>(
+      `/api/v1/UserFlashcardStats/submit-answer`,
+      {
+        method: "POST",
+        data: request,
+      }
+    );
+  }
+
+  // User Profile Controller
+  async getUserProfile(userId: string): Promise<UserProfileResponse> {
+    return this.request<UserProfileResponse>(`/api/v1/UserProfile/${userId}`);
+  }
+
+  async updateUserProfile(
+    userId: string,
+    profile: UpdateUserProfileRequest
+  ): Promise<UserProfileResponse> {
+    return this.request<UserProfileResponse>(`/api/v1/UserProfile/${userId}`, {
+      method: "PUT",
+      data: profile,
+    });
+  }
+
+  async deleteUserProfile(userId: string): Promise<void> {
+    await this.request<void>(`/api/v1/UserProfile/${userId}`, {
+      method: "DELETE",
     });
   }
 }

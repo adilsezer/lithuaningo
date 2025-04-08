@@ -154,38 +154,6 @@ namespace Lithuaningo.API.Services.UserProfile
             }
         }
 
-        public async Task UpdateLastLoginAsync(string userId)
-        {
-            if (!Guid.TryParse(userId, out var userGuid))
-            {
-                throw new ArgumentException("Invalid user ID format", nameof(userId));
-            }
-
-            try
-            {
-                var profile = new Models.UserProfile
-                {
-                    Id = userGuid,
-                    LastLoginAt = DateTime.UtcNow
-                };
-
-                await _supabaseClient
-                    .From<Models.UserProfile>()
-                    .Where(u => u.Id == userGuid)
-                    .Set(u => u.LastLoginAt, DateTime.UtcNow)
-                    .Update();
-
-                await _cacheInvalidator.InvalidateUserProfileAsync(userId);
-
-                _logger.LogInformation("Updated last login for user {UserId}", userId);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error updating last login for user {UserId}", userId);
-                throw;
-            }
-        }
-
         public async Task<IEnumerable<UserProfileResponse>> GetUserProfilesAsync()
         {
             var cacheKey = $"{CacheKeyPrefix}all";

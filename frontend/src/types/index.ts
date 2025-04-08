@@ -5,3 +5,5 @@ export * from "./auth.types";
 export * from "./UserChallengeStats";
 export * from "./Leaderboard";
 export * from "./ChallengeQuestion";
+export * from "./Flashcard";
+export * from "./AI";
