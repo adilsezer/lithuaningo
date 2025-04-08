@@ -21,12 +21,12 @@ import ChatInput from "@components/chat/ChatInput";
 import ChatExampleSuggestions from "@components/chat/ChatExampleSuggestions";
 import ChatUsageLimitInfo from "@components/chat/ChatUsageLimitInfo";
 import LoginPrompt from "@components/chat/LoginPrompt";
+import { useIsLoading } from "@stores/useUIStore";
 
 export default function ChatScreen(): JSX.Element {
   const {
     messages,
     inputText,
-    isLoading,
     refreshing,
     showExamples,
     isAuthenticated,
@@ -44,6 +44,8 @@ export default function ChatScreen(): JSX.Element {
     processText,
     navigateToPremium,
   } = useChat();
+
+  const isLoading = useIsLoading();
 
   const insets = useSafeAreaInsets();
 

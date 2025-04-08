@@ -315,14 +315,6 @@ class ApiClient {
     return response.response;
   }
 
-  // Add missing method used by useChat
-  async generateAIResponse(request: AIRequest): Promise<AIResponse> {
-    return this.request<AIResponse>(`/api/v1/ai/process`, {
-      method: "POST",
-      data: request,
-    });
-  }
-
   // User Challenge Stats Controller
   async getUserChallengeStats(
     userId: string
