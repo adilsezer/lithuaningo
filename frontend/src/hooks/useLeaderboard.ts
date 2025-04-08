@@ -1,11 +1,14 @@
 import { useState, useCallback } from "react";
+import { useSetLoading, useSetError } from "@src/stores/useUIStore";
 import leaderboardService from "@services/data/leaderboardService";
-import { LeaderboardEntry } from "@src/types";
+import { LeaderboardEntryResponse } from "@src/types";
 
 export const useLeaderboard = () => {
-  const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<Error | null>(null);
+  const [entries, setEntries] = useState<LeaderboardEntryResponse[]>([]);
+
+  // Global UI state handlers
+  const setLoading = useSetLoading();
+  const setError = useSetError();
 
   const fetchLeaderboard = useCallback(async () => {
     setLoading(true);
@@ -15,31 +18,34 @@ export const useLeaderboard = () => {
       setEntries(newEntries);
     } catch (err) {
       setError(
-        err instanceof Error ? err : new Error("Failed to fetch leaderboard")
+        err instanceof Error ? err.message : "Failed to fetch leaderboard"
       );
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [setLoading, setError]);
 
   const updateEntry = useCallback(
     async (userId: string, score: number) => {
+      setLoading(true);
       try {
-        await leaderboardService.updateLeaderboardEntry({ userId, score });
+        await leaderboardService.updateLeaderboardEntry({
+          userId,
+          scoreToAdd: score,
+        });
         await fetchLeaderboard(); // Refresh the leaderboard after update
       } catch (err) {
         setError(
-          err instanceof Error ? err : new Error("Failed to update leaderboard")
+          err instanceof Error ? err.message : "Failed to update leaderboard"
         );
+        setLoading(false);
       }
     },
-    [fetchLeaderboard]
+    [fetchLeaderboard, setLoading, setError]
   );
 
   return {
     entries,
-    loading,
-    error,
     fetchLeaderboard,
     updateEntry,
   };

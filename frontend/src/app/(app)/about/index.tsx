@@ -4,6 +4,7 @@ import { useAbout } from "@hooks/useAbout";
 import { useAppInfo } from "@hooks/useAppInfo";
 import CustomText from "@components/ui/CustomText";
 import { useTheme } from "react-native-paper";
+
 const AboutScreen = () => {
   const {
     links,
@@ -11,8 +12,12 @@ const AboutScreen = () => {
     navigateToPrivacyPolicy,
     navigateToTermsOfService,
   } = useAbout();
-  const { versionInfo } = useAppInfo();
+  const { currentVersion, appInfo, openUpdateUrl } = useAppInfo();
   const theme = useTheme();
+
+  // Check if there's a newer version available
+  const hasUpdate =
+    appInfo?.currentVersion && currentVersion !== appInfo.currentVersion;
 
   return (
     <ScrollView>
@@ -54,24 +59,29 @@ const AboutScreen = () => {
       <CustomText variant="titleMedium" bold>
         Version
       </CustomText>
-      <CustomText>{versionInfo.current}</CustomText>
-      {versionInfo.latest && versionInfo.current !== versionInfo.latest && (
-        <CustomText style={{ color: theme.colors.primary }}>
-          New version available: {versionInfo.latest}
+      <CustomText>{currentVersion}</CustomText>
+
+      {hasUpdate && (
+        <CustomText
+          style={[styles.link, { color: theme.colors.primary }]}
+          onPress={openUpdateUrl}
+        >
+          New version available: {appInfo.currentVersion}
         </CustomText>
       )}
     </ScrollView>
   );
 };
 
-export default AboutScreen;
-
 const styles = StyleSheet.create({
   justifiedText: {
     textAlign: "justify",
+    marginBottom: 20,
   },
   link: {
-    color: "#0000FF",
+    color: "blue",
     textDecorationLine: "underline",
   },
 });
+
+export default AboutScreen;

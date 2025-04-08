@@ -11,6 +11,7 @@ import {
 import { storeData, retrieveData } from "@utils/storageUtils";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAlertDialog from "@hooks/useAlertDialog";
+import { useSetLoading, useSetError } from "@src/stores/useUIStore";
 
 // Message interface
 export interface Message {
@@ -51,11 +52,14 @@ export const useChat = () => {
   // Core chat state
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [inputText, setInputText] = useState<string>("");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [showExamples, setShowExamples] = useState<boolean>(true);
   const [dailyMessageCount, setDailyMessageCount] = useState<number>(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
+
+  // Global UI state handlers
+  const setLoading = useSetLoading();
+  const setError = useSetError();
 
   // External hooks
   const isAuthenticated = useIsAuthenticated();
@@ -158,7 +162,8 @@ export const useChat = () => {
 
     // Hide examples after sending first message
     setShowExamples(false);
-    setIsLoading(true);
+    setLoading(true);
+    setError(null);
 
     // Increment daily message count
     const newCount = dailyMessageCount + 1;
@@ -211,6 +216,7 @@ export const useChat = () => {
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
     } catch (error) {
       console.error("Error sending message:", error);
+      setError("Failed to send message. Please try again.");
 
       // Update message status to "error"
       setMessages((prevMessages) =>
@@ -229,7 +235,7 @@ export const useChat = () => {
 
       setMessages((prevMessages) => [...prevMessages, errorMessage]);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
@@ -335,7 +341,6 @@ export const useChat = () => {
     // State
     messages,
     inputText,
-    isLoading,
     refreshing,
     showExamples,
     dailyMessageCount,

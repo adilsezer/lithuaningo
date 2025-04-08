@@ -1,19 +1,20 @@
 import { useEffect, useState, useCallback } from "react";
-import { ChallengeQuestion } from "@src/types";
+import { ChallengeQuestionResponse } from "@src/types";
 import { useUserData } from "@stores/useUserStore";
+import { useSetLoading, useSetError } from "@src/stores/useUIStore";
 import challengeService from "@src/services/data/challengeService";
 import { UserChallengeStatsService } from "@src/services/data/userChallengeStatsService";
 
 interface UseChallengeOptions {
-  customQuestions?: ChallengeQuestion[];
+  customQuestions?: ChallengeQuestionResponse[];
   onComplete?: (score: number, totalQuestions: number) => void;
   skipInitialFetch?: boolean;
 }
 
 interface UseChallengeReturn {
-  questions: ChallengeQuestion[];
+  questions: ChallengeQuestionResponse[];
   currentIndex: number;
-  currentQuestion: ChallengeQuestion | undefined;
+  currentQuestion: ChallengeQuestionResponse | undefined;
   loading: boolean;
   error: string | null;
   score: number;
@@ -23,7 +24,7 @@ interface UseChallengeReturn {
   handleAnswer: (answer: string) => Promise<void>;
   handleNextQuestion: () => Promise<void>;
   resetChallenge: () => void;
-  setQuestions: (questions: ChallengeQuestion[]) => void;
+  setQuestions: (questions: ChallengeQuestionResponse[]) => void;
   getCompletionMessage: () => string;
   dailyChallengeCompleted: boolean;
   checkDailyChallengeStatus: () => Promise<boolean>;
@@ -43,8 +44,12 @@ export const useChallenge = (
   const userData = useUserData();
   const userId = userData?.id;
 
+  // Global UI state handlers
+  const setGlobalLoading = useSetLoading();
+  const setGlobalError = useSetError();
+
   // Challenge state
-  const [questions, setQuestions] = useState<ChallengeQuestion[]>(
+  const [questions, setQuestions] = useState<ChallengeQuestionResponse[]>(
     customQuestions || []
   );
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -62,7 +67,8 @@ export const useChallenge = (
     setIsCorrectAnswer(null);
     setIsCompleted(false);
     setError(null);
-  }, []);
+    setGlobalError(null);
+  }, [setGlobalError]);
 
   // Check if the user has completed today's challenge
   const checkDailyChallengeStatus = useCallback(async () => {
@@ -88,6 +94,7 @@ export const useChallenge = (
         resetChallenge();
         setQuestions(customQuestions);
         setLoading(false);
+        setGlobalLoading(false);
         return;
       }
 
@@ -95,17 +102,21 @@ export const useChallenge = (
       if (userId) {
         const isCompleted = await checkDailyChallengeStatus();
         if (isCompleted) {
-          setError(
-            "You've already completed today's challenge. Come back tomorrow for a new one!"
-          );
+          const errorMsg =
+            "You've already completed today's challenge. Come back tomorrow for a new one!";
+          setError(errorMsg);
+          setGlobalError(errorMsg);
           setLoading(false);
+          setGlobalLoading(false);
           return;
         }
       }
 
       try {
         setLoading(true);
+        setGlobalLoading(true);
         setError(null);
+        setGlobalError(null);
 
         // Reset states for new challenges
         if (isNew) resetChallenge();
@@ -114,22 +125,33 @@ export const useChallenge = (
         const challengeQuestions = await challengeService.getDailyChallenge();
 
         if (!challengeQuestions?.length) {
-          setError("No questions available. Please try again later.");
+          const errorMsg = "No questions available. Please try again later.";
+          setError(errorMsg);
+          setGlobalError(errorMsg);
           return;
         }
 
         setQuestions(challengeQuestions);
       } catch (err: any) {
         console.error("Failed to load challenge:", err);
-        setError(
+        const errorMsg =
           err?.message ||
-            "Failed to load challenge. Please check your connection and try again."
-        );
+          "Failed to load challenge. Please check your connection and try again.";
+        setError(errorMsg);
+        setGlobalError(errorMsg);
       } finally {
         setLoading(false);
+        setGlobalLoading(false);
       }
     },
-    [customQuestions, resetChallenge, userId, checkDailyChallengeStatus]
+    [
+      customQuestions,
+      resetChallenge,
+      userId,
+      checkDailyChallengeStatus,
+      setGlobalLoading,
+      setGlobalError,
+    ]
   );
 
   // Centralized function to update user stats
@@ -144,6 +166,7 @@ export const useChallenge = (
       if (!userId) return null;
 
       try {
+        setGlobalLoading(true);
         // Try to get existing stats first
         let currentStats;
         try {
@@ -195,9 +218,11 @@ export const useChallenge = (
       } catch (error) {
         console.error("Error updating user stats:", error);
         return null;
+      } finally {
+        setGlobalLoading(false);
       }
     },
-    [userId]
+    [userId, setGlobalLoading]
   );
 
   // Handle user's answer selection
@@ -213,15 +238,27 @@ export const useChallenge = (
 
       // Only update stats for non-custom challenges
       if (!customQuestions && userId) {
-        await updateUserStats({
-          todayCorrect: isCorrect ? 1 : 0,
-          todayIncorrect: !isCorrect ? 1 : 0,
-          totalCorrect: isCorrect ? 1 : 0,
-          totalIncorrect: !isCorrect ? 1 : 0,
-        });
+        setGlobalLoading(true);
+        try {
+          await updateUserStats({
+            todayCorrect: isCorrect ? 1 : 0,
+            todayIncorrect: !isCorrect ? 1 : 0,
+            totalCorrect: isCorrect ? 1 : 0,
+            totalIncorrect: !isCorrect ? 1 : 0,
+          });
+        } finally {
+          setGlobalLoading(false);
+        }
       }
     },
-    [currentIndex, questions, userId, customQuestions, updateUserStats]
+    [
+      currentIndex,
+      questions,
+      userId,
+      customQuestions,
+      updateUserStats,
+      setGlobalLoading,
+    ]
   );
 
   // Move to next question or complete the challenge
@@ -237,6 +274,7 @@ export const useChallenge = (
       // For non-custom challenges, update stats and submit results
       if (!customQuestions && userId) {
         try {
+          setGlobalLoading(true);
           // Mark the daily challenge as completed
           await challengeService.setDailyChallengeCompleted(userId);
           setDailyChallengeCompleted(true);
@@ -251,6 +289,8 @@ export const useChallenge = (
         } catch (error) {
           console.error("Error completing challenge:", error);
           // Continue even if stats update fails
+        } finally {
+          setGlobalLoading(false);
         }
       }
 
@@ -265,6 +305,7 @@ export const useChallenge = (
     customQuestions,
     onComplete,
     updateUserStats,
+    setGlobalLoading,
   ]);
 
   // Get feedback message based on score
@@ -288,12 +329,15 @@ export const useChallenge = (
     if (!userId || !__DEV__) return;
 
     try {
+      setGlobalLoading(true);
       await challengeService.resetDailyChallengeStatus(userId);
       setDailyChallengeCompleted(false);
     } catch (error) {
       console.error("Error resetting daily challenge status:", error);
+    } finally {
+      setGlobalLoading(false);
     }
-  }, [userId]);
+  }, [userId, setGlobalLoading]);
 
   // Load challenge questions on mount if needed
   useEffect(() => {

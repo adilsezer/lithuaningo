@@ -5,12 +5,11 @@ import {
   getCurrentVersion,
   compareVersions,
 } from "@services/data/appInfoService";
-import type { AppInfo } from "@src/types/AppInfo";
+import type { AppInfoResponse } from "@src/types/AppInfo";
+import useUIStore from "./useUIStore";
 
 interface AppInfoState {
-  appInfo: AppInfo | null;
-  loading: boolean;
-  error: string | null;
+  appInfo: AppInfoResponse | null;
   isUnderMaintenance: boolean;
   needsUpdate: boolean;
 }
@@ -23,13 +22,18 @@ const currentVersion = getCurrentVersion();
 
 const useAppInfoStore = create<AppInfoState & AppInfoActions>((set) => ({
   appInfo: null,
-  loading: true,
-  error: null,
   isUnderMaintenance: false,
   needsUpdate: false,
 
   checkAppStatus: async () => {
+    // Get setLoading and setError from UI store
+    const setLoading = useUIStore.getState().setLoading;
+    const setError = useUIStore.getState().setError;
+
     try {
+      setLoading(true);
+      setError(null);
+
       const latestAppInfo = await getLatestAppInfo();
 
       if (!latestAppInfo) {
@@ -46,40 +50,21 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set) => ({
         appInfo: latestAppInfo,
         isUnderMaintenance: latestAppInfo.isMaintenance,
         needsUpdate,
-        error: null,
-        loading: false,
       });
 
       if (needsUpdate || latestAppInfo.isMaintenance) {
         router.replace("/notification");
       }
+
+      setLoading(false);
     } catch (err) {
-      set({
-        error: err instanceof Error ? err.message : "Failed to fetch app info",
-        loading: false,
-      });
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to fetch app info";
+      setError(errorMessage);
+      setLoading(false);
       console.error("[useAppInfoStore] Error checking app status:", err);
     }
   },
 }));
-
-// Selectors
-export const useAppInfoState = () => {
-  const state = useAppInfoStore();
-  return {
-    appInfo: state.appInfo,
-    loading: state.loading,
-    error: state.error,
-    isUnderMaintenance: state.isUnderMaintenance,
-    needsUpdate: state.needsUpdate,
-  };
-};
-
-export const useAppInfoActions = () => {
-  const state = useAppInfoStore();
-  return {
-    checkAppStatus: state.checkAppStatus,
-  };
-};
 
 export default useAppInfoStore;

@@ -14,13 +14,17 @@ import {
   ENTITLEMENTS,
   DEBUG_SETTINGS,
 } from "@config/revenuecat.config";
+import { useSetLoading, useSetError } from "@src/stores/useUIStore";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const [customerInfo, setCustomerInfo] = useState<CustomerInfo | null>(null);
   const [isPremium, setIsPremium] = useState(false);
+
+  // Global UI state handlers
+  const setLoading = useSetLoading();
+  const setError = useSetError();
 
   const userData = useUserData();
 
@@ -56,26 +60,33 @@ export const useRevenueCat = () => {
   // Fetch available offerings
   const fetchOfferings = async () => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+      setError(null);
       const offerings = await Purchases.getOfferings();
       if (offerings.current) {
         setOfferings(offerings.current);
       }
     } catch (error) {
       console.error("Error fetching offerings:", error);
+      setError("Failed to fetch subscription offerings");
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   // Get current customer info
   const getCustomerInfo = async () => {
     try {
+      setLoading(true);
+      setError(null);
       const info = await Purchases.getCustomerInfo();
       setCustomerInfo(info);
       checkPremiumEntitlement(info);
     } catch (error) {
       console.error("Error getting customer info:", error);
+      setError("Failed to retrieve subscription status");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -92,7 +103,8 @@ export const useRevenueCat = () => {
   // Purchase a package
   const purchasePackage = async (pack: PurchasesPackage) => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+      setError(null);
       setPurchaseError(null);
 
       // TypeScript doesn't allow direct destructuring here due to typing issues
@@ -111,21 +123,23 @@ export const useRevenueCat = () => {
       if (
         purchaseError.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
       ) {
-        setPurchaseError(
-          purchaseError.message || "An error occurred during purchase"
-        );
+        const errorMessage =
+          purchaseError.message || "An error occurred during purchase";
+        setPurchaseError(errorMessage);
+        setError(errorMessage);
       }
 
       throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   // Restore purchases
   const restorePurchases = async () => {
     try {
-      setIsLoading(true);
+      setLoading(true);
+      setError(null);
       setPurchaseError(null);
 
       // TypeScript doesn't allow direct destructuring here due to typing issues
@@ -142,24 +156,30 @@ export const useRevenueCat = () => {
       if (
         purchaseError.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
       ) {
-        setPurchaseError(
-          purchaseError.message || "An error occurred while restoring purchases"
-        );
+        const errorMessage =
+          purchaseError.message ||
+          "An error occurred while restoring purchases";
+        setPurchaseError(errorMessage);
+        setError(errorMessage);
       }
       throw error;
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   // Handle user logout
   const logout = async () => {
     try {
+      setLoading(true);
       await Purchases.logOut();
       setCustomerInfo(null);
       setIsPremium(false);
     } catch (error) {
       console.error("Error logging out from RevenueCat:", error);
+      setError("Failed to sign out from subscription service");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -167,7 +187,6 @@ export const useRevenueCat = () => {
     offerings,
     customerInfo,
     isPremium,
-    isLoading,
     purchaseError,
     purchasePackage,
     restorePurchases,
