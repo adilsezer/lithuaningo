@@ -14,13 +14,13 @@ import {
 import { router } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomDivider from "@components/ui/CustomDivider";
-import { ChallengeQuestion } from "@src/types";
+import { ChallengeQuestionResponse } from "@src/types";
 
 // Define props interface for the reusable component
 interface ChallengeComponentProps {
-  questions: ChallengeQuestion[];
+  questions: ChallengeQuestionResponse[];
   currentIndex: number;
-  currentQuestion?: ChallengeQuestion;
+  currentQuestion?: ChallengeQuestionResponse;
   loading: boolean;
   error: string | null;
   score: number;

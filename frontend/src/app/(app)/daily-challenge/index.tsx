@@ -1,51 +1,35 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { View, StyleSheet } from "react-native";
 import { useChallenge } from "@src/hooks/useChallenge";
 import ChallengeComponent from "@components/ui/ChallengeComponent";
 import { Card, Button } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { router } from "expo-router";
-import { useUserData } from "@stores/useUserStore";
 
 /**
  * Daily Challenge Screen
  */
 export default function DailyChallengeScreen() {
-  const userData = useUserData();
-  const userId = userData?.id;
-
   // Get challenge data and handlers
   const {
     questions,
     currentIndex,
     currentQuestion,
-    loading,
+    isLoading,
     error,
     score,
-    isCorrectAnswer,
+    isCorrect,
+    isAnswered,
     isCompleted,
-    dailyChallengeCompleted,
-    fetchChallenge,
     handleAnswer,
     handleNextQuestion,
-    checkDailyChallengeStatus,
+    fetchQuestions,
     getCompletionMessage,
+    resetChallenge,
   } = useChallenge();
 
-  // Load challenge on mount
-  useEffect(() => {
-    if (!userId) return;
-
-    async function loadChallenge() {
-      const isCompleted = await checkDailyChallengeStatus();
-      if (!isCompleted) fetchChallenge();
-    }
-
-    loadChallenge();
-  }, [userId, checkDailyChallengeStatus, fetchChallenge]);
-
   // Handle "already completed" state
-  if (dailyChallengeCompleted && !isCompleted) {
+  if (isCompleted && currentIndex < questions.length - 1) {
     return (
       <View style={styles.completedContainer}>
         <Card>
@@ -77,15 +61,21 @@ export default function DailyChallengeScreen() {
         questions={questions}
         currentIndex={currentIndex}
         currentQuestion={currentQuestion}
-        loading={loading}
+        loading={isLoading}
         error={error}
         score={score}
-        isCorrectAnswer={isCorrectAnswer}
+        isCorrectAnswer={isAnswered ? isCorrect : null}
         isCompleted={isCompleted}
         onAnswer={handleAnswer}
         onNextQuestion={handleNextQuestion}
-        onRetry={() => fetchChallenge()}
-        onGenerateNew={() => fetchChallenge(true)}
+        onRetry={() => {
+          resetChallenge();
+          fetchQuestions();
+        }}
+        onGenerateNew={() => {
+          resetChallenge();
+          fetchQuestions();
+        }}
         onGoBack={() => router.back()}
         getCompletionMessage={getCompletionMessage}
       />

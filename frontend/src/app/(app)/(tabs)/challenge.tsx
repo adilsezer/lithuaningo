@@ -29,15 +29,17 @@ export default function ChallengeScreen() {
 
   // Feature data
   const { entries, fetchLeaderboard } = useLeaderboard();
-  const { stats, error, fetchStats, createStats } =
-    useUserChallengeStats(userId);
   const {
-    dailyChallengeCompleted,
-    checkDailyChallengeStatus,
-    resetDailyChallenge,
-  } = useChallenge({
-    skipInitialFetch: true,
-  });
+    stats,
+    error: statsError,
+    fetchStats,
+  } = useUserChallengeStats(userId);
+  const {
+    isCompleted,
+    isLoading: challengeLoading,
+    error: challengeError,
+    fetchQuestions,
+  } = useChallenge();
 
   // Load data
   useEffect(() => {
@@ -53,11 +55,7 @@ export default function ChallengeScreen() {
 
     setIsLoading(true);
     try {
-      await Promise.all([
-        checkDailyChallengeStatus(),
-        fetchStats(),
-        fetchLeaderboard(),
-      ]);
+      await Promise.all([fetchQuestions(), fetchStats(), fetchLeaderboard()]);
     } catch (err) {
       console.error("Failed to load challenge data:", err);
     } finally {
@@ -66,20 +64,18 @@ export default function ChallengeScreen() {
   }
 
   // Start daily challenge
-  async function startChallenge() {
-    if (userId && !stats) {
-      try {
-        await createStats();
-      } catch (err) {
-        console.error("Failed to create stats:", err);
-      }
-    }
+  function startChallenge() {
     router.push("/daily-challenge");
   }
 
   // Show error state
-  if (error) {
-    return <ErrorMessage message={error} onRetry={loadData} />;
+  if (statsError || challengeError) {
+    return (
+      <ErrorMessage
+        message={statsError || challengeError || "Failed to load data"}
+        onRetry={loadData}
+      />
+    );
   }
 
   return (
@@ -99,14 +95,14 @@ export default function ChallengeScreen() {
       </View>
 
       {/* Challenge status */}
-      {isLoading ? (
+      {isLoading || challengeLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <CustomText style={styles.loadingText}>
             Loading challenge data...
           </CustomText>
         </View>
-      ) : dailyChallengeCompleted ? (
+      ) : isCompleted ? (
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
             <IconButton
@@ -155,21 +151,6 @@ export default function ChallengeScreen() {
         Weekly Leaderboard
       </CustomText>
       <Leaderboard entries={entries} />
-
-      {/* Dev reset button */}
-      {__DEV__ && (
-        <CustomButton
-          title="Reset Challenge"
-          mode="outlined"
-          onPress={async () => {
-            if (userId) {
-              await resetDailyChallenge();
-              loadData();
-            }
-          }}
-          style={styles.devButton}
-        />
-      )}
     </ScrollView>
   );
 }
@@ -215,8 +196,5 @@ const styles = StyleSheet.create({
   sectionTitle: {
     marginVertical: 8,
     textAlign: "center",
-  },
-  devButton: {
-    marginTop: 24,
   },
 });

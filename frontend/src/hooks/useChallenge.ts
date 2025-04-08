@@ -1,368 +1,129 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { ChallengeQuestionResponse } from "@src/types";
-import { useUserData } from "@stores/useUserStore";
-import { useSetLoading, useSetError } from "@src/stores/useUIStore";
 import challengeService from "@src/services/data/challengeService";
-import { UserChallengeStatsService } from "@src/services/data/userChallengeStatsService";
-
-interface UseChallengeOptions {
-  customQuestions?: ChallengeQuestionResponse[];
-  onComplete?: (score: number, totalQuestions: number) => void;
-  skipInitialFetch?: boolean;
-}
-
-interface UseChallengeReturn {
-  questions: ChallengeQuestionResponse[];
-  currentIndex: number;
-  currentQuestion: ChallengeQuestionResponse | undefined;
-  loading: boolean;
-  error: string | null;
-  score: number;
-  isCorrectAnswer: boolean | null;
-  isCompleted: boolean;
-  fetchChallenge: (isNew?: boolean) => Promise<void>;
-  handleAnswer: (answer: string) => Promise<void>;
-  handleNextQuestion: () => Promise<void>;
-  resetChallenge: () => void;
-  setQuestions: (questions: ChallengeQuestionResponse[]) => void;
-  getCompletionMessage: () => string;
-  dailyChallengeCompleted: boolean;
-  checkDailyChallengeStatus: () => Promise<boolean>;
-  resetDailyChallenge: () => Promise<void>;
-}
 
 /**
- * Hook to manage challenge state, supports both daily challenges and custom questions
- *
- * @param options Optional configuration for the challenge
- * @returns State and handlers for the challenge
+ * Simple hook for challenge functionality
  */
-export const useChallenge = (
-  options: UseChallengeOptions = {}
-): UseChallengeReturn => {
-  const { customQuestions, onComplete, skipInitialFetch = false } = options;
-  const userData = useUserData();
-  const userId = userData?.id;
-
-  // Global UI state handlers
-  const setGlobalLoading = useSetLoading();
-  const setGlobalError = useSetError();
-
-  // Challenge state
+export function useChallenge(customQuestions?: ChallengeQuestionResponse[]) {
+  // Core state
   const [questions, setQuestions] = useState<ChallengeQuestionResponse[]>(
     customQuestions || []
   );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [loading, setLoading] = useState(!customQuestions);
-  const [error, setError] = useState<string | null>(null);
   const [score, setScore] = useState(0);
-  const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
+  const [isAnswered, setIsAnswered] = useState(false);
+  const [isCorrect, setIsCorrect] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
-  const [dailyChallengeCompleted, setDailyChallengeCompleted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  // Reset the challenge states
-  const resetChallenge = useCallback(() => {
-    setCurrentIndex(0);
-    setScore(0);
-    setIsCorrectAnswer(null);
-    setIsCompleted(false);
-    setError(null);
-    setGlobalError(null);
-  }, [setGlobalError]);
+  // Current question based on index
+  const currentQuestion = questions[currentIndex];
 
-  // Check if the user has completed today's challenge
-  const checkDailyChallengeStatus = useCallback(async () => {
-    if (!userId) return false;
+  // Fetch questions from API
+  const fetchQuestions = useCallback(async () => {
+    if (customQuestions) {
+      setQuestions(customQuestions);
+      return;
+    }
 
     try {
-      const isCompleted = await challengeService.hasDailyChallengeCompleted(
-        userId
-      );
-      setDailyChallengeCompleted(isCompleted);
-      return isCompleted;
-    } catch (error) {
-      console.error("Error checking daily challenge status:", error);
-      return false;
-    }
-  }, [userId]);
+      setIsLoading(true);
+      setError(null);
+      const data = await challengeService.getDailyChallengeQuestions();
 
-  // Main function to fetch challenge questions
-  const fetchChallenge = useCallback(
-    async (isNew = false) => {
-      // If custom questions are provided, just reset and use them
-      if (customQuestions) {
-        resetChallenge();
-        setQuestions(customQuestions);
-        setLoading(false);
-        setGlobalLoading(false);
+      if (!data?.length) {
+        setError("No questions available");
         return;
       }
 
-      // Check if the daily challenge is already completed
-      if (userId) {
-        const isCompleted = await checkDailyChallengeStatus();
-        if (isCompleted) {
-          const errorMsg =
-            "You've already completed today's challenge. Come back tomorrow for a new one!";
-          setError(errorMsg);
-          setGlobalError(errorMsg);
-          setLoading(false);
-          setGlobalLoading(false);
-          return;
-        }
-      }
+      setQuestions(data);
+    } catch (err) {
+      setError("Failed to load questions");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [customQuestions]);
 
-      try {
-        setLoading(true);
-        setGlobalLoading(true);
-        setError(null);
-        setGlobalError(null);
-
-        // Reset states for new challenges
-        if (isNew) resetChallenge();
-
-        // Fetch questions from API
-        const challengeQuestions = await challengeService.getDailyChallenge();
-
-        if (!challengeQuestions?.length) {
-          const errorMsg = "No questions available. Please try again later.";
-          setError(errorMsg);
-          setGlobalError(errorMsg);
-          return;
-        }
-
-        setQuestions(challengeQuestions);
-      } catch (err: any) {
-        console.error("Failed to load challenge:", err);
-        const errorMsg =
-          err?.message ||
-          "Failed to load challenge. Please check your connection and try again.";
-        setError(errorMsg);
-        setGlobalError(errorMsg);
-      } finally {
-        setLoading(false);
-        setGlobalLoading(false);
-      }
-    },
-    [
-      customQuestions,
-      resetChallenge,
-      userId,
-      checkDailyChallengeStatus,
-      setGlobalLoading,
-      setGlobalError,
-    ]
-  );
-
-  // Centralized function to update user stats
-  const updateUserStats = useCallback(
-    async (statsUpdate: {
-      todayCorrect?: number;
-      todayIncorrect?: number;
-      totalCorrect?: number;
-      totalIncorrect?: number;
-      completedChallenge?: boolean;
-    }) => {
-      if (!userId) return null;
-
-      try {
-        setGlobalLoading(true);
-        // Try to get existing stats first
-        let currentStats;
-        try {
-          currentStats = await UserChallengeStatsService.getUserChallengeStats(
-            userId
-          );
-        } catch (error) {
-          // If stats don't exist, create them with initial values
-          const createRequest = {
-            userId,
-            currentStreak: 0,
-            longestStreak: 0,
-            todayCorrectAnswers: 0,
-            todayIncorrectAnswers: 0,
-            totalChallengesCompleted: 0,
-            totalCorrectAnswers: 0,
-            totalIncorrectAnswers: 0,
-          };
-          currentStats =
-            await UserChallengeStatsService.createUserChallengeStats(
-              createRequest
-            );
-        }
-
-        // Update with new values
-        const updateRequest = {
-          currentStreak: currentStats.currentStreak,
-          longestStreak: currentStats.longestStreak,
-          todayCorrectAnswers:
-            currentStats.todayCorrectAnswers + (statsUpdate.todayCorrect || 0),
-          todayIncorrectAnswers:
-            currentStats.todayIncorrectAnswers +
-            (statsUpdate.todayIncorrect || 0),
-          totalChallengesCompleted:
-            currentStats.totalChallengesCompleted +
-            (statsUpdate.completedChallenge ? 1 : 0),
-          totalCorrectAnswers:
-            currentStats.totalCorrectAnswers + (statsUpdate.totalCorrect || 0),
-          totalIncorrectAnswers:
-            currentStats.totalIncorrectAnswers +
-            (statsUpdate.totalIncorrect || 0),
-        };
-
-        await UserChallengeStatsService.updateUserChallengeStats(
-          userId,
-          updateRequest
-        );
-        return currentStats;
-      } catch (error) {
-        console.error("Error updating user stats:", error);
-        return null;
-      } finally {
-        setGlobalLoading(false);
-      }
-    },
-    [userId, setGlobalLoading]
-  );
-
-  // Handle user's answer selection
+  // Handle answer selection
   const handleAnswer = useCallback(
-    async (answer: string) => {
-      const question = questions[currentIndex];
-      if (!question) return;
+    (answer: string) => {
+      if (!currentQuestion || isAnswered) return;
 
-      const isCorrect = answer === question.correctAnswer;
-      setIsCorrectAnswer(isCorrect);
+      const correct = answer === currentQuestion.correctAnswer;
+      setIsCorrect(correct);
+      setIsAnswered(true);
 
-      if (isCorrect) setScore((prev) => prev + 1);
-
-      // Only update stats for non-custom challenges
-      if (!customQuestions && userId) {
-        setGlobalLoading(true);
-        try {
-          await updateUserStats({
-            todayCorrect: isCorrect ? 1 : 0,
-            todayIncorrect: !isCorrect ? 1 : 0,
-            totalCorrect: isCorrect ? 1 : 0,
-            totalIncorrect: !isCorrect ? 1 : 0,
-          });
-        } finally {
-          setGlobalLoading(false);
-        }
+      if (correct) {
+        setScore((prev) => prev + 1);
       }
     },
-    [
-      currentIndex,
-      questions,
-      userId,
-      customQuestions,
-      updateUserStats,
-      setGlobalLoading,
-    ]
+    [currentQuestion, isAnswered]
   );
 
-  // Move to next question or complete the challenge
-  const handleNextQuestion = useCallback(async () => {
-    setIsCorrectAnswer(null);
+  // Move to next question or complete
+  const handleNextQuestion = useCallback(() => {
+    setIsAnswered(false);
 
-    // If more questions, move to next
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
-    }
-    // Otherwise complete the challenge
-    else {
-      // For non-custom challenges, update stats and submit results
-      if (!customQuestions && userId) {
-        try {
-          setGlobalLoading(true);
-          // Mark the daily challenge as completed
-          await challengeService.setDailyChallengeCompleted(userId);
-          setDailyChallengeCompleted(true);
-
-          // Update completion stats
-          await updateUserStats({
-            completedChallenge: true,
-          });
-
-          // Update daily streak
-          await UserChallengeStatsService.updateDailyStreak(userId);
-        } catch (error) {
-          console.error("Error completing challenge:", error);
-          // Continue even if stats update fails
-        } finally {
-          setGlobalLoading(false);
-        }
-      }
-
+    } else {
       setIsCompleted(true);
-      if (onComplete) onComplete(score, questions.length);
     }
-  }, [
-    currentIndex,
-    questions.length,
-    userId,
-    score,
-    customQuestions,
-    onComplete,
-    updateUserStats,
-    setGlobalLoading,
-  ]);
+  }, [currentIndex, questions.length]);
 
-  // Get feedback message based on score
+  // Reset the challenge
+  const resetChallenge = useCallback(() => {
+    setCurrentIndex(0);
+    setScore(0);
+    setIsAnswered(false);
+    setIsCorrect(false);
+    setIsCompleted(false);
+  }, []);
+
+  // Get completion message
   const getCompletionMessage = useCallback(() => {
     const percentage =
       questions.length > 0 ? (score / questions.length) * 100 : 0;
 
-    if (percentage >= 90)
-      return "Puiku! (Excellent!) Your Lithuanian skills are impressive!";
-    if (percentage >= 75)
-      return "Labai gerai! (Very good!) You're making great progress!";
-    if (percentage >= 60)
-      return "Gerai! (Good!) Keep practicing to improve your skills.";
-    if (percentage >= 40)
-      return "Neblogai. (Not bad.) More practice will help you improve.";
-    return "Keep learning! Practice makes perfect in Lithuanian.";
+    if (percentage >= 80)
+      return "Excellent! Your Lithuanian skills are impressive!";
+    if (percentage >= 60) return "Good job! You're making progress.";
+    return "Keep practicing to improve your Lithuanian skills.";
   }, [score, questions.length]);
 
-  // Reset daily challenge status (dev only)
-  const resetDailyChallenge = useCallback(async () => {
-    if (!userId || !__DEV__) return;
-
-    try {
-      setGlobalLoading(true);
-      await challengeService.resetDailyChallengeStatus(userId);
-      setDailyChallengeCompleted(false);
-    } catch (error) {
-      console.error("Error resetting daily challenge status:", error);
-    } finally {
-      setGlobalLoading(false);
-    }
-  }, [userId, setGlobalLoading]);
-
-  // Load challenge questions on mount if needed
+  // Load questions on mount
   useEffect(() => {
-    if (!customQuestions && !skipInitialFetch && userId) {
-      checkDailyChallengeStatus();
+    if (!customQuestions) {
+      fetchQuestions();
     }
-  }, [customQuestions, skipInitialFetch, userId, checkDailyChallengeStatus]);
+  }, [customQuestions, fetchQuestions]);
 
   return {
+    // State
     questions,
+    currentQuestion,
     currentIndex,
-    currentQuestion: questions[currentIndex],
-    loading,
-    error,
     score,
-    isCorrectAnswer,
+    isAnswered,
+    isCorrect,
     isCompleted,
-    fetchChallenge,
+    isLoading,
+    error,
+
+    // Actions
     handleAnswer,
     handleNextQuestion,
     resetChallenge,
-    setQuestions,
+    fetchQuestions,
+
+    // Helpers
     getCompletionMessage,
-    dailyChallengeCompleted,
-    checkDailyChallengeStatus,
-    resetDailyChallenge,
+
+    // Extra
+    totalQuestions: questions.length,
+    progress: questions.length ? (currentIndex + 1) / questions.length : 0,
   };
-};
+}

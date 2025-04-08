@@ -3,7 +3,7 @@ import { View, StyleSheet } from "react-native";
 import { Card, ProgressBar, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import CustomText from "@components/ui/CustomText";
-import { UserChallengeStats } from "@src/types";
+import { UserChallengeStatsResponse } from "@src/types";
 
 interface UserChallengeStatItemProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -39,7 +39,7 @@ const UserChallengeStatItem: React.FC<UserChallengeStatItemProps> = ({
 };
 
 interface UserChallengeStatsCardProps {
-  stats: UserChallengeStats;
+  stats: UserChallengeStatsResponse;
 }
 
 export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
