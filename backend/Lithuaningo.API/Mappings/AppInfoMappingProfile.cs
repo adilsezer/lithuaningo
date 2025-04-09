@@ -10,7 +10,6 @@ namespace Lithuaningo.API.Mappings
         {
             // AppInfo mappings
             CreateMap<AppInfo, AppInfoResponse>();
-            CreateMap<UpdateAppInfoRequest, AppInfo>();
         }
     }
 }

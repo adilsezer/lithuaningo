@@ -3,7 +3,7 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
 import { useSetError } from "@src/stores/useUIStore";
-import { useUserChallengeStats } from "@hooks/useUserChallengeStats";
+import { useChallengeWithStats } from "@hooks/useChallengeWithStats";
 import { DailyChallengeCard } from "@components/ui/DailyChallengeCard";
 import { router } from "expo-router";
 import CustomButton from "@components/ui/CustomButton";
@@ -19,9 +19,9 @@ export default function HomeScreen() {
   const {
     stats,
     error: statsError,
-    fetchStats,
+    getUserChallengeStats,
     isLoading: statsLoading,
-  } = useUserChallengeStats(userData?.id);
+  } = useChallengeWithStats(userData?.id);
 
   useEffect(() => {
     if (userData?.id) {
@@ -39,9 +39,9 @@ export default function HomeScreen() {
   // Fetch stats when the component mounts or when the user ID changes
   useEffect(() => {
     if (userData?.id) {
-      fetchStats();
+      getUserChallengeStats();
     }
-  }, [userData?.id, fetchStats]);
+  }, [userData?.id, getUserChallengeStats]);
 
   return (
     <ScrollView style={[styles.container]} showsVerticalScrollIndicator={false}>

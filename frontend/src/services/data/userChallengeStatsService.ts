@@ -1,5 +1,8 @@
 import { apiClient } from "@services/api/apiClient";
-import { UserChallengeStatsResponse } from "@src/types";
+import {
+  UserChallengeStatsResponse,
+  SubmitChallengeAnswerRequest,
+} from "@src/types";
 
 export class UserChallengeStatsService {
   /**
@@ -12,11 +15,21 @@ export class UserChallengeStatsService {
     userId: string
   ): Promise<UserChallengeStatsResponse> {
     try {
-      const stats = await apiClient.getUserChallengeStats(userId);
-      return stats;
+      return await apiClient.getUserChallengeStats(userId);
+    } catch (error) {
+      console.error("[UserChallengeStatsService] Error:", error);
+      throw error;
+    }
+  }
+
+  static async submitChallengeAnswer(
+    request: SubmitChallengeAnswerRequest
+  ): Promise<UserChallengeStatsResponse> {
+    try {
+      return await apiClient.submitChallengeAnswer(request);
     } catch (error) {
       console.error(
-        `[UserChallengeStatsService] getUserChallengeStats: Error fetching stats:`,
+        "[UserChallengeStatsService] Error submitting challenge answer:",
         error
       );
       throw error;

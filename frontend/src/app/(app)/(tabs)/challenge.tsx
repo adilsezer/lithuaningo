@@ -15,8 +15,7 @@ import Leaderboard from "@components/ui/Leaderboard";
 import { UserChallengeStatsCard } from "@components/ui/UserChallengeStatsCard";
 import { useLeaderboard } from "@hooks/useLeaderboard";
 import { useUserData } from "@stores/useUserStore";
-import { useUserChallengeStats } from "@src/hooks/useUserChallengeStats";
-import { useChallenge } from "@src/hooks/useChallenge";
+import { useChallengeWithStats } from "@src/hooks/useChallengeWithStats";
 
 /**
  * Challenge Tab Screen
@@ -31,15 +30,10 @@ export default function ChallengeScreen() {
   const { entries, fetchLeaderboard } = useLeaderboard();
   const {
     stats,
-    error: statsError,
-    fetchStats,
-  } = useUserChallengeStats(userId);
-  const {
     isCompleted,
     isLoading: challengeLoading,
     error: challengeError,
-    fetchQuestions,
-  } = useChallenge();
+  } = useChallengeWithStats(userId);
 
   // Load data
   useEffect(() => {
@@ -55,7 +49,7 @@ export default function ChallengeScreen() {
 
     setIsLoading(true);
     try {
-      await Promise.all([fetchQuestions(), fetchStats(), fetchLeaderboard()]);
+      await fetchLeaderboard();
     } catch (err) {
       console.error("Failed to load challenge data:", err);
     } finally {
@@ -69,10 +63,10 @@ export default function ChallengeScreen() {
   }
 
   // Show error state
-  if (statsError || challengeError) {
+  if (challengeError) {
     return (
       <ErrorMessage
-        message={statsError || challengeError || "Failed to load data"}
+        message={challengeError || "Failed to load data"}
         onRetry={loadData}
       />
     );
@@ -90,7 +84,7 @@ export default function ChallengeScreen() {
       <View style={styles.headerContainer}>
         <CustomText variant="titleLarge">Daily Challenge</CustomText>
         <CustomText>
-          Test your Lithuanian skills with daily multiple-choice questions.
+          Test your Lithuanian skills with daily challenges!
         </CustomText>
       </View>
 

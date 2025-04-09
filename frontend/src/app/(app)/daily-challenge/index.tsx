@@ -1,15 +1,19 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { useChallenge } from "@src/hooks/useChallenge";
+import { useChallengeWithStats } from "@src/hooks/useChallengeWithStats";
 import ChallengeComponent from "@components/ui/ChallengeComponent";
 import { Card, Button } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { router } from "expo-router";
+import { useUserData } from "@stores/useUserStore";
 
 /**
  * Daily Challenge Screen
  */
 export default function DailyChallengeScreen() {
+  const userData = useUserData();
+  const userId = userData?.id;
+
   // Get challenge data and handlers
   const {
     questions,
@@ -18,15 +22,12 @@ export default function DailyChallengeScreen() {
     isLoading,
     error,
     score,
-    isCorrect,
     isAnswered,
     isCompleted,
-    handleAnswer,
-    handleNextQuestion,
-    fetchQuestions,
-    getCompletionMessage,
+    submitAnswer,
+    getDailyChallengeQuestions,
     resetChallenge,
-  } = useChallenge();
+  } = useChallengeWithStats(userId);
 
   // Handle "already completed" state
   if (isCompleted && currentIndex < questions.length - 1) {
@@ -64,20 +65,19 @@ export default function DailyChallengeScreen() {
         loading={isLoading}
         error={error}
         score={score}
-        isCorrectAnswer={isAnswered ? isCorrect : null}
+        isCorrectAnswer={isAnswered ? null : null}
         isCompleted={isCompleted}
-        onAnswer={handleAnswer}
-        onNextQuestion={handleNextQuestion}
+        onAnswer={submitAnswer}
+        onNextQuestion={() => {}}
         onRetry={() => {
           resetChallenge();
-          fetchQuestions();
+          getDailyChallengeQuestions();
         }}
         onGenerateNew={() => {
           resetChallenge();
-          fetchQuestions();
+          getDailyChallengeQuestions();
         }}
         onGoBack={() => router.back()}
-        getCompletionMessage={getCompletionMessage}
       />
     </View>
   );

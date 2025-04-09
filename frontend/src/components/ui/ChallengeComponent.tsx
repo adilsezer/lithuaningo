@@ -32,7 +32,6 @@ interface ChallengeComponentProps {
   onRetry: () => Promise<void> | void;
   onGoBack?: () => void;
   onGenerateNew?: () => Promise<void> | void;
-  getCompletionMessage: () => string;
   customCompletionComponent?: React.ReactNode;
 }
 
@@ -51,7 +50,6 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
   onRetry,
   onGoBack = () => router.back(),
   onGenerateNew,
-  getCompletionMessage,
   customCompletionComponent,
 }) => {
   const theme = useTheme();
@@ -205,7 +203,6 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
       return <>{customCompletionComponent}</>;
     }
 
-    const completionMessage = getCompletionMessage();
     const percentage =
       questions.length > 0 ? (score / questions.length) * 100 : 0;
     const isHighScore = percentage >= 75;
@@ -258,13 +255,6 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             <Divider style={styles.divider} />
 
             <View style={styles.feedbackContainer}>
-              <Text
-                variant="bodyLarge"
-                style={{ textAlign: "center", fontWeight: "500" }}
-              >
-                {completionMessage}
-              </Text>
-
               <Text
                 variant="bodyMedium"
                 style={{

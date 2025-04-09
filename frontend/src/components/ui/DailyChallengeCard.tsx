@@ -46,7 +46,7 @@ export const StatsCard: React.FC<StatsCardProps> = ({
     <Card
       style={[
         {
-          marginTop: 16,
+          marginVertical: 16,
           padding: 16,
           borderRadius: 16,
           backgroundColor: theme.colors.surface,
