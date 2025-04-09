@@ -31,8 +31,6 @@ export default function TabsLayout() {
         },
         sceneStyle: {
           backgroundColor: "transparent",
-          flex: 1,
-          paddingBottom: 12,
         },
       }}
       initialRouteName="index"
@@ -44,7 +42,7 @@ export default function TabsLayout() {
           name={name}
           options={{
             title,
-            tabBarIcon: ({ color }) => (
+            tabBarIcon: ({ color }: { color: string }) => (
               <MaterialCommunityIcons size={28} name={icon} color={color} />
             ),
           }}
@@ -61,8 +59,5 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     elevation: 0,
     backgroundColor: "transparent",
-  },
-  tabLabel: {
-    fontSize: 14,
   },
 });

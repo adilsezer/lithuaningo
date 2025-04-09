@@ -1,7 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import {
   ChallengeQuestionResponse,
-  ChallengeQuestionType,
   UserChallengeStatsResponse,
   SubmitChallengeAnswerRequest,
 } from "@src/types";
