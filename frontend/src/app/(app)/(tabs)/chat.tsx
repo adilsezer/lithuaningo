@@ -6,14 +6,9 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import {
-  IconButton,
-  Divider,
-  Text,
-  ActivityIndicator,
-} from "react-native-paper";
+import { Text, ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useChat, MAX_FREE_MESSAGES_PER_DAY } from "@hooks/useChat";
+import { useChat } from "@hooks/useChat";
 import CustomText from "@components/ui/CustomText";
 import CustomDivider from "@components/ui/CustomDivider";
 import ChatMessage from "@components/chat/ChatMessage";
@@ -21,7 +16,6 @@ import ChatInput from "@components/chat/ChatInput";
 import ChatExampleSuggestions from "@components/chat/ChatExampleSuggestions";
 import ChatUsageLimitInfo from "@components/chat/ChatUsageLimitInfo";
 import LoginPrompt from "@components/chat/LoginPrompt";
-import { useIsLoading } from "@stores/useUIStore";
 
 export default function ChatScreen(): JSX.Element {
   const {
@@ -35,6 +29,8 @@ export default function ChatScreen(): JSX.Element {
     flatListRef,
     userData,
     theme,
+    isLoading,
+
     formatTimestamp,
     refreshChat,
     setInputText,
@@ -44,8 +40,6 @@ export default function ChatScreen(): JSX.Element {
     processText,
     navigateToPremium,
   } = useChat();
-
-  const isLoading = useIsLoading();
 
   const insets = useSafeAreaInsets();
 
