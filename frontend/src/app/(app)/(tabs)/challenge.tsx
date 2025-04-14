@@ -10,12 +10,12 @@ import { router } from "expo-router";
 import CustomText from "@components/ui/CustomText";
 import CustomButton from "@components/ui/CustomButton";
 import CustomDivider from "@components/ui/CustomDivider";
-import { ErrorMessage } from "@components/ui/ErrorMessage";
 import Leaderboard from "@components/ui/Leaderboard";
 import { UserChallengeStatsCard } from "@components/ui/UserChallengeStatsCard";
 import { useLeaderboard } from "@hooks/useLeaderboard";
 import { useUserData } from "@stores/useUserStore";
-import { useChallengeWithStats } from "@src/hooks/useChallengeWithStats";
+import { useChallengeStats } from "@hooks/useChallengeStats";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 /**
  * Challenge Tab Screen
@@ -24,16 +24,15 @@ export default function ChallengeScreen() {
   const userData = useUserData();
   const userId = userData?.id;
   const theme = useTheme();
-  const [isLoading, setIsLoading] = useState(true);
 
   // Feature data
   const { entries, fetchLeaderboard } = useLeaderboard();
   const {
     stats,
-    isCompleted,
-    isLoading: challengeLoading,
-    error: challengeError,
-  } = useChallengeWithStats(userId);
+    isLoading: statsLoading,
+    error: statsError,
+    getUserChallengeStats,
+  } = useChallengeStats(userId);
 
   // Load data
   useEffect(() => {
@@ -42,34 +41,18 @@ export default function ChallengeScreen() {
 
   // Load all needed data
   async function loadData() {
-    if (!userId) {
-      setIsLoading(false);
-      return;
-    }
+    if (!userId) return;
 
-    setIsLoading(true);
     try {
-      await fetchLeaderboard();
+      await Promise.all([fetchLeaderboard(), getUserChallengeStats()]);
     } catch (err) {
       console.error("Failed to load challenge data:", err);
-    } finally {
-      setIsLoading(false);
     }
   }
 
   // Start daily challenge
   function startChallenge() {
     router.push("/daily-challenge");
-  }
-
-  // Show error state
-  if (challengeError) {
-    return (
-      <ErrorMessage
-        message={challengeError || "Failed to load data"}
-        onRetry={loadData}
-      />
-    );
   }
 
   return (
@@ -88,15 +71,21 @@ export default function ChallengeScreen() {
         </CustomText>
       </View>
 
-      {/* Challenge status */}
-      {isLoading || challengeLoading ? (
+      {/* Error State */}
+      {statsError ? (
+        <ErrorMessage
+          message={`Unable to load challenge data: ${statsError}`}
+          onRetry={loadData}
+          buttonText="Try Again"
+        />
+      ) : statsLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <CustomText style={styles.loadingText}>
             Loading challenge data...
           </CustomText>
         </View>
-      ) : isCompleted ? (
+      ) : stats?.hasCompletedTodayChallenge ? (
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
             <IconButton
@@ -137,7 +126,7 @@ export default function ChallengeScreen() {
       )}
 
       {/* Stats */}
-      {stats && <UserChallengeStatsCard stats={stats} />}
+      {stats && !statsError && <UserChallengeStatsCard stats={stats} />}
 
       {/* Leaderboard */}
       <CustomDivider />

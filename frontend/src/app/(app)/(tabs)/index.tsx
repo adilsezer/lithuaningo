@@ -3,25 +3,25 @@ import { View, StyleSheet, ScrollView } from "react-native";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
 import { useSetError } from "@src/stores/useUIStore";
-import { useChallengeWithStats } from "@hooks/useChallengeWithStats";
 import { DailyChallengeCard } from "@components/ui/DailyChallengeCard";
 import { router } from "expo-router";
 import CustomButton from "@components/ui/CustomButton";
 import Leaderboard from "@components/ui/Leaderboard";
 import { useLeaderboard } from "@src/hooks/useLeaderboard";
+import { useChallengeStats } from "@hooks/useChallengeStats";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 export default function HomeScreen() {
   const userData = useUserData();
   const setError = useSetError();
 
   const { entries, fetchLeaderboard } = useLeaderboard();
-
   const {
     stats,
+    isLoading: statsLoading,
     error: statsError,
     getUserChallengeStats,
-    isLoading: statsLoading,
-  } = useChallengeWithStats(userData?.id);
+  } = useChallengeStats(userData?.id);
 
   useEffect(() => {
     if (userData?.id) {
@@ -49,11 +49,19 @@ export default function HomeScreen() {
         Hi, {userData?.fullName || "there"} 👋
       </CustomText>
 
-      <DailyChallengeCard
-        answeredQuestions={stats?.todayTotalAnswers}
-        correctAnswers={stats?.todayCorrectAnswers}
-        isLoading={statsLoading}
-      />
+      {statsError ? (
+        <ErrorMessage
+          message={`Unable to load challenge stats: ${statsError}`}
+          onRetry={getUserChallengeStats}
+          buttonText="Try Again"
+        />
+      ) : (
+        <DailyChallengeCard
+          answeredQuestions={stats?.todayTotalAnswers}
+          correctAnswers={stats?.todayCorrectAnswers}
+          isLoading={statsLoading}
+        />
+      )}
 
       <CustomText variant="bodyMedium">
         Practice flashcards with our AI assistant.
