@@ -141,7 +141,6 @@ export default function ChallengeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
   },
   content: {
     paddingBottom: 32,

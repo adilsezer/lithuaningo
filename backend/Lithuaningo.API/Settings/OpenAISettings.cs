@@ -22,7 +22,7 @@ public class OpenAISettings
     /// The model to use for chat completions
     /// </summary>
     [Required]
-    public string ChatModelName { get; set; } = "gpt-4o-mini";
+    public string ChatModelName { get; set; } = "gpt-4.1-mini";
 
     /// <summary>
     /// The model to use for image generation (e.g., "dall-e-3")

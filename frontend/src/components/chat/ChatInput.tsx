@@ -69,7 +69,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
 const styles = StyleSheet.create({
   input: {
-    marginHorizontal: 12,
+    marginBottom: 12,
   },
   inputContent: {
     marginVertical: 12,

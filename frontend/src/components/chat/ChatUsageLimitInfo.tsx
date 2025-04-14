@@ -52,7 +52,6 @@ const ChatUsageLimitInfo: React.FC<ChatUsageLimitInfoProps> = ({
 
 const styles = StyleSheet.create({
   container: {
-    marginHorizontal: 12,
     padding: 8,
     borderRadius: 8,
     borderWidth: 1,
