@@ -1,10 +1,11 @@
 import React from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
 import { Card, useTheme } from "react-native-paper";
 import { FlashcardResponse } from "@src/types/Flashcard";
 import CustomText from "./CustomText";
 import CustomDivider from "./CustomDivider";
 import Icon from "@expo/vector-icons/MaterialIcons";
+import AudioPlayer from "./AudioPlayer";
 
 interface FlashcardProps {
   flashcard: FlashcardResponse;
@@ -30,29 +31,54 @@ export default function Flashcard({
       onPress={onPress}
     >
       <Card.Content style={styles.cardContent}>
+        <View style={styles.contentContainer}>
+          {flipped && (
+            <>
+              {flashcard.imageUrl && (
+                <Image
+                  source={{ uri: flashcard.imageUrl }}
+                  style={styles.image}
+                  resizeMode="cover"
+                />
+              )}
+
+              <CustomText variant="headlineSmall" style={styles.cardText}>
+                {flashcard.backText}
+              </CustomText>
+
+              {flashcard.audioUrl && (
+                <AudioPlayer audioUrl={flashcard.audioUrl} />
+              )}
+
+              {flashcard.exampleSentence && (
+                <View style={styles.exampleContainer}>
+                  <CustomDivider />
+                  <CustomText variant="bodyLarge" style={styles.exampleText}>
+                    {flashcard.exampleSentence}
+                  </CustomText>
+                  <CustomText
+                    variant="bodyMedium"
+                    style={styles.translationText}
+                  >
+                    {flashcard.exampleSentenceTranslation}
+                  </CustomText>
+                </View>
+              )}
+            </>
+          )}
+
+          {!flipped && (
+            <CustomText variant="headlineSmall" style={styles.cardText}>
+              {flashcard.frontText}
+            </CustomText>
+          )}
+        </View>
+
         <View style={styles.flipIconContainer}>
           <Icon name="3d-rotation" size={24} color={theme.colors.onSurface} />
           <CustomText variant="bodySmall" style={styles.flipText}>
             Tap to flip
           </CustomText>
-        </View>
-
-        <View style={styles.contentContainer}>
-          <CustomText variant="headlineSmall" style={styles.cardText}>
-            {flipped ? flashcard.backText : flashcard.frontText}
-          </CustomText>
-
-          {flipped && flashcard.exampleSentence && (
-            <View style={styles.exampleContainer}>
-              <CustomDivider />
-              <CustomText variant="bodyMedium" style={styles.exampleText}>
-                {flashcard.exampleSentence}
-              </CustomText>
-              <CustomText variant="bodySmall" style={styles.translationText}>
-                {flashcard.exampleSentenceTranslation}
-              </CustomText>
-            </View>
-          )}
         </View>
       </Card.Content>
     </Card>
@@ -67,41 +93,47 @@ const styles = StyleSheet.create({
   },
   cardContent: {
     alignItems: "center",
-    justifyContent: "space-between",
+    justifyContent: "center",
     minHeight: 300,
     padding: 20,
     position: "relative",
+    paddingBottom: 60,
   },
   flipIconContainer: {
     position: "absolute",
-    top: 20,
-    right: 20,
+    bottom: 20,
+    alignSelf: "center",
     flexDirection: "row",
     alignItems: "center",
     opacity: 0.5,
+    zIndex: 10,
   },
   flipText: {
     marginLeft: 8,
   },
   contentContainer: {
-    flex: 1,
     width: "100%",
-    justifyContent: "center",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 40,
+    justifyContent: "center",
+  },
+  image: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 20,
   },
   cardText: {
     textAlign: "center",
-    marginBottom: 8,
+    marginBottom: 16,
   },
   exampleContainer: {
-    marginTop: 16,
     width: "100%",
+    marginTop: 8,
+    marginVertical: 16,
   },
   exampleText: {
     fontStyle: "italic",
-    marginVertical: 4,
+    marginBottom: 8,
     textAlign: "center",
   },
   translationText: {

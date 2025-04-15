@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import { useTheme, Button } from "react-native-paper";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -68,7 +68,7 @@ export default function CategoryFlashcardsScreen() {
   }
 
   return (
-    <SafeAreaView
+    <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
       <View style={styles.header}>
@@ -121,7 +121,7 @@ export default function CategoryFlashcardsScreen() {
         They are regularly reviewed, and a verified sign will appear if approved
         by our team.
       </CustomText>
-    </SafeAreaView>
+    </ScrollView>
   );
 }
 
