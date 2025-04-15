@@ -1,99 +1,42 @@
-import React, { useEffect, useState } from "react";
-import { StyleSheet, View, ActivityIndicator, FlatList } from "react-native";
-import { useTheme, Card, Button } from "react-native-paper";
+import React, { useEffect } from "react";
+import { StyleSheet, View } from "react-native";
+import { useTheme, Button } from "react-native-paper";
 import { useLocalSearchParams, router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useFlashcards } from "@src/hooks/useFlashcards";
-import {
-  FlashcardCategory,
-  DifficultyLevel,
-  FlashcardResponse,
-} from "@src/types/Flashcard";
+import { useFlashcardNavigation } from "@src/hooks/useFlashcardNavigation";
 import CustomText from "@components/ui/CustomText";
-import CustomDivider from "@components/ui/CustomDivider";
+import Flashcard from "@components/ui/Flashcard";
+import LoadingIndicator from "@components/ui/LoadingIndicator";
 
 export default function CategoryFlashcardsScreen() {
   const theme = useTheme();
   const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
-  const { flashcards, isLoading, error, getFlashcards } = useFlashcards();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [flipped, setFlipped] = useState(false);
+  const {
+    currentFlashcard,
+    currentIndex,
+    flipped,
+    isLoading,
+    error,
+    fetchFlashcards,
+    handleFlip,
+    handleNext,
+    handlePrevious,
+    totalCards,
+    hasNext,
+    hasPrevious,
+  } = useFlashcardNavigation({ id });
 
   useEffect(() => {
     fetchFlashcards();
   }, [id]);
 
-  const fetchFlashcards = async () => {
-    try {
-      const numericId = parseInt(id);
-
-      // Determine if it's a difficulty level or a category
-      if (numericId >= 0 && numericId <= 2) {
-        // It's a difficulty level
-        await getFlashcards({
-          primaryCategory: FlashcardCategory.AllCategories, // Get all categories
-          count: 10,
-          difficulty: numericId as DifficultyLevel,
-        });
-      } else {
-        // It's a category
-        await getFlashcards({
-          primaryCategory: numericId as FlashcardCategory,
-          count: 10,
-          difficulty: DifficultyLevel.Basic, // Default difficulty
-        });
-      }
-    } catch (err) {
-      console.error("Error fetching flashcards:", err);
-    }
-  };
-
-  const handleFlip = () => {
-    setFlipped(!flipped);
-  };
-
-  const handleNext = () => {
-    if (currentIndex < flashcards.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setFlipped(false);
-    }
-  };
-
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setFlipped(false);
-    }
-  };
-
-  const renderFlashcard = (item: FlashcardResponse) => {
-    return (
-      <Card style={styles.card} onPress={handleFlip}>
-        <Card.Content style={styles.cardContent}>
-          <CustomText variant="titleMedium" style={styles.cardText}>
-            {flipped ? item.backText : item.frontText}
-          </CustomText>
-          {flipped && item.exampleSentence && (
-            <View style={styles.exampleContainer}>
-              <CustomDivider />
-              <CustomText variant="bodyMedium" style={styles.exampleText}>
-                {item.exampleSentence}
-              </CustomText>
-              <CustomText variant="bodySmall" style={styles.translationText}>
-                {item.exampleSentenceTranslation}
-              </CustomText>
-            </View>
-          )}
-        </Card.Content>
-      </Card>
-    );
-  };
-
-  if (isLoading && flashcards.length === 0) {
+  if (isLoading && totalCards === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-        <CustomText>Loading flashcards...</CustomText>
+        <LoadingIndicator modal={false} />
+        <CustomText style={{ marginTop: 16 }}>
+          🤖 Thinking hard... AI is generating your flashcards!
+        </CustomText>
       </View>
     );
   }
@@ -111,7 +54,7 @@ export default function CategoryFlashcardsScreen() {
     );
   }
 
-  if (flashcards.length === 0) {
+  if (totalCards === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
         <CustomText variant="bodyLarge">
@@ -133,18 +76,24 @@ export default function CategoryFlashcardsScreen() {
           {name} Flashcards
         </CustomText>
         <CustomText variant="bodyMedium">
-          Card {currentIndex + 1} of {flashcards.length}
+          Card {currentIndex + 1} of {totalCards}
         </CustomText>
-        <CustomText variant="bodySmall">Tap card to flip</CustomText>
       </View>
 
-      {flashcards.length > 0 && renderFlashcard(flashcards[currentIndex])}
+      {currentFlashcard && (
+        <Flashcard
+          flashcard={currentFlashcard}
+          flipped={flipped}
+          onPress={handleFlip}
+        />
+      )}
 
       <View style={styles.navigationButtons}>
         <Button
-          mode="outlined"
+          mode="contained"
           onPress={handlePrevious}
-          disabled={currentIndex === 0}
+          disabled={!hasPrevious}
+          buttonColor={theme.colors.secondary}
           style={styles.navButton}
         >
           Previous
@@ -152,7 +101,7 @@ export default function CategoryFlashcardsScreen() {
         <Button
           mode="contained"
           onPress={handleNext}
-          disabled={currentIndex === flashcards.length - 1}
+          disabled={!hasNext}
           style={styles.navButton}
         >
           Next
@@ -166,6 +115,12 @@ export default function CategoryFlashcardsScreen() {
       >
         Back to Categories
       </Button>
+
+      <CustomText variant="bodySmall" style={styles.disclaimer}>
+        Note: These flashcards are generated by AI and may contain inaccuracies.
+        They are regularly reviewed, and a verified sign will appear if approved
+        by our team.
+      </CustomText>
     </SafeAreaView>
   );
 }
@@ -183,29 +138,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     alignItems: "center",
   },
-  card: {
-    marginVertical: 20,
-    minHeight: 200,
-  },
-  cardContent: {
-    alignItems: "center",
-    justifyContent: "center",
-    minHeight: 200,
-  },
-  cardText: {
-    textAlign: "center",
-  },
-  exampleContainer: {
-    marginTop: 16,
-    width: "100%",
-  },
-  exampleText: {
-    fontStyle: "italic",
-    marginVertical: 4,
-  },
-  translationText: {
-    opacity: 0.7,
-  },
   navigationButtons: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -221,6 +153,10 @@ const styles = StyleSheet.create({
   errorText: {
     color: "red",
     marginBottom: 16,
+    textAlign: "center",
+  },
+  disclaimer: {
+    marginTop: 20,
     textAlign: "center",
   },
 });
