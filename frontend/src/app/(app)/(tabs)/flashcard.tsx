@@ -1,5 +1,5 @@
 import React from "react";
-import { StyleSheet, SafeAreaView, ScrollView } from "react-native";
+import { StyleSheet, SafeAreaView, FlatList, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import CustomText from "@components/ui/CustomText";
@@ -160,6 +160,35 @@ export default function FlashcardScreen() {
     },
   ];
 
+  // Define sections for FlatList
+  const sections = [
+    { id: "header", type: "header" },
+    {
+      id: "all",
+      type: "category",
+      title: "All Flashcards",
+      data: allCategories,
+    },
+    {
+      id: "difficulty",
+      type: "category",
+      title: "By Difficulty",
+      data: difficultyCategories,
+    },
+    {
+      id: "grammatical",
+      type: "category",
+      title: "Grammatical Categories",
+      data: grammaticalCategories,
+    },
+    {
+      id: "thematic",
+      type: "category",
+      title: "Thematic Categories",
+      data: thematicCategories,
+    },
+  ];
+
   const handleSelectCategory = (category: FlashcardCategory) => {
     // Navigate to category flashcards screen
     router.push({
@@ -171,59 +200,53 @@ export default function FlashcardScreen() {
     });
   };
 
+  const renderItem = ({ item }: { item: any }) => {
+    switch (item.type) {
+      case "header":
+        return (
+          <View>
+            <CustomText variant="titleLarge" bold style={styles.title}>
+              Flashcards
+            </CustomText>
+            <CustomText variant="bodyLarge" style={styles.subtitle}>
+              Choose a category to practice
+            </CustomText>
+          </View>
+        );
+      case "category":
+        return (
+          <>
+            <CustomDivider />
+            <View style={styles.categoryContainer}>
+              <CategoryGrid
+                categories={item.data}
+                onSelectCategory={handleSelectCategory}
+                title={item.title}
+              />
+            </View>
+          </>
+        );
+      default:
+        return null;
+    }
+  };
+
   return (
     <SafeAreaView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
-      <ScrollView style={styles.scrollView}>
-        <CustomText variant="titleLarge" bold style={styles.title}>
-          Flashcards
-        </CustomText>
-        <CustomText variant="bodyLarge" style={styles.subtitle}>
-          Choose a category to practice
-        </CustomText>
-
-        <CustomDivider />
-
-        <CategoryGrid
-          categories={allCategories}
-          onSelectCategory={handleSelectCategory}
-          title="All Flashcards"
-        />
-
-        <CustomDivider />
-
-        <CategoryGrid
-          categories={difficultyCategories}
-          onSelectCategory={handleSelectCategory}
-          title="By Difficulty"
-        />
-
-        <CustomDivider />
-
-        <CategoryGrid
-          categories={grammaticalCategories}
-          onSelectCategory={handleSelectCategory}
-          title="Grammatical Categories"
-        />
-
-        <CustomDivider />
-
-        <CategoryGrid
-          categories={thematicCategories}
-          onSelectCategory={handleSelectCategory}
-          title="Thematic Categories"
-        />
-      </ScrollView>
+      <FlatList
+        data={sections}
+        renderItem={renderItem}
+        keyExtractor={(item) => item.id}
+        showsVerticalScrollIndicator={true}
+      />
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-  },
-  scrollView: {
     flex: 1,
   },
   title: {
@@ -233,5 +256,8 @@ const styles = StyleSheet.create({
   subtitle: {
     marginHorizontal: 16,
     marginBottom: 8,
+  },
+  categoryContainer: {
+    marginBottom: 16,
   },
 });

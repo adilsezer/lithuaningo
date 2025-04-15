@@ -17,6 +17,7 @@ const AUTHENTICATED_SCREENS = [
   { name: "about/index", title: "About" },
   { name: "terms-of-service/index", title: "Terms of Service" },
   { name: "privacy-policy/index", title: "Privacy Policy" },
+  { name: "category-flashcards/[id]", title: "Flashcards" },
 ];
 
 export default function AppLayout() {
