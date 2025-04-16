@@ -10,9 +10,24 @@ import {
   FlashcardCategory as FlashcardCategoryEnum,
   DifficultyLevel,
 } from "@src/types/Flashcard";
+import { UserFlashcardStatsCard } from "@components/ui/UserFlashcardStatsCard";
+import { useFlashcardStats } from "@hooks/useFlashcardStats";
+import { useUserData } from "@stores/useUserStore";
+import { ActivityIndicator } from "react-native-paper";
 
 export default function FlashcardScreen() {
   const theme = useTheme();
+  const userData = useUserData();
+  const { stats, isLoading, error, getUserFlashcardStats } = useFlashcardStats(
+    userData?.id
+  );
+
+  // Fetch stats on component mount
+  React.useEffect(() => {
+    if (userData?.id) {
+      getUserFlashcardStats();
+    }
+  }, [userData?.id, getUserFlashcardStats]);
 
   // Helper function to get theme color based on index
   const getColor = (index: number) => {
@@ -163,6 +178,9 @@ export default function FlashcardScreen() {
   // Define sections for FlatList
   const sections = [
     { id: "header", type: "header" },
+    { id: "stats-subtitle", type: "stats-subtitle" },
+    { id: "stats", type: "stats" },
+    { id: "category-subtitle", type: "category-subtitle" },
     {
       id: "all",
       type: "category",
@@ -208,11 +226,36 @@ export default function FlashcardScreen() {
             <CustomText variant="titleLarge" bold style={styles.title}>
               Flashcards
             </CustomText>
-            <CustomText variant="bodyLarge" style={styles.subtitle}>
-              Choose a category to practice
-            </CustomText>
           </View>
         );
+      case "category-subtitle":
+        return (
+          <CustomText variant="bodyLarge" style={styles.subtitle}>
+            Choose a category to practice
+          </CustomText>
+        );
+      case "stats-subtitle":
+        return (
+          <CustomText variant="bodyLarge" style={styles.subtitle}>
+            Your Learning Progress
+          </CustomText>
+        );
+      case "stats":
+        return userData?.id ? (
+          stats ? (
+            <UserFlashcardStatsCard stats={stats} isLoading={isLoading} />
+          ) : isLoading ? (
+            <View style={styles.loadingContainer}>
+              <ActivityIndicator
+                animating={true}
+                color={theme.colors.primary}
+              />
+              <CustomText variant="bodySmall" style={styles.loadingText}>
+                Loading your statistics...
+              </CustomText>
+            </View>
+          ) : null
+        ) : null;
       case "category":
         return (
           <>
@@ -259,5 +302,15 @@ const styles = StyleSheet.create({
   },
   categoryContainer: {
     marginBottom: 16,
+  },
+  loadingContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 16,
+    marginHorizontal: 16,
+    marginVertical: 8,
+  },
+  loadingText: {
+    marginTop: 8,
   },
 });
