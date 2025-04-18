@@ -20,8 +20,10 @@ export default function FlashcardScreen() {
   const userData = useUserData();
 
   // Initialize the hook with autoRefreshDetails disabled to avoid unnecessary API calls
-  const { statsSummary, isLoading, error, getUserFlashcardStats } =
-    useFlashcardStats(userData?.id, { autoRefreshDetails: false });
+  const { statsSummary, isLoading, getUserFlashcardStats } = useFlashcardStats(
+    userData?.id,
+    { autoRefreshDetails: false }
+  );
 
   // Fetch stats only once when the component mounts or userId changes
   useEffect(() => {

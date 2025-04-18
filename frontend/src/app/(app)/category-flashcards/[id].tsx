@@ -25,6 +25,7 @@ export default function CategoryFlashcardsScreen() {
     flipped,
     totalCards,
     currentFlashcardStats,
+    isDeckCompleted,
 
     // State
     isLoadingFlashcards,
@@ -59,6 +60,12 @@ export default function CategoryFlashcardsScreen() {
       });
     }
   }, [currentFlashcard, handleSubmitAnswer]);
+
+  // Handler for fetching a new batch of cards
+  const handleFetchNewCards = useCallback(() => {
+    // Fetch new cards - this will reset the state and get a fresh batch
+    fetchFlashcards();
+  }, [fetchFlashcards]);
 
   if (!userData?.id) {
     return (
@@ -121,9 +128,11 @@ export default function CategoryFlashcardsScreen() {
         <CustomText variant="titleLarge" bold>
           {name} Flashcards
         </CustomText>
-        <CustomText variant="bodyMedium">
-          Card {currentIndex + 1} of {totalCards}
-        </CustomText>
+        {!isDeckCompleted && (
+          <CustomText variant="bodyMedium">
+            Card {currentIndex + 1} of {totalCards}
+          </CustomText>
+        )}
       </View>
 
       {submissionMessage && (
@@ -137,42 +146,74 @@ export default function CategoryFlashcardsScreen() {
         </View>
       )}
 
-      {currentFlashcard && (
-        <>
-          <Flashcard
-            flashcard={currentFlashcard}
-            flipped={flipped}
-            onPress={handleFlip}
-          />
+      {isDeckCompleted ? (
+        // Completed deck view
+        <View style={styles.completedContainer}>
+          <CustomText variant="headlineSmall" style={styles.completedText}>
+            Congratulations! 🎉
+          </CustomText>
+          <CustomText variant="bodyLarge" style={styles.completedSubtext}>
+            You've completed all flashcards in this deck.
+          </CustomText>
+          <View style={styles.completedButtonsContainer}>
+            <Button
+              mode="contained"
+              onPress={handleFetchNewCards}
+              style={styles.completedButton}
+              icon="refresh"
+              loading={isLoadingFlashcards}
+              disabled={isLoadingFlashcards}
+            >
+              Get New Cards
+            </Button>
+            <Button
+              mode="outlined"
+              onPress={handleGoBack}
+              style={styles.completedButton}
+            >
+              Return to Categories
+            </Button>
+          </View>
+        </View>
+      ) : (
+        // Active flashcard view
+        currentFlashcard && (
+          <>
+            <Flashcard
+              flashcard={currentFlashcard}
+              flipped={flipped}
+              onPress={handleFlip}
+            />
 
-          {flipped && (
-            <View style={styles.answerButtonsContainer}>
-              <Button
-                mode="contained"
-                buttonColor={theme.colors.error}
-                style={styles.answerButton}
-                onPress={handleMarkIncorrect}
-                icon="close"
-              >
-                Incorrect
-              </Button>
-              <Button
-                mode="contained"
-                buttonColor={theme.colors.primary}
-                style={styles.answerButton}
-                onPress={handleMarkCorrect}
-                icon="check"
-              >
-                Correct
-              </Button>
-            </View>
-          )}
+            {flipped && (
+              <View style={styles.answerButtonsContainer}>
+                <Button
+                  mode="contained"
+                  buttonColor={theme.colors.error}
+                  style={styles.answerButton}
+                  onPress={handleMarkIncorrect}
+                  icon="close"
+                >
+                  Incorrect
+                </Button>
+                <Button
+                  mode="contained"
+                  buttonColor={theme.colors.primary}
+                  style={styles.answerButton}
+                  onPress={handleMarkCorrect}
+                  icon="check"
+                >
+                  Correct
+                </Button>
+              </View>
+            )}
 
-          <FlashcardStats
-            stats={currentFlashcardStats}
-            isLoading={isLoadingStats}
-          />
-        </>
+            <FlashcardStats
+              stats={currentFlashcardStats}
+              isLoading={isLoadingStats}
+            />
+          </>
+        )
       )}
 
       <CustomText variant="bodySmall" style={styles.disclaimer}>
@@ -222,5 +263,29 @@ const styles = StyleSheet.create({
   answerButton: {
     flex: 1,
     marginHorizontal: 5,
+  },
+  completedContainer: {
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+    marginTop: 20,
+    marginBottom: 20,
+    borderRadius: 12,
+  },
+  completedText: {
+    marginBottom: 12,
+    textAlign: "center",
+  },
+  completedSubtext: {
+    textAlign: "center",
+    marginBottom: 24,
+  },
+  completedButtonsContainer: {
+    width: "100%",
+    marginTop: 16,
+    gap: 12,
+  },
+  completedButton: {
+    marginBottom: 8,
   },
 });

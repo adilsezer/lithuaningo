@@ -31,7 +31,7 @@ export const useFlashcardStats = (
   // Track the current flashcard ID for auto-refreshing stats
   const currentFlashcardIdRef = useRef<string | null>(null);
 
-  // Loading and error states
+  // Loading and error states - keep these even if unused to maintain hook order
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,7 +110,7 @@ export const useFlashcardStats = (
         setIsLoading(false);
       }
     },
-    [userId] // Stable function reference
+    [userId] // Keep this dependency array minimal
   );
 
   /**

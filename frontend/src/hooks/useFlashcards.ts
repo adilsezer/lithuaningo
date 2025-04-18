@@ -27,10 +27,11 @@ export const useFlashcards = ({
   const [submissionMessage, setSubmissionMessage] = useState<string | null>(
     null
   );
+  // Track whether the user has completed all cards in the deck
+  const [isDeckCompleted, setIsDeckCompleted] = useState(false);
 
   // Loading and error states
   const [isLoadingFlashcards, setIsLoadingFlashcards] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Use the flashcard stats hook for stats-related functionality
@@ -46,6 +47,8 @@ export const useFlashcards = ({
     async (request: FlashcardRequest) => {
       setIsLoadingFlashcards(true);
       setError(null);
+      // Reset deck completion state when fetching new cards
+      setIsDeckCompleted(false);
       try {
         const data = await flashcardService.getFlashcards(request);
         setFlashcards(data);
@@ -97,8 +100,10 @@ export const useFlashcards = ({
   // Get current flashcard - use useMemo instead of useCallback to prevent
   // unnecessary recreation of this function
   const currentFlashcard = useMemo((): FlashcardResponse | null => {
+    // Don't return a flashcard if we've completed the deck
+    if (isDeckCompleted) return null;
     return flashcards.length > 0 ? flashcards[currentIndex] : null;
-  }, [flashcards, currentIndex]);
+  }, [flashcards, currentIndex, isDeckCompleted]);
 
   // Auto-fetch flashcards when categoryId changes
   useEffect(() => {
@@ -127,13 +132,6 @@ export const useFlashcards = ({
     }
   }, [currentIndex, flashcards.length]);
 
-  const handlePrevious = useCallback(() => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setFlipped(false);
-    }
-  }, [currentIndex]);
-
   // Handle answer submission with feedback and navigation
   const handleSubmitAnswer = useCallback(
     async (answer: SubmitFlashcardAnswerRequest) => {
@@ -142,7 +140,6 @@ export const useFlashcards = ({
         return;
       }
 
-      setIsSubmitting(true);
       try {
         // Submit the answer using the stats hook
         await submitFlashcardAnswerToStats({
@@ -163,6 +160,7 @@ export const useFlashcards = ({
             handleNext();
           } else {
             // Reached the end of the deck
+            setIsDeckCompleted(true);
             setSubmissionMessage("You've completed all cards in this deck!");
           }
         }, 1500);
@@ -174,8 +172,6 @@ export const useFlashcards = ({
         setTimeout(() => {
           setSubmissionMessage(null);
         }, 2000);
-      } finally {
-        setIsSubmitting(false);
       }
     },
     [
@@ -189,11 +185,11 @@ export const useFlashcards = ({
 
   return {
     // Data
-    flashcards,
     currentFlashcard,
     currentIndex,
     flipped,
     submissionMessage,
+    isDeckCompleted,
 
     // Stats data
     currentFlashcardStats,
@@ -201,18 +197,12 @@ export const useFlashcards = ({
 
     // State information
     isLoadingFlashcards,
-    isSubmitting,
     error,
     totalCards: flashcards.length,
-    hasNext: currentIndex < flashcards.length - 1,
-    hasPrevious: currentIndex > 0,
 
     // Actions
-    getFlashcards,
     fetchFlashcards,
     handleFlip,
-    handleNext,
-    handlePrevious,
     handleSubmitAnswer,
   };
 };
