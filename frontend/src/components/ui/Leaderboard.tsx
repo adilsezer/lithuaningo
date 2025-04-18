@@ -3,10 +3,10 @@ import { StyleSheet, View } from "react-native";
 import { DataTable, useTheme } from "react-native-paper";
 import FontAwesome from "@expo/vector-icons/FontAwesome";
 import CustomText from "./CustomText";
-import { LeaderboardEntry } from "@src/types";
+import { LeaderboardEntryResponse } from "@src/types";
 
 interface LeaderboardProps {
-  entries: LeaderboardEntry[];
+  entries: LeaderboardEntryResponse[];
 }
 
 const TrophyIcon = ({

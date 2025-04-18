@@ -32,7 +32,6 @@ export const useFlashcardStats = (
   const currentFlashcardIdRef = useRef<string | null>(null);
 
   // Loading and error states - keep these even if unused to maintain hook order
-  const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   /**
@@ -44,7 +43,6 @@ export const useFlashcardStats = (
       return null;
     }
 
-    setIsLoading(true);
     setError(null);
 
     try {
@@ -60,8 +58,6 @@ export const useFlashcardStats = (
           : "Failed to fetch user flashcard stats";
       setError(errorMessage);
       throw err;
-    } finally {
-      setIsLoading(false);
     }
   }, [userId]);
 
@@ -86,7 +82,6 @@ export const useFlashcardStats = (
       // Update the current flashcard ID reference
       currentFlashcardIdRef.current = flashcardId;
 
-      setIsLoading(true);
       setError(null);
 
       try {
@@ -106,8 +101,6 @@ export const useFlashcardStats = (
           setError(errorMessage);
         }
         throw err;
-      } finally {
-        setIsLoading(false);
       }
     },
     [userId] // Keep this dependency array minimal
@@ -123,7 +116,6 @@ export const useFlashcardStats = (
         return null;
       }
 
-      setIsLoading(true);
       setError(null);
 
       try {
@@ -158,8 +150,6 @@ export const useFlashcardStats = (
             : "Failed to submit flashcard answer";
         setError(errorMessage);
         throw err;
-      } finally {
-        setIsLoading(false);
       }
     },
     [userId, getUserFlashcardStats, options.autoRefreshDetails]
@@ -179,7 +169,6 @@ export const useFlashcardStats = (
     singleFlashcardStats,
 
     // State
-    isLoading,
     error,
 
     // Actions

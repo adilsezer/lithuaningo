@@ -23,7 +23,13 @@ export default function Flashcard({
   // Simplified content rendering
   return (
     <Card
-      style={[styles.card, { backgroundColor: theme.colors.background }]}
+      style={[
+        styles.card,
+        {
+          backgroundColor: theme.colors.background,
+          borderColor: theme.colors.primary,
+        },
+      ]}
       onPress={onPress}
     >
       <Card.Content style={styles.cardContent}>
@@ -118,6 +124,7 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 12,
     marginVertical: 8,
+    borderWidth: 1,
   },
   cardContent: {
     padding: 16,

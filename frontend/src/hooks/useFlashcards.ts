@@ -15,6 +15,12 @@ interface UseFlashcardsProps {
   userId?: string;
 }
 
+// Define a type for message with type indicator
+export interface FlashcardMessage {
+  text: string;
+  type: "success" | "error" | "info";
+}
+
 export const useFlashcards = ({
   categoryId,
   initialIndex = 0,
@@ -24,9 +30,8 @@ export const useFlashcards = ({
   const [flashcards, setFlashcards] = useState<FlashcardResponse[]>([]);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
   const [flipped, setFlipped] = useState(false);
-  const [submissionMessage, setSubmissionMessage] = useState<string | null>(
-    null
-  );
+  const [submissionMessage, setSubmissionMessage] =
+    useState<FlashcardMessage | null>(null);
   // Track whether the user has completed all cards in the deck
   const [isDeckCompleted, setIsDeckCompleted] = useState(false);
 
@@ -37,7 +42,6 @@ export const useFlashcards = ({
   // Use the flashcard stats hook for stats-related functionality
   const {
     singleFlashcardStats: currentFlashcardStats,
-    isLoading: isLoadingStats,
     getSingleFlashcardStats,
     submitFlashcardAnswer: submitFlashcardAnswerToStats,
   } = useFlashcardStats(userId);
@@ -147,11 +151,17 @@ export const useFlashcards = ({
           userId,
         });
 
-        setSubmissionMessage(
-          answer.wasCorrect
-            ? "Great job! Moving to the next card..."
-            : "Keep practicing! This card will appear again later."
-        );
+        if (answer.wasCorrect) {
+          setSubmissionMessage({
+            text: "Great job! Moving to the next card...",
+            type: "success",
+          });
+        } else {
+          setSubmissionMessage({
+            text: "Keep practicing! This card will appear again later.",
+            type: "error",
+          });
+        }
 
         // Clear message and move to next card after a short delay
         setTimeout(() => {
@@ -161,12 +171,18 @@ export const useFlashcards = ({
           } else {
             // Reached the end of the deck
             setIsDeckCompleted(true);
-            setSubmissionMessage("You've completed all cards in this deck!");
+            setSubmissionMessage({
+              text: "You've completed all cards in this deck!",
+              type: "info",
+            });
           }
         }, 1500);
       } catch (err) {
         console.error("Error submitting answer:", err);
-        setSubmissionMessage("Error recording your answer. Please try again.");
+        setSubmissionMessage({
+          text: "Error recording your answer. Please try again.",
+          type: "error",
+        });
 
         // Clear error message after a delay
         setTimeout(() => {
@@ -193,7 +209,6 @@ export const useFlashcards = ({
 
     // Stats data
     currentFlashcardStats,
-    isLoadingStats,
 
     // State information
     isLoadingFlashcards,

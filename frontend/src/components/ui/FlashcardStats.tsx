@@ -18,7 +18,13 @@ const FlashcardStats: React.FC<FlashcardStatsProps> = ({
   if (isLoading) {
     return (
       <Card
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.primary,
+          },
+        ]}
       >
         <Card.Content>
           <CustomText>Loading stats...</CustomText>
@@ -30,7 +36,13 @@ const FlashcardStats: React.FC<FlashcardStatsProps> = ({
   if (!stats) {
     return (
       <Card
-        style={[styles.container, { backgroundColor: theme.colors.background }]}
+        style={[
+          styles.container,
+          {
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.primary,
+          },
+        ]}
       >
         <Card.Content>
           <CustomText>
@@ -47,7 +59,13 @@ const FlashcardStats: React.FC<FlashcardStatsProps> = ({
 
   return (
     <Card
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
+      style={[
+        styles.container,
+        {
+          backgroundColor: theme.colors.background,
+          borderColor: theme.colors.primary,
+        },
+      ]}
     >
       <Card.Content>
         <CustomText variant="titleMedium" style={styles.title}>
@@ -124,6 +142,7 @@ const styles = StyleSheet.create({
     marginVertical: 12,
     borderRadius: 8,
     elevation: 2,
+    borderWidth: 1,
   },
   title: {
     marginBottom: 12,

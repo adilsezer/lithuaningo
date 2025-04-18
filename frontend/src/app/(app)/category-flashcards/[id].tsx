@@ -2,7 +2,7 @@ import React, { useCallback } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useTheme, Button } from "react-native-paper";
 import { useLocalSearchParams, router } from "expo-router";
-import { useFlashcards } from "@src/hooks/useFlashcards";
+import { useFlashcards, FlashcardMessage } from "@src/hooks/useFlashcards";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
 import Flashcard from "@components/ui/Flashcard";
@@ -29,7 +29,6 @@ export default function CategoryFlashcardsScreen() {
 
     // State
     isLoadingFlashcards,
-    isLoadingStats,
     error,
     submissionMessage,
 
@@ -66,6 +65,22 @@ export default function CategoryFlashcardsScreen() {
     // Fetch new cards - this will reset the state and get a fresh batch
     fetchFlashcards();
   }, [fetchFlashcards]);
+
+  // Function to get message background color based on message type
+  const getMessageBackgroundColor = useCallback(
+    (messageType: FlashcardMessage["type"]) => {
+      switch (messageType) {
+        case "success":
+          return theme.colors.primary;
+        case "error":
+          return theme.colors.error;
+        case "info":
+        default:
+          return theme.colors.background;
+      }
+    },
+    [theme.colors]
+  );
 
   if (!userData?.id) {
     return (
@@ -136,12 +151,21 @@ export default function CategoryFlashcardsScreen() {
       </View>
 
       {submissionMessage && (
-        <View style={styles.messageContainer}>
+        <View
+          style={[
+            styles.messageContainer,
+            {
+              backgroundColor: getMessageBackgroundColor(
+                submissionMessage.type
+              ),
+            },
+          ]}
+        >
           <CustomText
             variant="bodyLarge"
-            style={{ textAlign: "center", color: theme.colors.onSurface }}
+            style={{ textAlign: "center", color: theme.colors.onPrimary }}
           >
-            {submissionMessage}
+            {submissionMessage.text}
           </CustomText>
         </View>
       )}
@@ -210,7 +234,7 @@ export default function CategoryFlashcardsScreen() {
 
             <FlashcardStats
               stats={currentFlashcardStats}
-              isLoading={isLoadingStats}
+              isLoading={isLoadingFlashcards}
             />
           </>
         )
@@ -248,7 +272,6 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   messageContainer: {
-    backgroundColor: "rgba(0,0,0,0.05)",
     padding: 10,
     borderRadius: 8,
     marginBottom: 16,
