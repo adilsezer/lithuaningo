@@ -149,4 +149,5 @@ logs/
 # IDE rules
 .windsurfrules
 .cursorrules
+.cursor/
 CHANGELOG.md
