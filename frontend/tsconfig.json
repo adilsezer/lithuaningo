@@ -2,6 +2,8 @@
   "compilerOptions": {
     "strict": true,
     "baseUrl": "./",
+    "moduleResolution": "bundler",
+    "module": "es2022",
     "paths": {
       "assets/*": ["assets/*"],
       "@components/*": ["src/components/*"],

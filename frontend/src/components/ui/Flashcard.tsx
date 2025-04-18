@@ -1,7 +1,7 @@
 import React from "react";
 import { StyleSheet, View, Image } from "react-native";
 import { Card, useTheme, Chip } from "react-native-paper";
-import { FlashcardResponse } from "@src/types/Flashcard";
+import { FlashcardResponse, DifficultyLevel } from "@src/types/Flashcard";
 import CustomText from "./CustomText";
 import CustomDivider from "./CustomDivider";
 import Icon from "@expo/vector-icons/MaterialIcons";
@@ -20,6 +20,20 @@ export default function Flashcard({
 }: FlashcardProps) {
   const theme = useTheme();
 
+  // Get difficulty label based on difficulty level
+  const getDifficultyLabel = (difficulty: DifficultyLevel): string => {
+    switch (difficulty) {
+      case DifficultyLevel.Basic:
+        return "Basic";
+      case DifficultyLevel.Intermediate:
+        return "Intermediate";
+      case DifficultyLevel.Advanced:
+        return "Advanced";
+      default:
+        return "Unknown";
+    }
+  };
+
   // Simplified content rendering
   return (
     <Card
@@ -35,6 +49,21 @@ export default function Flashcard({
       <Card.Content style={styles.cardContent}>
         {/* Verification badge */}
         <View style={styles.headerContainer}>
+          {/* Difficulty level (only show when flipped) */}
+          <Chip
+            style={[
+              styles.difficultyChip,
+              { backgroundColor: theme.colors.secondaryContainer },
+            ]}
+            textStyle={{
+              fontSize: 12,
+              color: theme.colors.onSecondaryContainer,
+            }}
+            compact
+          >
+            {getDifficultyLabel(flashcard.difficulty)}
+          </Chip>
+
           {!flashcard.isVerified && (
             <Chip
               icon="check-decagram"
@@ -43,7 +72,7 @@ export default function Flashcard({
                 { backgroundColor: theme.colors.primaryContainer },
               ]}
               textStyle={{
-                fontSize: 10,
+                fontSize: 12,
                 color: theme.colors.onPrimaryContainer,
               }}
               compact
@@ -86,6 +115,19 @@ export default function Flashcard({
                     style={styles.translationText}
                   >
                     {flashcard.exampleSentenceTranslation}
+                  </CustomText>
+                </View>
+              )}
+
+              {/* Notes section */}
+              {flashcard.notes && (
+                <View style={styles.notesContainer}>
+                  <CustomDivider />
+                  <CustomText variant="bodyMedium" style={styles.notesTitle}>
+                    Notes:
+                  </CustomText>
+                  <CustomText variant="bodySmall" style={styles.notesText}>
+                    {flashcard.notes}
                   </CustomText>
                 </View>
               )}
@@ -135,7 +177,8 @@ const styles = StyleSheet.create({
   headerContainer: {
     width: "100%",
     flexDirection: "row",
-    justifyContent: "flex-end",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 8,
   },
   contentContainer: {
@@ -148,6 +191,9 @@ const styles = StyleSheet.create({
     height: 16,
   },
   verifiedBadge: {
+    borderRadius: 4,
+  },
+  difficultyChip: {
     borderRadius: 4,
   },
   image: {
@@ -171,6 +217,17 @@ const styles = StyleSheet.create({
   },
   translationText: {
     textAlign: "center",
+  },
+  notesContainer: {
+    width: "100%",
+    marginTop: 12,
+  },
+  notesTitle: {
+    fontWeight: "bold",
+    marginBottom: 4,
+  },
+  notesText: {
+    lineHeight: 18,
   },
   flipIndicator: {
     flexDirection: "row",
