@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { StyleSheet, SafeAreaView, FlatList, View } from "react-native";
 import { useTheme } from "react-native-paper";
 import { router } from "expo-router";
@@ -18,15 +18,28 @@ import { ActivityIndicator } from "react-native-paper";
 export default function FlashcardScreen() {
   const theme = useTheme();
   const userData = useUserData();
-  const { stats, isLoading, error, getUserFlashcardStats } = useFlashcardStats(
-    userData?.id
-  );
 
-  // Fetch stats on component mount
-  React.useEffect(() => {
+  // Initialize the hook with autoRefreshDetails disabled to avoid unnecessary API calls
+  const { statsSummary, isLoading, error, getUserFlashcardStats } =
+    useFlashcardStats(userData?.id, { autoRefreshDetails: false });
+
+  // Fetch stats only once when the component mounts or userId changes
+  useEffect(() => {
+    let isMounted = true;
+
     if (userData?.id) {
-      getUserFlashcardStats();
+      // Only fetch if component is still mounted
+      getUserFlashcardStats().catch((err) => {
+        if (isMounted) {
+          console.error("Error fetching flashcard stats:", err);
+        }
+      });
     }
+
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+    };
   }, [userData?.id, getUserFlashcardStats]);
 
   // Helper function to get theme color based on index
@@ -175,104 +188,122 @@ export default function FlashcardScreen() {
     },
   ];
 
-  // Define sections for FlatList
-  const sections = [
-    { id: "header", type: "header" },
-    { id: "stats-subtitle", type: "stats-subtitle" },
-    { id: "stats", type: "stats" },
-    { id: "category-subtitle", type: "category-subtitle" },
-    {
-      id: "all",
-      type: "category",
-      title: "All Flashcards",
-      data: allCategories,
-    },
-    {
-      id: "difficulty",
-      type: "category",
-      title: "By Difficulty",
-      data: difficultyCategories,
-    },
-    {
-      id: "grammatical",
-      type: "category",
-      title: "Grammatical Categories",
-      data: grammaticalCategories,
-    },
-    {
-      id: "thematic",
-      type: "category",
-      title: "Thematic Categories",
-      data: thematicCategories,
-    },
-  ];
-
-  const handleSelectCategory = (category: FlashcardCategory) => {
-    // Navigate to category flashcards screen
-    router.push({
-      pathname: "/(app)/category-flashcards/[id]",
-      params: {
-        id: category.id,
-        name: category.name,
+  // Define sections for FlatList - memoize to prevent re-creation on every render
+  const sections = React.useMemo(
+    () => [
+      { id: "header", type: "header" },
+      { id: "stats-subtitle", type: "stats-subtitle" },
+      { id: "stats", type: "stats" },
+      { id: "category-subtitle", type: "category-subtitle" },
+      {
+        id: "all",
+        type: "category",
+        title: "All Flashcards",
+        data: allCategories,
       },
-    });
-  };
+      {
+        id: "difficulty",
+        type: "category",
+        title: "By Difficulty",
+        data: difficultyCategories,
+      },
+      {
+        id: "grammatical",
+        type: "category",
+        title: "Grammatical Categories",
+        data: grammaticalCategories,
+      },
+      {
+        id: "thematic",
+        type: "category",
+        title: "Thematic Categories",
+        data: thematicCategories,
+      },
+    ],
+    [theme.colors.inversePrimary]
+  ); // Only depend on the dynamic color
 
-  const renderItem = ({ item }: { item: any }) => {
-    switch (item.type) {
-      case "header":
-        return (
-          <View>
-            <CustomText variant="titleLarge" bold style={styles.title}>
-              Flashcards
-            </CustomText>
-          </View>
-        );
-      case "category-subtitle":
-        return (
-          <CustomText variant="bodyLarge" style={styles.subtitle}>
-            Choose a category to practice
-          </CustomText>
-        );
-      case "stats-subtitle":
-        return (
-          <CustomText variant="bodyLarge" style={styles.subtitle}>
-            Your Learning Progress
-          </CustomText>
-        );
-      case "stats":
-        return userData?.id ? (
-          stats ? (
-            <UserFlashcardStatsCard stats={stats} isLoading={isLoading} />
-          ) : isLoading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator
-                animating={true}
-                color={theme.colors.primary}
-              />
-              <CustomText variant="bodySmall" style={styles.loadingText}>
-                Loading your statistics...
+  const handleSelectCategory = React.useCallback(
+    (category: FlashcardCategory) => {
+      // Navigate to category flashcards screen
+      router.push({
+        pathname: "/(app)/category-flashcards/[id]",
+        params: {
+          id: category.id,
+          name: category.name,
+        },
+      });
+    },
+    []
+  );
+
+  const renderItem = React.useCallback(
+    ({ item }: { item: any }) => {
+      switch (item.type) {
+        case "header":
+          return (
+            <View>
+              <CustomText variant="titleLarge" bold style={styles.title}>
+                Flashcards
               </CustomText>
             </View>
-          ) : null
-        ) : null;
-      case "category":
-        return (
-          <>
-            <CustomDivider />
-            <View style={styles.categoryContainer}>
-              <CategoryGrid
-                categories={item.data}
-                onSelectCategory={handleSelectCategory}
-                title={item.title}
+          );
+        case "category-subtitle":
+          return (
+            <CustomText variant="bodyLarge" style={styles.subtitle}>
+              Choose a category to practice
+            </CustomText>
+          );
+        case "stats-subtitle":
+          return (
+            <CustomText variant="bodyLarge" style={styles.subtitle}>
+              Your Learning Progress
+            </CustomText>
+          );
+        case "stats":
+          return userData?.id ? (
+            statsSummary ? (
+              <UserFlashcardStatsCard
+                stats={statsSummary}
+                isLoading={isLoading}
               />
-            </View>
-          </>
-        );
-      default:
-        return null;
-    }
-  };
+            ) : isLoading ? (
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator
+                  animating={true}
+                  color={theme.colors.primary}
+                />
+                <CustomText variant="bodySmall" style={styles.loadingText}>
+                  Loading your statistics...
+                </CustomText>
+              </View>
+            ) : null
+          ) : null;
+        case "category":
+          return (
+            <>
+              <CustomDivider />
+              <View style={styles.categoryContainer}>
+                <CategoryGrid
+                  categories={item.data}
+                  onSelectCategory={handleSelectCategory}
+                  title={item.title}
+                />
+              </View>
+            </>
+          );
+        default:
+          return null;
+      }
+    },
+    [
+      theme.colors.primary,
+      statsSummary,
+      isLoading,
+      userData?.id,
+      handleSelectCategory,
+    ]
+  );
 
   return (
     <SafeAreaView

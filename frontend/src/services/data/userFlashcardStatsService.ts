@@ -40,4 +40,25 @@ export class UserFlashcardStatsService {
       throw error;
     }
   }
+
+  /**
+   * Fetches statistics for a single flashcard for a specific user
+   * @param userId The ID of the user
+   * @param flashcardId The ID of the flashcard
+   * @returns Promise<UserFlashcardStatResponse>
+   */
+  static async getFlashcardStats(
+    userId: string,
+    flashcardId: string
+  ): Promise<UserFlashcardStatResponse> {
+    try {
+      return await apiClient.getFlashcardStats(userId, flashcardId);
+    } catch (error) {
+      console.error(
+        "[UserFlashcardStatsService] Error fetching flashcard stats:",
+        error
+      );
+      throw error;
+    }
+  }
 }

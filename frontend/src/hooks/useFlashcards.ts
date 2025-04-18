@@ -1,16 +1,13 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
   FlashcardResponse,
   FlashcardRequest,
   FlashcardCategory,
   DifficultyLevel,
 } from "@src/types/Flashcard";
-import {
-  SubmitFlashcardAnswerRequest,
-  UserFlashcardStatResponse,
-} from "@src/types/UserFlashcardStats";
+import { SubmitFlashcardAnswerRequest } from "@src/types/UserFlashcardStats";
 import flashcardService from "@services/data/flashcardService";
-import { UserFlashcardStatsService } from "@services/data/userFlashcardStatsService";
+import { useFlashcardStats } from "./useFlashcardStats";
 
 interface UseFlashcardsProps {
   categoryId?: string;
@@ -32,14 +29,22 @@ export const useFlashcards = ({
   );
 
   // Loading and error states
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingFlashcards, setIsLoadingFlashcards] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Use the flashcard stats hook for stats-related functionality
+  const {
+    singleFlashcardStats: currentFlashcardStats,
+    isLoading: isLoadingStats,
+    getSingleFlashcardStats,
+    submitFlashcardAnswer: submitFlashcardAnswerToStats,
+  } = useFlashcardStats(userId);
 
   // Get flashcards from API
   const getFlashcards = useCallback(
     async (request: FlashcardRequest) => {
-      setIsLoading(true);
+      setIsLoadingFlashcards(true);
       setError(null);
       try {
         const data = await flashcardService.getFlashcards(request);
@@ -52,7 +57,7 @@ export const useFlashcards = ({
         setError(errorMessage);
         throw err;
       } finally {
-        setIsLoading(false);
+        setIsLoadingFlashcards(false);
       }
     },
     [initialIndex]
@@ -89,12 +94,26 @@ export const useFlashcards = ({
     }
   }, [categoryId, getFlashcards, userId]);
 
+  // Get current flashcard - use useMemo instead of useCallback to prevent
+  // unnecessary recreation of this function
+  const currentFlashcard = useMemo((): FlashcardResponse | null => {
+    return flashcards.length > 0 ? flashcards[currentIndex] : null;
+  }, [flashcards, currentIndex]);
+
   // Auto-fetch flashcards when categoryId changes
   useEffect(() => {
     if (categoryId) {
       fetchFlashcards();
     }
   }, [categoryId, fetchFlashcards]);
+
+  // Fetch stats when current flashcard changes
+  // Only trigger when the flashcard ID changes, not the entire object
+  useEffect(() => {
+    if (userId && currentFlashcard?.id) {
+      getSingleFlashcardStats(currentFlashcard.id);
+    }
+  }, [userId, currentFlashcard?.id, getSingleFlashcardStats]);
 
   // Navigation handlers
   const handleFlip = useCallback(() => {
@@ -115,44 +134,21 @@ export const useFlashcards = ({
     }
   }, [currentIndex]);
 
-  // Answer submission
-  const submitFlashcardAnswer = useCallback(
-    async (
-      request: SubmitFlashcardAnswerRequest
-    ): Promise<UserFlashcardStatResponse | null> => {
-      if (!userId) {
-        setError("User ID is required to submit answers");
-        return null;
-      }
-
-      setIsSubmitting(true);
-      setError(null);
-
-      try {
-        const data = await UserFlashcardStatsService.submitFlashcardAnswer({
-          ...request,
-          userId,
-        });
-        return data;
-      } catch (err) {
-        const errorMessage =
-          err instanceof Error
-            ? err.message
-            : "Failed to submit flashcard answer";
-        setError(errorMessage);
-        throw err;
-      } finally {
-        setIsSubmitting(false);
-      }
-    },
-    [userId]
-  );
-
   // Handle answer submission with feedback and navigation
   const handleSubmitAnswer = useCallback(
     async (answer: SubmitFlashcardAnswerRequest) => {
+      if (!userId) {
+        setError("User ID is required to submit answers");
+        return;
+      }
+
+      setIsSubmitting(true);
       try {
-        await submitFlashcardAnswer(answer);
+        // Submit the answer using the stats hook
+        await submitFlashcardAnswerToStats({
+          ...answer,
+          userId,
+        });
 
         setSubmissionMessage(
           answer.wasCorrect
@@ -178,26 +174,33 @@ export const useFlashcards = ({
         setTimeout(() => {
           setSubmissionMessage(null);
         }, 2000);
+      } finally {
+        setIsSubmitting(false);
       }
     },
-    [submitFlashcardAnswer, currentIndex, flashcards.length, handleNext]
+    [
+      userId,
+      submitFlashcardAnswerToStats,
+      currentIndex,
+      flashcards.length,
+      handleNext,
+    ]
   );
-
-  // Get current flashcard
-  const getCurrentFlashcard = useCallback((): FlashcardResponse | null => {
-    return flashcards.length > 0 ? flashcards[currentIndex] : null;
-  }, [flashcards, currentIndex]);
 
   return {
     // Data
     flashcards,
-    currentFlashcard: getCurrentFlashcard(),
+    currentFlashcard,
     currentIndex,
     flipped,
     submissionMessage,
 
+    // Stats data
+    currentFlashcardStats,
+    isLoadingStats,
+
     // State information
-    isLoading,
+    isLoadingFlashcards,
     isSubmitting,
     error,
     totalCards: flashcards.length,
@@ -210,7 +213,6 @@ export const useFlashcards = ({
     handleFlip,
     handleNext,
     handlePrevious,
-    submitFlashcardAnswer,
     handleSubmitAnswer,
   };
 };

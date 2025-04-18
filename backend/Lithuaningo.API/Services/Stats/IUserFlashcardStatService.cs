@@ -35,5 +35,14 @@ namespace Lithuaningo.API.Services.Stats
         /// <param name="userId">The ID of the user</param>
         /// <returns>A summary of the user's flashcard statistics</returns>
         Task<UserFlashcardStatsSummaryResponse> GetUserFlashcardStatsSummaryAsync(string userId);
+
+        /// <summary>
+        /// Gets the statistics for a specific flashcard
+        /// </summary>
+        /// <param name="userId">The ID of the user</param>
+        /// <param name="flashcardId">The ID of the flashcard</param>
+        /// <returns>The statistics for the specified flashcard</returns>
+        Task<UserFlashcardStatResponse> GetFlashcardStatsAsync(string userId, string flashcardId);
+        
     }
 }

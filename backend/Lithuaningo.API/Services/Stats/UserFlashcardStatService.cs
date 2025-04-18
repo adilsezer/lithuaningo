@@ -203,5 +203,34 @@ namespace Lithuaningo.API.Services.Stats
                 throw;
             }
         }
+
+        /// <inheritdoc />
+        public async Task<UserFlashcardStatResponse> GetFlashcardStatsAsync(string userId, string flashcardId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId) || string.IsNullOrEmpty(flashcardId))
+                {
+                    throw new ArgumentNullException(nameof(userId));
+                    throw new ArgumentNullException(nameof(flashcardId));
+                }
+
+                var query = _supabaseService.Client
+                    .From<UserFlashcardStat>()
+                    .Filter("user_id", Operator.Equals, userId)
+                    .Filter("flashcard_id", Operator.Equals, flashcardId);
+
+                var result = await query.Get();
+                var models = result.Models?.ToList() ?? new List<UserFlashcardStat>();
+
+                return _mapper.Map<UserFlashcardStatResponse>(models.FirstOrDefault());
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting flashcard stats for user {UserId} and flashcard {FlashcardId}",
+                    userId, flashcardId);
+                throw;
+            }
+        }
     }
 }

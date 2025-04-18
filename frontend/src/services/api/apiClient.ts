@@ -420,6 +420,24 @@ class ApiClient {
       method: "DELETE",
     });
   }
+
+  /**
+   * Fetches statistics for a single flashcard for a specific user
+   * @param userId The ID of the user
+   * @param flashcardId The ID of the flashcard
+   * @returns Promise<UserFlashcardStatResponse>
+   */
+  async getFlashcardStats(
+    userId: string,
+    flashcardId: string
+  ): Promise<UserFlashcardStatResponse> {
+    return this.request<UserFlashcardStatResponse>(
+      `/api/v1/UserFlashcardStats/${userId}/flashcard/${flashcardId}`,
+      {
+        method: "GET",
+      }
+    );
+  }
 }
 
 // Request options type

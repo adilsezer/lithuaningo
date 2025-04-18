@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useTheme, Button } from "react-native-paper";
 import { useLocalSearchParams, router } from "expo-router";
@@ -6,6 +6,7 @@ import { useFlashcards } from "@src/hooks/useFlashcards";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
 import Flashcard from "@components/ui/Flashcard";
+import FlashcardStats from "@components/ui/FlashcardStats";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
 
 export default function CategoryFlashcardsScreen() {
@@ -13,14 +14,25 @@ export default function CategoryFlashcardsScreen() {
   const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
   const userData = useUserData();
 
+  // Memoize navigation handlers to prevent unnecessary re-renders
+  const handleGoBack = useCallback(() => router.back(), []);
+  const handleGoToLogin = useCallback(() => router.push("/auth/login"), []);
+
   const {
+    // Data
     currentFlashcard,
     currentIndex,
     flipped,
     totalCards,
-    isLoading,
+    currentFlashcardStats,
+
+    // State
+    isLoadingFlashcards,
+    isLoadingStats,
     error,
     submissionMessage,
+
+    // Actions
     handleFlip,
     handleSubmitAnswer,
     fetchFlashcards,
@@ -28,6 +40,25 @@ export default function CategoryFlashcardsScreen() {
     categoryId: id,
     userId: userData?.id,
   });
+
+  // Memoize answer submission handlers - moved to top level to avoid hook order issues
+  const handleMarkIncorrect = useCallback(() => {
+    if (currentFlashcard) {
+      handleSubmitAnswer({
+        flashcardId: currentFlashcard.id,
+        wasCorrect: false,
+      });
+    }
+  }, [currentFlashcard, handleSubmitAnswer]);
+
+  const handleMarkCorrect = useCallback(() => {
+    if (currentFlashcard) {
+      handleSubmitAnswer({
+        flashcardId: currentFlashcard.id,
+        wasCorrect: true,
+      });
+    }
+  }, [currentFlashcard, handleSubmitAnswer]);
 
   if (!userData?.id) {
     return (
@@ -38,14 +69,14 @@ export default function CategoryFlashcardsScreen() {
         <CustomText style={{ textAlign: "center", marginBottom: 24 }}>
           Please log in to track your flashcard progress.
         </CustomText>
-        <Button mode="contained" onPress={() => router.push("/auth/login")}>
+        <Button mode="contained" onPress={handleGoToLogin}>
           Go to Login
         </Button>
       </View>
     );
   }
 
-  if (isLoading && totalCards === 0) {
+  if (isLoadingFlashcards && totalCards === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
         <LoadingIndicator modal={false} />
@@ -75,7 +106,7 @@ export default function CategoryFlashcardsScreen() {
         <CustomText variant="bodyLarge">
           No flashcards found for this category.
         </CustomText>
-        <Button mode="contained" onPress={() => router.back()}>
+        <Button mode="contained" onPress={handleGoBack}>
           Go Back
         </Button>
       </View>
@@ -120,12 +151,7 @@ export default function CategoryFlashcardsScreen() {
                 mode="contained"
                 buttonColor={theme.colors.error}
                 style={styles.answerButton}
-                onPress={() =>
-                  handleSubmitAnswer({
-                    flashcardId: currentFlashcard.id,
-                    wasCorrect: false,
-                  })
-                }
+                onPress={handleMarkIncorrect}
                 icon="close"
               >
                 Incorrect
@@ -134,18 +160,18 @@ export default function CategoryFlashcardsScreen() {
                 mode="contained"
                 buttonColor={theme.colors.primary}
                 style={styles.answerButton}
-                onPress={() =>
-                  handleSubmitAnswer({
-                    flashcardId: currentFlashcard.id,
-                    wasCorrect: true,
-                  })
-                }
+                onPress={handleMarkCorrect}
                 icon="check"
               >
                 Correct
               </Button>
             </View>
           )}
+
+          <FlashcardStats
+            stats={currentFlashcardStats}
+            isLoading={isLoadingStats}
+          />
         </>
       )}
 
