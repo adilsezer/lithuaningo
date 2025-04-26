@@ -101,6 +101,7 @@ builder.Services.AddAutoMapper(cfg =>
     cfg.AddProfile<LeaderboardMappingProfile>();  // Leaderboard mappings
     cfg.AddProfile<FlashcardMappingProfile>(); // Flashcard mappings
     cfg.AddProfile<UserFlashcardStatMappingProfile>(); // User flashcard stat mappings
+    cfg.AddProfile<UserChatStatsMappingProfile>(); // User chat stats mappings
 });
 
 builder.Services.AddControllers();
@@ -332,6 +333,7 @@ To authorize in Swagger UI:
     services.AddScoped<IUserFlashcardStatService, UserFlashcardStatService>();
     services.AddScoped<ILeaderboardService, LeaderboardService>();
     services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
+    services.AddScoped<IUserChatStatsService, UserChatStatsService>();
     // Challenge Related Services
     services.AddScoped<IChallengeService, ChallengeService>();
 
@@ -389,6 +391,7 @@ To authorize in Swagger UI:
     .AddApplicationPart(typeof(AppInfoController).Assembly)
     .AddApplicationPart(typeof(FlashcardController).Assembly)
     .AddApplicationPart(typeof(UserFlashcardStatsController).Assembly)
+    .AddApplicationPart(typeof(UserChatStatsController).Assembly)
     .AddApplicationPart(typeof(StorageService).Assembly);
 
     // Add Authentication Services

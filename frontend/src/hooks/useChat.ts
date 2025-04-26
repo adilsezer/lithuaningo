@@ -8,7 +8,6 @@ import {
   useIsPremium,
   useUserData,
 } from "@stores/useUserStore";
-import { storeData, retrieveData } from "@utils/storageUtils";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAlertDialog from "@hooks/useAlertDialog";
 
@@ -20,9 +19,6 @@ export interface Message {
   timestamp: Date;
   status?: "sending" | "sent" | "delivered" | "error";
 }
-
-// Storage key for daily chat usage
-const DAILY_CHAT_USAGE_KEY = "chat_daily_usage";
 
 // Session ID storage key
 const SESSION_ID_KEY = "lithuaningo:chat:session_id";
@@ -71,8 +67,10 @@ export const useChat = () => {
 
   // Load and track daily message count
   useEffect(() => {
-    loadDailyCount();
-  }, []);
+    if (isAuthenticated && userData?.id) {
+      loadChatStats();
+    }
+  }, [isAuthenticated, userData?.id]);
 
   // Initialize session ID on component mount
   useEffect(() => {
@@ -88,29 +86,15 @@ export const useChat = () => {
     }
   }, [messages]);
 
-  // Load daily message count
-  const loadDailyCount = async (): Promise<void> => {
-    try {
-      const today = new Date().toISOString().split("T")[0]; // YYYY-MM-DD
-      const storedData = await retrieveData<{ date: string; count: number }>(
-        DAILY_CHAT_USAGE_KEY
-      );
+  // Load chat stats from the server
+  const loadChatStats = async (): Promise<void> => {
+    if (!isAuthenticated || !userData?.id) return;
 
-      if (storedData) {
-        // Reset counter if it's a new day
-        if (storedData.date === today) {
-          setDailyMessageCount(storedData.count);
-        } else {
-          // New day, reset counter
-          setDailyMessageCount(0);
-          await storeData(DAILY_CHAT_USAGE_KEY, { date: today, count: 0 });
-        }
-      } else {
-        // First time using chat
-        await storeData(DAILY_CHAT_USAGE_KEY, { date: today, count: 0 });
-      }
+    try {
+      const stats = await apiClient.getUserChatStats(userData.id);
+      setDailyMessageCount(stats.todayMessageCount);
     } catch (error) {
-      console.error("Error loading daily chat usage:", error);
+      console.error("Error loading chat stats:", error);
     }
   };
 
@@ -142,6 +126,22 @@ export const useChat = () => {
     });
   };
 
+  // Track message usage on the server
+  const trackMessageUsage = async (): Promise<void> => {
+    if (!isAuthenticated || !userData?.id) return;
+
+    try {
+      const response = await apiClient.trackChatMessage({
+        userId: userData.id,
+        sessionId: sessionId || undefined,
+      });
+
+      setDailyMessageCount(response.todayMessageCount);
+    } catch (error) {
+      console.error("Error tracking message usage:", error);
+    }
+  };
+
   // Send a new message
   const sendMessage = async (message: string): Promise<void> => {
     if (!isAuthenticated) return;
@@ -160,17 +160,8 @@ export const useChat = () => {
     setShowExamples(false);
     setIsLoading(true);
 
-    // Increment daily message count
-    const newCount = dailyMessageCount + 1;
-    setDailyMessageCount(newCount);
-
-    // Save updated count to storage
-    try {
-      const today = new Date().toISOString().split("T")[0];
-      await storeData(DAILY_CHAT_USAGE_KEY, { date: today, count: newCount });
-    } catch (error) {
-      console.error("Error saving daily chat usage:", error);
-    }
+    // Track message usage on the server
+    await trackMessageUsage();
 
     // Scroll to the newly added message
     setTimeout(() => {
@@ -248,8 +239,19 @@ export const useChat = () => {
   };
 
   // Check if user has reached daily message limit
-  const checkDailyLimit = (): boolean => {
-    return !isPremium && dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY;
+  const checkDailyLimit = async (): Promise<boolean> => {
+    if (!isAuthenticated || !userData?.id) return false;
+
+    try {
+      // For premium users, always return false (no limit)
+      if (isPremium) return false;
+
+      return await apiClient.hasReachedChatLimit(userData.id, isPremium);
+    } catch (error) {
+      console.error("Error checking message limit:", error);
+      // Fallback to local count if API call fails
+      return dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY;
+    }
   };
 
   // Clear chat session (for logout or reset)
@@ -272,11 +274,12 @@ export const useChat = () => {
   // ===== UI Handlers =====
 
   // Handle message sending
-  const handleSend = () => {
+  const handleSend = async () => {
     if (inputText.trim() === "") return;
 
     // Check for message limit for free users
-    if (checkDailyLimit()) {
+    const hasReachedLimit = await checkDailyLimit();
+    if (hasReachedLimit) {
       showLimitReachedDialog();
       return;
     }

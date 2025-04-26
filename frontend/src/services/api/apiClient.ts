@@ -24,6 +24,10 @@ import {
   UpdateUserProfileRequest,
 } from "@src/types/UserProfile";
 import { AIRequest, AIResponse } from "@src/types/AI";
+import {
+  UserChatStatsResponse,
+  TrackMessageRequest,
+} from "@src/types/UserChatStats";
 
 // Get the app version from Expo constants
 const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
@@ -433,6 +437,40 @@ class ApiClient {
   ): Promise<UserFlashcardStatResponse> {
     return this.request<UserFlashcardStatResponse>(
       `/api/v1/UserFlashcardStats/${userId}/flashcard/${flashcardId}`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  // User Chat Stats Controller
+  async getUserChatStats(userId: string): Promise<UserChatStatsResponse> {
+    return this.request<UserChatStatsResponse>(
+      `/api/v1/UserChatStats/${userId}/stats`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  async trackChatMessage(
+    request: TrackMessageRequest
+  ): Promise<UserChatStatsResponse> {
+    return this.request<UserChatStatsResponse>(
+      `/api/v1/UserChatStats/track-message`,
+      {
+        method: "POST",
+        data: request,
+      }
+    );
+  }
+
+  async hasReachedChatLimit(
+    userId: string,
+    isPremium: boolean
+  ): Promise<boolean> {
+    return this.request<boolean>(
+      `/api/v1/UserChatStats/${userId}/has-reached-limit?isPremium=${isPremium}`,
       {
         method: "GET",
       }
