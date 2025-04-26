@@ -48,7 +48,6 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
         // Log in the user if they're authenticated
         if (userData?.id) {
           await Purchases.logIn(userData.id);
-          console.log("RevenueCat: User logged in", userData.id);
         }
       } catch (error) {
         console.error("RevenueCat initialization error:", error);

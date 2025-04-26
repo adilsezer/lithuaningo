@@ -43,8 +43,6 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
 
         if (!audioUrl) return;
 
-        console.log("Loading audio:", audioUrl);
-
         // Create and load the Sound object
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: audioUrl },
@@ -72,7 +70,6 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
     return () => {
       isMounted = false;
       if (sound.current) {
-        console.log("Unloading Sound on cleanup");
         sound.current.unloadAsync();
       }
     };
@@ -109,16 +106,13 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
 
       if (status.isLoaded) {
         if (status.isPlaying) {
-          console.log("Pausing playback");
           await sound.current.pauseAsync();
         } else {
           // If the sound has finished playing, restart from beginning
           if (status.positionMillis === status.durationMillis) {
-            console.log("Replaying from start");
             await sound.current.setPositionAsync(0);
           }
 
-          console.log("Playing audio");
           await sound.current.playAsync();
         }
       }

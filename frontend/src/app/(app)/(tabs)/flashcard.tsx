@@ -11,38 +11,36 @@ import {
   DifficultyLevel,
 } from "@src/types/Flashcard";
 import { UserFlashcardStatsCard } from "@components/ui/UserFlashcardStatsCard";
-import { useFlashcardStats } from "@hooks/useFlashcardStats";
-import { useUserData } from "@stores/useUserStore";
-import { ActivityIndicator } from "react-native-paper";
+import { useUserData, useIsPremium } from "@stores/useUserStore";
+import {
+  useFlashcardStore,
+  DAILY_FLASHCARD_LIMIT,
+} from "@stores/useFlashcardStore";
 
 export default function FlashcardScreen() {
   const theme = useTheme();
   const userData = useUserData();
+  const isPremium = useIsPremium();
 
-  // Initialize the hook with autoRefreshDetails disabled to avoid unnecessary API calls
-  const { statsSummary, isLoading, getUserFlashcardStats } = useFlashcardStats(
-    userData?.id,
-    { autoRefreshDetails: false }
-  );
+  // Get data from the flashcard store for consistent daily limit display
+  const {
+    flashcardsAnsweredToday,
+    syncFlashcardCount,
+    isLoading: isSyncingCount,
+    statsSummary,
+    isLoadingStats,
+    resetSession,
+  } = useFlashcardStore();
 
-  // Fetch stats only once when the component mounts or userId changes
+  // Sync flashcard count when screen loads and reset session state
   useEffect(() => {
-    let isMounted = true;
-
     if (userData?.id) {
-      // Only fetch if component is still mounted
-      getUserFlashcardStats().catch((err) => {
-        if (isMounted) {
-          console.error("Error fetching flashcard stats:", err);
-        }
-      });
+      syncFlashcardCount(userData.id);
     }
 
-    // Cleanup function to prevent state updates on unmounted component
-    return () => {
-      isMounted = false;
-    };
-  }, [userData?.id, getUserFlashcardStats]);
+    // Clean up any previous flashcard session
+    resetSession();
+  }, [userData?.id, syncFlashcardCount, resetSession]);
 
   // Helper function to get theme color based on index
   const getColor = (index: number) => {
@@ -190,12 +188,13 @@ export default function FlashcardScreen() {
     },
   ];
 
-  // Define sections for FlatList - memoize to prevent re-creation on every render
+  // Define sections for FlatList
   const sections = React.useMemo(
     () => [
       { id: "header", type: "header" },
       { id: "stats-subtitle", type: "stats-subtitle" },
       { id: "stats", type: "stats" },
+      { id: "limit-info", type: "limit-info" },
       { id: "category-subtitle", type: "category-subtitle" },
       {
         id: "all",
@@ -223,7 +222,7 @@ export default function FlashcardScreen() {
       },
     ],
     [theme.colors.inversePrimary]
-  ); // Only depend on the dynamic color
+  );
 
   const handleSelectCategory = React.useCallback(
     (category: FlashcardCategory) => {
@@ -262,23 +261,30 @@ export default function FlashcardScreen() {
               Your Learning Progress
             </CustomText>
           );
+        case "limit-info":
+          return !isPremium ? (
+            <View style={styles.limitInfoContainer}>
+              <CustomText variant="bodyMedium">
+                Daily Usage: {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+                flashcards
+              </CustomText>
+              {flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT && (
+                <CustomText variant="bodySmall" style={styles.limitWarning}>
+                  You've reached your daily limit. Upgrade to premium for
+                  unlimited access!
+                </CustomText>
+              )}
+            </View>
+          ) : null;
         case "stats":
           return userData?.id ? (
             statsSummary ? (
               <UserFlashcardStatsCard
                 stats={statsSummary}
-                isLoading={isLoading}
+                isLoading={isLoadingStats || isSyncingCount}
               />
-            ) : isLoading ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator
-                  animating={true}
-                  color={theme.colors.primary}
-                />
-                <CustomText variant="bodySmall" style={styles.loadingText}>
-                  Loading your statistics...
-                </CustomText>
-              </View>
+            ) : isLoadingStats || isSyncingCount ? (
+              <UserFlashcardStatsCard stats={null as any} isLoading={true} />
             ) : null
           ) : null;
         case "category":
@@ -299,11 +305,14 @@ export default function FlashcardScreen() {
       }
     },
     [
-      theme.colors.primary,
-      statsSummary,
-      isLoading,
       userData?.id,
+      statsSummary,
+      isLoadingStats,
+      isSyncingCount,
+      isPremium,
+      flashcardsAnsweredToday,
       handleSelectCategory,
+      theme.colors.primary,
     ]
   );
 
@@ -336,14 +345,15 @@ const styles = StyleSheet.create({
   categoryContainer: {
     marginBottom: 16,
   },
-  loadingContainer: {
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
+  limitInfoContainer: {
     marginHorizontal: 16,
-    marginVertical: 8,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+    backgroundColor: "#f5f5f5",
   },
-  loadingText: {
-    marginTop: 8,
+  limitWarning: {
+    color: "red",
+    marginTop: 4,
   },
 });

@@ -39,6 +39,11 @@ namespace Lithuaningo.API.DTOs.UserFlashcardStats
         public double AverageMasteryLevel { get; set; }
 
         /// <summary>
+        /// Number of flashcards answered today (based on updated_at timestamp)
+        /// </summary>
+        public int FlashcardsAnsweredToday { get; set; }
+
+        /// <summary>
         /// Success rate (correct answers / total answers)
         /// </summary>
         public double SuccessRate => TotalViews > 0 ? (double)TotalCorrectAnswers / TotalViews * 100 : 0;
