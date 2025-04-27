@@ -518,12 +518,12 @@ const styles = StyleSheet.create({
   questionCard: {
     marginBottom: 20,
     borderRadius: 12,
-    overflow: "hidden",
     elevation: 2,
     borderWidth: 1,
   },
   questionContent: {
     padding: 16,
+    overflow: "hidden",
   },
   questionText: {
     fontWeight: "600",
@@ -592,11 +592,11 @@ const styles = StyleSheet.create({
   feedbackCard: {
     marginTop: 20,
     borderRadius: 12,
-    overflow: "hidden",
     elevation: 2,
   },
   feedbackContent: {
     padding: 16,
+    overflow: "hidden",
   },
   feedbackIconContainer: {
     alignItems: "center",

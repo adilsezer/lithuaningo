@@ -50,10 +50,8 @@ export default function DailyChallengeScreen() {
     if (!currentQuestion || isCorrectAnswer !== null) return;
 
     const isCorrect = answer === currentQuestion.correctAnswer;
-    setIsCorrectAnswer(isCorrect);
-    if (isCorrect) setScore((prev) => prev + 1);
 
-    // Submit to backend
+    // Submit to backend first
     if (userId && currentQuestion.id) {
       try {
         await submitChallengeAnswer({
@@ -64,6 +62,12 @@ export default function DailyChallengeScreen() {
         console.error("Failed to submit answer:", err);
       }
     }
+
+    // Set answer state after a slight delay to ensure smooth scrolling
+    setTimeout(() => {
+      setIsCorrectAnswer(isCorrect);
+      if (isCorrect) setScore((prev) => prev + 1);
+    }, 100);
   };
 
   const handleNextQuestion = () => {
