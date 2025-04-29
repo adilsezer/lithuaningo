@@ -60,15 +60,13 @@ export default function ChallengeScreen() {
     }
   }, [userId]);
 
-  // Initial load
-  useEffect(() => {
-    if (userId) loadData();
-  }, [userId, loadData]);
-
-  // Refresh when screen comes into focus
+  // Refresh when screen comes into focus (including initial load)
   useFocusEffect(
     React.useCallback(() => {
-      if (userId) loadData();
+      if (userId) {
+        console.log("[ChallengeScreen] Loading data from useFocusEffect");
+        loadData();
+      }
       return () => {};
     }, [userId, loadData])
   );
