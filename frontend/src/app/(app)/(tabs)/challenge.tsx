@@ -92,7 +92,7 @@ export default function ChallengeScreen() {
   const hasCompletedAllQuestions =
     hasStartedChallenge &&
     (stats?.todayCorrectAnswers ?? 0) + (stats?.todayIncorrectAnswers ?? 0) >=
-      9; // Assuming there are 9 questions
+      10; // Expecting 10 questions from the AI
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>

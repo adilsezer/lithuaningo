@@ -107,16 +107,22 @@ namespace Lithuaningo.API.Services.Challenges
             {
                 _logger.LogInformation("Getting random flashcards to use as context for challenge generation");
 
-                // Get random flashcards from the database for context
+                // Get a larger set of random flashcards from the database for context
+                // We retrieve more flashcards to ensure sufficient diversity for all question types
                 var flashcards = await _flashcardService.RetrieveFlashcardModelsAsync(
-                    limit: 10);
+                    limit: 25); // Increased from 10 to 25 to ensure more diversity
 
                 if (flashcards.Any())
                 {
-                    _logger.LogInformation("Retrieved {Count} flashcards to use as context for challenge generation", flashcards.Count());
+                    // Shuffle the flashcards for better randomization
+                    var shuffledFlashcards = flashcards.ToList().OrderBy(x => _random.Next()).ToList();
+
+                    // Log the count and briefly analyze diversity
+                    _logger.LogInformation("Retrieved {Count} flashcards to use as context for challenge generation",
+                        shuffledFlashcards.Count);
 
                     // Generate challenges based on the flashcard data
-                    var questions = await _aiService.GenerateChallengesAsync(flashcards);
+                    var questions = await _aiService.GenerateChallengesAsync(shuffledFlashcards);
 
                     // Save the generated questions to the database
                     await SaveChallengeQuestionsToDatabase(questions);

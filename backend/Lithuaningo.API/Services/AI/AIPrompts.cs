@@ -22,7 +22,7 @@ namespace Lithuaningo.API.Services.AI
     /// </summary>
     public const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are creating Lithuanian language challenges based on provided flashcard data.
 
-FORMAT: Return a JSON array of 10 challenge objects with these properties:
+FORMAT: Return a JSON array containing EXACTLY 10 challenge objects with these properties:
 - question: A clear question using the template formats provided below
 - options: Array of 4 possible answers (or 2 for true/false)
 - correctAnswer: Must match exactly one option from the options array
@@ -31,11 +31,19 @@ FORMAT: Return a JSON array of 10 challenge objects with these properties:
 
 RULES:
 1. USE ONLY texts, words and phrases from the provided flashcards in the user message
-2. Create 10 questions total: 4 multiple-choice, 4 true/false, and 2 fill-in-blank
+2. Create EXACTLY 10 questions total with this DISTRIBUTION: 4 multiple-choice (type 0), 4 true/false (type 1), and 2 fill-in-blank (type 2)
 3. For each question, use appropriate template from below
 4. ONLY create challenges based on the flashcard data provided, not from general knowledge
 5. Each challenge should test vocabulary comprehension, grammatical form, or sentence structure
 6. Return valid, well-formed JSON that can be parsed
+7. CRITICAL: You MUST generate EXACTLY 10 valid questions - no more, no less
+8. Count your questions before returning the result to ensure you have exactly 10
+9. INCLUDE A MIX OF DIFFICULTY LEVELS: 5 beginner-level, 3 intermediate-level, and 2 advanced-level questions
+
+DIFFICULTY LEVELS:
+- Beginner: Common greetings, basic vocabulary, simple verb forms, basic numbers
+- Intermediate: Past/future tenses, more specialized vocabulary, more complex grammar structures
+- Advanced: Complex grammatical forms, idiomatic expressions, rare vocabulary
 
 QUESTION TEMPLATES:
 - For Multiple Choice (type=0):
@@ -53,7 +61,7 @@ QUESTION TEMPLATES:
   * ""Fill in the blank: {sentence with blank}""
   * ""Complete the translation: {partial translation with blank}""
 
-EXAMPLE OUTPUT:
+EXAMPLE OUTPUT (EXACTLY 10 QUESTIONS):
 [
   {
     ""question"": ""What does 'Labas' mean?"",
@@ -67,6 +75,13 @@ EXAMPLE OUTPUT:
     ""options"": [""duona"", ""vanduo"", ""pienas"", ""mėsa""],
     ""correctAnswer"": ""duona"",
     ""exampleSentence"": ""Man patinka šviežia duona."",
+    ""type"": 0
+  },
+  {
+    ""question"": ""What is the grammatical form of 'eina'?"",
+    ""options"": [""Present tense, third person"", ""Past tense, third person"", ""Future tense, first person"", ""Imperative""],
+    ""correctAnswer"": ""Present tense, third person"",
+    ""exampleSentence"": ""Jis eina į mokyklą."",
     ""type"": 0
   },
   {
@@ -84,6 +99,13 @@ EXAMPLE OUTPUT:
     ""type"": 1
   },
   {
+    ""question"": ""'Knyga' means 'Movie' (True or False)"",
+    ""options"": [""True"", ""False""],
+    ""correctAnswer"": ""False"",
+    ""exampleSentence"": ""Aš skaitau įdomią knygą."",
+    ""type"": 1
+  },
+  {
     ""question"": ""The correct translation of 'Aš gyvenu Vilniuje' is 'I live in Vilnius' (True or False)"",
     ""options"": [""True"", ""False""],
     ""correctAnswer"": ""True"",
@@ -91,10 +113,24 @@ EXAMPLE OUTPUT:
     ""type"": 1
   },
   {
+    ""question"": ""The grammatical form of 'valgiau' is present tense (True or False)"",
+    ""options"": [""True"", ""False""],
+    ""correctAnswer"": ""False"",
+    ""exampleSentence"": ""Vakar aš valgiau skanią vakarienę."",
+    ""type"": 1
+  },
+  {
     ""question"": ""Fill in the blank: Aš _____ į parduotuvę pirkti duonos."",
     ""options"": [""einu"", ""valgo"", ""miega"", ""kalba""],
     ""correctAnswer"": ""einu"",
     ""exampleSentence"": ""Aš einu į parduotuvę pirkti duonos."",
+    ""type"": 2
+  },
+  {
+    ""question"": ""Complete the translation: 'Šiandien oras gražus' means 'Today the weather is _____'"",
+    ""options"": [""beautiful"", ""rainy"", ""cold"", ""windy""],
+    ""correctAnswer"": ""beautiful"",
+    ""exampleSentence"": ""Šiandien oras gražus, eisime pasivaikščioti."",
     ""type"": 2
   }
 ]";

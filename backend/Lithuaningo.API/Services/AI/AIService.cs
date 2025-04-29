@@ -296,6 +296,8 @@ public class AIService : IAIService
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails</exception>
     public async Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync(IEnumerable<Flashcard>? flashcards = null)
     {
+        const int REQUIRED_QUESTION_COUNT = 10;
+
         return await RetryWithBackoffAsync(async (attempt) =>
         {
             _logger.LogInformation("Generating challenges with AI, attempt {AttemptNumber}", attempt);
@@ -305,7 +307,7 @@ public class AIService : IAIService
             // If flashcards are provided, use them as context
             if (flashcards != null && flashcards.Any())
             {
-                userPrompt.AppendLine("Create Lithuanian language challenges based on these flashcards:");
+                userPrompt.AppendLine("Use the following Lithuanian flashcards as your source material for creating the challenges:");
 
                 // Add the flashcard data to the prompt in a structured format
                 int counter = 0;
@@ -317,15 +319,17 @@ public class AIService : IAIService
                     userPrompt.AppendLine($"- English: {card.BackText}");
                     userPrompt.AppendLine($"- Example: {card.ExampleSentence}");
                     userPrompt.AppendLine($"- Example Translation: {card.ExampleSentenceTranslation}");
+                    userPrompt.AppendLine($"- Difficulty: {card.Difficulty}");
 
                     // Limit the number of flashcards included to avoid hitting token limits
-                    if (counter >= 10) break;
+                    // Still include more than needed to allow for diversity
+                    if (counter >= 15) break;
                 }
             }
             else
             {
-                _logger.LogWarning("No flashcards provided for challenge generation. Creating generic challenges.");
-                userPrompt.AppendLine("Create 10 Lithuanian language challenges with generic vocabulary suitable for beginners.");
+                userPrompt.AppendLine("Create Lithuanian language challenges using a range of vocabulary and grammar concepts.");
+                userPrompt.AppendLine("Include common words and useful phrases to test language comprehension at various levels.");
             }
 
             var messages = new List<ChatMessage>
@@ -357,6 +361,14 @@ public class AIService : IAIService
             if (questions == null || questions.Count == 0 || !ValidateGeneratedChallenges(questions))
             {
                 throw new InvalidOperationException("Generated questions failed validation");
+            }
+
+            // Check if we have exactly the required number of questions
+            if (questions.Count != REQUIRED_QUESTION_COUNT)
+            {
+                _logger.LogWarning("AI returned {Count} valid questions instead of {Required}. Will retry.",
+                    questions.Count, REQUIRED_QUESTION_COUNT);
+                throw new InvalidOperationException($"AI generated {questions.Count} questions but {REQUIRED_QUESTION_COUNT} are required");
             }
 
             // Generate IDs for each question

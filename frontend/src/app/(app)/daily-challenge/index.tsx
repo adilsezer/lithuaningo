@@ -12,6 +12,7 @@ import {
 import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
 import ChallengeService from "@services/data/challengeService";
 import CustomButton from "@components/ui/CustomButton";
+import { useTheme } from "react-native-paper";
 
 /**
  * Daily Challenge Screen - Simplified with direct service calls
@@ -20,6 +21,7 @@ export default function DailyChallengeScreen() {
   const userData = useUserData();
   const userId = userData?.id;
   const params = useLocalSearchParams();
+  const theme = useTheme();
 
   // Check if we should generate new questions
   const shouldGenerateQuestions = params.generateQuestions === "true";
@@ -152,7 +154,7 @@ export default function DailyChallengeScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color="#6200ee" />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <CustomText style={styles.text}>Loading challenge...</CustomText>
       </View>
     );
