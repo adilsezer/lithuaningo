@@ -1,6 +1,6 @@
 using System;
-using Supabase.Postgrest.Models;
 using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace Lithuaningo.API.Models;
 
@@ -37,4 +37,4 @@ public class UserChallengeStats : BaseModel
 
     [Column("total_incorrect_answers")]
     public int TotalIncorrectAnswers { get; set; }
-} 
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { ScrollView, Image, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
@@ -6,54 +6,96 @@ import {
   IconButton,
   useTheme,
 } from "react-native-paper";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import CustomText from "@components/ui/CustomText";
 import CustomButton from "@components/ui/CustomButton";
 import CustomDivider from "@components/ui/CustomDivider";
 import Leaderboard from "@components/ui/Leaderboard";
 import { UserChallengeStatsCard } from "@components/ui/UserChallengeStatsCard";
-import { useLeaderboard } from "@hooks/useLeaderboard";
 import { useUserData } from "@stores/useUserStore";
-import { useChallengeStats } from "@hooks/useChallengeStats";
 import ErrorMessage from "@components/ui/ErrorMessage";
+import {
+  LeaderboardEntryResponse,
+  UserChallengeStatsResponse,
+} from "@src/types";
+import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
+import LeaderboardService from "@services/data/leaderboardService";
 
 /**
- * Challenge Tab Screen
+ * Challenge Tab Screen - Using direct service calls
  */
 export default function ChallengeScreen() {
   const userData = useUserData();
   const userId = userData?.id;
   const theme = useTheme();
 
-  // Feature data
-  const { entries, fetchLeaderboard } = useLeaderboard();
-  const {
-    stats,
-    isLoading: statsLoading,
-    error: statsError,
-    getUserChallengeStats,
-  } = useChallengeStats(userId);
+  // Local state
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
+  const [entries, setEntries] = useState<LeaderboardEntryResponse[]>([]);
 
-  // Load data
-  useEffect(() => {
-    loadData();
-  }, [userId]);
-
-  // Load all needed data
-  async function loadData() {
+  // Load data function - only loads stats and leaderboard, not questions
+  const loadData = useCallback(async () => {
     if (!userId) return;
 
     try {
-      await Promise.all([fetchLeaderboard(), getUserChallengeStats()]);
+      setIsLoading(true);
+      setError(null);
+
+      // Load only user stats and leaderboard data
+      const [userStats, leaderboardEntries] = await Promise.all([
+        UserChallengeStatsService.getUserChallengeStats(userId),
+        LeaderboardService.getCurrentWeekLeaderboard(),
+      ]);
+
+      // Update state with the data
+      setStats(userStats);
+      setEntries(leaderboardEntries);
     } catch (err) {
       console.error("Failed to load challenge data:", err);
+      setError("Failed to load challenge data. Please try again.");
+    } finally {
+      setIsLoading(false);
     }
-  }
+  }, [userId]);
 
-  // Start daily challenge
-  function startChallenge() {
+  // Initial load
+  useEffect(() => {
+    if (userId) loadData();
+  }, [userId, loadData]);
+
+  // Refresh when screen comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userId) loadData();
+      return () => {};
+    }, [userId, loadData])
+  );
+
+  // Handle start challenge button press - now navigates to a route that will generate questions
+  const startChallenge = useCallback(() => {
+    // Pass a query parameter to indicate we want to generate new questions
+    router.push({
+      pathname: "/daily-challenge",
+      params: { generateQuestions: "true" },
+    });
+  }, []);
+
+  // Handle continue challenge button press
+  const continueChallenge = useCallback(() => {
+    // Just navigate to the challenge screen without generating new questions
     router.push("/daily-challenge");
-  }
+  }, []);
+
+  // Calculate simple derived values
+  const hasStartedChallenge = (stats?.todayTotalAnswers ?? 0) > 0;
+  const totalAnswers = stats?.todayTotalAnswers ?? 0;
+  // Check how many questions user has answered
+  const hasCompletedAllQuestions =
+    hasStartedChallenge &&
+    (stats?.todayCorrectAnswers ?? 0) + (stats?.todayIncorrectAnswers ?? 0) >=
+      9; // Assuming there are 9 questions
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -71,21 +113,21 @@ export default function ChallengeScreen() {
         </CustomText>
       </View>
 
-      {/* Error State */}
-      {statsError ? (
+      {/* Challenge Card */}
+      {error ? (
         <ErrorMessage
-          message={`Unable to load challenge data: ${statsError}`}
+          message={`Unable to load challenge data: ${error}`}
           onRetry={loadData}
           buttonText="Try Again"
         />
-      ) : statsLoading ? (
+      ) : isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
           <CustomText style={styles.loadingText}>
             Loading challenge data...
           </CustomText>
         </View>
-      ) : stats?.hasCompletedTodayChallenge ? (
+      ) : hasStartedChallenge ? (
         <Card style={styles.card}>
           <Card.Content style={styles.cardContent}>
             <IconButton
@@ -94,11 +136,23 @@ export default function ChallengeScreen() {
               iconColor={theme.colors.primary}
             />
             <CustomText variant="titleMedium" style={styles.cardTitle}>
-              Today's Challenge Completed!
+              {hasCompletedAllQuestions
+                ? "Today's Challenge Completed!"
+                : "Today's Challenge Started"}
             </CustomText>
             <CustomText style={styles.cardText}>
-              Come back tomorrow for a new challenge.
+              {hasCompletedAllQuestions
+                ? "You've completed all available questions. Come back tomorrow for a new challenge!"
+                : totalAnswers > 0
+                ? `You've answered ${totalAnswers} questions so far.`
+                : "You've started today's challenge."}
             </CustomText>
+            {!hasCompletedAllQuestions && (
+              <CustomButton
+                title="Continue Challenge"
+                onPress={continueChallenge}
+              />
+            )}
           </Card.Content>
         </Card>
       ) : (
@@ -120,13 +174,16 @@ export default function ChallengeScreen() {
             <CustomText variant="titleMedium" style={styles.cardTitle}>
               Daily Challenge Available
             </CustomText>
+            <CustomText style={styles.cardText}>
+              Start today's challenge to test your knowledge!
+            </CustomText>
             <CustomButton title="Start Challenge" onPress={startChallenge} />
           </Card.Content>
         </Card>
       )}
 
       {/* Stats */}
-      {stats && !statsError && <UserChallengeStatsCard stats={stats} />}
+      {stats && !error && <UserChallengeStatsCard stats={stats} />}
 
       {/* Leaderboard */}
       <CustomDivider />

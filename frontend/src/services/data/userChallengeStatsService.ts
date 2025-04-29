@@ -15,7 +15,12 @@ export class UserChallengeStatsService {
     userId: string
   ): Promise<UserChallengeStatsResponse> {
     try {
-      return await apiClient.getUserChallengeStats(userId);
+      const response = await apiClient.getUserChallengeStats(userId);
+      console.log(
+        "[UserChallengeStatsService] HasCompletedTodayChallenge:",
+        response.hasCompletedTodayChallenge
+      );
+      return response;
     } catch (error) {
       console.error("[UserChallengeStatsService] Error:", error);
       throw error;
