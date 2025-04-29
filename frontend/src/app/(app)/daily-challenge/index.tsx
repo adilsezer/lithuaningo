@@ -34,6 +34,7 @@ export default function DailyChallengeScreen() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [isCorrectAnswer, setIsCorrectAnswer] = useState<boolean | null>(null);
+  const [showCompletionScreen, setShowCompletionScreen] = useState(false);
 
   // Load data with options to generate questions or not
   const loadData = useCallback(
@@ -87,6 +88,7 @@ export default function DailyChallengeScreen() {
         }
 
         setError(null);
+        setShowCompletionScreen(false);
       } catch (err) {
         console.error("Failed to load challenge data:", err);
         setError(
@@ -139,6 +141,9 @@ export default function DailyChallengeScreen() {
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
       setIsCorrectAnswer(null);
+    } else {
+      // If it's the last question, show completion screen
+      setShowCompletionScreen(true);
     }
   }, [currentIndex, questions.length]);
 
@@ -149,6 +154,7 @@ export default function DailyChallengeScreen() {
       // Load data with flag to start from the beginning
       await loadData(true);
       setIsCorrectAnswer(null);
+      setShowCompletionScreen(false);
     } catch (err) {
       setError("Failed to reload challenge questions");
     } finally {
@@ -198,10 +204,8 @@ export default function DailyChallengeScreen() {
         error={error}
         score={score}
         isCorrectAnswer={isCorrectAnswer}
-        // Show completed screen immediately after answering the last question
-        isCompleted={
-          currentIndex === questions.length - 1 && isCorrectAnswer !== null
-        }
+        // Only show completed screen after the user has clicked next on the last question
+        isCompleted={showCompletionScreen}
         onAnswer={handleAnswer}
         onNextQuestion={handleNextQuestion}
         onRetry={handleRetry}
