@@ -55,20 +55,9 @@ export default function DailyChallengeScreen() {
         );
         setStats(userStats);
 
-        // Check if questions already exist for today
-        let challengeQuestions: ChallengeQuestionResponse[] = [];
-
-        // If generating new questions or if we don't have existing questions
-        // Note: This will make a call to get any existing questions in the backend
-        challengeQuestions =
+        // Get daily challenge questions
+        const challengeQuestions =
           await ChallengeService.getDailyChallengeQuestions();
-
-        // Log question count
-        console.log(
-          `[DailyChallenge] Loaded ${challengeQuestions.length} questions`
-        );
-
-        // Set questions in state
         setQuestions(challengeQuestions);
 
         // Set starting position based on progress (if not generating new questions)
@@ -124,11 +113,9 @@ export default function DailyChallengeScreen() {
           userId,
         });
 
-        // Update local state after a slight delay
-        setTimeout(() => {
-          setIsCorrectAnswer(isCorrect);
-          if (isCorrect) setScore((prev) => prev + 1);
-        }, 100);
+        // Update local state
+        setIsCorrectAnswer(isCorrect);
+        if (isCorrect) setScore((prev) => prev + 1);
       } catch (err) {
         console.error("Failed to submit answer:", err);
       }
@@ -151,7 +138,6 @@ export default function DailyChallengeScreen() {
   const handleRetry = useCallback(async () => {
     try {
       setIsLoading(true);
-      // Load data with flag to start from the beginning
       await loadData(true);
       setIsCorrectAnswer(null);
       setShowCompletionScreen(false);
@@ -204,7 +190,6 @@ export default function DailyChallengeScreen() {
         error={error}
         score={score}
         isCorrectAnswer={isCorrectAnswer}
-        // Only show completed screen after the user has clicked next on the last question
         isCompleted={showCompletionScreen}
         onAnswer={handleAnswer}
         onNextQuestion={handleNextQuestion}

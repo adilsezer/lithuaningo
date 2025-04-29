@@ -64,7 +64,6 @@ export default function ChallengeScreen() {
   useFocusEffect(
     React.useCallback(() => {
       if (userId) {
-        console.log("[ChallengeScreen] Loading data from useFocusEffect");
         loadData();
       }
       return () => {};

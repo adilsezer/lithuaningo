@@ -66,10 +66,11 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
   // Scroll to bottom when feedback appears
   useEffect(() => {
     if (isCorrectAnswer !== null && scrollViewRef.current) {
-      // Add a small delay to ensure the component has rendered
+      // The setTimeout is necessary to ensure the feedback component
+      // is fully rendered before scrolling
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
-      }, 100);
+      }, 150);
     }
   }, [isCorrectAnswer]);
 
