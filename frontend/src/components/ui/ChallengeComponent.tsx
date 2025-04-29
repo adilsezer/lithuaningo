@@ -14,7 +14,7 @@ import {
 import { router } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomDivider from "@components/ui/CustomDivider";
-import { ChallengeQuestionResponse } from "@src/types";
+import { ChallengeQuestionResponse, ChallengeQuestionType } from "@src/types";
 
 // Define props interface for the reusable component
 interface ChallengeComponentProps {
@@ -74,48 +74,81 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
     }
   }, [isCorrectAnswer]);
 
-  // Helper function to get button styles based on option state
+  // Simple helper for button styling
   const getOptionButtonProps = (option: string) => {
-    // Determine button state
     const isCorrect = option === currentQuestion?.correctAnswer;
     const isSelected = option === selectedAnswer;
-    const isIncorrectSelection = isCorrectAnswer === false && isSelected;
-    const isRevealedCorrect = isCorrectAnswer !== null && isCorrect;
+    const isRevealed = isCorrectAnswer !== null;
 
-    // Determine mode
-    const mode:
+    let mode:
       | "text"
       | "contained"
       | "outlined"
       | "elevated"
-      | "contained-tonal" =
-      isRevealedCorrect || isIncorrectSelection ? "contained" : "outlined";
+      | "contained-tonal" = "outlined";
+    let color = theme.colors.primary;
+    let textColor = theme.colors.onBackground;
 
-    // Determine style
-    const buttonStyle = [
-      styles.optionButton,
-      {
-        borderColor: isIncorrectSelection
-          ? theme.colors.error
-          : theme.colors.primary,
-      },
-      isRevealedCorrect && { backgroundColor: theme.colors.primary },
-      isIncorrectSelection && { backgroundColor: theme.colors.error },
-    ];
+    // For incorrect selection
+    if (isRevealed && isSelected && !isCorrect) {
+      mode = "contained";
+      color = theme.colors.error;
+      textColor = theme.colors.onError;
+    }
 
-    // Determine label style
-    const labelStyle = [
-      styles.optionButtonLabel,
-      {
-        color: isIncorrectSelection
-          ? theme.colors.onError
-          : isRevealedCorrect
-          ? theme.colors.onPrimary
-          : theme.colors.onBackground,
-      },
-    ];
+    // For correct answer reveal
+    if (isRevealed && isCorrect) {
+      mode = "contained";
+      color = theme.colors.primary;
+      textColor = theme.colors.onPrimary;
+    }
 
-    return { mode, buttonStyle, labelStyle };
+    return {
+      mode,
+      buttonStyle: [
+        styles.optionButton,
+        {
+          borderColor: color,
+          backgroundColor: mode === "contained" ? color : undefined,
+        },
+      ],
+      labelStyle: [styles.optionButtonLabel, { color: textColor }],
+    };
+  };
+
+  // Example sentence visibility based on question type
+  const shouldShowExampleSentence = (
+    question: ChallengeQuestionResponse
+  ): boolean => {
+    // No example to show
+    if (!question.exampleSentence) return false;
+
+    // Don't show if example is directly part of the question
+    if (question.question.includes(question.exampleSentence)) return false;
+
+    // Type-specific rules
+    switch (question.type) {
+      case ChallengeQuestionType.FillInTheBlank:
+        // Never show examples with the answer for fill-in-blank
+        return !question.exampleSentence.includes(question.correctAnswer);
+
+      case ChallengeQuestionType.TrueFalse:
+        // For true/false, only show if it doesn't contain the answer
+        return !question.exampleSentence.includes(question.correctAnswer);
+
+      case ChallengeQuestionType.MultipleChoice:
+        // For vocabulary questions, hide if example contains answer
+        if (
+          question.question.includes("mean") ||
+          question.question.includes("translation")
+        ) {
+          return !question.exampleSentence.includes(question.correctAnswer);
+        }
+        return true;
+
+      default:
+        return true;
+    }
   };
 
   // Loading state
@@ -344,23 +377,25 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
                 <CustomDivider />
 
-                {currentQuestion.exampleSentence && (
-                  <>
-                    <Text
-                      variant="bodySmall"
-                      style={{
-                        color: theme.colors.onSurfaceVariant,
-                        marginTop: 12,
-                        marginBottom: 4,
-                      }}
-                    >
-                      Example:
-                    </Text>
-                    <Text variant="bodyMedium" style={styles.exampleSentence}>
-                      "{currentQuestion.exampleSentence}"
-                    </Text>
-                  </>
-                )}
+                {/* Handle example sentences intelligently based on question type */}
+                {currentQuestion.exampleSentence &&
+                  shouldShowExampleSentence(currentQuestion) && (
+                    <>
+                      <Text
+                        variant="bodySmall"
+                        style={{
+                          color: theme.colors.onSurfaceVariant,
+                          marginTop: 12,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Example:
+                      </Text>
+                      <Text variant="bodyMedium" style={styles.exampleSentence}>
+                        "{currentQuestion.exampleSentence}"
+                      </Text>
+                    </>
+                  )}
               </Card.Content>
             </Card>
 
