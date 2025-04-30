@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import { StyleSheet, SafeAreaView, FlatList, View } from "react-native";
 import { useTheme } from "react-native-paper";
-import { router } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import CustomText from "@components/ui/CustomText";
 import CategoryGrid from "@components/ui/CategoryGrid";
 import { FlashcardCategory } from "@components/ui/CategoryCard";
@@ -41,6 +41,15 @@ export default function FlashcardScreen() {
     // Clean up any previous flashcard session
     resetSession();
   }, [userData?.id, syncFlashcardCount, resetSession]);
+
+  // Refresh stats when tab comes into focus
+  useFocusEffect(
+    React.useCallback(() => {
+      if (userData?.id) {
+        syncFlashcardCount(userData.id);
+      }
+    }, [userData?.id, syncFlashcardCount])
+  );
 
   // Helper function to get theme color based on index
   const getColor = (index: number) => {
