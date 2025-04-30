@@ -12,6 +12,7 @@ import {
   UserFlashcardStatsSummaryResponse,
   SubmitFlashcardAnswerRequest,
 } from "@src/types/UserFlashcardStats";
+import { useUserStore } from "./useUserStore";
 
 // Constants
 export const DAILY_FLASHCARD_LIMIT = 25;
@@ -297,9 +298,12 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       return;
     }
 
-    // Check daily limit for non-premium users using direct count comparison for consistency
+    // Get premium status from the user store
+    const userData = useUserStore.getState().userData;
+    const isPremium = userData?.isPremium ?? false;
+
+    // Check daily limit for non-premium users
     const currentCount = get().flashcardsAnsweredToday;
-    const isPremium = !get().isDailyLimitReached(true);
 
     if (!isPremium && currentCount >= DAILY_FLASHCARD_LIMIT) {
       set({
@@ -312,15 +316,17 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     }
 
     try {
-      // Update local count immediately for responsive UI
-      get().incrementFlashcardCount();
-
-      // Submit to backend
+      // Submit to backend first
       const updatedStats =
         await UserFlashcardStatsService.submitFlashcardAnswer({
           ...answer,
           userId,
         });
+
+      // Update local count by incrementing it since the API doesn't return a total
+      set({
+        flashcardsAnsweredToday: currentCount + 1,
+      });
 
       // Show appropriate feedback message
       const message = {
@@ -336,7 +342,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       });
 
       // Check if we reached limit after this submission
-      const newCount = get().flashcardsAnsweredToday;
+      const newCount = currentCount + 1;
       if (!isPremium && newCount >= DAILY_FLASHCARD_LIMIT) {
         // Set timeout to update the message after showing the success/error message
         setTimeout(() => {
@@ -354,6 +360,10 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         get().goToNextCard();
       }, 1500);
     } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Failed to submit answer";
+      console.error(`[SubmitAnswer] Error: ${errorMessage}`);
+
       set({
         submissionMessage: {
           text: "Error recording your answer. Please try again.",
@@ -374,7 +384,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     // Premium users have no limit
     if (isPremium) return false;
 
-    // Check against daily limit for free users - use exact comparison to ensure consistency
+    // Check against daily limit for free users
     return get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT;
   },
 
