@@ -192,8 +192,31 @@ namespace Lithuaningo.API.Services.Stats
                 var result = await query.Get();
                 var models = result.Models?.ToList() ?? new List<UserFlashcardStat>();
 
+                // Get a separate count of flashcards answered today using database filtering
+                var today = DateTime.UtcNow.Date;
+                var todayStart = today.ToString("yyyy-MM-dd");
+                var todayEnd = today.AddDays(1).ToString("yyyy-MM-dd");
+
+                // Just count directly
+                var todayQuery = _supabaseService.Client
+                    .From<UserFlashcardStat>()
+                    .Filter("user_id", Operator.Equals, userId.ToString())
+                    .Filter("updated_at", Operator.GreaterThanOrEqual, todayStart)
+                    .Filter("updated_at", Operator.LessThan, todayEnd);
+
+                var todayResult = await todayQuery.Get();
+
+                // Count cards that have been answered (either correctly or incorrectly)
+                var todayCount = todayResult.Models?.Count(s => s.CorrectCount > 0 || s.IncorrectCount > 0) ?? 0;
+
+                _logger.LogInformation("User {UserId} has answered {Count} flashcards today (database query)",
+                    userId, todayCount);
+
                 // Use AutoMapper to map the collection to the summary response
                 var summary = _mapper.Map<UserFlashcardStatsSummaryResponse>(models);
+
+                // Override the AutoMapper value with our database query result
+                summary.FlashcardsAnsweredToday = todayCount;
 
                 return summary;
             }

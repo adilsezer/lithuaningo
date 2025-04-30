@@ -1,8 +1,11 @@
 import { apiClient, ApiError } from "@services/api/apiClient";
-import { LeaderboardEntry, UpdateLeaderboardEntryRequest } from "@src/types";
+import {
+  LeaderboardEntryResponse,
+  UpdateLeaderboardEntryRequest,
+} from "@src/types";
 
 class LeaderboardService {
-  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntry[]> {
+  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntryResponse[]> {
     try {
       return await apiClient.getCurrentWeekLeaderboard();
     } catch (error) {
@@ -17,7 +20,7 @@ class LeaderboardService {
 
   async updateLeaderboardEntry(
     request: UpdateLeaderboardEntryRequest
-  ): Promise<LeaderboardEntry> {
+  ): Promise<LeaderboardEntryResponse> {
     try {
       return await apiClient.updateLeaderboardEntry(request);
     } catch (error) {

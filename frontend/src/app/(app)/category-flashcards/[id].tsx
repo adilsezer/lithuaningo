@@ -2,6 +2,7 @@ import React, { useCallback, useEffect } from "react";
 import { ScrollView, StyleSheet, View } from "react-native";
 import { useTheme, Button } from "react-native-paper";
 import { useLocalSearchParams, router } from "expo-router";
+import { useFocusEffect } from "@react-navigation/native";
 import {
   useFlashcardStore,
   DAILY_FLASHCARD_LIMIT,
@@ -53,6 +54,15 @@ export default function CategoryFlashcardsScreen() {
   const dailyLimitReached = isDailyLimitReached(isPremium);
   const cardsRemainingToday = DAILY_FLASHCARD_LIMIT - flashcardsAnsweredToday;
 
+  // Always sync when the screen comes into focus
+  useFocusEffect(
+    useCallback(() => {
+      if (userData?.id) {
+        syncFlashcardCount(userData.id);
+      }
+    }, [userData?.id, syncFlashcardCount])
+  );
+
   // Memoize navigation handlers
   const handleGoBack = useCallback(() => {
     resetSession();
@@ -92,6 +102,18 @@ export default function CategoryFlashcardsScreen() {
     resetSession,
     isDailyLimitReached,
   ]);
+
+  // Create a daily flashcard progress component
+  const DailyFlashcardProgress = () => (
+    <>
+      <CustomText variant="bodySmall" style={styles.limitInfo}>
+        <CustomText bold>
+          {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT}
+        </CustomText>{" "}
+        daily flashcards used
+      </CustomText>
+    </>
+  );
 
   // Memoize answer submission handlers
   const handleMarkIncorrect = useCallback(() => {
@@ -168,8 +190,8 @@ export default function CategoryFlashcardsScreen() {
           Daily Limit Reached! 🔒
         </CustomText>
         <CustomText variant="bodyLarge" style={styles.completedSubtext}>
-          You've answered {DAILY_FLASHCARD_LIMIT} flashcards today, which is the
-          daily limit for free users.
+          You've answered {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+          flashcards today, which is the daily limit for free users.
         </CustomText>
         <CustomText variant="bodyMedium" style={styles.premiumMessage}>
           Upgrade to Premium to access unlimited flashcards and accelerate your
@@ -204,6 +226,7 @@ export default function CategoryFlashcardsScreen() {
         <CustomText style={{ marginTop: 16 }}>
           🤖 Thinking hard... AI is generating your flashcards!
         </CustomText>
+        {!isPremium && <DailyFlashcardProgress />}
       </View>
     );
   }
@@ -218,6 +241,7 @@ export default function CategoryFlashcardsScreen() {
         <Button mode="contained" onPress={handleFetchNewCards}>
           Retry
         </Button>
+        {!isPremium && <DailyFlashcardProgress />}
       </View>
     );
   }
@@ -232,6 +256,7 @@ export default function CategoryFlashcardsScreen() {
         <Button mode="contained" onPress={handleGoBack}>
           Go Back
         </Button>
+        {!isPremium && <DailyFlashcardProgress />}
       </View>
     );
   }
@@ -242,6 +267,7 @@ export default function CategoryFlashcardsScreen() {
       <View style={[styles.container, styles.centered]}>
         <LoadingIndicator modal={false} />
         <CustomText style={{ marginTop: 16 }}>Loading flashcards...</CustomText>
+        {!isPremium && <DailyFlashcardProgress />}
       </View>
     );
   }
@@ -261,12 +287,7 @@ export default function CategoryFlashcardsScreen() {
             Card {currentIndex + 1} of {totalCards}
           </CustomText>
         )}
-        {!isPremium && (
-          <CustomText variant="bodySmall" style={styles.limitInfo}>
-            {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT} daily flashcards
-            used
-          </CustomText>
-        )}
+        {!isPremium && <DailyFlashcardProgress />}
       </View>
 
       {/* Notification Message */}

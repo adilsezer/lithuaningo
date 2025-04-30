@@ -19,8 +19,8 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.TotalIncorrectAnswers, opt => opt.MapFrom(src => src.Sum(s => s.IncorrectCount)))
                 .ForMember(dest => dest.AverageMasteryLevel, opt => opt.MapFrom(src =>
                     src.Any() ? src.Average(s => s.MasteryLevel) : 0))
-                .ForMember(dest => dest.FlashcardsAnsweredToday, opt => opt.MapFrom(src =>
-                    src.Count(s => s.UpdatedAt.HasValue && s.UpdatedAt.Value.Date == DateTime.UtcNow.Date)));
+                // Set default to 0 since we'll calculate this with a separate query
+                .ForMember(dest => dest.FlashcardsAnsweredToday, opt => opt.MapFrom(src => 0));
         }
     }
 }
