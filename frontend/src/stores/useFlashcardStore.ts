@@ -30,6 +30,7 @@ interface FlashcardState {
   currentFlashcardId: string | null;
   flipped: boolean;
   isDeckCompleted: boolean;
+  hasAttemptedLoad: boolean;
 }
 
 interface StatsState {
@@ -61,7 +62,6 @@ interface FlashcardStoreState extends FlashcardState, StatsState, UIState {
 
   // Stats actions
   syncFlashcardCount: (userId?: string) => Promise<void>;
-  incrementFlashcardCount: () => void;
   resetFlashcardCount: () => void;
   fetchFlashcardStats: (flashcardId: string, userId?: string) => Promise<void>;
   submitFlashcardAnswer: (
@@ -82,6 +82,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
   currentFlashcardId: null,
   flipped: false,
   isDeckCompleted: false,
+  hasAttemptedLoad: false,
 
   // Stats state
   flashcardsAnsweredToday: 0,
@@ -99,10 +100,16 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
   // ===== FLASHCARD ACTIONS =====
 
   fetchFlashcards: async ({ categoryId, userId, isPremium }) => {
+    // Always sync with server first to get the latest count
+    if (userId) {
+      await get().syncFlashcardCount(userId);
+    }
+
     // Skip if daily limit reached for non-premium users
     if (!isPremium && get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT) {
       // Set explicit message when trying to fetch with limit reached
       set({
+        hasAttemptedLoad: true,
         isDeckCompleted: true,
         submissionMessage: {
           text: "Daily flashcard limit reached. Upgrade to premium for unlimited access!",
@@ -146,6 +153,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         isDeckCompleted: flashcards.length === 0,
         isLoadingFlashcards: false,
         currentFlashcardId: flashcards.length > 0 ? flashcards[0].id : null,
+        hasAttemptedLoad: true,
       });
 
       // Fetch stats for first flashcard if available
@@ -160,6 +168,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         isLoadingFlashcards: false,
         error: errorMessage,
         flashcards: [],
+        hasAttemptedLoad: true,
       });
     }
   },
@@ -210,6 +219,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       flipped: false,
       error: null,
       submissionMessage: null,
+      hasAttemptedLoad: false,
     });
   },
 
@@ -237,12 +247,6 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         error: "Failed to sync flashcard count. Please try again.",
       });
     }
-  },
-
-  incrementFlashcardCount: () => {
-    set((state) => ({
-      flashcardsAnsweredToday: state.flashcardsAnsweredToday + 1,
-    }));
   },
 
   resetFlashcardCount: () => {
@@ -302,9 +306,10 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     const userData = useUserStore.getState().userData;
     const isPremium = userData?.isPremium ?? false;
 
-    // Check daily limit for non-premium users
+    // Use existing count - no need to sync here since we already sync when entering screen
     const currentCount = get().flashcardsAnsweredToday;
 
+    // Check daily limit for non-premium users
     if (!isPremium && currentCount >= DAILY_FLASHCARD_LIMIT) {
       set({
         submissionMessage: {
@@ -316,17 +321,15 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     }
 
     try {
-      // Submit to backend first
+      // Submit answer to server - this call also returns updated stats including the new count
       const updatedStats =
         await UserFlashcardStatsService.submitFlashcardAnswer({
           ...answer,
           userId,
         });
 
-      // Update local count by incrementing it since the API doesn't return a total
-      set({
-        flashcardsAnsweredToday: currentCount + 1,
-      });
+      // Update local state with the response data
+      await get().syncFlashcardCount(userId);
 
       // Show appropriate feedback message
       const message = {
@@ -342,8 +345,10 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       });
 
       // Check if we reached limit after this submission
-      const newCount = currentCount + 1;
-      if (!isPremium && newCount >= DAILY_FLASHCARD_LIMIT) {
+      if (
+        !isPremium &&
+        get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT
+      ) {
         // Set timeout to update the message after showing the success/error message
         setTimeout(() => {
           set({
@@ -384,7 +389,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     // Premium users have no limit
     if (isPremium) return false;
 
-    // Check against daily limit for free users
+    // Check against daily limit for free users using server data
     return get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT;
   },
 

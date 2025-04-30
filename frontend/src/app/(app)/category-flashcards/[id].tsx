@@ -29,10 +29,9 @@ export default function CategoryFlashcardsScreen() {
     isDeckCompleted,
     submissionMessage,
     error,
+    hasAttemptedLoad,
 
     // Loading states
-    isLoading,
-    isLoadingStats,
     isLoadingFlashcards,
 
     // Daily limit data
@@ -52,6 +51,7 @@ export default function CategoryFlashcardsScreen() {
   const currentFlashcard = flashcards[currentIndex];
   const totalCards = flashcards.length;
   const dailyLimitReached = isDailyLimitReached(isPremium);
+  const cardsRemainingToday = DAILY_FLASHCARD_LIMIT - flashcardsAnsweredToday;
 
   // Memoize navigation handlers
   const handleGoBack = useCallback(() => {
@@ -141,18 +141,9 @@ export default function CategoryFlashcardsScreen() {
     [theme.colors]
   );
 
-  // Show loader while checking user stats
-  if (isLoading || isLoadingStats) {
-    return (
-      <View style={[styles.container, styles.centered]}>
-        <LoadingIndicator modal={false} />
-        <CustomText style={{ marginTop: 16 }}>
-          Loading your progress...
-        </CustomText>
-      </View>
-    );
-  }
+  // Render states based on conditions
 
+  // 2. Not logged in
   if (!userData?.id) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -169,7 +160,7 @@ export default function CategoryFlashcardsScreen() {
     );
   }
 
-  // Show premium upgrade message if daily limit is reached
+  // 3. Daily limit reached for free users
   if (!isPremium && dailyLimitReached) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -205,6 +196,7 @@ export default function CategoryFlashcardsScreen() {
     );
   }
 
+  // 4. Loading flashcards
   if (isLoadingFlashcards && totalCards === 0) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -216,6 +208,7 @@ export default function CategoryFlashcardsScreen() {
     );
   }
 
+  // 5. Error state
   if (error) {
     return (
       <View style={[styles.container, styles.centered]}>
@@ -229,7 +222,8 @@ export default function CategoryFlashcardsScreen() {
     );
   }
 
-  if (totalCards === 0) {
+  // 6. No flashcards found - only show this if we've actually tried to load cards
+  if (totalCards === 0 && hasAttemptedLoad) {
     return (
       <View style={[styles.container, styles.centered]}>
         <CustomText variant="bodyLarge">
@@ -242,10 +236,22 @@ export default function CategoryFlashcardsScreen() {
     );
   }
 
+  // Show loading state while waiting for first load
+  if (totalCards === 0) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <LoadingIndicator modal={false} />
+        <CustomText style={{ marginTop: 16 }}>Loading flashcards...</CustomText>
+      </View>
+    );
+  }
+
+  // Main render - flashcards available
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
     >
+      {/* Header Section */}
       <View style={styles.header}>
         <CustomText variant="titleLarge" bold>
           {name} Flashcards
@@ -263,6 +269,7 @@ export default function CategoryFlashcardsScreen() {
         )}
       </View>
 
+      {/* Notification Message */}
       {submissionMessage && (
         <View
           style={[
@@ -283,8 +290,8 @@ export default function CategoryFlashcardsScreen() {
         </View>
       )}
 
+      {/* Deck Completed View */}
       {isDeckCompleted ? (
-        // Completed deck view
         <View style={styles.completedContainer}>
           <CustomText variant="headlineSmall" style={styles.completedText}>
             Congratulations! 🎉
@@ -320,18 +327,24 @@ export default function CategoryFlashcardsScreen() {
               <CustomText variant="bodyLarge" style={styles.completedSubtext}>
                 You've completed all free flashcards in this deck.
               </CustomText>
-              {dailyLimitReached ? (
-                <CustomText variant="bodyMedium" style={styles.premiumMessage}>
-                  You've reached your daily limit of {DAILY_FLASHCARD_LIMIT}{" "}
-                  flashcards. Upgrade to Premium for unlimited access!
-                </CustomText>
-              ) : (
-                <CustomText variant="bodyMedium" style={styles.premiumMessage}>
-                  Upgrade to Premium to access unlimited flashcards and
-                  accelerate your learning!
-                </CustomText>
-              )}
+              <CustomText variant="bodyMedium" style={styles.premiumMessage}>
+                {dailyLimitReached
+                  ? `You've reached your daily limit of ${DAILY_FLASHCARD_LIMIT} flashcards. Upgrade to Premium for unlimited access!`
+                  : `You still have ${cardsRemainingToday} flashcards remaining today. You can get new cards or upgrade to Premium for unlimited access!`}
+              </CustomText>
               <View style={styles.completedButtonsContainer}>
+                {!dailyLimitReached && (
+                  <Button
+                    mode="contained"
+                    onPress={handleFetchNewCards}
+                    style={styles.completedButton}
+                    icon="refresh"
+                    loading={isLoadingFlashcards}
+                    disabled={isLoadingFlashcards}
+                  >
+                    Get New Cards
+                  </Button>
+                )}
                 <Button
                   mode="contained"
                   onPress={handleGoToPremium}
@@ -352,7 +365,7 @@ export default function CategoryFlashcardsScreen() {
           )}
         </View>
       ) : (
-        // Active flashcard view
+        // Active Flashcard View
         currentFlashcard && (
           <>
             <Flashcard
