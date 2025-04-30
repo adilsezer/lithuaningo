@@ -81,7 +81,7 @@ export const UserFlashcardStatsCard: React.FC<UserFlashcardStatsCardProps> = ({
         <View style={styles.statsContainer}>
           <UserFlashcardStatItem
             icon="cards"
-            value={stats.totalFlashcards}
+            value={stats.totalCorrectAnswers + stats.totalIncorrectAnswers}
             label="Total Cards"
             color={theme.colors.tertiary}
           />
@@ -132,15 +132,6 @@ export const UserFlashcardStatsCard: React.FC<UserFlashcardStatsCardProps> = ({
             style={styles.progressBar}
           />
         </View>
-
-        <View style={styles.totalStats}>
-          <CustomText
-            variant="bodySmall"
-            style={{ color: theme.colors.onSurfaceVariant }}
-          >
-            Total Views: {stats.totalViews}
-          </CustomText>
-        </View>
       </Card.Content>
     </Card>
   );
@@ -182,10 +173,5 @@ const styles = StyleSheet.create({
   progressBar: {
     height: 8,
     borderRadius: 4,
-  },
-  totalStats: {
-    marginTop: 8,
-    flexDirection: "row",
-    justifyContent: "space-between",
   },
 });
