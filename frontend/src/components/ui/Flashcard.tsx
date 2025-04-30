@@ -64,7 +64,7 @@ export default function Flashcard({
             {getDifficultyLabel(flashcard.difficulty)}
           </Chip>
 
-          {!flashcard.isVerified && (
+          {flashcard.isVerified && (
             <Chip
               icon="check-decagram"
               style={[
