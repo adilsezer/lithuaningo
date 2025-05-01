@@ -124,10 +124,7 @@ export default function PremiumFeaturesScreen() {
     comparisonTable: {
       marginBottom: 24,
       borderRadius: 12,
-    },
-    tableContainer: {
-      borderRadius: 12,
-      overflow: "hidden",
+      backgroundColor: theme.colors.background,
     },
     tableRow: {
       flexDirection: "row",
@@ -217,7 +214,6 @@ export default function PremiumFeaturesScreen() {
       backgroundColor: theme.colors.secondaryContainer,
       padding: 16,
       borderRadius: 12,
-      marginBottom: 24,
     },
     infoIcon: {
       marginRight: 12,
@@ -406,7 +402,7 @@ export default function PremiumFeaturesScreen() {
 
       <Text style={styles.sectionTitle}>Premium vs Free</Text>
       <Surface style={styles.comparisonTable} elevation={1}>
-        <View style={styles.tableContainer}>
+        <View>
           {/* Table Header */}
           <View style={styles.tableRow}>
             <View
@@ -475,8 +471,8 @@ export default function PremiumFeaturesScreen() {
         {renderPlanCard("lifetime", "Lifetime")}
       </View>
 
-      <Surface style={styles.infoSection} elevation={1}>
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
+      <Surface style={{ marginBottom: 24 }} elevation={1}>
+        <View style={styles.infoSection}>
           <MaterialCommunityIcons
             name="shield-check"
             size={24}
