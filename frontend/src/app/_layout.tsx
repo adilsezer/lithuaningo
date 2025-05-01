@@ -91,7 +91,7 @@ export default function RootLayout() {
                 headerShown: false,
                 contentStyle: {
                   backgroundColor: theme.colors.background,
-                  paddingHorizontal: 40,
+                  paddingHorizontal: 25,
                 },
                 animation: "none",
               }}

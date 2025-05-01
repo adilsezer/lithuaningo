@@ -272,7 +272,14 @@ export default function FlashcardScreen() {
           );
         case "limit-info":
           return !isPremium ? (
-            <View style={styles.limitInfoContainer}>
+            <View
+              style={[
+                styles.limitInfoContainer,
+                {
+                  backgroundColor: theme.colors.background,
+                },
+              ]}
+            >
               <CustomText variant="bodyMedium">
                 Daily Usage: {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT}{" "}
                 flashcards

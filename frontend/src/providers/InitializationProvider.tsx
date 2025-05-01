@@ -16,18 +16,22 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const { initializeTheme, setManualMode } = useThemeStore();
-  const { checkAppStatus } = useAppInfoStore();
+  const { checkAppStatus, appInfo, isCheckingStatus } = useAppInfoStore();
   const userData = useUserData();
 
   // Initialize theme and app info on mount
   useEffect(() => {
     try {
       initializeTheme();
-      checkAppStatus();
+
+      // Only check app status if it hasn't been checked yet
+      if (!appInfo && !isCheckingStatus) {
+        checkAppStatus();
+      }
     } catch (error) {
       console.error("Initialization error:", error);
     }
-  }, [initializeTheme, checkAppStatus]);
+  }, [initializeTheme, checkAppStatus, appInfo, isCheckingStatus]);
 
   // Initialize RevenueCat
   useEffect(() => {

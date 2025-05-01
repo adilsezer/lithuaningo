@@ -125,7 +125,15 @@ export default function ChallengeScreen() {
           </CustomText>
         </View>
       ) : hasStartedChallenge ? (
-        <Card style={styles.card}>
+        <Card
+          style={[
+            styles.card,
+            {
+              backgroundColor: theme.colors.background,
+              borderColor: theme.colors.primary,
+            },
+          ]}
+        >
           <Card.Content style={styles.cardContent}>
             <IconButton
               icon="check-circle"

@@ -27,6 +27,7 @@ const ProfileActions = ({
         key={title}
         title={title}
         onPress={() => onNavigate(path)}
+        style={styles.buttonContainer}
       />
     ))}
   </View>
@@ -83,7 +84,11 @@ export default function ProfileScreen() {
 
       <ProfileActions onNavigate={handleNavigation} />
 
-      <CustomButton title="Logout" onPress={signOut} />
+      <CustomButton
+        title="Logout"
+        onPress={signOut}
+        style={styles.buttonContainer}
+      />
     </ScrollView>
   );
 }
@@ -91,5 +96,8 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  buttonContainer: {
+    marginHorizontal: 40,
   },
 });

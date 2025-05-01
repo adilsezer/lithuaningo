@@ -12,6 +12,7 @@ interface AppInfoState {
   appInfo: AppInfoResponse | null;
   isUnderMaintenance: boolean;
   needsUpdate: boolean;
+  isCheckingStatus: boolean;
 }
 
 interface AppInfoActions {
@@ -20,17 +21,24 @@ interface AppInfoActions {
 
 const currentVersion = getCurrentVersion();
 
-const useAppInfoStore = create<AppInfoState & AppInfoActions>((set) => ({
+const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
   appInfo: null,
   isUnderMaintenance: false,
   needsUpdate: false,
+  isCheckingStatus: false,
 
   checkAppStatus: async () => {
-    // Get setLoading and setError from UI store
+    const { isCheckingStatus } = get();
+
+    if (isCheckingStatus) {
+      return;
+    }
+
     const setLoading = useUIStore.getState().setLoading;
     const setError = useUIStore.getState().setError;
 
     try {
+      set({ isCheckingStatus: true });
       setLoading(true);
       setError(null);
 
@@ -40,7 +48,6 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set) => ({
         throw new Error("Failed to fetch app info");
       }
 
-      // Check if minimum version requirement is met
       const needsUpdate =
         compareVersions(latestAppInfo.minimumVersion, currentVersion) > 0 ||
         (compareVersions(latestAppInfo.currentVersion, currentVersion) > 0 &&
@@ -55,14 +62,14 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set) => ({
       if (needsUpdate || latestAppInfo.isMaintenance) {
         router.replace("/notification");
       }
-
-      setLoading(false);
     } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch app info";
       setError(errorMessage);
-      setLoading(false);
       console.error("[useAppInfoStore] Error checking app status:", err);
+    } finally {
+      setLoading(false);
+      set({ isCheckingStatus: false });
     }
   },
 }));

@@ -9,8 +9,13 @@ import { getCurrentVersion } from "@src/services/data/appInfoService";
  */
 export const useAppInfo = () => {
   // Get app info from dedicated store
-  const { appInfo, needsUpdate, isUnderMaintenance, checkAppStatus } =
-    useAppInfoStore();
+  const {
+    appInfo,
+    needsUpdate,
+    isUnderMaintenance,
+    checkAppStatus,
+    isCheckingStatus,
+  } = useAppInfoStore();
 
   // Get loading and error states from UI store
   const loading = useIsLoading();
@@ -18,10 +23,13 @@ export const useAppInfo = () => {
 
   const currentVersion = getCurrentVersion();
 
-  // Check app status on mount
+  // Only check app status on mount if it hasn't already been performed elsewhere
   useEffect(() => {
-    checkAppStatus();
-  }, [checkAppStatus]);
+    // Don't trigger a new check if app info exists or check is already in progress
+    if (!appInfo && !isCheckingStatus) {
+      checkAppStatus();
+    }
+  }, [appInfo, checkAppStatus, isCheckingStatus]);
 
   // Handle update URL opening
   const openUpdateUrl = async () => {
