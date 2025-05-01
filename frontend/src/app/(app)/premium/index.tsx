@@ -124,8 +124,10 @@ export default function PremiumFeaturesScreen() {
     comparisonTable: {
       marginBottom: 24,
       borderRadius: 12,
+    },
+    tableContainer: {
+      borderRadius: 12,
       overflow: "hidden",
-      backgroundColor: theme.colors.background,
     },
     tableRow: {
       flexDirection: "row",
@@ -404,64 +406,66 @@ export default function PremiumFeaturesScreen() {
 
       <Text style={styles.sectionTitle}>Premium vs Free</Text>
       <Surface style={styles.comparisonTable} elevation={1}>
-        {/* Table Header */}
-        <View style={styles.tableRow}>
-          <View
-            style={[
-              styles.tableCell,
-              styles.tableHeader,
-              styles.tableCellFirst,
-            ]}
-          >
-            <Text style={styles.tableHeaderText}>Feature</Text>
-          </View>
-          <View style={[styles.tableCell, styles.tableHeader]}>
-            <Text style={styles.tableHeaderText}>Free</Text>
-          </View>
-          <View style={[styles.tableCell, styles.tableHeader]}>
-            <Text style={styles.tableHeaderText}>Premium</Text>
-          </View>
-        </View>
-
-        {/* Table Rows */}
-        {COMPARISON_DATA.map((item, index) => (
-          <React.Fragment key={index}>
-            <Divider style={styles.divider} />
-            <View style={styles.tableRow}>
-              <View style={[styles.tableCell, styles.tableCellFirst]}>
-                <Text numberOfLines={2} style={{ flexShrink: 1 }}>
-                  {item.feature}
-                </Text>
-              </View>
-              <View style={styles.tableCell}>
-                {typeof item.free === "boolean" ? (
-                  <MaterialCommunityIcons
-                    name={item.free ? "check" : "close"}
-                    size={20}
-                    color={
-                      item.free ? theme.colors.primary : theme.colors.error
-                    }
-                  />
-                ) : (
-                  <Text>{item.free}</Text>
-                )}
-              </View>
-              <View style={styles.tableCell}>
-                {typeof item.premium === "boolean" ? (
-                  <MaterialCommunityIcons
-                    name={item.premium ? "check" : "close"}
-                    size={20}
-                    color={
-                      item.premium ? theme.colors.primary : theme.colors.error
-                    }
-                  />
-                ) : (
-                  <Text>{item.premium}</Text>
-                )}
-              </View>
+        <View style={styles.tableContainer}>
+          {/* Table Header */}
+          <View style={styles.tableRow}>
+            <View
+              style={[
+                styles.tableCell,
+                styles.tableHeader,
+                styles.tableCellFirst,
+              ]}
+            >
+              <Text style={styles.tableHeaderText}>Feature</Text>
             </View>
-          </React.Fragment>
-        ))}
+            <View style={[styles.tableCell, styles.tableHeader]}>
+              <Text style={styles.tableHeaderText}>Free</Text>
+            </View>
+            <View style={[styles.tableCell, styles.tableHeader]}>
+              <Text style={styles.tableHeaderText}>Premium</Text>
+            </View>
+          </View>
+
+          {/* Table Rows */}
+          {COMPARISON_DATA.map((item, index) => (
+            <React.Fragment key={index}>
+              <Divider style={styles.divider} />
+              <View style={styles.tableRow}>
+                <View style={[styles.tableCell, styles.tableCellFirst]}>
+                  <Text numberOfLines={2} style={{ flexShrink: 1 }}>
+                    {item.feature}
+                  </Text>
+                </View>
+                <View style={styles.tableCell}>
+                  {typeof item.free === "boolean" ? (
+                    <MaterialCommunityIcons
+                      name={item.free ? "check" : "close"}
+                      size={20}
+                      color={
+                        item.free ? theme.colors.primary : theme.colors.error
+                      }
+                    />
+                  ) : (
+                    <Text>{item.free}</Text>
+                  )}
+                </View>
+                <View style={styles.tableCell}>
+                  {typeof item.premium === "boolean" ? (
+                    <MaterialCommunityIcons
+                      name={item.premium ? "check" : "close"}
+                      size={20}
+                      color={
+                        item.premium ? theme.colors.primary : theme.colors.error
+                      }
+                    />
+                  ) : (
+                    <Text>{item.premium}</Text>
+                  )}
+                </View>
+              </View>
+            </React.Fragment>
+          ))}
+        </View>
       </Surface>
 
       <Text style={styles.sectionTitle}>Choose Your Membership</Text>
@@ -472,16 +476,18 @@ export default function PremiumFeaturesScreen() {
       </View>
 
       <Surface style={styles.infoSection} elevation={1}>
-        <MaterialCommunityIcons
-          name="shield-check"
-          size={24}
-          color={theme.colors.onSecondaryContainer}
-          style={styles.infoIcon}
-        />
-        <Text style={styles.infoText}>
-          Easy to manage. Your subscription can be changed or canceled anytime
-          through your app store settings.
-        </Text>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <MaterialCommunityIcons
+            name="shield-check"
+            size={24}
+            color={theme.colors.onSecondaryContainer}
+            style={styles.infoIcon}
+          />
+          <Text style={styles.infoText}>
+            Easy to manage. Your subscription can be changed or canceled anytime
+            through your app store settings.
+          </Text>
+        </View>
       </Surface>
 
       <View style={styles.buttonContainer}>
