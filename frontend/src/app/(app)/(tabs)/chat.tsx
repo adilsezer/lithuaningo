@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import {
   View,
   FlatList,
@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Text, ActivityIndicator } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useChat } from "@hooks/useChat";
+import { useChat, MAX_FREE_MESSAGES_PER_DAY } from "@hooks/useChat";
 import CustomText from "@components/ui/CustomText";
 import CustomDivider from "@components/ui/CustomDivider";
 import ChatMessage from "@components/chat/ChatMessage";
@@ -42,6 +42,11 @@ export default function ChatScreen(): JSX.Element {
   } = useChat();
 
   const insets = useSafeAreaInsets();
+
+  // Calculate if user has reached daily limit
+  const hasReachedLimit = useMemo(() => {
+    return dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY;
+  }, [dailyMessageCount]);
 
   // Render loading indicator in chat
   const renderLoadingIndicator = () => {
@@ -133,6 +138,8 @@ export default function ChatScreen(): JSX.Element {
         isLoading={isLoading}
         isAuthenticated={isAuthenticated}
         showClearButton={messages.length > 0}
+        hasReachedLimit={hasReachedLimit}
+        isPremium={isPremium}
       />
     </KeyboardAvoidingView>
   );

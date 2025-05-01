@@ -24,7 +24,7 @@ export interface Message {
 const SESSION_ID_KEY = "lithuaningo:chat:session_id";
 
 // Maximum messages for free users per day
-export const MAX_FREE_MESSAGES_PER_DAY = 10;
+export const MAX_FREE_MESSAGES_PER_DAY = 5;
 
 // Example suggestions for new users
 export const CHAT_EXAMPLES = [
@@ -238,14 +238,20 @@ export const useChat = () => {
     setInputText("");
   };
 
-  // Check if user has reached daily message limit
+  // Check if user has reached daily limit
   const checkDailyLimit = async (): Promise<boolean> => {
     if (!isAuthenticated || !userData?.id) return false;
 
-    try {
-      // For premium users, always return false (no limit)
-      if (isPremium) return false;
+    // For premium users, always return false (no limit)
+    if (isPremium) return false;
 
+    // Use local count for quick check if already exceeded
+    if (dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY) {
+      return true;
+    }
+
+    try {
+      // If not exceeded locally, double-check with the API
       return await apiClient.hasReachedChatLimit(userData.id, isPremium);
     } catch (error) {
       console.error("Error checking message limit:", error);
@@ -299,7 +305,7 @@ export const useChat = () => {
         {
           text: "Upgrade",
           onPress: () => {
-            router.push("/premium/premium-features");
+            router.push("/premium");
           },
         },
       ],
@@ -331,7 +337,7 @@ export const useChat = () => {
 
   // Navigate to premium features
   const navigateToPremium = () => {
-    router.push("/premium/premium-features");
+    router.push("/premium");
   };
 
   return {

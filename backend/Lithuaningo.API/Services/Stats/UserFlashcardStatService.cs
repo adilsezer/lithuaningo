@@ -1,7 +1,9 @@
 using AutoMapper;
 using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
+using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services.Stats
@@ -11,15 +13,26 @@ namespace Lithuaningo.API.Services.Stats
         private readonly ILogger<UserFlashcardStatService> _logger;
         private readonly ISupabaseService _supabaseService;
         private readonly IMapper _mapper;
+        private readonly ICacheService _cache;
+        private readonly CacheSettings _cacheSettings;
+        private readonly CacheInvalidator _cacheInvalidator;
+        private const string CacheKeyPrefix = "flashcard-stats:";
+        private const string SummaryCacheKeyPrefix = "flashcard-stats-summary:";
 
         public UserFlashcardStatService(
             ISupabaseService supabaseService,
             ILogger<UserFlashcardStatService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            ICacheService cache,
+            IOptions<CacheSettings> cacheSettings,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseService = supabaseService ?? throw new ArgumentNullException(nameof(supabaseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _cacheSettings = cacheSettings.Value;
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         /// <inheritdoc />
@@ -31,6 +44,8 @@ namespace Lithuaningo.API.Services.Stats
                 {
                     throw new ArgumentNullException(nameof(userId));
                 }
+
+                // This is a helper method and doesn't need caching since it's used internally
 
                 var userFlashcardStatsQuery = _supabaseService.Client
                     .From<UserFlashcardStat>()
@@ -90,6 +105,11 @@ namespace Lithuaningo.API.Services.Stats
                         .Insert(newStat);
 
                     var resultStat = insertResult.Models?.FirstOrDefault() ?? newStat;
+
+                    // Invalidate cache when creating a new stat
+                    await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
+                    _logger.LogInformation("Invalidated flashcard stats cache for user {UserId} after creating new stat", userId);
+
                     return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
                 else
@@ -122,6 +142,11 @@ namespace Lithuaningo.API.Services.Stats
                         .Update(existingStat);
 
                     var resultStat = updateResult.Models?.FirstOrDefault() ?? existingStat;
+
+                    // Invalidate cache when updating a stat
+                    await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
+                    _logger.LogInformation("Invalidated flashcard stats cache for user {UserId} after updating stat", userId);
+
                     return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
             }
@@ -141,6 +166,19 @@ namespace Lithuaningo.API.Services.Stats
                 if (string.IsNullOrEmpty(userId))
                 {
                     throw new ArgumentNullException(nameof(userId));
+                }
+
+                // Generate a cache key that includes the query parameters
+                string flashcardIdsParam = flashcardIds != null ? string.Join(",", flashcardIds) : "all";
+                var cacheKey = $"{CacheKeyPrefix}{userId}:due:limit={limit}:ids={flashcardIdsParam}";
+
+                // Try to get from cache first
+                var cached = await _cache.GetAsync<List<UserFlashcardStatResponse>>(cacheKey);
+
+                if (cached != null)
+                {
+                    _logger.LogInformation("Retrieved flashcards due for review for user {UserId} from cache", userId);
+                    return cached;
                 }
 
                 var query = _supabaseService.Client
@@ -165,7 +203,13 @@ namespace Lithuaningo.API.Services.Stats
                 var models = result.Models?.ToList() ?? new List<UserFlashcardStat>();
 
                 // Map to response DTOs
-                return _mapper.Map<List<UserFlashcardStatResponse>>(models);
+                var response = _mapper.Map<List<UserFlashcardStatResponse>>(models);
+
+                // Cache the result
+                await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                _logger.LogInformation("Cached flashcards due for review for user {UserId}", userId);
+
+                return response;
             }
             catch (Exception ex)
             {
@@ -182,6 +226,16 @@ namespace Lithuaningo.API.Services.Stats
                 if (string.IsNullOrEmpty(userId))
                 {
                     throw new ArgumentNullException(nameof(userId));
+                }
+
+                // Try to get from cache first
+                var cacheKey = $"{SummaryCacheKeyPrefix}{userId}";
+                var cached = await _cache.GetAsync<UserFlashcardStatsSummaryResponse>(cacheKey);
+
+                if (cached != null)
+                {
+                    _logger.LogInformation("Retrieved flashcard stats summary for user {UserId} from cache", userId);
+                    return cached;
                 }
 
                 // Get all flashcard stats for the user
@@ -218,6 +272,10 @@ namespace Lithuaningo.API.Services.Stats
                 // Override the AutoMapper value with our database query result
                 summary.FlashcardsAnsweredToday = todayCount;
 
+                // Cache the result
+                await _cache.SetAsync(cacheKey, summary, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                _logger.LogInformation("Cached flashcard stats summary for user {UserId}", userId);
+
                 return summary;
             }
             catch (Exception ex)
@@ -238,6 +296,19 @@ namespace Lithuaningo.API.Services.Stats
                     throw new ArgumentNullException(nameof(flashcardId));
                 }
 
+                // Generate a specific cache key for this user+flashcard combination
+                var cacheKey = $"{CacheKeyPrefix}{userId}:card:{flashcardId}";
+
+                // Try to get from cache first
+                var cached = await _cache.GetAsync<UserFlashcardStatResponse>(cacheKey);
+
+                if (cached != null)
+                {
+                    _logger.LogInformation("Retrieved flashcard stats for user {UserId} and flashcard {FlashcardId} from cache",
+                        userId, flashcardId);
+                    return cached;
+                }
+
                 var query = _supabaseService.Client
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId)
@@ -246,7 +317,28 @@ namespace Lithuaningo.API.Services.Stats
                 var result = await query.Get();
                 var models = result.Models?.ToList() ?? new List<UserFlashcardStat>();
 
-                return _mapper.Map<UserFlashcardStatResponse>(models.FirstOrDefault());
+                var response = _mapper.Map<UserFlashcardStatResponse>(models.FirstOrDefault());
+
+                // Cache the result if we have a response (not null)
+                if (response != null)
+                {
+                    await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                    _logger.LogInformation("Cached flashcard stats for user {UserId} and flashcard {FlashcardId}",
+                        userId, flashcardId);
+                    return response;
+                }
+
+                // Return empty response object instead of null
+                return new UserFlashcardStatResponse
+                {
+                    UserId = userId,
+                    FlashcardId = Guid.Parse(flashcardId),
+                    ViewCount = 0,
+                    CorrectCount = 0,
+                    IncorrectCount = 0,
+                    MasteryLevel = 0,
+                    LastAnsweredCorrectly = false
+                };
             }
             catch (Exception ex)
             {

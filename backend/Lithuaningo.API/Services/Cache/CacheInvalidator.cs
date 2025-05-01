@@ -30,9 +30,7 @@ public class CacheInvalidator
     public async Task InvalidateFlashcardAsync(string flashcardId)
     {
         _logger.LogInformation("Invalidating cache for flashcard {FlashcardId}", flashcardId);
-
-        // Invalidate specific flashcard cache
-        await _cache.RemoveByPrefixAsync($"{FlashcardCachePrefix}id:{flashcardId}");
+        await InvalidateCacheKeyAsync($"{FlashcardCachePrefix}id:{flashcardId}");
     }
 
     /// <summary>
@@ -44,10 +42,10 @@ public class CacheInvalidator
         _logger.LogInformation("Invalidating all flashcard caches for category {Category}", category);
 
         // Invalidate category-based caches (all difficulties)
-        await _cache.RemoveByPrefixAsync($"{FlashcardCachePrefix}category:{category}");
+        await InvalidateCacheKeyAsync($"{FlashcardCachePrefix}category:{category}");
 
         // Invalidate front texts cache for this category
-        await _cache.RemoveByPrefixAsync($"{FlashcardCachePrefix}front-texts:category:{category}");
+        await InvalidateCacheKeyAsync($"{FlashcardCachePrefix}front-texts:category:{category}");
     }
 
     /// <summary>
@@ -56,7 +54,7 @@ public class CacheInvalidator
     public async Task InvalidateAppInfoAsync(string platform)
     {
         _logger.LogInformation("Invalidating cache for app info, platform {Platform}", platform);
-        await _cache.RemoveByPrefixAsync($"{AppInfoCachePrefix}{platform}");
+        await InvalidateCacheKeyAsync($"{AppInfoCachePrefix}{platform}");
     }
 
     /// <summary>
@@ -65,7 +63,7 @@ public class CacheInvalidator
     public async Task InvalidateUserProfileAsync(string userId)
     {
         _logger.LogInformation("Invalidating cache for user profile {UserId}", userId);
-        await _cache.RemoveByPrefixAsync($"{UserCachePrefix}{userId}");
+        await InvalidateCacheKeyAsync($"{UserCachePrefix}{userId}");
     }
 
     /// <summary>
@@ -74,7 +72,7 @@ public class CacheInvalidator
     public async Task InvalidateUserChallengeStatsAsync(string userId)
     {
         _logger.LogInformation("Invalidating cache for user challenge stats, user {UserId}", userId);
-        await _cache.RemoveByPrefixAsync($"challenge-stats:{userId}");
+        await InvalidateCacheKeyAsync($"challenge-stats:{userId}");
     }
 
     /// <summary>
@@ -85,12 +83,13 @@ public class CacheInvalidator
         if (!string.IsNullOrEmpty(category))
         {
             _logger.LogInformation("Invalidating cache for challenge category {Category}", category);
-            await _cache.RemoveByPrefixAsync($"challenge:category:{category.ToLowerInvariant()}");
+            await InvalidateCacheKeyAsync($"challenge:category:{category.ToLowerInvariant()}");
         }
         else
         {
             _logger.LogInformation("Invalidating all challenge cache");
             await _cache.RemoveByPrefixAsync("challenge:");
+            // No specific key to remove when clearing all challenges
         }
     }
 
@@ -99,27 +98,48 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateLeaderboardCacheAsync(string weekId)
     {
-        // Use both prefix removal and direct key removal strategies to ensure cache is properly invalidated
-
-        // First try prefix-based removal
         _logger.LogInformation("Invalidating cache for leaderboard week {WeekId}", weekId);
-        await _cache.RemoveByPrefixAsync($"leaderboard:week:{weekId}");
-
-        // Also directly remove the specific week cache key
-        await _cache.RemoveAsync($"leaderboard:week:{weekId}");
+        await InvalidateCacheKeyAsync($"leaderboard:week:{weekId}");
 
         // Handle current week cache invalidation
         string currentWeekId = DateUtils.GetCurrentWeekPeriod();
         if (weekId == currentWeekId)
         {
             _logger.LogInformation("Invalidating current week leaderboard cache");
-            await _cache.RemoveByPrefixAsync($"leaderboard:current");
-
-            // Also directly remove the current week cache key
-            await _cache.RemoveAsync($"leaderboard:current");
-            _logger.LogInformation("Explicitly cleared current week leaderboard cache");
+            await InvalidateCacheKeyAsync("leaderboard:current");
         }
     }
 
+    /// <summary>
+    /// Invalidates all cache entries related to user chat stats
+    /// </summary>
+    public async Task InvalidateUserChatStatsAsync(string userId)
+    {
+        _logger.LogInformation("Invalidating cache for user chat stats {UserId}", userId);
+        await InvalidateCacheKeyAsync($"chat-stats:{userId}");
+    }
 
+    /// <summary>
+    /// Invalidates all cache entries related to user flashcard stats
+    /// </summary>
+    public async Task InvalidateUserFlashcardStatsAsync(string userId)
+    {
+        _logger.LogInformation("Invalidating cache for user flashcard stats, user {UserId}", userId);
+
+        // Invalidate the main flashcard stats cache
+        await InvalidateCacheKeyAsync($"flashcard-stats:{userId}");
+
+        // Also invalidate the summary cache
+        await InvalidateCacheKeyAsync($"flashcard-stats-summary:{userId}");
+    }
+
+    /// <summary>
+    /// Helper method to invalidate a cache key using both prefix-based and direct key removal
+    /// </summary>
+    private async Task InvalidateCacheKeyAsync(string cacheKey)
+    {
+        // Use both prefix-based removal and direct key removal for robust invalidation
+        await _cache.RemoveByPrefixAsync(cacheKey);
+        await _cache.RemoveAsync(cacheKey);
+    }
 }

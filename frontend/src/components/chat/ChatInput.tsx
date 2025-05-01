@@ -10,6 +10,8 @@ interface ChatInputProps {
   isLoading: boolean;
   isAuthenticated: boolean;
   showClearButton: boolean;
+  hasReachedLimit?: boolean;
+  isPremium?: boolean;
 }
 
 const ChatInput: React.FC<ChatInputProps> = ({
@@ -20,13 +22,21 @@ const ChatInput: React.FC<ChatInputProps> = ({
   isLoading,
   isAuthenticated,
   showClearButton,
+  hasReachedLimit = false,
+  isPremium = false,
 }) => {
   const theme = useTheme();
+  const isDisabled =
+    isLoading || !isAuthenticated || (hasReachedLimit && !isPremium);
 
   return (
     <TextInput
       mode="outlined"
-      placeholder="Type a message..."
+      placeholder={
+        isDisabled && hasReachedLimit
+          ? "Daily message limit reached"
+          : "Type a message..."
+      }
       value={value}
       onChangeText={onChangeText}
       multiline
@@ -43,7 +53,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
           borderColor: theme.colors.primary,
         },
       ]}
-      disabled={isLoading || !isAuthenticated}
+      disabled={isDisabled}
       left={
         showClearButton && isAuthenticated ? (
           <TextInput.Icon
@@ -58,7 +68,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <TextInput.Icon
           icon="send"
           color={theme.colors.primary}
-          disabled={isLoading || value.trim() === "" || !isAuthenticated}
+          disabled={isDisabled || value.trim() === ""}
           onPress={onSend}
           style={styles.iconStyle}
         />

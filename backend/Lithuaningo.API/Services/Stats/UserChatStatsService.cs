@@ -20,6 +20,7 @@ namespace Lithuaningo.API.Services.Stats
         private const string CacheKeyPrefix = "chat-stats:";
         private readonly ILogger<UserChatStatsService> _logger;
         private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
         // Maximum messages per day for free users
         public const int MaxFreeMessagesPerDay = 10;
@@ -32,13 +33,15 @@ namespace Lithuaningo.API.Services.Stats
             ICacheService cache,
             IOptions<CacheSettings> cacheSettings,
             ILogger<UserChatStatsService> logger,
-            IMapper mapper)
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
             _cacheSettings = cacheSettings.Value;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
         /// <summary>
@@ -68,7 +71,8 @@ namespace Lithuaningo.API.Services.Stats
             var response = _mapper.Map<UserChatStatsResponse>(stats);
 
             // Cache the result
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(5));
+            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+            _logger.LogInformation("Cached chat stats for user {UserId}", userId);
 
             return response;
         }
@@ -103,9 +107,9 @@ namespace Lithuaningo.API.Services.Stats
                 .From<UserChatStats>()
                 .Update(stats);
 
-            // Invalidate cache
-            var cacheKey = $"{CacheKeyPrefix}{userId}";
-            await _cache.RemoveAsync(cacheKey);
+            // Invalidate cache using centralized invalidator
+            await _cacheInvalidator.InvalidateUserChatStatsAsync(userId);
+            _logger.LogInformation("Invalidated chat stats cache for user {UserId}", userId);
 
             // Use AutoMapper to map to response
             var response = _mapper.Map<UserChatStatsResponse>(stats);

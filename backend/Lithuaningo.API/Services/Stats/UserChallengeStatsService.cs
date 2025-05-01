@@ -2,8 +2,10 @@ using AutoMapper;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.DTOs.UserChallengeStats;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Leaderboard;
 using Lithuaningo.API.Services.Supabase;
+using Microsoft.Extensions.Options;
 using Supabase;
 using Supabase.Postgrest.Models;
 
@@ -18,17 +20,27 @@ public class UserChallengeStatsService : IUserChallengeStatsService
     private readonly ILogger<UserChallengeStatsService> _logger;
     private readonly IMapper _mapper;
     private readonly ILeaderboardService _leaderboardService;
+    private readonly ICacheService _cache;
+    private readonly CacheSettings _cacheSettings;
+    private readonly CacheInvalidator _cacheInvalidator;
+    private const string CacheKeyPrefix = "challenge-stats:";
 
     public UserChallengeStatsService(
         ISupabaseService supabaseService,
         ILogger<UserChallengeStatsService> logger,
         IMapper mapper,
-        ILeaderboardService leaderboardService)
+        ILeaderboardService leaderboardService,
+        ICacheService cache,
+        IOptions<CacheSettings> cacheSettings,
+        CacheInvalidator cacheInvalidator)
     {
         _supabaseClient = supabaseService.Client;
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _leaderboardService = leaderboardService;
+        _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+        _cacheSettings = cacheSettings.Value;
+        _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
     }
 
     /// <summary>
@@ -43,11 +55,25 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
         try
         {
+            // Try to get from cache first
+            var cacheKey = $"{CacheKeyPrefix}{userId}";
+            var cachedStats = await _cache.GetAsync<UserChallengeStatsResponse>(cacheKey);
+
+            if (cachedStats != null)
+            {
+                _logger.LogInformation("Retrieved challenge stats for user {UserId} from cache", userId);
+                return cachedStats;
+            }
+
             // Get or create stats entity
             var statsEntity = await GetOrCreateStatsEntityAsync(userGuid);
 
             // Convert to response DTO
             var statsResponse = _mapper.Map<UserChallengeStatsResponse>(statsEntity);
+
+            // Cache the result
+            await _cache.SetAsync(cacheKey, statsResponse, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+            _logger.LogInformation("Cached challenge stats for user {UserId}", userId);
 
             return statsResponse;
         }
@@ -88,6 +114,10 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             // Save updates back to database
             statsEntity = await SaveStatsEntityAsync(statsEntity);
+
+            // Invalidate the cache
+            await _cacheInvalidator.InvalidateUserChallengeStatsAsync(userId);
+            _logger.LogInformation("Invalidated challenge stats cache for user {UserId}", userId);
 
             // Update leaderboard if answer was correct
             if (request.WasCorrect)
