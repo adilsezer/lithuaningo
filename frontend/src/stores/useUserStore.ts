@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { UserProfile } from "@src/types/UserProfile";
+import { UserProfileResponse } from "@src/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 // Types
 export type UserData = Pick<
-  UserProfile,
+  UserProfileResponse,
   | "id"
   | "email"
   | "fullName"

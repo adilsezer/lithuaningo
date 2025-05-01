@@ -8,7 +8,7 @@ import {
   List,
   Divider,
 } from "react-native-paper";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { useRevenueCat } from "@hooks/useRevenueCat";
 import CustomButton from "@components/ui/CustomButton";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
@@ -95,7 +95,6 @@ export default function PremiumFeaturesScreen() {
       color: theme.colors.onSurfaceVariant,
       textAlign: "center",
       marginBottom: 24,
-      paddingHorizontal: 20,
     },
     valueTag: {
       backgroundColor: theme.colors.primaryContainer,
@@ -131,7 +130,7 @@ export default function PremiumFeaturesScreen() {
       backgroundColor: theme.colors.background,
     },
     tableHeader: {
-      backgroundColor: theme.colors.surfaceVariant,
+      backgroundColor: theme.colors.primary,
       padding: 12,
     },
     tableHeaderText: {
@@ -290,7 +289,15 @@ export default function PremiumFeaturesScreen() {
         title: "Subscription Successful",
         message:
           "You are now a premium user! Enjoy all premium features of Lithuaningo.",
-        buttons: [{ text: "Great!", onPress: () => {} }],
+        buttons: [
+          {
+            text: "Great!",
+            onPress: () => {
+              // Navigate back to the previous screen
+              router.back();
+            },
+          },
+        ],
       });
     } catch (error: any) {
       // User cancelled purchase, don't show an error
@@ -471,19 +478,17 @@ export default function PremiumFeaturesScreen() {
         {renderPlanCard("lifetime", "Lifetime")}
       </View>
 
-      <Surface style={{ marginBottom: 24 }} elevation={1}>
-        <View style={styles.infoSection}>
-          <MaterialCommunityIcons
-            name="shield-check"
-            size={24}
-            color={theme.colors.onSecondaryContainer}
-            style={styles.infoIcon}
-          />
-          <Text style={styles.infoText}>
-            Easy to manage. Your subscription can be changed or canceled anytime
-            through your app store settings.
-          </Text>
-        </View>
+      <Surface style={[styles.infoSection, { marginBottom: 24 }]} elevation={1}>
+        <MaterialCommunityIcons
+          name="shield-check"
+          size={24}
+          color={theme.colors.onSecondaryContainer}
+          style={styles.infoIcon}
+        />
+        <Text style={styles.infoText}>
+          Easy to manage. Your subscription can be changed or canceled anytime
+          through your app store settings.
+        </Text>
       </Surface>
 
       <View style={styles.buttonContainer}>

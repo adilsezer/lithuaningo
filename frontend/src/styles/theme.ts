@@ -29,6 +29,7 @@ export type ThemeColors = {
   secondaryContainer: string;
   onPrimaryContainer: string;
   onSecondaryContainer: string;
+  onSurfaceDisabled: string;
 };
 
 export const lightThemeColors: ThemeColors = {
@@ -50,6 +51,7 @@ export const lightThemeColors: ThemeColors = {
   onPrimaryContainer: "#1B5E20",
   secondaryContainer: "#FFF8E1",
   onSecondaryContainer: "#37474F",
+  onSurfaceDisabled: "#B0BEC5",
 };
 
 export const darkThemeColors: ThemeColors = {
@@ -71,6 +73,7 @@ export const darkThemeColors: ThemeColors = {
   onPrimaryContainer: "#E8F5E9",
   secondaryContainer: "#FF8F00",
   onSecondaryContainer: "#FFF8E1",
+  onSurfaceDisabled: "#B0BEC5",
 };
 
 export const createTheme = (isDarkMode: boolean) => {
@@ -101,6 +104,7 @@ export const createTheme = (isDarkMode: boolean) => {
       onSurface: colors.onSurface,
       onSurfaceVariant: colors.onSurfaceVariant,
       placeholder: colors.placeholder,
+      onSurfaceDisabled: colors.onSurfaceDisabled,
     },
     fonts: {
       ...MD3LightTheme.fonts,

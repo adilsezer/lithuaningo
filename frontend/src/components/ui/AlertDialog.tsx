@@ -1,5 +1,6 @@
 import React from "react";
 import { Portal, Dialog, Button, Text, useTheme } from "react-native-paper";
+import { StyleSheet } from "react-native";
 import useAlertStore, {
   useAlertVisible,
   useAlertMode,
@@ -17,11 +18,51 @@ export const AlertDialog: React.FC = () => {
   const { onConfirm, onCancel } = useAlertCallbacks();
   const { hideDialog } = useAlertActions();
 
+  const styles = StyleSheet.create({
+    dialog: {
+      backgroundColor: theme.colors.surface,
+    },
+    title: {
+      textAlign: "center",
+      color: theme.colors.onSurface,
+    },
+    message: {
+      textAlign: "center",
+      color: theme.colors.onSurface,
+    },
+    actionsContainer: {
+      flexDirection: "row",
+      justifyContent: "center",
+      paddingHorizontal: 16,
+      gap: 8,
+    },
+    buttonBase: {
+      minWidth: 100,
+    },
+    outlinedButtonLabel: {
+      fontSize: 14,
+      color: theme.colors.primary,
+    },
+    containedButtonLabel: {
+      fontSize: 14,
+      color: theme.colors.onPrimary,
+    },
+    cancelButtonLabel: {
+      fontSize: 14,
+      color: theme.colors.error,
+    },
+  });
+
   if (!visible) return null;
 
   return (
     <Portal>
-      <Dialog visible={visible} onDismiss={hideDialog} dismissable={false}>
+      <Dialog
+        visible={visible}
+        onDismiss={hideDialog}
+        dismissable={false}
+        style={styles.dialog}
+      >
         {/* Icon changes based on alert mode */}
         <Dialog.Icon
           icon={
@@ -45,21 +86,14 @@ export const AlertDialog: React.FC = () => {
         />
         {/* Dialog Title */}
         {title ? (
-          <Dialog.Title style={{ textAlign: "center" }}>{title}</Dialog.Title>
+          <Dialog.Title style={styles.title}>{title}</Dialog.Title>
         ) : null}
         {/* Dialog Content */}
         <Dialog.Content>
-          <Text style={{ textAlign: "center" }}>{message}</Text>
+          <Text style={styles.message}>{message}</Text>
         </Dialog.Content>
         {/* Dialog Actions */}
-        <Dialog.Actions
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-            paddingHorizontal: 16,
-            gap: 8,
-          }}
-        >
+        <Dialog.Actions style={styles.actionsContainer}>
           {alertMode === "CONFIRM" ? (
             <>
               <Button
@@ -68,11 +102,8 @@ export const AlertDialog: React.FC = () => {
                   hideDialog();
                   onCancel?.();
                 }}
-                style={{ minWidth: 100 }}
-                labelStyle={{
-                  fontSize: 14,
-                  color: theme.colors.error,
-                }}
+                style={styles.buttonBase}
+                labelStyle={styles.cancelButtonLabel}
               >
                 {cancelText}
               </Button>
@@ -88,12 +119,9 @@ export const AlertDialog: React.FC = () => {
                       .showError("An error occurred during confirmation.");
                   }
                 }}
-                style={{ minWidth: 100 }}
+                style={styles.buttonBase}
                 buttonColor={theme.colors.primary}
-                labelStyle={{
-                  fontSize: 14,
-                  color: theme.colors.onPrimary,
-                }}
+                labelStyle={styles.containedButtonLabel}
               >
                 {confirmText}
               </Button>
@@ -108,15 +136,13 @@ export const AlertDialog: React.FC = () => {
                   hideDialog();
                   button.onPress();
                 }}
-                style={{ minWidth: 100 }}
+                style={styles.buttonBase}
                 buttonColor={theme.colors.primary}
-                labelStyle={{
-                  fontSize: 14,
-                  color:
-                    index === buttons.length - 1
-                      ? theme.colors.onPrimary
-                      : theme.colors.primary,
-                }}
+                labelStyle={
+                  index === buttons.length - 1
+                    ? styles.containedButtonLabel
+                    : styles.outlinedButtonLabel
+                }
               >
                 {button.text}
               </Button>

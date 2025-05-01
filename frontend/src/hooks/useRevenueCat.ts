@@ -15,6 +15,7 @@ import {
   DEBUG_SETTINGS,
 } from "@config/revenuecat.config";
 import { useSetLoading, useSetError } from "@src/stores/useUIStore";
+import { UserProfileService } from "@src/services/data/userProfileService";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -81,7 +82,7 @@ export const useRevenueCat = () => {
       setError(null);
       const info = await Purchases.getCustomerInfo();
       setCustomerInfo(info);
-      checkPremiumEntitlement(info);
+      await checkPremiumEntitlement(info);
     } catch (error) {
       console.error("Error getting customer info:", error);
       setError("Failed to retrieve subscription status");
@@ -91,13 +92,29 @@ export const useRevenueCat = () => {
   };
 
   // Check if user has premium entitlement
-  const checkPremiumEntitlement = (info: CustomerInfo) => {
+  const checkPremiumEntitlement = async (info: CustomerInfo) => {
     const hasPremium =
       typeof info.entitlements.active[ENTITLEMENTS.premium] !== "undefined";
     setIsPremium(hasPremium);
 
-    // Update premium status in your app state if needed
-    // This might be integrated with your user store elsewhere
+    // Update user profile in Supabase if user is authenticated
+    if (userData?.id) {
+      try {
+        if (hasPremium) {
+          // Update premium status to true with expiration date
+          await UserProfileService.updatePremiumStatus(
+            userData.id,
+            info,
+            hasPremium
+          );
+        } else if (userData.isPremium) {
+          // If user was premium but no longer is, update status to false
+          await UserProfileService.removePremiumStatus(userData.id);
+        }
+      } catch (error) {
+        console.error("Error updating premium status in user profile:", error);
+      }
+    }
   };
 
   // Purchase a package
@@ -113,7 +130,10 @@ export const useRevenueCat = () => {
       // Use casting to address the TypeScript type issue
       const customerInfo = result.customerInfo as CustomerInfo;
       setCustomerInfo(customerInfo);
-      checkPremiumEntitlement(customerInfo);
+
+      // Check premium entitlement and update user profile
+      await checkPremiumEntitlement(customerInfo);
+
       return customerInfo;
     } catch (error) {
       console.error("Error purchasing package:", error);
@@ -148,7 +168,10 @@ export const useRevenueCat = () => {
       // Use casting to address the TypeScript type issue
       const customerInfo = (result as any).customerInfo as CustomerInfo;
       setCustomerInfo(customerInfo);
-      checkPremiumEntitlement(customerInfo);
+
+      // Check premium entitlement and update user profile
+      await checkPremiumEntitlement(customerInfo);
+
       return customerInfo;
     } catch (error) {
       console.error("Error restoring purchases:", error);
