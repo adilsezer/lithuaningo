@@ -99,19 +99,26 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateLeaderboardCacheAsync(string weekId)
     {
+        // Use both prefix removal and direct key removal strategies to ensure cache is properly invalidated
+
+        // First try prefix-based removal
         _logger.LogInformation("Invalidating cache for leaderboard week {WeekId}", weekId);
         await _cache.RemoveByPrefixAsync($"leaderboard:week:{weekId}");
 
-        // Also invalidate current week cache if needed
+        // Also directly remove the specific week cache key
+        await _cache.RemoveAsync($"leaderboard:week:{weekId}");
+
+        // Handle current week cache invalidation
         string currentWeekId = DateUtils.GetCurrentWeekPeriod();
         if (weekId == currentWeekId)
         {
             _logger.LogInformation("Invalidating current week leaderboard cache");
             await _cache.RemoveByPrefixAsync($"leaderboard:current");
-        }
 
-        // Also clear any other leaderboard caches
-        await _cache.RemoveByPrefixAsync($"leaderboard:");
+            // Also directly remove the current week cache key
+            await _cache.RemoveAsync($"leaderboard:current");
+            _logger.LogInformation("Explicitly cleared current week leaderboard cache");
+        }
     }
 
 
