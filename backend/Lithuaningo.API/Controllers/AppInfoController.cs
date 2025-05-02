@@ -26,6 +26,31 @@ namespace Lithuaningo.API.Controllers
         }
 
         /// <summary>
+        /// Health check endpoint to verify API is running correctly
+        /// </summary>
+        /// <returns>Simple health status response</returns>
+        /// <response code="200">API is healthy and running correctly</response>
+        [AllowAnonymous]
+        [HttpGet("health")]
+        [SwaggerOperation(
+            Summary = "Health check endpoint",
+            Description = "Simple endpoint to verify the API is running correctly",
+            OperationId = "GetHealth",
+            Tags = new[] { "AppInfo" }
+        )]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        public ActionResult GetHealth()
+        {
+            return Ok(new
+            {
+                status = "Healthy",
+                timestamp = DateTime.UtcNow,
+                version = "1.0.0",
+                environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Production"
+            });
+        }
+
+        /// <summary>
         /// Retrieves application information for a specified platform.
         /// </summary>
         /// <remarks>

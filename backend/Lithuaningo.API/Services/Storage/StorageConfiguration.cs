@@ -53,7 +53,6 @@ public class StorageConfiguration : IStorageConfiguration
         {
             ServiceURL = $"https://{settings.R2AccountId}.r2.cloudflarestorage.com",
             ForcePathStyle = true,
-            SignatureVersion = "4",
             RequestChecksumCalculation = RequestChecksumCalculation.WHEN_REQUIRED,
             ResponseChecksumValidation = ResponseChecksumValidation.WHEN_REQUIRED
         };

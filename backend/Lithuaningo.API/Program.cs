@@ -18,6 +18,7 @@ using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Services.UserProfile;
 using Lithuaningo.API.Settings;
 using Lithuaningo.API.Swagger;
+using Lithuaningo.API.Utilities;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
@@ -26,10 +27,13 @@ using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 
-
-// TODO: Add HTTPS to the API when deploying to production
-
 var builder = WebApplication.CreateBuilder(args);
+
+// Load production secrets from environment variables
+builder.AddProductionSecrets();
+
+// Validate configuration
+ValidateConfiguration(builder.Configuration, builder.Environment);
 
 // Configure Data Protection
 var dataProtection = builder.Services.AddDataProtection()
@@ -49,16 +53,28 @@ if (certificate != null)
 }
 
 // Helper method to load certificate with proper error handling
-static X509Certificate2 LoadCertificate(IWebHostEnvironment environment, IConfiguration configuration)
+static X509Certificate2? LoadCertificate(IWebHostEnvironment environment, IConfiguration configuration)
 {
-    var certificatePath = Path.Combine(environment.ContentRootPath, "config", "certificate.pfx");
-
     try
     {
-        // Try to get certificate password from configuration
-        var certPassword = configuration["DataProtection:CertificatePassword"];
+        // Try environment variable first for secure certificate password storage
+        var certPassword = Environment.GetEnvironmentVariable("LITHUANINGO_CERT_PASSWORD");
 
-        // If password exists, use it, otherwise try to load without password
+        // Fall back to configuration if not found in environment
+        if (string.IsNullOrEmpty(certPassword))
+        {
+            certPassword = configuration["DataProtection:CertificatePassword"];
+        }
+
+        var certificatePath = Path.Combine(environment.ContentRootPath, "config", "certificate.pfx");
+
+        // Check if certificate file exists before trying to load it
+        if (!File.Exists(certificatePath))
+        {
+            Console.WriteLine($"Certificate file not found at {certificatePath}. Skipping certificate protection.");
+            return null;
+        }
+
         if (!string.IsNullOrEmpty(certPassword))
         {
             return new X509Certificate2(certificatePath, certPassword,
@@ -72,7 +88,9 @@ static X509Certificate2 LoadCertificate(IWebHostEnvironment environment, IConfig
     }
     catch (Exception ex)
     {
-        throw new InvalidOperationException($"Failed to load certificate: {ex.Message}", ex);
+        // Log the error but don't crash the application
+        Console.WriteLine($"Failed to load certificate: {ex.Message}. Data protection keys will not be protected with a certificate.");
+        return null;
     }
 }
 
@@ -204,6 +222,12 @@ await app.RunAsync();
 // Service Configuration
 void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 {
+    // Application Insights
+    services.AddApplicationInsightsTelemetry();
+
+    // Health Checks
+    services.AddHealthChecks();
+
     // Basic Services
     services.AddControllers();
     services.AddEndpointsApiExplorer();
@@ -215,6 +239,12 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
         options.DefaultApiVersion = new ApiVersion(1, 0);
         options.AssumeDefaultVersionWhenUnspecified = true;
         options.ReportApiVersions = true;
+        // Add support for multiple versioning methods
+        options.ApiVersionReader = Microsoft.AspNetCore.Mvc.Versioning.ApiVersionReader.Combine(
+            new Microsoft.AspNetCore.Mvc.Versioning.UrlSegmentApiVersionReader(),
+            new Microsoft.AspNetCore.Mvc.Versioning.QueryStringApiVersionReader("api-version"),
+            new Microsoft.AspNetCore.Mvc.Versioning.HeaderApiVersionReader("X-Version")
+        );
     });
 
     services.AddVersionedApiExplorer(options =>
@@ -465,4 +495,41 @@ void ConfigureMiddleware(WebApplication app)
     app.UseCors("AllowFrontend");
     app.UseAuthorization();
     app.MapControllers();
+
+    // Add health check endpoint
+    app.MapHealthChecks("/health");
+}
+
+void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment environment)
+{
+    if (!environment.IsDevelopment())
+    {
+        // Critical production settings to validate
+        var criticalSettings = new Dictionary<string, string>
+        {
+            { "Supabase:Url", "Supabase URL" },
+            { "Supabase:ServiceKey", "Supabase service key" },
+            { "Supabase:JwtSecret", "JWT secret" },
+            { "OpenAI:ApiKey", "OpenAI API key" }
+            // Removed Certificate password as it might not be needed in Azure hosting
+            // { "DataProtection:CertificatePassword", "Certificate password" }
+        };
+
+        foreach (var setting in criticalSettings)
+        {
+            var value = configuration[setting.Key];
+            if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < 10)
+            {
+                throw new InvalidOperationException($"Missing or invalid configuration for {setting.Value}. " +
+                    $"Please set environment variable or update configuration.");
+            }
+        }
+
+        // Log a warning instead of failing if certificate password is missing
+        var certPassword = configuration["DataProtection:CertificatePassword"];
+        if (string.IsNullOrWhiteSpace(certPassword))
+        {
+            Console.WriteLine("Warning: Certificate password not found. Data protection keys will not be protected with a certificate.");
+        }
+    }
 }
