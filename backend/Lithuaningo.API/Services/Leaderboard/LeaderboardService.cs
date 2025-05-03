@@ -151,7 +151,7 @@ namespace Lithuaningo.API.Services.Leaderboard
 
                     updatedEntry = response.Models.First();
                     _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}, added {Score} points",
-                        updatedEntry.Id, request.UserId, request.ScoreToAdd);
+                        updatedEntry.Id, LogSanitizer.SanitizeUserId(request.UserId.ToString()), request.ScoreToAdd);
                 }
                 else
                 {
@@ -170,7 +170,7 @@ namespace Lithuaningo.API.Services.Leaderboard
 
                     updatedEntry = response.Models.First();
                     _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId} with initial score {Score}",
-                        updatedEntry.Id, request.UserId, request.ScoreToAdd);
+                        updatedEntry.Id, LogSanitizer.SanitizeUserId(request.UserId.ToString()), request.ScoreToAdd);
                 }
 
                 // Map to response DTO
@@ -183,7 +183,8 @@ namespace Lithuaningo.API.Services.Leaderboard
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}", request.UserId);
+                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}",
+                    LogSanitizer.SanitizeUserId(request.UserId.ToString()));
                 throw;
             }
         }

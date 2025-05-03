@@ -2,6 +2,7 @@ using AutoMapper;
 using Lithuaningo.API.DTOs.UserProfile;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Utilities;
 using Microsoft.Extensions.Options;
 using Supabase;
 
@@ -45,7 +46,8 @@ namespace Lithuaningo.API.Services.UserProfile
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved user profile from cache for user {UserId}", userId);
+                _logger.LogInformation("Retrieved user profile from cache for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userId));
                 return cached;
             }
 
@@ -66,12 +68,14 @@ namespace Lithuaningo.API.Services.UserProfile
                 await _cache.SetAsync(cacheKey, profileResponse,
                     TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
 
-                _logger.LogInformation("Retrieved and cached user profile for user {UserId}", userId);
+                _logger.LogInformation("Retrieved and cached user profile for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userId));
                 return profileResponse;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving user profile for user {UserId}", userId);
+                _logger.LogError(ex, "Error retrieving user profile for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userId));
                 throw;
             }
         }
@@ -110,12 +114,14 @@ namespace Lithuaningo.API.Services.UserProfile
 
                 await _cacheInvalidator.InvalidateUserProfileAsync(userId);
 
-                _logger.LogInformation("Updated user profile for user {UserId}", userId);
+                _logger.LogInformation("Updated user profile for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userId));
                 return profileResponse;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating user profile for user {UserId}", userId);
+                _logger.LogError(ex, "Error updating user profile for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userId));
                 throw;
             }
         }
@@ -133,7 +139,8 @@ namespace Lithuaningo.API.Services.UserProfile
                 var profile = await GetUserProfileAsync(userId);
                 if (profile == null)
                 {
-                    _logger.LogInformation("User profile {UserId} not found for deletion", userId);
+                    _logger.LogInformation("User profile {UserId} not found for deletion",
+                        LogSanitizer.SanitizeUserId(userId));
                     return false;
                 }
 
@@ -144,12 +151,14 @@ namespace Lithuaningo.API.Services.UserProfile
 
                 await _cacheInvalidator.InvalidateUserProfileAsync(userId);
 
-                _logger.LogInformation("Deleted user profile for user {UserId}", userId);
+                _logger.LogInformation("Deleted user profile for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userId));
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting user profile for user {UserId}", userId);
+                _logger.LogError(ex, "Error deleting user profile for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userId));
                 throw;
             }
         }

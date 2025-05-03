@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Services.Flashcards;
+using Lithuaningo.API.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -62,7 +63,7 @@ namespace Lithuaningo.API.Controllers
                 }
 
                 _logger.LogInformation("Getting learning flashcards for user {UserId}, category '{Category}', difficulty '{Difficulty}'",
-                    effectiveUserId,
+                    LogSanitizer.SanitizeUserId(effectiveUserId),
                     request.PrimaryCategory,
                     request.Difficulty);
 

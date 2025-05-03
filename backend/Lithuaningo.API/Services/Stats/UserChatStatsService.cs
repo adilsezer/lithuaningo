@@ -4,6 +4,7 @@ using Lithuaningo.API.DTOs.UserChatStats;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Utilities;
 using Microsoft.Extensions.Options;
 using Supabase;
 
@@ -60,7 +61,8 @@ namespace Lithuaningo.API.Services.Stats
 
             if (cachedStats != null)
             {
-                _logger.LogInformation("Retrieved chat stats for user {UserId} from cache", userId);
+                _logger.LogInformation("Retrieved chat stats for user {UserId} from cache",
+                    LogSanitizer.SanitizeUserId(userId));
                 return cachedStats;
             }
 
@@ -72,7 +74,8 @@ namespace Lithuaningo.API.Services.Stats
 
             // Cache the result
             await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-            _logger.LogInformation("Cached chat stats for user {UserId}", userId);
+            _logger.LogInformation("Cached chat stats for user {UserId}",
+                LogSanitizer.SanitizeUserId(userId));
 
             return response;
         }
@@ -90,7 +93,8 @@ namespace Lithuaningo.API.Services.Stats
             // Get or create stats
             var stats = await GetOrCreateChatStatsAsync(userId);
 
-            _logger.LogInformation("Tracking message for user {UserId}", stats.UserId);
+            _logger.LogInformation("Tracking message for user {UserId}",
+                LogSanitizer.SanitizeUserId(stats.UserId.ToString()));
             _logger.LogInformation("Current counts - Today: {TodayCount}, Total: {TotalCount}",
                 stats.TodayMessageCount, stats.TotalMessageCount);
 
@@ -100,7 +104,7 @@ namespace Lithuaningo.API.Services.Stats
             stats.LastChatDate = DateTime.UtcNow;
 
             _logger.LogInformation("After update - User: {UserId}, Today count: {TodayCount}, Total count: {TotalCount}",
-                stats.UserId, stats.TodayMessageCount, stats.TotalMessageCount);
+                LogSanitizer.SanitizeUserId(stats.UserId.ToString()), stats.TodayMessageCount, stats.TotalMessageCount);
 
             // Save to database
             await _supabaseClient
@@ -109,7 +113,8 @@ namespace Lithuaningo.API.Services.Stats
 
             // Invalidate cache using centralized invalidator
             await _cacheInvalidator.InvalidateUserChatStatsAsync(userId);
-            _logger.LogInformation("Invalidated chat stats cache for user {UserId}", userId);
+            _logger.LogInformation("Invalidated chat stats cache for user {UserId}",
+                LogSanitizer.SanitizeUserId(userId));
 
             // Use AutoMapper to map to response
             var response = _mapper.Map<UserChatStatsResponse>(stats);
@@ -142,7 +147,8 @@ namespace Lithuaningo.API.Services.Stats
                 throw new ArgumentException("User ID must be a valid GUID", nameof(userId));
             }
 
-            _logger.LogInformation("Getting chat stats for user {UserId}", userGuid);
+            _logger.LogInformation("Getting chat stats for user {UserId}",
+                LogSanitizer.SanitizeUserId(userGuid.ToString()));
 
             var response = await _supabaseClient
                 .From<UserChatStats>()
@@ -152,12 +158,14 @@ namespace Lithuaningo.API.Services.Stats
             var stats = response.Models.FirstOrDefault();
             if (stats != null)
             {
-                _logger.LogInformation("Found existing chat stats for user {UserId}", userGuid);
+                _logger.LogInformation("Found existing chat stats for user {UserId}",
+                    LogSanitizer.SanitizeUserId(userGuid.ToString()));
                 return stats;
             }
 
             // Create default stats if none exist
-            _logger.LogInformation("No chat stats found for user {UserId}, creating new record", userGuid);
+            _logger.LogInformation("No chat stats found for user {UserId}, creating new record",
+                LogSanitizer.SanitizeUserId(userGuid.ToString()));
 
             // Always use UTC for timestamp storage
             DateTime utcNow = DateTime.UtcNow;
@@ -182,7 +190,8 @@ namespace Lithuaningo.API.Services.Stats
                 throw new InvalidOperationException($"Failed to create chat stats for user {userGuid}");
             }
 
-            _logger.LogInformation("Created new chat stats for user {UserId}", userGuid);
+            _logger.LogInformation("Created new chat stats for user {UserId}",
+                LogSanitizer.SanitizeUserId(userGuid.ToString()));
             return createResponse.Models.First();
         }
     }

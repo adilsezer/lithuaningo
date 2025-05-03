@@ -1,6 +1,7 @@
 using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.Leaderboard;
 using Lithuaningo.API.Services.Leaderboard;
+using Lithuaningo.API.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -89,7 +90,8 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}", request.UserId);
+                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}",
+                    LogSanitizer.SanitizeUserId(request.UserId.ToString()));
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error updating leaderboard entry");
             }
         }
