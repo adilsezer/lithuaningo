@@ -380,14 +380,24 @@ To authorize in Swagger UI:
 
     services.AddCors(options =>
     {
-        options.AddPolicy("AllowFrontend", policy =>
+        // Mobile app CORS policy - allows any origin for React Native apps
+        options.AddPolicy("AllowMobile", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                  .WithHeaders("Authorization", "Content-Type", "X-XSRF-TOKEN")
+                  .WithExposedHeaders("Token-Expired", "X-XSRF-TOKEN");
+        });
+
+        // Web frontend CORS policy - for browser clients with specific origins
+        options.AddPolicy("AllowWebFrontend", policy =>
         {
             policy.WithOrigins(corsSettings?.AllowedOrigins ?? Array.Empty<string>())
                   .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                   .WithHeaders("Authorization", "Content-Type", "X-XSRF-TOKEN")
                   .AllowCredentials()
                   .SetIsOriginAllowedToAllowWildcardSubdomains()
-                  .WithExposedHeaders("X-XSRF-TOKEN");
+                  .WithExposedHeaders("Token-Expired", "X-XSRF-TOKEN");
         });
     });
 
@@ -492,7 +502,18 @@ void ConfigureMiddleware(WebApplication app)
         app.UseHttpsRedirection();
     }
 
-    app.UseCors("AllowFrontend");
+    // Use different CORS policies based on environment
+    if (app.Environment.IsDevelopment())
+    {
+        // Use web frontend policy in development for easier debugging
+        app.UseCors("AllowWebFrontend");
+    }
+    else
+    {
+        // Use mobile-friendly policy in production
+        app.UseCors("AllowMobile");
+    }
+
     app.UseAuthorization();
     app.MapControllers();
 
