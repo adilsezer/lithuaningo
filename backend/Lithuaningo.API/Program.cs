@@ -1,134 +1,556 @@
-using FirebaseAdmin;
-using Google.Apis.Auth.OAuth2;
-using Google.Cloud.Firestore;
+using System.Security.Cryptography.X509Certificates;
+using System.Text;
+using FluentValidation;
+using FluentValidation.AspNetCore;
 using Lithuaningo.API.Controllers;
-using Lithuaningo.API.Services;
-using Lithuaningo.API.Services.Interfaces;
-using Services.Announcements;
-using Services.Quiz.Interfaces;
+using Lithuaningo.API.Mappings;
+using Lithuaningo.API.Middleware;
+using Lithuaningo.API.Services.AI;
+using Lithuaningo.API.Services.AppInfo;
+using Lithuaningo.API.Services.Auth;
+using Lithuaningo.API.Services.Cache;
+using Lithuaningo.API.Services.Challenges;
+using Lithuaningo.API.Services.Flashcards;
+using Lithuaningo.API.Services.Leaderboard;
+using Lithuaningo.API.Services.Stats;
+using Lithuaningo.API.Services.Storage;
+using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Services.UserProfile;
+using Lithuaningo.API.Settings;
+using Lithuaningo.API.Swagger;
+using Lithuaningo.API.Utilities;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
+using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
+using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.ConfigureKestrel(serverOptions =>
+// Load production secrets from environment variables
+builder.AddProductionSecrets();
+
+// Validate configuration
+ValidateConfiguration(builder.Configuration, builder.Environment);
+
+// Configure Data Protection
+var dataProtection = builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(builder.Environment.ContentRootPath, "keys")))
+    .SetApplicationName("Lithuaningo")
+    .UseCryptographicAlgorithms(new AuthenticatedEncryptorConfiguration()
+    {
+        EncryptionAlgorithm = EncryptionAlgorithm.AES_256_CBC,
+        ValidationAlgorithm = ValidationAlgorithm.HMACSHA256
+    });
+
+// Try to protect with certificate if available
+var certificate = LoadCertificate(builder.Environment, builder.Configuration);
+if (certificate != null)
 {
-    if (builder.Environment.IsDevelopment())
+    dataProtection.ProtectKeysWithCertificate(certificate);
+}
+
+// Helper method to load certificate with proper error handling
+static X509Certificate2? LoadCertificate(IWebHostEnvironment environment, IConfiguration configuration)
+{
+    try
     {
-        // Using HTTP for development
-        serverOptions.ListenAnyIP(7016);
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("🚀 Server successfully started at http://localhost:7016");
-        Console.ResetColor();
-    }
-    else
-    {
-        // Using HTTPS for production
-        serverOptions.ListenAnyIP(7016, listenOptions =>
+        // Try environment variable first for secure certificate password storage
+        var certPassword = Environment.GetEnvironmentVariable("LITHUANINGO_CERT_PASSWORD");
+
+        // Fall back to configuration if not found in environment
+        if (string.IsNullOrEmpty(certPassword))
         {
-            listenOptions.UseHttps();
-        });
-        Console.ForegroundColor = ConsoleColor.Green;
-        Console.WriteLine("🚀 Server successfully started at https://localhost:7016");
-        Console.ResetColor();
+            certPassword = configuration["DataProtection:CertificatePassword"];
+        }
+
+        var certificatePath = Path.Combine(environment.ContentRootPath, "config", "certificate.pfx");
+
+        // Check if certificate file exists before trying to load it
+        if (!File.Exists(certificatePath))
+        {
+            Console.WriteLine($"Certificate file not found at {certificatePath}. Skipping certificate protection.");
+            return null;
+        }
+
+        if (!string.IsNullOrEmpty(certPassword))
+        {
+            return new X509Certificate2(certificatePath, certPassword,
+                X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
+        }
+
+        // Try loading without password
+        return new X509Certificate2(certificatePath,
+            string.Empty,
+            X509KeyStorageFlags.MachineKeySet | X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.Exportable);
     }
+    catch (Exception ex)
+    {
+        // Log the error but don't crash the application
+        Console.WriteLine($"Failed to load certificate: {ex.Message}. Data protection keys will not be protected with a certificate.");
+        return null;
+    }
+}
+
+// Configure caching
+builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
+builder.Services.AddMemoryCache(); // Use in-memory cache instead of Redis
+builder.Services.AddScoped<ICacheService, InMemoryCacheService>();
+builder.Services.AddScoped<CacheInvalidator>(); // Register the cache invalidator
+
+// Use NewtonsoftJson instead of the default System.Text.Json with secure settings
+builder.Services.AddControllers()
+    .AddNewtonsoftJson(options =>
+    {
+        options.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore;
+        // Prevent JSON hijacking
+        options.SerializerSettings.TypeNameHandling = Newtonsoft.Json.TypeNameHandling.None;
+    });
+
+// Add services to the container.
+builder.Services.AddAutoMapper(cfg =>
+{
+    cfg.AddProfile<UserMappingProfile>();    // User-related mappings
+    cfg.AddProfile<AppInfoMappingProfile>();  // App info mappings
+    cfg.AddProfile<UserChallengeStatsMappingProfile>();  // User challenge stats mappings
+    cfg.AddProfile<ChallengeMappingProfile>();  // Challenge mappings
+    cfg.AddProfile<LeaderboardMappingProfile>();  // Leaderboard mappings
+    cfg.AddProfile<FlashcardMappingProfile>(); // Flashcard mappings
+    cfg.AddProfile<UserFlashcardStatMappingProfile>(); // User flashcard stat mappings
+    cfg.AddProfile<UserChatStatsMappingProfile>(); // User chat stats mappings
 });
 
-ConfigureFirebase(builder.Configuration);
+builder.Services.AddControllers();
+builder.Services.AddFluentValidationAutoValidation()
+    .AddFluentValidationClientsideAdapters()
+    .AddValidatorsFromAssemblyContaining<Program>();
+
+// Configure Antiforgery with secure defaults
+builder.Services.AddAntiforgery(options =>
+{
+    options.Cookie.Name = "__Host-XSRF-TOKEN"; // __Host prefix for enhanced security
+    options.Cookie.SameSite = SameSiteMode.Strict;
+    options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+    options.Cookie.HttpOnly = true; // Prevent XSS from accessing the cookie
+    options.HeaderName = "X-XSRF-TOKEN";
+    // Ignore antiforgery token validation for API endpoints
+    options.SuppressXFrameOptionsHeader = true;
+});
+
+// Configure request size limits
+builder.Services.Configure<IISServerOptions>(options =>
+{
+    options.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+});
+
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 10 * 1024 * 1024; // 10MB
+    options.ValueLengthLimit = 10 * 1024 * 1024; // 10MB
+    options.MultipartHeadersLengthLimit = 32 * 1024; // 32KB
+});
+
+// Configure Kestrel with security settings
+builder.WebHost.ConfigureKestrel(serverOptions =>
+{
+    serverOptions.Limits.MaxRequestBodySize = 10 * 1024 * 1024; // 10MB
+    serverOptions.Limits.RequestHeadersTimeout = TimeSpan.FromSeconds(30);
+    serverOptions.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+    serverOptions.Limits.MaxConcurrentConnections = 100;
+    serverOptions.Limits.MaxConcurrentUpgradedConnections = 100;
+    serverOptions.Limits.MinRequestBodyDataRate = new Microsoft.AspNetCore.Server.Kestrel.Core.MinDataRate(
+        bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
+
+    if (!builder.Environment.IsDevelopment())
+    {
+        // Configure HTTPS options for production
+        serverOptions.ConfigureHttpsDefaults(httpsOptions =>
+        {
+            httpsOptions.SslProtocols = System.Security.Authentication.SslProtocols.Tls12 |
+                                     System.Security.Authentication.SslProtocols.Tls13;
+        });
+    }
+});
 
 ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
+// Configure the HTTP request pipeline with security middleware
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHsts();
+    app.UseHttpsRedirection();
+}
+
+app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<RateLimitingMiddleware>();
+app.UseMiddleware<RequestSizeMiddleware>();
+app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
+
+// Add authentication before authorization
+app.UseAuthentication();
+app.UseAuthorization();
+
 ConfigureMiddleware(app);
 
-await app.RunAsync();
-
-// Firebase Configuration
-void ConfigureFirebase(IConfiguration configuration)
+// Initialize Supabase with secure connection
+using (var scope = app.Services.CreateScope())
 {
-    var firestoreSettings = configuration.GetSection("FirestoreSettings").Get<FirestoreSettings>();
-    var credentialsPath = Path.Combine(Directory.GetCurrentDirectory(),
-        firestoreSettings?.CredentialsPath ?? "credentials/firebase/serviceAccountKey.json");
-
-
-    if (!File.Exists(credentialsPath))
-    {
-        throw new FileNotFoundException($"Firebase credentials file not found at: {credentialsPath}");
-    }
-
-    Environment.SetEnvironmentVariable("GOOGLE_APPLICATION_CREDENTIALS", credentialsPath);
-
-    if (FirebaseApp.DefaultInstance == null)
-    {
-        FirebaseApp.Create(new AppOptions
-        {
-            Credential = GoogleCredential.FromFile(credentialsPath)
-        });
-    }
+    var supabaseService = scope.ServiceProvider.GetRequiredService<ISupabaseService>();
+    await supabaseService.InitializeAsync();
 }
+
+// Add startup message before RunAsync
+if (app.Environment.IsDevelopment())
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("🚀 Server successfully started at http://localhost:7016");
+    Console.ResetColor();
+}
+else
+{
+    Console.ForegroundColor = ConsoleColor.Green;
+    Console.WriteLine("🚀 Server successfully started at https://localhost:7016");
+    Console.ResetColor();
+}
+
+await app.RunAsync();
 
 // Service Configuration
 void ConfigureServices(IServiceCollection services, IConfiguration configuration)
 {
+    // Application Insights
+    services.AddApplicationInsightsTelemetry();
+
+    // Health Checks
+    services.AddHealthChecks();
+
     // Basic Services
     services.AddControllers();
     services.AddEndpointsApiExplorer();
-    services.AddSwaggerGen();
+    // Register Random as a singleton to ensure thread safety
+    services.AddSingleton<Random>(sp => new Random());
+    // API Versioning
+    services.AddApiVersioning(options =>
+    {
+        options.DefaultApiVersion = new ApiVersion(1, 0);
+        options.AssumeDefaultVersionWhenUnspecified = true;
+        options.ReportApiVersions = true;
+        // Add support for multiple versioning methods
+        options.ApiVersionReader = Microsoft.AspNetCore.Mvc.Versioning.ApiVersionReader.Combine(
+            new Microsoft.AspNetCore.Mvc.Versioning.UrlSegmentApiVersionReader(),
+            new Microsoft.AspNetCore.Mvc.Versioning.QueryStringApiVersionReader("api-version"),
+            new Microsoft.AspNetCore.Mvc.Versioning.HeaderApiVersionReader("X-Version")
+        );
+    });
 
-    // Firebase Configuration
-    services.Configure<FirestoreSettings>(configuration.GetSection("FirestoreSettings"));
-    var firestoreSettings = configuration.GetSection("FirestoreSettings").Get<FirestoreSettings>();
-    services.AddSingleton(FirestoreDb.Create(firestoreSettings?.ProjectId));
+    services.AddVersionedApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
+
+    // Configure Swagger with security
+    services.AddSwaggerGen(c =>
+    {
+        c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "Lithuaningo API v1",
+            Version = "v1",
+            Description = @"Version 1 of the Lithuaningo API for the Lithuanian language learning platform.
+
+## Authentication
+To authorize in Swagger UI:
+1. Get a JWT token from Supabase (in development):
+   ```javascript
+   const token = (await supabase.auth.getSession()).data.session?.access_token
+   ```
+2. Click 'Authorize' button at the top
+3. Enter token as: Bearer your_token_here
+4. Click 'Authorize'",
+            Contact = new Microsoft.OpenApi.Models.OpenApiContact
+            {
+                Name = "Lithuaningo Team",
+                Email = "support@lithuaningo.com",
+                Url = new Uri("https://lithuaningo.com")
+            },
+            License = new Microsoft.OpenApi.Models.OpenApiLicense
+            {
+                Name = "Proprietary",
+                Url = new Uri("https://lithuaningo.com/terms")
+            }
+        });
+
+        c.SwaggerDoc("v2", new Microsoft.OpenApi.Models.OpenApiInfo
+        {
+            Title = "Lithuaningo API v2",
+            Version = "v2",
+            Description = "Version 2 of the Lithuaningo API with enhanced features and optimizations",
+            Contact = new Microsoft.OpenApi.Models.OpenApiContact
+            {
+                Name = "Lithuaningo Team",
+                Email = "support@lithuaningo.com",
+                Url = new Uri("https://lithuaningo.com")
+            },
+            License = new Microsoft.OpenApi.Models.OpenApiLicense
+            {
+                Name = "Proprietary",
+                Url = new Uri("https://lithuaningo.com/terms")
+            }
+        });
+
+        // Set the comments path for the Swagger JSON and UI
+        var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            c.IncludeXmlComments(xmlPath);
+        }
+
+        // Add security definitions and requirements
+        c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+        {
+            Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
+            Name = "Authorization",
+            In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+            Type = Microsoft.OpenApi.Models.SecuritySchemeType.ApiKey,
+            Scheme = "Bearer"
+        });
+
+        c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+        {
+            {
+                new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+                {
+                    Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                    {
+                        Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+
+        // Enable annotations for additional documentation
+        c.EnableAnnotations();
+
+        // Organize actions by controller name
+        c.TagActionsBy(api => new[] { api.GroupName ?? api.ActionDescriptor.RouteValues["controller"] });
+
+        // Order the controllers
+        c.OrderActionsBy(apiDesc => $"{apiDesc.ActionDescriptor.RouteValues["controller"]}_{apiDesc.RelativePath}");
+
+        c.OperationFilter<SwaggerDefaultValues>();
+    });
+
+    // Supabase Configuration
+    services.AddSingleton<ISupabaseConfiguration, SupabaseConfiguration>();
+    services.AddSingleton<ISupabaseService, SupabaseService>();
+
+    // Storage Configuration with secure defaults
+    services.Configure<StorageSettings>(configuration.GetSection("Storage"));
+    services.AddScoped<IStorageConfiguration, StorageConfiguration>();
+    services.AddScoped<IStorageService, StorageService>();
 
     // Core Services
-    services.AddScoped<IUserService, UserService>();
-    services.AddScoped<ISentenceService, SentenceService>();
-    services.AddScoped<IWordService, WordService>();
-    services.AddScoped<IAnnouncementService, AnnouncementService>();
+    services.AddScoped<IUserProfileService, UserProfileService>();
     services.AddScoped<IAppInfoService, AppInfoService>();
+    services.AddScoped<IFlashcardService, FlashcardService>();
+    services.AddScoped<IUserFlashcardStatService, UserFlashcardStatService>();
     services.AddScoped<ILeaderboardService, LeaderboardService>();
+    services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
+    services.AddScoped<IUserChatStatsService, UserChatStatsService>();
+    // Challenge Related Services
+    services.AddScoped<IChallengeService, ChallengeService>();
 
-    // Quiz Related Services
-    services.AddScoped<IQuizService, QuizService>();
-    services.AddScoped<IQuestionGeneratorFactory, QuestionGeneratorFactory>();
-    services.AddSingleton<IRandomGenerator, RandomGenerator>();
+    // OpenAI Services
+    services.AddOptions<OpenAISettings>()
+        .Bind(configuration.GetSection(OpenAISettings.SectionName))
+        .ValidateDataAnnotations()
+        .ValidateOnStart();
+    services.AddScoped<IAIService, AIService>();
 
-    // CORS Configuration
+    // CORS Configuration with secure defaults
     services.Configure<CorsSettings>(configuration.GetSection("CorsSettings"));
     var corsSettings = configuration.GetSection("CorsSettings").Get<CorsSettings>();
 
     services.AddCors(options =>
     {
-        options.AddPolicy("AllowFrontend", policy =>
+        // Mobile app CORS policy - allows any origin for React Native apps
+        options.AddPolicy("AllowMobile", policy =>
+        {
+            policy.AllowAnyOrigin()
+                  .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                  .WithHeaders("Authorization", "Content-Type", "X-XSRF-TOKEN")
+                  .WithExposedHeaders("Token-Expired", "X-XSRF-TOKEN");
+        });
+
+        // Web frontend CORS policy - for browser clients with specific origins
+        options.AddPolicy("AllowWebFrontend", policy =>
         {
             policy.WithOrigins(corsSettings?.AllowedOrigins ?? Array.Empty<string>())
-                  .AllowAnyMethod()
-                  .AllowAnyHeader();
+                  .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                  .WithHeaders("Authorization", "Content-Type", "X-XSRF-TOKEN")
+                  .AllowCredentials()
+                  .SetIsOriginAllowedToAllowWildcardSubdomains()
+                  .WithExposedHeaders("Token-Expired", "X-XSRF-TOKEN");
         });
     });
 
-    services.AddControllers()
-            .AddApplicationPart(typeof(UserController).Assembly)
-            .AddApplicationPart(typeof(WordController).Assembly)
-            .AddApplicationPart(typeof(SentenceController).Assembly)
-            .AddApplicationPart(typeof(QuizController).Assembly)
-            .AddApplicationPart(typeof(AnnouncementController).Assembly)
-            .AddApplicationPart(typeof(AppInfoController).Assembly)
-            .AddApplicationPart(typeof(LeaderboardController).Assembly);
+    // Configure MVC with security features
+    services.AddControllers(options =>
+    {
+        // Require HTTPS only in production
+        if (!builder.Environment.IsDevelopment())
+        {
+            options.Filters.Add(new RequireHttpsAttribute());
+        }
+        // Add security headers
+        options.Filters.Add(new ResponseCacheAttribute { NoStore = true, Location = ResponseCacheLocation.None });
+    })
+    .ConfigureApiBehaviorOptions(options =>
+    {
+        // Customize bad request responses
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var problemDetails = new ValidationProblemDetails(context.ModelState)
+            {
+                Status = StatusCodes.Status400BadRequest,
+                Title = "One or more validation errors occurred.",
+                Instance = context.HttpContext.Request.Path
+            };
+            return new BadRequestObjectResult(problemDetails);
+        };
+    })
+    .AddApplicationPart(typeof(UserProfileController).Assembly)
+    .AddApplicationPart(typeof(ChallengeController).Assembly)
+    .AddApplicationPart(typeof(AppInfoController).Assembly)
+    .AddApplicationPart(typeof(FlashcardController).Assembly)
+    .AddApplicationPart(typeof(UserFlashcardStatsController).Assembly)
+    .AddApplicationPart(typeof(UserChatStatsController).Assembly)
+    .AddApplicationPart(typeof(StorageService).Assembly);
+
+    // Add Authentication Services
+    services.AddScoped<IAuthService, AuthService>();
+
+    // Add JWT Authentication
+    services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+        .AddJwtBearer(options =>
+        {
+            var supabaseSettings = configuration.GetSection("Supabase").Get<SupabaseSettings>();
+            if (supabaseSettings == null)
+            {
+                throw new InvalidOperationException("Supabase settings not found in configuration");
+            }
+
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidateAudience = true,
+                ValidateLifetime = true,
+                ValidateIssuerSigningKey = true,
+                ValidIssuer = $"{supabaseSettings.Url}/auth/v1",
+                ValidAudience = "authenticated",
+                IssuerSigningKey = new SymmetricSecurityKey(
+                    Encoding.UTF8.GetBytes(supabaseSettings.JwtSecret)),
+                ClockSkew = TimeSpan.FromMinutes(5)
+            };
+
+            options.Events = new JwtBearerEvents
+            {
+                OnAuthenticationFailed = context =>
+                {
+                    if (context.Exception.GetType() == typeof(SecurityTokenExpiredException))
+                    {
+                        context.Response.Headers["Token-Expired"] = "true";
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+        });
 }
 
 void ConfigureMiddleware(WebApplication app)
 {
     if (app.Environment.IsDevelopment())
     {
-        app.UseSwagger();
-        app.UseSwaggerUI();
+        app.UseSwagger(c =>
+        {
+            c.PreSerializeFilters.Add((swaggerDoc, httpReq) =>
+            {
+                swaggerDoc.Servers = new List<Microsoft.OpenApi.Models.OpenApiServer>
+                {
+                    new() { Url = $"{httpReq.Scheme}://{httpReq.Host.Value}" }
+                };
+            });
+        });
+        app.UseSwaggerUI(c =>
+        {
+            c.SwaggerEndpoint("/swagger/v1/swagger.json", "Lithuaningo API v1");
+            c.SwaggerEndpoint("/swagger/v2/swagger.json", "Lithuaningo API v2");
+            c.EnableDeepLinking();
+            c.DisplayRequestDuration();
+        });
     }
     else
     {
+        // Enforce HTTPS in production
         app.UseHttpsRedirection();
     }
 
-    app.UseCors("AllowFrontend");
+    // Use different CORS policies based on environment
+    if (app.Environment.IsDevelopment())
+    {
+        // Use web frontend policy in development for easier debugging
+        app.UseCors("AllowWebFrontend");
+    }
+    else
+    {
+        // Use mobile-friendly policy in production
+        app.UseCors("AllowMobile");
+    }
+
     app.UseAuthorization();
     app.MapControllers();
+
+    // Add health check endpoint
+    app.MapHealthChecks("/health");
+}
+
+void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment environment)
+{
+    if (!environment.IsDevelopment())
+    {
+        // Critical production settings to validate
+        var criticalSettings = new Dictionary<string, string>
+        {
+            { "Supabase:Url", "Supabase URL" },
+            { "Supabase:ServiceKey", "Supabase service key" },
+            { "Supabase:JwtSecret", "JWT secret" },
+            { "OpenAI:ApiKey", "OpenAI API key" }
+            // Removed Certificate password as it might not be needed in Azure hosting
+            // { "DataProtection:CertificatePassword", "Certificate password" }
+        };
+
+        foreach (var setting in criticalSettings)
+        {
+            var value = configuration[setting.Key];
+            if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < 10)
+            {
+                throw new InvalidOperationException($"Missing or invalid configuration for {setting.Value}. " +
+                    $"Please set environment variable or update configuration.");
+            }
+        }
+
+        // Log a warning instead of failing if certificate password is missing
+        var certPassword = configuration["DataProtection:CertificatePassword"];
+        if (string.IsNullOrWhiteSpace(certPassword))
+        {
+            Console.WriteLine("Warning: Certificate password not found. Data protection keys will not be protected with a certificate.");
+        }
+    }
 }

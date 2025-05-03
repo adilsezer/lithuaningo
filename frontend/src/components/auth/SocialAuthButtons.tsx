@@ -1,29 +1,55 @@
 import React from "react";
-import { Platform } from "react-native";
-import CustomButton from "@components/ui/CustomButton";
-import AppleSignInButton from "@components/auth/AppleSignInButton";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { Platform, View, StyleSheet, TextStyle } from "react-native";
+import { useTheme } from "react-native-paper";
+import {
+  GoogleSocialButton,
+  AppleSocialButton,
+} from "react-native-social-buttons";
 
 export const SocialAuthButtons: React.FC<{
   onGooglePress: () => void;
   onApplePress: () => void;
-  disabled: boolean;
-}> = ({ onGooglePress, onApplePress, disabled }) => {
-  const { colors: globalColors } = useThemeStyles();
+}> = ({ onGooglePress, onApplePress }) => {
+  const theme = useTheme();
+
+  const buttonStyles = {
+    ...styles.button,
+    borderColor: theme.colors.onBackground,
+  };
+
+  const textStyles: TextStyle = {
+    fontFamily: theme.fonts.default.fontFamily,
+    fontWeight: "500",
+  };
 
   return (
-    <>
-      <CustomButton
+    <View style={styles.container}>
+      <GoogleSocialButton
         onPress={onGooglePress}
-        title="Continue with Google"
-        icon={require("assets/images/google-logo.png")}
-        style={{ backgroundColor: globalColors.card, paddingVertical: 18 }}
-        textStyle={{ color: globalColors.cardText }}
-        disabled={disabled}
+        buttonViewStyle={buttonStyles}
+        textStyle={textStyles}
       />
       {Platform.OS === "ios" && (
-        <AppleSignInButton onPress={onApplePress} disabled={disabled} />
+        <AppleSocialButton
+          onPress={onApplePress}
+          buttonViewStyle={buttonStyles}
+          textStyle={textStyles}
+        />
       )}
-    </>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    alignItems: "center",
+    marginVertical: 12,
+    gap: 16,
+  },
+  button: {
+    width: "100%",
+    height: 60,
+    borderRadius: 8,
+    borderWidth: 0.5,
+  },
+});

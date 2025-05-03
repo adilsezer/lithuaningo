@@ -1,7 +1,6 @@
 # Privacy Policy
 
 Last updated: June 10, 2024
-
 Thank you for choosing Lithuaningo ("us", "we", or "our"). This Privacy Policy explains how we collect, use, and disclose information about you when you use our mobile application ("App").
 
 By using the App, you agree to the collection and use of information in accordance with this Privacy Policy.
@@ -10,60 +9,170 @@ By using the App, you agree to the collection and use of information in accordan
 
 We collect the following types of information:
 
-- **Personal Information**: When you register for an account, we may collect personal information such as your name, email address, and profile picture.
-- **Usage Data**: We collect information on how you access and use the App. This includes information such as your device's IP address, browser type, browser version, the pages of our App that you visit, the time and date of your visit, the time spent on those pages, and other diagnostic data.
-- **Customer Support Data**: Data generated during a customer support request.
-- **Other User Content**: User-generated content such as quiz answers and interactions.
-- **Product Interaction Data**: Information about how you interact with our App, including app launches, taps, clicks, scrolling information, quiz interactions, and study sessions.
-- **Crash Data**: Logs of crashes, errors, or exceptions that occur within the app.
-- **Performance Data**: Information on app launch times, hang rates, energy usage, and other metrics related to the performance of the app.
-- **Other Diagnostic Data**: Additional technical diagnostics related to the app.
+### Personal Information
+
+- Name and email address
+- Profile picture and preferences
+- Authentication data (Email, Google, or Apple Sign-In)
+- In-app purchase history
+- Premium subscription status
+
+### Usage Data
+
+- App access patterns and learning behavior
+- Device information and system settings
+- Quiz and flashcard performance
+- Practice session statistics
+- Achievement progress
+- Word and sentence learning history
+
+### Technical Data
+
+- App performance metrics
+- Crash reports and error logs
+- Network connectivity status
+- Device specifications
+- Storage usage statistics
+
+### Content Data
+
+- Flashcard
+- Custom practice sessions
+- Audio pronunciation recordings
+- Image attachments
+- Learning preferences
+- Theme settings (Dark/Light mode)
 
 ## 2. How We Use Your Information
 
-We use the collected information for various purposes:
+We use the collected information for:
 
-- To provide and maintain our App
-- To notify you about changes to our App
-- To allow you to participate in interactive features of our App when you choose to do so
-- To provide customer support
-- To gather analysis or valuable information so that we can improve our App
-- To monitor the usage of our App
-- To detect, prevent, and address technical issues
+### Core Functionality
 
-## 3. Sharing of Your Information
+- User authentication and account management
+- Progress tracking and statistics
+- Personalized learning experience
+- Flashcard management
+- Quiz generation and assessment
 
-We do not share your personal information with third parties except in the following circumstances:
+### Service Improvement
 
-- With your consent
-- To comply with a legal obligation
-- To protect and defend our rights or property
-- To prevent or investigate possible wrongdoing in connection with the App
-- To protect the personal safety of users of the App or the public
+- Performance optimization
+- Content recommendations
+- Feature enhancement
+- Bug fixing and troubleshooting
+- Usage pattern analysis
 
-## 4. Third-Party Content
+### User Experience
 
-Our App may contain, show, or access content created by third parties, including AI-generated images provided by external services. We ensure that we have the necessary rights to use this third-party content. However, we are not responsible for the privacy practices or the content of these third-party providers. We strongly advise you to review the privacy policies of any third-party services you use through our App.
+- Push notification delivery
+- Progress synchronization
+- Offline mode management
+- Theme preferences
+- Accessibility settings
 
-## 5. Security of Your Information
+## 3. Data Storage and Security
 
-The security of your personal information is important to us. We strive to use commercially acceptable means to protect your personal information, but remember that no method of transmission over the Internet or method of electronic storage is 100% secure.
+### Storage Methods
 
-## 6. Links to Other Sites
+- Firebase Authentication for user management
+- Google Cloud Firestore for cloud storage
+- AsyncStorage for local data
+- Firebase Crashlytics for error reporting
 
-Our App may contain links to other sites that are not operated by us. If you click on a third-party link, you will be directed to that third party's site. We strongly advise you to review the Privacy Policy of every site you visit.
+### Security Measures
+
+- End-to-end encryption for sensitive data
+- Secure token management
+- Regular security audits
+- Automated backup systems
+- Data access controls
+
+## 4. Third-Party Services
+
+We utilize the following services:
+
+### Authentication
+
+- Google Sign-In
+- Apple Sign-In
+- Email authentication
+
+### Cloud Services
+
+- Firebase Admin SDK
+- Google Cloud Platform
+- Expo services
+
+### Analytics and Monitoring
+
+- Firebase Crashlytics
+- Performance monitoring
+- Usage analytics
+
+### Payment Processing
+
+- React Native IAP
+- App Store payments
+- Google Play payments
+
+## 5. Data Management
+
+### Data Access
+
+- View and export learning progress
+- Download user-created content
+- Access practice history
+- Review achievement records
+
+### Data Deletion
+
+- Account deletion through profile settings
+- Content removal options
+- Data export before deletion
+- Subscription cancellation
+
+## 6. User Controls
+
+### Notification Management
+
+- Custom notification settings
+- Daily reminder preferences
+- Progress alerts
+- Achievement notifications
+- Update notifications
+
+### Privacy Controls
+
+- Profile visibility settings
+- Data sharing preferences
+- Offline mode options
+- Sync settings
 
 ## 7. Children's Privacy
 
-Our App is suitable for ages 4 and up. We do not knowingly collect personally identifiable information from children under 13. If you are a parent or guardian and you are aware that your child has provided us with personal information, please contact us.
+Our App is suitable for ages 4 and up. We comply with COPPA (Children's Online Privacy Protection Act) and similar regulations:
 
-## 8. Changes to This Privacy Policy
+- Parental consent required for users under 13
+- Limited data collection for young users
+- Safe content filtering
+- Age-appropriate features
 
-We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page. You are advised to review this Privacy Policy periodically for any changes.
+## 8. Contact Information
 
-## 9. Contact Us
+For privacy-related inquiries:
 
-If you have any questions about this Privacy Policy, please contact us:
+- Email: [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com)
+- Website: [Privacy Policy](https://adilsezer.github.io/lithuaningo/privacy-policy)
+- Support: Available through in-app help center
 
-- By email: [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com)
-- By visiting this page on our website: [Privacy Policy URL](https://adilsezer.github.io/lithuaningo/privacy-policy)
+## 9. Policy Updates
+
+We regularly review and update this policy to reflect:
+
+- New features and functionality
+- Changes in data handling practices
+- Updated security measures
+- Regulatory requirements
+
+Last major update: June 10, 2024

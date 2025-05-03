@@ -1,9 +1,7 @@
 import * as Notifications from "expo-notifications";
 import * as Device from "expo-device";
 import { Platform } from "react-native";
-import { getCurrentDateKey } from "@utils/dateUtils";
 import { storeData, retrieveData } from "@utils/storageUtils";
-import { NOTIFICATION_KEYS, SENTENCE_KEYS } from "@config/constants";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -12,6 +10,12 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+const NOTIFICATION_KEYS = {
+  NOTIFICATION_PROMPT_KEY: "notification_prompt_key",
+  REMINDER_ENABLED: "reminder_enabled",
+  REMINDER_TIME: "reminder_time",
+};
 
 async function requestPermissions() {
   if (!Device.isDevice) {
@@ -51,17 +55,6 @@ async function requestPermissions() {
   }
 }
 
-async function checkIfReviewedToday(
-  userId: string | undefined
-): Promise<boolean> {
-  const COMPLETION_STATUS_KEY = SENTENCE_KEYS.COMPLETION_STATUS_KEY(
-    userId!,
-    getCurrentDateKey()
-  );
-  const completionStatus = await retrieveData<boolean>(COMPLETION_STATUS_KEY);
-  return completionStatus ?? false;
-}
-
 function getNextDayDate(date: Date): Date {
   const nextDay = new Date(date);
   nextDay.setDate(date.getDate() + 1);
@@ -73,25 +66,24 @@ export async function scheduleDailyReviewReminder(
   time: Date,
   forNextDay = false
 ) {
+  if (!userId) return;
+
   await cancelAllScheduledNotifications();
 
   try {
-    const hasReviewedToday = await checkIfReviewedToday(userId);
-    if (!hasReviewedToday || forNextDay) {
-      const notificationDate = forNextDay ? getNextDayDate(time) : time;
-      await Notifications.scheduleNotificationAsync({
-        content: {
-          title: "Time to Review!",
-          body: "Keep up the great work! Let's review today's word and boost your Lithuanian skills.",
-          sound: "default",
-        },
-        trigger: {
-          type: Notifications.SchedulableTriggerInputTypes.DAILY,
-          hour: notificationDate.getHours(),
-          minute: notificationDate.getMinutes(),
-        },
-      });
-    }
+    const notificationDate = forNextDay ? getNextDayDate(time) : time;
+    await Notifications.scheduleNotificationAsync({
+      content: {
+        title: "Time to Review!",
+        body: "Keep up the great work! Let's review today's word and boost your Lithuanian skills.",
+        sound: "default",
+      },
+      trigger: {
+        type: Notifications.SchedulableTriggerInputTypes.DAILY,
+        hour: notificationDate.getHours(),
+        minute: notificationDate.getMinutes(),
+      },
+    });
   } catch (e) {
     console.error(e);
   }

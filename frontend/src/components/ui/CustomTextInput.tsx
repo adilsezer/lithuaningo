@@ -1,121 +1,90 @@
-import React, { useState } from "react";
-import {
-  TextInput,
-  StyleProp,
-  TextStyle,
-  TextInputProps,
-  useWindowDimensions,
-  Platform,
-  View,
-  ViewStyle,
-  Animated,
-} from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import React, { forwardRef } from "react";
+import { StyleProp, ViewStyle } from "react-native";
+import { TextInput, HelperText, useTheme } from "react-native-paper";
 
-interface CustomTextInputProps extends TextInputProps {
-  placeholder: string;
+export interface CustomTextInputProps {
   value: string;
   onChangeText: (text: string) => void;
+  label?: string;
+  placeholder?: string;
+  error?: string;
   secureTextEntry?: boolean;
-  style?: StyleProp<TextStyle>;
-  containerStyle?: StyleProp<ViewStyle>;
+  disabled?: boolean;
+  multiline?: boolean;
+  numberOfLines?: number;
+  style?: StyleProp<ViewStyle>;
+  left?: React.ReactNode;
+  right?: React.ReactNode;
+  mode?: "flat" | "outlined";
+  keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  autoCorrect?: boolean;
 }
 
-const CustomTextInput: React.FC<CustomTextInputProps> = ({
-  placeholder,
-  value,
-  onChangeText,
-  secureTextEntry = false,
-  style,
-  containerStyle,
-  ...rest
-}) => {
-  const { styles: globalStyles, colors: globalColors } = useThemeStyles();
-  const { width: screenWidth } = useWindowDimensions();
+const CustomTextInput = forwardRef<any, CustomTextInputProps>(
+  (
+    {
+      value,
+      onChangeText,
+      label,
+      placeholder,
+      error,
+      secureTextEntry = false,
+      disabled = false,
+      multiline = false,
+      numberOfLines = 1,
+      style,
+      left,
+      right,
+      mode = "outlined",
+      keyboardType = "default",
+      autoCapitalize = "none",
+      autoCorrect = false,
+    },
+    ref
+  ) => {
+    const theme = useTheme();
 
-  const [placeholderAnim] = useState(new Animated.Value(value ? 1 : 0));
-
-  const isTablet =
-    (Platform.OS === "ios" && Platform.isPad) || screenWidth >= 768;
-
-  const defaultWidth = isTablet ? "75%" : "100%";
-
-  const handleFocus = () => {
-    Animated.timing(placeholderAnim, {
-      toValue: 1,
-      duration: 200,
-      useNativeDriver: false,
-    }).start();
-  };
-
-  const handleBlur = () => {
-    if (!value) {
-      Animated.timing(placeholderAnim, {
-        toValue: 0,
-        duration: 200,
-        useNativeDriver: false,
-      }).start();
-    }
-  };
-
-  const placeholderTranslateY = placeholderAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [10, -10],
-  });
-
-  const placeholderScale = placeholderAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: [1, 0.9],
-  });
-
-  return (
-    <View
-      style={[
-        {
-          width: defaultWidth,
-          alignSelf: "center",
-          position: "relative",
-          justifyContent: "center",
-          alignItems: "center",
-        },
-        containerStyle,
-      ]}
-    >
-      <Animated.Text
-        style={[
-          globalStyles.bold,
-          {
-            position: "absolute",
-            transform: [
-              { translateY: placeholderTranslateY },
-              { scale: placeholderScale },
-            ],
-            color: globalColors.placeholder,
-            textAlign: "center",
-            paddingBottom: isTablet ? 30 : 20,
-            pointerEvents: "none",
-          },
-        ]}
-      >
-        {placeholder}
-      </Animated.Text>
-      <TextInput
-        style={[
-          globalStyles.input,
-          style,
-          { width: "100%", textAlign: "center" },
-        ]}
-        value={value}
-        onChangeText={onChangeText}
-        secureTextEntry={secureTextEntry}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        autoCapitalize="none"
-        autoCorrect={false}
-        {...rest}
-      />
-    </View>
-  );
-};
+    return (
+      <>
+        <TextInput
+          ref={ref}
+          value={value}
+          onChangeText={onChangeText}
+          label={label}
+          placeholder={placeholder}
+          error={!!error}
+          secureTextEntry={secureTextEntry}
+          disabled={disabled}
+          multiline={multiline}
+          numberOfLines={numberOfLines}
+          mode={mode}
+          style={[
+            {
+              backgroundColor: theme.colors.background,
+              marginTop: 12,
+            },
+            style,
+          ]}
+          outlineColor={theme.colors.primary}
+          left={left}
+          right={right}
+          keyboardType={keyboardType}
+          autoCapitalize={autoCapitalize}
+          autoCorrect={autoCorrect}
+        />
+        {error && (
+          <HelperText
+            type="error"
+            visible={!!error}
+            style={{ marginHorizontal: 16 }}
+          >
+            {error}
+          </HelperText>
+        )}
+      </>
+    );
+  }
+);
 
 export default CustomTextInput;

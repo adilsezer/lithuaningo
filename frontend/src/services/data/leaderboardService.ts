@@ -1,11 +1,37 @@
-import apiClient from "@services/api/apiClient";
-import { Leaderboard } from "@src/types";
+import { apiClient, ApiError } from "@services/api/apiClient";
+import {
+  LeaderboardEntryResponse,
+  UpdateLeaderboardEntryRequest,
+} from "@src/types";
 
-const fetchLeaderboard = async (): Promise<Leaderboard[]> => {
-  try {
-    return await apiClient.getLeaderboard();
-  } catch (error) {
-    console.error("Error fetching leaderboard:", error);
-    return [];
+class LeaderboardService {
+  async getCurrentWeekLeaderboard(): Promise<LeaderboardEntryResponse[]> {
+    try {
+      return await apiClient.getCurrentWeekLeaderboard();
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error(`API Error ${error.status}:`, error.data);
+      } else {
+        console.error("Error fetching current week leaderboard:", error);
+      }
+      throw error;
+    }
   }
-};
+
+  async updateLeaderboardEntry(
+    request: UpdateLeaderboardEntryRequest
+  ): Promise<LeaderboardEntryResponse> {
+    try {
+      return await apiClient.updateLeaderboardEntry(request);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.error(`API Error ${error.status}:`, error.data);
+      } else {
+        console.error("Error updating leaderboard entry:", error);
+      }
+      throw error;
+    }
+  }
+}
+
+export default new LeaderboardService();

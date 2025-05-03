@@ -2,14 +2,42 @@ import "dotenv/config";
 import { ExpoConfig, ConfigContext } from "@expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
+  // Native configuration values – needed at build time
+  const nativeGoogleConfig = {
+    iosGoogleServicesFile: process.env.IOS_GOOGLE_SERVICES_BASE64,
+    androidGoogleServicesFile: process.env.ANDROID_GOOGLE_SERVICES_BASE64,
+    // This should be the reversed client ID provided by Google for iOS.
+    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+  };
+
+  // Runtime values – accessible in JavaScript via Constants.expoConfig.extra
+  const runtimeConfig = {
+    eas: {
+      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+    },
+    easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+    googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    googleIosClientId: nativeGoogleConfig.iosClientId,
+    googleAndroidClientId: nativeGoogleConfig.androidClientId,
+    iosProductId: process.env.IOS_PRODUCT_ID,
+    androidProductId: process.env.ANDROID_PRODUCT_ID,
+    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
+    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    privacyPolicyUrl: "https://adilsezer.github.io/lithuaningo/privacy-policy",
+    keywords:
+      "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language challenges, Interactive learning",
+  };
+
   return {
     ...config,
     name: "Lithuaningo",
     slug: "lithuaningo",
-    version: "2.7.0",
+    version: "3.0.0",
     orientation: "portrait",
     icon: "./assets/icons/ios/icon.png",
     userInterfaceStyle: "automatic",
+    scheme: "com.adilsezer.lithuaningo",
     splash: {
       image: "./assets/images/splash.jpeg",
       resizeMode: "contain",
@@ -17,7 +45,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     assetBundlePatterns: ["**/*"],
     ios: {
-      googleServicesFile: "./GoogleService-Info.plist",
       supportsTablet: true,
       bundleIdentifier: "com.adilsezer.lithuaningo",
       infoPlist: {
@@ -28,15 +55,23 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           NSExceptionDomains: {
             localhost: {
               NSExceptionAllowsInsecureHTTPLoads: true,
-              NSIncludesSubdomains: true
-            }
-          }
-        }
+              NSIncludesSubdomains: true,
+            },
+          },
+        },
+        CFBundleURLTypes: [
+          {
+            CFBundleURLSchemes: [
+              `com.googleusercontent.apps.${
+                nativeGoogleConfig.iosClientId?.split(".")[0]
+              }`,
+            ],
+          },
+        ],
       },
       usesAppleSignIn: true,
     },
     android: {
-      googleServicesFile: "./google-services.json",
       icon: "./assets/icons/android/xxxhdpi/icon.png",
       adaptiveIcon: {
         foregroundImage: "./assets/icons/android/foreground.png",
@@ -60,8 +95,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-router",
-      "@react-native-firebase/app",
-      "@react-native-firebase/crashlytics",
       [
         "expo-build-properties",
         {
@@ -86,21 +119,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
     ],
-    extra: {
-      eas: {
-        projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
-      },
-      easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
-      googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-      androidGoogleServicesBase64: process.env.ANDROID_GOOGLE_SERVICES_BASE64,
-      iosGoogleServicesBase64: process.env.IOS_GOOGLE_SERVICES_BASE64,
-      iosProductId: process.env.IOS_PRODUCT_ID,
-      androidProductId: process.env.ANDROID_PRODUCT_ID,
-      privacyPolicyUrl:
-        "https://adilsezer.github.io/lithuaningo/privacy-policy",
-      keywords:
-        "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language quizzes, Interactive learning",
-    },
-    scheme: "lithuaningo",
+    extra: runtimeConfig,
   };
 };

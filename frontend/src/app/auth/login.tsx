@@ -1,82 +1,87 @@
-import React, { useEffect, useState } from "react";
-import { Text, ScrollView } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import useAuthMethods from "@hooks/useAuthMethods";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsLoading } from "@redux/slices/uiSlice";
-import CustomTextInput from "@components/ui/CustomTextInput";
-import NavigationLink from "@components/layout/NavigationLink";
-import BackButton from "@components/layout/BackButton";
-import OrSeparator from "@components/ui/OrSeparator";
+import React, { useEffect, useCallback } from "react";
+import { ScrollView, StyleSheet } from "react-native";
+import { useAuth } from "@hooks/useAuth";
+import { useIsLoading } from "@stores/useUIStore";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
-import { useAuthOperation } from "@hooks/useAuthOperation";
-import crashlytics from "@react-native-firebase/crashlytics";
-import CustomButton from "@components/ui/CustomButton";
+import CustomDivider from "@components/ui/CustomDivider";
+import { Form } from "@components/form/Form";
+import type { FormField } from "@components/form/form.types";
+import type { SocialProvider } from "@hooks/useAuth";
+import { loginFormSchema } from "@utils/zodSchemas";
+import CustomText from "@components/ui/CustomText";
+import { router } from "expo-router";
+
+const loginFields: FormField[] = [
+  {
+    name: "email",
+    label: "Email",
+    category: "text-input",
+    type: "email",
+    placeholder: "Email",
+  },
+  {
+    name: "password",
+    label: "Password",
+    category: "text-input",
+    type: "password",
+    placeholder: "Password",
+  },
+];
 
 const LoginScreen: React.FC = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const loading = useAppSelector(selectIsLoading);
-  const { styles: globalStyles } = useThemeStyles();
-  const { handleLoginWithEmail, handleLoginWithGoogle, handleLoginWithApple } =
-    useAuthMethods();
-  const { performAuthOperation } = useAuthOperation();
+  const loading = useIsLoading();
+  const { signIn, signInWithSocial } = useAuth();
 
-  useEffect(() => {
-    crashlytics().log("Login screen loaded.");
-  }, []);
+  const handleSocialAuth = useCallback(
+    (provider: SocialProvider) => {
+      signInWithSocial(provider);
+    },
+    [signInWithSocial]
+  );
 
   return (
     <ScrollView>
-      <BackButton />
-      <Text style={globalStyles.title}>Welcome Back</Text>
-
-      <CustomTextInput
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <CustomTextInput
-        placeholder="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
+      <Form
+        fields={loginFields}
+        onSubmit={async (data) => {
+          await signIn(data.email, data.password);
+        }}
+        submitButtonText="Sign In"
+        isLoading={loading}
+        options={{ mode: "onBlur" }}
+        zodSchema={loginFormSchema}
       />
 
-      <CustomButton
-        onPress={() =>
-          performAuthOperation(
-            () => handleLoginWithEmail(email, password),
-            "Login Failed"
-          )
-        }
-        title="Log In with Email"
-        disabled={loading}
-      />
+      <CustomText
+        variant="bodyMedium"
+        onPress={() => {
+          router.push("/auth/forgot-password");
+        }}
+        style={{ textDecorationLine: "underline" }}
+      >
+        Forgot Password?
+      </CustomText>
 
-      <NavigationLink text="Forgot Password?" path="/auth/forgot-password" />
-
-      <OrSeparator />
+      <CustomDivider content="Or" />
 
       <SocialAuthButtons
-        onGooglePress={() =>
-          performAuthOperation(handleLoginWithGoogle, "Google Login Failed")
-        }
-        onApplePress={() =>
-          performAuthOperation(handleLoginWithApple, "Apple Login Failed")
-        }
-        disabled={loading}
+        onGooglePress={() => handleSocialAuth("google")}
+        onApplePress={() => handleSocialAuth("apple")}
       />
 
-      <NavigationLink
-        text="Don't have an account? Sign Up"
-        path="/auth/signup"
-        style={{ textAlign: "center" }}
-      />
+      <CustomText
+        variant="bodyMedium"
+        onPress={() => {
+          router.push("/auth/signup");
+        }}
+        style={{ textDecorationLine: "underline" }}
+      >
+        Don't have an account? Sign Up
+      </CustomText>
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({});
 
 export default LoginScreen;

@@ -1,0 +1,198 @@
+using System.Security.Claims;
+using FluentValidation;
+using Lithuaningo.API.Authorization;
+using Lithuaningo.API.DTOs.UserFlashcardStats;
+using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Stats;
+using Microsoft.AspNetCore.Mvc;
+using Swashbuckle.AspNetCore.Annotations;
+
+namespace Lithuaningo.API.Controllers
+{
+    /// <summary>
+    /// Manages user statistics for flashcards, including tracking views, correct/incorrect answers, and mastery levels.
+    /// </summary>
+    [Authorize]
+    [ApiVersion("1.0")]
+    [SwaggerTag("User Flashcard Statistics management endpoints")]
+    public class UserFlashcardStatsController : BaseApiController
+    {
+        private readonly IUserFlashcardStatService _userFlashcardStatService;
+        private readonly ILogger<UserFlashcardStatsController> _logger;
+
+        public UserFlashcardStatsController(
+            IUserFlashcardStatService userFlashcardStatService,
+            ILogger<UserFlashcardStatsController> logger)
+        {
+            _userFlashcardStatService = userFlashcardStatService ?? throw new ArgumentNullException(nameof(userFlashcardStatService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <summary>
+        /// Gets a summary of the user's flashcard statistics
+        /// </summary>
+        /// <param name="userId">The ID of the user to get stats for. If not provided, uses the authenticated user's ID.</param>
+        /// <returns>A summary of the user's flashcard statistics</returns>
+        /// <response code="200">Returns the user's flashcard statistics summary</response>
+        /// <response code="401">If the user is not authenticated</response>
+        /// <response code="500">If there was an error processing the request</response>
+        [HttpGet("{userId}/summary-stats")]
+        [SwaggerOperation(
+            Summary = "Gets user flashcard statistics summary",
+            Description = "Retrieves a summary of the user's flashcard usage and performance, including total counts, success rates, and mastery level distribution",
+            OperationId = "GetUserFlashcardStatsSummary",
+            Tags = new[] { "UserFlashcardStats" }
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "The user's flashcard statistics summary was successfully retrieved", typeof(UserFlashcardStatsSummaryResponse))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while processing the request")]
+        [ProducesResponseType(typeof(UserFlashcardStatsSummaryResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<UserFlashcardStatsSummaryResponse>> GetUserFlashcardStatsSummary(string userId)
+        {
+            try
+            {
+                // Use provided userId for development/testing, otherwise use authenticated user's ID
+                var effectiveUserId = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(effectiveUserId))
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation("Getting flashcard stats summary for user {UserId}", effectiveUserId);
+
+                var stats = await _userFlashcardStatService.GetUserFlashcardStatsSummaryAsync(effectiveUserId);
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting flashcard stats summary for user");
+                return StatusCode(500, "An error occurred while retrieving flashcard stats summary");
+            }
+        }
+
+        /// <summary>
+        /// Updates the statistics for a flashcard after user review
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/v1/UserFlashcardStats/submit-answer
+        ///     {
+        ///         "flashcardId": "0000000-0000-0000-0000-0000000000",
+        ///         "wasCorrect": true,
+        ///         "userId": null
+        ///     }
+        /// 
+        /// Notes:
+        /// - FlashcardId must be a valid GUID of an existing flashcard
+        /// - WasCorrect indicates if the user answered the flashcard correctly
+        /// - UserId can be left null (system will use the authenticated user's ID)
+        /// </remarks>
+        /// <param name="request">The request object containing the flashcard ID, correctness, and optional user ID</param>
+        /// <returns>The updated user flashcard statistics</returns>
+        /// <response code="200">Returns the updated flashcard statistics</response>
+        /// <response code="400">If the request parameters are invalid</response>
+        /// <response code="401">If the user is not authenticated</response>
+        /// <response code="500">If there was an error processing the request</response>
+        [HttpPost("submit-answer")]
+        [SwaggerOperation(
+            Summary = "Submits a flashcard answer",
+            Description = "Submits a flashcard answer and automatically updates all relevant statistics including answer counts and mastery level",
+            OperationId = "SubmitFlashcardAnswer",
+            Tags = new[] { "UserFlashcardStats" }
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "The flashcard statistics were successfully updated", typeof(UserFlashcardStatResponse))]
+        [SwaggerResponse(StatusCodes.Status400BadRequest, "Invalid input parameters")]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while processing the request")]
+        [ProducesResponseType(typeof(UserFlashcardStatResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<UserFlashcardStatResponse>> SubmitFlashcardAnswer([FromBody] SubmitFlashcardAnswerRequest request)
+        {
+            try
+            {
+                // Use provided userId for development/testing, otherwise use authenticated user's ID
+                var effectiveUserId = request.UserId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(effectiveUserId))
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation("Updating flashcard stats for flashcard {FlashcardId} and user {UserId}",
+                    request.FlashcardId, effectiveUserId);
+
+                var result = await _userFlashcardStatService.SubmitFlashcardAnswerAsync(
+                    effectiveUserId,
+                    request);
+
+                return Ok(result);
+            }
+            catch (ValidationException ex)
+            {
+                _logger.LogWarning(ex, "Validation failed for UpdateFlashcardStats request");
+                return BadRequest(ex.Errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating flashcard stats for flashcard {FlashcardId}", request.FlashcardId);
+                return StatusCode(500, "An error occurred while updating flashcard stats");
+            }
+        }
+
+        /// <summary>
+        /// Gets the statistics for a specific flashcard
+        /// </summary>
+        /// <param name="userId">The ID of the user to get stats for. If not provided, uses the authenticated user's ID.</param>
+        /// <param name="flashcardId">The ID of the flashcard to get stats for</param>
+        /// <returns>The statistics for the specified flashcard</returns>
+        /// <response code="200">Returns the flashcard statistics</response>
+        /// <response code="401">If the user is not authenticated</response>
+        /// <response code="404">If the flashcard is not found</response>
+        /// <response code="500">If there was an error processing the request</response>
+        [HttpGet("{userId}/flashcard/{flashcardId}")]
+        [SwaggerOperation(
+            Summary = "Gets flashcard statistics for a specific flashcard",
+            Description = "Retrieves detailed statistics for a specific flashcard including view count, correct/incorrect answer counts, and mastery level",
+            OperationId = "GetFlashcardStats",
+            Tags = new[] { "UserFlashcardStats" }
+        )]
+        [SwaggerResponse(StatusCodes.Status200OK, "The flashcard statistics were successfully retrieved", typeof(UserFlashcardStatResponse))]
+        [SwaggerResponse(StatusCodes.Status401Unauthorized, "User is not authenticated")]
+        [SwaggerResponse(StatusCodes.Status404NotFound, "The flashcard was not found")]
+        [SwaggerResponse(StatusCodes.Status500InternalServerError, "An error occurred while processing the request")]
+        [ProducesResponseType(typeof(UserFlashcardStatResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<UserFlashcardStatResponse>> GetFlashcardStats(string userId, string flashcardId)
+        {
+            try
+            {
+                // Use provided userId for development/testing, otherwise use authenticated user's ID
+                var effectiveUserId = userId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(effectiveUserId))
+                {
+                    return Unauthorized();
+                }
+
+                _logger.LogInformation("Getting flashcard stats for flashcard {FlashcardId} and user {UserId}",
+                    flashcardId, effectiveUserId);
+
+                var stats = await _userFlashcardStatService.GetFlashcardStatsAsync(
+                    effectiveUserId,
+                    flashcardId);
+
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting flashcard stats for flashcard {FlashcardId}", flashcardId);
+                return StatusCode(500, "An error occurred while retrieving flashcard stats");
+            }
+        }
+    }
+}

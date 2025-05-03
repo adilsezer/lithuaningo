@@ -1,20 +1,58 @@
 import React, { useState, useEffect } from "react";
-import { View, ActivityIndicator, StyleSheet, Modal } from "react-native";
-import { useAppSelector } from "@redux/hooks";
-import { selectIsLoading } from "@redux/slices/uiSlice";
-import { useThemeStyles } from "@hooks/useThemeStyles";
+import { ViewStyle, StyleSheet } from "react-native";
+import { useIsLoading } from "@stores/useUIStore";
+import {
+  useTheme,
+  ActivityIndicator,
+  Portal,
+  Modal,
+  Surface,
+} from "react-native-paper";
 
-const LoadingIndicator = () => {
-  const { colors: globalColors } = useThemeStyles();
-  const isLoading = useAppSelector(selectIsLoading);
+interface LoadingIndicatorProps {
+  modal?: boolean;
+  style?: ViewStyle;
+  size?: "small" | "large";
+  minimumDisplayTime?: number;
+  color?: string;
+  useTheme?: boolean;
+}
+
+const styles = StyleSheet.create({
+  modalContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    borderRadius: 12,
+  },
+  surface: {
+    padding: 24,
+    borderRadius: 12,
+  },
+});
+
+export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
+  modal = true,
+  style,
+  size = "large",
+  minimumDisplayTime = 200,
+  color,
+}) => {
+  const theme = useTheme();
+  const indicatorColor = color || theme.colors.primary;
+
+  const globalIsLoading = useIsLoading();
   const [showLoading, setShowLoading] = useState(false);
   const [delayedIsLoading, setDelayedIsLoading] = useState(false);
-  const minimumDisplayTime = 200;
 
   useEffect(() => {
+    if (!modal) return;
+
     let timer: ReturnType<typeof setTimeout>;
 
-    if (isLoading) {
+    if (globalIsLoading) {
       setDelayedIsLoading(true);
     } else if (delayedIsLoading) {
       timer = setTimeout(() => {
@@ -27,56 +65,45 @@ const LoadingIndicator = () => {
         clearTimeout(timer);
       }
     };
-  }, [isLoading, delayedIsLoading]);
+  }, [globalIsLoading, delayedIsLoading, modal, minimumDisplayTime]);
 
   useEffect(() => {
-    if (delayedIsLoading) {
-      setShowLoading(true);
-    } else {
-      setShowLoading(false);
-    }
+    setShowLoading(delayedIsLoading);
   }, [delayedIsLoading]);
 
+  if (!modal) {
+    return (
+      <ActivityIndicator
+        size={size}
+        color={indicatorColor}
+        style={style}
+        accessibilityLabel="Loading content"
+      />
+    );
+  }
+
   return (
-    <Modal
-      transparent={true}
-      animationType="none"
-      visible={showLoading}
-      onRequestClose={() => {}}
-    >
-      <View style={styles.modalBackground}>
-        <View
-          style={[
-            styles.activityIndicatorWrapper,
-            { backgroundColor: globalColors.background },
-          ]}
-        >
+    <Portal>
+      <Modal
+        visible={showLoading}
+        dismissable={false}
+        contentContainerStyle={[
+          styles.modalContent,
+          { backgroundColor: theme.colors.background },
+        ]}
+        style={styles.modalContainer}
+      >
+        <Surface style={styles.surface} elevation={4}>
           <ActivityIndicator
             size="large"
-            color={globalColors.active}
+            color={indicatorColor}
             animating={showLoading}
             accessibilityLabel="Loading content"
           />
-        </View>
-      </View>
-    </Modal>
+        </Surface>
+      </Modal>
+    </Portal>
   );
 };
-
-const styles = StyleSheet.create({
-  modalBackground: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    backgroundColor: "rgba(0,0,0,0.4)",
-  },
-  activityIndicatorWrapper: {
-    height: 100,
-    width: 100,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-});
 
 export default LoadingIndicator;

@@ -1,35 +1,41 @@
-using Google.Cloud.Firestore;
+using System;
+using Supabase.Postgrest.Models;
+using Supabase.Postgrest.Attributes;
 
-[FirestoreData]
-public class UserProfile
+namespace Lithuaningo.API.Models
 {
-    [FirestoreDocumentId]
-    public string Id { get; set; } = string.Empty;
+    [Table("user_profiles")]
+    public class UserProfile : BaseModel
+    {
+        [PrimaryKey("id")]
+        [Column("id")]
+        public Guid Id { get; set; }
 
-    [FirestoreProperty("name")]
-    public string Name { get; set; } = string.Empty;
+        [Column("email")]
+        public string Email { get; set; } = string.Empty;
 
-    [FirestoreProperty("email")]
-    public string Email { get; set; } = string.Empty;
+        [Column("email_verified")]
+        public bool EmailVerified { get; set; }
 
-    [FirestoreProperty("learnedSentences")]
-    public List<string> LearnedSentences { get; set; } = new();
+        [Column("full_name")]
+        public string FullName { get; set; } = string.Empty;
 
-    [FirestoreProperty("todayAnsweredQuestions")]
-    public int TodayAnsweredQuestions { get; set; } = 0;
+        [Column("avatar_url")]
+        public string? AvatarUrl { get; set; }
 
-    [FirestoreProperty("todayCorrectAnsweredQuestions")]
-    public int TodayCorrectAnsweredQuestions { get; set; } = 0;
+        [Column("last_login_at")]
+        public DateTime LastLoginAt { get; set; }
 
-    [FirestoreProperty("todayWrongAnsweredQuestions")]
-    public int TodayWrongAnsweredQuestions { get; set; } = 0;
+        [Column("is_admin")]
+        public bool IsAdmin { get; set; }
 
-    [FirestoreProperty("lastCompleted")]
-    public Timestamp LastCompleted { get; set; } = Timestamp.FromDateTime(DateTime.UtcNow);
+        [Column("is_premium")]
+        public bool IsPremium { get; set; }
 
-    [FirestoreProperty("isAdmin")]
-    public bool IsAdmin { get; set; } = false;
+        [Column("premium_expires_at")]
+        public DateTime? PremiumExpiresAt { get; set; }
 
-    [FirestoreProperty("hasPurchasedExtraContent")]
-    public bool HasPurchasedExtraContent { get; set; } = false;
+        [Column("auth_provider")]
+        public string AuthProvider { get; set; } = string.Empty;
+    }
 }

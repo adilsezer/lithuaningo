@@ -1,54 +1,73 @@
-import React, { useEffect, useState } from "react";
-import { Linking } from "react-native";
+import React from "react";
+import { useAppInfo } from "@hooks/useAppInfo";
 import NotificationDisplay from "@components/ui/NotificationDisplay";
-import { AppInfo } from "@src/types";
-import { getLatestAppInfo } from "@services/data/appInfoService";
+import ErrorMessage from "@components/ui/ErrorMessage";
+
+const NOTIFICATION_CONFIGS = {
+  maintenance: {
+    title: "Under Maintenance",
+    subtitle: (message?: string) =>
+      message ||
+      "We're currently performing maintenance. Please try again later.",
+  },
+  update: {
+    title: "Update Required",
+    subtitle: (notes?: string, version?: string) =>
+      `Please update to the latest version${
+        version ? ` (${version})` : ""
+      } to continue using the app.${notes ? `\n\nWhat's New:\n${notes}` : ""}`,
+    buttonText: "Update Now",
+  },
+  loading: {
+    title: "Checking App Status",
+    subtitle: "Please wait while we verify application status...",
+  },
+} as const;
 
 const NotificationScreen: React.FC = () => {
-  const [notification, setNotification] = useState<AppInfo | null>(null);
+  const {
+    loading,
+    error,
+    appInfo,
+    isUnderMaintenance,
+    maintenanceMessage,
+    needsUpdate,
+    releaseNotes,
+    openUpdateUrl,
+  } = useAppInfo();
 
-  useEffect(() => {
-    const fetchAppInfo = async () => {
-      const appInfo = await getLatestAppInfo();
-      if (appInfo) {
-        setNotification(appInfo);
-      }
-    };
-
-    fetchAppInfo();
-  }, []);
-
-  if (!notification) {
+  if (loading) {
     return (
       <NotificationDisplay
-        title="Oops!"
-        subtitle="We couldn't retrieve the server information. Please try again later."
-        buttonText="Retry"
-        buttonAction={() => {}}
+        title={NOTIFICATION_CONFIGS.loading.title}
+        subtitle={NOTIFICATION_CONFIGS.loading.subtitle}
       />
     );
   }
 
-  if (notification.isUnderMaintenance) {
+  if (error) {
+    return <ErrorMessage message={error} />;
+  }
+
+  if (isUnderMaintenance) {
     return (
       <NotificationDisplay
-        title="Scheduled Maintenance"
-        subtitle="Our servers are currently undergoing maintenance. We'll be back shortly. Thank you for your patience!"
+        title={NOTIFICATION_CONFIGS.maintenance.title}
+        subtitle={NOTIFICATION_CONFIGS.maintenance.subtitle(maintenanceMessage)}
       />
     );
   }
 
-  if (notification.updateUrl) {
+  if (needsUpdate) {
     return (
       <NotificationDisplay
-        title="Update Available"
-        subtitle="A new version of Lithuaningo is available. Please update to continue."
-        buttonText="Update Now"
-        buttonAction={() => {
-          Linking.openURL(notification.updateUrl).catch((err) =>
-            console.error("Failed to open URL:", err)
-          );
-        }}
+        title={NOTIFICATION_CONFIGS.update.title}
+        subtitle={NOTIFICATION_CONFIGS.update.subtitle(
+          releaseNotes,
+          appInfo?.currentVersion
+        )}
+        buttonText={NOTIFICATION_CONFIGS.update.buttonText}
+        buttonAction={openUpdateUrl}
       />
     );
   }

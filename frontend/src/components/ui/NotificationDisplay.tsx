@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text, StyleSheet, Image } from "react-native";
-import { useThemeStyles } from "@hooks/useThemeStyles";
-import CustomButton from "@components/ui/CustomButton";
+import { StyleSheet } from "react-native";
+import { View } from "react-native";
+import { Button, Avatar } from "react-native-paper";
+import CustomText from "./CustomText";
 
 interface NotificationDisplayProps {
   title: string;
@@ -16,15 +17,23 @@ const NotificationDisplay: React.FC<NotificationDisplayProps> = ({
   buttonText,
   buttonAction,
 }) => {
-  const { styles: globalStyles } = useThemeStyles();
-
   return (
     <View style={styles.container}>
-      <Image source={require("assets/images/icon.png")} style={styles.logo} />
-      <Text style={globalStyles.title}>{title}</Text>
-      <Text style={globalStyles.subtitle}>{subtitle}</Text>
+      <Avatar.Image
+        size={100}
+        source={require("assets/images/icon.png")}
+        style={styles.logo}
+      />
+      <CustomText variant="headlineMedium" style={styles.title}>
+        {title}
+      </CustomText>
+      <CustomText variant="bodyMedium" style={styles.subtitle}>
+        {subtitle}
+      </CustomText>
       {buttonText && buttonAction && (
-        <CustomButton onPress={buttonAction} title={buttonText} />
+        <Button mode="contained" onPress={buttonAction} style={styles.button}>
+          {buttonText}
+        </Button>
       )}
     </View>
   );
@@ -34,14 +43,22 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   logo: {
-    width: 100,
-    height: 100,
     marginBottom: 20,
-    borderRadius: 20,
-    alignSelf: "center",
+  },
+  title: {
+    textAlign: "center",
+    marginBottom: 8,
+  },
+  subtitle: {
+    textAlign: "center",
+    marginBottom: 16,
+  },
+  button: {
+    marginTop: 10,
   },
 });
 

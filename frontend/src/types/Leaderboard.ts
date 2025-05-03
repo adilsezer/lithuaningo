@@ -1,5 +1,12 @@
-export interface Leaderboard {
+export interface UpdateLeaderboardEntryRequest {
   userId: string;
-  name: string;
-  points: number;
+  scoreToAdd: number;
+}
+
+export interface LeaderboardEntryResponse {
+  id: string;
+  userId: string;
+  rank: number;
+  username: string;
+  score: number;
 }

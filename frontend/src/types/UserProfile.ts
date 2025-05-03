@@ -1,12 +1,22 @@
-export interface UserProfile {
+export interface UserProfileResponse {
   id: string;
-  name: string;
   email: string;
-  learnedSentences: string[];
-  todayAnsweredQuestions: number;
-  todayCorrectAnsweredQuestions: number;
-  todayWrongAnsweredQuestions: number;
-  lastCompleted: Date;
+  emailVerified: boolean;
+  fullName: string;
+  avatarUrl?: string;
+  lastLoginAt?: string;
   isAdmin: boolean;
-  hasPurchasedExtraContent: boolean;
+  isPremium: boolean;
+  premiumExpiresAt?: string;
+  authProvider: string;
+}
+
+export interface UpdateUserProfileRequest {
+  email: string;
+  emailVerified: boolean;
+  fullName: string;
+  avatarUrl?: string;
+  isAdmin: boolean;
+  isPremium: boolean;
+  premiumExpiresAt?: string;
 }

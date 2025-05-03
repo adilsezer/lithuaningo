@@ -1,76 +1,92 @@
-using Google.Cloud.Firestore;
-using Lithuaningo.API.Services.Interfaces;
+using AutoMapper;
+using Lithuaningo.API.DTOs.AppInfo;
+using Lithuaningo.API.Services.Cache;
+using Lithuaningo.API.Services.Supabase;
+using Microsoft.Extensions.Options;
+using Supabase;
 
-namespace Lithuaningo.API.Services;
-
-public class AppInfoService : IAppInfoService
+namespace Lithuaningo.API.Services.AppInfo
 {
-    private readonly FirestoreDb _db;
-    private const string COLLECTION_NAME = "appInfo";
-
-    public AppInfoService(FirestoreDb db)
+    public class AppInfoService : IAppInfoService
     {
-        _db = db ?? throw new ArgumentNullException(nameof(db));
-    }
+        private readonly Client _supabaseClient;
+        private readonly ICacheService _cache;
+        private readonly CacheSettings _cacheSettings;
+        private const string CacheKeyPrefix = "app-info:";
+        private readonly ILogger<AppInfoService> _logger;
+        private readonly IMapper _mapper;
+        private readonly CacheInvalidator _cacheInvalidator;
 
-    public async Task<AppInfo> GetAppInfoAsync(string platform)
-    {
-        if (string.IsNullOrEmpty(platform))
-            throw new ArgumentNullException(nameof(platform));
-
-        platform = platform.ToLowerInvariant();
-        if (platform != "ios" && platform != "android")
-            throw new ArgumentException("Platform must be either 'ios' or 'android'", nameof(platform));
-
-        try
+        public AppInfoService(
+            ISupabaseService supabaseService,
+            ICacheService cache,
+            IOptions<CacheSettings> cacheSettings,
+            ILogger<AppInfoService> logger,
+            IMapper mapper,
+            CacheInvalidator cacheInvalidator)
         {
-            var docRef = _db.Collection(COLLECTION_NAME).Document(platform);
-            var snapshot = await docRef.GetSnapshotAsync();
+            _supabaseClient = supabaseService.Client;
+            _cache = cache;
+            _cacheSettings = cacheSettings.Value;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
+        }
 
-            if (!snapshot.Exists)
+        public async Task<AppInfoResponse?> GetAppInfoAsync(string platform)
+        {
+            if (string.IsNullOrWhiteSpace(platform))
             {
-                // Return default app info if none exists
-                return new AppInfo
-                {
-                    Id = platform,
-                    LatestVersion = "1.0.0",
-                    MandatoryUpdate = false,
-                    UpdateUrl = string.Empty,
-                    IsUnderMaintenance = false
-                };
+                throw new ArgumentException("Platform cannot be empty", nameof(platform));
             }
 
-            return snapshot.ConvertTo<AppInfo>();
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error getting app info for {platform}: {ex.Message}");
-            throw;
-        }
-    }
+            var normalizedPlatform = platform.ToLowerInvariant();
+            var cacheKey = $"{CacheKeyPrefix}{normalizedPlatform}";
+            var cached = await _cache.GetAsync<AppInfoResponse>(cacheKey);
 
-    public async Task UpdateAppInfoAsync(string platform, AppInfo appInfo)
-    {
-        if (string.IsNullOrEmpty(platform))
-            throw new ArgumentNullException(nameof(platform));
+            if (cached != null)
+            {
+                _logger.LogInformation("Retrieved app info for platform '{Platform}' from cache", platform);
+                return cached;
+            }
 
-        if (appInfo == null)
-            throw new ArgumentNullException(nameof(appInfo));
+            try
+            {
+                var response = await _supabaseClient
+                    .From<Models.AppInfo>()
+                    .Where(a => a.Platform == normalizedPlatform)
+                    .Single();
 
-        platform = platform.ToLowerInvariant();
-        if (platform != "ios" && platform != "android")
-            throw new ArgumentException("Platform must be either 'ios' or 'android'", nameof(platform));
+                var appInfo = response;
+                if (appInfo == null)
+                {
+                    // Create a default record if not found
+                    appInfo = new Models.AppInfo
+                    {
+                        Id = Guid.NewGuid(),
+                        Platform = normalizedPlatform,
+                        CurrentVersion = "1.0.0",
+                        MinimumVersion = "1.0.0",
+                        IsMaintenance = false,
+                        MaintenanceMessage = null,
+                        ForceUpdate = false,
+                        UpdateUrl = null,
+                        ReleaseNotes = null,
+                    };
+                }
 
-        try
-        {
-            var docRef = _db.Collection(COLLECTION_NAME).Document(platform);
-            appInfo.Id = platform;
-            await docRef.SetAsync(appInfo);
-        }
-        catch (Exception ex)
-        {
-            Console.Error.WriteLine($"Error updating app info for {platform}: {ex.Message}");
-            throw;
+                var appInfoResponse = _mapper.Map<AppInfoResponse>(appInfo);
+                await _cache.SetAsync(cacheKey, appInfoResponse,
+                    TimeSpan.FromMinutes(_cacheSettings.AppInfoCacheMinutes));
+                _logger.LogInformation("Retrieved and cached app info for platform '{Platform}'", platform);
+
+                return appInfoResponse;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving app info for platform '{Platform}'", platform);
+                throw;
+            }
         }
     }
 }

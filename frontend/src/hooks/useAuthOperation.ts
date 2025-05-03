@@ -1,30 +1,62 @@
-import { useAppDispatch } from "@redux/hooks";
-import { setLoading } from "@redux/slices/uiSlice";
-import { Alert } from "react-native";
-import crashlytics from "@react-native-firebase/crashlytics";
+import { useSetLoading, useSetError } from "@stores/useUIStore";
+import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useCallback } from "react";
+import { AuthResponse } from "@src/types/auth.types";
 
 export const useAuthOperation = () => {
-  const dispatch = useAppDispatch();
+  const setLoading = useSetLoading();
+  const setError = useSetError();
+  const { showError, showSuccess } = useAlertDialog();
 
-  const performAuthOperation = async (
-    operation: () => Promise<{ success: boolean; message?: string }>,
-    errorTitle: string,
-    successMessage?: string
-  ) => {
-    dispatch(setLoading(true));
-    try {
-      const result = await operation();
-      if (!result.success) {
-        crashlytics().recordError(new Error(`${errorTitle} failed`));
-        Alert.alert(errorTitle, result.message || "An error occurred.");
-      } else if (successMessage) {
-        Alert.alert("Success", successMessage);
+  const handleError = useCallback(
+    (error: any, title: string) => {
+      const message = error.message || "An error occurred";
+      console.error(`${title}:`, error);
+      setError(message);
+      //crashlytics().recordError(error);
+      showError(message, title);
+      return { success: false, message };
+    },
+    [setError, showError]
+  );
+
+  const clearError = useCallback(() => {
+    setError(null);
+  }, [setError]);
+
+  const performAuthOperation = useCallback(
+    async (
+      operation: () => Promise<AuthResponse>,
+      errorTitle: string,
+      options?: { showSuccessAlert?: boolean }
+    ) => {
+      setLoading(true);
+      clearError();
+
+      try {
+        const result = await operation();
+
+        if (!result.success) {
+          const error = new Error(result.message || "Operation failed");
+          return handleError(error, errorTitle);
+        }
+
+        // Show success alert if requested and there's a message
+        if (options?.showSuccessAlert && result.message) {
+          showSuccess(result.message, "Success");
+        }
+
+        return result;
+      } catch (error: any) {
+        return handleError(error, errorTitle);
+      } finally {
+        setLoading(false);
       }
-      return result;
-    } finally {
-      dispatch(setLoading(false));
-    }
-  };
+    },
+    [handleError, clearError, setLoading, showSuccess]
+  );
 
-  return { performAuthOperation };
+  return {
+    performAuthOperation,
+  };
 };
