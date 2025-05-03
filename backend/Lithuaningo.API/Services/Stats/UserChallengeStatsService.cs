@@ -5,6 +5,7 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Leaderboard;
 using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Utilities;
 using Microsoft.Extensions.Options;
 using Supabase;
 using Supabase.Postgrest.Models;
@@ -61,7 +62,8 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             if (cachedStats != null)
             {
-                _logger.LogInformation("Retrieved challenge stats for user {UserId} from cache", userId);
+                _logger.LogInformation("Retrieved challenge stats for user {UserId} from cache",
+                    LogSanitizer.SanitizeUserId(userId));
                 return cachedStats;
             }
 
@@ -73,13 +75,15 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             // Cache the result
             await _cache.SetAsync(cacheKey, statsResponse, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
-            _logger.LogInformation("Cached challenge stats for user {UserId}", userId);
+            _logger.LogInformation("Cached challenge stats for user {UserId}",
+                LogSanitizer.SanitizeUserId(userId));
 
             return statsResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error retrieving challenge stats for user {UserId}", userId);
+            _logger.LogError(ex, "Error retrieving challenge stats for user {UserId}",
+                LogSanitizer.SanitizeUserId(userId));
             throw;
         }
     }
@@ -97,7 +101,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         try
         {
             _logger.LogInformation("Processing challenge answer for user {UserId}, challenge {ChallengeId}, correct: {WasCorrect}",
-                userId, request.ChallengeId, request.WasCorrect);
+                LogSanitizer.SanitizeUserId(userId), request.ChallengeId, request.WasCorrect);
 
             // Get or create stats entity
             var statsEntity = await GetOrCreateStatsEntityAsync(userGuid);
@@ -117,27 +121,30 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             // Invalidate the cache
             await _cacheInvalidator.InvalidateUserChallengeStatsAsync(userId);
-            _logger.LogInformation("Invalidated challenge stats cache for user {UserId}", userId);
+            _logger.LogInformation("Invalidated challenge stats cache for user {UserId}",
+                LogSanitizer.SanitizeUserId(userId));
 
             // Update leaderboard if answer was correct
             if (request.WasCorrect)
             {
                 // Add 1 point to leaderboard per correct answer
                 await _leaderboardService.UpdateLeaderboardEntryAsync(new UpdateLeaderboardEntryRequest { UserId = userGuid, ScoreToAdd = 1 });
-                _logger.LogInformation("Updated leaderboard for user {UserId} with 1 point", userId);
+                _logger.LogInformation("Updated leaderboard for user {UserId} with 1 point",
+                    LogSanitizer.SanitizeUserId(userId));
             }
 
             // Convert to response DTO
             var updatedStatsResponse = _mapper.Map<UserChallengeStatsResponse>(statsEntity);
 
             _logger.LogInformation("Successfully updated challenge stats for user {UserId}, total challenges: {Total}",
-                userId, statsEntity.TotalChallengesCompleted);
+                LogSanitizer.SanitizeUserId(userId), statsEntity.TotalChallengesCompleted);
 
             return updatedStatsResponse;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error submitting challenge answer for user {UserId}: {ErrorMessage}", userId, ex.Message);
+            _logger.LogError(ex, "Error submitting challenge answer for user {UserId}: {ErrorMessage}",
+                LogSanitizer.SanitizeUserId(userId), ex.Message);
             throw;
         }
     }
@@ -157,12 +164,14 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         var stats = response.Models.FirstOrDefault();
         if (stats != null)
         {
-            _logger.LogInformation("Found existing stats for user {UserId}", userGuid);
+            _logger.LogInformation("Found existing stats for user {UserId}",
+                LogSanitizer.SanitizeUserId(userGuid.ToString()));
             return stats;
         }
 
         // Create default stats if none exist
-        _logger.LogInformation("No stats found for user {UserId}, creating new record", userGuid);
+        _logger.LogInformation("No stats found for user {UserId}, creating new record",
+            LogSanitizer.SanitizeUserId(userGuid.ToString()));
         var newStats = new UserChallengeStats
         {
             Id = Guid.NewGuid(),
@@ -186,7 +195,8 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             throw new InvalidOperationException($"Failed to create stats for user {userGuid}");
         }
 
-        _logger.LogInformation("Created new challenge stats for user {UserId}", userGuid);
+        _logger.LogInformation("Created new challenge stats for user {UserId}",
+            LogSanitizer.SanitizeUserId(userGuid.ToString()));
         return createResponse.Models.First();
     }
 
@@ -214,20 +224,22 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             stats.TotalChallengesCompleted += 1;
 
             _logger.LogInformation("New day detected for user {UserId}, incrementing streak to {Streak}",
-                stats.UserId, stats.CurrentStreak);
+                LogSanitizer.SanitizeUserId(stats.UserId.ToString()), stats.CurrentStreak);
         }
         else if (stats.TodayCorrectAnswerCount + stats.TodayIncorrectAnswerCount == 0)
         {
             // First challenge of the day
             stats.TotalChallengesCompleted += 1;
-            _logger.LogInformation("First challenge today for user {UserId}, incrementing completed counter", stats.UserId);
+            _logger.LogInformation("First challenge today for user {UserId}, incrementing completed counter",
+                LogSanitizer.SanitizeUserId(stats.UserId.ToString()));
         }
 
         // Update longest streak if needed
         if (stats.CurrentStreak > stats.LongestStreak)
         {
             stats.LongestStreak = stats.CurrentStreak;
-            _logger.LogInformation("New longest streak for user {UserId}: {Streak}", stats.UserId, stats.LongestStreak);
+            _logger.LogInformation("New longest streak for user {UserId}: {Streak}",
+                LogSanitizer.SanitizeUserId(stats.UserId.ToString()), stats.LongestStreak);
         }
 
         // Update answer counts
@@ -249,7 +261,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
     private async Task<UserChallengeStats> SaveStatsEntityAsync(UserChallengeStats statsEntity)
     {
         _logger.LogInformation("Saving challenge stats for user {UserId}, ID: {StatId}",
-            statsEntity.UserId, statsEntity.Id);
+            LogSanitizer.SanitizeUserId(statsEntity.UserId.ToString()), statsEntity.Id);
 
         var updateResponse = await _supabaseClient
             .From<UserChallengeStats>()

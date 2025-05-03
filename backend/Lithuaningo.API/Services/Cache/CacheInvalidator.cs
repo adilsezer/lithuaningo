@@ -62,7 +62,8 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserProfileAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user profile {UserId}", userId);
+        _logger.LogInformation("Invalidating cache for user profile {UserId}",
+            LogSanitizer.SanitizeUserId(userId));
         await InvalidateCacheKeyAsync($"{UserCachePrefix}{userId}");
     }
 
@@ -71,7 +72,8 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserChallengeStatsAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user challenge stats, user {UserId}", userId);
+        _logger.LogInformation("Invalidating cache for user challenge stats, user {UserId}",
+            LogSanitizer.SanitizeUserId(userId));
         await InvalidateCacheKeyAsync($"challenge-stats:{userId}");
     }
 
@@ -115,7 +117,8 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserChatStatsAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user chat stats {UserId}", userId);
+        _logger.LogInformation("Invalidating cache for user chat stats {UserId}",
+            LogSanitizer.SanitizeUserId(userId));
         await InvalidateCacheKeyAsync($"chat-stats:{userId}");
     }
 
@@ -124,7 +127,8 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserFlashcardStatsAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user flashcard stats, user {UserId}", userId);
+        _logger.LogInformation("Invalidating cache for user flashcard stats, user {UserId}",
+            LogSanitizer.SanitizeUserId(userId));
 
         // Invalidate the main flashcard stats cache
         await InvalidateCacheKeyAsync($"flashcard-stats:{userId}");

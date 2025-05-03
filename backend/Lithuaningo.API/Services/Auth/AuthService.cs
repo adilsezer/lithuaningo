@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Settings;
+using Lithuaningo.API.Utilities;
 using Microsoft.IdentityModel.Tokens;
 using Supabase;
 
@@ -122,7 +123,8 @@ public class AuthService : IAuthService
                 return false;
             }
 
-            _logger.LogInformation("Token validation successful for user {UserId}", userIdClaim.Value);
+            _logger.LogInformation("Token validation successful for user {UserId}",
+                LogSanitizer.SanitizeUserId(userIdClaim.Value));
             return true;
         }
         catch (SecurityTokenExpiredException ex)

@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.UserChatStats;
 using Lithuaningo.API.Services.Stats;
+using Lithuaningo.API.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -54,7 +55,8 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting chat stats for user {UserId}", effectiveUserId);
+                _logger.LogInformation("Getting chat stats for user {UserId}",
+                    LogSanitizer.SanitizeUserId(effectiveUserId));
 
                 var stats = await _userChatStatsService.GetUserChatStatsAsync(effectiveUserId);
                 return Ok(stats);
@@ -94,7 +96,8 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Tracking chat message for user {UserId}", effectiveUserId);
+                _logger.LogInformation("Tracking chat message for user {UserId}",
+                    LogSanitizer.SanitizeUserId(effectiveUserId));
 
                 var stats = await _userChatStatsService.TrackMessageAsync(effectiveUserId, request);
                 return Ok(stats);
@@ -135,7 +138,8 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Checking chat limit for user {UserId} (isPremium: {IsPremium})", effectiveUserId, isPremium);
+                _logger.LogInformation("Checking chat limit for user {UserId} (isPremium: {IsPremium})",
+                    LogSanitizer.SanitizeUserId(effectiveUserId), isPremium);
 
                 var hasReachedLimit = await _userChatStatsService.HasReachedDailyLimitAsync(effectiveUserId, isPremium);
                 return Ok(hasReachedLimit);

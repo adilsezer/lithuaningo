@@ -1,3 +1,6 @@
+using System.Collections.Concurrent;
+using System.Text;
+using System.Text.Json;
 using AutoMapper;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
@@ -5,7 +8,9 @@ using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Utilities;
 using Microsoft.Extensions.Options;
+using Supabase;
 using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services.Flashcards
@@ -180,7 +185,7 @@ namespace Lithuaningo.API.Services.Flashcards
             {
                 _logger.LogInformation(
                     "Getting learning flashcards for user {UserId}, category '{Category}' with difficulty '{Difficulty}'",
-                    userId,
+                    LogSanitizer.SanitizeUserId(userId),
                     request.PrimaryCategory,
                     request.Difficulty);
 
@@ -203,7 +208,7 @@ namespace Lithuaningo.API.Services.Flashcards
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting learning flashcards for user {UserId}, category '{Category}' with difficulty '{Difficulty}'",
-                    userId, request.PrimaryCategory, request.Difficulty);
+                    LogSanitizer.SanitizeUserId(userId), request.PrimaryCategory, request.Difficulty);
                 throw;
             }
         }

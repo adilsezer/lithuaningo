@@ -4,6 +4,7 @@ using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.UserFlashcardStats;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Stats;
+using Lithuaningo.API.Utilities;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 
@@ -60,7 +61,8 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting flashcard stats summary for user {UserId}", effectiveUserId);
+                _logger.LogInformation("Getting flashcard stats summary for user {UserId}",
+                    LogSanitizer.SanitizeUserId(effectiveUserId));
 
                 var stats = await _userFlashcardStatService.GetUserFlashcardStatsSummaryAsync(effectiveUserId);
                 return Ok(stats);
@@ -123,7 +125,7 @@ namespace Lithuaningo.API.Controllers
                 }
 
                 _logger.LogInformation("Updating flashcard stats for flashcard {FlashcardId} and user {UserId}",
-                    request.FlashcardId, effectiveUserId);
+                    request.FlashcardId, LogSanitizer.SanitizeUserId(effectiveUserId));
 
                 var result = await _userFlashcardStatService.SubmitFlashcardAnswerAsync(
                     effectiveUserId,
@@ -180,7 +182,7 @@ namespace Lithuaningo.API.Controllers
                 }
 
                 _logger.LogInformation("Getting flashcard stats for flashcard {FlashcardId} and user {UserId}",
-                    flashcardId, effectiveUserId);
+                    flashcardId, LogSanitizer.SanitizeUserId(effectiveUserId));
 
                 var stats = await _userFlashcardStatService.GetFlashcardStatsAsync(
                     effectiveUserId,
