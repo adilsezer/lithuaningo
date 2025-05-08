@@ -95,10 +95,10 @@ static X509Certificate2? LoadCertificate(IWebHostEnvironment environment, IConfi
 }
 
 // Configure caching
-builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
 builder.Services.AddMemoryCache(); // Use in-memory cache instead of Redis
 builder.Services.AddScoped<ICacheService, InMemoryCacheService>();
 builder.Services.AddScoped<CacheInvalidator>(); // Register the cache invalidator
+builder.Services.AddScoped<ICacheSettingsService, CacheSettingsService>(); // Register the cache settings service
 
 // Use NewtonsoftJson instead of the default System.Text.Json with secure settings
 builder.Services.AddControllers()

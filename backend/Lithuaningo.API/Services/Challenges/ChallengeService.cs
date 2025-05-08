@@ -5,7 +5,6 @@ using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Flashcards;
 using Lithuaningo.API.Services.Supabase;
-using Microsoft.Extensions.Options;
 using Supabase;
 using static Supabase.Postgrest.Constants;
 namespace Lithuaningo.API.Services.Challenges
@@ -18,7 +17,7 @@ namespace Lithuaningo.API.Services.Challenges
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
-        private readonly CacheSettings _cacheSettings;
+        private readonly ICacheSettingsService _cacheSettingsService;
         private const string CacheKeyPrefix = "challenge:";
         private readonly ILogger<ChallengeService> _logger;
         private readonly IMapper _mapper;
@@ -29,7 +28,7 @@ namespace Lithuaningo.API.Services.Challenges
         public ChallengeService(
             ISupabaseService supabaseService,
             ICacheService cache,
-            IOptions<CacheSettings> cacheSettings,
+            ICacheSettingsService cacheSettingsService,
             ILogger<ChallengeService> logger,
             IMapper mapper,
             IAIService aiService,
@@ -38,7 +37,7 @@ namespace Lithuaningo.API.Services.Challenges
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
-            _cacheSettings = cacheSettings.Value;
+            _cacheSettingsService = cacheSettingsService;
             _logger = logger;
             _mapper = mapper;
             _aiService = aiService;
@@ -64,6 +63,10 @@ namespace Lithuaningo.API.Services.Challenges
                 return cachedQuestions;
             }
 
+            // Retrieve cache settings once - will be used in both paths
+            var cacheSettings = await _cacheSettingsService.GetCacheSettingsAsync();
+            var cacheExpiration = TimeSpan.FromHours(cacheSettings.DefaultExpirationMinutes);
+
             // Check if we already have questions for today in the database
             var today = DateTime.UtcNow.Date;
             var tomorrow = today.AddDays(1);
@@ -81,8 +84,7 @@ namespace Lithuaningo.API.Services.Challenges
                 var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(existingQuestions.Models);
 
                 // Cache the results
-                await _cache.SetAsync(cacheKey, questionResponses,
-                    TimeSpan.FromHours(_cacheSettings.DefaultExpirationMinutes));
+                await _cache.SetAsync(cacheKey, questionResponses, cacheExpiration);
 
                 _logger.LogInformation("Retrieved {Count} daily challenge questions from database", questionResponses.Count);
                 return questionResponses;
@@ -92,8 +94,7 @@ namespace Lithuaningo.API.Services.Challenges
             var newQuestions = await GenerateAIChallengeQuestionsAsync();
 
             // Cache the results for today
-            await _cache.SetAsync(cacheKey, newQuestions.ToList(),
-                TimeSpan.FromHours(_cacheSettings.DefaultExpirationMinutes));
+            await _cache.SetAsync(cacheKey, newQuestions.ToList(), cacheExpiration);
 
             return newQuestions;
         }

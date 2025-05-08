@@ -2,7 +2,6 @@ using AutoMapper;
 using Lithuaningo.API.DTOs.AppInfo;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
-using Microsoft.Extensions.Options;
 using Supabase;
 
 namespace Lithuaningo.API.Services.AppInfo
@@ -11,7 +10,7 @@ namespace Lithuaningo.API.Services.AppInfo
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
-        private readonly CacheSettings _cacheSettings;
+        private readonly ICacheSettingsService _cacheSettingsService;
         private const string CacheKeyPrefix = "app-info:";
         private readonly ILogger<AppInfoService> _logger;
         private readonly IMapper _mapper;
@@ -20,14 +19,14 @@ namespace Lithuaningo.API.Services.AppInfo
         public AppInfoService(
             ISupabaseService supabaseService,
             ICacheService cache,
-            IOptions<CacheSettings> cacheSettings,
+            ICacheSettingsService cacheSettingsService,
             ILogger<AppInfoService> logger,
             IMapper mapper,
             CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
-            _cacheSettings = cacheSettings.Value;
+            _cacheSettingsService = cacheSettingsService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
@@ -76,8 +75,7 @@ namespace Lithuaningo.API.Services.AppInfo
                 }
 
                 var appInfoResponse = _mapper.Map<AppInfoResponse>(appInfo);
-                await _cache.SetAsync(cacheKey, appInfoResponse,
-                    TimeSpan.FromMinutes(_cacheSettings.AppInfoCacheMinutes));
+                await CacheAppInfoAsync(cacheKey, appInfoResponse);
                 _logger.LogInformation("Retrieved and cached app info for platform '{Platform}'", platform);
 
                 return appInfoResponse;
@@ -87,6 +85,13 @@ namespace Lithuaningo.API.Services.AppInfo
                 _logger.LogError(ex, "Error retrieving app info for platform '{Platform}'", platform);
                 throw;
             }
+        }
+
+        private async Task CacheAppInfoAsync(string cacheKey, AppInfoResponse response)
+        {
+            var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+            await _cache.SetAsync(cacheKey, response,
+                TimeSpan.FromMinutes(settings.AppInfoCacheMinutes));
         }
     }
 }

@@ -4,7 +4,6 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Utilities;
-using Microsoft.Extensions.Options;
 using Supabase;
 using static Supabase.Postgrest.Constants;
 namespace Lithuaningo.API.Services.Leaderboard
@@ -13,7 +12,7 @@ namespace Lithuaningo.API.Services.Leaderboard
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
-        private readonly CacheSettings _cacheSettings;
+        private readonly ICacheSettingsService _cacheSettingsService;
         private const string CacheKeyPrefix = "leaderboard:";
         private readonly ILogger<LeaderboardService> _logger;
         private readonly IMapper _mapper;
@@ -23,14 +22,14 @@ namespace Lithuaningo.API.Services.Leaderboard
         public LeaderboardService(
             ISupabaseService supabaseService,
             ICacheService cache,
-            IOptions<CacheSettings> cacheSettings,
+            ICacheSettingsService cacheSettingsService,
             ILogger<LeaderboardService> logger,
             IMapper mapper,
             CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
-            _cacheSettings = cacheSettings.Value;
+            _cacheSettingsService = cacheSettingsService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
@@ -56,8 +55,9 @@ namespace Lithuaningo.API.Services.Leaderboard
                 var leaderboard = await GetWeekLeaderboardAsync(currentWeek);
 
                 // Cache under the current week key as well
+                var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, leaderboard,
-                    TimeSpan.FromMinutes(_cacheSettings.LeaderboardCacheMinutes));
+                    TimeSpan.FromMinutes(settings.LeaderboardCacheMinutes));
 
                 _logger.LogInformation("Cached current week leaderboard for week {WeekId}", currentWeek);
 
@@ -104,8 +104,9 @@ namespace Lithuaningo.API.Services.Leaderboard
                     mappedEntries[i].Rank = i + 1;
                 }
 
+                var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, mappedEntries,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                    TimeSpan.FromMinutes(settings.LeaderboardCacheMinutes));
 
                 _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries",
                     weekId, entriesResponse.Models.Count);

@@ -6,7 +6,6 @@ using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Leaderboard;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Utilities;
-using Microsoft.Extensions.Options;
 using Supabase;
 using Supabase.Postgrest.Models;
 
@@ -22,7 +21,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
     private readonly IMapper _mapper;
     private readonly ILeaderboardService _leaderboardService;
     private readonly ICacheService _cache;
-    private readonly CacheSettings _cacheSettings;
+    private readonly ICacheSettingsService _cacheSettingsService;
     private readonly CacheInvalidator _cacheInvalidator;
     private const string CacheKeyPrefix = "challenge-stats:";
 
@@ -32,7 +31,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         IMapper mapper,
         ILeaderboardService leaderboardService,
         ICacheService cache,
-        IOptions<CacheSettings> cacheSettings,
+        ICacheSettingsService cacheSettingsService,
         CacheInvalidator cacheInvalidator)
     {
         _supabaseClient = supabaseService.Client;
@@ -40,7 +39,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
         _leaderboardService = leaderboardService;
         _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-        _cacheSettings = cacheSettings.Value;
+        _cacheSettingsService = cacheSettingsService ?? throw new ArgumentNullException(nameof(cacheSettingsService));
         _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
     }
 
@@ -74,7 +73,8 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             var statsResponse = _mapper.Map<UserChallengeStatsResponse>(statsEntity);
 
             // Cache the result
-            await _cache.SetAsync(cacheKey, statsResponse, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+            var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+            await _cache.SetAsync(cacheKey, statsResponse, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
             _logger.LogInformation("Cached challenge stats for user {UserId}",
                 LogSanitizer.SanitizeUserId(userId));
 

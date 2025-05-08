@@ -1,21 +1,55 @@
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.Options;
 using System.Collections.Concurrent;
+using Microsoft.Extensions.Caching.Memory;
 
 namespace Lithuaningo.API.Services.Cache;
 
 public class InMemoryCacheService : ICacheService
 {
     private readonly IMemoryCache _cache;
-    private readonly CacheSettings _settings;
+    private readonly ICacheSettingsService _cacheSettingsService;
+    private readonly ILogger<InMemoryCacheService> _logger;
     private readonly ConcurrentDictionary<string, bool> _cacheKeys = new();
+    private CacheSettings? _cacheSettings;
+    private DateTime _cacheSettingsLastRefreshed = DateTime.MinValue;
+    private readonly TimeSpan _cacheSettingsRefreshInterval = TimeSpan.FromMinutes(5);
 
     public InMemoryCacheService(
         IMemoryCache cache,
-        IOptions<CacheSettings> settings)
+        ICacheSettingsService cacheSettingsService,
+        ILogger<InMemoryCacheService> logger)
     {
         _cache = cache;
-        _settings = settings.Value;
+        _cacheSettingsService = cacheSettingsService;
+        _logger = logger;
+    }
+
+    private async Task<CacheSettings> GetCacheSettingsAsync()
+    {
+        var now = DateTime.UtcNow;
+
+        // Refresh settings periodically
+        if (_cacheSettings == null || (now - _cacheSettingsLastRefreshed) > _cacheSettingsRefreshInterval)
+        {
+            try
+            {
+                _cacheSettings = await _cacheSettingsService.GetCacheSettingsAsync();
+                _cacheSettingsLastRefreshed = now;
+                _logger.LogInformation("Cache settings loaded from database");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to load cache settings from database, using defaults");
+                // Use default values if the database call fails
+                _cacheSettings = new CacheSettings
+                {
+                    DefaultExpirationMinutes = 10,
+                    FlashcardCacheMinutes = 5,
+                    LeaderboardCacheMinutes = 2,
+                    AppInfoCacheMinutes = 5
+                };
+            }
+        }
+        return _cacheSettings;
     }
 
     public Task<T?> GetAsync<T>(string key)
@@ -23,12 +57,14 @@ public class InMemoryCacheService : ICacheService
         return Task.FromResult(_cache.Get<T>(key));
     }
 
-    public Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
+    public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
     {
+        var settings = await GetCacheSettingsAsync();
+
         var options = new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow = 
-                expiration ?? TimeSpan.FromMinutes(_settings.DefaultExpirationMinutes)
+            AbsoluteExpirationRelativeToNow =
+                expiration ?? TimeSpan.FromMinutes(settings.DefaultExpirationMinutes)
         };
 
         options.RegisterPostEvictionCallback((evictedKey, _, _, _) =>
@@ -38,7 +74,6 @@ public class InMemoryCacheService : ICacheService
 
         _cacheKeys[key] = true;
         _cache.Set(key, value, options);
-        return Task.CompletedTask;
     }
 
     public Task RemoveAsync(string key)
@@ -65,14 +100,11 @@ public class InMemoryCacheService : ICacheService
 
     public Task ClearAllAsync()
     {
-        var keysToRemove = _cacheKeys.Keys.ToList();
-        
-        foreach (var key in keysToRemove)
+        foreach (var key in _cacheKeys.Keys.ToList())
         {
             _cache.Remove(key);
-            _cacheKeys.TryRemove(key, out _);
         }
-        
+        _cacheKeys.Clear();
         return Task.CompletedTask;
     }
-} 
+}
