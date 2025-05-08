@@ -33,7 +33,7 @@ import {
 const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
 
 // API URL from environment variables
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:7016";
+const API_URL = process.env.EXPO_PUBLIC_API_URLx || "http://localhost:7016";
 
 /**
  * Custom API error class to handle API errors with status and data
