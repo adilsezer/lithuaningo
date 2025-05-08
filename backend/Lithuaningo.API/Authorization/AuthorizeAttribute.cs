@@ -93,8 +93,9 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
                         return;
                     }
                 }
-                catch
+                catch (Exception ex)
                 {
+                    logger.LogError(ex, "Error extracting expiration info from token");
                     // If we can't extract expiration info, return generic invalid token message
                 }
 

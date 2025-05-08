@@ -15,6 +15,9 @@ export const useAppInfo = () => {
     isUnderMaintenance,
     checkAppStatus,
     isCheckingStatus,
+    hasFailedCheck,
+    lastError,
+    resetFailedState,
   } = useAppInfoStore();
 
   // Get loading and error states from UI store
@@ -25,11 +28,14 @@ export const useAppInfo = () => {
 
   // Only check app status on mount if it hasn't already been performed elsewhere
   useEffect(() => {
-    // Don't trigger a new check if app info exists or check is already in progress
-    if (!appInfo && !isCheckingStatus) {
+    // Don't trigger a new check if:
+    // - app info exists
+    // - check is already in progress
+    // - a previous check has failed (prevents continuous retries)
+    if (!appInfo && !isCheckingStatus && !hasFailedCheck) {
       checkAppStatus();
     }
-  }, [appInfo, checkAppStatus, isCheckingStatus]);
+  }, [appInfo, checkAppStatus, isCheckingStatus, hasFailedCheck]);
 
   // Handle update URL opening
   const openUpdateUrl = async () => {
@@ -64,6 +70,8 @@ export const useAppInfo = () => {
     // App state
     needsUpdate,
     isUnderMaintenance,
+    hasFailedCheck,
+    lastError,
 
     // Content
     maintenanceMessage: appInfo?.maintenanceMessage || "",
@@ -71,6 +79,7 @@ export const useAppInfo = () => {
 
     // Actions
     checkAppStatus,
+    resetFailedState,
     openUpdateUrl,
   };
 };
