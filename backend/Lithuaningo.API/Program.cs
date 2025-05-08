@@ -445,7 +445,13 @@ To authorize in Swagger UI:
                 ValidAudience = "authenticated",
                 IssuerSigningKey = new SymmetricSecurityKey(
                     Encoding.UTF8.GetBytes(supabaseSettings.JwtSecret)),
-                ClockSkew = TimeSpan.FromMinutes(5)
+                // Keep the same clock skew as in AuthService
+                ClockSkew = TimeSpan.FromMinutes(5),
+                // Standard validation settings
+                RequireSignedTokens = true,
+                RequireExpirationTime = true,
+                NameClaimType = "sub", // Default claim for user name
+                RoleClaimType = "role" // Default claim for role
             };
 
             options.Events = new JwtBearerEvents
@@ -456,6 +462,18 @@ To authorize in Swagger UI:
                     {
                         context.Response.Headers["Token-Expired"] = "true";
                     }
+
+                    // Log only essential info about authentication failure
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                    logger.LogWarning("JWT authentication failed: {Message}", context.Exception.Message);
+
+                    return Task.CompletedTask;
+                },
+                OnTokenValidated = context =>
+                {
+                    // Simply log successful validation without all the claims
+                    var logger = context.HttpContext.RequestServices.GetRequiredService<ILogger<JwtBearerEvents>>();
+                    logger.LogDebug("JWT token successfully validated");
                     return Task.CompletedTask;
                 }
             };

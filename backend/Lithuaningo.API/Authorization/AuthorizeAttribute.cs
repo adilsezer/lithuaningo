@@ -23,10 +23,6 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
         var env = context.HttpContext.RequestServices
             .GetRequiredService<IHostEnvironment>();
 
-        // Skip authentication in development
-        if (env.IsDevelopment())
-            return;
-
         var authService = context.HttpContext.RequestServices
             .GetRequiredService<IAuthService>();
 
@@ -57,7 +53,7 @@ public class AuthorizeAttribute : Attribute, IAuthorizationFilter
             return;
         }
 
-        var token = authHeader.Substring("Bearer ".Length);
+        var token = authHeader.Substring("Bearer ".Length).Trim();
 
         try
         {

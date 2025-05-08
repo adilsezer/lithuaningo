@@ -47,7 +47,7 @@ public class AuthService : IAuthService
             ValidAudience = "authenticated",
             IssuerSigningKey = new SymmetricSecurityKey(
                 Encoding.UTF8.GetBytes(_settings.JwtSecret)),
-            ClockSkew = TimeSpan.Zero
+            ClockSkew = TimeSpan.FromMinutes(5)
         };
     }
 
@@ -55,7 +55,6 @@ public class AuthService : IAuthService
     {
         try
         {
-            _logger.LogInformation("Starting token validation");
             var handler = new JwtSecurityTokenHandler();
             var principal = handler.ValidateToken(token, _tokenValidationParameters, out var validatedToken);
 
@@ -66,65 +65,20 @@ public class AuthService : IAuthService
                 return false;
             }
 
-            // Verify required Supabase claims
-            var userIdClaim = principal.FindFirst("sub");
-            var roleClaim = principal.FindFirst("role");
-            var emailClaim = principal.FindFirst("email");
-            var audClaim = principal.FindFirst("aud");
+            // Look for user ID in various possible claim fields
+            var userIdClaim = principal.FindFirst("sub") ??
+                              principal.FindFirst(ClaimTypes.NameIdentifier) ?? // Add standard .NET claim type
+                              principal.FindFirst("user_id") ??
+                              principal.FindFirst("id") ??
+                              principal.FindFirst("uid") ??
+                              principal.FindFirst("userId");
 
             if (userIdClaim == null)
             {
-                _logger.LogWarning("Token missing required claim: sub (user id)");
+                _logger.LogWarning("Token missing any user ID claim");
                 return false;
             }
 
-            if (roleClaim == null)
-            {
-                _logger.LogWarning("Token missing required claim: role");
-                return false;
-            }
-
-            if (audClaim == null)
-            {
-                _logger.LogWarning("Token missing required claim: aud (audience)");
-                return false;
-            }
-
-            // Verify role is either 'authenticated' or 'admin'
-            var role = roleClaim.Value;
-            if (role != "authenticated" && role != "admin")
-            {
-                _logger.LogWarning("Invalid role claim in token: {Role}", role);
-                return false;
-            }
-
-            // Verify audience
-            var audience = audClaim.Value;
-            if (audience != "authenticated")
-            {
-                _logger.LogWarning("Invalid audience in token: {Audience}", audience);
-                return false;
-            }
-
-            // Check token expiration
-            var expClaim = principal.FindFirst("exp");
-            if (expClaim != null && long.TryParse(expClaim.Value, out var expTime))
-            {
-                var nowUnix = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-                if (expTime < nowUnix)
-                {
-                    _logger.LogWarning("Token has expired. Expiration: {ExpTime}, Current: {NowUnix}", expTime, nowUnix);
-                    return false;
-                }
-            }
-            else
-            {
-                _logger.LogWarning("Token missing or has invalid expiration claim");
-                return false;
-            }
-
-            _logger.LogInformation("Token validation successful for user {UserId}",
-                LogSanitizer.SanitizeUserId(userIdClaim.Value));
             return true;
         }
         catch (SecurityTokenExpiredException ex)
@@ -151,18 +105,26 @@ public class AuthService : IAuthService
             var handler = new JwtSecurityTokenHandler();
             var principal = handler.ValidateToken(token, _tokenValidationParameters, out _);
 
-            var userId = principal.FindFirst("sub")?.Value;
+            // Look for user ID in various possible claim fields
+            var userId = principal.FindFirst("sub")?.Value ??
+                         principal.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? // Add standard .NET claim type
+                         principal.FindFirst("user_id")?.Value ??
+                         principal.FindFirst("id")?.Value ??
+                         principal.FindFirst("uid")?.Value ??
+                         principal.FindFirst("userId")?.Value;
+
             if (string.IsNullOrEmpty(userId))
             {
-                throw new InvalidOperationException("Token does not contain a user ID claim");
+                _logger.LogWarning("Token missing any user ID claim");
+                return string.Empty;
             }
 
             return userId;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting user ID from token");
-            throw;
+            _logger.LogError(ex, "Error extracting user ID from token");
+            return string.Empty;
         }
     }
 
