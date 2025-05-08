@@ -13,10 +13,13 @@ interface AppInfoState {
   isUnderMaintenance: boolean;
   needsUpdate: boolean;
   isCheckingStatus: boolean;
+  hasFailedCheck: boolean;
+  lastError: string | null;
 }
 
 interface AppInfoActions {
   checkAppStatus: () => Promise<void>;
+  resetFailedState: () => void;
 }
 
 const currentVersion = getCurrentVersion();
@@ -26,11 +29,13 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
   isUnderMaintenance: false,
   needsUpdate: false,
   isCheckingStatus: false,
+  hasFailedCheck: false,
+  lastError: null,
 
   checkAppStatus: async () => {
-    const { isCheckingStatus } = get();
+    const { isCheckingStatus, hasFailedCheck } = get();
 
-    if (isCheckingStatus) {
+    if (isCheckingStatus || hasFailedCheck) {
       return;
     }
 
@@ -57,6 +62,8 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
         appInfo: latestAppInfo,
         isUnderMaintenance: latestAppInfo.isMaintenance,
         needsUpdate,
+        hasFailedCheck: false,
+        lastError: null,
       });
 
       if (needsUpdate || latestAppInfo.isMaintenance) {
@@ -67,10 +74,21 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
         err instanceof Error ? err.message : "Failed to fetch app info";
       setError(errorMessage);
       console.error("[useAppInfoStore] Error checking app status:", err);
+      set({
+        hasFailedCheck: true,
+        lastError: errorMessage,
+      });
     } finally {
       setLoading(false);
       set({ isCheckingStatus: false });
     }
+  },
+
+  resetFailedState: () => {
+    set({
+      hasFailedCheck: false,
+      lastError: null,
+    });
   },
 }));
 

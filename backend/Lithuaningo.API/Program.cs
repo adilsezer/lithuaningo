@@ -203,19 +203,7 @@ using (var scope = app.Services.CreateScope())
     await supabaseService.InitializeAsync();
 }
 
-// Add startup message before RunAsync
-if (app.Environment.IsDevelopment())
-{
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine("🚀 Server successfully started at http://localhost:7016");
-    Console.ResetColor();
-}
-else
-{
-    Console.ForegroundColor = ConsoleColor.Green;
-    Console.WriteLine("🚀 Server successfully started at https://localhost:7016");
-    Console.ResetColor();
-}
+Console.WriteLine("🚀 Server successfully started!");
 
 await app.RunAsync();
 
