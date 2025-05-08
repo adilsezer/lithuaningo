@@ -5,7 +5,6 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Utilities;
-using Microsoft.Extensions.Options;
 using Supabase;
 
 namespace Lithuaningo.API.Services.Stats
@@ -17,7 +16,7 @@ namespace Lithuaningo.API.Services.Stats
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
-        private readonly CacheSettings _cacheSettings;
+        private readonly ICacheSettingsService _cacheSettingsService;
         private const string CacheKeyPrefix = "chat-stats:";
         private readonly ILogger<UserChatStatsService> _logger;
         private readonly IMapper _mapper;
@@ -32,14 +31,14 @@ namespace Lithuaningo.API.Services.Stats
         public UserChatStatsService(
             ISupabaseService supabaseService,
             ICacheService cache,
-            IOptions<CacheSettings> cacheSettings,
+            ICacheSettingsService cacheSettingsService,
             ILogger<UserChatStatsService> logger,
             IMapper mapper,
             CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
-            _cacheSettings = cacheSettings.Value;
+            _cacheSettingsService = cacheSettingsService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
@@ -73,7 +72,8 @@ namespace Lithuaningo.API.Services.Stats
             var response = _mapper.Map<UserChatStatsResponse>(stats);
 
             // Cache the result
-            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+            var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+            await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
             _logger.LogInformation("Cached chat stats for user {UserId}",
                 LogSanitizer.SanitizeUserId(userId));
 

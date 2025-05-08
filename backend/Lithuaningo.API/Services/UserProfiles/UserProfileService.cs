@@ -3,7 +3,6 @@ using Lithuaningo.API.DTOs.UserProfile;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Utilities;
-using Microsoft.Extensions.Options;
 using Supabase;
 
 namespace Lithuaningo.API.Services.UserProfile
@@ -12,7 +11,7 @@ namespace Lithuaningo.API.Services.UserProfile
     {
         private readonly Client _supabaseClient;
         private readonly ICacheService _cache;
-        private readonly CacheSettings _cacheSettings;
+        private readonly ICacheSettingsService _cacheSettingsService;
         private const string CacheKeyPrefix = "user-profile:";
         private readonly ILogger<UserProfileService> _logger;
         private readonly IMapper _mapper;
@@ -21,14 +20,14 @@ namespace Lithuaningo.API.Services.UserProfile
         public UserProfileService(
             ISupabaseService supabaseService,
             ICacheService cache,
-            IOptions<CacheSettings> cacheSettings,
+            ICacheSettingsService cacheSettingsService,
             ILogger<UserProfileService> logger,
             IMapper mapper,
             CacheInvalidator cacheInvalidator)
         {
             _supabaseClient = supabaseService.Client;
             _cache = cache;
-            _cacheSettings = cacheSettings.Value;
+            _cacheSettingsService = cacheSettingsService;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
@@ -65,8 +64,9 @@ namespace Lithuaningo.API.Services.UserProfile
                 }
 
                 var profileResponse = _mapper.Map<UserProfileResponse>(profile);
+                var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, profileResponse,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                    TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
 
                 _logger.LogInformation("Retrieved and cached user profile for user {UserId}",
                     LogSanitizer.SanitizeUserId(userId));
@@ -183,8 +183,9 @@ namespace Lithuaningo.API.Services.UserProfile
                 var profiles = response.Models;
                 var profileResponses = _mapper.Map<IEnumerable<UserProfileResponse>>(profiles);
 
+                var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, profileResponses,
-                    TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                    TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
 
                 _logger.LogInformation("Retrieved and cached {Count} user profiles", profiles.Count);
                 return profileResponses;

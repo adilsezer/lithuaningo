@@ -4,7 +4,6 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Utilities;
-using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services.Stats
@@ -15,7 +14,7 @@ namespace Lithuaningo.API.Services.Stats
         private readonly ISupabaseService _supabaseService;
         private readonly IMapper _mapper;
         private readonly ICacheService _cache;
-        private readonly CacheSettings _cacheSettings;
+        private readonly ICacheSettingsService _cacheSettingsService;
         private readonly CacheInvalidator _cacheInvalidator;
         private const string CacheKeyPrefix = "flashcard-stats:";
         private const string SummaryCacheKeyPrefix = "flashcard-stats-summary:";
@@ -25,14 +24,14 @@ namespace Lithuaningo.API.Services.Stats
             ILogger<UserFlashcardStatService> logger,
             IMapper mapper,
             ICacheService cache,
-            IOptions<CacheSettings> cacheSettings,
+            ICacheSettingsService cacheSettingsService,
             CacheInvalidator cacheInvalidator)
         {
             _supabaseService = supabaseService ?? throw new ArgumentNullException(nameof(supabaseService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-            _cacheSettings = cacheSettings.Value;
+            _cacheSettingsService = cacheSettingsService ?? throw new ArgumentNullException(nameof(cacheSettingsService));
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
@@ -211,7 +210,8 @@ namespace Lithuaningo.API.Services.Stats
                 var response = _mapper.Map<List<UserFlashcardStatResponse>>(models);
 
                 // Cache the result
-                await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+                await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
                 _logger.LogInformation("Cached flashcards due for review for user {UserId}",
                     LogSanitizer.SanitizeUserId(userId));
 
@@ -281,7 +281,8 @@ namespace Lithuaningo.API.Services.Stats
                 summary.FlashcardsAnsweredToday = todayCount;
 
                 // Cache the result
-                await _cache.SetAsync(cacheKey, summary, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+                await _cache.SetAsync(cacheKey, summary, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
                 _logger.LogInformation("Cached flashcard stats summary for user {UserId}",
                     LogSanitizer.SanitizeUserId(userId));
 
@@ -332,7 +333,8 @@ namespace Lithuaningo.API.Services.Stats
                 // Cache the result if we have a response (not null)
                 if (response != null)
                 {
-                    await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(_cacheSettings.DefaultExpirationMinutes));
+                    var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+                    await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
                     _logger.LogInformation("Cached flashcard stats for user {UserId} and flashcard {FlashcardId}",
                         LogSanitizer.SanitizeUserId(userId), flashcardId);
                     return response;

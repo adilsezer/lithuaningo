@@ -9,7 +9,6 @@ using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Utilities;
-using Microsoft.Extensions.Options;
 using Supabase;
 using static Supabase.Postgrest.Constants;
 
@@ -29,7 +28,7 @@ namespace Lithuaningo.API.Services.Flashcards
         private readonly IMapper _mapper;
         private readonly Random _random;
         private readonly ICacheService _cache;
-        private readonly CacheSettings _cacheSettings;
+        private readonly ICacheSettingsService _cacheSettingsService;
         private readonly CacheInvalidator _cacheInvalidator;
         private const string CacheKeyPrefix = "flashcard:";
         private const double ReviewFlashcardsRatio = 0.3; // 30% review cards, 70% new cards
@@ -45,7 +44,7 @@ namespace Lithuaningo.API.Services.Flashcards
             IMapper mapper,
             ILogger<FlashcardService> logger,
             ICacheService cache,
-            IOptions<CacheSettings> cacheSettings,
+            ICacheSettingsService cacheSettingsService,
             CacheInvalidator cacheInvalidator,
             Random random)
         {
@@ -54,10 +53,10 @@ namespace Lithuaningo.API.Services.Flashcards
             _userFlashcardStatService = userFlashcardStatService ?? throw new ArgumentNullException(nameof(userFlashcardStatService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _random = random ?? throw new ArgumentNullException(nameof(random));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
-            _cacheSettings = cacheSettings.Value ?? throw new ArgumentNullException(nameof(cacheSettings));
+            _cacheSettingsService = cacheSettingsService ?? throw new ArgumentNullException(nameof(cacheSettingsService));
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
+            _random = random ?? throw new ArgumentNullException(nameof(random));
         }
 
         #endregion
@@ -154,8 +153,9 @@ namespace Lithuaningo.API.Services.Flashcards
                 var flashcards = result.Models?.ToList() ?? new List<Flashcard>();
 
                 // Cache the results
+                var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, flashcards,
-                    TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
+                    TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
 
                 _logger.LogInformation("Cached {Count} flashcards with key {CacheKey}",
                     flashcards.Count, cacheKey);
@@ -467,8 +467,9 @@ namespace Lithuaningo.API.Services.Flashcards
             frontTexts = frontTexts.Distinct().Take(sampleSize).ToList();
 
             // Cache the result
+            var settings = await _cacheSettingsService.GetCacheSettingsAsync();
             await _cache.SetAsync(cacheKey, frontTexts,
-                TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
+                TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
 
             _logger.LogInformation("Cached {Count} random front texts for category {Category}",
                 frontTexts.Count, categoryValue);
@@ -651,8 +652,8 @@ namespace Lithuaningo.API.Services.Flashcards
         private async Task CacheFlashcardAsync(Flashcard flashcard)
         {
             var cacheKey = $"{CacheKeyPrefix}id:{flashcard.Id}";
-            await _cache.SetAsync(cacheKey, flashcard,
-                TimeSpan.FromMinutes(_cacheSettings.FlashcardCacheMinutes));
+            var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+            await _cache.SetAsync(cacheKey, flashcard, TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
             _logger.LogInformation("Cached flashcard for ID {Id}", flashcard.Id);
         }
 
