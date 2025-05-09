@@ -2,6 +2,7 @@ using AutoMapper;
 using Lithuaningo.API.DTOs.AppInfo;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Utilities;
 using Supabase;
 
 namespace Lithuaningo.API.Services.AppInfo
@@ -45,7 +46,6 @@ namespace Lithuaningo.API.Services.AppInfo
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved app info for platform '{Platform}' from cache", platform);
                 return cached;
             }
 
@@ -76,13 +76,12 @@ namespace Lithuaningo.API.Services.AppInfo
 
                 var appInfoResponse = _mapper.Map<AppInfoResponse>(appInfo);
                 await CacheAppInfoAsync(cacheKey, appInfoResponse);
-                _logger.LogInformation("Retrieved and cached app info for platform '{Platform}'", platform);
 
                 return appInfoResponse;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving app info for platform '{Platform}'", platform);
+                _logger.LogError(ex, "Error retrieving app info");
                 throw;
             }
         }

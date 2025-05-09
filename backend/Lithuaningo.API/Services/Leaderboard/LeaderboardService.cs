@@ -47,7 +47,6 @@ namespace Lithuaningo.API.Services.Leaderboard
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved current week leaderboard from cache for week {WeekId}", currentWeek);
                     return cached;
                 }
 
@@ -58,8 +57,6 @@ namespace Lithuaningo.API.Services.Leaderboard
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, leaderboard,
                     TimeSpan.FromMinutes(settings.LeaderboardCacheMinutes));
-
-                _logger.LogInformation("Cached current week leaderboard for week {WeekId}", currentWeek);
 
                 return leaderboard;
             }
@@ -82,7 +79,6 @@ namespace Lithuaningo.API.Services.Leaderboard
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved leaderboard from cache for week {WeekId}", weekId);
                 return cached;
             }
 
@@ -108,14 +104,11 @@ namespace Lithuaningo.API.Services.Leaderboard
                 await _cache.SetAsync(cacheKey, mappedEntries,
                     TimeSpan.FromMinutes(settings.LeaderboardCacheMinutes));
 
-                _logger.LogInformation("Retrieved and cached leaderboard for week {WeekId} with {Count} entries",
-                    weekId, entriesResponse.Models.Count);
-
                 return mappedEntries;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving leaderboard for week {WeekId}", weekId);
+                _logger.LogError(ex, "Error retrieving leaderboard");
                 throw;
             }
         }
@@ -151,8 +144,6 @@ namespace Lithuaningo.API.Services.Leaderboard
                         .Update();
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Updated leaderboard entry {Id} for user {UserId}, added {Score} points",
-                        updatedEntry.Id, LogSanitizer.SanitizeUserId(request.UserId.ToString()), request.ScoreToAdd);
                 }
                 else
                 {
@@ -170,8 +161,6 @@ namespace Lithuaningo.API.Services.Leaderboard
                         .Insert(newEntry);
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Created new leaderboard entry {Id} for user {UserId} with initial score {Score}",
-                        updatedEntry.Id, LogSanitizer.SanitizeUserId(request.UserId.ToString()), request.ScoreToAdd);
                 }
 
                 // Map to response DTO
@@ -184,8 +173,7 @@ namespace Lithuaningo.API.Services.Leaderboard
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}",
-                    LogSanitizer.SanitizeUserId(request.UserId.ToString()));
+                _logger.LogError(ex, "Error updating leaderboard entry");
                 throw;
             }
         }

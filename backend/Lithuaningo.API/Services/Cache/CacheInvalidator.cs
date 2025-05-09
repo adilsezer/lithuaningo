@@ -29,7 +29,6 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateFlashcardAsync(string flashcardId)
     {
-        _logger.LogInformation("Invalidating cache for flashcard {FlashcardId}", flashcardId);
         await InvalidateCacheKeyAsync($"{FlashcardCachePrefix}id:{flashcardId}");
     }
 
@@ -39,8 +38,6 @@ public class CacheInvalidator
     /// <param name="category">The category identifier</param>
     public async Task InvalidateAllFlashcardCachesForCategoryAsync(int category)
     {
-        _logger.LogInformation("Invalidating all flashcard caches for category {Category}", category);
-
         // Invalidate category-based caches (all difficulties)
         await InvalidateCacheKeyAsync($"{FlashcardCachePrefix}category:{category}");
 
@@ -53,7 +50,6 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateAppInfoAsync(string platform)
     {
-        _logger.LogInformation("Invalidating cache for app info, platform {Platform}", platform);
         await InvalidateCacheKeyAsync($"{AppInfoCachePrefix}{platform}");
     }
 
@@ -62,8 +58,6 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserProfileAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user profile {UserId}",
-            LogSanitizer.SanitizeUserId(userId));
         await InvalidateCacheKeyAsync($"{UserCachePrefix}{userId}");
     }
 
@@ -72,8 +66,6 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserChallengeStatsAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user challenge stats, user {UserId}",
-            LogSanitizer.SanitizeUserId(userId));
         await InvalidateCacheKeyAsync($"challenge-stats:{userId}");
     }
 
@@ -84,12 +76,10 @@ public class CacheInvalidator
     {
         if (!string.IsNullOrEmpty(category))
         {
-            _logger.LogInformation("Invalidating cache for challenge category {Category}", category);
             await InvalidateCacheKeyAsync($"challenge:category:{category.ToLowerInvariant()}");
         }
         else
         {
-            _logger.LogInformation("Invalidating all challenge cache");
             await _cache.RemoveByPrefixAsync("challenge:");
             // No specific key to remove when clearing all challenges
         }
@@ -100,14 +90,12 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateLeaderboardCacheAsync(string weekId)
     {
-        _logger.LogInformation("Invalidating cache for leaderboard week {WeekId}", weekId);
         await InvalidateCacheKeyAsync($"leaderboard:week:{weekId}");
 
         // Handle current week cache invalidation
         string currentWeekId = DateUtils.GetCurrentWeekPeriod();
         if (weekId == currentWeekId)
         {
-            _logger.LogInformation("Invalidating current week leaderboard cache");
             await InvalidateCacheKeyAsync("leaderboard:current");
         }
     }
@@ -117,8 +105,6 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserChatStatsAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user chat stats {UserId}",
-            LogSanitizer.SanitizeUserId(userId));
         await InvalidateCacheKeyAsync($"chat-stats:{userId}");
     }
 
@@ -127,9 +113,6 @@ public class CacheInvalidator
     /// </summary>
     public async Task InvalidateUserFlashcardStatsAsync(string userId)
     {
-        _logger.LogInformation("Invalidating cache for user flashcard stats, user {UserId}",
-            LogSanitizer.SanitizeUserId(userId));
-
         // Invalidate the main flashcard stats cache
         await InvalidateCacheKeyAsync($"flashcard-stats:{userId}");
 

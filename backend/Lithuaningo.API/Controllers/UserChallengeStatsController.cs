@@ -69,28 +69,17 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting challenge stats for user {UserId}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId));
-
                 var stats = await _userChallengeStatsService.GetUserChallengeStatsAsync(effectiveUserId);
                 if (stats == null)
                 {
-                    _logger.LogInformation("Challenge stats not found for user {UserId}",
-                        LogSanitizer.SanitizeUserId(effectiveUserId));
                     return NotFound();
                 }
-
-                _logger.LogInformation("Retrieved stats for user {UserId}: LastChallengeDate={LastChallengeDate}, TodayCorrectAnswers={TodayCorrectAnswers}, TodayIncorrectAnswers={TodayIncorrectAnswers}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId),
-                    stats.LastChallengeDate,
-                    stats.TodayCorrectAnswers,
-                    stats.TodayIncorrectAnswers);
 
                 return Ok(stats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving user challenge stats for user");
+                _logger.LogError(ex, "Error retrieving user challenge stats");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -159,20 +148,16 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var updatedStats = await _userChallengeStatsService.SubmitChallengeAnswerAsync(effectiveUserId, request);
-                _logger.LogInformation("Successfully submitted challenge answer for user {UserId}, challenge {ChallengeId}, correct: {WasCorrect}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId), request.ChallengeId, request.WasCorrect);
                 return Ok(updatedStats);
             }
             catch (InvalidOperationException ex)
             {
-                _logger.LogWarning(ex, "No challenge stats found for user {UserId}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId));
+                _logger.LogWarning(ex, "No challenge stats found");
                 return NotFound();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error submitting challenge answer for user {UserId}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId));
+                _logger.LogError(ex, "Error submitting challenge answer");
                 return StatusCode(500, "Internal server error");
             }
         }

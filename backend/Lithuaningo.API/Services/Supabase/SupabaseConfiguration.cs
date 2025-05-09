@@ -38,9 +38,6 @@ public class SupabaseConfiguration : ISupabaseConfiguration
 
         settings.Validate();
 
-        _logger.LogInformation("Supabase configuration loaded successfully from {Environment} environment",
-            _environment.EnvironmentName);
-
         return settings;
     }
 }

@@ -34,9 +34,6 @@ public class StorageConfiguration : IStorageConfiguration
 
         settings.Validate();
 
-        _logger.LogInformation("Storage configuration loaded successfully from {Environment} environment",
-            _environment.EnvironmentName);
-
         return settings;
     }
 

@@ -76,8 +76,6 @@ namespace Lithuaningo.API.Controllers
                 var profile = await _userProfileService.GetUserProfileAsync(id);
                 if (profile == null)
                 {
-                    _logger.LogInformation("User profile not found for ID {UserId}",
-                        LogSanitizer.SanitizeUserId(id));
                     return NotFound();
                 }
 
@@ -85,8 +83,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving user profile for ID {UserId}",
-                    LogSanitizer.SanitizeUserId(id));
+                _logger.LogError(ex, "Error retrieving user profile");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -141,14 +138,11 @@ namespace Lithuaningo.API.Controllers
             }
             catch (KeyNotFoundException)
             {
-                _logger.LogInformation("User profile not found for ID {UserId}",
-                    LogSanitizer.SanitizeUserId(id));
                 return NotFound();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating user profile for ID {UserId}",
-                    LogSanitizer.SanitizeUserId(id));
+                _logger.LogError(ex, "Error updating user profile");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -190,8 +184,6 @@ namespace Lithuaningo.API.Controllers
                 var result = await _userProfileService.DeleteUserProfileAsync(id);
                 if (!result)
                 {
-                    _logger.LogInformation("User profile not found for ID {UserId}",
-                        LogSanitizer.SanitizeUserId(id));
                     return NotFound();
                 }
 
@@ -199,8 +191,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error deleting user profile for ID {UserId}",
-                    LogSanitizer.SanitizeUserId(id));
+                _logger.LogError(ex, "Error deleting user profile");
                 return StatusCode(500, "Internal server error");
             }
         }

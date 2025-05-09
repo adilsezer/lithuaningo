@@ -62,20 +62,13 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting learning flashcards for user {UserId}, category '{Category}', difficulty '{Difficulty}'",
-                    LogSanitizer.SanitizeUserId(effectiveUserId),
-                    request.PrimaryCategory,
-                    request.Difficulty);
-
                 var flashcardResponses = await _flashcardService.GetUserLearningFlashcardsAsync(request, effectiveUserId);
 
                 return Ok(flashcardResponses);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting learning flashcards for category '{Category}', difficulty '{Difficulty}'",
-                    request.PrimaryCategory,
-                    request.Difficulty);
+                _logger.LogError(ex, "Error getting learning flashcards");
                 return StatusCode(500, "An error occurred while getting flashcards");
             }
         }

@@ -1,6 +1,7 @@
 using Lithuaningo.API.Authorization;
 using Lithuaningo.API.DTOs.AppInfo;
 using Lithuaningo.API.Services.AppInfo;
+using Lithuaningo.API.Utilities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -98,7 +99,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving app info for platform {Platform}", platform);
+                _logger.LogError(ex, "Error retrieving app info");
                 return StatusCode(500, "Internal server error");
             }
         }

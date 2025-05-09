@@ -34,7 +34,6 @@ public class InMemoryCacheService : ICacheService
             {
                 _cacheSettings = await _cacheSettingsService.GetCacheSettingsAsync();
                 _cacheSettingsLastRefreshed = now;
-                _logger.LogInformation("Cache settings loaded from database");
             }
             catch (Exception ex)
             {

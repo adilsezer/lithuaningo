@@ -74,7 +74,7 @@ public class AIController : BaseApiController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing AI request: {Message}", ex.Message);
+            _logger.LogError(ex, "Error processing AI request");
             return StatusCode(StatusCodes.Status500InternalServerError,
                 "An error occurred processing your request.");
         }

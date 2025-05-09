@@ -90,8 +90,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating leaderboard entry for user {UserId}",
-                    LogSanitizer.SanitizeUserId(request.UserId.ToString()));
+                _logger.LogError(ex, "Error updating leaderboard entry");
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error updating leaderboard entry");
             }
         }
