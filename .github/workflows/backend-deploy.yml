@@ -8,6 +8,10 @@ on:
       - "backend/**"
       - ".github/workflows/backend-deploy.yml"
 
+# Add permissions block to limit GitHub token scope
+permissions:
+  contents: read
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
