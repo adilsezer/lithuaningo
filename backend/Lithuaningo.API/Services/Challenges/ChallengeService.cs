@@ -59,7 +59,7 @@ namespace Lithuaningo.API.Services.Challenges
             var cachedQuestions = await _cache.GetAsync<List<ChallengeQuestionResponse>>(cacheKey);
             if (cachedQuestions != null && cachedQuestions.Count > 0)
             {
-                _logger.LogInformation("Retrieved {Count} daily challenge questions from cache", cachedQuestions.Count);
+                _logger.LogInformation("Retrieved daily challenge questions from cache");
                 return cachedQuestions;
             }
 
@@ -86,7 +86,7 @@ namespace Lithuaningo.API.Services.Challenges
                 // Cache the results
                 await _cache.SetAsync(cacheKey, questionResponses, cacheExpiration);
 
-                _logger.LogInformation("Retrieved {Count} daily challenge questions from database", questionResponses.Count);
+                _logger.LogInformation("Retrieved daily challenge questions from database");
                 return questionResponses;
             }
 
@@ -106,7 +106,7 @@ namespace Lithuaningo.API.Services.Challenges
         {
             try
             {
-                _logger.LogInformation("Getting random flashcards to use as context for challenge generation");
+                _logger.LogInformation("Retrieved flashcards to use as context for challenge generation");
 
                 // Get a larger set of random flashcards from the database for context
                 // We retrieve more flashcards to ensure sufficient diversity for all question types
@@ -160,7 +160,7 @@ namespace Lithuaningo.API.Services.Challenges
 
                 if (result.Models != null)
                 {
-                    _logger.LogInformation("Successfully saved {Count} challenge questions to database", result.Models.Count);
+                    _logger.LogInformation("Successfully saved challenge questions to database");
                 }
                 else
                 {

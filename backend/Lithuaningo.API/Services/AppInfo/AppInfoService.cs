@@ -46,7 +46,7 @@ namespace Lithuaningo.API.Services.AppInfo
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved app info for platform '{Platform}' from cache", LogSanitizer.SanitizeForLog(platform));
+                _logger.LogInformation("Retrieved app info from cache");
                 return cached;
             }
 
@@ -77,13 +77,13 @@ namespace Lithuaningo.API.Services.AppInfo
 
                 var appInfoResponse = _mapper.Map<AppInfoResponse>(appInfo);
                 await CacheAppInfoAsync(cacheKey, appInfoResponse);
-                _logger.LogInformation("Retrieved and cached app info for platform '{Platform}'", LogSanitizer.SanitizeForLog(platform));
+                _logger.LogInformation("Retrieved and cached app info");
 
                 return appInfoResponse;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving app info for platform '{Platform}'", LogSanitizer.SanitizeForLog(platform));
+                _logger.LogError(ex, "Error retrieving app info");
                 throw;
             }
         }

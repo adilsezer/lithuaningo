@@ -99,7 +99,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving app info for platform {Platform}", LogSanitizer.SanitizeForLog(platform));
+                _logger.LogError(ex, "Error retrieving app info");
                 return StatusCode(500, "Internal server error");
             }
         }

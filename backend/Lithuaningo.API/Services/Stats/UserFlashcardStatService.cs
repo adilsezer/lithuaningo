@@ -61,8 +61,7 @@ namespace Lithuaningo.API.Services.Stats
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting shown flashcard IDs for user {UserId}",
-                    LogSanitizer.SanitizeUserId(userId));
+                _logger.LogError(ex, "Error getting shown flashcard IDs");
                 throw;
             }
         }
@@ -109,8 +108,7 @@ namespace Lithuaningo.API.Services.Stats
 
                     // Invalidate cache when creating a new stat
                     await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-                    _logger.LogInformation("Invalidated flashcard stats cache for user {UserId} after creating new stat",
-                        LogSanitizer.SanitizeUserId(userId));
+                    _logger.LogInformation("Invalidated flashcard stats cache after creating new stat");
 
                     return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
@@ -147,16 +145,14 @@ namespace Lithuaningo.API.Services.Stats
 
                     // Invalidate cache when updating a stat
                     await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-                    _logger.LogInformation("Invalidated flashcard stats cache for user {UserId} after updating stat",
-                        LogSanitizer.SanitizeUserId(userId));
+                    _logger.LogInformation("Invalidated flashcard stats cache after updating stat");
 
                     return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating flashcard stats for user {UserId} and flashcard {FlashcardId}",
-                    LogSanitizer.SanitizeUserId(userId), request.FlashcardId);
+                _logger.LogError(ex, "Error updating flashcard stats");
                 throw;
             }
         }
@@ -180,8 +176,7 @@ namespace Lithuaningo.API.Services.Stats
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved flashcards due for review for user {UserId} from cache",
-                        LogSanitizer.SanitizeUserId(userId));
+                    _logger.LogInformation("Retrieved flashcards due for review from cache");
                     return cached;
                 }
 
@@ -212,15 +207,13 @@ namespace Lithuaningo.API.Services.Stats
                 // Cache the result
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-                _logger.LogInformation("Cached flashcards due for review for user {UserId}",
-                    LogSanitizer.SanitizeUserId(userId));
+                _logger.LogInformation("Cached flashcards due for review");
 
                 return response;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcards due for review for user {UserId}",
-                    LogSanitizer.SanitizeUserId(userId));
+                _logger.LogError(ex, "Error getting flashcards due for review");
                 throw;
             }
         }
@@ -241,8 +234,7 @@ namespace Lithuaningo.API.Services.Stats
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved flashcard stats summary for user {UserId} from cache",
-                        LogSanitizer.SanitizeUserId(userId));
+                    _logger.LogInformation("Retrieved flashcard stats summary from cache");
                     return cached;
                 }
 
@@ -271,8 +263,7 @@ namespace Lithuaningo.API.Services.Stats
                 // Count cards that have been answered (either correctly or incorrectly)
                 var todayCount = todayResult.Models?.Count(s => s.CorrectCount > 0 || s.IncorrectCount > 0) ?? 0;
 
-                _logger.LogInformation("User {UserId} has answered {Count} flashcards today (database query)",
-                    LogSanitizer.SanitizeUserId(userId), todayCount);
+                _logger.LogInformation("User has answered flashcards today (database query)");
 
                 // Use AutoMapper to map the collection to the summary response
                 var summary = _mapper.Map<UserFlashcardStatsSummaryResponse>(models);
@@ -283,15 +274,13 @@ namespace Lithuaningo.API.Services.Stats
                 // Cache the result
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, summary, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-                _logger.LogInformation("Cached flashcard stats summary for user {UserId}",
-                    LogSanitizer.SanitizeUserId(userId));
+                _logger.LogInformation("Cached flashcard stats summary");
 
                 return summary;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting user flashcard stats summary for user {UserId}",
-                    LogSanitizer.SanitizeUserId(userId));
+                _logger.LogError(ex, "Error getting user flashcard stats summary");
                 throw;
             }
         }
@@ -315,8 +304,7 @@ namespace Lithuaningo.API.Services.Stats
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved flashcard stats for user {UserId} and flashcard {FlashcardId} from cache",
-                        LogSanitizer.SanitizeUserId(userId), flashcardId);
+                    _logger.LogInformation("Retrieved flashcard stats from cache");
                     return cached;
                 }
 
@@ -335,8 +323,7 @@ namespace Lithuaningo.API.Services.Stats
                 {
                     var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                     await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-                    _logger.LogInformation("Cached flashcard stats for user {UserId} and flashcard {FlashcardId}",
-                        LogSanitizer.SanitizeUserId(userId), flashcardId);
+                    _logger.LogInformation("Cached flashcard stats");
                     return response;
                 }
 
@@ -354,8 +341,7 @@ namespace Lithuaningo.API.Services.Stats
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcard stats for user {UserId} and flashcard {FlashcardId}",
-                    LogSanitizer.SanitizeUserId(userId), flashcardId);
+                _logger.LogError(ex, "Error getting flashcard stats");
                 throw;
             }
         }

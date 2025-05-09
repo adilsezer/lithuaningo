@@ -76,7 +76,7 @@ namespace Lithuaningo.API.Services.Flashcards
             var flashcard = await _cache.GetAsync<Flashcard>(cacheKey);
             if (flashcard != null)
             {
-                _logger.LogInformation("Retrieved flashcard from cache for ID {Id}", flashcardId);
+                _logger.LogInformation("Retrieved flashcards from cache");
                 return flashcard;
             }
 
@@ -118,8 +118,7 @@ namespace Lithuaningo.API.Services.Flashcards
                 var cached = await _cache.GetAsync<List<Flashcard>>(cacheKey);
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved {Count} flashcards from cache using key {CacheKey}",
-                        cached.Count, cacheKey);
+                    _logger.LogInformation("Retrieved flashcards from cache");
                     return cached;
                 }
 
@@ -157,15 +156,13 @@ namespace Lithuaningo.API.Services.Flashcards
                 await _cache.SetAsync(cacheKey, flashcards,
                     TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
 
-                _logger.LogInformation("Cached {Count} flashcards with key {CacheKey}",
-                    flashcards.Count, cacheKey);
+                _logger.LogInformation("Cached flashcards");
 
                 return flashcards;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving flashcards with category {Category} and difficulty {Difficulty}",
-                    category, difficulty);
+                _logger.LogError(ex, "Error retrieving flashcards");
                 throw;
             }
         }
@@ -183,11 +180,7 @@ namespace Lithuaningo.API.Services.Flashcards
 
             try
             {
-                _logger.LogInformation(
-                    "Getting learning flashcards for user {UserId}, category '{Category}' with difficulty '{Difficulty}'",
-                    LogSanitizer.SanitizeUserId(userId),
-                    request.PrimaryCategory,
-                    request.Difficulty);
+                _logger.LogInformation("Getting learning flashcards");
 
                 // Get existing flashcards matching criteria directly
                 var existingFlashcards = await RetrieveFlashcardModelsAsync(
@@ -197,8 +190,7 @@ namespace Lithuaningo.API.Services.Flashcards
                 // If none exist, generate new ones
                 if (!existingFlashcards.Any())
                 {
-                    _logger.LogInformation("No existing flashcards found. Generating {Count} new flashcards for category '{Category}' with difficulty '{Difficulty}'",
-                        request.Count, request.PrimaryCategory, request.Difficulty);
+                    _logger.LogInformation("No existing flashcards found. Generating new flashcards");
                     return await GenerateFlashcardsAsync(request);
                 }
 
@@ -207,8 +199,7 @@ namespace Lithuaningo.API.Services.Flashcards
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting learning flashcards for user {UserId}, category '{Category}' with difficulty '{Difficulty}'",
-                    LogSanitizer.SanitizeUserId(userId), request.PrimaryCategory, request.Difficulty);
+                _logger.LogError(ex, "Error getting learning flashcards");
                 throw;
             }
         }
@@ -239,7 +230,7 @@ namespace Lithuaningo.API.Services.Flashcards
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating flashcards for category {Category}", request.PrimaryCategory);
+                _logger.LogError(ex, "Error generating flashcards");
                 throw;
             }
         }
@@ -262,14 +253,13 @@ namespace Lithuaningo.API.Services.Flashcards
                 flashcard.ImageUrl = imageUrl;
                 await UpdateFlashcardAsync(flashcard);
 
-                _logger.LogInformation("Generated and set image for flashcard {Id} with back text '{BackText}'",
-                    flashcardId, flashcard.BackText);
+                _logger.LogInformation("Generated and set image for flashcard");
 
                 return imageUrl;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating image for flashcard {Id}", flashcardId);
+                _logger.LogError(ex, "Error generating image for flashcard");
                 throw;
             }
         }
@@ -300,14 +290,13 @@ namespace Lithuaningo.API.Services.Flashcards
                 flashcard.AudioUrl = audioUrl;
                 await UpdateFlashcardAsync(flashcard);
 
-                _logger.LogInformation("Generated and set audio for flashcard {Id} with front text '{FrontText}'",
-                    flashcardId, flashcard.FrontText);
+                _logger.LogInformation("Generated and set audio for flashcard");
 
                 return audioUrl;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating audio for flashcard {Id}", flashcardId);
+                _logger.LogError(ex, "Error generating audio for flashcard");
                 throw;
             }
         }
@@ -333,8 +322,7 @@ namespace Lithuaningo.API.Services.Flashcards
                 .Where(f => reviewIds.Contains(f.Id))
                 .ToList();
 
-            _logger.LogInformation("Selected {ReviewCount} flashcards for review based on mastery level",
-                reviewFlashcards.Count);
+            _logger.LogInformation("Selected flashcards for review based on mastery level");
 
             return reviewFlashcards;
         }
@@ -357,8 +345,7 @@ namespace Lithuaningo.API.Services.Flashcards
                 .Take(newCardsNeeded)
                 .ToList();
 
-            _logger.LogInformation("Selected {NewCount} new flashcards the user hasn't seen before",
-                newFlashcards.Count);
+            _logger.LogInformation("Selected new flashcards the user hasn't seen before");
 
             // STEP 3: Combine the review and new flashcards
             var selectedFlashcards = reviewFlashcards.Concat(newFlashcards).ToList();
@@ -367,8 +354,7 @@ namespace Lithuaningo.API.Services.Flashcards
             int remainingCount = request.Count - selectedFlashcards.Count;
             if (remainingCount > 0)
             {
-                _logger.LogInformation("Not enough existing flashcards, generating {RemainingCount} new ones",
-                    remainingCount);
+                _logger.LogInformation("Not enough existing flashcards, generating new ones");
 
                 // Create a copy of the request with adjusted count
                 var generationRequest = new FlashcardRequest
@@ -404,8 +390,7 @@ namespace Lithuaningo.API.Services.Flashcards
             var cached = await _cache.GetAsync<List<string>>(cacheKey);
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved {Count} front texts from cache for category {Category}",
-                    cached.Count, categoryValue);
+                _logger.LogInformation("Retrieved front texts from cache");
                 return cached;
             }
 
@@ -422,8 +407,7 @@ namespace Lithuaningo.API.Services.Flashcards
             // Use a random offset that won't exceed the available data
             int offset = maxOffset > 0 ? _random.Next(0, maxOffset) : 0;
 
-            _logger.LogInformation("Using random offset {Offset} from maximum {MaxOffset} possible (total: {Total} flashcards)",
-                offset, maxOffset, totalFlashcards);
+            _logger.LogInformation("Using random offset for flashcard selection");
 
             // First, get the specific category flashcards
             var categoryFlashcards = await _supabaseService.Client
@@ -436,8 +420,7 @@ namespace Lithuaningo.API.Services.Flashcards
             if (categoryFlashcards.Models != null)
             {
                 frontTexts.AddRange(categoryFlashcards.Models.Select(f => f.FrontText));
-                _logger.LogInformation("Retrieved {Count} flashcards for category {Category}",
-                    categoryFlashcards.Models.Count, categoryValue);
+                _logger.LogInformation("Retrieved flashcards for category");
             }
 
             // Get random sample of front texts from all flashcards using the offset
@@ -471,8 +454,7 @@ namespace Lithuaningo.API.Services.Flashcards
             await _cache.SetAsync(cacheKey, frontTexts,
                 TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
 
-            _logger.LogInformation("Cached {Count} random front texts for category {Category}",
-                frontTexts.Count, categoryValue);
+            _logger.LogInformation("Cached random front texts");
 
             return frontTexts;
         }
@@ -511,17 +493,11 @@ namespace Lithuaningo.API.Services.Flashcards
                 // Log generation details
                 if (attemptCount == 1)
                 {
-                    _logger.LogInformation(
-                        "Generating flashcards for category '{Category}' with difficulty '{Difficulty}' (using {RandomCount} random front texts)",
-                        request.PrimaryCategory,
-                        request.Difficulty,
-                        existingFrontTexts.Count);
+                    _logger.LogInformation("Generating flashcards");
                 }
                 else
                 {
-                    _logger.LogInformation(
-                        "Generated only {Current} unique flashcards out of {Requested}, retrying (attempt {Attempt}/{MaxAttempts})",
-                        flashcards.Count, request.Count, attemptCount, 3);
+                    _logger.LogInformation("Retrying flashcard generation");
                 }
 
                 // Generate flashcards
@@ -551,9 +527,7 @@ namespace Lithuaningo.API.Services.Flashcards
             // Log the final result if we couldn't generate enough
             if (flashcards.Count < request.Count)
             {
-                _logger.LogWarning(
-                    "Could only generate {Count} flashcards out of {Requested} after {Attempts} attempts",
-                    flashcards.Count, request.Count, attemptCount);
+                _logger.LogWarning("Could not generate enough flashcards");
             }
 
             // Trim if we got more than requested
@@ -603,7 +577,7 @@ namespace Lithuaningo.API.Services.Flashcards
                     .Insert(flashcards);
 
                 int insertedCount = result.Models?.Count ?? 0;
-                _logger.LogInformation("Successfully saved {Count} flashcards to Supabase", insertedCount);
+                _logger.LogInformation("Successfully saved flashcards to Supabase");
 
                 // Invalidate relevant caches
                 await InvalidateCategoryCachesForFlashcardsAsync(result.Models);
@@ -645,7 +619,7 @@ namespace Lithuaningo.API.Services.Flashcards
 
             if (uniqueCategories.Count > 0)
             {
-                _logger.LogInformation("Invalidated flashcard caches for {Count} categories", uniqueCategories.Count);
+                _logger.LogInformation("Invalidated flashcard caches for categories");
             }
         }
 
@@ -654,7 +628,7 @@ namespace Lithuaningo.API.Services.Flashcards
             var cacheKey = $"{CacheKeyPrefix}id:{flashcard.Id}";
             var settings = await _cacheSettingsService.GetCacheSettingsAsync();
             await _cache.SetAsync(cacheKey, flashcard, TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
-            _logger.LogInformation("Cached flashcard for ID {Id}", flashcard.Id);
+            _logger.LogInformation("Cached flashcard");
         }
 
         #endregion

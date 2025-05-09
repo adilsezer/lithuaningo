@@ -61,15 +61,14 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting flashcard stats summary for user {UserId}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId));
+                _logger.LogInformation("Getting flashcard stats summary");
 
                 var stats = await _userFlashcardStatService.GetUserFlashcardStatsSummaryAsync(effectiveUserId);
                 return Ok(stats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcard stats summary for user");
+                _logger.LogError(ex, "Error getting flashcard stats summary");
                 return StatusCode(500, "An error occurred while retrieving flashcard stats summary");
             }
         }
@@ -124,8 +123,7 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Updating flashcard stats for flashcard {FlashcardId} and user {UserId}",
-                    request.FlashcardId, LogSanitizer.SanitizeUserId(effectiveUserId));
+                _logger.LogInformation("Updating flashcard stats");
 
                 var result = await _userFlashcardStatService.SubmitFlashcardAnswerAsync(
                     effectiveUserId,
@@ -140,7 +138,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating flashcard stats for flashcard {FlashcardId}", request.FlashcardId);
+                _logger.LogError(ex, "Error updating flashcard stats");
                 return StatusCode(500, "An error occurred while updating flashcard stats");
             }
         }
@@ -181,8 +179,7 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting flashcard stats for flashcard {FlashcardId} and user {UserId}",
-                    flashcardId, LogSanitizer.SanitizeUserId(effectiveUserId));
+                _logger.LogInformation("Getting flashcard stats");
 
                 var stats = await _userFlashcardStatService.GetFlashcardStatsAsync(
                     effectiveUserId,
@@ -192,7 +189,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcard stats for flashcard {FlashcardId}", flashcardId);
+                _logger.LogError(ex, "Error getting flashcard stats");
                 return StatusCode(500, "An error occurred while retrieving flashcard stats");
             }
         }

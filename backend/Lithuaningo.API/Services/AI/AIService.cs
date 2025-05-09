@@ -76,7 +76,7 @@ public class AIService : IAIService
         // Use provided client or create a new one
         _chatClient = chatClient ?? CreateChatClient(_modelName);
 
-        _logger.LogInformation("AIService initialized with model: {ModelName}", _modelName);
+        _logger.LogInformation("AIService initialized");
 
         _storageService = storageService;
     }
@@ -112,7 +112,7 @@ public class AIService : IAIService
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing AI request with service type {ServiceType}", serviceType);
+            _logger.LogError(ex, "Error processing AI request");
             throw;
         }
     }
@@ -134,7 +134,7 @@ public class AIService : IAIService
 
         try
         {
-            _logger.LogInformation("Generating image with flashcard text: {FlashcardText}", flashcardText);
+            _logger.LogInformation("Generating image");
 
             // Create image client with API key from settings
             var imageClient = new ImageClient(_openAiSettings.ImageModelName, _openAiSettings.ApiKey);
@@ -178,9 +178,9 @@ public class AIService : IAIService
             }
 
             // Generate the image and get bytes directly
-            _logger.LogInformation("Calling OpenAI API to generate image with size: {ImageSize}", options.Size);
+            _logger.LogInformation("Calling OpenAI API to generate image");
             string prompt = string.Format(AIPrompts.IMAGE_GENERATION_PROMPT, flashcardText);
-            _logger.LogInformation("Prompt: {Prompt}", prompt);
+            _logger.LogInformation("Prompt prepared");
 
             GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
 
@@ -197,7 +197,7 @@ public class AIService : IAIService
                 throw new InvalidOperationException("Generated image bytes are null");
             }
 
-            _logger.LogInformation("Image generated successfully, uploading to storage");
+            _logger.LogInformation("Image uploaded to storage");
 
             // Upload directly to R2 storage using the binary upload method
             var uploadedUrl = await _storageService.UploadBinaryDataAsync(
@@ -206,12 +206,12 @@ public class AIService : IAIService
                 _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Images);
 
-            _logger.LogInformation("Image uploaded to storage: {URL}", uploadedUrl);
+            _logger.LogInformation("Image uploaded to storage");
             return uploadedUrl;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating image: {Message}", ex.Message);
+            _logger.LogError(ex, "Error generating image");
             throw new InvalidOperationException($"Error generating image: {ex.Message}", ex);
         }
     }
@@ -234,7 +234,7 @@ public class AIService : IAIService
 
         try
         {
-            _logger.LogInformation("Generating audio for flashcard text: {FlashcardText}", flashcardText);
+            _logger.LogInformation("Generating audio");
 
             // Create audio client with API key from settings
             var audioClient = new AudioClient(_openAiSettings.AudioModelName, _openAiSettings.ApiKey);
@@ -255,9 +255,9 @@ public class AIService : IAIService
                 _ => GeneratedSpeechVoice.Nova // Default to Nova voice
             };
 
-            _logger.LogInformation("Using voice: {Voice} for text-to-speech", ttsVoice);
+            _logger.LogInformation("Using voice for text-to-speech");
 
-            _logger.LogDebug("Generating audio with text and example sentence: {Text} - {Sentence}", flashcardText, exampleSentence);
+            _logger.LogDebug("Generating audio with text and example sentence");
             string textToSpeak = $"{flashcardText}. \n\n{exampleSentence}";
 
             // Generate speech with the prepared text
@@ -278,12 +278,12 @@ public class AIService : IAIService
                 _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Audio);
 
-            _logger.LogInformation("Audio uploaded to storage: {URL}", uploadedUrl);
+            _logger.LogInformation("Audio uploaded to storage");
             return uploadedUrl;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating audio: {Message}", ex.Message);
+            _logger.LogError(ex, "Error generating audio");
             throw new InvalidOperationException($"Error generating audio: {ex.Message}", ex);
         }
     }
@@ -300,7 +300,7 @@ public class AIService : IAIService
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating challenges with AI, attempt {AttemptNumber}", attempt);
+            _logger.LogInformation("Generating challenges with AI");
 
             var userPrompt = new StringBuilder();
 
@@ -366,8 +366,7 @@ public class AIService : IAIService
             // Check if we have exactly the required number of questions
             if (questions.Count != REQUIRED_QUESTION_COUNT)
             {
-                _logger.LogWarning("AI returned {Count} valid questions instead of {Required}. Will retry.",
-                    questions.Count, REQUIRED_QUESTION_COUNT);
+                _logger.LogWarning("AI returned fewer valid questions than required. Will retry.");
                 throw new InvalidOperationException($"AI generated {questions.Count} questions but {REQUIRED_QUESTION_COUNT} are required");
             }
 
@@ -395,8 +394,7 @@ public class AIService : IAIService
 
         return await RetryWithBackoffAsync(async (attempt) =>
         {
-            _logger.LogInformation("Generating flashcards with AI for category '{Category}' with difficulty '{Difficulty}', attempt {AttemptNumber}",
-                request.PrimaryCategory, request.Difficulty, attempt);
+            _logger.LogInformation("Generating flashcards with AI");
 
             var prompt = new StringBuilder()
                 .AppendLine($"Create {request.Count} Lithuanian language flashcards.")
@@ -470,8 +468,7 @@ public class AIService : IAIService
             // Limit to the requested count
             var limitedFlashcards = flashcards.Take(request.Count).ToList();
 
-            _logger.LogInformation("Successfully generated {Count} flashcards for category '{Category}'",
-                limitedFlashcards.Count, request.PrimaryCategory);
+            _logger.LogInformation("Successfully generated flashcards");
 
             return limitedFlashcards;
         });
@@ -504,7 +501,7 @@ public class AIService : IAIService
     /// <returns>A configured ChatClient instance</returns>
     protected virtual ChatClient CreateChatClient(string modelName)
     {
-        _logger.LogInformation("Creating ChatClient with model: {Model}", modelName);
+        _logger.LogInformation("Creating ChatClient");
         return new ChatClient(modelName, _openAiSettings.ApiKey);
     }
 
@@ -623,7 +620,7 @@ public class AIService : IAIService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Operation failed on attempt {Attempt}", attempt);
+                _logger.LogError(ex, "Operation failed");
                 if (attempt >= maxAttempts)
                 {
                     throw;

@@ -55,8 +55,7 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting chat stats for user {UserId}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId));
+                _logger.LogInformation("Getting chat stats");
 
                 var stats = await _userChatStatsService.GetUserChatStatsAsync(effectiveUserId);
                 return Ok(stats);
@@ -96,8 +95,7 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Tracking chat message for user {UserId}",
-                    LogSanitizer.SanitizeUserId(effectiveUserId));
+                _logger.LogInformation("Tracking chat message");
 
                 var stats = await _userChatStatsService.TrackMessageAsync(effectiveUserId, request);
                 return Ok(stats);
@@ -138,8 +136,7 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Checking chat limit for user {UserId} (isPremium: {IsPremium})",
-                    LogSanitizer.SanitizeUserId(effectiveUserId), isPremium);
+                _logger.LogInformation("Checking chat limit");
 
                 var hasReachedLimit = await _userChatStatsService.HasReachedDailyLimitAsync(effectiveUserId, isPremium);
                 return Ok(hasReachedLimit);
