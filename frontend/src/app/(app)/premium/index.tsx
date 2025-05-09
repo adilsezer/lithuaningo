@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, Image, Animated } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Image } from "react-native";
 import {
   useTheme,
   Card,
@@ -13,7 +13,7 @@ import { useRevenueCat } from "@hooks/useRevenueCat";
 import CustomButton from "@components/ui/CustomButton";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useIsLoading, useSetLoading } from "@stores/useUIStore";
+import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Feature list definition with icons
@@ -51,13 +51,21 @@ const COMPARISON_DATA = [
 
 export default function PremiumFeaturesScreen() {
   const theme = useTheme();
-  const { offerings, purchasePackage, restorePurchases } = useRevenueCat();
+  const { offerings, purchasePackage, restorePurchases, isPremium } =
+    useRevenueCat();
   const globalIsLoading = useIsLoading();
   const setLoading = useSetLoading();
+  const setError = useSetError();
   const alertDialog = useAlertDialog();
+  const { showManageSubscriptions } = useRevenueCat();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(
     "yearly"
   );
+
+  // Clear any existing errors when entering this screen
+  useEffect(() => {
+    setError(null);
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -303,6 +311,22 @@ export default function PremiumFeaturesScreen() {
       opacity: 0.6,
       textAlign: "center",
     },
+    alreadyPremiumMessage: {
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    alreadyPremiumText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: theme.colors.primary,
+      marginBottom: 8,
+    },
+    alreadyPremiumDescription: {
+      fontSize: 16,
+      textAlign: "center",
+      marginBottom: 16,
+      color: theme.colors.onSurfaceVariant,
+    },
   });
 
   const getPriceString = (packageType: string) => {
@@ -382,13 +406,18 @@ export default function PremiumFeaturesScreen() {
         return;
       }
 
-      alertDialog.showAlert({
-        title: "Purchase Error",
-        message:
-          error.message ||
-          "There was an error processing your purchase. Please try again later.",
-        buttons: [{ text: "OK", onPress: () => {} }],
-      });
+      // Don't show server-side errors to users as they may be related to profile updating
+      if (error.message && !error.message.includes("500")) {
+        alertDialog.showAlert({
+          title: "Purchase Error",
+          message:
+            error.message ||
+            "There was an error processing your purchase. Please try again later.",
+          buttons: [{ text: "OK", onPress: () => {} }],
+        });
+      } else {
+        console.error("Server error during purchase process:", error);
+      }
     }
   };
 
@@ -401,13 +430,20 @@ export default function PremiumFeaturesScreen() {
         message: "Your previous purchases have been restored successfully.",
         buttons: [{ text: "OK", onPress: () => {} }],
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to restore purchases:", error);
-      alertDialog.showAlert({
-        title: "Restore Failed",
-        message: "We couldn't restore your purchases. Please try again later.",
-        buttons: [{ text: "OK", onPress: () => {} }],
-      });
+
+      // Don't show server-side errors to users
+      if (error.message && !error.message.includes("500")) {
+        alertDialog.showAlert({
+          title: "Restore Failed",
+          message:
+            "We couldn't restore your purchases. Please try again later.",
+          buttons: [{ text: "OK", onPress: () => {} }],
+        });
+      } else {
+        console.error("Server error during restore process:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -415,6 +451,41 @@ export default function PremiumFeaturesScreen() {
 
   if (globalIsLoading) {
     return <LoadingIndicator modal={false} />;
+  }
+
+  // If user is already premium
+  if (isPremium) {
+    return (
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <Stack.Screen options={{ title: "Premium Membership" }} />
+
+        <View style={styles.alreadyPremiumMessage}>
+          <MaterialCommunityIcons
+            name="check-decagram"
+            size={60}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.alreadyPremiumText}>
+            You're already a Premium member!
+          </Text>
+          <Text style={styles.alreadyPremiumDescription}>
+            You have full access to all premium features. Enjoy your learning
+            journey!
+          </Text>
+
+          <CustomButton
+            title="Manage Subscription"
+            mode="contained"
+            onPress={() => showManageSubscriptions()}
+            style={{ marginTop: 16 }}
+          />
+        </View>
+      </ScrollView>
+    );
   }
 
   const renderPlanCard = (type: string, title: string, isBestValue = false) => {

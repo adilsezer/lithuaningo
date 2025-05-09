@@ -66,28 +66,130 @@ export const useRevenueCat = () => {
     }
   };
 
+  // Handle expiration date that might be in different formats
+  const parseExpirationDate = (
+    expirationDate: string | number | null
+  ): string | undefined => {
+    if (!expirationDate) return undefined;
+
+    try {
+      // If it's already an ISO string date format (e.g. "2025-05-09T23:16:35Z")
+      if (typeof expirationDate === "string" && expirationDate.includes("T")) {
+        return new Date(expirationDate).toISOString();
+      }
+
+      // If it's a Unix timestamp in seconds (number or string)
+      const timestamp = Number(expirationDate);
+      if (!isNaN(timestamp)) {
+        // Convert seconds to milliseconds (JS Date uses milliseconds)
+        return new Date(timestamp * 1000).toISOString();
+      }
+
+      console.warn(`Unrecognized date format: ${expirationDate}`);
+      return undefined;
+    } catch (error) {
+      console.error("Error parsing expiration date:", error);
+      return undefined;
+    }
+  };
+
   // Check if user has premium entitlement
   const checkPremiumEntitlement = async (info: CustomerInfo) => {
-    const hasPremium =
-      typeof info.entitlements.active[ENTITLEMENTS.premium] !== "undefined";
+    // Check if the premium entitlement exists and is active
+    const premiumEntitlement = info.entitlements.active[ENTITLEMENTS.premium];
+    const hasPremium = typeof premiumEntitlement !== "undefined";
+
     setIsPremium(hasPremium);
 
     // Update user profile in Supabase if user is authenticated
     if (userData?.id) {
       try {
-        if (hasPremium) {
-          // Update premium status to true with expiration date
-          await UserProfileService.updatePremiumStatus(
-            userData.id,
-            info,
-            hasPremium
-          );
+        if (hasPremium && premiumEntitlement) {
+          // Check if this is a lifetime subscription (no expiration but active)
+          const isLifetime =
+            premiumEntitlement.isActive &&
+            !premiumEntitlement.expirationDate &&
+            premiumEntitlement.productIdentifier.includes("lifetime");
+
+          // Get expiration date from the entitlement
+          const expirationDate = premiumEntitlement.expirationDate;
+
+          // Handle specific cases:
+          // 1. Regular subscription with valid expiration date
+          // 2. Lifetime subscription (no expiration date)
+          if (expirationDate) {
+            // Safely parse the expiration date
+            const expiresAt = parseExpirationDate(expirationDate);
+            if (expiresAt) {
+              // Copy the premiumEntitlement to avoid any reference issues
+              const safeInfo = JSON.parse(JSON.stringify(info));
+
+              // Update premium status with expiration date
+              await UserProfileService.updatePremiumStatus(
+                userData.id,
+                safeInfo,
+                hasPremium
+              );
+            } else {
+              // Fall back to the lifetime handling
+              const farFuture = new Date();
+              farFuture.setFullYear(farFuture.getFullYear() + 10);
+
+              // Create a CustomerInfo object with the modified expiration
+              const modifiedInfo = {
+                ...info,
+                entitlements: {
+                  ...info.entitlements,
+                  active: {
+                    ...info.entitlements.active,
+                    [ENTITLEMENTS.premium]: {
+                      ...premiumEntitlement,
+                      expirationDate: (farFuture.getTime() / 1000).toString(),
+                    },
+                  },
+                },
+              };
+
+              await UserProfileService.updatePremiumStatus(
+                userData.id,
+                modifiedInfo,
+                hasPremium
+              );
+            }
+          } else if (isLifetime || premiumEntitlement.isActive) {
+            // Handle lifetime subscriptions which may not have expiration dates
+            // Set a far-future expiration date (10 years from now)
+            const farFuture = new Date();
+            farFuture.setFullYear(farFuture.getFullYear() + 10);
+
+            // Create a CustomerInfo object with the modified expiration
+            const modifiedInfo = {
+              ...info,
+              entitlements: {
+                ...info.entitlements,
+                active: {
+                  ...info.entitlements.active,
+                  [ENTITLEMENTS.premium]: {
+                    ...premiumEntitlement,
+                    expirationDate: (farFuture.getTime() / 1000).toString(),
+                  },
+                },
+              },
+            };
+
+            await UserProfileService.updatePremiumStatus(
+              userData.id,
+              modifiedInfo,
+              hasPremium
+            );
+          }
         } else if (userData.isPremium) {
           // If user was premium but no longer is, update status to false
           await UserProfileService.removePremiumStatus(userData.id);
         }
       } catch (error) {
         console.error("Error updating premium status in user profile:", error);
+        // Don't surface this error to the user as it doesn't affect their immediate experience
       }
     }
   };
