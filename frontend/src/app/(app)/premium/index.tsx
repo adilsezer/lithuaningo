@@ -13,7 +13,7 @@ import { useRevenueCat } from "@hooks/useRevenueCat";
 import CustomButton from "@components/ui/CustomButton";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useIsLoading } from "@stores/useUIStore";
+import { useIsLoading, useSetLoading } from "@stores/useUIStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Feature list definition with icons
@@ -51,8 +51,9 @@ const COMPARISON_DATA = [
 
 export default function PremiumFeaturesScreen() {
   const theme = useTheme();
-  const { offerings, purchasePackage } = useRevenueCat();
+  const { offerings, purchasePackage, restorePurchases } = useRevenueCat();
   const globalIsLoading = useIsLoading();
+  const setLoading = useSetLoading();
   const alertDialog = useAlertDialog();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(
     "yearly"
@@ -226,6 +227,82 @@ export default function PremiumFeaturesScreen() {
       marginBottom: 40,
       marginTop: 8,
     },
+    heading: {
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 10,
+      textAlign: "center",
+    },
+    subheading: {
+      fontSize: 16,
+      marginBottom: 20,
+      textAlign: "center",
+      opacity: 0.8,
+    },
+    packagesContainer: {
+      marginBottom: 24,
+    },
+    packageOption: {
+      borderWidth: 2,
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 12,
+    },
+    packageOptionSelected: {
+      borderWidth: 2,
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 12,
+    },
+    packageDescription: {
+      marginTop: 4,
+      opacity: 0.7,
+    },
+    packageBadge: {
+      position: "absolute",
+      top: -10,
+      right: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 12,
+    },
+    packageBadgeText: {
+      fontSize: 12,
+      fontWeight: "bold",
+    },
+    benefitsContainer: {
+      marginBottom: 24,
+    },
+    benefitItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+    benefitIcon: {
+      marginRight: 10,
+    },
+    benefitText: {
+      fontSize: 16,
+    },
+    upgradeButton: {
+      paddingVertical: 12,
+      marginBottom: 16,
+    },
+    upgradeButtonText: {
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    restoreButton: {
+      marginBottom: 16,
+    },
+    restoreButtonText: {
+      fontSize: 16,
+    },
+    termsText: {
+      fontSize: 12,
+      opacity: 0.6,
+      textAlign: "center",
+    },
   });
 
   const getPriceString = (packageType: string) => {
@@ -312,6 +389,27 @@ export default function PremiumFeaturesScreen() {
           "There was an error processing your purchase. Please try again later.",
         buttons: [{ text: "OK", onPress: () => {} }],
       });
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      setLoading(true);
+      await restorePurchases();
+      alertDialog.showAlert({
+        title: "Purchases Restored",
+        message: "Your previous purchases have been restored successfully.",
+        buttons: [{ text: "OK", onPress: () => {} }],
+      });
+    } catch (error) {
+      console.error("Failed to restore purchases:", error);
+      alertDialog.showAlert({
+        title: "Restore Failed",
+        message: "We couldn't restore your purchases. Please try again later.",
+        buttons: [{ text: "OK", onPress: () => {} }],
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -503,6 +601,12 @@ export default function PremiumFeaturesScreen() {
           mode="contained"
           onPress={handleUpgradeToPremium}
           disabled={!selectedPackage}
+        />
+        <CustomButton
+          title="Restore Purchases"
+          mode="text"
+          onPress={handleRestorePurchases}
+          style={{ marginTop: 12 }}
         />
       </View>
     </ScrollView>

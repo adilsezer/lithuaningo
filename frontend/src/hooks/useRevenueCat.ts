@@ -1,19 +1,13 @@
 import { useEffect, useState } from "react";
-import { Platform } from "react-native";
 import Purchases, {
   CustomerInfo,
   PurchasesOffering,
-  LOG_LEVEL,
   PurchasesPackage,
   PurchasesError,
   PURCHASES_ERROR_CODE,
 } from "react-native-purchases";
 import { useUserData } from "@stores/useUserStore";
-import {
-  REVENUECAT_API_KEYS,
-  ENTITLEMENTS,
-  DEBUG_SETTINGS,
-} from "@config/revenuecat.config";
+import { ENTITLEMENTS } from "@config/revenuecat.config";
 import { useSetLoading, useSetError } from "@src/stores/useUIStore";
 import { UserProfileService } from "@src/services/data/userProfileService";
 
@@ -29,47 +23,28 @@ export const useRevenueCat = () => {
 
   const userData = useUserData();
 
+  // Load offerings and customer info when the hook is mounted or userData changes
   useEffect(() => {
-    // Initialize RevenueCat
-    const initializeRevenueCat = async () => {
-      Purchases.setLogLevel(
-        DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR
-      );
-
-      if (Platform.OS === "ios") {
-        await Purchases.configure({ apiKey: REVENUECAT_API_KEYS.ios });
-      } else if (Platform.OS === "android") {
-        await Purchases.configure({ apiKey: REVENUECAT_API_KEYS.android });
-      }
-
-      // Login the user if they're authenticated
-      if (userData?.id) {
-        await Purchases.logIn(userData.id);
-      }
-
-      fetchOfferings();
-      getCustomerInfo();
-    };
-
-    initializeRevenueCat();
-
-    return () => {
-      // If needed, perform cleanup here
-    };
-  }, [userData?.id]);
+    // RevenueCat is already initialized in InitializationProvider
+    fetchOfferings();
+    getCustomerInfo();
+  }, []); // Run only once when component mounts since getCustomerInfo handles userData internally
 
   // Fetch available offerings
-  const fetchOfferings = async () => {
+  const fetchOfferings = async (): Promise<PurchasesOffering | null> => {
     try {
       setLoading(true);
       setError(null);
       const offerings = await Purchases.getOfferings();
       if (offerings.current) {
         setOfferings(offerings.current);
+        return offerings.current;
       }
+      return null;
     } catch (error) {
       console.error("Error fetching offerings:", error);
       setError("Failed to fetch subscription offerings");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -155,6 +130,12 @@ export const useRevenueCat = () => {
     }
   };
 
+  // Ensure offerings are loaded - useful to call before showing paywall
+  const ensureOfferings = async (): Promise<PurchasesOffering | null> => {
+    if (offerings) return offerings;
+    return fetchOfferings();
+  };
+
   // Restore purchases
   const restorePurchases = async () => {
     try {
@@ -162,11 +143,9 @@ export const useRevenueCat = () => {
       setError(null);
       setPurchaseError(null);
 
-      // TypeScript doesn't allow direct destructuring here due to typing issues
-      // We need to manually access the customerInfo property
-      const result = await Purchases.restorePurchases();
-      // Use casting to address the TypeScript type issue
-      const customerInfo = (result as any).customerInfo as CustomerInfo;
+      // Fixed return type handling
+      const customerInfo = await Purchases.restorePurchases();
+
       setCustomerInfo(customerInfo);
 
       // Check premium entitlement and update user profile
@@ -186,6 +165,19 @@ export const useRevenueCat = () => {
         setError(errorMessage);
       }
       throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show subscription management screen
+  const showManageSubscriptions = async () => {
+    try {
+      setLoading(true);
+      await Purchases.showManageSubscriptions();
+    } catch (error) {
+      console.error("Error showing subscription management:", error);
+      setError("Failed to open subscription management");
     } finally {
       setLoading(false);
     }
@@ -213,8 +205,10 @@ export const useRevenueCat = () => {
     purchaseError,
     purchasePackage,
     restorePurchases,
+    showManageSubscriptions,
     fetchOfferings,
     getCustomerInfo,
     logout,
+    ensureOfferings,
   };
 };

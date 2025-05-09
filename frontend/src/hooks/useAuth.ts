@@ -17,6 +17,7 @@ import { useAuthOperation } from "./useAuthOperation";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useCallback } from "react";
 import { Platform } from "react-native";
+import { useRevenueCat } from "@hooks/useRevenueCat";
 
 export type SocialProvider = "google" | "apple";
 
@@ -24,6 +25,7 @@ export const useAuth = () => {
   const router = useRouter();
   const { performAuthOperation } = useAuthOperation();
   const { showAlert, showConfirm } = useAlertDialog();
+  const { logout: logoutRevenueCat } = useRevenueCat();
 
   // Navigation helpers
   const navigateAfterAuth = useCallback(
@@ -121,6 +123,8 @@ export const useAuth = () => {
 
   const handleSignOut = useCallback(async () => {
     const result = await performAuthOperation(async () => {
+      // Sign out from RevenueCat to clear any user-specific data
+      await logoutRevenueCat();
       const response = await signOut();
       if (response.success) {
         // crashlytics().log("User signed out");
@@ -129,7 +133,7 @@ export const useAuth = () => {
       return response;
     }, "Sign Out Failed");
     return result;
-  }, [performAuthOperation, navigateAfterAuth]);
+  }, [performAuthOperation, navigateAfterAuth, logoutRevenueCat]);
 
   // Profile management
   const handleUpdateProfile = useCallback(
