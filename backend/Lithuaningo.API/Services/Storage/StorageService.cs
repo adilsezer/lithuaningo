@@ -18,7 +18,6 @@ public class StorageService : IStorageService, IDisposable
     {
         _settings = storageConfiguration.LoadConfiguration();
         _logger = logger;
-        logger.LogInformation("Initializing storage service with bucket: {BucketName}", _settings.BucketName);
 
         _publicBucketUrl = storageConfiguration.GetPublicBucketUrl(_settings);
         _s3Client = storageConfiguration.CreateS3Client(_settings);
@@ -47,7 +46,6 @@ public class StorageService : IStorageService, IDisposable
 
         try
         {
-            _logger.LogInformation("Uploading binary data to storage with content type: {ContentType}", contentType);
             // Simple extension mapping for image/png and audio/mp3
             string extension = contentType.ToLowerInvariant() switch
             {

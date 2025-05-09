@@ -55,14 +55,12 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting chat stats");
-
                 var stats = await _userChatStatsService.GetUserChatStatsAsync(effectiveUserId);
                 return Ok(stats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting chat stats for user");
+                _logger.LogError(ex, "Error getting chat stats");
                 return StatusCode(500, "An error occurred while retrieving chat stats");
             }
         }
@@ -95,14 +93,12 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Tracking chat message");
-
                 var stats = await _userChatStatsService.TrackMessageAsync(effectiveUserId, request);
                 return Ok(stats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error tracking chat message for user");
+                _logger.LogError(ex, "Error tracking chat message");
                 return StatusCode(500, "An error occurred while tracking chat message");
             }
         }
@@ -136,14 +132,12 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Checking chat limit");
-
                 var hasReachedLimit = await _userChatStatsService.HasReachedDailyLimitAsync(effectiveUserId, isPremium);
                 return Ok(hasReachedLimit);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking chat limit for user");
+                _logger.LogError(ex, "Error checking chat limit");
                 return StatusCode(500, "An error occurred while checking chat limit");
             }
         }

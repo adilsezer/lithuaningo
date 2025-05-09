@@ -62,8 +62,6 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting learning flashcards");
-
                 var flashcardResponses = await _flashcardService.GetUserLearningFlashcardsAsync(request, effectiveUserId);
 
                 return Ok(flashcardResponses);

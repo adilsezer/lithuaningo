@@ -108,7 +108,6 @@ namespace Lithuaningo.API.Services.Stats
 
                     // Invalidate cache when creating a new stat
                     await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-                    _logger.LogInformation("Invalidated flashcard stats cache after creating new stat");
 
                     return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
@@ -145,7 +144,6 @@ namespace Lithuaningo.API.Services.Stats
 
                     // Invalidate cache when updating a stat
                     await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-                    _logger.LogInformation("Invalidated flashcard stats cache after updating stat");
 
                     return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
@@ -176,7 +174,6 @@ namespace Lithuaningo.API.Services.Stats
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved flashcards due for review from cache");
                     return cached;
                 }
 
@@ -207,7 +204,6 @@ namespace Lithuaningo.API.Services.Stats
                 // Cache the result
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-                _logger.LogInformation("Cached flashcards due for review");
 
                 return response;
             }
@@ -234,7 +230,6 @@ namespace Lithuaningo.API.Services.Stats
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved flashcard stats summary from cache");
                     return cached;
                 }
 
@@ -263,8 +258,6 @@ namespace Lithuaningo.API.Services.Stats
                 // Count cards that have been answered (either correctly or incorrectly)
                 var todayCount = todayResult.Models?.Count(s => s.CorrectCount > 0 || s.IncorrectCount > 0) ?? 0;
 
-                _logger.LogInformation("User has answered flashcards today (database query)");
-
                 // Use AutoMapper to map the collection to the summary response
                 var summary = _mapper.Map<UserFlashcardStatsSummaryResponse>(models);
 
@@ -274,7 +267,6 @@ namespace Lithuaningo.API.Services.Stats
                 // Cache the result
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, summary, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-                _logger.LogInformation("Cached flashcard stats summary");
 
                 return summary;
             }
@@ -304,7 +296,6 @@ namespace Lithuaningo.API.Services.Stats
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved flashcard stats from cache");
                     return cached;
                 }
 
@@ -323,7 +314,6 @@ namespace Lithuaningo.API.Services.Stats
                 {
                     var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                     await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-                    _logger.LogInformation("Cached flashcard stats");
                     return response;
                 }
 

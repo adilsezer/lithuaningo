@@ -99,7 +99,7 @@ namespace Lithuaningo.API.Controllers
         {
             try
             {
-                _logger.LogInformation("Admin requested to clear cache entries with prefix");
+                _logger.LogInformation("Admin requested to clear cache entries with specific prefix");
                 await _cacheService.RemoveByPrefixAsync(prefix);
                 return Ok(new { message = $"Cache entries with prefix '{prefix}' cleared successfully" });
             }

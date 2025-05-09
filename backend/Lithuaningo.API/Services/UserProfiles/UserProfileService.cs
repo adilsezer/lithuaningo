@@ -45,7 +45,6 @@ namespace Lithuaningo.API.Services.UserProfile
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved user profile from cache");
                 return cached;
             }
 
@@ -67,7 +66,6 @@ namespace Lithuaningo.API.Services.UserProfile
                 await _cache.SetAsync(cacheKey, profileResponse,
                     TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
 
-                _logger.LogInformation("Retrieved and cached user profile");
                 return profileResponse;
             }
             catch (Exception ex)
@@ -111,7 +109,6 @@ namespace Lithuaningo.API.Services.UserProfile
 
                 await _cacheInvalidator.InvalidateUserProfileAsync(userId);
 
-                _logger.LogInformation("Updated user profile");
                 return profileResponse;
             }
             catch (Exception ex)
@@ -134,7 +131,6 @@ namespace Lithuaningo.API.Services.UserProfile
                 var profile = await GetUserProfileAsync(userId);
                 if (profile == null)
                 {
-                    _logger.LogInformation("User profile not found for deletion");
                     return false;
                 }
 
@@ -145,7 +141,6 @@ namespace Lithuaningo.API.Services.UserProfile
 
                 await _cacheInvalidator.InvalidateUserProfileAsync(userId);
 
-                _logger.LogInformation("Deleted user profile");
                 return true;
             }
             catch (Exception ex)
@@ -162,7 +157,6 @@ namespace Lithuaningo.API.Services.UserProfile
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved all user profiles from cache");
                 return cached;
             }
 
@@ -179,7 +173,6 @@ namespace Lithuaningo.API.Services.UserProfile
                 await _cache.SetAsync(cacheKey, profileResponses,
                     TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
 
-                _logger.LogInformation("Retrieved and cached user profiles");
                 return profileResponses;
             }
             catch (Exception ex)

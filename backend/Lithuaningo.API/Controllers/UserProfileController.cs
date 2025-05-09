@@ -76,7 +76,6 @@ namespace Lithuaningo.API.Controllers
                 var profile = await _userProfileService.GetUserProfileAsync(id);
                 if (profile == null)
                 {
-                    _logger.LogInformation("User profile not found");
                     return NotFound();
                 }
 
@@ -139,7 +138,6 @@ namespace Lithuaningo.API.Controllers
             }
             catch (KeyNotFoundException)
             {
-                _logger.LogInformation("User profile not found");
                 return NotFound();
             }
             catch (Exception ex)
@@ -186,7 +184,6 @@ namespace Lithuaningo.API.Controllers
                 var result = await _userProfileService.DeleteUserProfileAsync(id);
                 if (!result)
                 {
-                    _logger.LogInformation("User profile not found");
                     return NotFound();
                 }
 

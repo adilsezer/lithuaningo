@@ -23,7 +23,7 @@ public class AuthService : IAuthService
         _logger = logger;
         _settings = supabaseConfiguration.LoadConfiguration();
 
-        _logger.LogInformation("Initializing Supabase auth client with URL: {Url}", _settings.Url);
+        _logger.LogInformation("Initializing Supabase auth client");
 
         var options = new SupabaseOptions
         {
@@ -88,7 +88,7 @@ public class AuthService : IAuthService
         }
         catch (SecurityTokenValidationException ex)
         {
-            _logger.LogWarning(ex, "Token validation failed: {Message}", ex.Message);
+            _logger.LogWarning(ex, "Token validation failed");
             return false;
         }
         catch (Exception ex)

@@ -46,7 +46,6 @@ namespace Lithuaningo.API.Services.AppInfo
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved app info from cache");
                 return cached;
             }
 
@@ -77,7 +76,6 @@ namespace Lithuaningo.API.Services.AppInfo
 
                 var appInfoResponse = _mapper.Map<AppInfoResponse>(appInfo);
                 await CacheAppInfoAsync(cacheKey, appInfoResponse);
-                _logger.LogInformation("Retrieved and cached app info");
 
                 return appInfoResponse;
             }

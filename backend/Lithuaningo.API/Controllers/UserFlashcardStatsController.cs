@@ -61,8 +61,6 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting flashcard stats summary");
-
                 var stats = await _userFlashcardStatService.GetUserFlashcardStatsSummaryAsync(effectiveUserId);
                 return Ok(stats);
             }
@@ -123,8 +121,6 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Updating flashcard stats");
-
                 var result = await _userFlashcardStatService.SubmitFlashcardAnswerAsync(
                     effectiveUserId,
                     request);
@@ -178,8 +174,6 @@ namespace Lithuaningo.API.Controllers
                 {
                     return Unauthorized();
                 }
-
-                _logger.LogInformation("Getting flashcard stats");
 
                 var stats = await _userFlashcardStatService.GetFlashcardStatsAsync(
                     effectiveUserId,

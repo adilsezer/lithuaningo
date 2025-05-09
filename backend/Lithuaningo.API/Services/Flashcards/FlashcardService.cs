@@ -76,7 +76,6 @@ namespace Lithuaningo.API.Services.Flashcards
             var flashcard = await _cache.GetAsync<Flashcard>(cacheKey);
             if (flashcard != null)
             {
-                _logger.LogInformation("Retrieved flashcards from cache");
                 return flashcard;
             }
 
@@ -118,7 +117,6 @@ namespace Lithuaningo.API.Services.Flashcards
                 var cached = await _cache.GetAsync<List<Flashcard>>(cacheKey);
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved flashcards from cache");
                     return cached;
                 }
 
@@ -156,8 +154,6 @@ namespace Lithuaningo.API.Services.Flashcards
                 await _cache.SetAsync(cacheKey, flashcards,
                     TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
 
-                _logger.LogInformation("Cached flashcards");
-
                 return flashcards;
             }
             catch (Exception ex)
@@ -180,8 +176,6 @@ namespace Lithuaningo.API.Services.Flashcards
 
             try
             {
-                _logger.LogInformation("Getting learning flashcards");
-
                 // Get existing flashcards matching criteria directly
                 var existingFlashcards = await RetrieveFlashcardModelsAsync(
                     category: request.PrimaryCategory,
@@ -190,7 +184,6 @@ namespace Lithuaningo.API.Services.Flashcards
                 // If none exist, generate new ones
                 if (!existingFlashcards.Any())
                 {
-                    _logger.LogInformation("No existing flashcards found. Generating new flashcards");
                     return await GenerateFlashcardsAsync(request);
                 }
 
@@ -253,8 +246,6 @@ namespace Lithuaningo.API.Services.Flashcards
                 flashcard.ImageUrl = imageUrl;
                 await UpdateFlashcardAsync(flashcard);
 
-                _logger.LogInformation("Generated and set image for flashcard");
-
                 return imageUrl;
             }
             catch (Exception ex)
@@ -290,8 +281,6 @@ namespace Lithuaningo.API.Services.Flashcards
                 flashcard.AudioUrl = audioUrl;
                 await UpdateFlashcardAsync(flashcard);
 
-                _logger.LogInformation("Generated and set audio for flashcard");
-
                 return audioUrl;
             }
             catch (Exception ex)
@@ -322,8 +311,6 @@ namespace Lithuaningo.API.Services.Flashcards
                 .Where(f => reviewIds.Contains(f.Id))
                 .ToList();
 
-            _logger.LogInformation("Selected flashcards for review based on mastery level");
-
             return reviewFlashcards;
         }
 
@@ -345,8 +332,6 @@ namespace Lithuaningo.API.Services.Flashcards
                 .Take(newCardsNeeded)
                 .ToList();
 
-            _logger.LogInformation("Selected new flashcards the user hasn't seen before");
-
             // STEP 3: Combine the review and new flashcards
             var selectedFlashcards = reviewFlashcards.Concat(newFlashcards).ToList();
 
@@ -354,8 +339,6 @@ namespace Lithuaningo.API.Services.Flashcards
             int remainingCount = request.Count - selectedFlashcards.Count;
             if (remainingCount > 0)
             {
-                _logger.LogInformation("Not enough existing flashcards, generating new ones");
-
                 // Create a copy of the request with adjusted count
                 var generationRequest = new FlashcardRequest
                 {
@@ -390,7 +373,6 @@ namespace Lithuaningo.API.Services.Flashcards
             var cached = await _cache.GetAsync<List<string>>(cacheKey);
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved front texts from cache");
                 return cached;
             }
 
@@ -407,8 +389,6 @@ namespace Lithuaningo.API.Services.Flashcards
             // Use a random offset that won't exceed the available data
             int offset = maxOffset > 0 ? _random.Next(0, maxOffset) : 0;
 
-            _logger.LogInformation("Using random offset for flashcard selection");
-
             // First, get the specific category flashcards
             var categoryFlashcards = await _supabaseService.Client
                 .From<Flashcard>()
@@ -420,7 +400,6 @@ namespace Lithuaningo.API.Services.Flashcards
             if (categoryFlashcards.Models != null)
             {
                 frontTexts.AddRange(categoryFlashcards.Models.Select(f => f.FrontText));
-                _logger.LogInformation("Retrieved flashcards for category");
             }
 
             // Get random sample of front texts from all flashcards using the offset
@@ -453,8 +432,6 @@ namespace Lithuaningo.API.Services.Flashcards
             var settings = await _cacheSettingsService.GetCacheSettingsAsync();
             await _cache.SetAsync(cacheKey, frontTexts,
                 TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
-
-            _logger.LogInformation("Cached random front texts");
 
             return frontTexts;
         }
@@ -489,16 +466,6 @@ namespace Lithuaningo.API.Services.Flashcards
             while (flashcards.Count < request.Count && attemptCount < maxAttempts)
             {
                 attemptCount++;
-
-                // Log generation details
-                if (attemptCount == 1)
-                {
-                    _logger.LogInformation("Generating flashcards");
-                }
-                else
-                {
-                    _logger.LogInformation("Retrying flashcard generation");
-                }
 
                 // Generate flashcards
                 var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, existingFrontTexts);
@@ -577,7 +544,6 @@ namespace Lithuaningo.API.Services.Flashcards
                     .Insert(flashcards);
 
                 int insertedCount = result.Models?.Count ?? 0;
-                _logger.LogInformation("Successfully saved flashcards to Supabase");
 
                 // Invalidate relevant caches
                 await InvalidateCategoryCachesForFlashcardsAsync(result.Models);
@@ -616,11 +582,6 @@ namespace Lithuaningo.API.Services.Flashcards
             {
                 await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
             }
-
-            if (uniqueCategories.Count > 0)
-            {
-                _logger.LogInformation("Invalidated flashcard caches for categories");
-            }
         }
 
         private async Task CacheFlashcardAsync(Flashcard flashcard)
@@ -628,7 +589,6 @@ namespace Lithuaningo.API.Services.Flashcards
             var cacheKey = $"{CacheKeyPrefix}id:{flashcard.Id}";
             var settings = await _cacheSettingsService.GetCacheSettingsAsync();
             await _cache.SetAsync(cacheKey, flashcard, TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
-            _logger.LogInformation("Cached flashcard");
         }
 
         #endregion

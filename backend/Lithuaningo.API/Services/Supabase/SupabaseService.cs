@@ -21,7 +21,6 @@ public class SupabaseService : ISupabaseService
         _logger = logger;
 
         var settings = supabaseConfiguration.LoadConfiguration();
-        _logger.LogInformation("Initializing Supabase client with URL: {Url}", settings.Url);
 
         var options = new SupabaseOptions
         {

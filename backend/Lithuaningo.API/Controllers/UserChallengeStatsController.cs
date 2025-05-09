@@ -69,22 +69,17 @@ namespace Lithuaningo.API.Controllers
                     return Unauthorized();
                 }
 
-                _logger.LogInformation("Getting challenge stats");
-
                 var stats = await _userChallengeStatsService.GetUserChallengeStatsAsync(effectiveUserId);
                 if (stats == null)
                 {
-                    _logger.LogInformation("Challenge stats not found");
                     return NotFound();
                 }
-
-                _logger.LogInformation("Retrieved stats");
 
                 return Ok(stats);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving user challenge stats for user");
+                _logger.LogError(ex, "Error retrieving user challenge stats");
                 return StatusCode(500, "Internal server error");
             }
         }
@@ -153,7 +148,6 @@ namespace Lithuaningo.API.Controllers
             try
             {
                 var updatedStats = await _userChallengeStatsService.SubmitChallengeAnswerAsync(effectiveUserId, request);
-                _logger.LogInformation("Successfully submitted challenge answer");
                 return Ok(updatedStats);
             }
             catch (InvalidOperationException ex)

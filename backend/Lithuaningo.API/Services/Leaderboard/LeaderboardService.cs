@@ -47,7 +47,6 @@ namespace Lithuaningo.API.Services.Leaderboard
 
                 if (cached != null)
                 {
-                    _logger.LogInformation("Retrieved current week leaderboard from cache");
                     return cached;
                 }
 
@@ -58,8 +57,6 @@ namespace Lithuaningo.API.Services.Leaderboard
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, leaderboard,
                     TimeSpan.FromMinutes(settings.LeaderboardCacheMinutes));
-
-                _logger.LogInformation("Cached current week leaderboard");
 
                 return leaderboard;
             }
@@ -82,7 +79,6 @@ namespace Lithuaningo.API.Services.Leaderboard
 
             if (cached != null)
             {
-                _logger.LogInformation("Retrieved leaderboard from cache");
                 return cached;
             }
 
@@ -107,8 +103,6 @@ namespace Lithuaningo.API.Services.Leaderboard
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, mappedEntries,
                     TimeSpan.FromMinutes(settings.LeaderboardCacheMinutes));
-
-                _logger.LogInformation("Retrieved and cached leaderboard entries");
 
                 return mappedEntries;
             }
@@ -150,7 +144,6 @@ namespace Lithuaningo.API.Services.Leaderboard
                         .Update();
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Updated leaderboard entry");
                 }
                 else
                 {
@@ -168,7 +161,6 @@ namespace Lithuaningo.API.Services.Leaderboard
                         .Insert(newEntry);
 
                     updatedEntry = response.Models.First();
-                    _logger.LogInformation("Created new leaderboard entry");
                 }
 
                 // Map to response DTO

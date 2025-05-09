@@ -59,7 +59,6 @@ namespace Lithuaningo.API.Services.Challenges
             var cachedQuestions = await _cache.GetAsync<List<ChallengeQuestionResponse>>(cacheKey);
             if (cachedQuestions != null && cachedQuestions.Count > 0)
             {
-                _logger.LogInformation("Retrieved daily challenge questions from cache");
                 return cachedQuestions;
             }
 
@@ -86,7 +85,6 @@ namespace Lithuaningo.API.Services.Challenges
                 // Cache the results
                 await _cache.SetAsync(cacheKey, questionResponses, cacheExpiration);
 
-                _logger.LogInformation("Retrieved daily challenge questions from database");
                 return questionResponses;
             }
 
@@ -106,8 +104,6 @@ namespace Lithuaningo.API.Services.Challenges
         {
             try
             {
-                _logger.LogInformation("Retrieved flashcards to use as context for challenge generation");
-
                 // Get a larger set of random flashcards from the database for context
                 // We retrieve more flashcards to ensure sufficient diversity for all question types
                 var flashcards = await _flashcardService.RetrieveFlashcardModelsAsync(
@@ -117,10 +113,6 @@ namespace Lithuaningo.API.Services.Challenges
                 {
                     // Shuffle the flashcards for better randomization
                     var shuffledFlashcards = flashcards.ToList().OrderBy(x => _random.Next()).ToList();
-
-                    // Log the count and briefly analyze diversity
-                    _logger.LogInformation("Retrieved {Count} flashcards to use as context for challenge generation",
-                        shuffledFlashcards.Count);
 
                     // Generate challenges based on the flashcard data
                     var questions = await _aiService.GenerateChallengesAsync(shuffledFlashcards);
@@ -158,11 +150,7 @@ namespace Lithuaningo.API.Services.Challenges
                     .From<ChallengeQuestion>()
                     .Insert(questionModels);
 
-                if (result.Models != null)
-                {
-                    _logger.LogInformation("Successfully saved challenge questions to database");
-                }
-                else
+                if (result.Models == null)
                 {
                     _logger.LogWarning("No challenge questions were saved to the database");
                 }

@@ -60,7 +60,6 @@ namespace Lithuaningo.API.Services.Stats
 
             if (cachedStats != null)
             {
-                _logger.LogInformation("Retrieved chat stats from cache");
                 return cachedStats;
             }
 
@@ -73,7 +72,6 @@ namespace Lithuaningo.API.Services.Stats
             // Cache the result
             var settings = await _cacheSettingsService.GetCacheSettingsAsync();
             await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-            _logger.LogInformation("Cached chat stats");
 
             return response;
         }
@@ -91,15 +89,10 @@ namespace Lithuaningo.API.Services.Stats
             // Get or create stats
             var stats = await GetOrCreateChatStatsAsync(userId);
 
-            _logger.LogInformation("Tracking message");
-            _logger.LogInformation("Current counts logged");
-
             // Update both counters - Supabase handles daily resets but we still increment both counters
             stats.TodayMessageCount++;
             stats.TotalMessageCount++;
             stats.LastChatDate = DateTime.UtcNow;
-
-            _logger.LogInformation("Message counts updated");
 
             // Save to database
             await _supabaseClient
@@ -108,7 +101,6 @@ namespace Lithuaningo.API.Services.Stats
 
             // Invalidate cache using centralized invalidator
             await _cacheInvalidator.InvalidateUserChatStatsAsync(userId);
-            _logger.LogInformation("Invalidated chat stats cache");
 
             // Use AutoMapper to map to response
             var response = _mapper.Map<UserChatStatsResponse>(stats);
@@ -141,8 +133,6 @@ namespace Lithuaningo.API.Services.Stats
                 throw new ArgumentException("User ID must be a valid GUID", nameof(userId));
             }
 
-            _logger.LogInformation("Getting chat stats");
-
             var response = await _supabaseClient
                 .From<UserChatStats>()
                 .Where(u => u.UserId == userGuid)
@@ -151,13 +141,10 @@ namespace Lithuaningo.API.Services.Stats
             var stats = response.Models.FirstOrDefault();
             if (stats != null)
             {
-                _logger.LogInformation("Found existing chat stats");
                 return stats;
             }
 
             // Create default stats if none exist
-            _logger.LogInformation("No chat stats found, creating new record");
-
             // Always use UTC for timestamp storage
             DateTime utcNow = DateTime.UtcNow;
 
@@ -170,18 +157,15 @@ namespace Lithuaningo.API.Services.Stats
                 TotalMessageCount = 0
             };
 
-            _logger.LogInformation("Initializing new user stats");
-
             var createResponse = await _supabaseClient
                 .From<UserChatStats>()
                 .Insert(newStats);
 
             if (createResponse.Models.Count == 0)
             {
-                throw new InvalidOperationException($"Failed to create chat stats for user {userGuid}");
+                throw new InvalidOperationException("Failed to create chat stats");
             }
 
-            _logger.LogInformation("Created new chat stats");
             return createResponse.Models.First();
         }
     }

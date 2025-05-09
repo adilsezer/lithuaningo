@@ -134,8 +134,6 @@ public class AIService : IAIService
 
         try
         {
-            _logger.LogInformation("Generating image");
-
             // Create image client with API key from settings
             var imageClient = new ImageClient(_openAiSettings.ImageModelName, _openAiSettings.ApiKey);
 
@@ -178,9 +176,7 @@ public class AIService : IAIService
             }
 
             // Generate the image and get bytes directly
-            _logger.LogInformation("Calling OpenAI API to generate image");
             string prompt = string.Format(AIPrompts.IMAGE_GENERATION_PROMPT, flashcardText);
-            _logger.LogInformation("Prompt prepared");
 
             GeneratedImage image = await imageClient.GenerateImageAsync(prompt, options);
 
@@ -197,8 +193,6 @@ public class AIService : IAIService
                 throw new InvalidOperationException("Generated image bytes are null");
             }
 
-            _logger.LogInformation("Image uploaded to storage");
-
             // Upload directly to R2 storage using the binary upload method
             var uploadedUrl = await _storageService.UploadBinaryDataAsync(
                 image.ImageBytes.ToArray(),
@@ -206,7 +200,6 @@ public class AIService : IAIService
                 _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Images);
 
-            _logger.LogInformation("Image uploaded to storage");
             return uploadedUrl;
         }
         catch (Exception ex)
@@ -234,8 +227,6 @@ public class AIService : IAIService
 
         try
         {
-            _logger.LogInformation("Generating audio");
-
             // Create audio client with API key from settings
             var audioClient = new AudioClient(_openAiSettings.AudioModelName, _openAiSettings.ApiKey);
 
@@ -255,9 +246,6 @@ public class AIService : IAIService
                 _ => GeneratedSpeechVoice.Nova // Default to Nova voice
             };
 
-            _logger.LogInformation("Using voice for text-to-speech");
-
-            _logger.LogDebug("Generating audio with text and example sentence");
             string textToSpeak = $"{flashcardText}. \n\n{exampleSentence}";
 
             // Generate speech with the prepared text
@@ -269,16 +257,13 @@ public class AIService : IAIService
                 throw new InvalidOperationException("Failed to generate audio: null response");
             }
 
-            _logger.LogInformation("Audio generated successfully, uploading to storage");
-
-            // Upload to storage
+            // Upload audio to storage
             var uploadedUrl = await _storageService.UploadBinaryDataAsync(
                 speech.ToArray(),
                 "audio/mp3",
                 _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Audio);
 
-            _logger.LogInformation("Audio uploaded to storage");
             return uploadedUrl;
         }
         catch (Exception ex)

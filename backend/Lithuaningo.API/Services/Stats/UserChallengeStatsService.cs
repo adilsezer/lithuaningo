@@ -61,7 +61,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             if (cachedStats != null)
             {
-                _logger.LogInformation("Retrieved challenge stats from cache");
                 return cachedStats;
             }
 
@@ -74,7 +73,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
             // Cache the result
             var settings = await _cacheSettingsService.GetCacheSettingsAsync();
             await _cache.SetAsync(cacheKey, statsResponse, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
-            _logger.LogInformation("Cached challenge stats");
 
             return statsResponse;
         }
@@ -97,13 +95,8 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
         try
         {
-            _logger.LogInformation("Processing challenge answer");
-
             // Get or create stats entity
             var statsEntity = await GetOrCreateStatsEntityAsync(userGuid);
-
-            // Log current date info for debugging
-            _logger.LogInformation("Date comparison logged");
 
             // Always update the last challenge date to today
             statsEntity.LastChallengeDate = DateTime.UtcNow;
@@ -116,20 +109,16 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             // Invalidate the cache
             await _cacheInvalidator.InvalidateUserChallengeStatsAsync(userId);
-            _logger.LogInformation("Invalidated challenge stats cache");
 
             // Update leaderboard if answer was correct
             if (request.WasCorrect)
             {
                 // Add 1 point to leaderboard per correct answer
                 await _leaderboardService.UpdateLeaderboardEntryAsync(new UpdateLeaderboardEntryRequest { UserId = userGuid, ScoreToAdd = 1 });
-                _logger.LogInformation("Updated leaderboard with points");
             }
 
             // Convert to response DTO
             var updatedStatsResponse = _mapper.Map<UserChallengeStatsResponse>(statsEntity);
-
-            _logger.LogInformation("Successfully updated challenge stats");
 
             return updatedStatsResponse;
         }
@@ -155,12 +144,10 @@ public class UserChallengeStatsService : IUserChallengeStatsService
         var stats = response.Models.FirstOrDefault();
         if (stats != null)
         {
-            _logger.LogInformation("Found existing stats");
             return stats;
         }
 
         // Create default stats if none exist
-        _logger.LogInformation("No stats found, creating new record");
         var newStats = new UserChallengeStats
         {
             Id = Guid.NewGuid(),
@@ -181,10 +168,9 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
         if (createResponse.Models == null || createResponse.Models.Count == 0)
         {
-            throw new InvalidOperationException($"Failed to create stats for user {userGuid}");
+            throw new InvalidOperationException("Failed to create challenge stats");
         }
 
-        _logger.LogInformation("Created new challenge stats");
         return createResponse.Models.First();
     }
 
@@ -210,21 +196,17 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
             // Increment challenges completed counter for a new day
             stats.TotalChallengesCompleted += 1;
-
-            _logger.LogInformation("New day detected, incrementing streak");
         }
         else if (stats.TodayCorrectAnswerCount + stats.TodayIncorrectAnswerCount == 0)
         {
             // First challenge of the day
             stats.TotalChallengesCompleted += 1;
-            _logger.LogInformation("First challenge today, incrementing completed counter");
         }
 
         // Update longest streak if needed
         if (stats.CurrentStreak > stats.LongestStreak)
         {
             stats.LongestStreak = stats.CurrentStreak;
-            _logger.LogInformation("New longest streak recorded");
         }
 
         // Update answer counts
@@ -245,8 +227,6 @@ public class UserChallengeStatsService : IUserChallengeStatsService
     /// </summary>
     private async Task<UserChallengeStats> SaveStatsEntityAsync(UserChallengeStats statsEntity)
     {
-        _logger.LogInformation("Saving challenge stats");
-
         var updateResponse = await _supabaseClient
             .From<UserChallengeStats>()
             .Where(u => u.Id == statsEntity.Id)
@@ -254,7 +234,7 @@ public class UserChallengeStatsService : IUserChallengeStatsService
 
         if (updateResponse.Models == null || updateResponse.Models.Count == 0)
         {
-            throw new InvalidOperationException($"Failed to update stats for user {statsEntity.UserId}");
+            throw new InvalidOperationException("Failed to update challenge stats");
         }
 
         return updateResponse.Models.First();
