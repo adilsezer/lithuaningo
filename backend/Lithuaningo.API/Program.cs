@@ -15,6 +15,7 @@ using Lithuaningo.API.Services.Leaderboard;
 using Lithuaningo.API.Services.RevenueCat;
 using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Storage;
+using Lithuaningo.API.Services.Subscription;
 using Lithuaningo.API.Services.Supabase;
 using Lithuaningo.API.Services.UserProfile;
 using Lithuaningo.API.Settings;
@@ -353,6 +354,7 @@ To authorize in Swagger UI:
     services.AddScoped<ILeaderboardService, LeaderboardService>();
     services.AddScoped<IUserChallengeStatsService, UserChallengeStatsService>();
     services.AddScoped<IUserChatStatsService, UserChatStatsService>();
+    services.AddScoped<ISubscriptionService, SubscriptionService>();
     // Challenge Related Services
     services.AddScoped<IChallengeService, ChallengeService>();
     services.AddScoped<IRevenueCatWebhookService, RevenueCatWebhookService>();
