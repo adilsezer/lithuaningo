@@ -1,7 +1,7 @@
 using System;
 using AutoMapper;
-using Lithuaningo.API.Models;
 using Lithuaningo.API.DTOs.UserProfile;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Mappings
 {
@@ -27,8 +27,8 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarUrl))
                 .ForMember(dest => dest.IsAdmin, opt => opt.MapFrom(src => src.IsAdmin))
-                .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src => src.IsPremium))
-                .ForMember(dest => dest.PremiumExpiresAt, opt => opt.MapFrom(src => src.PremiumExpiresAt));
+                .ForMember(dest => dest.IsPremium, opt => opt.Ignore())
+                .ForMember(dest => dest.PremiumExpiresAt, opt => opt.Ignore());
         }
     }
-} 
+}

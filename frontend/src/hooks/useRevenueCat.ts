@@ -9,7 +9,6 @@ import Purchases, {
 import { useUserData } from "@stores/useUserStore";
 import { ENTITLEMENTS } from "@config/revenuecat.config";
 import { useSetLoading, useSetError } from "@src/stores/useUIStore";
-import { UserProfileService } from "@src/services/data/userProfileService";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -35,10 +34,10 @@ export const useRevenueCat = () => {
     try {
       setLoading(true);
       setError(null);
-      const offerings = await Purchases.getOfferings();
-      if (offerings.current) {
-        setOfferings(offerings.current);
-        return offerings.current;
+      const offeringsResponse = await Purchases.getOfferings(); // Renamed to avoid conflict with state variable
+      if (offeringsResponse.current) {
+        setOfferings(offeringsResponse.current);
+        return offeringsResponse.current;
       }
       return null;
     } catch (error) {
@@ -66,32 +65,8 @@ export const useRevenueCat = () => {
     }
   };
 
-  // Handle expiration date that might be in different formats
-  const parseExpirationDate = (
-    expirationDate: string | number | null
-  ): string | undefined => {
-    if (!expirationDate) return undefined;
-
-    try {
-      // If it's already an ISO string date format (e.g. "2025-05-09T23:16:35Z")
-      if (typeof expirationDate === "string" && expirationDate.includes("T")) {
-        return new Date(expirationDate).toISOString();
-      }
-
-      // If it's a Unix timestamp in seconds (number or string)
-      const timestamp = Number(expirationDate);
-      if (!isNaN(timestamp)) {
-        // Convert seconds to milliseconds (JS Date uses milliseconds)
-        return new Date(timestamp * 1000).toISOString();
-      }
-
-      console.warn(`Unrecognized date format: ${expirationDate}`);
-      return undefined;
-    } catch (error) {
-      console.error("Error parsing expiration date:", error);
-      return undefined;
-    }
-  };
+  // The parseExpirationDate function is no longer needed here as the backend handles date logic via webhooks.
+  // (Removed parseExpirationDate function)
 
   // Check if user has premium entitlement
   const checkPremiumEntitlement = async (info: CustomerInfo) => {
@@ -99,98 +74,20 @@ export const useRevenueCat = () => {
     const premiumEntitlement = info.entitlements.active[ENTITLEMENTS.premium];
     const hasPremium = typeof premiumEntitlement !== "undefined";
 
+    // Optimistically set local isPremium state based on RevenueCat CustomerInfo for immediate UI feedback.
+    // This allows the UI to react instantly to purchases or restores.
+    // The authoritative state will come from the backend (via webhooks and profile fetch).
     setIsPremium(hasPremium);
 
-    // Update user profile in Supabase if user is authenticated
+    // NOTE: Direct calls to UserProfileService for premium status updates were removed previously.
+    // Backend is updated by RevenueCat webhooks.
+
     if (userData?.id) {
-      try {
-        if (hasPremium && premiumEntitlement) {
-          // Check if this is a lifetime subscription (no expiration but active)
-          const isLifetime =
-            premiumEntitlement.isActive &&
-            !premiumEntitlement.expirationDate &&
-            premiumEntitlement.productIdentifier.includes("lifetime");
-
-          // Get expiration date from the entitlement
-          const expirationDate = premiumEntitlement.expirationDate;
-
-          // Handle specific cases:
-          // 1. Regular subscription with valid expiration date
-          // 2. Lifetime subscription (no expiration date)
-          if (expirationDate) {
-            // Safely parse the expiration date
-            const expiresAt = parseExpirationDate(expirationDate);
-            if (expiresAt) {
-              // Copy the premiumEntitlement to avoid any reference issues
-              const safeInfo = JSON.parse(JSON.stringify(info));
-
-              // Update premium status with expiration date
-              await UserProfileService.updatePremiumStatus(
-                userData.id,
-                safeInfo,
-                hasPremium
-              );
-            } else {
-              // Fall back to the lifetime handling
-              const farFuture = new Date();
-              farFuture.setFullYear(farFuture.getFullYear() + 10);
-
-              // Create a CustomerInfo object with the modified expiration
-              const modifiedInfo = {
-                ...info,
-                entitlements: {
-                  ...info.entitlements,
-                  active: {
-                    ...info.entitlements.active,
-                    [ENTITLEMENTS.premium]: {
-                      ...premiumEntitlement,
-                      expirationDate: (farFuture.getTime() / 1000).toString(),
-                    },
-                  },
-                },
-              };
-
-              await UserProfileService.updatePremiumStatus(
-                userData.id,
-                modifiedInfo,
-                hasPremium
-              );
-            }
-          } else if (isLifetime || premiumEntitlement.isActive) {
-            // Handle lifetime subscriptions which may not have expiration dates
-            // Set a far-future expiration date (10 years from now)
-            const farFuture = new Date();
-            farFuture.setFullYear(farFuture.getFullYear() + 10);
-
-            // Create a CustomerInfo object with the modified expiration
-            const modifiedInfo = {
-              ...info,
-              entitlements: {
-                ...info.entitlements,
-                active: {
-                  ...info.entitlements.active,
-                  [ENTITLEMENTS.premium]: {
-                    ...premiumEntitlement,
-                    expirationDate: (farFuture.getTime() / 1000).toString(),
-                  },
-                },
-              },
-            };
-
-            await UserProfileService.updatePremiumStatus(
-              userData.id,
-              modifiedInfo,
-              hasPremium
-            );
-          }
-        } else if (userData.isPremium) {
-          // If user was premium but no longer is, update status to false
-          await UserProfileService.removePremiumStatus(userData.id);
-        }
-      } catch (error) {
-        console.error("Error updating premium status in user profile:", error);
-        // Don't surface this error to the user as it doesn't affect their immediate experience
-      }
+      console.log(
+        "[useRevenueCat] CustomerInfo updated. Local isPremium set to:",
+        hasPremium,
+        "Backend will be updated via webhooks."
+      );
     }
   };
 
@@ -201,27 +98,20 @@ export const useRevenueCat = () => {
       setError(null);
       setPurchaseError(null);
 
-      // TypeScript doesn't allow direct destructuring here due to typing issues
-      // We need to manually access the customerInfo property
       const result = await Purchases.purchasePackage(pack);
-      // Use casting to address the TypeScript type issue
-      const customerInfo = result.customerInfo as CustomerInfo;
-      setCustomerInfo(customerInfo);
+      const purchasedCustomerInfo = result.customerInfo as CustomerInfo; // Renamed to avoid conflict
+      setCustomerInfo(purchasedCustomerInfo);
 
-      // Check premium entitlement and update user profile
-      await checkPremiumEntitlement(customerInfo);
+      await checkPremiumEntitlement(purchasedCustomerInfo);
 
-      return customerInfo;
+      return purchasedCustomerInfo;
     } catch (error) {
       console.error("Error purchasing package:", error);
 
-      // Handle user cancellation separately
-      const purchaseError = error as PurchasesError;
-      if (
-        purchaseError.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
-      ) {
+      const purchaseErr = error as PurchasesError; // Renamed to avoid conflict
+      if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
-          purchaseError.message || "An error occurred during purchase";
+          (error as Error).message || "An error occurred during purchase"; // Type assertion
         setPurchaseError(errorMessage);
         setError(errorMessage);
       }
@@ -245,23 +135,18 @@ export const useRevenueCat = () => {
       setError(null);
       setPurchaseError(null);
 
-      // Fixed return type handling
-      const customerInfo = await Purchases.restorePurchases();
+      const restoredCustomerInfo = await Purchases.restorePurchases(); // Renamed
 
-      setCustomerInfo(customerInfo);
+      setCustomerInfo(restoredCustomerInfo);
+      await checkPremiumEntitlement(restoredCustomerInfo);
 
-      // Check premium entitlement and update user profile
-      await checkPremiumEntitlement(customerInfo);
-
-      return customerInfo;
+      return restoredCustomerInfo;
     } catch (error) {
       console.error("Error restoring purchases:", error);
-      const purchaseError = error as PurchasesError;
-      if (
-        purchaseError.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
-      ) {
+      const purchaseErr = error as PurchasesError; // Renamed
+      if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
-          purchaseError.message ||
+          (error as Error).message || // Type assertion
           "An error occurred while restoring purchases";
         setPurchaseError(errorMessage);
         setError(errorMessage);

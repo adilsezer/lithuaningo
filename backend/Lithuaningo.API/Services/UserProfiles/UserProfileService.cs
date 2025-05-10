@@ -181,5 +181,58 @@ namespace Lithuaningo.API.Services.UserProfile
                 throw;
             }
         }
+
+        public async Task<UserProfileResponse?> UpdatePremiumStatusFromWebhookAsync(string userId, bool isPremium, DateTime? premiumExpiresAt)
+        {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                // Depending on your user ID strategy, you might have non-GUID app_user_ids from RevenueCat.
+                // If your Supabase user_profiles.id is always a GUID that matches RevenueCat's app_user_id, this TryParse is correct.
+                // If they can differ, you'll need a way to map RevenueCat's app_user_id to your internal Supabase user ID.
+                // For this example, we assume they are the same GUID.
+                return null;
+            }
+
+            try
+            {
+                var response = await _supabaseClient
+                    .From<Models.UserProfile>()
+                    .Where(u => u.Id == userGuid)
+                    .Get();
+
+                var profile = response.Models.FirstOrDefault();
+                if (profile == null)
+                {
+                    return null; // User not found
+                }
+
+                // Update premium status and expiration date
+                profile.IsPremium = isPremium;
+                profile.PremiumExpiresAt = premiumExpiresAt;
+
+                // We explicitly set these rather than mapping from a request object
+                var updateResponse = await _supabaseClient
+                    .From<Models.UserProfile>()
+                    .Where(u => u.Id == userGuid) // Ensure we are updating the correct record
+                    .Update(profile);
+
+                if (updateResponse.Models == null || !updateResponse.Models.Any())
+                {
+                    // Potentially throw an exception or handle this as a failure
+                    return null;
+                }
+
+                var updatedProfileModel = updateResponse.Models.First();
+                var profileResponse = _mapper.Map<UserProfileResponse>(updatedProfileModel);
+
+                await _cacheInvalidator.InvalidateUserProfileAsync(userId.ToString());
+
+                return profileResponse;
+            }
+            catch (Exception)
+            {
+                throw; // Re-throw to let the caller (webhook controller) handle the HTTP response
+            }
+        }
     }
 }
