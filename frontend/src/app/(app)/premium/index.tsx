@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, StyleSheet, ScrollView, Image, Animated } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Image } from "react-native";
 import {
   useTheme,
   Card,
@@ -13,7 +13,7 @@ import { useRevenueCat } from "@hooks/useRevenueCat";
 import CustomButton from "@components/ui/CustomButton";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useIsLoading } from "@stores/useUIStore";
+import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 
 // Feature list definition with icons
@@ -51,12 +51,21 @@ const COMPARISON_DATA = [
 
 export default function PremiumFeaturesScreen() {
   const theme = useTheme();
-  const { offerings, purchasePackage } = useRevenueCat();
+  const { offerings, purchasePackage, restorePurchases, isPremium } =
+    useRevenueCat();
   const globalIsLoading = useIsLoading();
+  const setLoading = useSetLoading();
+  const setError = useSetError();
   const alertDialog = useAlertDialog();
+  const { showManageSubscriptions } = useRevenueCat();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(
     "yearly"
   );
+
+  // Clear any existing errors when entering this screen
+  useEffect(() => {
+    setError(null);
+  }, []);
 
   const styles = StyleSheet.create({
     container: {
@@ -226,6 +235,98 @@ export default function PremiumFeaturesScreen() {
       marginBottom: 40,
       marginTop: 8,
     },
+    heading: {
+      fontSize: 24,
+      fontWeight: "bold",
+      marginBottom: 10,
+      textAlign: "center",
+    },
+    subheading: {
+      fontSize: 16,
+      marginBottom: 20,
+      textAlign: "center",
+      opacity: 0.8,
+    },
+    packagesContainer: {
+      marginBottom: 24,
+    },
+    packageOption: {
+      borderWidth: 2,
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 12,
+    },
+    packageOptionSelected: {
+      borderWidth: 2,
+      borderRadius: 8,
+      padding: 16,
+      marginBottom: 12,
+    },
+    packageDescription: {
+      marginTop: 4,
+      opacity: 0.7,
+    },
+    packageBadge: {
+      position: "absolute",
+      top: -10,
+      right: 10,
+      paddingHorizontal: 10,
+      paddingVertical: 5,
+      borderRadius: 12,
+    },
+    packageBadgeText: {
+      fontSize: 12,
+      fontWeight: "bold",
+    },
+    benefitsContainer: {
+      marginBottom: 24,
+    },
+    benefitItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 10,
+    },
+    benefitIcon: {
+      marginRight: 10,
+    },
+    benefitText: {
+      fontSize: 16,
+    },
+    upgradeButton: {
+      paddingVertical: 12,
+      marginBottom: 16,
+    },
+    upgradeButtonText: {
+      fontSize: 18,
+      fontWeight: "bold",
+    },
+    restoreButton: {
+      marginBottom: 16,
+    },
+    restoreButtonText: {
+      fontSize: 16,
+    },
+    termsText: {
+      fontSize: 12,
+      opacity: 0.6,
+      textAlign: "center",
+    },
+    alreadyPremiumMessage: {
+      paddingVertical: 16,
+      alignItems: "center",
+    },
+    alreadyPremiumText: {
+      fontSize: 18,
+      fontWeight: "bold",
+      color: theme.colors.primary,
+      marginBottom: 8,
+    },
+    alreadyPremiumDescription: {
+      fontSize: 16,
+      textAlign: "center",
+      marginBottom: 16,
+      color: theme.colors.onSurfaceVariant,
+    },
   });
 
   const getPriceString = (packageType: string) => {
@@ -305,18 +406,86 @@ export default function PremiumFeaturesScreen() {
         return;
       }
 
+      // Don't show server-side errors to users as they may be related to profile updating
+      if (error.message && !error.message.includes("500")) {
+        alertDialog.showAlert({
+          title: "Purchase Error",
+          message:
+            error.message ||
+            "There was an error processing your purchase. Please try again later.",
+          buttons: [{ text: "OK", onPress: () => {} }],
+        });
+      } else {
+        console.error("Server error during purchase process:", error);
+      }
+    }
+  };
+
+  const handleRestorePurchases = async () => {
+    try {
+      setLoading(true);
+      await restorePurchases();
       alertDialog.showAlert({
-        title: "Purchase Error",
-        message:
-          error.message ||
-          "There was an error processing your purchase. Please try again later.",
+        title: "Purchases Restored",
+        message: "Your previous purchases have been restored successfully.",
         buttons: [{ text: "OK", onPress: () => {} }],
       });
+    } catch (error: any) {
+      console.error("Failed to restore purchases:", error);
+
+      // Don't show server-side errors to users
+      if (error.message && !error.message.includes("500")) {
+        alertDialog.showAlert({
+          title: "Restore Failed",
+          message:
+            "We couldn't restore your purchases. Please try again later.",
+          buttons: [{ text: "OK", onPress: () => {} }],
+        });
+      } else {
+        console.error("Server error during restore process:", error);
+      }
+    } finally {
+      setLoading(false);
     }
   };
 
   if (globalIsLoading) {
     return <LoadingIndicator modal={false} />;
+  }
+
+  // If user is already premium
+  if (isPremium) {
+    return (
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.contentContainer}
+        showsVerticalScrollIndicator={false}
+      >
+        <Stack.Screen options={{ title: "Premium Membership" }} />
+
+        <View style={styles.alreadyPremiumMessage}>
+          <MaterialCommunityIcons
+            name="check-decagram"
+            size={60}
+            color={theme.colors.primary}
+          />
+          <Text style={styles.alreadyPremiumText}>
+            You're already a Premium member!
+          </Text>
+          <Text style={styles.alreadyPremiumDescription}>
+            You have full access to all premium features. Enjoy your learning
+            journey!
+          </Text>
+
+          <CustomButton
+            title="Manage Subscription"
+            mode="contained"
+            onPress={() => showManageSubscriptions()}
+            style={{ marginTop: 16 }}
+          />
+        </View>
+      </ScrollView>
+    );
   }
 
   const renderPlanCard = (type: string, title: string, isBestValue = false) => {
@@ -503,6 +672,12 @@ export default function PremiumFeaturesScreen() {
           mode="contained"
           onPress={handleUpgradeToPremium}
           disabled={!selectedPackage}
+        />
+        <CustomButton
+          title="Restore Purchases"
+          mode="text"
+          onPress={handleRestorePurchases}
+          style={{ marginTop: 12 }}
         />
       </View>
     </ScrollView>

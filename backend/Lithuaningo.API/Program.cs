@@ -12,6 +12,7 @@ using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Challenges;
 using Lithuaningo.API.Services.Flashcards;
 using Lithuaningo.API.Services.Leaderboard;
+using Lithuaningo.API.Services.RevenueCat;
 using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Storage;
 using Lithuaningo.API.Services.Supabase;
@@ -354,6 +355,7 @@ To authorize in Swagger UI:
     services.AddScoped<IUserChatStatsService, UserChatStatsService>();
     // Challenge Related Services
     services.AddScoped<IChallengeService, ChallengeService>();
+    services.AddScoped<IRevenueCatWebhookService, RevenueCatWebhookService>();
 
     // OpenAI Services
     services.AddOptions<OpenAISettings>()

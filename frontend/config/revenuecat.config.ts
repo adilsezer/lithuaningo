@@ -14,7 +14,7 @@ export const REVENUECAT_API_KEYS = {
 // Entitlement IDs
 export const ENTITLEMENTS = {
   premium:
-    process.env.EXPO_PUBLIC_REVENUECAT_PREMIUM_ENTITLEMENT_ID || "premium",
+    process.env.EXPO_PUBLIC_REVENUECAT_PREMIUM_ENTITLEMENT_ID || "Premium",
 };
 
 // Package Identifiers

@@ -6,18 +6,18 @@ import { createTheme } from "@src/styles/theme";
 import { useIsDarkMode } from "@stores/useThemeStore";
 import useThemeStore from "@stores/useThemeStore";
 import { useAuth } from "@hooks/useAuth";
+import { useRevenueCat } from "@hooks/useRevenueCat";
 
 export default function SettingsScreen() {
   const isDarkMode = useIsDarkMode();
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const theme = createTheme(isDarkMode);
   const { deleteAccount } = useAuth();
+  const { showManageSubscriptions, isPremium } = useRevenueCat();
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <Card style={styles.card}>
+    <ScrollView style={styles.container}>
+      <Card style={[styles.card, { backgroundColor: theme.colors.background }]}>
         <List.Section>
           <List.Subheader>Appearance</List.Subheader>
           <List.Item
@@ -64,28 +64,20 @@ export default function SettingsScreen() {
 
           <Divider />
 
-          <List.Subheader>Security</List.Subheader>
+          <List.Subheader>Subscription</List.Subheader>
           <List.Item
-            title="Change Password"
-            description="Update your account password"
-            left={(props) => <List.Icon {...props} icon="lock" />}
-            onPress={() => {
-              /* Navigate to change password screen */
-            }}
+            title="Manage Subscription"
+            description={
+              isPremium
+                ? "View, change, or cancel your subscription"
+                : "Subscribe to premium to unlock this feature"
+            }
+            left={(props) => <List.Icon {...props} icon="star" />}
+            onPress={() => showManageSubscriptions()}
+            disabled={!isPremium}
           />
         </List.Section>
       </Card>
-
-      <View style={styles.buttonGroup}>
-        <Button
-          mode="outlined"
-          onPress={() => deleteAccount()}
-          style={styles.dangerButton}
-          textColor={theme.colors.error}
-        >
-          Delete Account
-        </Button>
-      </View>
     </ScrollView>
   );
 }

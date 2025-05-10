@@ -1,21 +1,14 @@
 import { useEffect, useState } from "react";
-import { Platform } from "react-native";
 import Purchases, {
   CustomerInfo,
   PurchasesOffering,
-  LOG_LEVEL,
   PurchasesPackage,
   PurchasesError,
   PURCHASES_ERROR_CODE,
 } from "react-native-purchases";
 import { useUserData } from "@stores/useUserStore";
-import {
-  REVENUECAT_API_KEYS,
-  ENTITLEMENTS,
-  DEBUG_SETTINGS,
-} from "@config/revenuecat.config";
+import { ENTITLEMENTS } from "@config/revenuecat.config";
 import { useSetLoading, useSetError } from "@src/stores/useUIStore";
-import { UserProfileService } from "@src/services/data/userProfileService";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -29,47 +22,28 @@ export const useRevenueCat = () => {
 
   const userData = useUserData();
 
+  // Load offerings and customer info when the hook is mounted or userData changes
   useEffect(() => {
-    // Initialize RevenueCat
-    const initializeRevenueCat = async () => {
-      Purchases.setLogLevel(
-        DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR
-      );
-
-      if (Platform.OS === "ios") {
-        await Purchases.configure({ apiKey: REVENUECAT_API_KEYS.ios });
-      } else if (Platform.OS === "android") {
-        await Purchases.configure({ apiKey: REVENUECAT_API_KEYS.android });
-      }
-
-      // Login the user if they're authenticated
-      if (userData?.id) {
-        await Purchases.logIn(userData.id);
-      }
-
-      fetchOfferings();
-      getCustomerInfo();
-    };
-
-    initializeRevenueCat();
-
-    return () => {
-      // If needed, perform cleanup here
-    };
-  }, [userData?.id]);
+    // RevenueCat is already initialized in InitializationProvider
+    fetchOfferings();
+    getCustomerInfo();
+  }, []); // Run only once when component mounts since getCustomerInfo handles userData internally
 
   // Fetch available offerings
-  const fetchOfferings = async () => {
+  const fetchOfferings = async (): Promise<PurchasesOffering | null> => {
     try {
       setLoading(true);
       setError(null);
-      const offerings = await Purchases.getOfferings();
-      if (offerings.current) {
-        setOfferings(offerings.current);
+      const offeringsResponse = await Purchases.getOfferings(); // Renamed to avoid conflict with state variable
+      if (offeringsResponse.current) {
+        setOfferings(offeringsResponse.current);
+        return offeringsResponse.current;
       }
+      return null;
     } catch (error) {
       console.error("Error fetching offerings:", error);
       setError("Failed to fetch subscription offerings");
+      return null;
     } finally {
       setLoading(false);
     }
@@ -91,29 +65,29 @@ export const useRevenueCat = () => {
     }
   };
 
+  // The parseExpirationDate function is no longer needed here as the backend handles date logic via webhooks.
+  // (Removed parseExpirationDate function)
+
   // Check if user has premium entitlement
   const checkPremiumEntitlement = async (info: CustomerInfo) => {
-    const hasPremium =
-      typeof info.entitlements.active[ENTITLEMENTS.premium] !== "undefined";
+    // Check if the premium entitlement exists and is active
+    const premiumEntitlement = info.entitlements.active[ENTITLEMENTS.premium];
+    const hasPremium = typeof premiumEntitlement !== "undefined";
+
+    // Optimistically set local isPremium state based on RevenueCat CustomerInfo for immediate UI feedback.
+    // This allows the UI to react instantly to purchases or restores.
+    // The authoritative state will come from the backend (via webhooks and profile fetch).
     setIsPremium(hasPremium);
 
-    // Update user profile in Supabase if user is authenticated
+    // NOTE: Direct calls to UserProfileService for premium status updates were removed previously.
+    // Backend is updated by RevenueCat webhooks.
+
     if (userData?.id) {
-      try {
-        if (hasPremium) {
-          // Update premium status to true with expiration date
-          await UserProfileService.updatePremiumStatus(
-            userData.id,
-            info,
-            hasPremium
-          );
-        } else if (userData.isPremium) {
-          // If user was premium but no longer is, update status to false
-          await UserProfileService.removePremiumStatus(userData.id);
-        }
-      } catch (error) {
-        console.error("Error updating premium status in user profile:", error);
-      }
+      console.log(
+        "[useRevenueCat] CustomerInfo updated. Local isPremium set to:",
+        hasPremium,
+        "Backend will be updated via webhooks."
+      );
     }
   };
 
@@ -124,27 +98,20 @@ export const useRevenueCat = () => {
       setError(null);
       setPurchaseError(null);
 
-      // TypeScript doesn't allow direct destructuring here due to typing issues
-      // We need to manually access the customerInfo property
       const result = await Purchases.purchasePackage(pack);
-      // Use casting to address the TypeScript type issue
-      const customerInfo = result.customerInfo as CustomerInfo;
-      setCustomerInfo(customerInfo);
+      const purchasedCustomerInfo = result.customerInfo as CustomerInfo; // Renamed to avoid conflict
+      setCustomerInfo(purchasedCustomerInfo);
 
-      // Check premium entitlement and update user profile
-      await checkPremiumEntitlement(customerInfo);
+      await checkPremiumEntitlement(purchasedCustomerInfo);
 
-      return customerInfo;
+      return purchasedCustomerInfo;
     } catch (error) {
       console.error("Error purchasing package:", error);
 
-      // Handle user cancellation separately
-      const purchaseError = error as PurchasesError;
-      if (
-        purchaseError.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
-      ) {
+      const purchaseErr = error as PurchasesError; // Renamed to avoid conflict
+      if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
-          purchaseError.message || "An error occurred during purchase";
+          (error as Error).message || "An error occurred during purchase"; // Type assertion
         setPurchaseError(errorMessage);
         setError(errorMessage);
       }
@@ -155,6 +122,12 @@ export const useRevenueCat = () => {
     }
   };
 
+  // Ensure offerings are loaded - useful to call before showing paywall
+  const ensureOfferings = async (): Promise<PurchasesOffering | null> => {
+    if (offerings) return offerings;
+    return fetchOfferings();
+  };
+
   // Restore purchases
   const restorePurchases = async () => {
     try {
@@ -162,30 +135,36 @@ export const useRevenueCat = () => {
       setError(null);
       setPurchaseError(null);
 
-      // TypeScript doesn't allow direct destructuring here due to typing issues
-      // We need to manually access the customerInfo property
-      const result = await Purchases.restorePurchases();
-      // Use casting to address the TypeScript type issue
-      const customerInfo = (result as any).customerInfo as CustomerInfo;
-      setCustomerInfo(customerInfo);
+      const restoredCustomerInfo = await Purchases.restorePurchases(); // Renamed
 
-      // Check premium entitlement and update user profile
-      await checkPremiumEntitlement(customerInfo);
+      setCustomerInfo(restoredCustomerInfo);
+      await checkPremiumEntitlement(restoredCustomerInfo);
 
-      return customerInfo;
+      return restoredCustomerInfo;
     } catch (error) {
       console.error("Error restoring purchases:", error);
-      const purchaseError = error as PurchasesError;
-      if (
-        purchaseError.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR
-      ) {
+      const purchaseErr = error as PurchasesError; // Renamed
+      if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
-          purchaseError.message ||
+          (error as Error).message || // Type assertion
           "An error occurred while restoring purchases";
         setPurchaseError(errorMessage);
         setError(errorMessage);
       }
       throw error;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Show subscription management screen
+  const showManageSubscriptions = async () => {
+    try {
+      setLoading(true);
+      await Purchases.showManageSubscriptions();
+    } catch (error) {
+      console.error("Error showing subscription management:", error);
+      setError("Failed to open subscription management");
     } finally {
       setLoading(false);
     }
@@ -213,8 +192,10 @@ export const useRevenueCat = () => {
     purchaseError,
     purchasePackage,
     restorePurchases,
+    showManageSubscriptions,
     fetchOfferings,
     getCustomerInfo,
     logout,
+    ensureOfferings,
   };
 };
