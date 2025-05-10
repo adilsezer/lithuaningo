@@ -45,7 +45,7 @@ namespace Lithuaningo.API.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> HandleRevenueCatWebhook()
         {
-            _logger.LogInformation("RevenueCat webhook received.");
+            _logger.LogInformation("RevenueCat webhook received. Verifying authorization...");
 
             if (!Request.Headers.TryGetValue("Authorization", out var authorizationHeaderValues))
             {
@@ -57,10 +57,9 @@ namespace Lithuaningo.API.Controllers
 
             if (!string.Equals(receivedAuthHeader, _expectedAuthHeaderValue, StringComparison.Ordinal))
             {
-                _logger.LogWarning("Invalid RevenueCat webhook Authorization header. Received: '{ReceivedHeader}'", receivedAuthHeader);
+                _logger.LogWarning("Invalid RevenueCat webhook Authorization header.");
                 return Unauthorized("Invalid Authorization header.");
             }
-            _logger.LogInformation("RevenueCat webhook Authorization header verified successfully.");
 
             Request.EnableBuffering();
             string requestBody;
@@ -76,8 +75,6 @@ namespace Lithuaningo.API.Controllers
                 return BadRequest("Request body is empty.");
             }
 
-            _logger.LogDebug("RevenueCat webhook payload (verified): {Payload}", requestBody);
-
             RevenueCatWebhookPayload? payload;
             try
             {
@@ -85,7 +82,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "Failed to deserialize RevenueCat webhook payload.");
+                _logger.LogError(ex, "Failed to deserialize RevenueCat webhook payload. RequestBody snippet (first 100 chars): {RequestBodySnippet}", requestBody.Substring(0, Math.Min(requestBody.Length, 100)));
                 return BadRequest("Invalid JSON payload.");
             }
 
@@ -95,20 +92,23 @@ namespace Lithuaningo.API.Controllers
                 return BadRequest("Event data is missing after deserialization.");
             }
 
+            _logger.LogInformation("Deserialized RevenueCat Event. EventID: {EventId}, EventType: {EventType}",
+                                 payload.Event.Id, payload.Event.Type);
+
             try
             {
                 await _revenueCatWebhookService.ProcessWebhookEventAsync(payload.Event);
-                _logger.LogInformation("Successfully queued event {EventType} for AppUserID: {AppUserId} for processing.", payload.Event.Type, payload.Event.AppUserId);
+                _logger.LogInformation("Successfully processed event via service. EventID: {EventId}, EventType: {EventType}", payload.Event.Id, payload.Event.Type);
                 return Ok("Webhook processed successfully.");
             }
             catch (ArgumentNullException ex)
             {
-                _logger.LogWarning(ex, "Argument null exception while processing webhook event type: {EventType} for AppUserID: {AppUserId}.", payload.Event.Type, payload.Event.AppUserId);
+                _logger.LogWarning(ex, "Argument null exception while processing webhook event. EventID: {EventId}, EventType: {EventType}", payload.Event.Id, payload.Event.Type);
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing RevenueCat webhook event type: {EventType} for AppUserID: {AppUserId} via service.", payload.Event.Type, payload.Event.AppUserId);
+                _logger.LogError(ex, "Error processing RevenueCat webhook event via service. EventID: {EventId}, EventType: {EventType}", payload.Event.Id, payload.Event.Type);
                 return StatusCode(500, "Internal server error while processing webhook event.");
             }
         }
