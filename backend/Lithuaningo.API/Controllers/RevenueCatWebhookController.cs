@@ -63,7 +63,7 @@ namespace Lithuaningo.API.Controllers
 
             Request.EnableBuffering();
             string requestBody;
-            using (var reader = new StreamReader(Request.Body, Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
+            using (var reader = new StreamReader(Request.Body, encoding: Encoding.UTF8, detectEncodingFromByteOrderMarks: false, leaveOpen: true))
             {
                 requestBody = await reader.ReadToEndAsync();
                 Request.Body.Position = 0;
@@ -82,7 +82,7 @@ namespace Lithuaningo.API.Controllers
             }
             catch (JsonException ex)
             {
-                _logger.LogError(ex, "Failed to deserialize RevenueCat webhook payload. RequestBody snippet (first 100 chars): {RequestBodySnippet}", requestBody.Substring(0, Math.Min(requestBody.Length, 100)));
+                _logger.LogError(ex, "Failed to deserialize RevenueCat webhook payload.");
                 return BadRequest("Invalid JSON payload.");
             }
 
@@ -92,23 +92,22 @@ namespace Lithuaningo.API.Controllers
                 return BadRequest("Event data is missing after deserialization.");
             }
 
-            _logger.LogInformation("Deserialized RevenueCat Event. EventID: {EventId}, EventType: {EventType}",
-                                 payload.Event.Id, payload.Event.Type);
+            _logger.LogInformation("Deserialized RevenueCat Event.");
 
             try
             {
                 await _revenueCatWebhookService.ProcessWebhookEventAsync(payload.Event);
-                _logger.LogInformation("Successfully processed event via service. EventID: {EventId}, EventType: {EventType}", payload.Event.Id, payload.Event.Type);
+                _logger.LogInformation("Successfully processed event via service.");
                 return Ok("Webhook processed successfully.");
             }
             catch (ArgumentNullException ex)
             {
-                _logger.LogWarning(ex, "Argument null exception while processing webhook event. EventID: {EventId}, EventType: {EventType}", payload.Event.Id, payload.Event.Type);
+                _logger.LogWarning(ex, "Argument null exception while processing webhook event.");
                 return BadRequest(ex.Message);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error processing RevenueCat webhook event via service. EventID: {EventId}, EventType: {EventType}", payload.Event.Id, payload.Event.Type);
+                _logger.LogError(ex, "Error processing RevenueCat webhook event via service.");
                 return StatusCode(500, "Internal server error while processing webhook event.");
             }
         }

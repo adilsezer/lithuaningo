@@ -3,13 +3,13 @@ using Newtonsoft.Json;
 
 namespace Lithuaningo.API.DTOs.RevenueCat
 {
-    public class RevenueCatEntitlementInfo
+    public class SubscriberAttribute
     {
-        [JsonProperty("expires_at_ms")]
-        public long? ExpiresAtMs { get; set; }
+        [JsonProperty("updated_at_ms")]
+        public long UpdatedAtMs { get; set; }
 
-        // Add other relevant properties from entitlement info if needed
-        // e.g., product_identifier, is_active etc.
+        [JsonProperty("value")]
+        public string Value { get; set; } = string.Empty;
     }
 
     public class RevenueCatEvent
@@ -23,24 +23,85 @@ namespace Lithuaningo.API.DTOs.RevenueCat
         [JsonProperty("app_user_id")]
         public string AppUserId { get; set; } = string.Empty;
 
-        [JsonProperty("entitlements")]
-        public Dictionary<string, RevenueCatEntitlementInfo>? Entitlements { get; set; }
+        [JsonProperty("aliases")]
+        public List<string>? Aliases { get; set; }
 
-        // For EXPIRATION events, you might get entitlement IDs directly
+        [JsonProperty("app_id")]
+        public string? AppId { get; set; }
+
+        [JsonProperty("commission_percentage")]
+        public decimal? CommissionPercentage { get; set; }
+
+        [JsonProperty("country_code")]
+        public string? CountryCode { get; set; }
+
+        [JsonProperty("currency")]
+        public string? Currency { get; set; }
+
+        [JsonProperty("entitlement_id")]
+        public string? EntitlementId { get; set; }
+
         [JsonProperty("entitlement_ids")]
         public List<string>? EntitlementIds { get; set; }
 
-        // If you need to check against a specific product for lifetime, etc.
-        [JsonProperty("product_id")]
-        public string? ProductId { get; set; }
+        [JsonProperty("environment")]
+        public string? Environment { get; set; }
 
-        // Timestamp of the event
         [JsonProperty("event_timestamp_ms")]
         public long EventTimestampMs { get; set; }
 
-        // You can add more properties as needed based on the event type
-        // For example, for grace period handling:
-        // [JsonProperty("grace_period_expires_at_ms")]
-        // public long? GracePeriodExpiresAtMs { get; set; }
+        [JsonProperty("expiration_at_ms")]
+        public long ExpirationAtMs { get; set; }
+
+        [JsonProperty("is_family_share")]
+        public bool? IsFamilyShare { get; set; }
+
+        [JsonProperty("metadata")]
+        public object? Metadata { get; set; }
+
+        [JsonProperty("offer_code")]
+        public string? OfferCode { get; set; }
+
+        [JsonProperty("original_app_user_id")]
+        public string? OriginalAppUserId { get; set; }
+
+        [JsonProperty("original_transaction_id")]
+        public string? OriginalTransactionId { get; set; }
+
+        [JsonProperty("period_type")]
+        public string? PeriodType { get; set; }
+
+        [JsonProperty("presented_offering_id")]
+        public string? PresentedOfferingId { get; set; }
+
+        [JsonProperty("price")]
+        public decimal? Price { get; set; }
+
+        [JsonProperty("price_in_purchased_currency")]
+        public decimal? PriceInPurchasedCurrency { get; set; }
+
+        [JsonProperty("product_id")]
+        public string? ProductId { get; set; }
+
+        [JsonProperty("purchased_at_ms")]
+        public long PurchasedAtMs { get; set; }
+
+        [JsonProperty("renewal_number")]
+        public int? RenewalNumber { get; set; }
+
+        [JsonProperty("store")]
+        public string? Store { get; set; }
+
+        [JsonProperty("subscriber_attributes")]
+        public Dictionary<string, SubscriberAttribute>? SubscriberAttributes { get; set; }
+
+        [JsonProperty("takehome_percentage")]
+        public decimal? TakehomePercentage { get; set; }
+
+        [JsonProperty("tax_percentage")]
+        public decimal? TaxPercentage { get; set; }
+
+        [JsonProperty("transaction_id")]
+        public string? TransactionId { get; set; }
     }
 }
