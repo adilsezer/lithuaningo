@@ -51,13 +51,17 @@ const COMPARISON_DATA = [
 
 export default function PremiumFeaturesScreen() {
   const theme = useTheme();
-  const { offerings, purchasePackage, restorePurchases, isPremium } =
-    useRevenueCat();
+  const {
+    offerings,
+    purchasePackage,
+    restorePurchases,
+    isPremium,
+    showManageSubscriptions,
+  } = useRevenueCat();
   const globalIsLoading = useIsLoading();
   const setLoading = useSetLoading();
   const setError = useSetError();
   const alertDialog = useAlertDialog();
-  const { showManageSubscriptions } = useRevenueCat();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(
     "yearly"
   );
@@ -66,6 +70,11 @@ export default function PremiumFeaturesScreen() {
   useEffect(() => {
     setError(null);
   }, []);
+
+  const offeringsAvailable =
+    offerings &&
+    offerings.availablePackages &&
+    offerings.availablePackages.length > 0;
 
   const styles = StyleSheet.create({
     container: {
@@ -327,6 +336,18 @@ export default function PremiumFeaturesScreen() {
       marginBottom: 16,
       color: theme.colors.onSurfaceVariant,
     },
+    unavailableContainer: {
+      paddingVertical: 40,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    unavailableText: {
+      fontSize: 16,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: "center",
+      lineHeight: 24,
+    },
   });
 
   const getPriceString = (packageType: string) => {
@@ -449,7 +470,7 @@ export default function PremiumFeaturesScreen() {
     }
   };
 
-  if (globalIsLoading) {
+  if (globalIsLoading && !offeringsAvailable) {
     return <LoadingIndicator modal={false} />;
   }
 
@@ -640,46 +661,68 @@ export default function PremiumFeaturesScreen() {
         </View>
       </Surface>
 
-      <Text style={styles.sectionTitle}>Choose Your Membership</Text>
-      <View style={styles.planContainer}>
-        {renderPlanCard("monthly", "Monthly")}
-        {renderPlanCard("yearly", "Annual", true)}
-        {renderPlanCard("lifetime", "Lifetime")}
-      </View>
+      {offeringsAvailable ? (
+        <>
+          <Text style={styles.sectionTitle}>Choose Your Membership</Text>
+          <View style={styles.planContainer}>
+            {renderPlanCard("monthly", "Monthly")}
+            {renderPlanCard("yearly", "Annual", true)}
+            {renderPlanCard("lifetime", "Lifetime")}
+          </View>
 
-      <Surface style={[styles.infoSection, { marginBottom: 24 }]} elevation={1}>
-        <MaterialCommunityIcons
-          name="shield-check"
-          size={24}
-          color={theme.colors.onSecondaryContainer}
-          style={styles.infoIcon}
-        />
-        <Text style={styles.infoText}>
-          Easy to manage. Your subscription can be changed or canceled anytime
-          through your app store settings.
-        </Text>
-      </Surface>
+          <Surface
+            style={[styles.infoSection, { marginBottom: 24 }]}
+            elevation={1}
+          >
+            <MaterialCommunityIcons
+              name="shield-check"
+              size={24}
+              color={theme.colors.onSecondaryContainer}
+              style={styles.infoIcon}
+            />
+            <Text style={styles.infoText}>
+              Easy to manage. Your subscription can be changed or canceled
+              anytime through your app store settings.
+            </Text>
+          </Surface>
 
-      <View style={styles.buttonContainer}>
-        <CustomButton
-          title={`Start Premium ${
-            selectedPackage === "monthly"
-              ? "Monthly"
-              : selectedPackage === "yearly"
-              ? "Annual"
-              : "Lifetime"
-          }`}
-          mode="contained"
-          onPress={handleUpgradeToPremium}
-          disabled={!selectedPackage}
-        />
-        <CustomButton
-          title="Restore Purchases"
-          mode="text"
-          onPress={handleRestorePurchases}
-          style={{ marginTop: 12 }}
-        />
-      </View>
+          <View style={styles.buttonContainer}>
+            <CustomButton
+              title={`Start Premium ${
+                selectedPackage === "monthly"
+                  ? "Monthly"
+                  : selectedPackage === "yearly"
+                  ? "Annual"
+                  : selectedPackage === "lifetime"
+                  ? "Lifetime"
+                  : ""
+              }`}
+              mode="contained"
+              onPress={handleUpgradeToPremium}
+              disabled={!selectedPackage || globalIsLoading}
+            />
+            <CustomButton
+              title="Restore Purchases"
+              mode="text"
+              onPress={handleRestorePurchases}
+              style={{ marginTop: 12 }}
+            />
+          </View>
+        </>
+      ) : (
+        <View style={styles.unavailableContainer}>
+          <MaterialCommunityIcons
+            name="cloud-off-outline"
+            size={48}
+            color={theme.colors.onSurfaceVariant}
+            style={{ marginBottom: 16 }}
+          />
+          <Text style={styles.unavailableText}>
+            Subscription options are currently unavailable. Please check your
+            internet connection and try again later.
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 }

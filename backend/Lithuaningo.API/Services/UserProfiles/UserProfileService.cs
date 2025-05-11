@@ -184,12 +184,17 @@ namespace Lithuaningo.API.Services.UserProfile
 
         public async Task<UserProfileResponse?> UpdatePremiumStatusFromWebhookAsync(string userId, bool isPremium, DateTime? premiumExpiresAt)
         {
-            if (!Guid.TryParse(userId, out var userGuid))
+            if (string.IsNullOrEmpty(userId))
             {
-                // Depending on your user ID strategy, you might have non-GUID app_user_ids from RevenueCat.
-                // If your Supabase user_profiles.id is always a GUID that matches RevenueCat's app_user_id, this TryParse is correct.
-                // If they can differ, you'll need a way to map RevenueCat's app_user_id to your internal Supabase user ID.
-                // For this example, we assume they are the same GUID.
+                _logger.LogWarning("Received empty userId in webhook premium status update");
+                return null;
+            }
+
+            Guid userGuid;
+
+            if (!Guid.TryParse(userId, out userGuid))
+            {
+                _logger.LogError("Cannot map RevenueCat user ID to Supabase user ID. Update failed");
                 return null;
             }
 
@@ -203,12 +208,15 @@ namespace Lithuaningo.API.Services.UserProfile
                 var profile = response.Models.FirstOrDefault();
                 if (profile == null)
                 {
+                    _logger.LogWarning("User profile not found from RevenueCat webhook");
                     return null; // User not found
                 }
 
                 // Update premium status and expiration date
                 profile.IsPremium = isPremium;
                 profile.PremiumExpiresAt = premiumExpiresAt;
+
+                _logger.LogInformation("Updating premium status with expiration");
 
                 // We explicitly set these rather than mapping from a request object
                 var updateResponse = await _supabaseClient
@@ -219,6 +227,7 @@ namespace Lithuaningo.API.Services.UserProfile
                 if (updateResponse.Models == null || !updateResponse.Models.Any())
                 {
                     // Potentially throw an exception or handle this as a failure
+                    _logger.LogError("Failed to update premium status. No rows updated.");
                     return null;
                 }
 
@@ -226,11 +235,13 @@ namespace Lithuaningo.API.Services.UserProfile
                 var profileResponse = _mapper.Map<UserProfileResponse>(updatedProfileModel);
 
                 await _cacheInvalidator.InvalidateUserProfileAsync(userId.ToString());
+                _logger.LogInformation("Successfully updated premium status");
 
                 return profileResponse;
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error updating premium status");
                 throw; // Re-throw to let the caller (webhook controller) handle the HTTP response
             }
         }

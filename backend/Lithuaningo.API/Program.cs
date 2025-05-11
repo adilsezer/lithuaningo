@@ -223,6 +223,10 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     services.AddEndpointsApiExplorer();
     // Register Random as a singleton to ensure thread safety
     services.AddSingleton<Random>(sp => new Random());
+
+    // Add RevenueCat webhook configuration
+    services.Configure<RevenueCatSettings>(configuration.GetSection("RevenueCat"));
+
     // API Versioning
     services.AddApiVersioning(options =>
     {

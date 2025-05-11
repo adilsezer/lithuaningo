@@ -1,9 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.RevenueCat;
 using Lithuaningo.API.Services.Subscription;
 using Lithuaningo.API.Services.UserProfile;
+using Lithuaningo.API.Settings;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Lithuaningo.API.Services.RevenueCat
 {
@@ -12,30 +15,47 @@ namespace Lithuaningo.API.Services.RevenueCat
         private readonly IUserProfileService _userProfileService;
         private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<RevenueCatWebhookService> _logger;
+        private readonly RevenueCatSettings _revenueCatSettings;
 
         public RevenueCatWebhookService(
             IUserProfileService userProfileService,
             ISubscriptionService subscriptionService,
-            ILogger<RevenueCatWebhookService> logger)
+            ILogger<RevenueCatWebhookService> logger,
+            IOptions<RevenueCatSettings> revenueCatSettings)
         {
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
             _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _revenueCatSettings = revenueCatSettings?.Value ?? throw new ArgumentNullException(nameof(revenueCatSettings));
+        }
+
+        private bool IsPurchaseOrActivationEventType(string? eventType)
+        {
+            if (string.IsNullOrEmpty(eventType)) return false;
+            return eventType.ToUpperInvariant() switch
+            {
+                "TEST" => true,
+                "INITIAL_PURCHASE" => true,
+                "RENEWAL" => true,
+                "PRODUCT_CHANGE" => true,
+                "UNCANCEL" => true,
+                _ => false,
+            };
         }
 
         public async Task ProcessWebhookEventAsync(RevenueCatEvent evt)
         {
             if (evt == null)
             {
-                _logger.LogWarning("[RevenueCatWebhookService] Event object is null. Cannot process.");
+                _logger.LogWarning("Event object is null. Cannot process.");
                 throw new ArgumentNullException(nameof(evt), "RevenueCat event cannot be null.");
             }
 
-            _logger.LogInformation("[RevenueCatWebhookService] Processing RevenueCat event type: {0}", evt.Type);
+            _logger.LogInformation("Processing RevenueCat event");
 
             if (string.IsNullOrEmpty(evt.AppUserId))
             {
-                _logger.LogWarning("[RevenueCatWebhookService] AppUserID is missing in event.");
+                _logger.LogWarning("AppUserID is missing in event.");
                 return;
             }
 
@@ -43,70 +63,55 @@ namespace Lithuaningo.API.Services.RevenueCat
             DateTime? premiumExpiresAt = null;
             bool shouldUpdateProfile = true;
 
+            List<string> lifetimeProductIds = _revenueCatSettings.LifetimeProductIdentifiers ?? new List<string>();
+
             switch (evt.Type?.ToUpperInvariant())
             {
                 case "TEST":
-                    // For test events, check for product_id and valid expiration_at_ms
-                    if (!string.IsNullOrEmpty(evt.ProductId) && evt.ExpirationAtMs > 0)
-                    {
-                        // Only set premium to true if we have a valid expiration date in the future
-                        var expirationDate = DateTimeOffset.FromUnixTimeMilliseconds(evt.ExpirationAtMs).UtcDateTime;
-
-                        if (expirationDate > DateTime.UtcNow)
-                        {
-                            isPremium = true;
-                            premiumExpiresAt = expirationDate;
-                            _logger.LogInformation("[RevenueCatWebhookService] TEST event with product_id: {0}, setting isPremium to true with expiration at {1}.",
-                                evt.ProductId, premiumExpiresAt);
-                        }
-                        else
-                        {
-                            isPremium = false;
-                            premiumExpiresAt = expirationDate;
-                            _logger.LogInformation("[RevenueCatWebhookService] TEST event has expired at {0}, setting isPremium to false.",
-                                expirationDate);
-                        }
-                    }
-                    else
-                    {
-                        isPremium = false;
-                        _logger.LogInformation("[RevenueCatWebhookService] TEST event without valid product_id or expiration, setting isPremium to false.");
-                    }
-                    break;
-
                 case "INITIAL_PURCHASE":
                 case "RENEWAL":
                 case "PRODUCT_CHANGE":
                 case "UNCANCEL":
-                    // Only set premium true if we have a valid expiration date in the future
-                    if (evt.ExpirationAtMs > 0)
+                    if (!string.IsNullOrEmpty(evt.ProductId) && lifetimeProductIds.Contains(evt.ProductId) && IsPurchaseOrActivationEventType(evt.Type))
+                    {
+                        isPremium = true;
+                        premiumExpiresAt = DateTime.UtcNow.AddYears(100);
+                        _logger.LogInformation("Identified lifetime product event");
+                    }
+                    else if (evt.ExpirationAtMs > 0)
                     {
                         var expirationDate = DateTimeOffset.FromUnixTimeMilliseconds(evt.ExpirationAtMs).UtcDateTime;
-
                         if (expirationDate > DateTime.UtcNow)
                         {
                             isPremium = true;
                             premiumExpiresAt = expirationDate;
-                            _logger.LogInformation("[RevenueCatWebhookService] Purchase event with valid expiration, setting isPremium to true.");
+                            _logger.LogInformation("Processing subscription event with future expiration");
                         }
                         else
                         {
                             isPremium = false;
                             premiumExpiresAt = expirationDate;
-                            _logger.LogInformation("[RevenueCatWebhookService] Purchase event with expired date, setting isPremium to false.");
+                            _logger.LogInformation("Processing subscription event with past expiration");
                         }
                     }
                     else
                     {
                         isPremium = false;
-                        _logger.LogInformation("[RevenueCatWebhookService] Purchase event without valid expiration, setting isPremium to false.");
+                        if (evt.EventTimestampMs > 0)
+                        {
+                            premiumExpiresAt = DateTimeOffset.FromUnixTimeMilliseconds(evt.EventTimestampMs).UtcDateTime;
+                        }
+                        else
+                        {
+                            premiumExpiresAt = null;
+                        }
+                        _logger.LogInformation("Processing event with no positive ExpirationAtMs and not lifetime");
                     }
                     break;
 
                 case "EXPIRATION":
                 case "CANCELLATION":
                     isPremium = false;
-
                     if (evt.ExpirationAtMs > 0)
                     {
                         premiumExpiresAt = DateTimeOffset.FromUnixTimeMilliseconds(evt.ExpirationAtMs).UtcDateTime;
@@ -115,12 +120,11 @@ namespace Lithuaningo.API.Services.RevenueCat
                     {
                         premiumExpiresAt = DateTimeOffset.FromUnixTimeMilliseconds(evt.EventTimestampMs).UtcDateTime;
                     }
-
-                    _logger.LogInformation("[RevenueCatWebhookService] Subscription expiration or cancellation event. Setting isPremium to false.");
+                    _logger.LogInformation("Processing subscription expiration or cancellation event");
                     break;
 
                 default:
-                    _logger.LogInformation("[RevenueCatWebhookService] Unhandled event type: {0}. No profile update.", evt.Type);
+                    _logger.LogInformation("Unhandled event type. No profile update");
                     shouldUpdateProfile = false;
                     break;
             }
@@ -129,16 +133,14 @@ namespace Lithuaningo.API.Services.RevenueCat
             {
                 try
                 {
-                    // First, save the full event details to the subscriptions table
                     var subscription = await _subscriptionService.AddSubscriptionEventAsync(
                         evt.AppUserId,
                         evt,
                         isPremium,
                         premiumExpiresAt);
 
-                    _logger.LogInformation("[RevenueCatWebhookService] Saved subscription record with ID: {0}", subscription.Id);
+                    _logger.LogInformation("Saved subscription record");
 
-                    // Then, update the user profile with the premium status
                     var updatedProfile = await _userProfileService.UpdatePremiumStatusFromWebhookAsync(
                         evt.AppUserId,
                         isPremium,
@@ -146,18 +148,17 @@ namespace Lithuaningo.API.Services.RevenueCat
 
                     if (updatedProfile == null)
                     {
-                        _logger.LogWarning("[RevenueCatWebhookService] UserProfileService update returned null (user not found or update failed).");
+                        _logger.LogWarning("User profile update failed");
                     }
                     else
                     {
-                        _logger.LogInformation("[RevenueCatWebhookService] Successfully updated user profile for {0}. Premium: {1}, Expires: {2}",
-                            evt.AppUserId, isPremium, premiumExpiresAt?.ToString() ?? "never");
+                        _logger.LogInformation("Successfully updated user profile");
                     }
                 }
                 catch (Exception ex)
                 {
-                    _logger.LogError(ex, "[RevenueCatWebhookService] Error processing subscription event for user {UserId}", evt.AppUserId);
-                    throw;
+                    _logger.LogError(ex, "Error processing subscription event");
+                    throw; // Re-throw to let the controller handle the HTTP response
                 }
             }
         }

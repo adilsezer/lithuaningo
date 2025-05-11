@@ -26,7 +26,7 @@ namespace Lithuaningo.API.Services.Subscription
 
         public async Task<Models.Subscription> AddSubscriptionEventAsync(string userId, RevenueCatEvent evt, bool isPremium, DateTime? expiresAt)
         {
-            _logger.LogInformation("[SubscriptionService] Adding subscription event for user {UserId}", userId);
+            _logger.LogInformation("Adding subscription event");
 
             try
             {
@@ -80,13 +80,13 @@ namespace Lithuaningo.API.Services.Subscription
                     .Insert(subscription);
 
                 var createdSubscription = response.Models.Count > 0 ? response.Models[0] : subscription;
-                _logger.LogInformation("[SubscriptionService] Successfully added subscription event: {eventId}", createdSubscription.Id);
+                _logger.LogInformation("Successfully added subscription event");
 
                 return createdSubscription;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[SubscriptionService] Error adding subscription event for user {UserId}", userId);
+                _logger.LogError(ex, "Error adding subscription event");
                 throw;
             }
         }
@@ -106,7 +106,7 @@ namespace Lithuaningo.API.Services.Subscription
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[SubscriptionService] Error fetching latest subscription for user {UserId}", userId);
+                _logger.LogError(ex, "Error fetching latest subscription");
                 throw;
             }
         }
@@ -125,7 +125,7 @@ namespace Lithuaningo.API.Services.Subscription
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "[SubscriptionService] Error fetching subscription history for user {UserId}", userId);
+                _logger.LogError(ex, "Error fetching subscription history");
                 throw;
             }
         }
