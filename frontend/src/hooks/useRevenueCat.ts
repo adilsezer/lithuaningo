@@ -9,6 +9,7 @@ import Purchases, {
 import { useUserData } from "@stores/useUserStore";
 import { ENTITLEMENTS } from "@config/revenuecat.config";
 import { useSetLoading, useSetError } from "@src/stores/useUIStore";
+import { useUserStore } from "@stores/useUserStore";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -65,9 +66,6 @@ export const useRevenueCat = () => {
     }
   };
 
-  // The parseExpirationDate function is no longer needed here as the backend handles date logic via webhooks.
-  // (Removed parseExpirationDate function)
-
   // Check if user has premium entitlement
   const checkPremiumEntitlement = async (info: CustomerInfo) => {
     // Check if the premium entitlement exists and is active
@@ -94,24 +92,62 @@ export const useRevenueCat = () => {
   // Purchase a package
   const purchasePackage = async (pack: PurchasesPackage) => {
     try {
+      console.log(
+        "[RevenueCat] Starting purchase for package:",
+        pack.identifier
+      );
       setLoading(true);
       setError(null);
       setPurchaseError(null);
 
+      // Ensure user is logged in to RevenueCat with correct ID
+      const userData = useUserStore.getState().userData;
+      if (userData?.id) {
+        console.log(
+          "[RevenueCat] Ensuring user is logged in with ID:",
+          userData.id
+        );
+        await Purchases.logIn(userData.id);
+      }
+
       const result = await Purchases.purchasePackage(pack);
-      const purchasedCustomerInfo = result.customerInfo as CustomerInfo; // Renamed to avoid conflict
+      const purchasedCustomerInfo = result.customerInfo;
       setCustomerInfo(purchasedCustomerInfo);
 
+      console.log(
+        "[RevenueCat] Purchase successful for package:",
+        pack.identifier
+      );
+      console.log(
+        "[RevenueCat] Customer info:",
+        JSON.stringify(purchasedCustomerInfo)
+      );
+
+      // Check and update premium status in user store
+      const hasPremium =
+        purchasedCustomerInfo.entitlements.active[ENTITLEMENTS.premium] !==
+        undefined;
+      console.log("[RevenueCat] Premium entitlement active:", hasPremium);
+
+      if (hasPremium) {
+        // Update user store with premium status
+        console.log("[RevenueCat] Updating user store with premium status");
+        useUserStore.getState().updateUserProfile({
+          isPremium: true,
+        });
+      }
+
+      // Update local state
       await checkPremiumEntitlement(purchasedCustomerInfo);
 
       return purchasedCustomerInfo;
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error purchasing package:", error);
 
-      const purchaseErr = error as PurchasesError; // Renamed to avoid conflict
+      const purchaseErr = error as PurchasesError;
       if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
-          (error as Error).message || "An error occurred during purchase"; // Type assertion
+          error.message || "An error occurred during purchase";
         setPurchaseError(errorMessage);
         setError(errorMessage);
       }

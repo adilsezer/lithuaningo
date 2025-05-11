@@ -24,7 +24,7 @@ namespace Lithuaningo.API.Services.Subscription
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
-        public async Task<Models.Subscription> AddSubscriptionEventAsync(string userId, RevenueCatEvent evt, bool isPremium, DateTime? expiresAt)
+        public async Task<Models.Subscription> AddSubscriptionEventAsync(string userId, RevenueCatEvent evt, bool isPremium)
         {
             _logger.LogInformation("Adding subscription event");
 
@@ -68,7 +68,9 @@ namespace Lithuaningo.API.Services.Subscription
                     StartedAt = evt.PurchasedAtMs > 0
                         ? DateTimeOffset.FromUnixTimeMilliseconds(evt.PurchasedAtMs).UtcDateTime
                         : DateTimeOffset.FromUnixTimeMilliseconds(evt.EventTimestampMs).UtcDateTime,
-                    ExpiresAt = expiresAt,
+                    ExpiresAt = evt.ExpirationAtMs > 0
+                        ? DateTimeOffset.FromUnixTimeMilliseconds(evt.ExpirationAtMs).UtcDateTime
+                        : null,
                     TransactionId = evt.TransactionId,
                     OriginalTransactionId = evt.OriginalTransactionId,
                     EventType = evt.Type ?? "UNKNOWN",

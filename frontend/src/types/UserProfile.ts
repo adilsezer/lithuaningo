@@ -7,7 +7,6 @@ export interface UserProfileResponse {
   lastLoginAt?: string;
   isAdmin: boolean;
   isPremium: boolean;
-  premiumExpiresAt?: string;
   authProvider: string;
 }
 
@@ -18,5 +17,4 @@ export interface UpdateUserProfileRequest {
   avatarUrl?: string;
   isAdmin: boolean;
   isPremium: boolean;
-  premiumExpiresAt?: string;
 }

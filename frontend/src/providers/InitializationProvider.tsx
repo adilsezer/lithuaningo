@@ -3,9 +3,10 @@ import { Appearance, Platform } from "react-native";
 import useThemeStore from "@stores/useThemeStore";
 import useAppInfoStore from "@stores/useAppInfoStore";
 import { useUserData } from "@stores/useUserStore";
-import Purchases, { LOG_LEVEL } from "react-native-purchases";
+import Purchases, { LOG_LEVEL, CustomerInfo } from "react-native-purchases";
 import { REVENUECAT_API_KEYS, DEBUG_SETTINGS } from "@config/revenuecat.config";
 import { useSetLoading } from "@stores/useUIStore";
+import { useUserStore } from "@stores/useUserStore";
 
 /**
  * Provider component that handles core app initialization:
@@ -120,6 +121,44 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("Theme listener error:", error);
     }
   }, [setManualMode]);
+
+  // Set up RevenueCat CustomerInfo update listener
+  useEffect(() => {
+    if (!userData) return;
+
+    console.log("[InitProvider] Setting up CustomerInfo update listener");
+    const customerInfoUpdateListener = (info: CustomerInfo) => {
+      console.log("[InitProvider] CustomerInfo updated from RevenueCat");
+
+      // For debugging
+      const hasPremium = info.entitlements.active.Premium !== undefined;
+      console.log("[InitProvider] Premium entitlement active:", hasPremium);
+
+      if (hasPremium && userData) {
+        console.log("[InitProvider] Updating premium status in user store");
+        updateUserStore(userData.id, info);
+      }
+    };
+
+    Purchases.addCustomerInfoUpdateListener(customerInfoUpdateListener);
+
+    return () => {
+      Purchases.removeCustomerInfoUpdateListener(customerInfoUpdateListener);
+    };
+  }, [userData]);
+
+  // Helper function to update user store from CustomerInfo
+  const updateUserStore = (userId: string, info: CustomerInfo) => {
+    const hasPremium = info.entitlements.active.Premium !== undefined;
+
+    console.log(
+      `[InitProvider] Updating user store - isPremium: ${hasPremium}`
+    );
+
+    useUserStore.getState().updateUserProfile({
+      isPremium: hasPremium,
+    });
+  };
 
   return <>{children}</>;
 };

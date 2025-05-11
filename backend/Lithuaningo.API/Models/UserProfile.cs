@@ -1,6 +1,6 @@
 using System;
-using Supabase.Postgrest.Models;
 using Supabase.Postgrest.Attributes;
+using Supabase.Postgrest.Models;
 
 namespace Lithuaningo.API.Models
 {
@@ -31,9 +31,6 @@ namespace Lithuaningo.API.Models
 
         [Column("is_premium")]
         public bool IsPremium { get; set; }
-
-        [Column("premium_expires_at")]
-        public DateTime? PremiumExpiresAt { get; set; }
 
         [Column("auth_provider")]
         public string AuthProvider { get; set; } = string.Empty;

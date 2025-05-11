@@ -16,6 +16,7 @@ import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { RC_PACKAGE_TYPES } from "@config/revenuecat.config";
+import { useUserStore } from "@stores/useUserStore";
 
 // Feature list definition with icons
 const FEATURES = [
@@ -392,6 +393,8 @@ export default function PremiumFeaturesScreen() {
           ? RC_PACKAGE_TYPES.ANNUAL
           : RC_PACKAGE_TYPES.LIFETIME;
 
+      console.log(`[Premium] Attempting to purchase ${packageType} package`);
+
       const premiumPackage = offerings.availablePackages.find(
         (pkg) => pkg.packageType === packageType
       );
@@ -406,7 +409,15 @@ export default function PremiumFeaturesScreen() {
         return;
       }
 
-      await purchasePackage(premiumPackage);
+      console.log(
+        `[Premium] Found package with identifier: ${premiumPackage.identifier}`
+      );
+      const customerInfo = await purchasePackage(premiumPackage);
+      console.log(
+        `[Premium] Purchase completed. isPremium: ${
+          useUserStore.getState().userData?.isPremium
+        }`
+      );
 
       alertDialog.showAlert({
         title: "Subscription Successful",
