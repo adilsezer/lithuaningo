@@ -34,6 +34,23 @@ var builder = WebApplication.CreateBuilder(args);
 // Load production secrets from environment variables
 builder.AddProductionSecrets();
 
+// Map specific environment variables to configuration keys
+if (builder.Environment.IsProduction())
+{
+    // Map RevenueCat specific environment variables
+    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("REVENUECAT_WEBHOOK_AUTH_HEADER")))
+    {
+        builder.Configuration["RevenueCat:WebhookAuthHeader"] =
+            Environment.GetEnvironmentVariable("REVENUECAT_WEBHOOK_AUTH_HEADER");
+    }
+
+    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("REVENUECAT_LIFETIME_PRODUCT_IDENTIFIERS")))
+    {
+        builder.Configuration["RevenueCat:LifetimeProductIdentifiers"] =
+            Environment.GetEnvironmentVariable("REVENUECAT_LIFETIME_PRODUCT_IDENTIFIERS");
+    }
+}
+
 // Validate configuration
 ValidateConfiguration(builder.Configuration, builder.Environment);
 

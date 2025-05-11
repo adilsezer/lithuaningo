@@ -26,7 +26,9 @@ public static class SecretConfigurationHelper
                 { "LITHUANINGO_STORAGE_R2_ACCESS_KEY_SECRET", "Storage:R2AccessKeySecret" },
                 { "LITHUANINGO_STORAGE_BUCKET_NAME", "Storage:BucketName" },
                 { "LITHUANINGO_STORAGE_CUSTOM_DOMAIN", "Storage:CustomDomain" },
-                { "LITHUANINGO_STORAGE_R2_ACCOUNT_ID", "Storage:R2AccountId" }
+                { "LITHUANINGO_STORAGE_R2_ACCOUNT_ID", "Storage:R2AccountId" },
+                { "REVENUECAT_WEBHOOK_AUTH_HEADER", "RevenueCat:WebhookAuthHeader" },
+                { "REVENUECAT_LIFETIME_PRODUCT_IDENTIFIERS", "RevenueCat:LifetimeProductIdentifiers" }
             };
 
             // Add environment variables to configuration
