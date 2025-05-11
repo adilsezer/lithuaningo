@@ -15,6 +15,7 @@ import LoadingIndicator from "@components/ui/LoadingIndicator";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { RC_PACKAGE_TYPES } from "@config/revenuecat.config";
 
 // Feature list definition with icons
 const FEATURES = [
@@ -355,9 +356,9 @@ export default function PremiumFeaturesScreen() {
       offerings?.availablePackages.find(
         (pkg) => pkg.packageType === packageType.toUpperCase()
       )?.product?.priceString ||
-      (packageType === "MONTHLY"
+      (packageType === RC_PACKAGE_TYPES.MONTHLY
         ? "$4.99"
-        : packageType === "ANNUAL"
+        : packageType === RC_PACKAGE_TYPES.ANNUAL
         ? "$39.99"
         : "$99.99")
     );
@@ -386,10 +387,10 @@ export default function PremiumFeaturesScreen() {
 
       const packageType =
         selectedPackage === "monthly"
-          ? "MONTHLY"
+          ? RC_PACKAGE_TYPES.MONTHLY
           : selectedPackage === "yearly"
-          ? "ANNUAL"
-          : "LIFETIME";
+          ? RC_PACKAGE_TYPES.ANNUAL
+          : RC_PACKAGE_TYPES.LIFETIME;
 
       const premiumPackage = offerings.availablePackages.find(
         (pkg) => pkg.packageType === packageType
@@ -531,7 +532,7 @@ export default function PremiumFeaturesScreen() {
               <View style={styles.priceRow}>
                 <Text style={styles.originalPrice}>$59.88</Text>
                 <Text style={styles.packagePrice}>
-                  {getPriceString("ANNUAL")} per year
+                  {getPriceString(RC_PACKAGE_TYPES.ANNUAL)} per year
                 </Text>
               </View>
               <Text style={styles.savings}>Save 33% with annual plan</Text>
@@ -539,13 +540,13 @@ export default function PremiumFeaturesScreen() {
           ) : type === "lifetime" ? (
             <>
               <Text style={styles.packagePrice}>
-                {getPriceString("LIFETIME")} one-time payment
+                {getPriceString(RC_PACKAGE_TYPES.LIFETIME)} one-time payment
               </Text>
               <Text style={styles.savings}>Best long-term value</Text>
             </>
           ) : (
             <Text style={styles.packagePrice}>
-              {getPriceString("MONTHLY")} per month
+              {getPriceString(RC_PACKAGE_TYPES.MONTHLY)} per month
             </Text>
           )}
         </Card.Content>
