@@ -4,11 +4,13 @@ using System.Text;
 using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.RevenueCat;
 using Lithuaningo.API.Services.RevenueCat;
+using Lithuaningo.API.Settings;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 
 namespace Lithuaningo.API.Controllers
@@ -25,14 +27,21 @@ namespace Lithuaningo.API.Controllers
         public RevenueCatWebhookController(
             ILogger<RevenueCatWebhookController> logger,
             IRevenueCatWebhookService revenueCatWebhookService,
+            IOptions<RevenueCatSettings> revenueCatSettings,
             IConfiguration configuration)
         {
             _logger = logger;
             _revenueCatWebhookService = revenueCatWebhookService ?? throw new ArgumentNullException(nameof(revenueCatWebhookService));
 
-            _expectedAuthHeaderValue = configuration["RevenueCat:WebhookAuthHeader"] ??
-                                       configuration["REVENUECAT_WEBHOOK_AUTH_HEADER"] ??
-                                       throw new InvalidOperationException("RevenueCat Webhook Authorization Header value not configured.");
+            // First try to get from settings, then fallback to configuration or environment variables
+            _expectedAuthHeaderValue = revenueCatSettings.Value.WebhookAuthHeader;
+
+            if (string.IsNullOrEmpty(_expectedAuthHeaderValue))
+            {
+                _expectedAuthHeaderValue = configuration["RevenueCat:WebhookAuthHeader"] ??
+                                          configuration["REVENUECAT_WEBHOOK_AUTH_HEADER"] ??
+                                          throw new InvalidOperationException("RevenueCat Webhook Authorization Header value not configured.");
+            }
 
             if (string.IsNullOrEmpty(_expectedAuthHeaderValue))
             {

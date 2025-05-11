@@ -5,6 +5,7 @@ import useAppInfoStore from "@stores/useAppInfoStore";
 import { useUserData } from "@stores/useUserStore";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 import { REVENUECAT_API_KEYS, DEBUG_SETTINGS } from "@config/revenuecat.config";
+import { useSetLoading } from "@stores/useUIStore";
 
 /**
  * Provider component that handles core app initialization:
@@ -20,6 +21,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
   const { checkAppStatus, appInfo, isCheckingStatus, hasFailedCheck } =
     useAppInfoStore();
   const userData = useUserData();
+  const setLoading = useSetLoading();
 
   // Initialize theme and app info on mount
   useEffect(() => {
@@ -45,6 +47,8 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     const initializeRevenueCat = async () => {
       try {
+        setLoading(true);
+
         // Set log level based on debug settings
         Purchases.setLogLevel(
           DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR
@@ -74,11 +78,13 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
       } catch (error) {
         // Log detailed error but don't surface to UI since this is initialization
         console.error("Failed to initialize RevenueCat:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     initializeRevenueCat();
-  }, []);
+  }, [setLoading]);
 
   // Identify user with RevenueCat when user data changes
   useEffect(() => {
@@ -87,15 +93,18 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
 
     const identifyUser = async () => {
       try {
+        setLoading(true);
         await Purchases.logIn(userData.id);
         console.log("RevenueCat user identified:", userData.id);
       } catch (error) {
         console.error("Failed to identify user with RevenueCat:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     identifyUser();
-  }, [userData?.id]);
+  }, [userData?.id, setLoading]);
 
   // Listen for system theme changes when not in manual mode
   useEffect(() => {
