@@ -12,7 +12,6 @@ export type UserData = Pick<
   | "emailVerified"
   | "isAdmin"
   | "isPremium"
-  | "premiumExpiresAt"
   | "authProvider"
 >;
 
@@ -111,7 +110,5 @@ export const useIsAdmin = () =>
   useUserStore((state) => state.userData?.isAdmin ?? false);
 export const useIsPremium = () =>
   useUserStore((state) => state.userData?.isPremium ?? false);
-export const usePremiumExpiresAt = () =>
-  useUserStore((state) => state.userData?.premiumExpiresAt);
 export const useIsEmailVerified = () =>
   useUserStore((state) => state.userData?.emailVerified ?? false);

@@ -25,12 +25,11 @@ namespace Lithuaningo.API.Services.UserProfile
         Task<IEnumerable<UserProfileResponse>> GetUserProfilesAsync();
 
         /// <summary>
-        /// Updates a user's premium status and expiration based on webhook event.
+        /// Updates a user's premium status based on webhook event.
         /// </summary>
         /// <param name="userId">The user identifier (App User ID from RevenueCat)</param>
         /// <param name="isPremium">Whether the user should be considered premium</param>
-        /// <param name="premiumExpiresAt">The new expiration date for the premium status</param>
         /// <returns>The updated user profile or null if user not found</returns>
-        Task<UserProfileResponse?> UpdatePremiumStatusFromWebhookAsync(string userId, bool isPremium, DateTime? premiumExpiresAt);
+        Task<UserProfileResponse?> UpdatePremiumStatusFromWebhookAsync(string userId, bool isPremium);
     }
 }

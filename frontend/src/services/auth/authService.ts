@@ -42,7 +42,6 @@ export const updateAuthState = async (session: { user: User } | null) => {
     emailVerified: user.email_confirmed_at !== null,
     isAdmin: user.user_metadata?.is_admin || false,
     isPremium: user.user_metadata?.is_premium || false,
-    premiumExpiresAt: user.user_metadata?.premium_expires_at,
     authProvider: user.app_metadata?.provider || "email",
   };
 
@@ -97,7 +96,6 @@ export const signUpWithEmail = async (
           avatar_url: "",
           is_admin: false,
           is_premium: false,
-          premium_expires_at: null,
           provider: "email",
         },
       },
@@ -357,7 +355,6 @@ export const updateProfile = async (
     avatarUrl?: string;
     isAdmin?: boolean;
     isPremium?: boolean;
-    premiumExpiresAt?: string;
   }
 ): Promise<AuthResponse> => {
   try {
@@ -397,7 +394,6 @@ export const updateProfile = async (
       avatar_url: updates.avatarUrl,
       is_admin: updates.isAdmin,
       is_premium: updates.isPremium,
-      premium_expires_at: updates.premiumExpiresAt,
     };
 
     // Remove any undefined values

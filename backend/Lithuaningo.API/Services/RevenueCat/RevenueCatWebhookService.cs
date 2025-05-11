@@ -60,7 +60,6 @@ namespace Lithuaningo.API.Services.RevenueCat
             }
 
             bool isPremium = false;
-            DateTime? premiumExpiresAt = null;
             bool shouldUpdateProfile = true;
 
             List<string> lifetimeProductIds = _revenueCatSettings.LifetimeProductIdentifiers ?? new List<string>();
@@ -75,7 +74,6 @@ namespace Lithuaningo.API.Services.RevenueCat
                     if (!string.IsNullOrEmpty(evt.ProductId) && lifetimeProductIds.Contains(evt.ProductId) && IsPurchaseOrActivationEventType(evt.Type))
                     {
                         isPremium = true;
-                        premiumExpiresAt = DateTime.UtcNow.AddYears(100);
                         _logger.LogInformation("Identified lifetime product event");
                     }
                     else if (evt.ExpirationAtMs > 0)
@@ -84,27 +82,17 @@ namespace Lithuaningo.API.Services.RevenueCat
                         if (expirationDate > DateTime.UtcNow)
                         {
                             isPremium = true;
-                            premiumExpiresAt = expirationDate;
                             _logger.LogInformation("Processing subscription event with future expiration");
                         }
                         else
                         {
                             isPremium = false;
-                            premiumExpiresAt = expirationDate;
                             _logger.LogInformation("Processing subscription event with past expiration");
                         }
                     }
                     else
                     {
                         isPremium = false;
-                        if (evt.EventTimestampMs > 0)
-                        {
-                            premiumExpiresAt = DateTimeOffset.FromUnixTimeMilliseconds(evt.EventTimestampMs).UtcDateTime;
-                        }
-                        else
-                        {
-                            premiumExpiresAt = null;
-                        }
                         _logger.LogInformation("Processing event with no positive ExpirationAtMs and not lifetime");
                     }
                     break;
@@ -112,14 +100,6 @@ namespace Lithuaningo.API.Services.RevenueCat
                 case "EXPIRATION":
                 case "CANCELLATION":
                     isPremium = false;
-                    if (evt.ExpirationAtMs > 0)
-                    {
-                        premiumExpiresAt = DateTimeOffset.FromUnixTimeMilliseconds(evt.ExpirationAtMs).UtcDateTime;
-                    }
-                    else
-                    {
-                        premiumExpiresAt = DateTimeOffset.FromUnixTimeMilliseconds(evt.EventTimestampMs).UtcDateTime;
-                    }
                     _logger.LogInformation("Processing subscription expiration or cancellation event");
                     break;
 
@@ -136,15 +116,13 @@ namespace Lithuaningo.API.Services.RevenueCat
                     var subscription = await _subscriptionService.AddSubscriptionEventAsync(
                         evt.AppUserId,
                         evt,
-                        isPremium,
-                        premiumExpiresAt);
+                        isPremium);
 
                     _logger.LogInformation("Saved subscription record");
 
                     var updatedProfile = await _userProfileService.UpdatePremiumStatusFromWebhookAsync(
                         evt.AppUserId,
-                        isPremium,
-                        premiumExpiresAt);
+                        isPremium);
 
                     if (updatedProfile == null)
                     {

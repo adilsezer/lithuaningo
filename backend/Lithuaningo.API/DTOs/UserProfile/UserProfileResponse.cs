@@ -48,13 +48,8 @@ namespace Lithuaningo.API.DTOs.UserProfile
         public bool IsPremium { get; set; }
 
         /// <summary>
-        /// When the user's premium expires
-        /// </summary>
-        public DateTime? PremiumExpiresAt { get; set; }
-
-        /// <summary>
         /// The provider of the user's authentication
         /// </summary>
         public string AuthProvider { get; set; } = string.Empty;
     }
-} 
+}

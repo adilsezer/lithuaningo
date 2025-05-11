@@ -182,7 +182,7 @@ namespace Lithuaningo.API.Services.UserProfile
             }
         }
 
-        public async Task<UserProfileResponse?> UpdatePremiumStatusFromWebhookAsync(string userId, bool isPremium, DateTime? premiumExpiresAt)
+        public async Task<UserProfileResponse?> UpdatePremiumStatusFromWebhookAsync(string userId, bool isPremium)
         {
             if (string.IsNullOrEmpty(userId))
             {
@@ -212,11 +212,10 @@ namespace Lithuaningo.API.Services.UserProfile
                     return null; // User not found
                 }
 
-                // Update premium status and expiration date
+                // Update premium status
                 profile.IsPremium = isPremium;
-                profile.PremiumExpiresAt = premiumExpiresAt;
 
-                _logger.LogInformation("Updating premium status with expiration");
+                _logger.LogInformation("Updating premium status");
 
                 // We explicitly set these rather than mapping from a request object
                 var updateResponse = await _supabaseClient
