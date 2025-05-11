@@ -43,12 +43,6 @@ if (builder.Environment.IsProduction())
         builder.Configuration["RevenueCat:WebhookAuthHeader"] =
             Environment.GetEnvironmentVariable("REVENUECAT_WEBHOOK_AUTH_HEADER");
     }
-
-    if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("REVENUECAT_LIFETIME_PRODUCT_IDENTIFIERS")))
-    {
-        builder.Configuration["RevenueCat:LifetimeProductIdentifiers"] =
-            Environment.GetEnvironmentVariable("REVENUECAT_LIFETIME_PRODUCT_IDENTIFIERS");
-    }
 }
 
 // Validate configuration
@@ -563,10 +557,7 @@ void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment env
             { "Supabase:ServiceKey", "Supabase service key" },
             { "Supabase:JwtSecret", "JWT secret" },
             { "OpenAI:ApiKey", "OpenAI API key" },
-            { "RevenueCat:WebhookAuthHeader", "RevenueCat Webhook Auth Header" },
-            { "RevenueCat:LifetimeProductIdentifiers", "RevenueCat Lifetime Product Identifiers" }
-            // Removed Certificate password as it might not be needed in Azure hosting
-            // { "DataProtection:CertificatePassword", "Certificate password" }
+            { "RevenueCat:WebhookAuthHeader", "RevenueCat Webhook Auth Header" }
         };
 
         foreach (var setting in criticalSettings)
@@ -574,15 +565,7 @@ void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment env
             var value = configuration[setting.Key];
             if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < 10)
             {
-                // For LifetimeProductIdentifiers, a shorter length might be valid if there's only one short ID.
-                // However, the YOUR_ check and IsNullOrWhiteSpace are still very important.
-                // We'll adjust the length check specifically for LifetimeProductIdentifiers if needed,
-                // but the generic check is a good starting point.
-                if (setting.Key == "RevenueCat:LifetimeProductIdentifiers" && !string.IsNullOrWhiteSpace(value) && !value.Contains("YOUR_") && value.Length < 3)
-                {
-                    // Allow shorter lifetime product identifiers if they don't seem to be placeholders
-                }
-                else if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < 10)
+                if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < 10)
                 {
                     throw new InvalidOperationException($"Missing or invalid configuration for {setting.Value}. " +
                         $"Please set environment variable or update configuration.");
