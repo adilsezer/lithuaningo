@@ -29,20 +29,6 @@ namespace Lithuaningo.API.Services.RevenueCat
             _revenueCatSettings = revenueCatSettings?.Value ?? throw new ArgumentNullException(nameof(revenueCatSettings));
         }
 
-        private bool IsPurchaseOrActivationEventType(string? eventType)
-        {
-            if (string.IsNullOrEmpty(eventType)) return false;
-            return eventType.ToUpperInvariant() switch
-            {
-                "TEST" => true,
-                "INITIAL_PURCHASE" => true,
-                "RENEWAL" => true,
-                "PRODUCT_CHANGE" => true,
-                "UNCANCEL" => true,
-                _ => false,
-            };
-        }
-
         public async Task ProcessWebhookEventAsync(RevenueCatEvent evt)
         {
             if (evt == null)
@@ -51,7 +37,7 @@ namespace Lithuaningo.API.Services.RevenueCat
                 throw new ArgumentNullException(nameof(evt), "RevenueCat event cannot be null.");
             }
 
-            _logger.LogInformation("Processing RevenueCat event");
+            _logger.LogInformation("Processing RevenueCat webhook event");
 
             if (string.IsNullOrEmpty(evt.AppUserId))
             {
@@ -59,53 +45,48 @@ namespace Lithuaningo.API.Services.RevenueCat
                 return;
             }
 
-            bool isPremium = false;
+            // Determine premium status directly from the event type according to RevenueCat documentation
+            bool isPremium;
             bool shouldUpdateProfile = true;
 
-            List<string> lifetimeProductIds = _revenueCatSettings.LifetimeProductIdentifiers ?? new List<string>();
+            // Get uppercase event type for reliable comparison
+            string eventType = evt.Type?.ToUpperInvariant() ?? string.Empty;
 
-            switch (evt.Type?.ToUpperInvariant())
+            // For standard subscriptions, determine from event type
+            switch (eventType)
             {
+                // Active subscription events - premium access should be granted
                 case "TEST":
                 case "INITIAL_PURCHASE":
                 case "RENEWAL":
                 case "PRODUCT_CHANGE":
-                case "UNCANCEL":
-                    if (!string.IsNullOrEmpty(evt.ProductId) && lifetimeProductIds.Contains(evt.ProductId) && IsPurchaseOrActivationEventType(evt.Type))
-                    {
-                        isPremium = true;
-                        _logger.LogInformation("Identified lifetime product event");
-                    }
-                    else if (evt.ExpirationAtMs > 0)
-                    {
-                        var expirationDate = DateTimeOffset.FromUnixTimeMilliseconds(evt.ExpirationAtMs).UtcDateTime;
-                        if (expirationDate > DateTime.UtcNow)
-                        {
-                            isPremium = true;
-                            _logger.LogInformation("Processing subscription event with future expiration");
-                        }
-                        else
-                        {
-                            isPremium = false;
-                            _logger.LogInformation("Processing subscription event with past expiration");
-                        }
-                    }
-                    else
-                    {
-                        isPremium = false;
-                        _logger.LogInformation("Processing event with no positive ExpirationAtMs and not lifetime");
-                    }
+                case "UNCANCELLATION":
+                case "NON_RENEWING_PURCHASE":  // Added for lifetime products
+                case "SUBSCRIPTION_EXTENDED":
+                    isPremium = true;
+                    _logger.LogInformation("Active subscription event detected");
                     break;
 
-                case "EXPIRATION":
+                // Inactive subscription events - premium access should be removed
                 case "CANCELLATION":
+                case "EXPIRATION":
                     isPremium = false;
-                    _logger.LogInformation("Processing subscription expiration or cancellation event");
+                    _logger.LogInformation("Subscription ended event detected");
                     break;
 
+                // Billing issue doesn't immediately mean loss of access
+                // Should check existing status or wait for EXPIRATION
+                case "BILLING_ISSUE":
+                    _logger.LogInformation("Billing issue detected");
+                    shouldUpdateProfile = false;
+                    isPremium = false; // Default value, won't be used if shouldUpdateProfile is false
+                    break;
+
+                // For other events, don't update the profile
                 default:
                     _logger.LogInformation("Unhandled event type. No profile update");
                     shouldUpdateProfile = false;
+                    isPremium = false; // Default value, won't be used if shouldUpdateProfile is false
                     break;
             }
 

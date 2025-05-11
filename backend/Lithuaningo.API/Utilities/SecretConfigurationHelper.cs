@@ -28,7 +28,6 @@ public static class SecretConfigurationHelper
                 { "LITHUANINGO_STORAGE_CUSTOM_DOMAIN", "Storage:CustomDomain" },
                 { "LITHUANINGO_STORAGE_R2_ACCOUNT_ID", "Storage:R2AccountId" },
                 { "REVENUECAT_WEBHOOK_AUTH_HEADER", "RevenueCat:WebhookAuthHeader" },
-                { "REVENUECAT_LIFETIME_PRODUCT_IDENTIFIERS", "RevenueCat:LifetimeProductIdentifiers" }
             };
 
             // Add environment variables to configuration
