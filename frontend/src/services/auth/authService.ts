@@ -7,6 +7,7 @@ import { User } from "@supabase/supabase-js";
 import { AUTH_PATTERNS } from "@utils/validationPatterns";
 import { AuthResponse } from "@src/types/auth.types";
 import { generateAnonymousName } from "@utils/userUtils";
+import Purchases from "react-native-purchases";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -47,6 +48,14 @@ export const updateAuthState = async (session: { user: User } | null) => {
 
   useUserStore.getState().logIn(userData);
   useUserStore.getState().setAuthenticated(true);
+
+  // Synchronize AppUserID with RevenueCat
+  try {
+    await Purchases.logIn(user.id);
+  } catch (error) {
+    console.error("[Auth] Failed to logIn to RevenueCat:", error);
+    // Decide if this error should be surfaced or just logged
+  }
 };
 
 // Helper Functions
@@ -166,7 +175,7 @@ export const signInWithEmail = async (
       throw error;
     }
 
-    if (!data.user) throw new Error("No user data received");
+    if (!data.user || !data.session) throw new Error("No user data received");
 
     await updateAuthState(data.session);
     return { success: true, message: "Successfully logged in" };
@@ -217,6 +226,10 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
       console.error("Failed to update user metadata:", updateError);
     }
 
+    // Ensure session is passed to updateAuthState
+    if (!data.session) {
+      throw new Error("No session data received after Google Sign-In");
+    }
     await updateAuthState(data.session);
     return { success: true };
   } catch (error) {
@@ -271,6 +284,10 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
       console.error("Failed to update user metadata:", updateError);
     }
 
+    // Ensure session is passed to updateAuthState
+    if (!data.session) {
+      throw new Error("No session data received after Apple Sign-In");
+    }
     await updateAuthState(data.session);
     return { success: true };
   } catch (error) {
@@ -298,6 +315,13 @@ export const signOut = async (): Promise<AuthResponse> => {
       } catch (googleError) {
         console.error("Google sign out error:", googleError);
       }
+    }
+
+    // Log out from RevenueCat
+    try {
+      await Purchases.logOut();
+    } catch (error) {
+      console.error("[Auth] Failed to logOut from RevenueCat:", error);
     }
 
     const store = useUserStore.getState();
@@ -390,7 +414,9 @@ export const updateProfile = async (
     if (updateError) throw updateError;
     if (!userData.user) throw new Error("Failed to update user");
 
+    // Call updateAuthState directly with the updated user object
     await updateAuthState({ user: userData.user });
+
     return {
       success: true,
       message: "Profile updated successfully.",
@@ -494,6 +520,16 @@ export const verifyPasswordReset = async (
 
     // Sign out after successful password reset
     await supabase.auth.signOut();
+
+    // Log out from RevenueCat as well, since Supabase session is ended
+    try {
+      await Purchases.logOut();
+    } catch (rcError) {
+      console.error(
+        "[Auth] Failed to logOut from RevenueCat after password reset:",
+        rcError
+      );
+    }
 
     return {
       success: true,
@@ -600,6 +636,15 @@ export const deleteAccount = async (
           } catch (error) {
             console.error("Error revoking Google access:", error);
           }
+        }
+        // Log out from RevenueCat before clearing Supabase session and local store
+        try {
+          await Purchases.logOut();
+        } catch (rcError) {
+          console.error(
+            "[Auth] Failed to logOut from RevenueCat during account deletion:",
+            rcError
+          );
         }
         await useUserStore.getState().logOut();
         await supabase.auth.signOut();
