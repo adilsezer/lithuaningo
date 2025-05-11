@@ -59,6 +59,7 @@ namespace Lithuaningo.API.Services.Subscription
                 // Create subscription record
                 var subscription = new Models.Subscription
                 {
+                    Id = Guid.NewGuid(),
                     UserId = Guid.Parse(userId),
                     IsPremium = isPremium,
                     SubscriptionStatus = subscriptionStatus,
