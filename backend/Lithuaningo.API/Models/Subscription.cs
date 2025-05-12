@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Supabase.Postgrest.Attributes;
 using Supabase.Postgrest.Models;
@@ -38,6 +39,27 @@ namespace Lithuaningo.API.Models
 
         [Column("event_type")]
         public string EventType { get; set; } = string.Empty;
+
+        [Column("currency")]
+        public string? Currency { get; set; }
+
+        [Column("price")]
+        public decimal? Price { get; set; }
+
+        [Column("period_type")]
+        public string? PeriodType { get; set; }
+
+        [Column("country_code")]
+        public string? CountryCode { get; set; }
+
+        [Column("entitlement_id")]
+        public string? EntitlementId { get; set; }
+
+        [Column("presented_offering_id")]
+        public string? PresentedOfferingId { get; set; }
+
+        [Column("renewal_number")]
+        public int? RenewalNumber { get; set; }
 
         [Column("metadata")]
         public object? Metadata { get; set; }
