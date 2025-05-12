@@ -30,15 +30,22 @@ namespace Lithuaningo.API.Services.Subscription
 
             try
             {
-                // Create metadata object
+                // Create metadata object with fields that aren't direct columns
                 var metadata = new
                 {
                     evt.Environment,
                     evt.AppId,
-                    evt.CountryCode,
-                    evt.PeriodType,
-                    evt.EntitlementId,
+                    evt.IsFamilyShare,
+                    evt.Aliases,
+                    evt.OriginalAppUserId,
+                    evt.PriceInPurchasedCurrency,
+                    evt.TakehomePercentage,
+                    evt.OfferCode,
+                    evt.TaxPercentage,
+                    evt.CommissionPercentage,
                     evt.EntitlementIds,
+                    SubscriberAttributes = evt.SubscriberAttributes,
+                    MetadataFromEvent = evt.Metadata
                 };
 
                 // Create subscription record
@@ -58,6 +65,14 @@ namespace Lithuaningo.API.Services.Subscription
                     TransactionId = evt.TransactionId,
                     OriginalTransactionId = evt.OriginalTransactionId,
                     EventType = evt.Type ?? "UNKNOWN",
+                    // Set the new direct columns
+                    Currency = evt.Currency,
+                    Price = evt.Price,
+                    PeriodType = evt.PeriodType,
+                    CountryCode = evt.CountryCode,
+                    EntitlementId = evt.EntitlementId,
+                    PresentedOfferingId = evt.PresentedOfferingId,
+                    RenewalNumber = evt.RenewalNumber,
                     Metadata = metadata
                 };
 
