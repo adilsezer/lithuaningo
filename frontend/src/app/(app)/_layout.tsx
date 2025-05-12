@@ -13,7 +13,7 @@ const AUTHENTICATED_SCREENS = [
   { name: "profile/settings", title: "Settings" },
   { name: "profile/change-password", title: "Change Password" },
   { name: "profile/delete-account", title: "Delete Account" },
-  { name: "premium/index", title: "Premium" },
+  { name: "premium/index", title: "Premium Membership" },
   { name: "about/index", title: "About" },
   { name: "terms-of-service/index", title: "Terms of Service" },
   { name: "privacy-policy/index", title: "Privacy Policy" },

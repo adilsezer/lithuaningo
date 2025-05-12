@@ -494,8 +494,6 @@ export default function PremiumFeaturesScreen() {
         contentContainerStyle={styles.contentContainer}
         showsVerticalScrollIndicator={false}
       >
-        <Stack.Screen options={{ title: "Premium Membership" }} />
-
         <View style={styles.alreadyPremiumMessage}>
           <MaterialCommunityIcons
             name="check-decagram"
@@ -571,8 +569,6 @@ export default function PremiumFeaturesScreen() {
       contentContainerStyle={styles.contentContainer}
       showsVerticalScrollIndicator={false}
     >
-      <Stack.Screen options={{ title: "Premium Membership" }} />
-
       <View style={styles.header}>
         <View style={styles.imageContainer}>
           <Image

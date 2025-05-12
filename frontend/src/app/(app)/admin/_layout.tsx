@@ -2,7 +2,12 @@ import React from "react";
 import { Stack, Redirect } from "expo-router";
 import { useIsAdmin } from "@stores/useUserStore";
 import { useTheme } from "react-native-paper";
-import { View } from "react-native";
+
+const ADMIN_SCREENS = [
+  { name: "flashcard-review", title: "Review Flashcards" },
+  // Add future admin screens here
+];
+
 export default function AdminLayout() {
   const isAdmin = useIsAdmin();
   const theme = useTheme();
@@ -24,11 +29,13 @@ export default function AdminLayout() {
         headerShown: false,
       }}
     >
-      <Stack.Screen
-        name="flashcard-review"
-        options={{ title: "Review Flashcards" }}
-      />
-      {/* Add other admin screens here if needed */}
+      {ADMIN_SCREENS.map((screen) => (
+        <Stack.Screen
+          key={screen.name}
+          name={screen.name}
+          options={{ title: screen.title }}
+        />
+      ))}
     </Stack>
   );
 }
