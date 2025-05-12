@@ -663,6 +663,14 @@ export const deleteAccount = async (
           }
         }
         // Log out from RevenueCat before clearing Supabase session and local store
+        try {
+          await Purchases.logOut();
+        } catch (rcError) {
+          console.error(
+            "[Auth] Failed to logOut from RevenueCat during account deletion cleanup:",
+            rcError
+          );
+        }
         await useUserStore.getState().logOut();
         await supabase.auth.signOut();
       },

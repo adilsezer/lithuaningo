@@ -128,7 +128,7 @@ public class CacheInvalidator
         // Align prefix with BuildCacheKey method
         string prefix = $"{FlashcardCachePrefix}status:unverified:";
         await _cache.RemoveByPrefixAsync(prefix);
-        _logger.LogInformation("Invalidated cache entries with prefix: {Prefix}", prefix);
+        _logger.LogInformation("Invalidated cache entries with prefix");
     }
 
     /// <summary>
