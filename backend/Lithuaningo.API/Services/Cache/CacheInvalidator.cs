@@ -121,6 +121,17 @@ public class CacheInvalidator
     }
 
     /// <summary>
+    /// Invalidates the cache entries storing lists of unverified flashcards.
+    /// </summary>
+    public async Task InvalidateUnverifiedFlashcardsCacheAsync()
+    {
+        // Align prefix with BuildCacheKey method
+        string prefix = $"{FlashcardCachePrefix}status:unverified:";
+        await _cache.RemoveByPrefixAsync(prefix);
+        _logger.LogInformation("Invalidated cache entries with prefix: {Prefix}", prefix);
+    }
+
+    /// <summary>
     /// Helper method to invalidate a cache key using both prefix-based and direct key removal
     /// </summary>
     private async Task InvalidateCacheKeyAsync(string cacheKey)

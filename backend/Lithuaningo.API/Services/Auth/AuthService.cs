@@ -2,6 +2,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Services.UserProfile;
 using Lithuaningo.API.Settings;
 using Lithuaningo.API.Utilities;
 using Microsoft.IdentityModel.Tokens;
@@ -15,13 +16,16 @@ public class AuthService : IAuthService
     private readonly ILogger<AuthService> _logger;
     private readonly SupabaseSettings _settings;
     private readonly TokenValidationParameters _tokenValidationParameters;
+    private readonly IUserProfileService _userProfileService;
 
     public AuthService(
         ISupabaseConfiguration supabaseConfiguration,
-        ILogger<AuthService> logger)
+        ILogger<AuthService> logger,
+        IUserProfileService userProfileService)
     {
         _logger = logger;
         _settings = supabaseConfiguration.LoadConfiguration();
+        _userProfileService = userProfileService;
 
         _logger.LogInformation("Initializing Supabase auth client");
 
@@ -142,8 +146,31 @@ public class AuthService : IAuthService
         }
     }
 
-    public bool IsAdmin(ClaimsPrincipal user)
+    public async Task<bool> IsAdminAsync(ClaimsPrincipal user)
     {
-        return user.Claims.Any(c => c.Type == "role" && c.Value == "admin");
+        var userIdString = user.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+        {
+            _logger.LogWarning("Could not extract valid User ID from token claims for admin check.");
+            return false;
+        }
+
+        try
+        {
+            var userProfile = await _userProfileService.GetUserProfileAsync(userIdString);
+
+            if (userProfile == null)
+            {
+                _logger.LogWarning("User profile not found in database for ID {UserId} during admin check.", userId);
+                return false;
+            }
+
+            return userProfile.IsAdmin;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error checking admin status for User ID {UserId} by querying user_profiles table.", userId);
+            return false;
+        }
     }
 }

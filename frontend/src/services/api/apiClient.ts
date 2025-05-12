@@ -1,6 +1,6 @@
 import axios, { AxiosInstance, AxiosError } from "axios";
 import { Platform } from "react-native";
-import { supabase } from "../../services/supabase/supabaseClient";
+import { supabase } from "@services/supabase/supabaseClient";
 import { useUserStore } from "../../stores/useUserStore";
 import Constants from "expo-constants";
 import { AppInfoResponse } from "@src/types/AppInfo";
@@ -9,7 +9,11 @@ import {
   UpdateLeaderboardEntryRequest,
 } from "@src/types/Leaderboard";
 import { ChallengeQuestionResponse } from "@src/types/ChallengeQuestion";
-import { FlashcardRequest, FlashcardResponse } from "@src/types/Flashcard";
+import {
+  FlashcardRequest,
+  FlashcardResponse,
+  UpdateFlashcardAdminRequest,
+} from "@src/types/Flashcard";
 import {
   SubmitFlashcardAnswerRequest,
   UserFlashcardStatResponse,
@@ -28,12 +32,10 @@ import {
   UserChatStatsResponse,
   TrackMessageRequest,
 } from "@src/types/UserChatStats";
+import { API_URL } from "@config/apiConfig"; // Use alias
 
 // Get the app version from Expo constants
 const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
-
-// API URL from environment variables
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:7016";
 
 /**
  * Custom API error class to handle API errors with status and data
@@ -473,6 +475,74 @@ class ApiClient {
       `/api/v1/UserChatStats/${userId}/has-reached-limit?isPremium=${isPremium}`,
       {
         method: "GET",
+      }
+    );
+  }
+
+  // ----- Admin Flashcard Methods -----
+
+  /**
+   * Fetches unverified flashcards for admin review
+   * @returns Promise<FlashcardResponse[]>
+   */
+  async getUnverifiedFlashcards(
+    limit: number = 20
+  ): Promise<FlashcardResponse[]> {
+    return this.request<FlashcardResponse[]>(
+      `/api/v1/Admin/flashcards/unverified?limit=${limit}`,
+      {
+        method: "GET",
+      }
+    );
+  }
+
+  /**
+   * Updates a flashcard as an admin
+   * @param flashcardId The ID of the flashcard
+   * @param request The update request data
+   * @returns Promise<FlashcardResponse>
+   */
+  async updateFlashcardAdmin(
+    flashcardId: string,
+    request: UpdateFlashcardAdminRequest
+  ): Promise<FlashcardResponse> {
+    return this.request<FlashcardResponse>(
+      `/api/v1/Admin/flashcards/${flashcardId}`,
+      {
+        method: "PUT",
+        data: request,
+      }
+    );
+  }
+
+  /**
+   * Regenerates the image for a flashcard
+   * @param flashcardId The ID of the flashcard
+   * @returns Promise<{ imageUrl: string }>
+   */
+  async regenerateFlashcardImage(
+    flashcardId: string
+  ): Promise<{ imageUrl: string }> {
+    return this.request<{ imageUrl: string }>(
+      `/api/v1/Admin/flashcards/${flashcardId}/regenerate-image`,
+      {
+        method: "POST",
+      }
+    );
+  }
+
+  /**
+   * Regenerates the audio for a flashcard
+   * @param flashcardId The ID of the flashcard
+   * @returns Promise<{ audioUrl: string }>
+   */
+  async regenerateFlashcardAudio(
+    flashcardId: string
+  ): Promise<{ audioUrl: string }> {
+    return this.request<{ audioUrl: string }>(
+      `/api/v1/Admin/flashcards/${flashcardId}/regenerate-audio`,
+      {
+        method: "POST",
       }
     );
   }

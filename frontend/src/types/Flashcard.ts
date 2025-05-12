@@ -45,3 +45,16 @@ export interface FlashcardResponse {
   difficulty: DifficultyLevel;
   isVerified: boolean;
 }
+
+export interface UpdateFlashcardAdminRequest {
+  frontText: string;
+  backText: string;
+  exampleSentence?: string;
+  exampleSentenceTranslation?: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  notes?: string;
+  categories: FlashcardCategory[];
+  difficulty: DifficultyLevel;
+  isVerified: boolean;
+}

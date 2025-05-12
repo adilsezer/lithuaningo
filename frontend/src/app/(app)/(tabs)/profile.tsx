@@ -1,7 +1,11 @@
 import React from "react";
 import { View, ScrollView, StyleSheet } from "react-native";
 import { useAuth } from "@hooks/useAuth";
-import { useUserData, useIsAuthenticated } from "@stores/useUserStore";
+import {
+  useUserData,
+  useIsAuthenticated,
+  useIsAdmin,
+} from "@stores/useUserStore";
 import CustomButton from "@components/ui/CustomButton";
 import { useRouter } from "expo-router";
 import CustomSwitch from "@components/ui/CustomSwitch";
@@ -16,10 +20,16 @@ const PROFILE_ACTIONS = [
   { title: "About the App", path: "/about" },
 ] as const;
 
+const ADMIN_ACTIONS = [
+  { title: "Review Flashcards", path: "/admin/flashcard-review" },
+] as const;
+
 const ProfileActions = ({
   onNavigate,
+  isAdmin,
 }: {
   onNavigate: (path: string) => void;
+  isAdmin: boolean;
 }) => (
   <View>
     {PROFILE_ACTIONS.map(({ title, path }) => (
@@ -30,6 +40,16 @@ const ProfileActions = ({
         style={styles.buttonContainer}
       />
     ))}
+    {isAdmin &&
+      ADMIN_ACTIONS.map(({ title, path }) => (
+        <CustomButton
+          key={title}
+          title={title}
+          onPress={() => onNavigate(path)}
+          style={[styles.buttonContainer, styles.adminButton]}
+          mode="outlined"
+        />
+      ))}
   </View>
 );
 
@@ -53,6 +73,7 @@ export default function ProfileScreen() {
   const { toggleTheme } = useThemeActions();
   const isDarkMode = useIsDarkMode();
   const router = useRouter();
+  const isAdmin = useIsAdmin();
 
   const userData = useUserData();
   const isAuthenticated = useIsAuthenticated();
@@ -82,7 +103,7 @@ export default function ProfileScreen() {
         email={userData?.email || "No email"}
       />
 
-      <ProfileActions onNavigate={handleNavigation} />
+      <ProfileActions onNavigate={handleNavigation} isAdmin={isAdmin} />
 
       <CustomButton
         title="Logout"
@@ -99,5 +120,10 @@ const styles = StyleSheet.create({
   },
   buttonContainer: {
     marginHorizontal: 40,
+    marginVertical: 8,
+  },
+  adminButton: {
+    // Add specific styles for admin buttons if needed
+    // Example: borderColor: theme.colors.primary,
   },
 });

@@ -18,11 +18,13 @@ namespace Lithuaningo.API.Services.Flashcards
         /// <param name="category">The flashcard category</param>
         /// <param name="difficulty">The difficulty level</param>
         /// <param name="limit">Maximum number of flashcards to retrieve</param>
+        /// <param name="isVerified">Filter by verified status</param>
         /// <returns>A collection of Flashcard model objects</returns>
         Task<IEnumerable<Flashcard>> RetrieveFlashcardModelsAsync(
             FlashcardCategory? category = null,
             DifficultyLevel? difficulty = null,
-            int? limit = null);
+            int? limit = null,
+            bool? isVerified = null);
 
         /// <summary>
         /// Generates flashcards using AI based on provided parameters without saving them
@@ -57,5 +59,7 @@ namespace Lithuaningo.API.Services.Flashcards
         /// providing a comprehensive audio experience for the user.
         /// </remarks>
         Task<string> GenerateFlashcardAudioAsync(Guid flashcardId);
+
+        Task<Flashcard> UpdateFlashcardAdminAsync(Guid flashcardId, UpdateFlashcardAdminRequest request);
     }
 }

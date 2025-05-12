@@ -102,16 +102,18 @@ namespace Lithuaningo.API.Services.Flashcards
         /// <param name="category">The flashcard category</param>
         /// <param name="difficulty">The difficulty level</param>
         /// <param name="limit">Maximum number of flashcards to retrieve</param>
+        /// <param name="isVerified">Filter by verification status</param>
         /// <returns>A collection of Flashcard model objects</returns>
         public async Task<IEnumerable<Flashcard>> RetrieveFlashcardModelsAsync(
             FlashcardCategory? category = null,
             DifficultyLevel? difficulty = null,
-            int? limit = null)
+            int? limit = null,
+            bool? isVerified = null)
         {
             try
             {
                 // Construct a unique cache key based on parameters
-                string cacheKey = BuildCacheKey(category, difficulty, limit);
+                string cacheKey = BuildCacheKey(category, difficulty, limit, isVerified);
 
                 // Try to get from cache first
                 var cached = await _cache.GetAsync<List<Flashcard>>(cacheKey);
@@ -137,6 +139,14 @@ namespace Lithuaningo.API.Services.Flashcards
                     int difficultyValue = (int)difficulty.Value;
                     var difficultyFilter = query.Filter("difficulty", Operator.Equals, difficultyValue);
                     query = (dynamic)difficultyFilter;
+                }
+
+                // Add filter for verification status
+                if (isVerified.HasValue)
+                {
+                    // Pass boolean value as lowercase string for Supabase filter
+                    var verifiedFilter = query.Filter("is_verified", Operator.Equals, isVerified.Value.ToString().ToUpper());
+                    query = (dynamic)verifiedFilter;
                 }
 
                 if (limit.HasValue)
@@ -286,6 +296,38 @@ namespace Lithuaningo.API.Services.Flashcards
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error generating audio for flashcard");
+                throw;
+            }
+        }
+
+        #endregion
+
+        #region Admin Methods
+
+        public async Task<Flashcard> UpdateFlashcardAdminAsync(Guid flashcardId, UpdateFlashcardAdminRequest request)
+        {
+            try
+            {
+                var existingFlashcard = await GetFlashcardByIdAsync(flashcardId);
+                if (existingFlashcard == null)
+                {
+                    throw new KeyNotFoundException($"Flashcard not found.");
+                }
+
+                // Use AutoMapper to map updates, ignoring ID and timestamps
+                _mapper.Map(request, existingFlashcard);
+
+                // Update the flashcard in Supabase
+                await UpdateFlashcardAsync(existingFlashcard); // This already invalidates individual/category cache
+
+                // Invalidate the cache for unverified flashcards lists
+                await _cacheInvalidator.InvalidateUnverifiedFlashcardsCacheAsync();
+
+                return existingFlashcard;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating flashcard (admin)");
                 throw;
             }
         }
@@ -605,9 +647,14 @@ namespace Lithuaningo.API.Services.Flashcards
             }
         }
 
-        private static string BuildCacheKey(FlashcardCategory? category, DifficultyLevel? difficulty, int? limit)
+        private static string BuildCacheKey(FlashcardCategory? category, DifficultyLevel? difficulty, int? limit, bool? isVerified)
         {
             var components = new List<string> { CacheKeyPrefix };
+
+            if (isVerified.HasValue)
+            {
+                components.Add(isVerified.Value ? "status:verified" : "status:unverified");
+            }
 
             if (category.HasValue && category.Value != FlashcardCategory.AllCategories)
             {

@@ -1,14 +1,15 @@
+using System.Threading.Tasks;
+using Lithuaningo.API.Services.Auth;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
-using Lithuaningo.API.Services.Auth;
 using Microsoft.Extensions.Hosting;
 
 namespace Lithuaningo.API.Authorization;
 
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method)]
-public class RequireAdminAttribute : Attribute, IAuthorizationFilter
+public class RequireAdminAttribute : Attribute, IAsyncAuthorizationFilter
 {
-    public void OnAuthorization(AuthorizationFilterContext context)
+    public async Task OnAuthorizationAsync(AuthorizationFilterContext context)
     {
         // Get environment service
         var env = context.HttpContext.RequestServices
@@ -19,11 +20,11 @@ public class RequireAdminAttribute : Attribute, IAuthorizationFilter
             return;
 
         var authService = context.HttpContext.RequestServices.GetRequiredService<IAuthService>();
-        
-        if (!authService.IsAdmin(context.HttpContext.User))
+
+        if (!await authService.IsAdminAsync(context.HttpContext.User))
         {
             context.Result = new ForbidResult();
             return;
         }
     }
-} 
+}

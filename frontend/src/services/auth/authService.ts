@@ -3,11 +3,12 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { useUserStore } from "@stores/useUserStore";
 import { getErrorMessage } from "@utils/errorMessages";
 import { supabase } from "@services/supabase/supabaseClient";
-import { User } from "@supabase/supabase-js";
+import { Session } from "@supabase/supabase-js";
 import { AUTH_PATTERNS } from "@utils/validationPatterns";
 import { AuthResponse } from "@src/types/auth.types";
 import { generateAnonymousName } from "@utils/userUtils";
 import Purchases from "react-native-purchases";
+import { apiClient } from "../api/apiClient";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -17,10 +18,20 @@ GoogleSignin.configure({
 });
 
 // Auth state management
-export const updateAuthState = async (session: { user: User } | null) => {
+export const updateAuthState = async (session: Session | null) => {
   if (!session?.user) {
-    console.error("[Auth] No user in session");
-    throw new Error("User is unexpectedly null or undefined.");
+    console.error("[Auth] No user in session or session is null");
+    useUserStore.getState().logOut();
+    useUserStore.getState().setAuthenticated(false);
+    try {
+      await Purchases.logOut();
+    } catch (rcError) {
+      console.warn(
+        "[Auth] Failed to logOut from RevenueCat on null session:",
+        rcError
+      );
+    }
+    return;
   }
 
   const { user } = session;
@@ -29,31 +40,44 @@ export const updateAuthState = async (session: { user: User } | null) => {
     throw new Error("User email is unexpectedly null or undefined.");
   }
 
-  // Get display name from various possible locations in metadata
-  const displayName =
-    user.user_metadata?.display_name ||
-    user.user_metadata?.name ||
-    generateAnonymousName(user.id);
-
-  const userData = {
-    id: user.id,
-    email: user.email,
-    fullName: displayName,
-    emailVerified: user.email_confirmed_at !== null,
-    isAdmin: user.user_metadata?.is_admin || false,
-    isPremium: user.user_metadata?.is_premium || false,
-    authProvider: user.app_metadata?.provider || "email",
-  };
-
-  useUserStore.getState().logIn(userData);
-  useUserStore.getState().setAuthenticated(true);
-
-  // Synchronize AppUserID with RevenueCat
   try {
+    const userProfile = await apiClient.getUserProfile(user.id);
+
+    const userData = {
+      id: user.id,
+      email: userProfile.email,
+      fullName: userProfile.fullName,
+      emailVerified: userProfile.emailVerified,
+      isAdmin: userProfile.isAdmin,
+      isPremium: userProfile.isPremium,
+      authProvider: userProfile.authProvider,
+    };
+
+    useUserStore.getState().logIn(userData);
+    useUserStore.getState().setAuthenticated(true);
+
+    if (session?.access_token) {
+      console.log("[DEBUG] Supabase JWT access token:", session.access_token);
+    }
+
     await Purchases.logIn(user.id);
   } catch (error) {
-    console.error("[Auth] Failed to logIn to RevenueCat:", error);
-    // Decide if this error should be surfaced or just logged
+    console.error(
+      "[Auth] Failed to fetch user profile or log in to RevenueCat:",
+      error
+    );
+    useUserStore.getState().logOut();
+    useUserStore.getState().setAuthenticated(false);
+    try {
+      await Purchases.logOut();
+    } catch (rcError) {
+      /* Ignore secondary error */
+    }
+    throw new Error(
+      `Failed to initialize user session: ${getErrorMessage(
+        error instanceof Error ? error.message : String(error)
+      )}`
+    );
   }
 };
 
@@ -315,13 +339,6 @@ export const signOut = async (): Promise<AuthResponse> => {
       }
     }
 
-    // Log out from RevenueCat
-    try {
-      await Purchases.logOut();
-    } catch (error) {
-      console.error("[Auth] Failed to logOut from RevenueCat:", error);
-    }
-
     const store = useUserStore.getState();
     store.logOut();
     store.setAuthenticated(false);
@@ -353,8 +370,6 @@ export const updateProfile = async (
   updates: {
     displayName?: string;
     avatarUrl?: string;
-    isAdmin?: boolean;
-    isPremium?: boolean;
   }
 ): Promise<AuthResponse> => {
   try {
@@ -392,8 +407,6 @@ export const updateProfile = async (
     const updateData = {
       display_name: updates.displayName,
       avatar_url: updates.avatarUrl,
-      is_admin: updates.isAdmin,
-      is_premium: updates.isPremium,
     };
 
     // Remove any undefined values
@@ -410,8 +423,24 @@ export const updateProfile = async (
     if (updateError) throw updateError;
     if (!userData.user) throw new Error("Failed to update user");
 
-    // Call updateAuthState directly with the updated user object
-    await updateAuthState({ user: userData.user });
+    // After updating the user, get the current full session
+    const { data: updatedSessionData, error: updatedSessionError } =
+      await supabase.auth.getSession();
+    if (updatedSessionError) {
+      console.warn("Could not get session after user update in updateProfile");
+      throw updatedSessionError;
+    }
+    if (!updatedSessionData.session) {
+      console.warn(
+        "No active session found after user update in updateProfile"
+      );
+      // Decide if this is an error or if user might have been logged out by another action
+      // For now, we'll proceed as if it's an error for updateAuthState to expect a session
+      throw new Error("No active session after profile update.");
+    }
+
+    // Call updateAuthState with the full, current session
+    await updateAuthState(updatedSessionData.session);
 
     return {
       success: true,
@@ -634,14 +663,6 @@ export const deleteAccount = async (
           }
         }
         // Log out from RevenueCat before clearing Supabase session and local store
-        try {
-          await Purchases.logOut();
-        } catch (rcError) {
-          console.error(
-            "[Auth] Failed to logOut from RevenueCat during account deletion:",
-            rcError
-          );
-        }
         await useUserStore.getState().logOut();
         await supabase.auth.signOut();
       },
