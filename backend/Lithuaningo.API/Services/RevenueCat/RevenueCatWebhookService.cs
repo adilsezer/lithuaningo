@@ -72,13 +72,13 @@ namespace Lithuaningo.API.Services.RevenueCat
 
                 // Immediate revocation events
                 case "EXPIRATION":
-                case "SUBSCRIPTION_PAUSED":
                     isPremium = false;
                     _logger.LogInformation("Subscription ended event detected");
                     break;
 
                 // Special handling based on expiration date
                 case "CANCELLATION":
+                case "SUBSCRIPTION_PAUSED":
                 case "BILLING_ISSUE":
                     // Check if subscription is still active based on expiration date
                     if (evt.ExpirationAtMs > 0)
