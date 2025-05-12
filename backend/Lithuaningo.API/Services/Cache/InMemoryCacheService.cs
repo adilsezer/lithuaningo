@@ -59,11 +59,11 @@ public class InMemoryCacheService : ICacheService
     public async Task SetAsync<T>(string key, T value, TimeSpan? expiration = null)
     {
         var settings = await GetCacheSettingsAsync();
+        var actualExpiration = expiration ?? TimeSpan.FromMinutes(settings.DefaultExpirationMinutes);
 
         var options = new MemoryCacheEntryOptions
         {
-            AbsoluteExpirationRelativeToNow =
-                expiration ?? TimeSpan.FromMinutes(settings.DefaultExpirationMinutes)
+            AbsoluteExpirationRelativeToNow = actualExpiration
         };
 
         options.RegisterPostEvictionCallback((evictedKey, _, _, _) =>

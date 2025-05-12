@@ -161,8 +161,8 @@ namespace Lithuaningo.API.Services.Flashcards
 
                 // Cache the results
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
-                await _cache.SetAsync(cacheKey, flashcards,
-                    TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
+                var expiration = TimeSpan.FromMinutes(settings.FlashcardCacheMinutes);
+                await _cache.SetAsync(cacheKey, flashcards, expiration);
 
                 return flashcards;
             }
@@ -649,7 +649,7 @@ namespace Lithuaningo.API.Services.Flashcards
 
         private static string BuildCacheKey(FlashcardCategory? category, DifficultyLevel? difficulty, int? limit, bool? isVerified)
         {
-            var components = new List<string> { CacheKeyPrefix };
+            var components = new List<string> { CacheKeyPrefix.TrimEnd(':') }; // Start with prefix without trailing colon
 
             if (isVerified.HasValue)
             {
@@ -671,7 +671,8 @@ namespace Lithuaningo.API.Services.Flashcards
                 components.Add($"limit:{limit.Value}");
             }
 
-            return string.Join(":", components);
+            // Join non-empty components with a single colon
+            return string.Join(":", components.Where(c => !string.IsNullOrEmpty(c)));
         }
 
         #endregion

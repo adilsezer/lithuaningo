@@ -109,9 +109,10 @@ static X509Certificate2? LoadCertificate(IWebHostEnvironment environment, IConfi
 
 // Configure caching
 builder.Services.AddMemoryCache(); // Use in-memory cache instead of Redis
-builder.Services.AddScoped<ICacheService, InMemoryCacheService>();
-builder.Services.AddScoped<CacheInvalidator>(); // Register the cache invalidator
-builder.Services.AddScoped<ICacheSettingsService, CacheSettingsService>(); // Register the cache settings service
+// Change Scoped to Singleton for cache services to ensure a single instance
+builder.Services.AddSingleton<ICacheService, InMemoryCacheService>();
+builder.Services.AddSingleton<CacheInvalidator>(); // Register the cache invalidator as Singleton
+builder.Services.AddSingleton<ICacheSettingsService, CacheSettingsService>(); // Register the cache settings service as Singleton
 
 // Use NewtonsoftJson instead of the default System.Text.Json with secure settings
 builder.Services.AddControllers()
