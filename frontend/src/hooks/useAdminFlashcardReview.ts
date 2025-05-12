@@ -4,6 +4,8 @@ import { adminFlashcardService } from "@services/admin/adminFlashcardService";
 import {
   FlashcardResponse,
   UpdateFlashcardAdminRequest,
+  FlashcardCategory,
+  DifficultyLevel,
 } from "@src/types/Flashcard";
 import { getErrorMessage } from "@utils/errorMessages";
 
@@ -27,6 +29,84 @@ export const useAdminFlashcardReview = () => {
   const [isUpdating, setIsUpdating] = useState<boolean>(false); // For update/verify actions
   const [isRegenerating, setIsRegenerating] = useState<boolean>(false); // For regenerate actions
   const [error, setError] = useState<string | null>(null);
+
+  // Function to update a field in the current editable flashcard data
+  const updateField = useCallback(
+    <K extends keyof UpdateFlashcardAdminRequest>(
+      field: K,
+      value: UpdateFlashcardAdminRequest[K]
+    ) => {
+      setCurrentFlashcardData((prev) =>
+        prev ? { ...prev, [field]: value } : null
+      );
+    },
+    []
+  );
+
+  // --- Menu/Dialog State ---
+  // Category Dialog
+  const [isCategoryDialogVisible, setIsCategoryDialogVisible] = useState(false);
+  const [tempCategories, setTempCategories] = useState<FlashcardCategory[]>([]);
+
+  // Difficulty Dialog
+  const [isDifficultyDialogVisible, setIsDifficultyDialogVisible] =
+    useState(false);
+  const [tempDifficulty, setTempDifficulty] = useState<DifficultyLevel | null>(
+    null
+  );
+
+  // --- Handlers ---
+  // Category Dialog
+  const openCategoryDialog = useCallback(() => {
+    // Initialize temporary state with current categories when opening
+    setTempCategories(currentFlashcardData?.categories || []);
+    setIsCategoryDialogVisible(true);
+  }, [currentFlashcardData?.categories]);
+
+  const closeCategoryDialog = useCallback(() => {
+    setIsCategoryDialogVisible(false);
+    // No need to reset tempCategories here, openCategoryDialog handles init
+  }, []);
+
+  const handleToggleTempCategory = useCallback(
+    (category: FlashcardCategory) => {
+      setTempCategories((prev) =>
+        prev.includes(category)
+          ? prev.filter((c) => c !== category)
+          : [...prev, category]
+      );
+    },
+    []
+  );
+
+  const confirmCategorySelection = useCallback(() => {
+    updateField("categories", tempCategories);
+    closeCategoryDialog();
+  }, [tempCategories, updateField, closeCategoryDialog]);
+
+  // Difficulty Dialog Handlers
+  const openDifficultyDialog = useCallback(() => {
+    setTempDifficulty(currentFlashcardData?.difficulty ?? null);
+    setIsDifficultyDialogVisible(true);
+  }, [currentFlashcardData?.difficulty]);
+
+  const closeDifficultyDialog = useCallback(() => {
+    setIsDifficultyDialogVisible(false);
+  }, []);
+
+  const handleSelectTempDifficulty = useCallback(
+    (difficulty: DifficultyLevel) => {
+      setTempDifficulty(difficulty);
+    },
+    []
+  );
+
+  const confirmDifficultySelection = useCallback(() => {
+    if (tempDifficulty !== null) {
+      updateField("difficulty", tempDifficulty);
+    }
+    closeDifficultyDialog();
+  }, [tempDifficulty, updateField, closeDifficultyDialog]);
 
   // Memoize the current flashcard based on index
   const currentFlashcard = useMemo(() => {
@@ -55,7 +135,8 @@ export const useAdminFlashcardReview = () => {
         // If categories can be null/undefined in FlashcardResponse but required in UpdateRequest, provide default
         categories: currentFlashcard.categories || [],
         difficulty: currentFlashcard.difficulty, // Assuming DifficultyLevel enum aligns
-        isVerified: currentFlashcard.isVerified,
+        // Set initial state: true if incoming is false, otherwise respect incoming value
+        isVerified: true,
       };
       setCurrentFlashcardData(editableData);
     } else {
@@ -86,19 +167,6 @@ export const useAdminFlashcardReview = () => {
     }
   };
 
-  // Function to update a field in the current editable flashcard data
-  const updateField = useCallback(
-    <K extends keyof UpdateFlashcardAdminRequest>(
-      field: K,
-      value: UpdateFlashcardAdminRequest[K]
-    ) => {
-      setCurrentFlashcardData((prev) =>
-        prev ? { ...prev, [field]: value } : null
-      );
-    },
-    []
-  );
-
   // Go to the next flashcard or finish
   const advanceToNext = () => {
     if (currentIndex < flashcards.length - 1) {
@@ -117,7 +185,11 @@ export const useAdminFlashcardReview = () => {
     setIsUpdating(true);
     setError(null);
     try {
-      const updateData = { ...currentFlashcardData, isVerified: true };
+      if (!currentFlashcardData) {
+        throw new Error("Current flashcard data is missing.");
+      }
+      const updateData = { ...currentFlashcardData };
+
       await adminFlashcardService.updateFlashcard(
         currentFlashcard.id,
         updateData
@@ -213,5 +285,26 @@ export const useAdminFlashcardReview = () => {
     handleRegenerateAudio,
     handleComplete,
     loadFlashcards, // Expose load function if manual refresh is needed
+
+    // Menu state and handlers
+    // difficultyMenuVisible, // Removed
+    // openDifficultyMenu, // Removed
+    // closeDifficultyMenu, // Removed
+
+    // Dialog state and handlers
+    isCategoryDialogVisible,
+    tempCategories, // Pass temp state for Dialog rendering
+    openCategoryDialog,
+    closeCategoryDialog,
+    handleToggleTempCategory,
+    confirmCategorySelection,
+
+    // Difficulty Dialog
+    isDifficultyDialogVisible,
+    tempDifficulty,
+    openDifficultyDialog,
+    closeDifficultyDialog,
+    handleSelectTempDifficulty,
+    confirmDifficultySelection,
   };
 };

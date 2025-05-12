@@ -1,9 +1,11 @@
 import React from "react";
 import { Stack, Redirect } from "expo-router";
 import { useIsAdmin } from "@stores/useUserStore";
-
+import { useTheme } from "react-native-paper";
+import { View } from "react-native";
 export default function AdminLayout() {
   const isAdmin = useIsAdmin();
+  const theme = useTheme();
 
   // If the user is not an admin, redirect them away from the admin section.
   if (!isAdmin) {
@@ -14,7 +16,14 @@ export default function AdminLayout() {
 
   // This layout can contain navigation configuration like screen titles.
   return (
-    <Stack>
+    <Stack
+      screenOptions={{
+        contentStyle: {
+          backgroundColor: theme.colors.background,
+        },
+        headerShown: false,
+      }}
+    >
       <Stack.Screen
         name="flashcard-review"
         options={{ title: "Review Flashcards" }}

@@ -1,6 +1,15 @@
 import React, { useState } from "react";
-import { ScrollView, View, StyleSheet, Platform } from "react-native";
-import { Card, Text, useTheme, Menu, Divider } from "react-native-paper";
+import { ScrollView, View, StyleSheet, Platform, Image } from "react-native";
+import {
+  Card,
+  Text,
+  useTheme,
+  Divider,
+  Portal,
+  Dialog,
+  Checkbox,
+  RadioButton,
+} from "react-native-paper";
 import { useAdminFlashcardReview } from "@hooks/useAdminFlashcardReview";
 import CustomText from "@components/ui/CustomText";
 import CustomButton from "@components/ui/CustomButton";
@@ -8,6 +17,7 @@ import CustomTextInput from "@components/ui/CustomTextInput";
 import CustomSwitch from "@components/ui/CustomSwitch";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
 import ErrorMessage from "@components/ui/ErrorMessage";
+import AudioPlayer from "@components/ui/AudioPlayer";
 import { FlashcardCategory, DifficultyLevel } from "@src/types/Flashcard";
 
 // Helper function to get enum keys for display
@@ -32,16 +42,19 @@ export default function AdminFlashcardReviewScreen() {
     handleRegenerateImage,
     handleRegenerateAudio,
     handleComplete,
+    isCategoryDialogVisible,
+    tempCategories,
+    openCategoryDialog,
+    closeCategoryDialog,
+    handleToggleTempCategory,
+    confirmCategorySelection,
+    isDifficultyDialogVisible,
+    tempDifficulty,
+    openDifficultyDialog,
+    closeDifficultyDialog,
+    handleSelectTempDifficulty,
+    confirmDifficultySelection,
   } = useAdminFlashcardReview();
-
-  // State for Menu visibility
-  const [categoryMenuVisible, setCategoryMenuVisible] = useState(false);
-  const [difficultyMenuVisible, setDifficultyMenuVisible] = useState(false);
-
-  const openCategoryMenu = () => setCategoryMenuVisible(true);
-  const closeCategoryMenu = () => setCategoryMenuVisible(false);
-  const openDifficultyMenu = () => setDifficultyMenuVisible(true);
-  const closeDifficultyMenu = () => setDifficultyMenuVisible(false);
 
   if (isLoading) {
     return <LoadingIndicator size="large" style={styles.loader} />;
@@ -98,6 +111,7 @@ export default function AdminFlashcardReviewScreen() {
             0,
             8
           )})`}
+          titleStyle={{ textAlign: "center" }}
         />
         <Card.Content>
           {error && (
@@ -136,6 +150,13 @@ export default function AdminFlashcardReviewScreen() {
             currentFlashcardData.imageUrl,
             "imageUrl"
           )}
+          {currentFlashcardData?.imageUrl ? (
+            <Image
+              source={{ uri: currentFlashcardData.imageUrl }}
+              style={styles.imagePreview}
+              resizeMode="contain"
+            />
+          ) : null}
           <CustomButton
             onPress={handleRegenerateImage}
             title="Regenerate Image"
@@ -148,6 +169,9 @@ export default function AdminFlashcardReviewScreen() {
             currentFlashcardData.audioUrl,
             "audioUrl"
           )}
+          {currentFlashcardData?.audioUrl ? (
+            <AudioPlayer audioUrl={currentFlashcardData.audioUrl} />
+          ) : null}
           <CustomButton
             onPress={handleRegenerateAudio}
             title="Regenerate Audio"
@@ -157,64 +181,111 @@ export default function AdminFlashcardReviewScreen() {
           />
           {renderTextInput("Notes", currentFlashcardData.notes, "notes", true)}
 
-          {/* Category Selector using Menu */}
-          <Menu
-            visible={categoryMenuVisible}
-            onDismiss={closeCategoryMenu}
-            anchor={
-              <CustomButton
-                onPress={openCategoryMenu}
-                title={`Category: ${
-                  FlashcardCategory[currentFlashcardData.categories?.[0]] ||
-                  "Select"
-                }`}
-                mode="outlined"
-                style={styles.input}
-                disabled={isUpdating || isRegenerating}
-              />
+          {/* Category Selector - Now a Button to open Dialog */}
+          <CustomButton
+            onPress={openCategoryDialog}
+            title={
+              currentFlashcardData?.categories &&
+              currentFlashcardData.categories.length > 0
+                ? `Categories: ${currentFlashcardData.categories
+                    .map((cat) => FlashcardCategory[cat])
+                    .join(", ")}`
+                : "Select Categories"
             }
-          >
-            {getEnumKeys(FlashcardCategory)
-              .filter((key) => key !== "AllCategories")
-              .map((key) => (
-                <Menu.Item
-                  key={key}
-                  onPress={() => {
-                    updateField("categories", [FlashcardCategory[key]]);
-                    closeCategoryMenu();
-                  }}
-                  title={key}
-                />
-              ))}
-          </Menu>
+            mode="outlined"
+            style={styles.input}
+            disabled={isUpdating || isRegenerating}
+          />
 
-          {/* Difficulty Selector using Menu */}
-          <Menu
-            visible={difficultyMenuVisible}
-            onDismiss={closeDifficultyMenu}
-            anchor={
-              <CustomButton
-                onPress={openDifficultyMenu}
-                title={`Difficulty: ${
-                  DifficultyLevel[currentFlashcardData.difficulty]
-                }`}
-                mode="outlined"
-                style={styles.input}
-                disabled={isUpdating || isRegenerating}
-              />
-            }
-          >
-            {getEnumKeys(DifficultyLevel).map((key) => (
-              <Menu.Item
-                key={key}
-                onPress={() => {
-                  updateField("difficulty", DifficultyLevel[key]);
-                  closeDifficultyMenu();
-                }}
-                title={key}
-              />
-            ))}
-          </Menu>
+          {/* Category Selection Dialog */}
+          <Portal>
+            <Dialog
+              visible={isCategoryDialogVisible}
+              onDismiss={closeCategoryDialog}
+              style={{ backgroundColor: theme.colors.background }}
+            >
+              <Dialog.Title>Select Categories</Dialog.Title>
+              <Dialog.Content>
+                <ScrollView style={{ maxHeight: 300 }}>
+                  {getEnumKeys(FlashcardCategory)
+                    .filter((key) => key !== "AllCategories")
+                    .map((key) => {
+                      const categoryValue = FlashcardCategory[key];
+                      const isSelected =
+                        tempCategories?.includes(categoryValue);
+                      return (
+                        <Checkbox.Item
+                          key={key}
+                          label={key}
+                          status={isSelected ? "checked" : "unchecked"}
+                          onPress={() =>
+                            handleToggleTempCategory(categoryValue)
+                          }
+                          color={theme.colors.primary}
+                        />
+                      );
+                    })}
+                </ScrollView>
+              </Dialog.Content>
+              <Dialog.Actions>
+                <CustomButton onPress={closeCategoryDialog} title="Cancel" />
+                <CustomButton
+                  onPress={confirmCategorySelection}
+                  title="Done"
+                  mode="contained"
+                />
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
+
+          {/* Difficulty Selector - Now a Button to open Dialog */}
+          <CustomButton
+            onPress={openDifficultyDialog}
+            title={`Difficulty: ${
+              currentFlashcardData
+                ? DifficultyLevel[currentFlashcardData.difficulty]
+                : "Select"
+            }`}
+            mode="outlined"
+            style={styles.input}
+            disabled={isUpdating || isRegenerating}
+          />
+
+          {/* Difficulty Selection Dialog */}
+          <Portal>
+            <Dialog
+              visible={isDifficultyDialogVisible}
+              onDismiss={closeDifficultyDialog}
+              style={{ backgroundColor: theme.colors.background }}
+            >
+              <Dialog.Title>Select Difficulty</Dialog.Title>
+              <Dialog.Content>
+                <RadioButton.Group
+                  onValueChange={(value) =>
+                    handleSelectTempDifficulty(Number(value) as DifficultyLevel)
+                  }
+                  value={tempDifficulty?.toString() ?? ""}
+                >
+                  {getEnumKeys(DifficultyLevel).map((key) => (
+                    <RadioButton.Item
+                      key={key}
+                      label={key}
+                      value={DifficultyLevel[key].toString()}
+                      color={theme.colors.primary}
+                    />
+                  ))}
+                </RadioButton.Group>
+              </Dialog.Content>
+              <Dialog.Actions>
+                <CustomButton onPress={closeDifficultyDialog} title="Cancel" />
+                <CustomButton
+                  onPress={confirmDifficultySelection}
+                  title="Done"
+                  mode="contained"
+                />
+              </Dialog.Actions>
+            </Dialog>
+          </Portal>
 
           {/* Verified Switch */}
           <CustomSwitch
@@ -286,5 +357,13 @@ const styles = StyleSheet.create({
   },
   completeButton: {
     marginTop: 16,
+  },
+  imagePreview: {
+    width: "100%",
+    height: 200,
+    borderRadius: 8,
+    marginBottom: 12,
+    marginTop: 4,
+    backgroundColor: "#e0e0e0", // Placeholder background
   },
 });
