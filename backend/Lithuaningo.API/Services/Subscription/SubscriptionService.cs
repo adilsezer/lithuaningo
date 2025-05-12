@@ -30,19 +30,6 @@ namespace Lithuaningo.API.Services.Subscription
 
             try
             {
-                // Map event type to subscription status
-                string subscriptionStatus = evt.Type?.ToUpperInvariant() switch
-                {
-                    "INITIAL_PURCHASE" => "ACTIVE",
-                    "RENEWAL" => "ACTIVE",
-                    "PRODUCT_CHANGE" => "ACTIVE",
-                    "UNCANCEL" => "ACTIVE",
-                    "TEST" when isPremium => "ACTIVE",
-                    "EXPIRATION" => "EXPIRED",
-                    "CANCELLATION" => "CANCELLED",
-                    _ => "UNKNOWN"
-                };
-
                 // Create metadata object
                 var metadata = new
                 {
@@ -52,8 +39,6 @@ namespace Lithuaningo.API.Services.Subscription
                     evt.PeriodType,
                     evt.EntitlementId,
                     evt.EntitlementIds,
-                    Aliases = evt.Aliases,
-                    SubscriberAttributes = evt.SubscriberAttributes
                 };
 
                 // Create subscription record
@@ -62,7 +47,6 @@ namespace Lithuaningo.API.Services.Subscription
                     Id = Guid.NewGuid(),
                     UserId = Guid.Parse(userId),
                     IsPremium = isPremium,
-                    SubscriptionStatus = subscriptionStatus,
                     ProductId = evt.ProductId,
                     Store = evt.Store,
                     StartedAt = evt.PurchasedAtMs > 0
