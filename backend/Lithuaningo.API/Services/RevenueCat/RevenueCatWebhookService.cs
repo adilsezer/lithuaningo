@@ -56,30 +56,46 @@ namespace Lithuaningo.API.Services.RevenueCat
             switch (eventType)
             {
                 // Active subscription events - premium access should be granted
-                case "TEST":
                 case "INITIAL_PURCHASE":
+                case "TRIAL":
                 case "RENEWAL":
-                case "PRODUCT_CHANGE":
+                case "NON_RENEWING_PURCHASE":
                 case "UNCANCELLATION":
-                case "NON_RENEWING_PURCHASE":  // Added for lifetime products
                 case "SUBSCRIPTION_EXTENDED":
+                case "PRODUCT_CHANGE":
+                case "REFUND_REVERSED":
+                case "TEMPORARY_ENTITLEMENT_GRANT":
+                case "TRANSFER":
                     isPremium = true;
                     _logger.LogInformation("Active subscription event detected");
                     break;
 
-                // Inactive subscription events - premium access should be removed
-                case "CANCELLATION":
+                // Immediate revocation events
                 case "EXPIRATION":
                     isPremium = false;
                     _logger.LogInformation("Subscription ended event detected");
                     break;
 
-                // Billing issue doesn't immediately mean loss of access
-                // Should check existing status or wait for EXPIRATION
+                // Special handling based on expiration date
+                case "CANCELLATION":
+                case "SUBSCRIPTION_PAUSED":
                 case "BILLING_ISSUE":
-                    _logger.LogInformation("Billing issue detected");
-                    shouldUpdateProfile = false;
-                    isPremium = false; // Default value, won't be used if shouldUpdateProfile is false
+                    // Check if subscription is still active based on expiration date
+                    if (evt.ExpirationAtMs > 0)
+                    {
+                        var expirationDate = DateTimeOffset.FromUnixTimeMilliseconds(evt.ExpirationAtMs).UtcDateTime;
+
+                        // Add buffer time to account for webhook delays 
+                        isPremium = expirationDate > DateTime.UtcNow.Subtract(TimeSpan.FromMinutes(5));
+
+                        _logger.LogInformation("Special event with future/past expiration detected");
+                    }
+                    else
+                    {
+                        // If no expiration date, assume not premium
+                        isPremium = false;
+                        _logger.LogInformation("Special event with no expiration date detected");
+                    }
                     break;
 
                 // For other events, don't update the profile
