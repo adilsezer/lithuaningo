@@ -1,11 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.RevenueCat;
 using Lithuaningo.API.Services.Subscription;
 using Lithuaningo.API.Services.UserProfile;
 using Lithuaningo.API.Settings;
-using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace Lithuaningo.API.Services.RevenueCat
@@ -15,7 +11,6 @@ namespace Lithuaningo.API.Services.RevenueCat
         private readonly IUserProfileService _userProfileService;
         private readonly ISubscriptionService _subscriptionService;
         private readonly ILogger<RevenueCatWebhookService> _logger;
-        private readonly RevenueCatSettings _revenueCatSettings;
 
         public RevenueCatWebhookService(
             IUserProfileService userProfileService,
@@ -26,7 +21,6 @@ namespace Lithuaningo.API.Services.RevenueCat
             _userProfileService = userProfileService ?? throw new ArgumentNullException(nameof(userProfileService));
             _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _revenueCatSettings = revenueCatSettings?.Value ?? throw new ArgumentNullException(nameof(revenueCatSettings));
         }
 
         public async Task ProcessWebhookEventAsync(RevenueCatEvent evt)

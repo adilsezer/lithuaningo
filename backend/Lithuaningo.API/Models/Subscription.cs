@@ -18,9 +18,6 @@ namespace Lithuaningo.API.Models
         [Column("is_premium")]
         public bool IsPremium { get; set; }
 
-        [Column("subscription_status")]
-        public string SubscriptionStatus { get; set; } = string.Empty;
-
         [Column("product_id")]
         public string? ProductId { get; set; }
 
