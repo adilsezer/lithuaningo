@@ -19,23 +19,20 @@ const AuthInitializer: React.FC = () => {
   const isUpdatingRef = useRef(false);
 
   const handleAuthStateUpdate = async (session: Session | null) => {
-    if (isUpdatingRef.current) {
+    if (isUpdatingRef.current && session) {
       return;
     }
 
     try {
       isUpdatingRef.current = true;
-      setLoading(true);
 
       if (session) {
         await updateAuthState(session);
-        // Navigation will be handled by the useProtectedRoutes hook
       } else {
         logOut();
-        // Navigation will be handled by the useProtectedRoutes hook
       }
     } catch (error) {
-      console.error("[Auth] State update failed:", error);
+      console.error("[Auth] State update failed:", error); // Kept generic error log
       showAlert({
         title: "Authentication Error",
         message:
@@ -44,37 +41,29 @@ const AuthInitializer: React.FC = () => {
       });
     } finally {
       isUpdatingRef.current = false;
-      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // Show loading while initializing auth
-    setLoading(true);
+    let initialCheckCompleted = false;
+    setLoading(true); // Keep this one for initial app load/listener setup
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
         await handleAuthStateUpdate(session);
+        if (!initialCheckCompleted) {
+          setLoading(false);
+          initialCheckCompleted = true;
+        }
       }
     );
 
     return () => {
       subscription.unsubscribe();
     };
-  }, [logOut, router, showAlert]);
-
-  useEffect(() => {
-    // Get the initial session when the component mounts
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        updateAuthState(session);
-      }
-      // Done loading initial session
-      setLoading(false);
-    });
-  }, []);
+  }, [logOut, router, showAlert, setLoading]);
 
   useEffect(() => {
     const refreshToken = async () => {
@@ -86,9 +75,7 @@ const AuthInitializer: React.FC = () => {
 
         if (error) {
           console.error("Error refreshing token:", error);
-          logOut();
         } else if (session) {
-          await updateAuthState(session);
         }
       } catch (error) {
         console.error("Unexpected error during token refresh:", error);
@@ -98,7 +85,7 @@ const AuthInitializer: React.FC = () => {
     // Refresh token every 23 hours
     const interval = setInterval(refreshToken, 23 * 60 * 60 * 1000);
     return () => clearInterval(interval);
-  }, [logOut]);
+  }, []);
 
   return null;
 };
