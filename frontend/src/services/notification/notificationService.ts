@@ -11,13 +11,14 @@ Notifications.setNotificationHandler({
   }),
 });
 
-const NOTIFICATION_KEYS = {
+export const NOTIFICATION_KEYS = {
   NOTIFICATION_PROMPT_KEY: "notification_prompt_key",
   REMINDER_ENABLED: "reminder_enabled",
   REMINDER_TIME: "reminder_time",
+  USER_PREF_PUSH_NOTIFICATIONS_ENABLED: "user_pref_push_notifications_enabled",
 };
 
-async function requestPermissions() {
+export async function requestPermissions() {
   if (!Device.isDevice) {
     console.warn("Bypassing physical device check for testing on simulator");
     return "granted";
@@ -68,6 +69,22 @@ export async function scheduleDailyReviewReminder(
 ) {
   if (!userId) return;
 
+  // Check global user preference first
+  const userPrefersNotifications = await retrieveData<boolean>(
+    NOTIFICATION_KEYS.USER_PREF_PUSH_NOTIFICATIONS_ENABLED
+  );
+  if (userPrefersNotifications === false) {
+    return; // Do not schedule if globally disabled
+  }
+
+  // Check if the specific daily reminder is enabled
+  const dailyReminderIsEnabled = await retrieveData<boolean>(
+    NOTIFICATION_KEYS.REMINDER_ENABLED
+  );
+  if (dailyReminderIsEnabled === false) {
+    return; // Do not schedule if daily reminder specifically is disabled
+  }
+
   await cancelAllScheduledNotifications();
 
   try {
@@ -109,6 +126,15 @@ async function setPromptedForNotifications() {
 }
 
 export async function initializeNotifications(userId: string | undefined) {
+  // Check global user preference first
+  const userPrefersNotifications = await retrieveData<boolean>(
+    NOTIFICATION_KEYS.USER_PREF_PUSH_NOTIFICATIONS_ENABLED
+  );
+  if (userPrefersNotifications === false) {
+    // If user has turned them off globally, don't proceed with initial setup/prompt.
+    return;
+  }
+
   const hasPrompted = await hasPromptedForNotifications();
 
   if (!hasPrompted) {

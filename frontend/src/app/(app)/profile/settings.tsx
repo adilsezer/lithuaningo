@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, StyleSheet, ScrollView } from "react-native";
 import { Button, List, Switch, Divider, Card } from "react-native-paper";
 import { router } from "expo-router";
@@ -7,13 +7,28 @@ import { useIsDarkMode } from "@stores/useThemeStore";
 import useThemeStore from "@stores/useThemeStore";
 import { useAuth } from "@hooks/useAuth";
 import { useRevenueCat } from "@hooks/useRevenueCat";
+import useNotificationPreferencesStore from "@stores/useNotificationPreferencesStore";
+import { useUserData } from "@stores/useUserStore";
 
 export default function SettingsScreen() {
   const isDarkMode = useIsDarkMode();
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const theme = createTheme(isDarkMode);
   const { deleteAccount } = useAuth();
+  const userData = useUserData();
   const { showManageSubscriptions, isPremium } = useRevenueCat();
+
+  // Notification preferences store
+  const {
+    arePushNotificationsEnabled,
+    loadPushNotificationPreference,
+    setPushNotificationsEnabled,
+    isLoading: isLoadingNotificationPreference,
+  } = useNotificationPreferencesStore();
+
+  useEffect(() => {
+    loadPushNotificationPreference();
+  }, [loadPushNotificationPreference]);
 
   return (
     <ScrollView style={styles.container}>
@@ -42,22 +57,12 @@ export default function SettingsScreen() {
             left={(props) => <List.Icon {...props} icon="bell" />}
             right={() => (
               <Switch
-                value={true}
-                onValueChange={() => {}}
+                value={arePushNotificationsEnabled}
+                onValueChange={(newValue) =>
+                  setPushNotificationsEnabled(newValue, userData?.id)
+                }
                 color={theme.colors.primary}
-              />
-            )}
-          />
-
-          <List.Item
-            title="Email Notifications"
-            description="Receive email notifications"
-            left={(props) => <List.Icon {...props} icon="email" />}
-            right={() => (
-              <Switch
-                value={true}
-                onValueChange={() => {}}
-                color={theme.colors.primary}
+                disabled={isLoadingNotificationPreference}
               />
             )}
           />
