@@ -20,14 +20,18 @@ GoogleSignin.configure({
 // Auth state management
 export const updateAuthState = async (session: Session | null) => {
   if (!session?.user) {
-    console.error("[Auth] No user in session or session is null");
+    console.error(
+      "[AuthService] updateAuthState: No user in session or session is null. Clearing local state."
+    );
     useUserStore.getState().logOut();
-    useUserStore.getState().setAuthenticated(false);
     try {
       await Purchases.logOut();
+      console.log(
+        "[AuthService] updateAuthState: RevenueCat logout successful on null session."
+      );
     } catch (rcError) {
       console.warn(
-        "[Auth] Failed to logOut from RevenueCat on null session:",
+        "[AuthService] updateAuthState: Failed to logOut from RevenueCat on null session:",
         rcError
       );
     }
@@ -36,8 +40,19 @@ export const updateAuthState = async (session: Session | null) => {
 
   const { user } = session;
   if (!user.email) {
-    console.error("[Auth] No email in user data");
-    throw new Error("User email is unexpectedly null or undefined.");
+    console.error(
+      "[AuthService] updateAuthState: No email in user data. This should not happen."
+    );
+    useUserStore.getState().logOut();
+    try {
+      await Purchases.logOut();
+    } catch (e) {
+      console.warn(
+        "[AuthService] RC Logout failed after missing email error.",
+        e
+      );
+    }
+    return;
   }
 
   try {
@@ -54,36 +69,31 @@ export const updateAuthState = async (session: Session | null) => {
     };
 
     useUserStore.getState().logIn(userData);
-    useUserStore.getState().setAuthenticated(true);
-
-    if (session?.access_token) {
-      console.log("[DEBUG] Supabase JWT access token:", session.access_token);
-    }
 
     await Purchases.logIn(user.id);
   } catch (error) {
     console.error(
-      "[Auth] Failed to fetch user profile or log in to RevenueCat:",
+      `[AuthService] updateAuthState: Error during state update for user ${user.id}:`,
       error
     );
     useUserStore.getState().logOut();
-    useUserStore.getState().setAuthenticated(false);
     try {
       await Purchases.logOut();
+      console.log(
+        "[AuthService] updateAuthState: RevenueCat logout successful after error."
+      );
     } catch (rcError) {
-      /* Ignore secondary error */
+      console.warn(
+        `[AuthService] updateAuthState: Failed to logOut from RevenueCat for user ${user.id} after error:`,
+        rcError
+      );
     }
-    throw new Error(
-      `Failed to initialize user session: ${getErrorMessage(
-        error instanceof Error ? error.message : String(error)
-      )}`
-    );
   }
 };
 
 // Helper Functions
 const handleAuthError = (error: any): AuthResponse => {
-  console.error("Auth operation failed:", error);
+  console.error("[AuthService] Auth operation failed:", error);
 
   if (error.message?.includes("Email not confirmed")) {
     return {
@@ -194,12 +204,19 @@ export const signInWithEmail = async (
           email,
         };
       }
+      console.error(
+        "[authService] signInWithEmail: Supabase signInWithPassword error:",
+        error
+      );
       throw error;
     }
 
-    if (!data.user || !data.session) throw new Error("No user data received");
-
-    await updateAuthState(data.session);
+    if (!data.user || !data.session) {
+      console.error(
+        "[authService] signInWithEmail: No user data or session received from Supabase."
+      );
+      throw new Error("No user data received");
+    }
     return { success: true, message: "Successfully logged in" };
   } catch (error) {
     return handleAuthError(error);
@@ -208,30 +225,34 @@ export const signInWithEmail = async (
 
 export const signInWithGoogle = async (): Promise<AuthResponse> => {
   try {
-    // Sign in with Google
     await GoogleSignin.hasPlayServices();
     const userInfo = await GoogleSignin.signIn();
     const tokens = await GoogleSignin.getTokens();
 
     if (!userInfo.idToken) {
+      console.error(
+        "[authService] signInWithGoogle: Failed to get ID token from Google Sign-In."
+      );
       throw new Error("Failed to get ID token from Google Sign-In");
     }
 
-    // Sign in with Supabase using the Google ID token
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "google",
       token: userInfo.idToken,
       access_token: tokens.accessToken,
     });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    // Check if we have user data
     if (!data.user || !data.session) {
+      console.error(
+        "[authService] signInWithGoogle: No user data or session received from Supabase."
+      );
       throw new Error("No user data received from authentication");
     }
 
-    // Update user metadata with a properly formatted display name
     const displayName =
       userInfo.user.name ||
       data.user.user_metadata?.name ||
@@ -245,14 +266,18 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
     });
 
     if (updateError) {
-      console.error("Failed to update user metadata:", updateError);
+      console.warn(
+        "[authService] signInWithGoogle: Failed to update user metadata:",
+        updateError
+      );
     }
 
-    // Ensure session is passed to updateAuthState
     if (!data.session) {
+      console.error(
+        "[authService] signInWithGoogle: No session data received after Google Sign-In (post-metadata update)."
+      );
       throw new Error("No session data received after Google Sign-In");
     }
-    await updateAuthState(data.session);
     return { success: true };
   } catch (error) {
     return handleAuthError(error);
@@ -269,24 +294,29 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
     });
 
     if (!credential.identityToken) {
+      console.error(
+        "[authService] signInWithApple: No identity token from Apple Sign-In."
+      );
       throw new Error("No identity token from Apple Sign-In");
     }
 
-    // Sign in with Supabase using the Apple ID token
     const { data, error } = await supabase.auth.signInWithIdToken({
       provider: "apple",
       token: credential.identityToken,
       access_token: credential.authorizationCode || undefined,
     });
 
-    if (error) throw error;
+    if (error) {
+      throw error;
+    }
 
-    // Check if we have user data
     if (!data.user || !data.session) {
+      console.error(
+        "[authService] signInWithApple: No user data or session received from Supabase."
+      );
       throw new Error("No user data received from authentication");
     }
 
-    // Update user metadata with a properly formatted display name
     const displayName =
       (credential.fullName?.givenName && credential.fullName?.familyName
         ? `${credential.fullName.givenName} ${credential.fullName.familyName}`.trim()
@@ -303,14 +333,19 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
     });
 
     if (updateError) {
-      console.error("Failed to update user metadata:", updateError);
+      console.warn(
+        "[authService] signInWithApple: Failed to update user metadata:",
+        updateError
+      );
     }
 
-    // Ensure session is passed to updateAuthState
     if (!data.session) {
+      console.error(
+        "[authService] signInWithApple: No session data received after Apple Sign-In (post-metadata update)."
+      );
       throw new Error("No session data received after Apple Sign-In");
     }
-    await updateAuthState(data.session);
+
     return { success: true };
   } catch (error) {
     return handleAuthError(error);
@@ -427,15 +462,15 @@ export const updateProfile = async (
     const { data: updatedSessionData, error: updatedSessionError } =
       await supabase.auth.getSession();
     if (updatedSessionError) {
-      console.warn("Could not get session after user update in updateProfile");
+      console.warn(
+        "[AuthService] Could not get session after user update in updateProfile. This might be an issue if updateAuthState relies on it."
+      );
       throw updatedSessionError;
     }
     if (!updatedSessionData.session) {
       console.warn(
-        "No active session found after user update in updateProfile"
+        "[AuthService] No active session found after user update in updateProfile. This might be an issue if updateAuthState relies on it."
       );
-      // Decide if this is an error or if user might have been logged out by another action
-      // For now, we'll proceed as if it's an error for updateAuthState to expect a session
       throw new Error("No active session after profile update.");
     }
 
@@ -549,9 +584,12 @@ export const verifyPasswordReset = async (
     // Log out from RevenueCat as well, since Supabase session is ended
     try {
       await Purchases.logOut();
+      console.log(
+        "[AuthService] RevenueCat logout successful after password reset."
+      );
     } catch (rcError) {
       console.error(
-        "[Auth] Failed to logOut from RevenueCat after password reset:",
+        "[AuthService] Failed to logOut from RevenueCat after password reset:",
         rcError
       );
     }
@@ -665,9 +703,12 @@ export const deleteAccount = async (
         // Log out from RevenueCat before clearing Supabase session and local store
         try {
           await Purchases.logOut();
+          console.log(
+            "[AuthService] RevenueCat logout successful during account deletion."
+          );
         } catch (rcError) {
           console.error(
-            "[Auth] Failed to logOut from RevenueCat during account deletion cleanup:",
+            "[AuthService] Failed to logOut from RevenueCat during account deletion cleanup:",
             rcError
           );
         }

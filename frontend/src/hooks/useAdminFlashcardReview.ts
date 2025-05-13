@@ -287,9 +287,6 @@ export const useAdminFlashcardReview = () => {
     loadFlashcards, // Expose load function if manual refresh is needed
 
     // Menu state and handlers
-    // difficultyMenuVisible, // Removed
-    // openDifficultyMenu, // Removed
-    // closeDifficultyMenu, // Removed
 
     // Dialog state and handlers
     isCategoryDialogVisible,

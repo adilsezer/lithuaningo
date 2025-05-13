@@ -260,10 +260,21 @@ class ApiClient {
         timeout: options?.timeout || this.axiosInstance.defaults.timeout,
       });
 
-      console.log(`[API] [${requestId}] COMPLETE ${method} ${endpoint}`);
       return response.data;
     } catch (error) {
-      console.log(`[API] [${requestId}] ERROR ${method} ${endpoint}`);
+      console.error(
+        `[API] [${requestId}] ERROR ${method} ${endpoint}. Raw Error:`,
+        error
+      );
+      if (axios.isAxiosError(error)) {
+        console.error(`[API] [${requestId}] Axios Error Details:`, {
+          message: error.message,
+          status: error.response?.status,
+          configPath: error.config?.url,
+        });
+      } else {
+        console.error(`[API] [${requestId}] Non-Axios Error Details:`, error);
+      }
       throw this.handleError(error);
     }
   }
@@ -277,7 +288,7 @@ class ApiClient {
       return response;
     } catch (error) {
       console.error("[getAppInfo] Error", {
-        error,
+        message: error instanceof Error ? error.message : String(error),
         platform,
         baseURL: this.baseURL,
       });

@@ -9,6 +9,7 @@ export type UserData = Pick<
   | "id"
   | "email"
   | "fullName"
+  | "avatarUrl"
   | "emailVerified"
   | "isAdmin"
   | "isPremium"

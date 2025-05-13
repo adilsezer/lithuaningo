@@ -25,7 +25,6 @@ export const useAuth = () => {
   const router = useRouter();
   const { performAuthOperation } = useAuthOperation();
   const { showAlert, showConfirm } = useAlertDialog();
-  const { logout: logoutRevenueCat } = useRevenueCat();
 
   // Navigation helpers
   const navigateAfterAuth = useCallback(
@@ -107,7 +106,10 @@ export const useAuth = () => {
         } else if (provider === "apple" && Platform.OS === "ios") {
           response = await signInWithApple();
         } else {
-          throw new Error(`Unsupported provider: ${provider}`);
+          console.error(
+            `[useAuth] signInWithSocial: Unsupported provider or platform for ${provider}`
+          );
+          throw new Error(`Unsupported provider or platform for ${provider}`);
         }
 
         if (response.success) {
@@ -122,9 +124,8 @@ export const useAuth = () => {
   );
 
   const handleSignOut = useCallback(async () => {
+    console.log("[useAuth] handleSignOut: Initiating sign-out process."); // Keep this high-level log
     const result = await performAuthOperation(async () => {
-      // Sign out from RevenueCat to clear any user-specific data
-      await logoutRevenueCat();
       const response = await signOut();
       if (response.success) {
         // crashlytics().log("User signed out");
@@ -133,7 +134,7 @@ export const useAuth = () => {
       return response;
     }, "Sign Out Failed");
     return result;
-  }, [performAuthOperation, navigateAfterAuth, logoutRevenueCat]);
+  }, [performAuthOperation, navigateAfterAuth]);
 
   // Profile management
   const handleUpdateProfile = useCallback(

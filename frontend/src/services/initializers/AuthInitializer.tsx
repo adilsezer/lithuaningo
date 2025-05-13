@@ -1,7 +1,10 @@
 import React, { useEffect, useRef } from "react";
 import { useUserStore } from "@stores/useUserStore";
 import { useRouter } from "expo-router";
-import { updateAuthState } from "@services/auth/authService";
+import {
+  hydrateUserSessionAndProfile,
+  clearUserSessionAndLogout,
+} from "../user/userProfileService";
 import { useAlertActions } from "@stores/useAlertStore";
 import { supabase } from "@services/supabase/supabaseClient";
 import { AuthChangeEvent, Session } from "@supabase/supabase-js";
@@ -12,47 +15,95 @@ import { useSetLoading } from "@stores/useUIStore";
  * and updates the app state accordingly.
  */
 const AuthInitializer: React.FC = () => {
-  const { logOut } = useUserStore();
   const { showAlert } = useAlertActions();
   const router = useRouter();
   const setLoading = useSetLoading();
-  const isUpdatingRef = useRef(false);
+  const activeProcessingId = useRef<string | null>(null);
+  const isProcessingSessionUpdate = useRef<boolean>(false);
+  const pendingSessionUpdate = useRef<Session | null | undefined>(undefined);
 
-  const handleAuthStateUpdate = async (session: Session | null) => {
-    if (isUpdatingRef.current && session) {
+  const processLatestSessionUpdate = async () => {
+    if (
+      isProcessingSessionUpdate.current ||
+      pendingSessionUpdate.current === undefined
+    ) {
       return;
     }
 
-    try {
-      isUpdatingRef.current = true;
+    isProcessingSessionUpdate.current = true;
+    const sessionToProcess = pendingSessionUpdate.current;
+    pendingSessionUpdate.current = undefined;
 
-      if (session) {
-        await updateAuthState(session);
+    const sessionIdForLogging =
+      sessionToProcess?.user?.id ||
+      (sessionToProcess === null ? "null_session" : "undefined_session_state");
+    activeProcessingId.current = sessionIdForLogging;
+
+    try {
+      if (sessionToProcess?.user) {
+        const success = await hydrateUserSessionAndProfile(sessionToProcess);
+        if (!success) {
+          console.warn(
+            `[AuthInitializer] hydrateUserSessionAndProfile failed for user: ${sessionToProcess.user.id}`
+          );
+        }
       } else {
-        logOut();
+        await clearUserSessionAndLogout();
       }
     } catch (error) {
-      console.error("[Auth] State update failed:", error); // Kept generic error log
-      showAlert({
-        title: "Authentication Error",
-        message:
-          "There was a problem with your authentication. Please try again.",
-        buttons: [{ text: "OK", onPress: () => router.replace("/auth/login") }],
-      });
+      console.error(
+        "[AuthInitializer] Critical error in processLatestSessionUpdate:",
+        error
+      );
+      if (sessionToProcess !== null) {
+        await clearUserSessionAndLogout();
+      }
     } finally {
-      isUpdatingRef.current = false;
+      activeProcessingId.current = null;
+      isProcessingSessionUpdate.current = false;
+
+      if (pendingSessionUpdate.current !== undefined) {
+        Promise.resolve().then(processLatestSessionUpdate);
+      }
     }
+  };
+
+  const handleSessionUpdate = async (session: Session | null) => {
+    pendingSessionUpdate.current = session;
+    processLatestSessionUpdate();
   };
 
   useEffect(() => {
     let initialCheckCompleted = false;
-    setLoading(true); // Keep this one for initial app load/listener setup
+    console.log("[AuthInitializer] Setting up Supabase auth state listener.");
+    setLoading(true);
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(
       async (event: AuthChangeEvent, session: Session | null) => {
-        await handleAuthStateUpdate(session);
+        console.log(
+          `[AuthInitializer] onAuthStateChange event: ${event}, session: ${
+            session ? "exists" : "null"
+          }`
+        );
+
+        if (session) {
+          if (
+            event === "SIGNED_IN" ||
+            event === "INITIAL_SESSION" ||
+            event === "TOKEN_REFRESHED"
+          ) {
+            handleSessionUpdate(session);
+          } else if (event === "USER_UPDATED") {
+            console.log(
+              `[AuthInitializer] USER_UPDATED event for user: ${session.user.id}. No automatic profile refresh.`
+            );
+          }
+        } else {
+          handleSessionUpdate(null);
+        }
+
         if (!initialCheckCompleted) {
           setLoading(false);
           initialCheckCompleted = true;
@@ -60,31 +111,107 @@ const AuthInitializer: React.FC = () => {
       }
     );
 
+    (async () => {
+      if (initialCheckCompleted) return;
+      try {
+        const {
+          data: { session: initialSession },
+        } = await supabase.auth.getSession();
+        if (initialSession) {
+          console.log(
+            "[AuthInitializer] Initial session found via getSession."
+          );
+          handleSessionUpdate(initialSession);
+        } else {
+          console.log(
+            "[AuthInitializer] No initial session found via getSession."
+          );
+          handleSessionUpdate(null);
+        }
+      } catch (e) {
+        console.error(
+          "[AuthInitializer] Error during explicit getSession check:",
+          e
+        );
+        handleSessionUpdate(null);
+      } finally {
+        if (!initialCheckCompleted) {
+          setLoading(false);
+          initialCheckCompleted = true;
+        }
+      }
+    })();
+
     return () => {
+      console.log(
+        "[AuthInitializer] Unsubscribing Supabase auth state listener."
+      );
       subscription.unsubscribe();
     };
-  }, [logOut, router, showAlert, setLoading]);
+  }, [showAlert, router, setLoading]);
 
   useEffect(() => {
     const refreshToken = async () => {
       try {
         const {
-          data: { session },
+          data: { session: refreshedSession },
           error,
         } = await supabase.auth.refreshSession();
-
         if (error) {
-          console.error("Error refreshing token:", error);
-        } else if (session) {
+          console.warn(
+            "[AuthInitializer] Error refreshing Supabase token:",
+            error.message
+          );
+          if (
+            error.message.includes("Invalid refresh token") ||
+            error.status === 401 ||
+            error.status === 403
+          ) {
+            console.warn(
+              "[AuthInitializer] Invalid refresh token detected. Clearing session."
+            );
+            handleSessionUpdate(null);
+          }
+        } else if (refreshedSession) {
+        } else {
+          const {
+            data: { session: currentSession },
+          } = await supabase.auth.getSession();
+          if (!currentSession) {
+            console.log(
+              "[AuthInitializer] No current session after token refresh attempt led to no new session. Clearing session."
+            );
+            handleSessionUpdate(null);
+          }
         }
-      } catch (error) {
-        console.error("Unexpected error during token refresh:", error);
+      } catch (error: any) {
+        console.error(
+          "[AuthInitializer] Unexpected error during Supabase token refresh:",
+          error
+        );
+        if (
+          error.message?.includes("Invalid refresh token") ||
+          error.status === 401 ||
+          error.status === 403
+        ) {
+          console.warn(
+            "[AuthInitializer] Unexpected error indicates invalid token. Clearing session."
+          );
+          handleSessionUpdate(null);
+        }
       }
     };
 
-    // Refresh token every 23 hours
     const interval = setInterval(refreshToken, 23 * 60 * 60 * 1000);
-    return () => clearInterval(interval);
+
+    const timerId = setTimeout(() => {
+      refreshToken();
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      clearTimeout(timerId);
+    };
   }, []);
 
   return null;
