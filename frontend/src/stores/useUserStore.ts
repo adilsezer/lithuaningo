@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
-import { UserProfileResponse } from "@src/types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UserProfileResponse } from "@src/types";
 
 // Types
 export type UserData = Pick<
@@ -16,71 +16,47 @@ export type UserData = Pick<
   | "authProvider"
 >;
 
-interface UserStore {
-  // State
-  userData: UserData | null;
+interface UserState {
   isAuthenticated: boolean;
-
-  // Actions
+  sessionLoading: boolean;
+  isVerifyingEmail: boolean;
+  userData: UserData | null;
   logIn: (userData: UserData) => void;
   logOut: () => void;
-  updateUserProfile: (userData: Partial<UserData>) => void;
-  deleteAccount: () => void;
-  setAuthenticated: (value: boolean) => void;
+  updateUserData: (updates: Partial<UserData>) => void;
+  setAuthenticated: (isAuthenticated: boolean) => void;
+  setSessionLoading: (loading: boolean) => void;
+  setVerifyingEmail: (isVerifying: boolean) => void;
 }
 
-// Custom storage with error handling
-const customStorage = {
-  getItem: async (name: string): Promise<string | null> => {
-    try {
-      return await AsyncStorage.getItem(name);
-    } catch (err) {
-      console.warn(`Error reading from AsyncStorage: ${err}`);
-      return null;
-    }
-  },
-  setItem: async (name: string, value: string): Promise<void> => {
-    try {
-      await AsyncStorage.setItem(name, value);
-    } catch (err) {
-      console.warn(`Error writing to AsyncStorage: ${err}`);
-    }
-  },
-  removeItem: async (name: string): Promise<void> => {
-    try {
-      await AsyncStorage.removeItem(name);
-    } catch (err) {
-      console.warn(`Error removing from AsyncStorage: ${err}`);
-    }
-  },
-};
-
-export const useUserStore = create<UserStore>()(
+export const useUserStore = create<UserState>()(
   persist(
     (set) => ({
       // State
-      userData: null,
       isAuthenticated: false,
+      sessionLoading: true,
+      isVerifyingEmail: false,
+      userData: null,
 
       // Actions
       logIn: (userData) => {
-        set({
-          userData,
-          isAuthenticated: true,
-        });
+        console.log("[AuthStore] Logging in user:", userData.id);
+        set({ isAuthenticated: true, userData, sessionLoading: false });
       },
 
       logOut: () => {
+        console.log("[AuthStore] Logging out user.");
         set({
-          userData: null,
           isAuthenticated: false,
+          userData: null,
+          sessionLoading: false,
         });
       },
 
-      updateUserProfile: (userData) =>
+      updateUserData: (updates) =>
         set((state) => ({
           ...state,
-          userData: state.userData ? { ...state.userData, ...userData } : null,
+          userData: state.userData ? { ...state.userData, ...updates } : null,
         })),
 
       deleteAccount: () => {
@@ -90,13 +66,14 @@ export const useUserStore = create<UserStore>()(
         });
       },
 
-      setAuthenticated: (value) => {
-        set({ isAuthenticated: value });
-      },
+      setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
+      setSessionLoading: (loading) => set({ sessionLoading: loading }),
+      setVerifyingEmail: (isVerifying) =>
+        set({ isVerifyingEmail: isVerifying }),
     }),
     {
-      name: "user-storage",
-      storage: createJSONStorage(() => customStorage),
+      name: "user-auth-storage",
+      storage: createJSONStorage(() => AsyncStorage),
     }
   )
 );

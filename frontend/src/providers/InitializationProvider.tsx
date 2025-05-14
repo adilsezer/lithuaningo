@@ -155,7 +155,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
       `[InitProvider] Updating user store - isPremium: ${hasPremium}`
     );
 
-    useUserStore.getState().updateUserProfile({
+    useUserStore.getState().updateUserData({
       isPremium: hasPremium,
     });
   };

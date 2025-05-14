@@ -132,7 +132,7 @@ export const useRevenueCat = () => {
       if (hasPremium) {
         // Update user store with premium status
         console.log("[RevenueCat] Updating user store with premium status");
-        useUserStore.getState().updateUserProfile({
+        useUserStore.getState().updateUserData({
           isPremium: true,
         });
       }

@@ -17,6 +17,17 @@ export const hydrateUserSessionAndProfile = async (
 
   console.log(`[UserProfileService] Starting hydration for user: ${user.id}`);
 
+  // Check if email verification is in progress
+  if (useUserStore.getState().isVerifyingEmail) {
+    console.log(
+      `[UserProfileService] Email verification in progress for ${user.id}. Skipping full hydration.`
+    );
+    // Optionally, you might still want to log in to Purchases here if needed,
+    // or handle it consistently with how updateAuthState does it.
+    // For now, just returning true as the session technically exists from Supabase perspective.
+    return true;
+  }
+
   try {
     const userProfile = await apiClient.getUserProfile(user.id);
 

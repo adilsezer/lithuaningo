@@ -19,6 +19,12 @@ GoogleSignin.configure({
 
 // Auth state management
 export const updateAuthState = async (session: Session | null) => {
+  console.log(
+    "[authService.ts] updateAuthState: Called with session for user:",
+    session?.user?.id || "NO SESSION"
+  );
+  const isVerifying = useUserStore.getState().isVerifyingEmail;
+
   if (!session?.user) {
     console.error(
       "[AuthService] updateAuthState: No user in session or session is null. Clearing local state."
@@ -68,7 +74,16 @@ export const updateAuthState = async (session: Session | null) => {
       authProvider: userProfile.authProvider,
     };
 
-    useUserStore.getState().logIn(userData);
+    if (!isVerifying) {
+      console.log(
+        "[authService.ts] updateAuthState: NOT verifying email, calling userStore.logIn()."
+      );
+      useUserStore.getState().logIn(userData);
+    } else {
+      console.log(
+        "[authService.ts] updateAuthState: IS verifying email, SKIPPING userStore.logIn()."
+      );
+    }
 
     await Purchases.logIn(user.id);
   } catch (error) {
@@ -158,7 +173,9 @@ export const verifyEmail = async (
   email: string,
   token: string
 ): Promise<AuthResponse> => {
+  console.log("[authService.ts] verifyEmail: Started for email:", email);
   try {
+    useUserStore.getState().setVerifyingEmail(true);
     const { data: verifyData, error: verifyError } =
       await supabase.auth.verifyOtp({
         email,
@@ -168,20 +185,19 @@ export const verifyEmail = async (
 
     if (verifyError) throw verifyError;
 
-    if (verifyData.user) {
-      const name = verifyData.user.user_metadata?.display_name;
-      if (!name) throw new Error("Name is required");
-    }
-
-    // Sign out after successful email verification
     await supabase.auth.signOut();
 
+    console.log("[authService.ts] verifyEmail: Process successful for:", email);
     return {
       success: true,
       message: "Email verified successfully! You can now log in.",
     };
   } catch (error) {
+    console.error("[authService.ts] verifyEmail: Error for", email, error);
     return handleAuthError(error);
+  } finally {
+    useUserStore.getState().setVerifyingEmail(false);
+    console.log("[authService.ts] verifyEmail: Finished for:", email);
   }
 };
 

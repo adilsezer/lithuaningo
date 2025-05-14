@@ -27,6 +27,7 @@ export default function AdminLayout() {
           backgroundColor: theme.colors.background,
         },
         headerShown: false,
+        animation: "none",
       }}
     >
       {ADMIN_SCREENS.map((screen) => (
