@@ -17,7 +17,7 @@ import { useAuthOperation } from "./useAuthOperation";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useCallback } from "react";
 import { Platform } from "react-native";
-import { useRevenueCat } from "@hooks/useRevenueCat";
+import { useUserStore } from "@stores/useUserStore";
 
 export type SocialProvider = "google" | "apple";
 
@@ -142,6 +142,12 @@ export const useAuth = () => {
       const result = await performAuthOperation(async () => {
         const response = await updateProfile(currentPassword, updates);
         if (response.success) {
+          // Update user store with new display name
+          if (updates.displayName) {
+            useUserStore
+              .getState()
+              .updateUserData({ fullName: updates.displayName });
+          }
           showAlert({
             title: "Success",
             message: "Your profile has been updated successfully.",
