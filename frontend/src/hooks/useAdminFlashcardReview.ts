@@ -17,7 +17,9 @@ const showSnackbar = (
   console.log(`[Snackbar-${type.toUpperCase()}] ${message}`);
 };
 
-export const useAdminFlashcardReview = () => {
+export const useAdminFlashcardReview = (
+  scrollToTop?: () => void // Add scrollToTop as an optional callback
+) => {
   const router = useRouter();
   // const showSnackbar = useSnackbar(); // Replaced with console log
 
@@ -171,6 +173,7 @@ export const useAdminFlashcardReview = () => {
   const advanceToNext = () => {
     if (currentIndex < flashcards.length - 1) {
       setCurrentIndex((prev) => prev + 1);
+      scrollToTop?.(); // Call scrollToTop if provided
     } else {
       showSnackbar("All flashcards reviewed!", "success");
       // Optionally navigate back or show a completion message

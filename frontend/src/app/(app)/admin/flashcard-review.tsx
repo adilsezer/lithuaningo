@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { ScrollView, View, StyleSheet, Platform, Image } from "react-native";
 import {
   Card,
@@ -29,6 +29,13 @@ function getEnumKeys<T extends object>(enumObj: T): Array<keyof T> {
 
 export default function AdminFlashcardReviewScreen() {
   const theme = useTheme();
+  const scrollViewRef = useRef<ScrollView>(null); // Create a ref for ScrollView
+
+  // Function to scroll to top
+  const scrollToTop = () => {
+    scrollViewRef.current?.scrollTo({ y: 0, animated: true });
+  };
+
   const {
     currentFlashcardData,
     currentFlashcard,
@@ -54,7 +61,7 @@ export default function AdminFlashcardReviewScreen() {
     closeDifficultyDialog,
     handleSelectTempDifficulty,
     confirmDifficultySelection,
-  } = useAdminFlashcardReview();
+  } = useAdminFlashcardReview(scrollToTop); // Pass scrollToTop to the hook
 
   if (isLoading) {
     return <LoadingIndicator size="large" style={styles.loader} />;
@@ -99,6 +106,7 @@ export default function AdminFlashcardReviewScreen() {
 
   return (
     <ScrollView
+      ref={scrollViewRef} // Assign ref to ScrollView
       style={[
         styles.scrollContainer,
         { backgroundColor: theme.colors.background },
