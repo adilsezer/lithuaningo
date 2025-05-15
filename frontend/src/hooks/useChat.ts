@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { FlatList } from "react-native";
+import { FlatList, Keyboard } from "react-native";
 import { useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import { apiClient } from "@services/api/apiClient";
@@ -10,6 +10,7 @@ import {
 } from "@stores/useUserStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAlertDialog from "@hooks/useAlertDialog";
+import { useAlertActions } from "@stores/useAlertStore";
 
 // Message interface
 export interface Message {
@@ -33,19 +34,19 @@ export const CHAT_EXAMPLES = [
   "Show Lithuanian alphabet basics",
 ];
 
-const initialMessages: Message[] = [
+const getInitialMessages = (): Message[] => [
   {
     id: "1",
     text: "Hello! How can I help you learn Lithuanian?",
     sender: "ai",
-    timestamp: new Date(),
+    timestamp: new Date(), // Note: this will be a new timestamp each time
     status: "delivered",
   },
 ];
 
 export const useChat = () => {
   // Core chat state
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(getInitialMessages());
   const [inputText, setInputText] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [showExamples, setShowExamples] = useState<boolean>(true);
@@ -58,6 +59,7 @@ export const useChat = () => {
   const isPremium = useIsPremium();
   const userData = useUserData();
   const alertDialog = useAlertDialog();
+  const { hideDialog } = useAlertActions();
   const theme = useTheme();
 
   // UI refs
@@ -262,6 +264,7 @@ export const useChat = () => {
 
   // Clear chat session (for logout or reset)
   const clearChatSession = async (): Promise<void> => {
+    console.log("Attempting to clear chat session...");
     try {
       // Generate a new session ID
       const newSessionId = `session_${Date.now()}`;
@@ -269,9 +272,10 @@ export const useChat = () => {
       setSessionId(newSessionId);
 
       // Clear messages and reset state
-      setMessages(initialMessages);
+      setMessages(getInitialMessages());
       setInputText("");
       setShowExamples(true);
+      console.log("Chat session supposedly cleared. Messages set to initial.");
     } catch (error) {
       console.error("Error clearing chat session:", error);
     }
@@ -319,13 +323,19 @@ export const useChat = () => {
 
   // Handle clear chat confirmation
   const handleClearChat = () => {
+    Keyboard.dismiss();
     alertDialog.showConfirm({
       title: "Clear Chat",
       message: "Are you sure you want to clear all chat messages?",
       confirmText: "Clear",
       cancelText: "Cancel",
-      onConfirm: () => clearChatSession(),
-      onCancel: () => {},
+      onConfirm: async () => {
+        await clearChatSession();
+        hideDialog();
+      },
+      onCancel: () => {
+        hideDialog();
+      },
     });
   };
 
