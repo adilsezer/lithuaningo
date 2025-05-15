@@ -248,19 +248,32 @@ namespace Lithuaningo.API.Services.Flashcards
             try
             {
                 var flashcard = await GetFlashcardByIdAsync(flashcardId);
+                if (flashcard == null)
+                {
+                    _logger.LogWarning("Flashcard with ID {FlashcardId} not found for image generation.", flashcardId);
+                    throw new InvalidOperationException($"Flashcard with ID {flashcardId} not found.");
+                }
 
-                // Generate the image using the back text (English)
-                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackText);
+                // AIService now handles the upload and returns the URL directly.
+                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackText, flashcard.ExampleSentenceTranslation);
 
-                // Update and save the flashcard
+                if (string.IsNullOrEmpty(imageUrl))
+                {
+                    // This case should ideally be caught within AIService if upload fails, 
+                    // but an extra check here doesn't hurt.
+                    _logger.LogError("AI service returned an empty or null URL for flashcard {FlashcardId} (BackText: {BackText}).", flashcardId, flashcard.BackText);
+                    throw new InvalidOperationException("AI service failed to return a valid image URL.");
+                }
+
                 flashcard.ImageUrl = imageUrl;
-                await UpdateFlashcardAsync(flashcard);
+                await UpdateFlashcardAsync(flashcard); // This also handles cache invalidation
 
+                _logger.LogInformation("Successfully generated, uploaded, and attached image for flashcard {FlashcardId}. Image URL: {ImageUrl}", flashcardId, imageUrl);
                 return imageUrl;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating image for flashcard");
+                _logger.LogError(ex, "Error in GenerateFlashcardImageAsync for flashcard {FlashcardId}", flashcardId);
                 throw;
             }
         }

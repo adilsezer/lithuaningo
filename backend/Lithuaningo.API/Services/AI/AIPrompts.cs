@@ -226,22 +226,11 @@ EXAMPLE OUTPUT:
     /// Image generation prompt template
     /// </summary>
     public const string IMAGE_GENERATION_PROMPT =
-        "[TEXT_FREE=TRUE] Create a colorful, vivid visual representation of '{0}' for a language learning flashcard with these specifications:\n\n" +
-        "1. CONTENT: Single clear concept that represents the flashcard text meaning instantly\n" +
-        "2. STYLE: Bold, vibrant illustration with strong visual impact\n" +
-        "3. COLOR: Rich color palette (2-5 colors) with high contrast\n" +
-        "4. COMPOSITION: Centered subject with clean edges against simple background\n" +
-        "5. CLARITY: Must be immediately recognizable at small sizes\n\n" +
-        "CRITICAL REQUIREMENTS:\n" +
-        "- NO TEXT, LETTERS, NUMBERS OR SYMBOLS OF ANY KIND\n" +
-        "- NO WRITTEN WORDS IN ANY LANGUAGE\n" +
-        "- NO BORDERS, LABELS OR ANNOTATIONS\n" +
-        "- PURE VISUAL IMAGERY ONLY\n\n" +
-        "TYPE-BASED GUIDANCE:\n" +
-        "- For concrete nouns → show the exact object (e.g., 'bread' → loaf of bread)\n" +
-        "- For verbs → show action being performed (e.g., 'run' → person running)\n" +
-        "- For adjectives → show object with that quality (e.g., 'tall' → tall building)\n" +
-        "- For abstract concepts → use clear metaphor (e.g., 'freedom' → bird flying)\n\n" +
-        "Create a DALL-E optimized image that helps language learners instantly associate the visual with the meaning of '{0}'.";
+    "Generate a **minimalist flat icon** representing the Lithuanian word: '{0}'. " +
+    "The icon's theme and style should be inspired by its usage in the English sentence: '{1}'. " +
+    "The image MUST feature '{0}' as the **primary subject**, rendered in a **clean, vector-like style with 2-4 distinct solid colors**, on a **fully transparent background**. " +
+    "While the sentence '{1}' provides context, the icon should focus on a simple, clear representation of '{0}'. Avoid overly complex scenes. " +
+    "**Strictly prohibit any text, letters, numbers, symbols, borders, or frames** in the image. " +
+    "The final image must be an easily recognizable icon of '{0}', suitable for a language learning flashcard, reflecting the context of '{1}'.";
   }
 }

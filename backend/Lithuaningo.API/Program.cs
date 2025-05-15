@@ -230,6 +230,9 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Health Checks
     services.AddHealthChecks();
 
+    // Register IHttpClientFactory
+    services.AddHttpClient();
+
     // Basic Services
     services.AddControllers();
     services.AddEndpointsApiExplorer();
@@ -375,9 +378,9 @@ To authorize in Swagger UI:
     services.AddScoped<IChallengeService, ChallengeService>();
     services.AddScoped<IRevenueCatWebhookService, RevenueCatWebhookService>();
 
-    // OpenAI Services
-    services.AddOptions<OpenAISettings>()
-        .Bind(configuration.GetSection(OpenAISettings.SectionName))
+    // AI Services (formerly OpenAI Services)
+    services.AddOptions<AISettings>() // Changed from OpenAISettings
+        .Bind(configuration.GetSection(AISettings.SectionName)) // Changed from OpenAISettings.SectionName
         .ValidateDataAnnotations()
         .ValidateOnStart();
     services.AddScoped<IAIService, AIService>();
@@ -557,7 +560,13 @@ void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment env
             { "Supabase:Url", "Supabase URL" },
             { "Supabase:ServiceKey", "Supabase service key" },
             { "Supabase:JwtSecret", "JWT secret" },
-            { "OpenAI:ApiKey", "OpenAI API key" },
+            { "AI:GeminiApiBaseUrl", "Gemini API Base URL" },
+            { "AI:GeminiApiKey", "Gemini API key" },
+            { "AI:GeminiTextModelName", "Gemini Text Model Name" },
+            { "AI:OpenAIApiKey", "OpenAI API key for audio services" },
+            { "AI:OpenAIImageModelName", "OpenAI Image Model Name" },
+            { "AI:OpenAIAudioModelName", "OpenAI Audio Model Name" },
+            { "AI:OpenAIApiBaseUrl", "OpenAI API Base URL" },
             { "RevenueCat:WebhookAuthHeader", "RevenueCat Webhook Auth Header" }
         };
 

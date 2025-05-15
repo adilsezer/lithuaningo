@@ -13,6 +13,7 @@ public static class JsonSettings
     /// </summary>
     public static readonly JsonSerializerOptions DefaultOptions = new()
     {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
         PropertyNameCaseInsensitive = true,
         AllowTrailingCommas = true,
         ReadCommentHandling = JsonCommentHandling.Skip,
