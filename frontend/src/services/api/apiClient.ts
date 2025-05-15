@@ -70,7 +70,7 @@ class ApiClient {
     this.baseURL = getBaseUrl();
     this.axiosInstance = axios.create({
       baseURL: this.baseURL,
-      timeout: 60000, // 60 seconds
+      timeout: 120000, // 120 seconds
       headers: {
         "Content-Type": "application/json",
         "X-Platform": Platform.OS,
