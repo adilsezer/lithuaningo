@@ -6,7 +6,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
-import { Text, ActivityIndicator } from "react-native-paper";
+import { Text, ActivityIndicator, Avatar } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useChat, MAX_FREE_MESSAGES_PER_DAY } from "@hooks/useChat";
 import CustomText from "@components/ui/CustomText";
@@ -30,14 +30,12 @@ export default function ChatScreen(): JSX.Element {
     userData,
     theme,
     isLoading,
-
     formatTimestamp,
     refreshChat,
     setInputText,
     handleSend,
     handleExamplePress,
     handleClearChat,
-    processText,
     navigateToPremium,
   } = useChat();
 
@@ -56,18 +54,26 @@ export default function ChatScreen(): JSX.Element {
       <View
         style={{
           flexDirection: "row",
-          alignItems: "center",
-          padding: 10,
-          marginLeft: 16,
+          alignItems: "flex-start",
+          marginVertical: 8,
         }}
       >
-        <ActivityIndicator size="small" />
-        <Text
-          variant="bodyMedium"
-          style={{ marginLeft: 8, color: theme.colors.outline }}
+        <Avatar.Image
+          source={require("assets/images/icon-transparent.png")}
+          size={35}
+          style={{ marginRight: 8, marginTop: 6 }}
+        />
+        <View
+          style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}
         >
-          AI is typing...
-        </Text>
+          <ActivityIndicator size="small" />
+          <Text
+            variant="bodyMedium"
+            style={{ marginLeft: 8, color: theme.colors.outline }}
+          >
+            Lithuaningo AI is typing...
+          </Text>
+        </View>
       </View>
     );
   };
@@ -96,7 +102,6 @@ export default function ChatScreen(): JSX.Element {
             message={item}
             userData={userData}
             formatTimestamp={formatTimestamp}
-            processText={processText}
           />
         )}
         contentContainerStyle={{ flexGrow: 1 }}

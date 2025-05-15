@@ -1,23 +1,71 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Platform } from "react-native";
 import { Text, Card, Avatar, useTheme } from "react-native-paper";
 import { Message } from "@hooks/useChat";
+import MarkdownDisplay from "react-native-markdown-display";
 
 interface ChatMessageProps {
   message: Message;
   userData?: { fullName?: string } | null;
   formatTimestamp: (timestamp: Date) => string;
-  processText: (text: string) => string;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   userData,
   formatTimestamp,
-  processText,
 }) => {
   const theme = useTheme();
   const isUser = message.sender === "user";
+
+  // Define base styles for Markdown content based on the theme
+  // These can be expanded significantly for more granular control (headings, links, code blocks, etc.)
+  const markdownStyle = {
+    body: {
+      color: theme.colors.onSurface,
+      fontSize: 15,
+      lineHeight: 22,
+    },
+    heading1: {
+      color: theme.colors.onSurface,
+      fontSize: 24, // Example size, adjust as needed
+      fontWeight: "bold" as "bold",
+      marginTop: 10,
+      marginBottom: 5,
+    },
+    heading2: {
+      color: theme.colors.onSurface,
+      fontSize: 20, // Example size
+      fontWeight: "bold" as "bold",
+      marginTop: 8,
+      marginBottom: 4,
+    },
+    // Add more styles for other markdown elements like strong, em, listItem, etc.
+    strong: {
+      fontWeight: "bold" as "bold",
+    },
+    em: {
+      fontStyle: "italic" as "italic",
+    },
+    listItemBullet: {
+      color: theme.colors.onSurfaceVariant || theme.colors.onSurface, // Use theme color for bullets
+      fontSize: 18, // Adjust bullet size if needed
+    },
+    listItemNumber: {
+      color: theme.colors.onSurfaceVariant || theme.colors.onSurface, // Use theme color for numbers
+      fontWeight: "bold" as "bold",
+    },
+    // You might need to style `list` and `listItem` for padding/margin if default isn't ideal
+    code_inline: {
+      // Added for inline code `` `text` ``
+      backgroundColor: theme.colors.background, // A subtle background
+      color: theme.colors.secondary, // Ensure text is visible
+      paddingHorizontal: 4,
+      paddingVertical: 2,
+      borderRadius: 4,
+      fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", // Monospace font
+    },
+  };
 
   return (
     <View
@@ -51,32 +99,11 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
           ]}
           mode="outlined"
         >
-          <Card.Content style={styles.cardContent}>
-            {message.text.split("\n\n").map((paragraph, index) => (
-              <Text
-                key={index}
-                style={{
-                  color: theme.colors.onSurface,
-                  marginBottom:
-                    index < message.text.split("\n\n").length - 1 ? 8 : 0,
-                }}
-              >
-                {paragraph.split("\n").map((line, lineIndex) => (
-                  <Text
-                    key={`line-${lineIndex}`}
-                    style={{
-                      fontWeight:
-                        line.startsWith("**") && line.endsWith("**")
-                          ? "bold"
-                          : "normal",
-                    }}
-                  >
-                    {processText(line)}
-                    {lineIndex < paragraph.split("\n").length - 1 ? "\n" : ""}
-                  </Text>
-                ))}
-              </Text>
-            ))}
+          <Card.Content style={[styles.cardContent, { paddingVertical: 10 }]}>
+            {/* Use MarkdownDisplay to render message.text */}
+            <MarkdownDisplay style={markdownStyle}>
+              {message.text}
+            </MarkdownDisplay>
           </Card.Content>
         </Card>
 
@@ -134,7 +161,7 @@ const styles = StyleSheet.create({
     borderWidth: 0.5,
   },
   cardContent: {
-    padding: 12,
+    paddingHorizontal: 12,
   },
   timestamp: {
     marginTop: 2,

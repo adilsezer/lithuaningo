@@ -339,12 +339,6 @@ export const useChat = () => {
     });
   };
 
-  // Process message text (format bold text)
-  const processText = (text: string) => {
-    // Replace **text** with bold
-    return text.replace(/\*\*(.*?)\*\*/g, "$1");
-  };
-
   // Navigate to premium features
   const navigateToPremium = () => {
     router.push("/premium");
@@ -366,7 +360,6 @@ export const useChat = () => {
 
     // Data operations
     formatTimestamp,
-    processText,
 
     // User actions
     refreshChat,
