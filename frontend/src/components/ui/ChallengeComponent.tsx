@@ -163,7 +163,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
           />
           <View style={styles.loadingTextContainer}>
             <Text variant="titleMedium" style={{ color: theme.colors.primary }}>
-              Loading Challenge
+              🧠 Lithuaningo AI is setting up your challenge... This should only
+              take a few seconds!
             </Text>
             <Text
               variant="bodySmall"

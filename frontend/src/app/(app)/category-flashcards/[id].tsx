@@ -224,8 +224,8 @@ export default function CategoryFlashcardsScreen() {
       <View style={[styles.container, styles.centered]}>
         <LoadingIndicator modal={false} />
         <CustomText style={{ marginTop: 16 }}>
-          🤖 Thinking hard... AI is generating your flashcards (this may take
-          ~30 seconds)!
+          🤖 Thinking hard... Lithuaningo AI is generating your flashcards (this
+          may take ~30 seconds)!
         </CustomText>
         {!isPremium && <DailyFlashcardProgress />}
       </View>

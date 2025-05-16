@@ -588,31 +588,41 @@ public class AIService : IAIService
     /// </summary>
     private static string ExtractJsonFromAiResponse(string aiResponse)
     {
-        if (string.IsNullOrEmpty(aiResponse))
+        if (string.IsNullOrWhiteSpace(aiResponse))
         {
             return string.Empty;
         }
 
-        // Check if the response is a markdown code block and extract the JSON content
-        var jsonBlockPattern = @"```(?:json)?\s*\n([\s\S]*?)\n```";
-        var jsonBlockMatch = Regex.Match(aiResponse, jsonBlockPattern);
+        string content = aiResponse.Trim();
 
-        if (jsonBlockMatch.Success && jsonBlockMatch.Groups.Count > 1)
+        // Pattern 1: Standard complete markdown block (e.g., ```json\n{...}\n```)
+        // Regex accounts for optional "json" language specifier and ensures it captures content between the fences.
+        var fullBlockMatch = Regex.Match(content, @"^```(?:json)?\s*\n([\s\S]+?)\n```$", RegexOptions.Multiline);
+        if (fullBlockMatch.Success && fullBlockMatch.Groups.Count > 1)
         {
-            return jsonBlockMatch.Groups[1].Value.Trim();
+            return fullBlockMatch.Groups[1].Value.Trim();
         }
 
-        // If no markdown code block, try to find a JSON array directly
-        var jsonArrayPattern = @"^\s*\[\s*\{[\s\S]*\}\s*\]\s*$";
-        var jsonArrayMatch = Regex.Match(aiResponse, jsonArrayPattern);
-
-        if (jsonArrayMatch.Success)
+        // Pattern 2: Starts with markdown prefix (e.g., ```json\n{...), but possibly truncated (no proper closing ```)
+        // Regex captures content after the initial fence.
+        var prefixOnlyMatch = Regex.Match(content, @"^```(?:json)?\s*\n([\s\S]+)");
+        if (prefixOnlyMatch.Success && prefixOnlyMatch.Groups.Count > 1)
         {
-            return jsonArrayMatch.Value.Trim();
+            string extractedContent = prefixOnlyMatch.Groups[1].Value.Trim();
+            // If the extracted content itself ends with ``` (e.g., due to very short or malformed block), remove it.
+            if (extractedContent.EndsWith("```"))
+            {
+                extractedContent = extractedContent.Substring(0, extractedContent.Length - 3).Trim();
+            }
+            return extractedContent; // This might be an incomplete JSON string if the original response was truncated
         }
 
-        // If no direct JSON array, return the full response (which might be JSON or might need more cleanup)
-        return aiResponse.Trim();
+        // Pattern 3: If it's not in a markdown block (or the patterns above didn't catch it),
+        // assume it's direct JSON or a plain text error message from the AI.
+        // If the content still starts with "```" here, it means our patterns failed unexpectedly for a markdown-like string.
+        // In such a case, returning an empty string or logging an error might be preferable to passing invalid content to the deserializer.
+        // However, for now, we pass the content as is, assuming it might be valid JSON or a non-JSON error message.
+        return content;
     }
 
     /// <summary>
