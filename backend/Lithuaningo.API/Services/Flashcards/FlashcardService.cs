@@ -229,6 +229,10 @@ namespace Lithuaningo.API.Services.Flashcards
 
                 // Save and return the generated flashcards
                 await SaveFlashcardsToSupabaseAsync(flashcards, request.UserId);
+
+                // Use the centralized aggressive invalidator method.
+                await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
+
                 return _mapper.Map<IEnumerable<FlashcardResponse>>(flashcards);
             }
             catch (Exception ex)
@@ -333,8 +337,8 @@ namespace Lithuaningo.API.Services.Flashcards
                 // Update the flashcard in Supabase
                 await UpdateFlashcardAsync(existingFlashcard); // This already invalidates individual/category cache
 
-                // Invalidate the cache for unverified flashcards lists
-                await _cacheInvalidator.InvalidateUnverifiedFlashcardsCacheAsync();
+                // Invalidate all flashcard list caches as admin updates can affect any list query.
+                await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
 
                 return existingFlashcard;
             }
@@ -381,8 +385,12 @@ namespace Lithuaningo.API.Services.Flashcards
 
             // STEP 2: Fill the rest with new flashcards the user hasn't seen
             int newCardsNeeded = request.Count - reviewFlashcards.Count;
-            var newFlashcards = allFlashcards
+
+            var availableUnseenMatchingCards = allFlashcards
                 .Where(f => !shownFlashcardIds.Contains(f.Id))
+                .ToList();
+
+            var newFlashcards = availableUnseenMatchingCards
                 .OrderBy(_ => _random.Next())
                 .Take(newCardsNeeded)
                 .ToList();
@@ -411,6 +419,10 @@ namespace Lithuaningo.API.Services.Flashcards
 
                 // Combine both sets
                 return selectedResponses.Concat(newFlashcardResponses);
+            }
+            else
+            {
+                _logger.LogInformation("GetFlashcardsWithSpacedRepetitionAsync - Not triggering AI generation. Sufficient cards found.");
             }
 
             // STEP 5: Shuffle and return the final selection
@@ -571,23 +583,8 @@ namespace Lithuaningo.API.Services.Flashcards
                 .From<Flashcard>()
                 .Update(flashcard);
 
-            // Invalidate caches
-            await InvalidateFlashcardCachesAsync(flashcard);
-        }
-
-        private async Task InvalidateFlashcardCachesAsync(Flashcard flashcard)
-        {
-            // Invalidate the specific flashcard cache
-            await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString());
-
-            // Also invalidate category-based caches
-            if (flashcard.Categories?.Count > 0)
-            {
-                foreach (var category in flashcard.Categories)
-                {
-                    await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
-                }
-            }
+            // Directly invalidate all flashcard list caches
+            await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
         }
 
         private async Task SaveFlashcardsToSupabaseAsync(List<Flashcard> flashcards, string? userId = null)
@@ -598,44 +595,13 @@ namespace Lithuaningo.API.Services.Flashcards
                     .From<Flashcard>()
                     .Insert(flashcards);
 
-                int insertedCount = result.Models?.Count ?? 0;
-
-                // Invalidate relevant caches
-                await InvalidateCategoryCachesForFlashcardsAsync(result.Models);
+                // Directly invalidate all flashcard list caches
+                await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving flashcards to Supabase");
                 throw;
-            }
-        }
-
-        private async Task InvalidateCategoryCachesForFlashcardsAsync(IEnumerable<Flashcard>? flashcards)
-        {
-            if (flashcards == null)
-            {
-                return;
-            }
-
-            // Use a HashSet to track unique categories
-            var uniqueCategories = new HashSet<int>();
-
-            // Collect all affected categories
-            foreach (var flashcard in flashcards)
-            {
-                if (flashcard.Categories != null)
-                {
-                    foreach (var category in flashcard.Categories)
-                    {
-                        uniqueCategories.Add(category);
-                    }
-                }
-            }
-
-            // Invalidate caches for each category
-            foreach (var category in uniqueCategories)
-            {
-                await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
             }
         }
 
