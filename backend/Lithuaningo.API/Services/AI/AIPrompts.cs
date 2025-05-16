@@ -92,7 +92,7 @@ Return a JSON array of flashcard objects. Each object MUST include these propert
   ""backText"": ""(string) The accurate and natural English translation of frontText."",
   ""exampleSentence"": ""(string) A practical, common, and natural-sounding example sentence in Lithuanian using the frontText. This sentence MUST be grammatically perfect and contextually appropriate."",
   ""exampleSentenceTranslation"": ""(string) An accurate and natural English translation of the exampleSentence."",
-  ""notes"": ""(string) Brief, helpful usage notes, cultural context, or grammatical tips related to the frontText/phrase. Focus on information a learner would find valuable."",
+  ""notes"": ""(string) VERY brief usage notes (max 1-2 short sentences), cultural context, or grammatical tips related to the frontText/phrase. Focus on essential, high-value information. Avoid lengthy explanations."",
   ""difficulty"": ""(integer) The difficulty level: 0 for Basic, 1 for Intermediate, 2 for Advanced. This MUST match the user's request."",
   ""categories"": ""(integer[]) An array of numeric category codes. ALWAYS include the primary category requested by the user. Add other relevant categories from the list below.""
 }
