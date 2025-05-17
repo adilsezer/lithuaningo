@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomDivider from "@components/ui/CustomDivider";
 import { ChallengeQuestionResponse, ChallengeQuestionType } from "@src/types";
+import CustomText from "./CustomText";
 
 // Define props interface for the reusable component
 interface ChallengeComponentProps {
@@ -162,10 +163,15 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             animating={true}
           />
           <View style={styles.loadingTextContainer}>
-            <Text variant="titleMedium" style={{ color: theme.colors.primary }}>
-              🧠 Lithuaningo AI is setting up your challenge... This should only
-              take a few seconds!
-            </Text>
+            <CustomText
+              variant="titleMedium"
+              style={{ color: theme.colors.primary }}
+            >
+              🤖 Lithuaningo AI is setting up your challenge...
+            </CustomText>
+            <CustomText variant="bodySmall">
+              No need to wait—come back to this screen anytime!
+            </CustomText>
             <Text
               variant="bodySmall"
               style={{
