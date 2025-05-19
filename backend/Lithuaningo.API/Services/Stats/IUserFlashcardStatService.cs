@@ -6,11 +6,19 @@ namespace Lithuaningo.API.Services.Stats
     public interface IUserFlashcardStatService
     {
         /// <summary>
-        /// Gets flashcard IDs that have been shown to a user
+        /// Gets the IDs of the last 'count' flashcards seen by the user, ordered by the most recently seen.
         /// </summary>
-        /// <param name="userId">The user ID to check</param>
-        /// <returns>A collection of flashcard IDs the user has seen</returns>
-        Task<HashSet<Guid>> GetShownFlashcardIdsAsync(string userId);
+        /// <param name="userId">The user ID.</param>
+        /// <param name="count">The number of flashcard IDs to retrieve.</param>
+        /// <returns>A list of flashcard IDs, ordered by most recently seen.</returns>
+        Task<List<Guid>> GetLastSeenFlashcardIdsAsync(string userId, int count = 10);
+
+        /// <summary>
+        /// Gets all unique flashcard IDs that the user has ever interacted with (e.g., viewed, answered).
+        /// </summary>
+        /// <param name="userId">The user ID.</param>
+        /// <returns>A HashSet of all unique flashcard IDs the user has interacted with.</returns>
+        Task<HashSet<Guid>> GetAllUserInteractedFlashcardIdsAsync(string userId);
 
         /// <summary>
         /// Submits a flashcard answer and updates the user's statistics
@@ -43,6 +51,15 @@ namespace Lithuaningo.API.Services.Stats
         /// <param name="flashcardId">The ID of the flashcard</param>
         /// <returns>The statistics for the specified flashcard</returns>
         Task<UserFlashcardStatResponse> GetFlashcardStatsAsync(string userId, string flashcardId);
-        
+
+        /// <summary>
+        /// Increments the view count for a specific flashcard for a user.
+        /// If no stat record exists, it creates one with ViewCount = 1.
+        /// Other stats like CorrectCount, IncorrectCount, MasteryLevel are not affected by this operation.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="flashcardId">The ID of the flashcard.</param>
+        /// <returns>The updated user flashcard statistics.</returns>
+        Task<UserFlashcardStatResponse> IncrementFlashcardViewCountAsync(string userId, Guid flashcardId);
     }
 }

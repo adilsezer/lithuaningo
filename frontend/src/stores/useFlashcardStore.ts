@@ -13,6 +13,7 @@ import {
   SubmitFlashcardAnswerRequest,
 } from "@src/types/UserFlashcardStats";
 import { useUserStore } from "./useUserStore";
+import { apiClient } from "@services/api/apiClient";
 
 // Constants
 export const DAILY_FLASHCARD_LIMIT = 25;
@@ -34,7 +35,7 @@ interface FlashcardState {
 }
 
 interface StatsState {
-  flashcardsAnsweredToday: number;
+  flashcardsViewedToday: number;
   lastSyncTime: Date | null;
   statsSummary: UserFlashcardStatsSummaryResponse | null;
   currentFlashcardStats: UserFlashcardStatResponse | null;
@@ -59,6 +60,10 @@ interface FlashcardStoreState extends FlashcardState, StatsState, UIState {
   handleFlip: () => void;
   goToNextCard: () => void;
   resetSession: () => void;
+  advanceCardAndProcess: (
+    currentActualCardId: string,
+    userId: string
+  ) => Promise<void>;
 
   // Stats actions
   syncFlashcardCount: (userId?: string) => Promise<void>;
@@ -85,7 +90,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
   hasAttemptedLoad: false,
 
   // Stats state
-  flashcardsAnsweredToday: 0,
+  flashcardsViewedToday: 0,
   lastSyncTime: null,
   statsSummary: null,
   currentFlashcardStats: null,
@@ -106,7 +111,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     }
 
     // Skip if daily limit reached for non-premium users
-    if (!isPremium && get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT) {
+    if (!isPremium && get().flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT) {
       // Set explicit message when trying to fetch with limit reached
       set({
         hasAttemptedLoad: true,
@@ -176,36 +181,73 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
   handleFlip: () => set((state) => ({ flipped: !state.flipped })),
 
   goToNextCard: () => {
-    const { currentIndex, flashcards } = get();
+    set((state) => {
+      if (state.currentIndex >= state.flashcards.length - 1) {
+        return {
+          isDeckCompleted: true,
+          submissionMessage: {
+            text: "You've completed all cards in this deck!",
+            type: "info",
+          },
+          currentFlashcardStats: null, // Clear stats on completion
+          currentFlashcardId: null, // Clear current card ID
+        };
+      }
 
-    // Check if we've reached the end of the deck
-    if (currentIndex >= flashcards.length - 1) {
-      set({
-        isDeckCompleted: true,
-        submissionMessage: {
-          text: "You've completed all cards in this deck!",
-          type: "info",
-        },
-      });
+      const nextIndex = state.currentIndex + 1;
+      const nextFlashcard = state.flashcards[nextIndex];
+      return {
+        currentIndex: nextIndex,
+        currentFlashcardId: nextFlashcard.id,
+        flipped: false,
+        submissionMessage: null,
+        currentFlashcardStats: null, // Clear stats for the new card, will be fetched by advanceCardAndProcess
+      };
+    });
+  },
+
+  advanceCardAndProcess: async (
+    currentActualCardId: string,
+    userId: string
+  ) => {
+    if (!currentActualCardId || !userId) {
+      console.error(
+        "[advanceCardAndProcess] currentActualCardId and userId are required."
+      );
+      set({ error: "Cannot advance card: missing card or user ID." });
       return;
     }
 
-    // Move to next card
-    const nextIndex = currentIndex + 1;
-    const nextFlashcard = flashcards[nextIndex];
+    try {
+      // 1. Increment view count for the card being left
+      await apiClient.incrementFlashcardViewCount(currentActualCardId);
+      // After incrementing view count, immediately sync to update flashcardsViewedToday
+      await get().syncFlashcardCount(userId);
+    } catch (err) {
+      console.error(
+        `[advanceCardAndProcess] Failed to increment view count for ${currentActualCardId}:`,
+        err
+      );
+      // Non-critical, so we proceed, but good to log.
+      // Potentially set an error in store if this failure should be user-visible:
+      // set({ error: "Failed to update view count. Please try again." });
+    }
 
-    set({
-      currentIndex: nextIndex,
-      currentFlashcardId: nextFlashcard.id,
-      flipped: false,
-      submissionMessage: null,
-      currentFlashcardStats: null,
-    });
+    // 2. Advance to the next card (synchronous state update)
+    get().goToNextCard();
 
-    // Fetch stats for the new card
-    const userId = get().statsSummary?.userId;
-    if (userId) {
-      get().fetchFlashcardStats(nextFlashcard.id, userId);
+    // 3. Fetch stats for the new current card if the deck is not completed
+    const { currentFlashcardId, isDeckCompleted } = get();
+    if (!isDeckCompleted && currentFlashcardId) {
+      try {
+        await get().fetchFlashcardStats(currentFlashcardId, userId);
+      } catch (err) {
+        // fetchFlashcardStats should handle its own error logging and state.error setting
+        console.error(
+          `[advanceCardAndProcess] Error fetching stats for new card ${currentFlashcardId}:`,
+          err
+        );
+      }
     }
   },
 
@@ -235,7 +277,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         await UserFlashcardStatsService.getUserFlashcardStatsSummary(userId);
 
       set({
-        flashcardsAnsweredToday: stats.flashcardsAnsweredToday,
+        flashcardsViewedToday: stats.flashcardsViewedToday,
         lastSyncTime: new Date(),
         statsSummary: stats,
         isLoading: false,
@@ -251,7 +293,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
 
   resetFlashcardCount: () => {
     set({
-      flashcardsAnsweredToday: 0,
+      flashcardsViewedToday: 0,
       lastSyncTime: null,
     });
   },
@@ -302,18 +344,17 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       return;
     }
 
-    // Get premium status from the user store
+    // Note: The daily limit check here might be redundant if this function is
+    // no longer tied to the main flashcard viewing flow which controls the daily VIEW limit.
+    // However, keeping it for now ensures safety if it's used in a context where limit applies.
     const userData = useUserStore.getState().userData;
     const isPremium = userData?.isPremium ?? false;
+    const currentViewCount = get().flashcardsViewedToday; // Check against view count
 
-    // Use existing count - no need to sync here since we already sync when entering screen
-    const currentCount = get().flashcardsAnsweredToday;
-
-    // Check daily limit for non-premium users
-    if (!isPremium && currentCount >= DAILY_FLASHCARD_LIMIT) {
+    if (!isPremium && currentViewCount >= DAILY_FLASHCARD_LIMIT) {
       set({
         submissionMessage: {
-          text: "Daily flashcard limit reached. Upgrade to premium for unlimited access!",
+          text: "Daily flashcard viewing limit reached. Upgrade to premium for unlimited access!",
           type: "error",
         },
       });
@@ -321,17 +362,15 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     }
 
     try {
-      // Submit answer to server - this call also returns updated stats including the new count
       const updatedStats =
         await UserFlashcardStatsService.submitFlashcardAnswer({
           ...answer,
           userId,
         });
 
-      // Update local state with the response data
+      // Sync general stats summary, which now includes flashcardsViewedToday
       await get().syncFlashcardCount(userId);
 
-      // Show appropriate feedback message
       const message = {
         text: answer.wasCorrect
           ? "Great job! Moving to the next card..."
@@ -344,23 +383,18 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         currentFlashcardStats: updatedStats,
       });
 
-      // Check if we reached limit after this submission
-      if (
-        !isPremium &&
-        get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT
-      ) {
-        // Set timeout to update the message after showing the success/error message
+      // This check is also based on flashcardsViewedToday now.
+      if (!isPremium && get().flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT) {
         setTimeout(() => {
           set({
             submissionMessage: {
-              text: "You've reached your daily limit! Upgrade to premium for unlimited access.",
+              text: "You've reached your daily viewing limit! Upgrade to premium for unlimited access.",
               type: "error",
             },
           });
         }, 2000);
       }
 
-      // Delay before moving to next card
       setTimeout(() => {
         get().goToNextCard();
       }, 1500);
@@ -376,7 +410,6 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         },
       });
 
-      // Clear error message after delay
       setTimeout(() => {
         set({ submissionMessage: null });
       }, 2000);
@@ -386,16 +419,12 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
   // ===== HELPER FUNCTIONS =====
 
   isDailyLimitReached: (isPremium: boolean) => {
-    // Premium users have no limit
     if (isPremium) return false;
-
-    // Check against daily limit for free users using server data
-    return get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT;
+    return get().flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT;
   },
 
-  // Check if we're allowed to fetch new cards
   canFetchNewCards: (isPremium: boolean) => {
     if (isPremium) return true;
-    return get().flashcardsAnsweredToday < DAILY_FLASHCARD_LIMIT;
+    return get().flashcardsViewedToday < DAILY_FLASHCARD_LIMIT;
   },
 }));

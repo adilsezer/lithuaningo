@@ -381,7 +381,7 @@ namespace Lithuaningo.API.Services.Flashcards
             List<Flashcard> allFlashcards, FlashcardRequest request, string userId)
         {
             // Get all previously shown flashcard IDs
-            var shownFlashcardIds = await _userFlashcardStatService.GetShownFlashcardIdsAsync(userId);
+            var shownFlashcardIds = await _userFlashcardStatService.GetAllUserInteractedFlashcardIdsAsync(userId);
 
             // STEP 1: Get flashcards for review based on mastery level
             int reviewCount = (int)Math.Ceiling(request.Count * ReviewFlashcardsRatio);

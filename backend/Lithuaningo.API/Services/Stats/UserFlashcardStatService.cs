@@ -35,8 +35,42 @@ namespace Lithuaningo.API.Services.Stats
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
         }
 
+        /// <summary>
+        /// Helper method to get an existing UserFlashcardStat or create a new one with default values if it doesn't exist.
+        /// </summary>
+        private async Task<UserFlashcardStat> GetOrCreateUserFlashcardStatAsync(string userId, Guid flashcardId)
+        {
+            var existingStatQuery = _supabaseService.Client
+                .From<UserFlashcardStat>()
+                .Filter("user_id", Operator.Equals, userId.ToString())
+                .Filter("flashcard_id", Operator.Equals, flashcardId.ToString());
+
+            var existingStatResult = await existingStatQuery.Get();
+            var existingStat = existingStatResult.Models?.FirstOrDefault();
+
+            if (existingStat != null)
+            {
+                return existingStat;
+            }
+            else
+            {
+                var newStat = new UserFlashcardStat
+                {
+                    Id = Guid.NewGuid(),
+                    UserId = userId,
+                    FlashcardId = flashcardId,
+                    ViewCount = 0,
+                    CorrectCount = 0,
+                    IncorrectCount = 0,
+                    LastAnsweredCorrectly = null,
+                    MasteryLevel = 0
+                };
+                return newStat;
+            }
+        }
+
         /// <inheritdoc />
-        public async Task<HashSet<Guid>> GetShownFlashcardIdsAsync(string userId)
+        public async Task<UserFlashcardStatResponse> IncrementFlashcardViewCountAsync(string userId, Guid flashcardId)
         {
             try
             {
@@ -45,23 +79,93 @@ namespace Lithuaningo.API.Services.Stats
                     throw new ArgumentNullException(nameof(userId));
                 }
 
-                // This is a helper method and doesn't need caching since it's used internally
+                var statEntity = await GetOrCreateUserFlashcardStatAsync(userId, flashcardId);
+                statEntity.ViewCount++;
 
-                var userFlashcardStatsQuery = _supabaseService.Client
+                // Upsert the entity (Insert if new, Update if existing)
+                var upsertResult = await _supabaseService.Client
+                    .From<UserFlashcardStat>()
+                    .Upsert(statEntity);
+
+                var resultStat = upsertResult.Models?.FirstOrDefault() ?? statEntity;
+
+                // Invalidate cache
+                await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
+                var cacheKey = $"{CacheKeyPrefix}{userId}:card:{flashcardId}";
+                await _cache.RemoveAsync(cacheKey);
+
+                return _mapper.Map<UserFlashcardStatResponse>(resultStat);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error incrementing flashcard view count for user {UserId}, flashcard {FlashcardId}", userId, flashcardId);
+                throw;
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<List<Guid>> GetLastSeenFlashcardIdsAsync(string userId, int count = 10)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    throw new ArgumentNullException(nameof(userId));
+                }
+
+                // This method is for fetching IDs for review challenges, typically not cached
+                // as it needs to be fresh. If caching is desired later, it can be added.
+
+                var query = _supabaseService.Client
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId.ToString())
+                    .Order("updated_at", Ordering.Descending)
+                    .Limit(count)
                     .Select("flashcard_id");
 
-                var userFlashcardStats = await userFlashcardStatsQuery.Get();
+                var result = await query.Get();
 
-                // Get the set of flashcard IDs to exclude (ones user has already seen)
-                return userFlashcardStats.Models?
+                return result.Models?
+                    .Select(s => s.FlashcardId)
+                    .ToList() ?? new List<Guid>();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting last seen flashcard IDs for user {UserId}", userId);
+                throw;
+            }
+        }
+
+        /// <inheritdoc />
+        public async Task<HashSet<Guid>> GetAllUserInteractedFlashcardIdsAsync(string userId)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(userId))
+                {
+                    throw new ArgumentNullException(nameof(userId));
+                }
+
+                // This fetches all unique flashcard IDs a user has interacted with.
+                // It's used to determine 'new' vs 'seen' cards in learning mode.
+                // Caching could be considered if this becomes a performance issue,
+                // but it needs to be invalidated whenever a user interacts with a new card.
+                // For now, direct fetch is simpler.
+
+                var query = _supabaseService.Client
+                    .From<UserFlashcardStat>()
+                    .Filter("user_id", Operator.Equals, userId.ToString())
+                    .Select("flashcard_id"); // Select only the flashcard_id
+
+                var result = await query.Get();
+
+                return result.Models?
                     .Select(s => s.FlashcardId)
                     .ToHashSet() ?? new HashSet<Guid>();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting shown flashcard IDs");
+                _logger.LogError(ex, "Error getting all interacted flashcard IDs for user {UserId}", userId);
                 throw;
             }
         }
@@ -76,81 +180,45 @@ namespace Lithuaningo.API.Services.Stats
                     throw new ArgumentNullException(nameof(userId));
                 }
 
-                // Find the existing stat
-                var existingStatQuery = _supabaseService.Client
-                    .From<UserFlashcardStat>()
-                    .Filter("user_id", Operator.Equals, userId.ToString())
-                    .Filter("flashcard_id", Operator.Equals, request.FlashcardId.ToString());
+                var statEntity = await GetOrCreateUserFlashcardStatAsync(userId, request.FlashcardId);
 
-                var existingStatResult = await existingStatQuery.Get();
+                // Update the stat based on the answer
+                statEntity.LastAnsweredCorrectly = request.WasCorrect;
 
-                // Create or update the stat
-                if (existingStatResult.Models == null || existingStatResult.Models.Count == 0)
+                if (request.WasCorrect)
                 {
-                    // Create new stat if it doesn't exist
-                    var newStat = new UserFlashcardStat
+                    statEntity.CorrectCount++;
+                    if (statEntity.MasteryLevel < 5) // Assuming max mastery level is 5
                     {
-                        Id = Guid.NewGuid(),
-                        UserId = userId,
-                        FlashcardId = request.FlashcardId,
-                        ViewCount = 1,
-                        CorrectCount = request.WasCorrect ? 1 : 0,
-                        IncorrectCount = request.WasCorrect ? 0 : 1,
-                        LastAnsweredCorrectly = request.WasCorrect,
-                        MasteryLevel = request.WasCorrect ? 1 : 0
-                    };
-
-                    var insertResult = await _supabaseService.Client
-                        .From<UserFlashcardStat>()
-                        .Insert(newStat);
-
-                    var resultStat = insertResult.Models?.FirstOrDefault() ?? newStat;
-
-                    // Invalidate cache when creating a new stat
-                    await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-
-                    return _mapper.Map<UserFlashcardStatResponse>(resultStat);
+                        statEntity.MasteryLevel++;
+                    }
                 }
                 else
                 {
-                    // Update the existing stat
-                    var existingStat = existingStatResult.Models.First();
-
-                    existingStat.ViewCount++;
-                    existingStat.LastAnsweredCorrectly = request.WasCorrect;
-
-                    if (request.WasCorrect)
+                    statEntity.IncorrectCount++;
+                    if (statEntity.MasteryLevel > 0) // Assuming min mastery level is 0
                     {
-                        existingStat.CorrectCount++;
-                        if (existingStat.MasteryLevel < 5)
-                        {
-                            existingStat.MasteryLevel++;
-                        }
+                        statEntity.MasteryLevel--;
                     }
-                    else
-                    {
-                        existingStat.IncorrectCount++;
-                        if (existingStat.MasteryLevel > 0)
-                        {
-                            existingStat.MasteryLevel--;
-                        }
-                    }
-
-                    var updateResult = await _supabaseService.Client
-                        .From<UserFlashcardStat>()
-                        .Update(existingStat);
-
-                    var resultStat = updateResult.Models?.FirstOrDefault() ?? existingStat;
-
-                    // Invalidate cache when updating a stat
-                    await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-
-                    return _mapper.Map<UserFlashcardStatResponse>(resultStat);
                 }
+
+                // Upsert the entity (Insert if new, Update if existing)
+                var upsertResult = await _supabaseService.Client
+                    .From<UserFlashcardStat>()
+                    .Upsert(statEntity);
+
+                var resultStat = upsertResult.Models?.FirstOrDefault() ?? statEntity;
+
+                // Invalidate cache
+                await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
+                var cacheKey = $"{CacheKeyPrefix}{userId}:card:{request.FlashcardId}";
+                await _cache.RemoveAsync(cacheKey);
+
+                return _mapper.Map<UserFlashcardStatResponse>(resultStat);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error updating flashcard stats");
+                _logger.LogError(ex, "Error submitting flashcard answer for user {UserId}, flashcard {FlashcardId}", userId, request.FlashcardId);
                 throw;
             }
         }
@@ -255,14 +323,17 @@ namespace Lithuaningo.API.Services.Stats
 
                 var todayResult = await todayQuery.Get();
 
-                // Count cards that have been answered (either correctly or incorrectly)
-                var todayCount = todayResult.Models?.Count(s => s.CorrectCount > 0 || s.IncorrectCount > 0) ?? 0;
+                // Count distinct flashcards that had their UserFlashcardStat record updated today
+                var flashcardsViewedTodayCount = todayResult.Models?
+                    .Select(s => s.FlashcardId)
+                    .Distinct()
+                    .Count() ?? 0;
 
                 // Use AutoMapper to map the collection to the summary response
                 var summary = _mapper.Map<UserFlashcardStatsSummaryResponse>(models);
 
                 // Override the AutoMapper value with our database query result
-                summary.FlashcardsAnsweredToday = todayCount;
+                summary.FlashcardsViewedToday = flashcardsViewedTodayCount;
 
                 // Cache the result
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
@@ -301,7 +372,7 @@ namespace Lithuaningo.API.Services.Stats
 
                 var query = _supabaseService.Client
                     .From<UserFlashcardStat>()
-                    .Filter("user_id", Operator.Equals, userId)
+                    .Filter("user_id", Operator.Equals, userId.ToString())
                     .Filter("flashcard_id", Operator.Equals, flashcardId);
 
                 var result = await query.Get();
@@ -331,7 +402,7 @@ namespace Lithuaningo.API.Services.Stats
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting flashcard stats");
+                _logger.LogError(ex, "Error getting flashcard stats.");
                 throw;
             }
         }

@@ -36,7 +36,7 @@ export default function CategoryFlashcardsScreen() {
     isLoadingFlashcards,
 
     // Daily limit data
-    flashcardsAnsweredToday,
+    flashcardsViewedToday,
     isDailyLimitReached,
     canFetchNewCards,
 
@@ -44,7 +44,6 @@ export default function CategoryFlashcardsScreen() {
     syncFlashcardCount,
     fetchFlashcards,
     handleFlip,
-    submitFlashcardAnswer,
     resetSession,
   } = useFlashcardStore();
 
@@ -52,7 +51,7 @@ export default function CategoryFlashcardsScreen() {
   const currentFlashcard = flashcards[currentIndex];
   const totalCards = flashcards.length;
   const dailyLimitReached = isDailyLimitReached(isPremium);
-  const cardsRemainingToday = DAILY_FLASHCARD_LIMIT - flashcardsAnsweredToday;
+  const cardsRemainingToday = DAILY_FLASHCARD_LIMIT - flashcardsViewedToday;
 
   // Always sync when the screen comes into focus
   useFocusEffect(
@@ -67,6 +66,11 @@ export default function CategoryFlashcardsScreen() {
   const handleGoBack = useCallback(() => {
     resetSession();
     router.back();
+  }, [resetSession]);
+
+  const handleGoToReviewChallenge = useCallback(() => {
+    resetSession(); // Good practice to reset session before starting a new type of activity
+    router.push("/(app)/review-challenge");
   }, [resetSession]);
 
   const handleGoToLogin = useCallback(() => router.push("/auth/login"), []);
@@ -108,33 +112,30 @@ export default function CategoryFlashcardsScreen() {
     <>
       <CustomText variant="bodySmall" style={styles.limitInfo}>
         <CustomText bold>
-          {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT}
+          {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}
         </CustomText>{" "}
-        daily flashcards used
+        daily flashcards viewed
       </CustomText>
     </>
   );
 
-  // Memoize answer submission handlers
-  const handleMarkIncorrect = useCallback(() => {
-    if (currentFlashcard) {
-      submitFlashcardAnswer({
-        flashcardId: currentFlashcard.id,
-        wasCorrect: false,
-        userId: userData?.id,
+  // New handler for the "Next Flashcard" button
+  const handleAdvanceToNextCard = useCallback(() => {
+    if (currentFlashcard?.id && userData?.id) {
+      // Call the store action to handle all logic
+      useFlashcardStore
+        .getState()
+        .advanceCardAndProcess(currentFlashcard.id, userData.id);
+    } else {
+      console.warn(
+        "[handleAdvanceToNextCard] Missing currentFlashcard.id or userData.id"
+      );
+      // Optionally, provide feedback to the user or set an error state in the store
+      useFlashcardStore.setState({
+        error: "Could not advance card. User or card data missing.",
       });
     }
-  }, [currentFlashcard, submitFlashcardAnswer, userData?.id]);
-
-  const handleMarkCorrect = useCallback(() => {
-    if (currentFlashcard) {
-      submitFlashcardAnswer({
-        flashcardId: currentFlashcard.id,
-        wasCorrect: true,
-        userId: userData?.id,
-      });
-    }
-  }, [currentFlashcard, submitFlashcardAnswer, userData?.id]);
+  }, [currentFlashcard, userData?.id]);
 
   // Handler for fetching a new batch of cards
   const handleFetchNewCards = useCallback(() => {
@@ -190,7 +191,7 @@ export default function CategoryFlashcardsScreen() {
           Daily Limit Reached! 🔒
         </CustomText>
         <CustomText variant="bodyLarge" style={styles.completedSubtext}>
-          You've answered {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+          You've viewed {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
           flashcards today, which is the daily limit for free users.
         </CustomText>
         <CustomText variant="bodyMedium" style={styles.premiumMessage}>
@@ -322,62 +323,100 @@ export default function CategoryFlashcardsScreen() {
             Congratulations! 🎉
           </CustomText>
 
-          {isPremium ? (
-            <>
-              <CustomText variant="bodyLarge" style={styles.completedSubtext}>
-                You've completed all flashcards in this deck.
-              </CustomText>
+          <CustomText variant="bodyLarge" style={styles.completedSubtext}>
+            {isPremium
+              ? "You've completed all flashcards in this deck."
+              : "You've completed all free flashcards in this deck."}
+          </CustomText>
+
+          {!isPremium && (
+            <CustomText variant="bodyMedium" style={styles.premiumMessage}>
+              {dailyLimitReached
+                ? `You've reached your daily limit of ${DAILY_FLASHCARD_LIMIT} flashcards. Upgrade to Premium for unlimited access!`
+                : `You still have ${cardsRemainingToday} flashcard views remaining today. You can get new cards or upgrade to Premium for unlimited access!`}
+            </CustomText>
+          )}
+
+          {(() => {
+            // Define button props for clarity
+            let getNewCardsButtonProps;
+            if (isPremium) {
+              getNewCardsButtonProps = {
+                text: "Get New Cards",
+                onPress: handleFetchNewCards,
+                icon: "refresh",
+                mode: "contained" as const,
+              };
+            } else if (!dailyLimitReached) {
+              getNewCardsButtonProps = {
+                text: "Get New Cards",
+                onPress: handleFetchNewCards,
+                icon: "refresh",
+                mode: "contained" as const,
+              };
+            } else {
+              getNewCardsButtonProps = {
+                text: "Unlock All Cards (Premium ✨)",
+                onPress: handleGoToPremium,
+                icon: "star",
+                mode: "contained" as const,
+              };
+            }
+
+            const challengeButtonProps = {
+              text: isPremium
+                ? "Practice Learned Cards"
+                : "Practice Learned Cards (Premium ✨)",
+              onPress: isPremium
+                ? handleGoToReviewChallenge
+                : handleGoToPremium,
+              icon: "school",
+              mode: "contained-tonal" as const,
+            };
+
+            return (
               <View style={styles.completedButtonsContainer}>
+                {/* Get New Cards button */}
                 <Button
-                  mode="contained"
-                  onPress={handleFetchNewCards}
+                  mode={getNewCardsButtonProps.mode}
+                  onPress={getNewCardsButtonProps.onPress}
                   style={styles.completedButton}
-                  icon="refresh"
-                  loading={isLoadingFlashcards}
-                  disabled={isLoadingFlashcards}
+                  icon={getNewCardsButtonProps.icon}
+                  loading={
+                    isLoadingFlashcards &&
+                    getNewCardsButtonProps.onPress === handleFetchNewCards
+                  }
+                  disabled={
+                    isLoadingFlashcards &&
+                    getNewCardsButtonProps.onPress === handleFetchNewCards
+                  }
                 >
-                  Get New Cards
+                  {getNewCardsButtonProps.text}
                 </Button>
+
+                {/* Challenge with Learned Cards button */}
                 <Button
-                  mode="outlined"
-                  onPress={handleGoBack}
+                  mode={challengeButtonProps.mode}
+                  icon={challengeButtonProps.icon}
+                  onPress={challengeButtonProps.onPress}
                   style={styles.completedButton}
                 >
-                  Return to Categories
+                  {challengeButtonProps.text}
                 </Button>
-              </View>
-            </>
-          ) : (
-            <>
-              <CustomText variant="bodyLarge" style={styles.completedSubtext}>
-                You've completed all free flashcards in this deck.
-              </CustomText>
-              <CustomText variant="bodyMedium" style={styles.premiumMessage}>
-                {dailyLimitReached
-                  ? `You've reached your daily limit of ${DAILY_FLASHCARD_LIMIT} flashcards. Upgrade to Premium for unlimited access!`
-                  : `You still have ${cardsRemainingToday} flashcards remaining today. You can get new cards or upgrade to Premium for unlimited access!`}
-              </CustomText>
-              <View style={styles.completedButtonsContainer}>
-                {!dailyLimitReached && (
+
+                {/* Upgrade to Premium button: Shown only if NOT premium AND daily limit NOT reached */}
+                {!isPremium && !dailyLimitReached && (
                   <Button
                     mode="contained"
-                    onPress={handleFetchNewCards}
+                    onPress={handleGoToPremium}
                     style={styles.completedButton}
-                    icon="refresh"
-                    loading={isLoadingFlashcards}
-                    disabled={isLoadingFlashcards}
+                    icon="star"
                   >
-                    Get New Cards
+                    Upgrade to Premium
                   </Button>
                 )}
-                <Button
-                  mode="contained"
-                  onPress={handleGoToPremium}
-                  style={styles.completedButton}
-                  icon="star"
-                >
-                  Upgrade to Premium
-                </Button>
+
+                {/* Return to Categories button: Always shown */}
                 <Button
                   mode="outlined"
                   onPress={handleGoBack}
@@ -386,8 +425,8 @@ export default function CategoryFlashcardsScreen() {
                   Return to Categories
                 </Button>
               </View>
-            </>
-          )}
+            );
+          })()}
         </View>
       ) : (
         // Active Flashcard View
@@ -403,23 +442,11 @@ export default function CategoryFlashcardsScreen() {
               <View style={styles.answerButtonsContainer}>
                 <Button
                   mode="contained"
-                  buttonColor={theme.colors.error}
                   style={styles.answerButton}
-                  onPress={handleMarkIncorrect}
-                  icon="close"
-                  disabled={!canFetchNewCards(isPremium)}
+                  onPress={handleAdvanceToNextCard}
+                  icon="arrow-right-circle"
                 >
-                  Incorrect
-                </Button>
-                <Button
-                  mode="contained"
-                  buttonColor={theme.colors.primary}
-                  style={styles.answerButton}
-                  onPress={handleMarkCorrect}
-                  icon="check"
-                  disabled={!canFetchNewCards(isPremium)}
-                >
-                  Correct
+                  Next Flashcard
                 </Button>
               </View>
             )}
@@ -470,7 +497,7 @@ const styles = StyleSheet.create({
   },
   answerButtonsContainer: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "center",
     width: "100%",
     marginTop: 20,
     marginBottom: 20,
@@ -511,5 +538,8 @@ const styles = StyleSheet.create({
   limitInfo: {
     marginTop: 4,
     color: "gray",
+  },
+  reviewChallengeButton: {
+    marginBottom: 16,
   },
 });

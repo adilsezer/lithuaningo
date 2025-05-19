@@ -250,6 +250,8 @@ class ApiClient {
       .substring(2, 9)}`;
     const method = options?.method || "GET";
 
+    console.log(`[API] [${requestId}] Making request: ${method} ${endpoint}`);
+
     try {
       const response = await this.axiosInstance({
         url: endpoint,
@@ -383,6 +385,17 @@ class ApiClient {
         method: "GET",
       }
     );
+  }
+
+  async getReviewChallengeQuestions(
+    count?: number
+  ): Promise<ChallengeQuestionResponse[]> {
+    const endpoint = "/api/v1/challenge/review";
+    const params = count ? { count } : {};
+    return this.request<ChallengeQuestionResponse[]>(endpoint, {
+      method: "GET",
+      params,
+    });
   }
 
   // Flashcard Controller
@@ -556,6 +569,16 @@ class ApiClient {
         method: "POST",
       }
     );
+  }
+
+  async incrementFlashcardViewCount(
+    flashcardId: string
+  ): Promise<UserFlashcardStatResponse> {
+    const endpoint = "/api/v1/UserFlashcardStats/increment-view";
+    return this.request<UserFlashcardStatResponse>(endpoint, {
+      method: "POST",
+      data: { flashcardId },
+    });
   }
 }
 

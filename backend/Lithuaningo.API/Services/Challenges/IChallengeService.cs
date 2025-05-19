@@ -19,5 +19,13 @@ namespace Lithuaningo.API.Services.Challenges
         /// </summary>
         /// <returns>The daily challenge questions</returns>
         Task<IEnumerable<ChallengeQuestionResponse>> GetDailyChallengeQuestionsAsync();
+
+        /// <summary>
+        /// Generates a review challenge for a premium user based on their seen flashcards.
+        /// </summary>
+        /// <param name="userId">The ID of the user.</param>
+        /// <param name="count">The number of challenge questions to generate.</param>
+        /// <returns>A list of challenge questions for review.</returns>
+        Task<IEnumerable<ChallengeQuestionResponse>> GenerateReviewChallengeQuestionsAsync(string userId, int count = 10);
     }
 }

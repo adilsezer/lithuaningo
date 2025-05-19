@@ -24,7 +24,7 @@ export default function FlashcardScreen() {
 
   // Get data from the flashcard store for consistent daily limit display
   const {
-    flashcardsAnsweredToday,
+    flashcardsViewedToday,
     syncFlashcardCount,
     isLoading: isSyncingCount,
     statsSummary,
@@ -281,10 +281,10 @@ export default function FlashcardScreen() {
               ]}
             >
               <CustomText variant="bodyMedium">
-                Daily Usage: {flashcardsAnsweredToday}/{DAILY_FLASHCARD_LIMIT}{" "}
-                flashcards
+                Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+                flashcards viewed
               </CustomText>
-              {flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT && (
+              {flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT && (
                 <CustomText variant="bodySmall" style={styles.limitWarning}>
                   You've reached your daily limit. Upgrade to premium for
                   unlimited access!
@@ -326,9 +326,10 @@ export default function FlashcardScreen() {
       isLoadingStats,
       isSyncingCount,
       isPremium,
-      flashcardsAnsweredToday,
+      flashcardsViewedToday,
       handleSelectCategory,
       theme.colors.primary,
+      theme.colors.background,
     ]
   );
 
@@ -366,7 +367,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     padding: 12,
     borderRadius: 8,
-    backgroundColor: "#f5f5f5",
   },
   limitWarning: {
     color: "red",

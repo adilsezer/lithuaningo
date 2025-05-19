@@ -4,6 +4,7 @@ using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Flashcards;
+using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Supabase;
 using Supabase;
 using static Supabase.Postgrest.Constants;
@@ -23,6 +24,7 @@ namespace Lithuaningo.API.Services.Challenges
         private readonly IMapper _mapper;
         private readonly IAIService _aiService;
         private readonly IFlashcardService _flashcardService;
+        private readonly IUserFlashcardStatService _userFlashcardStatService;
         private readonly Random _random;
 
         public ChallengeService(
@@ -33,6 +35,7 @@ namespace Lithuaningo.API.Services.Challenges
             IMapper mapper,
             IAIService aiService,
             IFlashcardService flashcardService,
+            IUserFlashcardStatService userFlashcardStatService,
             Random random)
         {
             _supabaseClient = supabaseService.Client;
@@ -42,6 +45,7 @@ namespace Lithuaningo.API.Services.Challenges
             _mapper = mapper;
             _aiService = aiService;
             _flashcardService = flashcardService;
+            _userFlashcardStatService = userFlashcardStatService;
             _random = random;
         }
 
@@ -158,7 +162,74 @@ namespace Lithuaningo.API.Services.Challenges
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving challenge questions to database");
-                // Don't rethrow - treat database save as best-effort
+                throw;
+            }
+        }
+
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateReviewChallengeQuestionsAsync(string userId, int count = 10)
+        {
+            _logger.LogInformation("Generating review challenge questions for based on last seen flashcards.");
+
+            try
+            {
+                // 1. Get the IDs of the last 'count' flashcards seen by the user
+                var lastSeenFlashcardIds = await _userFlashcardStatService.GetLastSeenFlashcardIdsAsync(userId, count);
+
+                if (!lastSeenFlashcardIds.Any())
+                {
+                    _logger.LogInformation("The user has not seen any flashcards yet, or no seen flashcards could be retrieved. Cannot generate review challenge.");
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
+                }
+
+                var flashcardsForChallenge = new List<Flashcard>();
+
+                // 2. Fetch the full flashcard models for these IDs
+                foreach (var flashcardId in lastSeenFlashcardIds)
+                {
+                    try
+                    {
+                        var flashcard = await _flashcardService.GetFlashcardByIdAsync(flashcardId);
+                        if (flashcard != null)
+                        {
+                            flashcardsForChallenge.Add(flashcard);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Could not retrieve flashcard (one of the last seen) for review challenge generation.");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Exception while retrieving flashcard for review challenge generation.");
+                    }
+                }
+
+                if (!flashcardsForChallenge.Any())
+                {
+                    _logger.LogWarning("No valid flashcard models could be retrieved from the last seen IDs for user {UserId} to generate a review challenge.", userId);
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
+                }
+
+                // 3. Generate challenges using AI Service
+                var distinctFlashcardsForAI = flashcardsForChallenge.DistinctBy(f => f.Id).ToList();
+
+                if (!distinctFlashcardsForAI.Any())
+                {
+                    _logger.LogWarning("No distinct flashcards available for AI generation for user review challenge.");
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
+                }
+
+                var generatedChallenges = await _aiService.GenerateChallengesAsync(distinctFlashcardsForAI);
+
+                var finalChallenges = generatedChallenges.Take(count).ToList();
+
+                _logger.LogInformation("Successfully generated review challenge questions based on recently seen flashcards.");
+                return finalChallenges;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating review challenge questions for user.");
+                throw;
             }
         }
     }

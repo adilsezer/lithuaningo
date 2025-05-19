@@ -31,8 +31,5 @@ namespace Lithuaningo.API.Models
 
         [Column("mastery_level")]
         public int MasteryLevel { get; set; } = 0;
-
-        [Column("updated_at")]
-        public DateTime? UpdatedAt { get; set; }
     }
 }

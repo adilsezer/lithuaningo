@@ -22,6 +22,6 @@ export interface UserFlashcardStatsSummaryResponse {
   totalCorrectAnswers: number;
   totalIncorrectAnswers: number;
   averageMasteryLevel: number;
-  flashcardsAnsweredToday: number;
+  flashcardsViewedToday: number;
   successRate: number;
 }

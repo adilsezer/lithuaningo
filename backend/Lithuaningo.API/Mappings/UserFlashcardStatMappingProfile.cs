@@ -20,7 +20,7 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.AverageMasteryLevel, opt => opt.MapFrom(src =>
                     src.Any() ? src.Average(s => s.MasteryLevel) : 0))
                 // Set default to 0 since we'll calculate this with a separate query
-                .ForMember(dest => dest.FlashcardsAnsweredToday, opt => opt.MapFrom(src => 0));
+                .ForMember(dest => dest.FlashcardsViewedToday, opt => opt.MapFrom(src => 0));
         }
     }
 }
