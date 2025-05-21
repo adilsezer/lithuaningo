@@ -1,3 +1,7 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using AutoMapper;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.Models;
@@ -6,8 +10,9 @@ using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Flashcards;
 using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Supabase;
+using Microsoft.Extensions.Logging;
 using Supabase;
-using static Supabase.Postgrest.Constants;
+
 namespace Lithuaningo.API.Services.Challenges
 {
     /// <summary>
@@ -23,9 +28,7 @@ namespace Lithuaningo.API.Services.Challenges
         private readonly ILogger<ChallengeService> _logger;
         private readonly IMapper _mapper;
         private readonly IAIService _aiService;
-        private readonly IFlashcardService _flashcardService;
         private readonly IUserFlashcardStatService _userFlashcardStatService;
-        private readonly Random _random;
 
         public ChallengeService(
             ISupabaseService supabaseService,
@@ -34,19 +37,15 @@ namespace Lithuaningo.API.Services.Challenges
             ILogger<ChallengeService> logger,
             IMapper mapper,
             IAIService aiService,
-            IFlashcardService flashcardService,
-            IUserFlashcardStatService userFlashcardStatService,
-            Random random)
+            IUserFlashcardStatService userFlashcardStatService)
         {
-            _supabaseClient = supabaseService.Client;
-            _cache = cache;
-            _cacheSettingsService = cacheSettingsService;
-            _logger = logger;
-            _mapper = mapper;
-            _aiService = aiService;
-            _flashcardService = flashcardService;
-            _userFlashcardStatService = userFlashcardStatService;
-            _random = random;
+            _supabaseClient = supabaseService.Client ?? throw new ArgumentNullException(nameof(supabaseService));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _cacheSettingsService = cacheSettingsService ?? throw new ArgumentNullException(nameof(cacheSettingsService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
+            _userFlashcardStatService = userFlashcardStatService ?? throw new ArgumentNullException(nameof(userFlashcardStatService));
         }
 
         /// <summary>
@@ -56,179 +55,188 @@ namespace Lithuaningo.API.Services.Challenges
         /// <returns>The daily challenge questions</returns>
         public async Task<IEnumerable<ChallengeQuestionResponse>> GetDailyChallengeQuestionsAsync()
         {
-            // Create a daily cache key in the format "challenge:daily:YYYY-MM-DD"
-            string cacheKey = $"{CacheKeyPrefix}daily:{DateTime.UtcNow:yyyy-MM-dd}";
+            var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            var cacheKey = $"{CacheKeyPrefix}daily:{today}";
 
-            // Try to get from cache first
             var cachedQuestions = await _cache.GetAsync<List<ChallengeQuestionResponse>>(cacheKey);
-            if (cachedQuestions != null && cachedQuestions.Count > 0)
+            if (cachedQuestions != null && cachedQuestions.Any())
             {
+                _logger.LogInformation("Retrieved daily challenge questions from cache for {Today}", today);
                 return cachedQuestions;
             }
 
-            // Retrieve cache settings once - will be used in both paths
-            var cacheSettings = await _cacheSettingsService.GetCacheSettingsAsync();
-            var cacheExpiration = TimeSpan.FromHours(cacheSettings.DefaultExpirationMinutes);
+            _logger.LogInformation("Cache miss for daily challenge questions for {Today}. Fetching from Supabase RPC.", today);
 
-            // Check if we already have questions for today in the database
-            var today = DateTime.UtcNow.Date;
-            var tomorrow = today.AddDays(1);
-
-            var existingQuestions = await _supabaseClient
-                .From<ChallengeQuestion>()
-                .Filter("created_at", Operator.GreaterThanOrEqual, today.ToString("yyyy-MM-dd"))
-                .Filter("created_at", Operator.LessThan, tomorrow.ToString("yyyy-MM-dd"))
-                .Order("created_at", Ordering.Descending)
-                .Limit(10)
-                .Get();
-
-            if (existingQuestions.Models != null && existingQuestions.Models.Count > 0)
-            {
-                var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(existingQuestions.Models);
-
-                // Cache the results
-                await _cache.SetAsync(cacheKey, questionResponses, cacheExpiration);
-
-                return questionResponses;
-            }
-
-            // If we get here, we need to generate new questions
-            var newQuestions = await GenerateAIChallengeQuestionsAsync();
-
-            // Cache the results for today
-            await _cache.SetAsync(cacheKey, newQuestions.ToList(), cacheExpiration);
-
-            return newQuestions;
-        }
-
-        /// <summary>
-        /// Generates new challenge questions using AI based on random flashcards as context.
-        /// </summary>
-        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync()
-        {
             try
             {
-                // Get a larger set of random flashcards from the database for context
-                // We retrieve more flashcards to ensure sufficient diversity for all question types
-                var flashcards = await _flashcardService.RetrieveFlashcardModelsAsync(
-                    limit: 25); // Increased from 10 to 25 to ensure more diversity
+                // Call the Supabase RPC function
+                var response = await _supabaseClient.Rpc("get_random_challenge_questions", new Dictionary<string, object> { { "count", 10 } });
 
-                if (flashcards.Any())
+                if (response.ResponseMessage != null && response.ResponseMessage.IsSuccessStatusCode && !string.IsNullOrEmpty(response.Content))
                 {
-                    // Shuffle the flashcards for better randomization
-                    var shuffledFlashcards = flashcards.ToList().OrderBy(x => _random.Next()).ToList();
+                    var questions = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ChallengeQuestion>>(response.Content);
 
-                    // Generate challenges based on the flashcard data
-                    var questions = await _aiService.GenerateChallengesAsync(shuffledFlashcards);
+                    if (questions == null || !questions.Any())
+                    {
+                        _logger.LogWarning("RPC get_random_challenge_questions returned no questions or failed to deserialize.");
+                        // Fallback or error handling: Potentially try AI generation or return empty
+                        // For now, let's log and return empty to avoid breaking if AI is not set up for this path.
+                        return Enumerable.Empty<ChallengeQuestionResponse>();
+                    }
 
-                    // Save the generated questions to the database
-                    await SaveChallengeQuestionsToDatabase(questions);
+                    var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(questions);
 
-                    return questions;
+                    var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+                    var expiration = TimeSpan.FromHours(settings.DefaultExpirationMinutes > 0 ? settings.DefaultExpirationMinutes / 60.0 : 24); // Example: 24 hours
+                    await _cache.SetAsync(cacheKey, questionResponses, expiration);
+                    _logger.LogInformation("Successfully fetched and cached {Count} daily challenge questions.", questionResponses.Count);
+                    return questionResponses;
                 }
                 else
                 {
-                    _logger.LogWarning("No flashcards found to use as context for challenge generation. Generating challenges without context.");
-                    return await _aiService.GenerateChallengesAsync();
+                    string errorDetail = response.Content ?? string.Empty; // Ensure non-null
+                    if (response.ResponseMessage != null && !response.ResponseMessage.IsSuccessStatusCode)
+                    {
+                        errorDetail = $"HTTP Status: {response.ResponseMessage.StatusCode}, Reason: {response.ResponseMessage.ReasonPhrase}, Content: {response.Content ?? string.Empty}";
+                    }
+                    _logger.LogError("Error calling Supabase RPC get_random_challenge_questions. Details: {ErrorDetails}", errorDetail);
+                    // Fallback or error handling
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating AI challenge questions");
-                throw;
+                _logger.LogError(ex, "Error fetching daily challenge questions via RPC.");
+                // Consider a fallback to AI generation here if appropriate, or just rethrow/return empty
+                return Enumerable.Empty<ChallengeQuestionResponse>();
             }
         }
 
-        /// <summary>
-        /// Saves challenge questions to the Supabase database
-        /// </summary>
-        private async Task SaveChallengeQuestionsToDatabase(IEnumerable<ChallengeQuestionResponse> questions)
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GetChallengeQuestionsForSeenFlashcardsAsync(string userId, int count = 10)
         {
+            if (string.IsNullOrEmpty(userId))
+            {
+                _logger.LogWarning("User ID is null or empty for review challenge generation.");
+                throw new ArgumentNullException(nameof(userId));
+            }
+            if (count <= 0) count = 10;
+
+            _logger.LogInformation("Generating {Count} review challenge questions for user {UserId}", count, userId);
+
+            var seenFlashcardIds = await _userFlashcardStatService.GetLastSeenFlashcardIdsAsync(userId, count * 2); // Get more flashcards initially to ensure we find enough questions
+            if (!seenFlashcardIds.Any())
+            {
+                _logger.LogInformation("No flashcards found for user {UserId} to generate review challenges.", userId);
+                return new List<ChallengeQuestionResponse>();
+            }
+
+            // Fetch all challenges associated with these flashcard IDs in one go
+            var allReviewChallenges = await _supabaseClient.From<ChallengeQuestion>()
+                .Where(cq => cq.FlashcardId.HasValue && seenFlashcardIds.Contains(cq.FlashcardId.Value))
+                .Get();
+
+            if (allReviewChallenges.Models == null || !allReviewChallenges.Models.Any())
+            {
+                _logger.LogInformation("No existing challenge questions found for the review flashcards of user {UserId}.", userId);
+                return new List<ChallengeQuestionResponse>();
+            }
+
+            // Shuffle all available challenges and take the required count
+            var selectedChallengeModels = allReviewChallenges.Models
+                .Take(count)
+                .ToList();
+
+            if (!selectedChallengeModels.Any())
+            {
+                _logger.LogInformation("No challenges selected after attempting to fetch for user {UserId} (this shouldn't happen if models were found).", userId);
+                return new List<ChallengeQuestionResponse>();
+            }
+
+            var response = _mapper.Map<List<ChallengeQuestionResponse>>(selectedChallengeModels);
+
+            _logger.LogInformation("Retrieved {Count} existing review challenge questions for user {UserId}", response.Count, userId);
+            return response;
+        }
+
+        public async Task GenerateAndSaveChallengesForFlashcardAsync(Flashcard flashcard)
+        {
+            if (flashcard == null)
+            {
+                throw new ArgumentNullException(nameof(flashcard));
+            }
+
+            _logger.LogInformation("Generating and saving challenges for flashcard ID: {FlashcardId}", flashcard.Id);
+
             try
             {
-                // Map DTO responses to database models
-                var questionModels = _mapper.Map<List<ChallengeQuestion>>(questions);
+                var challengeDtos = await _aiService.GenerateChallengesForFlashcardAsync(flashcard);
 
-                // Save to database
-                var result = await _supabaseClient
+                if (challengeDtos == null || !challengeDtos.Any())
+                {
+                    _logger.LogWarning("AI Service returned no challenges for flashcard ID: {FlashcardId}", flashcard.Id);
+                    return; // Or throw, depending on desired behavior for empty generation
+                }
+
+                var challengeModels = _mapper.Map<List<ChallengeQuestion>>(challengeDtos);
+                if (challengeModels == null || !challengeModels.Any())
+                {
+                    _logger.LogWarning("Mapped challenge models are null or empty for flashcard ID: {FlashcardId}", flashcard.Id);
+                    return;
+                }
+
+                foreach (var model in challengeModels)
+                {
+                    model.FlashcardId = flashcard.Id; // Ensure FlashcardId is set
+                    if (model.Id == Guid.Empty) model.Id = Guid.NewGuid();
+                    // CreatedAt/UpdatedAt are handled by DB
+                }
+
+                // Inlined SaveChallengeQuestionsAsync logic:
+                try
+                {
+                    await _supabaseClient.From<ChallengeQuestion>().Insert(challengeModels);
+                    _logger.LogInformation("{Count} challenge questions saved to the database for flashcard ID: {FlashcardId}.", challengeModels.Count, flashcard.Id);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error saving challenge questions to database for flashcard ID: {FlashcardId}", flashcard.Id);
+                    throw; // Re-throw to indicate failure in the saving step
+                }
+                // End of inlined logic
+
+                _logger.LogInformation("Successfully generated and saved {Count} challenges for flashcard ID: {FlashcardId}", challengeModels.Count, flashcard.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating or saving challenges for flashcard ID: {FlashcardId}", flashcard.Id);
+                throw new InvalidOperationException($"Failed to generate and save challenges for flashcard {flashcard.Id}.", ex);
+            }
+        }
+
+        public async Task ClearChallengesByFlashcardIdAsync(Guid flashcardId)
+        {
+            if (flashcardId == Guid.Empty)
+            {
+                _logger.LogWarning("Attempted to clear challenges with an empty flashcard ID.");
+                return; // Or throw ArgumentException
+            }
+
+            try
+            {
+                _logger.LogInformation("Clearing challenge questions for flashcard ID {FlashcardId}", flashcardId);
+
+                // Delete all challenge questions where flashcard_id matches
+                await _supabaseClient
                     .From<ChallengeQuestion>()
-                    .Insert(questionModels);
+                    .Where(cq => cq.FlashcardId == flashcardId) // Ensure your ChallengeQuestion model has FlashcardId
+                    .Delete();
 
-                if (result.Models == null)
-                {
-                    _logger.LogWarning("No challenge questions were saved to the database");
-                }
+                _logger.LogInformation("Successfully cleared challenge questions for flashcard ID {FlashcardId}", flashcardId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving challenge questions to database");
-                throw;
-            }
-        }
-
-        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateReviewChallengeQuestionsAsync(string userId, int count = 10)
-        {
-            _logger.LogInformation("Generating review challenge questions for based on last seen flashcards.");
-
-            try
-            {
-                // 1. Get the IDs of the last 'count' flashcards seen by the user
-                var lastSeenFlashcardIds = await _userFlashcardStatService.GetLastSeenFlashcardIdsAsync(userId, count);
-
-                if (!lastSeenFlashcardIds.Any())
-                {
-                    _logger.LogInformation("The user has not seen any flashcards yet, or no seen flashcards could be retrieved. Cannot generate review challenge.");
-                    return Enumerable.Empty<ChallengeQuestionResponse>();
-                }
-
-                var flashcardsForChallenge = new List<Flashcard>();
-
-                // 2. Fetch the full flashcard models for these IDs
-                foreach (var flashcardId in lastSeenFlashcardIds)
-                {
-                    try
-                    {
-                        var flashcard = await _flashcardService.GetFlashcardByIdAsync(flashcardId);
-                        if (flashcard != null)
-                        {
-                            flashcardsForChallenge.Add(flashcard);
-                        }
-                        else
-                        {
-                            _logger.LogWarning("Could not retrieve flashcard (one of the last seen) for review challenge generation.");
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Exception while retrieving flashcard for review challenge generation.");
-                    }
-                }
-
-                if (!flashcardsForChallenge.Any())
-                {
-                    _logger.LogWarning("No valid flashcard models could be retrieved from the last seen IDs for user {UserId} to generate a review challenge.", userId);
-                    return Enumerable.Empty<ChallengeQuestionResponse>();
-                }
-
-                // 3. Generate challenges using AI Service
-                var distinctFlashcardsForAI = flashcardsForChallenge.DistinctBy(f => f.Id).ToList();
-
-                if (!distinctFlashcardsForAI.Any())
-                {
-                    _logger.LogWarning("No distinct flashcards available for AI generation for user review challenge.");
-                    return Enumerable.Empty<ChallengeQuestionResponse>();
-                }
-
-                var generatedChallenges = await _aiService.GenerateChallengesAsync(distinctFlashcardsForAI);
-
-                var finalChallenges = generatedChallenges.Take(count).ToList();
-
-                _logger.LogInformation("Successfully generated review challenge questions based on recently seen flashcards.");
-                return finalChallenges;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error generating review challenge questions for user.");
+                _logger.LogError(ex, "Error clearing challenge questions for flashcard ID {FlashcardId}", flashcardId);
+                // Re-throw or handle as appropriate for your application's error strategy
                 throw;
             }
         }

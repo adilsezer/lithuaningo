@@ -106,6 +106,11 @@ class ApiClient {
 
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
+            // Log the token for testing purposes
+            if (__DEV__) {
+              // Only log in development mode
+              console.log("Retrieved JWT for testing:", token);
+            }
           }
         } catch (error) {
           console.error(

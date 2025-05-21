@@ -64,10 +64,16 @@ public class AISettings
     public string GeminiApiKey { get; set; } = string.Empty;
 
     /// <summary>
-    /// The model to use for Gemini text generation
+    /// The model to use for Gemini text generation (Pro version, for tasks like flashcard generation)
     /// </summary>
     [Required]
-    public string GeminiTextModelName { get; set; } = "gemini-2.5-pro-preview-05-06";
+    public string GeminiProModelName { get; set; } = "gemini-2.5-pro-preview-05-06";
+
+    /// <summary>
+    /// The model to use for Gemini text generation (Flash version, for tasks like chat and challenge generation)
+    /// </summary>
+    [Required]
+    public string GeminiFlashModelName { get; set; } = "gemini-2.5-flash-preview-05-20";
 
     /// <summary>
     /// Base URL for Gemini API
@@ -86,8 +92,20 @@ public class AISettings
     /// Maximum number of tokens to generate in the chat completion.
     /// This corresponds to 'maxOutputTokens' in Gemini.
     /// </summary>
-    [Range(1, 65536, ErrorMessage = "Token count must be between 1 and 65536 for this Gemini model")]
+    [Range(1, 8192, ErrorMessage = "Token count must be between 1 and 8192 for current Gemini models.")] // Adjusted range to be more generic, actual limit depends on specific model
     public int MaxTokens { get; set; } = 8192;
+
+    /// <summary>
+    /// Default temperature for Gemini generation. Controls randomness. Lower is more deterministic.
+    /// </summary>
+    [Range(0.0, 2.0, ErrorMessage = "Temperature must be between 0.0 and 2.0 for Gemini.")] // Gemini typical range
+    public float DefaultTemperature { get; set; } = 0.7f;
+
+    /// <summary>
+    /// Default Top-P for Gemini generation. Nucleus sampling parameter.
+    /// </summary>
+    [Range(0.0, 1.0, ErrorMessage = "TopP must be between 0.0 and 1.0.")]
+    public float DefaultTopP { get; set; } = 0.9f;
 
     /// <summary>
     /// System message to guide the AI's responses.

@@ -26,5 +26,8 @@ namespace Lithuaningo.API.Models
 
         [Column("type")]
         public ChallengeQuestionType Type { get; set; }
+
+        [Column("flashcard_id")]
+        public Guid? FlashcardId { get; set; }
     }
 }

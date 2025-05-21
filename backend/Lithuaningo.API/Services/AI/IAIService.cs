@@ -27,18 +27,9 @@ public interface IAIService
     /// </summary>
     /// <param name="prompt">The text prompt to send to the AI</param>
     /// <param name="context">Optional context parameters for the request, including session management</param>
-    /// <param name="serviceType">The type of AI service to use (currently only supports "chat")</param>
     /// <returns>The AI's response text</returns>
     /// <exception cref="Exception">Thrown when there's an error processing the request</exception>
-    Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat");
-
-    /// <summary>
-    /// Generates a set of challenge questions using AI based on the provided parameters
-    /// </summary>
-    /// <param name="flashcards">Optional collection of flashcards to use as context for challenge generation</param>
-    /// <returns>A list of challenge questions with multiple choice, true/false, and fill-in-blank options</returns>
-    /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails</exception>
-    Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync(IEnumerable<Flashcard>? flashcards = null);
+    Task<string> GenerateChatResponseAsync(string prompt, Dictionary<string, string>? context = null);
 
     /// <summary>
     /// Generates a set of flashcards using AI based on the provided parameters
@@ -75,4 +66,13 @@ public interface IAIService
     /// <exception cref="ArgumentNullException">Thrown when flashcardFrontText is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
     Task<string> GenerateAudioAsync(string flashcardFrontText, string exampleSentence);
+
+    /// <summary>
+    /// Generates challenge questions for a single flashcard.
+    /// </summary>
+    /// <param name="flashcard">The flashcard to generate challenges for.</param>
+    /// <returns>A list of the generated challenge question DTOs.</returns>
+    /// <exception cref="ArgumentNullException">Thrown when flashcard is null.</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails.</exception>
+    Task<List<ChallengeQuestionResponse>> GenerateChallengesForFlashcardAsync(Flashcard flashcard);
 }

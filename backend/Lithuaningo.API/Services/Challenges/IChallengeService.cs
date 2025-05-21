@@ -1,4 +1,7 @@
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Lithuaningo.API.DTOs.Challenge;
+using Lithuaningo.API.Models;
 
 namespace Lithuaningo.API.Services.Challenges
 {
@@ -7,12 +10,6 @@ namespace Lithuaningo.API.Services.Challenges
     /// </summary>
     public interface IChallengeService
     {
-        /// <summary>
-        /// Generates new challenge questions using AI without checking if questions already exist.
-        /// </summary>
-        /// <returns>The generated challenge questions</returns>
-        Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync();
-
         /// <summary>
         /// Gets or generates daily challenge questions. Will retrieve from cache if available 
         /// for the current day, otherwise will generate new ones.
@@ -26,6 +23,22 @@ namespace Lithuaningo.API.Services.Challenges
         /// <param name="userId">The ID of the user.</param>
         /// <param name="count">The number of challenge questions to generate.</param>
         /// <returns>A list of challenge questions for review.</returns>
-        Task<IEnumerable<ChallengeQuestionResponse>> GenerateReviewChallengeQuestionsAsync(string userId, int count = 10);
+        Task<IEnumerable<ChallengeQuestionResponse>> GetChallengeQuestionsForSeenFlashcardsAsync(string userId, int count = 10);
+
+        /// <summary>
+        /// Generates challenge questions for a given flashcard using the AI service and saves them to the database.
+        /// </summary>
+        /// <param name="flashcard">The flashcard to generate challenges for.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if flashcard is null.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if AI generation or saving fails.</exception>
+        Task GenerateAndSaveChallengesForFlashcardAsync(Flashcard flashcard);
+
+        /// <summary>
+        /// Clears all challenge questions associated with a specific flashcard.
+        /// </summary>
+        /// <param name="flashcardId">The ID of the flashcard whose challenges are to be cleared.</param>
+        /// <returns>A task representing the asynchronous operation.</returns>
+        Task ClearChallengesByFlashcardIdAsync(Guid flashcardId);
     }
 }

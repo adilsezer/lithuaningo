@@ -35,7 +35,7 @@ public class AIController : BaseApiController
     [Authorize]
     [SwaggerOperation(
         Summary = "Process an AI request",
-        Description = "Sends a request to the AI service and returns the response",
+        Description = "Sends a request to the AI service and returns the response. Currently, this endpoint primarily supports 'chat' service type.",
         OperationId = "AI.Process",
         Tags = new[] { "AI" }
     )]
@@ -49,32 +49,39 @@ public class AIController : BaseApiController
         {
             if (string.IsNullOrWhiteSpace(request.Prompt))
             {
-                return BadRequest("Prompt cannot be empty");
+                return BadRequest("Prompt cannot be empty.");
             }
 
-            // Validate service type
-            if (string.IsNullOrWhiteSpace(request.ServiceType))
+            string serviceType = request.ServiceType;
+            if (string.IsNullOrWhiteSpace(serviceType))
             {
-                request.ServiceType = "chat";
+                serviceType = "chat"; // Default to chat
             }
+            serviceType = serviceType.ToLowerInvariant();
 
-            // Process the request
-            var response = await _aiService.ProcessRequestAsync(
-                request.Prompt,
-                request.Context,
-                request.ServiceType);
+            string responseText;
+            if (serviceType == "chat")
+            {
+                // IAIService has GenerateChatResponseAsync(string prompt, Dictionary<string, string>? context)
+                responseText = await _aiService.GenerateChatResponseAsync(request.Prompt, request.Context as Dictionary<string, string>);
+            }
+            else
+            {
+                _logger.LogWarning("ProcessRequest called with unsupported service type: {ServiceType}", request.ServiceType);
+                return BadRequest($"Service type '{request.ServiceType}' is not supported by this endpoint or the underlying AI service's current generic processing capabilities.");
+            }
 
             // Return the response
             return Ok(new AIResponse
             {
-                Response = response,
-                ServiceType = request.ServiceType,
+                Response = responseText,
+                ServiceType = serviceType, // Reflect the processed service type
                 Timestamp = DateTime.UtcNow
             });
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing AI request");
+            _logger.LogError(ex, "Error processing AI request for service type {ServiceType}", request.ServiceType);
             return StatusCode(StatusCodes.Status500InternalServerError,
                 "An error occurred processing your request.");
         }
@@ -99,8 +106,28 @@ public class AIController : BaseApiController
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<AIResponse>> SendChatMessage([FromBody] AIRequest request)
     {
-        // Override the service type to ensure it's processed as a chat request
-        request.ServiceType = "chat";
-        return await ProcessRequest(request);
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Prompt))
+            {
+                return BadRequest("Prompt cannot be empty.");
+            }
+
+            // IAIService has GenerateChatResponseAsync(string prompt, Dictionary<string, string>? context)
+            var responseText = await _aiService.GenerateChatResponseAsync(request.Prompt, request.Context as Dictionary<string, string>);
+
+            return Ok(new AIResponse
+            {
+                Response = responseText,
+                ServiceType = "chat", // Explicitly set service type for chat endpoint
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error processing AI chat message");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                "An error occurred processing your chat message.");
+        }
     }
 }

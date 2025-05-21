@@ -14,4 +14,5 @@ export interface ChallengeQuestionResponse {
   correctAnswer: string;
   exampleSentence?: string;
   type: ChallengeQuestionType;
+  flashcardId?: string;
 }

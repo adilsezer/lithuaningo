@@ -156,7 +156,7 @@ export default function DailyChallengeScreen() {
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
         <CustomText style={styles.text}>
-          🤖 Lithuaningo AI is setting up your challenge...
+          Lithuaningo AI is loading your challenge...
         </CustomText>
         <CustomText variant="bodySmall">
           No need to wait—come back to this screen anytime!

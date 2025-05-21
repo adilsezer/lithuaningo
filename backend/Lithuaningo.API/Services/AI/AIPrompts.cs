@@ -19,68 +19,6 @@ namespace Lithuaningo.API.Services.AI
         "Maintain a supportive, conversational, and encouraging tone. Accuracy in any Lithuanian provided, as well as in cultural and grammatical information, is paramount.";
 
     /// <summary>
-    /// System instructions for challenge generation
-    /// </summary>
-    public const string CHALLENGE_SYSTEM_INSTRUCTIONS = @"You are an AI tasked with creating high-quality Lithuanian language learning challenges. Your primary objective is to generate content that helps users learn natural and grammatically perfect Lithuanian, with all instructions and question prompts provided in English.
-
-OUTPUT FORMAT:
-Return a JSON array containing EXACTLY 10 challenge objects. Each object must have the following properties:
-- question: (string) The question text, which MUST be in English to clearly instruct the user. If the question includes Lithuanian words/phrases to be tested, these should be placed on a new line after the English instruction, using two newline characters (\n\n) for better visual separation (e.g., ""What does the following Lithuanian word mean?\n\n'knyga'"" or ""Complete the sentence below:\n\nAš einu ____ namo."" ).
-- options: (string[]) An array of 4 possible answers (or 2 for true/false). All Lithuanian text in options must be natural and grammatically flawless.
-- correctAnswer: (string) The correct answer, which must exactly match one of the options. Ensure its Lithuanian is natural and correct.
-- exampleSentence: (string) A practical, natural-sounding Lithuanian example sentence that uses or relates to the content being tested. This sentence MUST be grammatically perfect.
-- type: (integer) The challenge type: 0 for MultipleChoice, 1 for TrueFalse, 2 for FillInTheBlank.
-
-CORE RULES:
-1.  NATURAL LITHUANIAN: All generated Lithuanian text (within options, correctAnswer, exampleSentence, and as part of testable content within English questions) MUST be natural, idiomatic, and grammatically pristine.
-2.  ENGLISH FOR ALL INSTRUCTIONS: All parts of the 'question' field that instruct the user what to do MUST be in English.
-3.  SOURCE MATERIAL: Strictly base all challenges on the vocabulary, phrases, and grammatical structures found in the provided flashcard data from the user message.
-4.  QUESTION COUNT & DISTRIBUTION: Generate EXACTLY 10 questions: 4 multiple-choice (type 0), 4 true/false (type 1), and 2 fill-in-the-blank (type 2).
-5.  DIFFICULTY MIX: Create a balanced set: 5 beginner-level, 3 intermediate-level, and 2 advanced-level questions, based on the flashcard data.
-6.  VALIDATION: Ensure the output is a single, valid, well-formed JSON array.
-7.  TESTING FOCUS: Each challenge should effectively test vocabulary comprehension, grammatical understanding, or sentence construction skills related to Lithuanian.
-
-DIFFICULTY LEVELS (apply to the selection of flashcard content for questions):
-- Beginner: Common greetings, basic vocabulary, simple present tense, basic numbers. Questions should be straightforward.
-- Intermediate: Past/future tenses, more specialized vocabulary, common cases (dative, accusative, genitive), more complex sentences.
-- Advanced: Complex grammatical forms (participles, subjunctive), idiomatic expressions, nuanced vocabulary.
-
-QUESTION TEMPLATES (All question prompts must be in English):
-
-Multiple Choice (type=0):
-  *   Question (Vocabulary LT > EN): ""What does the following Lithuanian word mean?\n\n'{Lithuanian word}'?"" (Options: English translations)
-  *   Question (Vocabulary EN > LT): ""Which Lithuanian word means the following English word?\n\n'{English word}'?"" (Options: Lithuanian words)
-  *   Question (Grammar): ""What is the grammatical form of the following Lithuanian word?\n\n'{Lithuanian word}'?"" (Options: Grammatical descriptions in English)
-  *   Question (Sentence order): ""Arrange the following Lithuanian words into a correct sentence:\n\n{scrambled Lithuanian words from example sentence}"" (Options: Different Lithuanian word orders of the sentence)
-
-True/False (type=1):
-  *   Question (LT > EN meaning): ""Does the Lithuanian word below mean the English word provided?\n\nLithuanian: '{Lithuanian word}'\n\nEnglish meaning: '{English word}'\n\n(True or False)""
-  *   Question (Grammar): ""Is the Lithuanian word '{Lithuanian word}' grammatically {grammatical form description} as stated below?\n\n(True or False)""
-  *   Question (Sentence translation verification): ""Is '{English translation}' the correct English translation of the following Lithuanian sentence?\n\n'{Lithuanian example sentence}'\n\n(True or False)""
-
-Fill in the Blank (type=2):
-  *   Question: ""Choose the correct Lithuanian word to complete the sentence below:\n\n{Lithuanian sentence with a ____ blank}"" (Options: Lithuanian words to fill the blank)
-
-EXAMPLE OUTPUT (Illustrative, ensure EXACTLY 10 questions following all rules and distributions):
-[
-  {
-    ""question"": ""What does the following Lithuanian word mean?\n\n'Labas'?"",
-    ""options"": [""Hello"", ""Goodbye"", ""Thank you"", ""Please""],
-    ""correctAnswer"": ""Hello"",
-    ""exampleSentence"": ""Labas, kaip tau sekasi?"",
-    ""type"": 0
-  },
-  // ... (Include 8 more unique questions following all rules and distributions) ...
-  {
-  ""question"": ""Choose the correct Lithuanian word to complete the sentence below:\n\nAš ____ į parduotuvę pirkti duonos."" ,
-    ""options"": [""einu"", ""valgau"", ""miegu"", ""kalbu""],
-    ""correctAnswer"": ""einu"",
-    ""exampleSentence"": ""Aš einu į parduotuvę kasdien pirkti šviežios duonos."",
-    ""type"": 2
-  }
-]";
-
-    /// <summary>
     /// System instructions for flashcard generation
     /// </summary>
     public const string FLASHCARD_SYSTEM_INSTRUCTIONS = @"You are an AI expert in Lithuanian linguistics, tasked with creating high-quality language flashcards. Your primary goal is to produce content that is natural, grammatically impeccable, and genuinely helpful for learning Lithuanian.
@@ -178,5 +116,87 @@ EXAMPLE OUTPUT:
     "While the sentence '{1}' provides context, the icon should focus on a simple, clear representation of '{0}'. Avoid overly complex scenes. " +
     "**Strictly prohibit any text, letters, numbers, symbols, borders, or frames** in the image. " +
     "The final image must be an easily recognizable icon of '{0}', suitable for a language learning flashcard, reflecting the context of '{1}'.";
+
+    /// <summary>
+    /// System instructions for generating challenge questions for a single flashcard.
+    /// </summary>
+    public const string FLASHCARD_CHALLENGE_GENERATION_SYSTEM_INSTRUCTIONS = @"You are an AI tasked with creating high-quality Lithuanian language learning challenges based on a single provided flashcard. Your primary objective is to generate content that helps users learn natural and grammatically perfect Lithuanian, with all instructions and question prompts provided in English.
+
+The input will be a single flashcard object with: frontText (Lithuanian), backText (English), exampleSentence (Lithuanian), exampleSentenceTranslation (English), difficulty, and categories.
+
+OUTPUT FORMAT:
+Return a JSON array containing EXACTLY 4 challenge objects. Each object must have the following properties:
+- question: (string) The question text, which MUST be in English to clearly instruct the user. If the question includes Lithuanian words/phrases to be tested, these should be placed on a new line after the English instruction, using two newline characters (\n\n) for better visual separation.
+- options: (string[]) An array of 4 possible answers (or 2 for true/false). All Lithuanian text in options must be natural and grammatically flawless. For RearrangeTheSentence, provide 4 distinct orderings of the sentence words.
+- correctAnswer: (string) The correct answer, which must exactly match one of the options. Ensure its Lithuanian is natural and correct.
+- exampleSentence: (string) The Lithuanian example sentence from the provided flashcard. This sentence MUST be grammatically perfect.
+- type: (integer) The challenge type: 0 for MultipleChoice, 1 for TrueFalse, 2 for FillInTheBlank, 3 for RearrangeTheSentence.
+
+CORE RULES:
+1.  FLASHCARD FOCUS: Strictly base all challenges (question, options, correctAnswer) on the vocabulary, phrases, and grammatical structures found in the *single provided flashcard data*.
+2.  NATURAL LITHUANIAN: All generated Lithuanian text (within options, correctAnswer, and as part of testable content within English questions) MUST be natural, idiomatic, and grammatically pristine.
+3.  ENGLISH FOR ALL INSTRUCTIONS: All parts of the 'question' field that instruct the user what to do MUST be in English.
+4.  QUESTION COUNT & TYPES: Generate EXACTLY 4 questions, one of each type:
+    *   1 MultipleChoice (type 0)
+    *   1 TrueFalse (type 1)
+    *   1 FillInTheBlank (type 2)
+    *   1 RearrangeTheSentence (type 3)
+5.  VALIDATION: Ensure the output is a single, valid, well-formed JSON array of 4 objects.
+6.  TESTING FOCUS: Each challenge should effectively test vocabulary comprehension, grammatical understanding, or sentence construction skills related to the Lithuanian content of the provided flashcard.
+7.  DIFFICULTY: The difficulty of the questions should align with the difficulty of the provided flashcard.
+
+QUESTION TEMPLATES (All question prompts must be in English, adapt them to the flashcard content):
+
+Multiple Choice (type=0): (Test frontText to backText, or vice-versa, or a concept from notes if applicable)
+  *   Question (Vocabulary LT > EN): ""What is the English meaning of the Lithuanian word/phrase below?\n\n'{flashcard.frontText}'?"" (Options: flashcard.backText and 3 plausible but incorrect English translations)
+  *   Question (Vocabulary EN > LT): ""Which Lithuanian word/phrase means the following?\n\n'{flashcard.backText}'?"" (Options: flashcard.frontText and 3 plausible but incorrect Lithuanian words/phrases of similar type/difficulty)
+
+True/False (type=1): (Test correctness of translation or a statement about the flashcard)
+  *   Question: ""Does the Lithuanian word/phrase '{flashcard.frontText}' mean '{a plausible English translation (can be correct or incorrect)}' in English?\n\n(True or False)""
+  *   Question: ""Is the following statement about '{flashcard.frontText}' true or false based on common knowledge or its typical usage?\n\n'{Statement about the flashcard item, could be related to its category or a simple fact related to it}'\n\n(True or False)""
+
+Fill in the Blank (type=2): (Use the flashcard's example sentence)
+  *   Question: ""Complete the Lithuanian sentence below by choosing the correct word. The sentence is based on the flashcard for '{flashcard.frontText}'.\n\n'{flashcard.exampleSentence with frontText or a key word blanked out with ____}'?"" (Options: The correct word from the blank and 3 plausible but incorrect Lithuanian words that could fit grammatically but change meaning or are contextually wrong)
+
+Rearrange The Sentence (type=3): (Use the flashcard's example sentence)
+  *   Question: ""The following Lithuanian words are from the example sentence for '{flashcard.frontText}'. Arrange them into a grammatically correct sentence.\n\n'{Scrambled words from flashcard.exampleSentence}'"" (Options: Four different orderings of the words, one being the correct flashcard.exampleSentence, and three being plausible but incorrect orderings.)
+
+EXAMPLE OUTPUT (Illustrative, for a flashcard like: frontText=""knyga"", backText=""book"", exampleSentence=""Aš skaitau įdomią knygą."", difficulty=0):
+[
+  {
+    ""question"": ""What is the English meaning of the Lithuanian word below?\n\n'knyga'?"",
+    ""options"": [""book"", ""pen"", ""table"", ""house""],
+    ""correctAnswer"": ""book"",
+    ""exampleSentence"": ""Aš skaitau įdomią knygą."",
+    ""type"": 0
+  },
+  {
+    ""question"": ""Does the Lithuanian word 'knyga' mean 'letter' in English?\n\n(True or False)"",
+    ""options"": [""True"", ""False""],
+    ""correctAnswer"": ""False"",
+    ""exampleSentence"": ""Aš skaitau įdomią knygą."",
+    ""type"": 1
+  },
+  {
+    ""question"": ""Complete the Lithuanian sentence below by choosing the correct word. The sentence is based on the flashcard for 'knyga'.\n\nAš skaitau įdomią ____."",
+    ""options"": [""knygą"", ""filmą"", ""dainą"", ""laišką""],
+    ""correctAnswer"": ""knygą"",
+    ""exampleSentence"": ""Aš skaitau įdomią knygą."",
+    ""type"": 2
+  },
+  {
+    ""question"": ""The following Lithuanian words are from the example sentence for 'knyga'. Arrange them into a grammatically correct sentence.\n\n'įdomią Aš knygą skaitau'"",
+    ""options"": [
+        ""Aš skaitau įdomią knygą."",
+        ""Skaitau Aš knygą įdomią."",
+        ""Įdomią knygą Aš skaitau."",
+        ""Aš įdomią skaitau knygą.""
+    ],
+    ""correctAnswer"": ""Aš skaitau įdomią knygą."",
+    ""exampleSentence"": ""Aš skaitau įdomią knygą."",
+    ""type"": 3
+  }
+]
+""";
   }
 }

@@ -76,19 +76,17 @@ public class AIService : IAIService
     /// Gets the model name used by this service (primary text model)
     /// </summary>
     /// <returns>The name of the AI model</returns>
-    public string GetModelName() => _aiSettings.GeminiTextModelName;
+    public string GetModelName() => _aiSettings.GeminiProModelName;
 
     /// <summary>
     /// Processes an AI request and returns a response
     /// </summary>
     /// <param name="prompt">The text prompt to send to the AI</param>
     /// <param name="context">Optional context parameters for the request</param>
-    /// <param name="serviceType">The type of AI service to use (chat or challenge)</param>
     /// <returns>The AI's response text</returns>
-    public async Task<string> ProcessRequestAsync(string prompt, Dictionary<string, string>? context = null, string serviceType = "chat")
+    public async Task<string> GenerateChatResponseAsync(string prompt, Dictionary<string, string>? context = null)
     {
-        // serviceType is not strictly used here anymore for differentiating core logic vs Gemini, but kept for interface compatibility
-        _logger.LogInformation("Processing AI request with Gemini for service type: {ServiceType}", serviceType);
+        _logger.LogInformation("Processing AI chat request with Gemini.");
 
         var sessionId = context?.GetValueOrDefault("sessionId") ?? "default_session";
 
@@ -124,11 +122,16 @@ public class AIService : IAIService
         }
 
         var httpClient = _httpClientFactory.CreateClient("Gemini");
-        var requestUrl = $"{_aiSettings.GeminiApiBaseUrl}/{_aiSettings.GeminiApiVersion}/models/{_aiSettings.GeminiTextModelName}:generateContent?key={_aiSettings.GeminiApiKey}";
+        var requestUrl = $"{_aiSettings.GeminiApiBaseUrl}/{_aiSettings.GeminiApiVersion}/models/{_aiSettings.GeminiFlashModelName}:generateContent?key={_aiSettings.GeminiApiKey}";
 
         var geminiRequest = new GeminiTextRequest(
             Contents: conversationHistory.ToList(), // Send the current history
-            GenerationConfig: new GeminiGenerationConfig { MaxOutputTokens = _aiSettings.MaxTokens }
+            GenerationConfig: new GeminiGenerationConfig
+            {
+                Temperature = _aiSettings.DefaultTemperature,
+                TopP = _aiSettings.DefaultTopP,
+                MaxOutputTokens = _aiSettings.MaxTokens
+            }
         );
 
         try
@@ -366,94 +369,6 @@ public class AIService : IAIService
     }
 
     /// <summary>
-    /// Generates a set of challenge questions using AI based on the provided parameters
-    /// </summary>
-    /// <param name="flashcards">Optional collection of flashcards to use as context for challenge generation</param>
-    /// <returns>A list of challenge questions with multiple choice, true/false, and fill-in-blank options</returns>
-    /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails</exception>
-    public async Task<List<ChallengeQuestionResponse>> GenerateChallengesAsync(IEnumerable<Flashcard>? flashcards = null)
-    {
-        const int REQUIRED_QUESTION_COUNT = 10;
-
-        return await RetryWithBackoffAsync(async (attempt) =>
-        {
-            _logger.LogInformation("Generating challenges with AI - Attempt: {Attempt}", attempt);
-
-            var systemInstructions = AIPrompts.CHALLENGE_SYSTEM_INSTRUCTIONS;
-            var userPromptBuilder = new StringBuilder();
-
-            if (flashcards != null && flashcards.Any())
-            {
-                userPromptBuilder.AppendLine("Use the following Lithuanian flashcards as your source material for creating the challenges:");
-                int counter = 0;
-                foreach (var card in flashcards)
-                {
-                    counter++;
-                    userPromptBuilder.AppendLine($"\nFlashcard #{counter}:");
-                    userPromptBuilder.AppendLine($"- Lithuanian: {card.FrontText}");
-                    userPromptBuilder.AppendLine($"- English: {card.BackText}");
-                    userPromptBuilder.AppendLine($"- Example: {card.ExampleSentence}");
-                    userPromptBuilder.AppendLine($"- Example Translation: {card.ExampleSentenceTranslation}");
-                    userPromptBuilder.AppendLine($"- Difficulty: {card.Difficulty}");
-                    if (counter >= 15) break;
-                }
-            }
-            else
-            {
-                userPromptBuilder.AppendLine("Create Lithuanian language challenges using a range of vocabulary and grammar concepts.");
-                userPromptBuilder.AppendLine("Include common words and useful phrases to test language comprehension at various levels.");
-            }
-
-            // Combine system instructions and user prompt for ProcessRequestAsync
-            // Gemini chat usually takes a list of contents. For a one-off generation like this,
-            // we can send the system instructions as part of the main prompt or rely on the general system message in ProcessRequestAsync.
-            // For now, let's prepend the specific system instructions to the user prompt for clarity to the model for this specific task.
-            var fullPrompt = systemInstructions + "\n\n" + userPromptBuilder.ToString();
-
-            // Call the refactored ProcessRequestAsync. No specific session context for this one-off generation.
-            var jsonResponse = await ProcessRequestAsync(fullPrompt, context: null, serviceType: "challenge_generation");
-
-            if (string.IsNullOrEmpty(jsonResponse))
-            {
-                _logger.LogWarning("AI returned empty response for challenge generation on attempt {Attempt}.", attempt);
-                throw new InvalidOperationException("AI returned empty response for challenge generation");
-            }
-
-            var jsonContent = ExtractJsonFromAiResponse(jsonResponse);
-            if (string.IsNullOrEmpty(jsonContent))
-            {
-                throw new InvalidOperationException("Failed to extract JSON content from AI response");
-            }
-
-            jsonContent = ConvertStringTypeToIntIfNeeded(jsonContent);
-            var questions = JsonSerializer.Deserialize<List<ChallengeQuestionResponse>>(
-                jsonContent,
-                JsonSettings.AiOptions
-            );
-
-            if (questions == null || questions.Count == 0 || !ValidateGeneratedChallenges(questions))
-            {
-                throw new InvalidOperationException("Generated questions failed validation");
-            }
-
-            // Check if we have exactly the required number of questions
-            if (questions.Count != REQUIRED_QUESTION_COUNT)
-            {
-                _logger.LogWarning("AI returned fewer valid questions than required. Will retry.");
-                throw new InvalidOperationException($"AI generated {questions.Count} questions but {REQUIRED_QUESTION_COUNT} are required");
-            }
-
-            // Generate IDs for each question
-            foreach (var question in questions)
-            {
-                question.Id = Guid.NewGuid();
-            }
-
-            return questions;
-        });
-    }
-
-    /// <summary>
     /// Generates a set of flashcards using AI based on the provided parameters
     /// </summary>
     /// <param name="request">The parameters for flashcard generation, including primary category and difficulty</param>
@@ -463,82 +378,62 @@ public class AIService : IAIService
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or empty</exception>
     public async Task<List<Flashcard>> GenerateFlashcardsAsync(FlashcardRequest request, IEnumerable<string>? existingFlashcardFrontTexts = null)
     {
-        ArgumentNullException.ThrowIfNull(request);
+        _logger.LogInformation("Attempting to generate flashcards with AI for category {Category} and difficulty {Difficulty}", request.PrimaryCategory, request.Difficulty);
 
-        return await RetryWithBackoffAsync(async (attempt) =>
+        return await RetryWithBackoffAsync(async attempt =>
         {
             _logger.LogInformation("Generating flashcards with AI - Attempt: {Attempt}, Category: {Category}, Difficulty: {Difficulty}", attempt, request.PrimaryCategory, request.Difficulty);
+            var flashcardGenerationUserPrompt = BuildFlashcardGenerationUserPrompt(request, existingFlashcardFrontTexts);
 
-            var systemInstructions = AIPrompts.FLASHCARD_SYSTEM_INSTRUCTIONS;
-            var userPromptBuilder = new StringBuilder()
-                .AppendLine($"Create {request.Count} Lithuanian language flashcards.")
-                .AppendLine($"Category: {request.PrimaryCategory}")
-                .AppendLine($"Difficulty: {request.Difficulty}")
-                .AppendLine($"Primary Category: {request.PrimaryCategory} (category code: {(int)request.PrimaryCategory})");
+            var aiResponseText = await ExecuteGeminiGenerationRequestAsync(
+                _aiSettings.GeminiProModelName,
+                AIPrompts.FLASHCARD_SYSTEM_INSTRUCTIONS,
+                flashcardGenerationUserPrompt,
+                new GeminiGenerationConfig // Use default generation config for flashcards
+                {
+                    Temperature = _aiSettings.DefaultTemperature,
+                    TopP = _aiSettings.DefaultTopP,
+                    MaxOutputTokens = _aiSettings.MaxTokens,
+                    // CandidateCount is typically 1 for Gemini text models and might not be needed here
+                }
+            );
 
-            if (existingFlashcardFrontTexts != null && existingFlashcardFrontTexts.Any())
+            if (string.IsNullOrWhiteSpace(aiResponseText))
             {
-                userPromptBuilder.AppendLine("\nIMPORTANT: Do NOT create flashcards similar to these existing words:");
-                var existingWords = string.Join(", ",
-                    existingFlashcardFrontTexts
-                    .Where(t => !string.IsNullOrEmpty(t))
-                    .OrderBy(t => t)
-                    .Select(t => t.Trim()));
-                userPromptBuilder.AppendLine(existingWords);
-                userPromptBuilder.AppendLine("\nCreate only flashcards that are conceptually distinct from these.");
+                _logger.LogWarning("AI response was null or whitespace on attempt {Attempt}.", attempt);
+                throw new InvalidOperationException("AI response was null or whitespace.");
             }
 
-            var fullPrompt = systemInstructions + "\n\n" + userPromptBuilder.ToString();
-
-            var jsonResponse = await ProcessRequestAsync(fullPrompt, context: null, serviceType: "flashcard_generation");
-
-            if (string.IsNullOrEmpty(jsonResponse))
-            {
-                _logger.LogWarning("AI returned empty response for flashcard generation on attempt {Attempt}.", attempt);
-                throw new InvalidOperationException("AI returned empty response for flashcard generation");
-            }
-
-            var jsonContent = ExtractJsonFromAiResponse(jsonResponse);
-            if (string.IsNullOrEmpty(jsonContent))
-            {
-                _logger.LogWarning("Failed to extract JSON content from AI response for flashcard generation on attempt {Attempt}. Response: {JsonResponse}", attempt, jsonResponse);
-                throw new InvalidOperationException("Failed to extract JSON content from AI response for flashcard generation");
-            }
-
-            List<Flashcard>? flashcards = null;
             try
             {
-                flashcards = JsonSerializer.Deserialize<List<Flashcard>>(
-                    jsonContent,
-                    JsonSettings.AiOptions
-                );
+                // aiResponseText from ExecuteGeminiGenerationRequestAsync is already the cleaned JSON string for flashcards.
+                // No need to deserialize as GeminiTextResponse first or call ExtractJsonFromAiResponse again.
+                var flashcards = JsonSerializer.Deserialize<List<Flashcard>>(aiResponseText, JsonSettings.AiOptions);
+
+                if (flashcards == null || !flashcards.Any())
+                {
+                    _logger.LogWarning("Deserialized flashcards list is null or empty on attempt {Attempt}. Cleaned JSON: {CleanedJson}", attempt, aiResponseText);
+                    throw new InvalidOperationException("Deserialized flashcards list is null or empty.");
+                }
+
+                if (!ValidateGeneratedFlashcards(flashcards))
+                {
+                    _logger.LogWarning("Generated flashcards failed validation on attempt {Attempt}. Count: {FlashcardCount}", attempt, flashcards.Count);
+                    throw new InvalidOperationException("Generated flashcards failed validation.");
+                }
+                _logger.LogInformation("Successfully generated and validated {FlashcardCount} flashcards on attempt {Attempt}.", flashcards.Count, attempt);
+                return flashcards;
             }
             catch (JsonException jsonEx)
             {
-                _logger.LogError(jsonEx, "Failed to deserialize flashcards JSON on attempt {Attempt}. JSON: {JsonContent}", attempt, jsonContent);
+                _logger.LogError(jsonEx, "Failed to deserialize flashcards JSON on attempt {Attempt}. JSON: {JsonResponse}", attempt, aiResponseText);
                 throw new InvalidOperationException("Failed to deserialize flashcards JSON", jsonEx);
             }
-
-            if (flashcards == null || flashcards.Count == 0 || !ValidateGeneratedFlashcards(flashcards))
+            catch (Exception ex)
             {
-                _logger.LogWarning("Generated flashcards failed validation on attempt {Attempt}. Count: {Count}", attempt, flashcards?.Count ?? 0);
-                throw new InvalidOperationException("Generated flashcards failed validation");
+                _logger.LogError(ex, "An unexpected error occurred during flashcard generation on attempt {Attempt}.", attempt);
+                throw; // Re-throw original exception to be caught by RetryWithBackoffAsync for retries
             }
-
-            foreach (var flashcard in flashcards)
-            {
-                flashcard.Id = Guid.NewGuid();
-                flashcard.Categories ??= new List<int>();
-                int primaryCategoryValue = (int)request.PrimaryCategory;
-                if (!flashcard.Categories.Contains(primaryCategoryValue))
-                {
-                    flashcard.Categories.Add(primaryCategoryValue);
-                }
-            }
-
-            var limitedFlashcards = flashcards.Take(request.Count).ToList();
-            _logger.LogInformation("Successfully generated {Count} flashcards on attempt {Attempt}.", limitedFlashcards.Count, attempt);
-            return limitedFlashcards;
         });
     }
 
@@ -560,9 +455,135 @@ public class AIService : IAIService
         }
     }
 
+    public async Task<List<ChallengeQuestionResponse>> GenerateChallengesForFlashcardAsync(Flashcard flashcard)
+    {
+        if (flashcard == null)
+        {
+            throw new ArgumentNullException(nameof(flashcard));
+        }
+
+        return await RetryWithBackoffAsync(async (attempt) =>
+        {
+            _logger.LogInformation("Attempting to generate challenges for flashcard ID: {FlashcardId} - Attempt {Attempt}", flashcard.Id, attempt);
+
+            var flashcardJson = JsonSerializer.Serialize(new
+            {
+                frontText = flashcard.FrontText,
+                backText = flashcard.BackText,
+                exampleSentence = flashcard.ExampleSentence,
+                exampleSentenceTranslation = flashcard.ExampleSentenceTranslation,
+                difficulty = (int)flashcard.Difficulty,
+                categories = flashcard.Categories
+            }, JsonSettings.AiOptions);
+
+            var userPrompt = $"Generate challenges for the following flashcard:\n{flashcardJson}";
+
+            var generationConfig = new GeminiGenerationConfig
+            {
+                Temperature = _aiSettings.DefaultTemperature,
+                MaxOutputTokens = _aiSettings.MaxTokens,
+                TopP = _aiSettings.DefaultTopP
+            };
+
+            var extractedJson = await ExecuteGeminiGenerationRequestAsync(
+                _aiSettings.GeminiFlashModelName,
+                AIPrompts.FLASHCARD_CHALLENGE_GENERATION_SYSTEM_INSTRUCTIONS,
+                userPrompt,
+                generationConfig
+            );
+
+            List<ChallengeQuestionResponse>? challengeResponses;
+            try
+            {
+                challengeResponses = JsonSerializer.Deserialize<List<ChallengeQuestionResponse>>(extractedJson, JsonSettings.AiOptions);
+            }
+            catch (JsonException jsonEx)
+            {
+                _logger.LogError(jsonEx, "Error deserializing challenge questions JSON for flashcard {FlashcardId} on attempt {Attempt}. Extracted JSON: {ExtractedJson}", flashcard.Id, attempt, extractedJson);
+                throw new InvalidOperationException("Failed to deserialize AI-generated challenge questions for flashcard.", jsonEx);
+            }
+
+            if (challengeResponses == null || !challengeResponses.Any() || !ValidateGeneratedChallenges(challengeResponses))
+            {
+                _logger.LogWarning("Generated challenges for flashcard {FlashcardId} on attempt {Attempt} are null, empty, or invalid. JSON: {ExtractedJson}", flashcard.Id, attempt, extractedJson);
+                throw new InvalidOperationException("AI generated invalid or empty challenge questions for flashcard.");
+            }
+
+            _logger.LogInformation("Successfully generated {Count} challenges for flashcard ID: {FlashcardId} on attempt {Attempt}", challengeResponses.Count, flashcard.Id, attempt);
+            return challengeResponses;
+        });
+    }
+
     #endregion
 
     #region Private Methods
+
+    private async Task<string> ExecuteGeminiGenerationRequestAsync(
+        string modelName,
+        string systemPrompt,
+        string userPrompt,
+        GeminiGenerationConfig generationConfig,
+        string? clientName = "GeminiApiClient") // Allow specifying client name if needed, defaults to GeminiApiClient
+    {
+        var client = _httpClientFactory.CreateClient(clientName ?? "GeminiApiClient");
+        var requestUrl = $"{_aiSettings.GeminiApiBaseUrl}/v1beta/models/{modelName}:generateContent?key={_aiSettings.GeminiApiKey}";
+
+        // Correctly structure contents for Gemini: System instruction as first user message, then model ack, then actual user prompt
+        var contents = new List<GeminiContent>
+        {
+            new GeminiContent(Parts: new List<GeminiPart> { new GeminiPart(systemPrompt) }, Role: "user"), // System prompt as first user turn
+            new GeminiContent(Parts: new List<GeminiPart> { new GeminiPart("Okay, I understand the instructions.") }, Role: "model"), // Model's acknowledgment
+            new GeminiContent(Parts: new List<GeminiPart> { new GeminiPart(userPrompt) }, Role: "user") // Actual user prompt
+        };
+
+        var geminiRequest = new GeminiTextRequest(
+            Contents: contents,
+            GenerationConfig: generationConfig
+        );
+
+        var jsonRequest = JsonSerializer.Serialize(geminiRequest, JsonSettings.AiOptions);
+        string? rawResponseString;
+
+        var httpResponse = await client.PostAsync(requestUrl, new StringContent(jsonRequest, Encoding.UTF8, "application/json"));
+        rawResponseString = await httpResponse.Content.ReadAsStringAsync();
+
+        if (!httpResponse.IsSuccessStatusCode)
+        {
+            _logger.LogError("Gemini API error. Status: {StatusCode}, Response: {RawResponse}", httpResponse.StatusCode, rawResponseString);
+            httpResponse.EnsureSuccessStatusCode(); // Let this throw for handling by RetryWithBackoffAsync or the caller
+        }
+
+        if (string.IsNullOrWhiteSpace(rawResponseString))
+        {
+            _logger.LogError("Received null or empty response from Gemini API.");
+            throw new InvalidOperationException("AI service returned an empty response.");
+        }
+
+        // Attempt to deserialize the entire response to get to the actual content
+        var geminiResponse = JsonSerializer.Deserialize<GeminiTextResponse>(rawResponseString, JsonSettings.AiOptions);
+
+        if (geminiResponse?.Candidates == null || !geminiResponse.Candidates.Any() ||
+            geminiResponse.Candidates[0].Content?.Parts == null || !geminiResponse.Candidates[0].Content.Parts.Any() ||
+            string.IsNullOrWhiteSpace(geminiResponse.Candidates[0].Content.Parts[0].Text))
+        {
+            _logger.LogError("Could not extract valid content text from Gemini API response. Raw response: {RawResponse}", rawResponseString);
+            throw new InvalidOperationException("Failed to extract content text from AI response.");
+        }
+
+        // The actual text content is what we expect to be the JSON payload (for flashcards/challenges)
+        var contentText = geminiResponse.Candidates[0].Content.Parts[0].Text;
+
+        // Now, extract the JSON from the content text, which might be wrapped in markdown
+        var extractedJson = ExtractJsonFromAiResponse(contentText);
+
+        if (string.IsNullOrWhiteSpace(extractedJson))
+        {
+            _logger.LogError("Could not extract valid JSON from the AI's text content. Original content text: {ContentText}, Raw response: {RawResponse}", contentText, rawResponseString);
+            throw new InvalidOperationException("Failed to extract JSON from AI's text content.");
+        }
+
+        return extractedJson;
+    }
 
     /// <summary>
     /// Validates the generated challenges
@@ -625,27 +646,6 @@ public class AIService : IAIService
         return content;
     }
 
-    /// <summary>
-    /// Converts string type values to integers if needed (to handle AI sometimes returning string enum values)
-    /// </summary>
-    private static string ConvertStringTypeToIntIfNeeded(string jsonContent)
-    {
-        // Try to handle cases where the type is provided as a string like "0", "1", "2"
-        // or as words like "MultipleChoice", "TrueFalse", "FillInTheBlank"
-        var typePatterns = new Dictionary<string, string>
-        {
-            { @"""type""\s*:\s*""0""", @"""type"":0" },
-            { @"""type""\s*:\s*""1""", @"""type"":1" },
-            { @"""type""\s*:\s*""2""", @"""type"":2" },
-            { @"""type""\s*:\s*""MultipleChoice""", @"""type"":0" },
-            { @"""type""\s*:\s*""TrueFalse""", @"""type"":1" },
-            { @"""type""\s*:\s*""FillInTheBlank""", @"""type"":2" }
-        };
-
-        return typePatterns.Aggregate(jsonContent, (current, pattern) =>
-            current.Replace(pattern.Key, pattern.Value));
-    }
-
     private async Task<T> RetryWithBackoffAsync<T>(Func<int, Task<T>> operation, int maxAttempts = 3)
     {
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
@@ -681,6 +681,28 @@ public class AIService : IAIService
             !string.IsNullOrWhiteSpace(flashcard.ExampleSentence) &&
             !string.IsNullOrWhiteSpace(flashcard.ExampleSentenceTranslation) &&
             Enum.IsDefined(typeof(DifficultyLevel), flashcard.Difficulty));
+    }
+
+    private string BuildFlashcardGenerationUserPrompt(FlashcardRequest request, IEnumerable<string>? existingFlashcardFrontTexts = null)
+    {
+        var userPromptBuilder = new StringBuilder()
+            .AppendLine($"Create {request.Count} Lithuanian language flashcards.")
+            .AppendLine($"Category: {request.PrimaryCategory}")
+            .AppendLine($"Difficulty: {request.Difficulty}")
+            .AppendLine($"Primary Category: {request.PrimaryCategory} (category code: {(int)request.PrimaryCategory})");
+
+        if (existingFlashcardFrontTexts != null && existingFlashcardFrontTexts.Any())
+        {
+            userPromptBuilder.AppendLine("\nIMPORTANT: Do NOT create flashcards similar to these existing words:");
+            var existingWords = string.Join(", ",
+                existingFlashcardFrontTexts
+                .Where(t => !string.IsNullOrEmpty(t))
+                .OrderBy(t => t)
+                .Select(t => t.Trim()));
+            userPromptBuilder.AppendLine(existingWords);
+            userPromptBuilder.AppendLine("\nCreate only flashcards that are conceptually distinct from these.");
+        }
+        return userPromptBuilder.ToString();
     }
 
     #endregion

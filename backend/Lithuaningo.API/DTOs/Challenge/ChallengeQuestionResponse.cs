@@ -11,5 +11,6 @@ namespace Lithuaningo.API.DTOs.Challenge
         public string CorrectAnswer { get; set; } = string.Empty;
         public string? ExampleSentence { get; set; }
         public ChallengeQuestionType Type { get; set; }
+        public Guid? FlashcardId { get; set; }
     }
 }

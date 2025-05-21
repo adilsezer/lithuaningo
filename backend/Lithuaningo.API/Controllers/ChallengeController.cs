@@ -103,7 +103,7 @@ namespace Lithuaningo.API.Controllers
                 }
 
                 _logger.LogInformation("Fetching review challenge questions for user (Premium).");
-                var questions = await _challengeService.GenerateReviewChallengeQuestionsAsync(effectiveUserId, count);
+                var questions = await _challengeService.GetChallengeQuestionsForSeenFlashcardsAsync(effectiveUserId, count);
                 if (questions == null || !questions.Any())
                 {
                     _logger.LogInformation("No review questions generated or found.");
