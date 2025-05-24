@@ -6,13 +6,15 @@ import CustomText from "./CustomText";
 
 interface CategoryGridProps {
   categories: FlashcardCategory[];
-  onSelectCategory: (category: FlashcardCategory) => void;
+  onPressPractice: (category: FlashcardCategory) => void;
+  onPressMaster?: (category: FlashcardCategory) => void;
   title?: string;
 }
 
 const CategoryGrid: React.FC<CategoryGridProps> = ({
   categories,
-  onSelectCategory,
+  onPressPractice,
+  onPressMaster,
   title,
 }) => {
   const theme = useTheme();
@@ -31,7 +33,11 @@ const CategoryGrid: React.FC<CategoryGridProps> = ({
       <FlatList
         data={categories}
         renderItem={({ item }) => (
-          <CategoryCard category={item} onPress={onSelectCategory} />
+          <CategoryCard
+            category={item}
+            onPressPractice={onPressPractice}
+            onPressMaster={onPressMaster}
+          />
         )}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}

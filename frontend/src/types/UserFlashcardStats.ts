@@ -11,7 +11,7 @@ export interface UserFlashcardStatResponse {
   viewCount: number;
   correctCount: number;
   incorrectCount: number;
-  lastAnsweredCorrectly?: boolean;
+  lastAnsweredCorrectly: boolean | null;
   masteryLevel: number;
 }
 

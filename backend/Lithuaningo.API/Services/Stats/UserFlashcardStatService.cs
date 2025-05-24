@@ -89,16 +89,14 @@ namespace Lithuaningo.API.Services.Stats
 
                 var resultStat = upsertResult.Models?.FirstOrDefault() ?? statEntity;
 
-                // Invalidate cache
-                await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-                var cacheKey = $"{CacheKeyPrefix}{userId}:card:{flashcardId}";
-                await _cache.RemoveAsync(cacheKey);
+                // Invalidate flashcard stats cache for this user (both individual stats and summary)
+                await _cacheInvalidator.InvalidateAllUserFlashcardStatsAsync(userId);
 
                 return _mapper.Map<UserFlashcardStatResponse>(resultStat);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error incrementing flashcard view count for user {UserId}, flashcard {FlashcardId}", userId, flashcardId);
+                _logger.LogError(ex, "Error incrementing flashcard view count");
                 throw;
             }
         }
@@ -131,7 +129,7 @@ namespace Lithuaningo.API.Services.Stats
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting last seen flashcard IDs for user {UserId}", userId);
+                _logger.LogError(ex, "Error getting last seen flashcard IDs");
                 throw;
             }
         }
@@ -165,7 +163,7 @@ namespace Lithuaningo.API.Services.Stats
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting all interacted flashcard IDs for user {UserId}", userId);
+                _logger.LogError(ex, "Error getting all interacted flashcard IDs");
                 throw;
             }
         }
@@ -209,16 +207,14 @@ namespace Lithuaningo.API.Services.Stats
 
                 var resultStat = upsertResult.Models?.FirstOrDefault() ?? statEntity;
 
-                // Invalidate cache
-                await _cacheInvalidator.InvalidateUserFlashcardStatsAsync(userId);
-                var cacheKey = $"{CacheKeyPrefix}{userId}:card:{request.FlashcardId}";
-                await _cache.RemoveAsync(cacheKey);
+                // Invalidate flashcard stats cache for this user (both individual stats and summary)
+                await _cacheInvalidator.InvalidateAllUserFlashcardStatsAsync(userId);
 
                 return _mapper.Map<UserFlashcardStatResponse>(resultStat);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error submitting flashcard answer for user {UserId}, flashcard {FlashcardId}", userId, request.FlashcardId);
+                _logger.LogError(ex, "Error submitting flashcard answer");
                 throw;
             }
         }
@@ -237,9 +233,7 @@ namespace Lithuaningo.API.Services.Stats
                 string flashcardIdsParam = flashcardIds != null ? string.Join(",", flashcardIds) : "all";
                 var cacheKey = $"{CacheKeyPrefix}{userId}:due:limit={limit}:ids={flashcardIdsParam}";
 
-                // Try to get from cache first
                 var cached = await _cache.GetAsync<List<UserFlashcardStatResponse>>(cacheKey);
-
                 if (cached != null)
                 {
                     return cached;
@@ -252,7 +246,6 @@ namespace Lithuaningo.API.Services.Stats
                     .Order("view_count", Ordering.Ascending) // Then prioritize less viewed cards
                     .Limit(limit);
 
-                // If specific flashcard IDs are provided, filter to only those
                 if (flashcardIds != null && flashcardIds.Any())
                 {
                     var flashcardIdObjects = new List<object>();
@@ -265,11 +258,8 @@ namespace Lithuaningo.API.Services.Stats
 
                 var result = await query.Get();
                 var models = result.Models?.ToList() ?? new List<UserFlashcardStat>();
-
-                // Map to response DTOs
                 var response = _mapper.Map<List<UserFlashcardStatResponse>>(models);
 
-                // Cache the result
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, response, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
 
@@ -292,7 +282,6 @@ namespace Lithuaningo.API.Services.Stats
                     throw new ArgumentNullException(nameof(userId));
                 }
 
-                // Try to get from cache first
                 var cacheKey = $"{SummaryCacheKeyPrefix}{userId}";
                 var cached = await _cache.GetAsync<UserFlashcardStatsSummaryResponse>(cacheKey);
 
@@ -301,7 +290,6 @@ namespace Lithuaningo.API.Services.Stats
                     return cached;
                 }
 
-                // Get all flashcard stats for the user
                 var query = _supabaseService.Client
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId.ToString());
@@ -309,12 +297,10 @@ namespace Lithuaningo.API.Services.Stats
                 var result = await query.Get();
                 var models = result.Models?.ToList() ?? new List<UserFlashcardStat>();
 
-                // Get a separate count of flashcards answered today using database filtering
                 var today = DateTime.UtcNow.Date;
                 var todayStart = today.ToString("yyyy-MM-dd");
                 var todayEnd = today.AddDays(1).ToString("yyyy-MM-dd");
 
-                // Just count directly
                 var todayQuery = _supabaseService.Client
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId.ToString())
@@ -323,19 +309,14 @@ namespace Lithuaningo.API.Services.Stats
 
                 var todayResult = await todayQuery.Get();
 
-                // Count distinct flashcards that had their UserFlashcardStat record updated today
                 var flashcardsViewedTodayCount = todayResult.Models?
                     .Select(s => s.FlashcardId)
                     .Distinct()
                     .Count() ?? 0;
 
-                // Use AutoMapper to map the collection to the summary response
                 var summary = _mapper.Map<UserFlashcardStatsSummaryResponse>(models);
-
-                // Override the AutoMapper value with our database query result
                 summary.FlashcardsViewedToday = flashcardsViewedTodayCount;
 
-                // Cache the result
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                 await _cache.SetAsync(cacheKey, summary, TimeSpan.FromMinutes(settings.DefaultExpirationMinutes));
 
@@ -359,10 +340,7 @@ namespace Lithuaningo.API.Services.Stats
                     throw new ArgumentNullException(nameof(flashcardId));
                 }
 
-                // Generate a specific cache key for this user+flashcard combination
                 var cacheKey = $"{CacheKeyPrefix}{userId}:card:{flashcardId}";
-
-                // Try to get from cache first
                 var cached = await _cache.GetAsync<UserFlashcardStatResponse>(cacheKey);
 
                 if (cached != null)
@@ -380,7 +358,6 @@ namespace Lithuaningo.API.Services.Stats
 
                 var response = _mapper.Map<UserFlashcardStatResponse>(models.FirstOrDefault());
 
-                // Cache the result if we have a response (not null)
                 if (response != null)
                 {
                     var settings = await _cacheSettingsService.GetCacheSettingsAsync();
@@ -388,7 +365,6 @@ namespace Lithuaningo.API.Services.Stats
                     return response;
                 }
 
-                // Return empty response object instead of null
                 return new UserFlashcardStatResponse
                 {
                     UserId = userId,
@@ -397,7 +373,7 @@ namespace Lithuaningo.API.Services.Stats
                     CorrectCount = 0,
                     IncorrectCount = 0,
                     MasteryLevel = 0,
-                    LastAnsweredCorrectly = false
+                    LastAnsweredCorrectly = null
                 };
             }
             catch (Exception ex)

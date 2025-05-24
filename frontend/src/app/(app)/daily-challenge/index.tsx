@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import ChallengeComponent from "@components/ui/ChallengeComponent";
-import { Card, ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { router, useLocalSearchParams } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
@@ -11,7 +11,7 @@ import {
 } from "@src/types";
 import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
 import ChallengeService from "@services/data/challengeService";
-import CustomButton from "@components/ui/CustomButton";
+import ErrorMessage from "@components/ui/ErrorMessage";
 import { useTheme } from "react-native-paper";
 
 /**
@@ -168,20 +168,14 @@ export default function DailyChallengeScreen() {
   // Show error state
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Card>
-          <Card.Content>
-            <CustomText variant="titleLarge" style={styles.title}>
-              Something went wrong
-            </CustomText>
-            <CustomText style={styles.text}>{error}</CustomText>
-            <Card.Actions style={{ justifyContent: "center", width: "100%" }}>
-              <CustomButton title="Try Again" onPress={handleRetry} />
-              <CustomButton title="Go Back" onPress={() => router.back()} />
-            </Card.Actions>
-          </Card.Content>
-        </Card>
-      </View>
+      <ErrorMessage
+        title="Something went wrong"
+        message={error}
+        onRetry={handleRetry}
+        onSecondaryAction={() => router.back()}
+        secondaryButtonText="Go Back"
+        fullScreen={true}
+      />
     );
   }
 

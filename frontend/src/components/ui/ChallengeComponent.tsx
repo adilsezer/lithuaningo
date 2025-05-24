@@ -458,7 +458,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       icon={isCorrectAnswer ? "check-circle" : "close-circle"}
                       color={
                         isCorrectAnswer
-                          ? theme.colors.primary
+                          ? theme.colors.onPrimary
                           : theme.colors.error
                       }
                       style={{ backgroundColor: "transparent" }}
@@ -470,7 +470,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       variant="titleMedium"
                       style={{
                         color: isCorrectAnswer
-                          ? theme.colors.primary
+                          ? theme.colors.onPrimary
                           : theme.colors.error,
                         fontWeight: "600",
                       }}
@@ -482,7 +482,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       variant="bodyMedium"
                       style={{
                         color: isCorrectAnswer
-                          ? theme.colors.primary
+                          ? theme.colors.onPrimary
                           : theme.colors.error,
                         marginTop: 4,
                       }}

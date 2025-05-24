@@ -77,15 +77,67 @@ public class CacheInvalidator
     }
 
     /// <summary>
-    /// Invalidates all cache entries related to user flashcard stats
+    /// Invalidates all cache entries related to user flashcard stats for a specific user.
+    /// This clears individual flashcard stats cache entries including cards, due lists, etc.
+    /// Uses robust invalidation with both prefix and direct key removal.
     /// </summary>
     public async Task InvalidateUserFlashcardStatsAsync(string userId)
     {
-        // Invalidate the main flashcard stats cache
-        await InvalidateCacheKeyAsync($"{UserFlashcardStatsCachePrefix}{userId}");
+        if (string.IsNullOrEmpty(userId))
+        {
+            return;
+        }
 
-        // Also invalidate the summary cache
-        await InvalidateCacheKeyAsync($"{UserFlashcardStatsSummaryCachePrefix}{userId}");
+        try
+        {
+            var mainCachePattern = $"{UserFlashcardStatsCachePrefix}{userId}";
+
+            // Invalidate ALL flashcard stats cache entries for this user using robust method
+            // This covers: flashcard-stats:{userId}:card:{flashcardId}, flashcard-stats:{userId}:due:*, etc.
+            await InvalidateCacheKeyAsync(mainCachePattern);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to invalidate flashcard stats cache");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Invalidates cache entries related to user flashcard stats summary for a specific user.
+    /// This clears only the summary cache entries.
+    /// Uses robust invalidation with both prefix and direct key removal.
+    /// </summary>
+    public async Task InvalidateUserFlashcardStatsSummaryAsync(string userId)
+    {
+        if (string.IsNullOrEmpty(userId))
+        {
+            return;
+        }
+
+        try
+        {
+            var summaryCachePattern = $"{UserFlashcardStatsSummaryCachePrefix}{userId}";
+
+            // Invalidate flashcard summary stats for this user
+            // This covers: flashcard-stats-summary:{userId}
+            await InvalidateCacheKeyAsync(summaryCachePattern);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to invalidate flashcard stats summary cache");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Invalidates all cache entries related to user flashcard stats for a specific user.
+    /// This combines both individual stats and summary cache invalidation.
+    /// </summary>
+    public async Task InvalidateAllUserFlashcardStatsAsync(string userId)
+    {
+        await InvalidateUserFlashcardStatsAsync(userId);
+        await InvalidateUserFlashcardStatsSummaryAsync(userId);
     }
 
     /// <summary>

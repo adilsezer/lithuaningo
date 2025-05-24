@@ -233,15 +233,27 @@ export default function FlashcardScreen() {
     [theme.colors.inversePrimary]
   );
 
-  const handleSelectCategory = React.useCallback(
+  // Renamed from handleSelectCategory
+  const handlePressPractice = React.useCallback(
     (category: FlashcardCategory) => {
       // Navigate to category flashcards screen
       router.push({
-        pathname: "/(app)/category-flashcards/[id]",
+        pathname: "/(app)/flashcard/[id]",
         params: {
           id: category.id,
           name: category.name,
         },
+      });
+    },
+    []
+  );
+
+  // Renamed from handleSelectReview to handleSelectMaster
+  const handleSelectMaster = React.useCallback(
+    (category: FlashcardCategory) => {
+      router.push({
+        pathname: "/(app)/flashcard-challenge/[id]", // Navigate to the new screen
+        params: { id: category.id, name: category.name }, // Pass category id and name
       });
     },
     []
@@ -310,7 +322,8 @@ export default function FlashcardScreen() {
               <View style={styles.categoryContainer}>
                 <CategoryGrid
                   categories={item.data}
-                  onSelectCategory={handleSelectCategory}
+                  onPressPractice={handlePressPractice}
+                  onPressMaster={handleSelectMaster} // Renamed prop from onPressReview
                   title={item.title}
                 />
               </View>
@@ -327,7 +340,8 @@ export default function FlashcardScreen() {
       isSyncingCount,
       isPremium,
       flashcardsViewedToday,
-      handleSelectCategory,
+      handlePressPractice,
+      handleSelectMaster, // Updated dependency: Renamed from handleSelectReview
       theme.colors.primary,
       theme.colors.background,
     ]

@@ -8,7 +8,10 @@ import {
   LeaderboardEntryResponse,
   UpdateLeaderboardEntryRequest,
 } from "@src/types/Leaderboard";
-import { ChallengeQuestionResponse } from "@src/types/ChallengeQuestion";
+import {
+  ChallengeQuestionResponse,
+  GetReviewChallengeQuestionsRequest,
+} from "@src/types/ChallengeQuestion";
 import {
   FlashcardRequest,
   FlashcardResponse,
@@ -393,10 +396,14 @@ class ApiClient {
   }
 
   async getReviewChallengeQuestions(
-    count?: number
+    request: GetReviewChallengeQuestionsRequest
   ): Promise<ChallengeQuestionResponse[]> {
     const endpoint = "/api/v1/challenge/review";
-    const params = count ? { count } : {};
+    const params: any = {};
+    if (request.count) params.count = request.count;
+    if (request.categoryId) params.categoryId = request.categoryId;
+    if (request.userId) params.userId = request.userId;
+
     return this.request<ChallengeQuestionResponse[]>(endpoint, {
       method: "GET",
       params,

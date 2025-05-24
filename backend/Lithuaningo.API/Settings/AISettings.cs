@@ -67,7 +67,8 @@ public class AISettings
     /// The model to use for Gemini text generation (Pro version, for tasks like flashcard generation)
     /// </summary>
     [Required]
-    public string GeminiProModelName { get; set; } = "gemini-2.5-pro-preview-05-06";
+    //public string GeminiProModelName { get; set; } = "gemini-2.5-pro-preview-05-06";
+    public string GeminiProModelName { get; set; } = "gemini-2.5-flash-preview-05-20";
 
     /// <summary>
     /// The model to use for Gemini text generation (Flash version, for tasks like chat and challenge generation)

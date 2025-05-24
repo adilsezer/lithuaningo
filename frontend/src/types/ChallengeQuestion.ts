@@ -16,3 +16,12 @@ export interface ChallengeQuestionResponse {
   type: ChallengeQuestionType;
   flashcardId?: string;
 }
+
+export interface GetReviewChallengeQuestionsRequest {
+  /** Optional user ID override. If not provided, the authenticated user's ID will be used. */
+  userId?: string;
+  /** Number of challenge questions to generate (default: 10, max: 50) */
+  count?: number;
+  /** Optional category ID to filter flashcards by specific category */
+  categoryId?: string;
+}

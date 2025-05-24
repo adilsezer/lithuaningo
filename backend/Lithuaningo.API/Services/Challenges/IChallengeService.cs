@@ -20,10 +20,9 @@ namespace Lithuaningo.API.Services.Challenges
         /// <summary>
         /// Generates a review challenge for a premium user based on their seen flashcards.
         /// </summary>
-        /// <param name="userId">The ID of the user.</param>
-        /// <param name="count">The number of challenge questions to generate.</param>
+        /// <param name="request">The request containing challenge generation parameters including user ID.</param>
         /// <returns>A list of challenge questions for review.</returns>
-        Task<IEnumerable<ChallengeQuestionResponse>> GetChallengeQuestionsForSeenFlashcardsAsync(string userId, int count = 10);
+        Task<IEnumerable<ChallengeQuestionResponse>> GetChallengeQuestionsForSeenFlashcardsAsync(GetReviewChallengeQuestionsRequest request);
 
         /// <summary>
         /// Generates challenge questions for a given flashcard using the AI service and saves them to the database.

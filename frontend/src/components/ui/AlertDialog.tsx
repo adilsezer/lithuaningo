@@ -111,6 +111,7 @@ export const AlertDialog: React.FC = () => {
                 mode="contained"
                 onPress={async () => {
                   try {
+                    hideDialog(); // Hide dialog first
                     await onConfirm?.();
                   } catch (err) {
                     console.error("Error in confirmation:", err);

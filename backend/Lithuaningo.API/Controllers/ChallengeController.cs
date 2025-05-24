@@ -72,49 +72,47 @@ namespace Lithuaningo.API.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
             Summary = "Gets review challenge questions for premium user",
-            Description = "Retrieves or generates challenge questions based on flashcards the user has seen. For premium users only.",
+            Description = "Retrieves or generates challenge questions based on flashcards the user has seen. For premium users only. Can optionally filter by category.",
             OperationId = "GetReviewChallengeQuestions",
             Tags = new[] { "Challenge", "Premium" }
         )]
-        public async Task<ActionResult<List<ChallengeQuestionResponse>>> GetReviewChallengeQuestions([FromQuery] string? userId = null, [FromQuery] int count = 10)
+        public async Task<ActionResult<List<ChallengeQuestionResponse>>> GetReviewChallengeQuestions(
+            [FromQuery] GetReviewChallengeQuestionsRequest request)
         {
             var authenticatedUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            var effectiveUserId = userId ?? authenticatedUserId;
+            var effectiveUserId = request.UserId ?? authenticatedUserId;
 
             if (string.IsNullOrEmpty(effectiveUserId))
             {
-                _logger.LogWarning("Effective User ID could not be determined for review challenge.");
                 return Unauthorized("User ID could not be determined.");
             }
+
+            // Set the effective user ID in the request for the service
+            request.UserId = effectiveUserId;
 
             try
             {
                 var userProfile = await _userProfileService.GetUserProfileAsync(effectiveUserId);
                 if (userProfile == null)
                 {
-                    _logger.LogWarning("User profile not found for user for review challenge.");
                     return NotFound("User profile not found.");
                 }
 
                 if (!userProfile.IsPremium)
                 {
-                    _logger.LogInformation("User attempted to access review challenge without premium status.");
                     return Forbid("This feature is available for premium users only.");
                 }
 
-                _logger.LogInformation("Fetching review challenge questions for user (Premium).");
-                var questions = await _challengeService.GetChallengeQuestionsForSeenFlashcardsAsync(effectiveUserId, count);
+                var questions = await _challengeService.GetChallengeQuestionsForSeenFlashcardsAsync(request);
                 if (questions == null || !questions.Any())
                 {
-                    _logger.LogInformation("No review questions generated or found.");
-                    // Return empty list with 200 OK if no questions, or could be 204 No Content
                     return Ok(new List<ChallengeQuestionResponse>());
                 }
                 return Ok(questions.ToList());
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error retrieving review challenge questions for user {EffectiveUserId}.", effectiveUserId);
+                _logger.LogError(ex, "Error retrieving review challenge questions");
                 return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving review challenge questions.");
             }
         }

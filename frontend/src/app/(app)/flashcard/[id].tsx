@@ -13,6 +13,7 @@ import CustomText from "@components/ui/CustomText";
 import Flashcard from "@components/ui/Flashcard";
 import FlashcardStats from "@components/ui/FlashcardStats";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 export default function CategoryFlashcardsScreen() {
   const theme = useTheme();
@@ -38,7 +39,6 @@ export default function CategoryFlashcardsScreen() {
     // Daily limit data
     flashcardsViewedToday,
     isDailyLimitReached,
-    canFetchNewCards,
 
     // Actions
     syncFlashcardCount,
@@ -66,11 +66,6 @@ export default function CategoryFlashcardsScreen() {
   const handleGoBack = useCallback(() => {
     resetSession();
     router.back();
-  }, [resetSession]);
-
-  const handleGoToReviewChallenge = useCallback(() => {
-    resetSession(); // Good practice to reset session before starting a new type of activity
-    router.push("/(app)/review-challenge");
   }, [resetSession]);
 
   const handleGoToLogin = useCallback(() => router.push("/auth/login"), []);
@@ -140,13 +135,15 @@ export default function CategoryFlashcardsScreen() {
   // Handler for fetching a new batch of cards
   const handleFetchNewCards = useCallback(() => {
     if (userData?.id) {
+      // Reset session state before fetching new cards to ensure clean state
+      resetSession();
       fetchFlashcards({
         categoryId: id,
         userId: userData.id,
         isPremium,
       });
     }
-  }, [id, userData?.id, isPremium, fetchFlashcards]);
+  }, [id, userData?.id, isPremium, fetchFlashcards, resetSession]);
 
   // Function to get message background color based on message type
   const getMessageBackgroundColor = useCallback(
@@ -240,12 +237,11 @@ export default function CategoryFlashcardsScreen() {
   if (error) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <CustomText variant="bodyLarge" style={styles.errorText}>
-          {error}
-        </CustomText>
-        <Button mode="contained" onPress={handleFetchNewCards}>
-          Retry
-        </Button>
+        <ErrorMessage
+          message={error}
+          onRetry={handleFetchNewCards}
+          showCard={false}
+        />
         {!isPremium && <DailyFlashcardProgress />}
       </View>
     );
@@ -363,17 +359,6 @@ export default function CategoryFlashcardsScreen() {
               };
             }
 
-            const challengeButtonProps = {
-              text: isPremium
-                ? "Practice Learned Cards"
-                : "Practice Learned Cards (Premium ✨)",
-              onPress: isPremium
-                ? handleGoToReviewChallenge
-                : handleGoToPremium,
-              icon: "school",
-              mode: "contained-tonal" as const,
-            };
-
             return (
               <View style={styles.completedButtonsContainer}>
                 {/* Get New Cards button */}
@@ -392,16 +377,6 @@ export default function CategoryFlashcardsScreen() {
                   }
                 >
                   {getNewCardsButtonProps.text}
-                </Button>
-
-                {/* Challenge with Learned Cards button */}
-                <Button
-                  mode={challengeButtonProps.mode}
-                  icon={challengeButtonProps.icon}
-                  onPress={challengeButtonProps.onPress}
-                  style={styles.completedButton}
-                >
-                  {challengeButtonProps.text}
                 </Button>
 
                 {/* Upgrade to Premium button: Shown only if NOT premium AND daily limit NOT reached */}
@@ -451,10 +426,7 @@ export default function CategoryFlashcardsScreen() {
               </View>
             )}
 
-            <FlashcardStats
-              stats={currentFlashcardStats}
-              isLoading={isLoadingFlashcards}
-            />
+            <FlashcardStats stats={currentFlashcardStats} isLoading={false} />
           </>
         )
       )}
@@ -538,8 +510,5 @@ const styles = StyleSheet.create({
   limitInfo: {
     marginTop: 4,
     color: "gray",
-  },
-  reviewChallengeButton: {
-    marginBottom: 16,
   },
 });

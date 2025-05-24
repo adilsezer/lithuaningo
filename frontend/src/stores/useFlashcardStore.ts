@@ -129,6 +129,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       error: null,
       isDeckCompleted: false,
       currentFlashcardId: null,
+      flipped: false, // Reset flipped state when fetching new cards
     });
 
     try {
@@ -159,6 +160,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         isLoadingFlashcards: false,
         currentFlashcardId: flashcards.length > 0 ? flashcards[0].id : null,
         hasAttemptedLoad: true,
+        flipped: false, // Ensure flipped is false for new flashcards
       });
 
       // Fetch stats for first flashcard if available
@@ -262,6 +264,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       error: null,
       submissionMessage: null,
       hasAttemptedLoad: false,
+      isLoadingFlashcards: false, // Reset loading state as well
     });
   },
 

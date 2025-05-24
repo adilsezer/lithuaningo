@@ -148,44 +148,44 @@ CORE RULES:
 QUESTION TEMPLATES (All question prompts must be in English, adapt them to the flashcard content):
 
 Multiple Choice (type=0): (Test frontText to backText, or vice-versa, or a concept from notes if applicable)
-  *   Question (Vocabulary LT > EN): ""What is the English meaning of the Lithuanian word/phrase below?\n\n'{flashcard.frontText}'?"" (Options: flashcard.backText and 3 plausible but incorrect English translations)
-  *   Question (Vocabulary EN > LT): ""Which Lithuanian word/phrase means the following?\n\n'{flashcard.backText}'?"" (Options: flashcard.frontText and 3 plausible but incorrect Lithuanian words/phrases of similar type/difficulty)
+  *   Question (Vocabulary LT > EN): ""What does this Lithuanian word mean?\n\n'{flashcard.frontText}'?"" (Options: flashcard.backText and 3 plausible but incorrect English translations)
+  *   Question (Vocabulary EN > LT): ""Which Lithuanian word means:\n\n'{flashcard.backText}'?"" (Options: flashcard.frontText and 3 plausible but incorrect Lithuanian words/phrases of similar type/difficulty)
 
 True/False (type=1): (Test correctness of translation or a statement about the flashcard)
-  *   Question: ""Does the Lithuanian word/phrase '{flashcard.frontText}' mean '{a plausible English translation (can be correct or incorrect)}' in English?\n\n(True or False)""
-  *   Question: ""Is the following statement about '{flashcard.frontText}' true or false based on common knowledge or its typical usage?\n\n'{Statement about the flashcard item, could be related to its category or a simple fact related to it}'\n\n(True or False)""
+  *   Question: ""Does '{flashcard.frontText}' mean '{a plausible English translation (can be correct or incorrect)}' in English?""
+  *   Question: ""Is this statement about '{flashcard.frontText}' true?\n\n'{Statement about the flashcard item, could be related to its category or a simple fact related to it}'""
 
 Fill in the Blank (type=2): (Use the flashcard's example sentence)
-  *   Question: ""Complete the Lithuanian sentence below by choosing the correct word. The sentence is based on the flashcard for '{flashcard.frontText}'.\n\n'{flashcard.exampleSentence with frontText or a key word blanked out with ____}'?"" (Options: The correct word from the blank and 3 plausible but incorrect Lithuanian words that could fit grammatically but change meaning or are contextually wrong)
+  *   Question: ""Complete the sentence:\n\n'{flashcard.exampleSentence with frontText or a key word blanked out with ____}'?"" (Options: The correct word from the blank and 3 plausible but incorrect Lithuanian words that could fit grammatically but change meaning or are contextually wrong)
 
 Rearrange The Sentence (type=3): (Use the flashcard's example sentence)
-  *   Question: ""The following Lithuanian words are from the example sentence for '{flashcard.frontText}'. Arrange them into a grammatically correct sentence.\n\n'{Scrambled words from flashcard.exampleSentence}'"" (Options: Four different orderings of the words, one being the correct flashcard.exampleSentence, and three being plausible but incorrect orderings.)
+  *   Question: ""Arrange these words into a correct sentence:\n\n'{Scrambled words from flashcard.exampleSentence}'"" (Options: Four different orderings of the words, one being the correct flashcard.exampleSentence, and three being plausible but incorrect orderings.)
 
 EXAMPLE OUTPUT (Illustrative, for a flashcard like: frontText=""knyga"", backText=""book"", exampleSentence=""Aš skaitau įdomią knygą."", difficulty=0):
 [
   {
-    ""question"": ""What is the English meaning of the Lithuanian word below?\n\n'knyga'?"",
+    ""question"": ""What does this Lithuanian word mean?\n\n'knyga'"",
     ""options"": [""book"", ""pen"", ""table"", ""house""],
     ""correctAnswer"": ""book"",
     ""exampleSentence"": ""Aš skaitau įdomią knygą."",
     ""type"": 0
   },
   {
-    ""question"": ""Does the Lithuanian word 'knyga' mean 'letter' in English?\n\n(True or False)"",
+    ""question"": ""Does 'knyga' mean 'letter' in English?"",
     ""options"": [""True"", ""False""],
     ""correctAnswer"": ""False"",
     ""exampleSentence"": ""Aš skaitau įdomią knygą."",
     ""type"": 1
   },
   {
-    ""question"": ""Complete the Lithuanian sentence below by choosing the correct word. The sentence is based on the flashcard for 'knyga'.\n\nAš skaitau įdomią ____."",
+    ""question"": ""Complete the sentence:\n\nAš skaitau įdomią ____."",
     ""options"": [""knygą"", ""filmą"", ""dainą"", ""laišką""],
     ""correctAnswer"": ""knygą"",
     ""exampleSentence"": ""Aš skaitau įdomią knygą."",
     ""type"": 2
   },
   {
-    ""question"": ""The following Lithuanian words are from the example sentence for 'knyga'. Arrange them into a grammatically correct sentence.\n\n'įdomią Aš knygą skaitau'"",
+    ""question"": ""Arrange these words into a correct sentence:\n\n'įdomią Aš knygą skaitau'"",
     ""options"": [
         ""Aš skaitau įdomią knygą."",
         ""Skaitau Aš knygą įdomią."",
