@@ -53,7 +53,9 @@ export const AlertDialog: React.FC = () => {
     },
   });
 
-  if (!visible) return null;
+  if (!visible) {
+    return null;
+  }
 
   return (
     <Portal>
@@ -129,10 +131,14 @@ export const AlertDialog: React.FC = () => {
             </>
           ) : (
             // Render custom buttons or default "OK"
-            buttons.map((button, index) => (
+            buttons.map((button) => (
               <Button
-                key={index}
-                mode={index === buttons.length - 1 ? "contained" : "outlined"}
+                key={button.text}
+                mode={
+                  button === buttons[buttons.length - 1]
+                    ? "contained"
+                    : "outlined"
+                }
                 onPress={() => {
                   hideDialog();
                   button.onPress();
@@ -140,7 +146,7 @@ export const AlertDialog: React.FC = () => {
                 style={styles.buttonBase}
                 buttonColor={theme.colors.primary}
                 labelStyle={
-                  index === buttons.length - 1
+                  button === buttons[buttons.length - 1]
                     ? styles.containedButtonLabel
                     : styles.outlinedButtonLabel
                 }

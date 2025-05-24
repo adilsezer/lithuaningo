@@ -1,8 +1,8 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Card, useTheme, ProgressBar } from "react-native-paper";
-import { UserFlashcardStatResponse } from "@src/types/UserFlashcardStats";
-import CustomText from "./CustomText";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Card, useTheme, ProgressBar } from 'react-native-paper';
+import { UserFlashcardStatResponse } from '@src/types/UserFlashcardStats';
+import CustomText from './CustomText';
 
 interface FlashcardStatsProps {
   stats: UserFlashcardStatResponse | null;
@@ -102,7 +102,7 @@ const FlashcardStats: React.FC<FlashcardStatsProps> = ({
                   : theme.colors.error,
               }}
             >
-              {stats.lastAnsweredCorrectly ? "Correct" : "Incorrect"}
+              {stats.lastAnsweredCorrectly ? 'Correct' : 'Incorrect'}
             </CustomText>
           ) : (
             <CustomText>None yet</CustomText>
@@ -146,19 +146,19 @@ const styles = StyleSheet.create({
   },
   title: {
     marginBottom: 12,
-    textAlign: "center",
+    textAlign: 'center',
   },
   statRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 8,
   },
   progressContainer: {
     marginTop: 8,
   },
   progressRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
   progressBar: {

@@ -8,7 +8,7 @@ import {
 } from "react-native";
 import { Text, ActivityIndicator, Avatar } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useChat, MAX_FREE_MESSAGES_PER_DAY } from "@hooks/useChat";
+import { useChat, MAX_FREE_MESSAGES_PER_DAY, Message } from "@hooks/useChat";
 import CustomText from "@components/ui/CustomText";
 import CustomDivider from "@components/ui/CustomDivider";
 import ChatMessage from "@components/chat/ChatMessage";
@@ -46,9 +46,26 @@ export default function ChatScreen(): JSX.Element {
     return dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY;
   }, [dailyMessageCount]);
 
+  // Memoize the renderItem function to prevent recreations
+  const renderChatMessage = React.useCallback(
+    ({ item }: { item: Message }) => (
+      <ChatMessage
+        message={item}
+        userData={userData}
+        formatTimestamp={formatTimestamp}
+      />
+    ),
+    [userData, formatTimestamp]
+  );
+
+  // Memoize keyExtractor to prevent recreations
+  const keyExtractor = React.useCallback((item: Message) => item.id, []);
+
   // Render loading indicator in chat
-  const renderLoadingIndicator = () => {
-    if (!isLoading) return null;
+  const renderLoadingIndicator = React.useCallback(() => {
+    if (!isLoading) {
+      return null;
+    }
 
     return (
       <View
@@ -59,7 +76,7 @@ export default function ChatScreen(): JSX.Element {
         }}
       >
         <Avatar.Image
-          source={require("assets/images/icon-transparent.png")}
+          source={require("../../../../assets/images/icon-transparent.png")}
           size={35}
           style={{ marginRight: 8, marginTop: 6 }}
         />
@@ -76,7 +93,7 @@ export default function ChatScreen(): JSX.Element {
         </View>
       </View>
     );
-  };
+  }, [isLoading, theme.colors.outline]);
 
   return (
     <KeyboardAvoidingView
@@ -96,14 +113,8 @@ export default function ChatScreen(): JSX.Element {
       <FlatList
         ref={flatListRef}
         data={messages}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => (
-          <ChatMessage
-            message={item}
-            userData={userData}
-            formatTimestamp={formatTimestamp}
-          />
-        )}
+        keyExtractor={keyExtractor}
+        renderItem={renderChatMessage}
         contentContainerStyle={{ flexGrow: 1 }}
         refreshControl={
           <RefreshControl
@@ -113,7 +124,13 @@ export default function ChatScreen(): JSX.Element {
             tintColor={theme.colors.primary}
           />
         }
-        ListFooterComponent={renderLoadingIndicator()}
+        ListFooterComponent={renderLoadingIndicator}
+        // Performance optimizations
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={10}
+        getItemLayout={undefined} // Let FlatList handle dynamic heights
       />
 
       {/* Example Suggestions */}

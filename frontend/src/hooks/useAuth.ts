@@ -79,7 +79,7 @@ export const useAuth = () => {
         }
 
         if (response.code === "EMAIL_NOT_VERIFIED") {
-          const emailToVerify = response.email || email;
+          const emailToVerify = response.email ?? email;
 
           navigateToVerification(emailToVerify);
 
@@ -138,7 +138,10 @@ export const useAuth = () => {
 
   // Profile management
   const handleUpdateProfile = useCallback(
-    async (currentPassword: string, updates: any) => {
+    async (
+      currentPassword: string,
+      updates: { displayName?: string; email?: string }
+    ) => {
       const result = await performAuthOperation(async () => {
         const response = await updateProfile(currentPassword, updates);
         if (response.success) {
@@ -214,7 +217,7 @@ export const useAuth = () => {
       }, "Password Reset Failed");
       return result;
     },
-    [performAuthOperation, showAlert]
+    [performAuthOperation, showAlert, router]
   );
 
   const handleVerifyPasswordReset = useCallback(

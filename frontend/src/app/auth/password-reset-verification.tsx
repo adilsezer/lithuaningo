@@ -1,35 +1,35 @@
-import React, { useState, useEffect } from "react";
-import { ScrollView, View, StyleSheet } from "react-native";
-import { useLocalSearchParams } from "expo-router";
-import { Form } from "@components/form/Form";
-import { FormField } from "@components/form/form.types";
-import { useAuth } from "@hooks/useAuth";
-import { useIsLoading } from "@stores/useUIStore";
-import { resetPasswordVerifyFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/ui/CustomText";
-import CustomButton from "@components/ui/CustomButton";
+import React, { useState, useEffect } from 'react';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
+import { Form } from '@components/form/Form';
+import { FormField } from '@components/form/form.types';
+import { useAuth } from '@hooks/useAuth';
+import { useIsLoading } from '@stores/useUIStore';
+import { resetPasswordVerifyFormSchema } from '@utils/zodSchemas';
+import CustomText from '@components/ui/CustomText';
+import CustomButton from '@components/ui/CustomButton';
 const resetPasswordVerifyFields: FormField[] = [
   {
-    name: "token",
-    label: "Reset Code",
-    category: "text-input",
-    type: "text",
-    placeholder: "Enter the 6-digit code",
-    keyboardType: "number-pad",
+    name: 'token',
+    label: 'Reset Code',
+    category: 'text-input',
+    type: 'text',
+    placeholder: 'Enter the 6-digit code',
+    keyboardType: 'number-pad',
   },
   {
-    name: "newPassword",
-    label: "New Password",
-    category: "text-input",
-    type: "password",
-    placeholder: "Enter your new password",
+    name: 'newPassword',
+    label: 'New Password',
+    category: 'text-input',
+    type: 'password',
+    placeholder: 'Enter your new password',
   },
   {
-    name: "confirmPassword",
-    label: "Confirm Password",
-    category: "text-input",
-    type: "password",
-    placeholder: "Confirm your new password",
+    name: 'confirmPassword',
+    label: 'Confirm Password',
+    category: 'text-input',
+    type: 'password',
+    placeholder: 'Confirm your new password',
   },
 ];
 
@@ -104,7 +104,7 @@ const PasswordResetVerificationScreen: React.FC = () => {
           }}
           submitButtonText="Reset Password"
           isLoading={loading}
-          options={{ mode: "onBlur" }}
+          options={{ mode: 'onBlur' }}
           zodSchema={resetPasswordVerifyFormSchema}
         />
 
@@ -112,7 +112,7 @@ const PasswordResetVerificationScreen: React.FC = () => {
           <CustomButton
             onPress={handleResend}
             title={
-              resendDisabled ? `Resend code in ${countdown}s` : "Resend code"
+              resendDisabled ? `Resend code in ${countdown}s` : 'Resend code'
             }
             disabled={resendDisabled}
             mode="text"
@@ -135,12 +135,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   resendContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     marginTop: 16,
   },
   note: {
     marginTop: 16,
-    textAlign: "center",
+    textAlign: 'center',
   },
 });
 

@@ -1,6 +1,6 @@
-import React from "react";
-import { StyleSheet } from "react-native";
-import { TextInput, useTheme } from "react-native-paper";
+import React from 'react';
+import { StyleSheet } from 'react-native';
+import { TextInput, useTheme } from 'react-native-paper';
 
 interface ChatInputProps {
   value: string;
@@ -34,8 +34,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
       mode="outlined"
       placeholder={
         isDisabled && hasReachedLimit
-          ? "Daily message limit reached"
-          : "Type a message..."
+          ? 'Daily message limit reached'
+          : 'Type a message...'
       }
       value={value}
       onChangeText={onChangeText}
@@ -68,7 +68,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
         <TextInput.Icon
           icon="send"
           color={theme.colors.primary}
-          disabled={isDisabled || value.trim() === ""}
+          disabled={isDisabled || value.trim() === ''}
           onPress={onSend}
           style={styles.iconStyle}
         />
@@ -89,9 +89,9 @@ const styles = StyleSheet.create({
     borderRadius: 24,
   },
   iconStyle: {
-    marginTop: "auto",
-    marginBottom: "auto",
-    alignSelf: "center",
+    marginTop: 'auto',
+    marginBottom: 'auto',
+    alignSelf: 'center',
   },
 });
 

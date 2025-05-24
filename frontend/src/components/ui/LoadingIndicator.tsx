@@ -1,18 +1,18 @@
-import React, { useState, useEffect } from "react";
-import { ViewStyle, StyleSheet } from "react-native";
-import { useIsLoading } from "@stores/useUIStore";
+import React, { useState, useEffect } from 'react';
+import { ViewStyle, StyleSheet } from 'react-native';
+import { useIsLoading } from '@stores/useUIStore';
 import {
   useTheme,
   ActivityIndicator,
   Portal,
   Modal,
   Surface,
-} from "react-native-paper";
+} from 'react-native-paper';
 
 interface LoadingIndicatorProps {
   modal?: boolean;
   style?: ViewStyle;
-  size?: "small" | "large";
+  size?: 'small' | 'large';
   minimumDisplayTime?: number;
   color?: string;
   useTheme?: boolean;
@@ -21,8 +21,8 @@ interface LoadingIndicatorProps {
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   modalContent: {
     borderRadius: 12,
@@ -36,7 +36,7 @@ const styles = StyleSheet.create({
 export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   modal = true,
   style,
-  size = "large",
+  size = 'large',
   minimumDisplayTime = 200,
   color,
 }) => {
@@ -48,7 +48,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   const [delayedIsLoading, setDelayedIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!modal) return;
+    if (!modal) {return;}
 
     let timer: ReturnType<typeof setTimeout>;
 

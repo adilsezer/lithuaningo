@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { FlatList, Keyboard } from "react-native";
 import { useTheme } from "react-native-paper";
 import { router } from "expo-router";
@@ -67,12 +67,26 @@ export const useChat = () => {
 
   // ===== Core Chat Logic =====
 
+  // Load chat stats from the server
+  const loadChatStats = useCallback(async (): Promise<void> => {
+    if (!isAuthenticated || !userData?.id) {
+      return;
+    }
+
+    try {
+      const stats = await apiClient.getUserChatStats(userData.id);
+      setDailyMessageCount(stats.todayMessageCount);
+    } catch (error) {
+      console.error("Error loading chat stats:", error);
+    }
+  }, [isAuthenticated, userData?.id]);
+
   // Load and track daily message count
   useEffect(() => {
     if (isAuthenticated && userData?.id) {
       loadChatStats();
     }
-  }, [isAuthenticated, userData?.id]);
+  }, [isAuthenticated, userData?.id, loadChatStats]);
 
   // Initialize session ID on component mount
   useEffect(() => {
@@ -87,18 +101,6 @@ export const useChat = () => {
       }, 200);
     }
   }, [messages]);
-
-  // Load chat stats from the server
-  const loadChatStats = async (): Promise<void> => {
-    if (!isAuthenticated || !userData?.id) return;
-
-    try {
-      const stats = await apiClient.getUserChatStats(userData.id);
-      setDailyMessageCount(stats.todayMessageCount);
-    } catch (error) {
-      console.error("Error loading chat stats:", error);
-    }
-  };
 
   // Initialize session ID
   const initSessionId = async (): Promise<void> => {
@@ -130,7 +132,9 @@ export const useChat = () => {
 
   // Track message usage on the server
   const trackMessageUsage = async (): Promise<void> => {
-    if (!isAuthenticated || !userData?.id) return;
+    if (!isAuthenticated || !userData?.id) {
+      return;
+    }
 
     try {
       const response = await apiClient.trackChatMessage({
@@ -146,7 +150,9 @@ export const useChat = () => {
 
   // Send a new message
   const sendMessage = async (message: string): Promise<void> => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      return;
+    }
 
     // Add the user's message to the chat with "sending" status
     const newMessage: Message = {
@@ -242,10 +248,14 @@ export const useChat = () => {
 
   // Check if user has reached daily limit
   const checkDailyLimit = async (): Promise<boolean> => {
-    if (!isAuthenticated || !userData?.id) return false;
+    if (!isAuthenticated || !userData?.id) {
+      return false;
+    }
 
     // For premium users, always return false (no limit)
-    if (isPremium) return false;
+    if (isPremium) {
+      return false;
+    }
 
     // Use local count for quick check if already exceeded
     if (dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY) {
@@ -285,7 +295,9 @@ export const useChat = () => {
 
   // Handle message sending
   const handleSend = async () => {
-    if (inputText.trim() === "") return;
+    if (inputText.trim() === "") {
+      return;
+    }
 
     // Check for message limit for free users
     const hasReachedLimit = await checkDailyLimit();

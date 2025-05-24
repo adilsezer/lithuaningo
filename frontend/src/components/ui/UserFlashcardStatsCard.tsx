@@ -1,9 +1,9 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Card, ProgressBar, useTheme } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import CustomText from "@components/ui/CustomText";
-import { UserFlashcardStatsSummaryResponse } from "@src/types/UserFlashcardStats";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Card, ProgressBar, useTheme } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import CustomText from '@components/ui/CustomText';
+import { UserFlashcardStatsSummaryResponse } from '@src/types/UserFlashcardStats';
 
 interface UserFlashcardStatItemProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -145,29 +145,29 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 16,
   },
   statItem: {
-    alignItems: "center",
+    alignItems: 'center',
     flex: 1,
   },
   statValue: {
-    fontWeight: "600",
+    fontWeight: '600',
     marginTop: 8,
   },
   statLabel: {
     marginTop: 4,
-    textAlign: "center",
+    textAlign: 'center',
   },
   progressSection: {
     marginBottom: 12,
   },
   progressHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   progressBar: {

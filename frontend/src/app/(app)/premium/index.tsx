@@ -8,7 +8,7 @@ import {
   List,
   Divider,
 } from "react-native-paper";
-import { Stack, router } from "expo-router";
+import { router } from "expo-router";
 import { useRevenueCat } from "@hooks/useRevenueCat";
 import CustomButton from "@components/ui/CustomButton";
 import LoadingIndicator from "@components/ui/LoadingIndicator";
@@ -71,12 +71,9 @@ export default function PremiumFeaturesScreen() {
   // Clear any existing errors when entering this screen
   useEffect(() => {
     setError(null);
-  }, []);
+  }, [setError]);
 
-  const offeringsAvailable =
-    offerings &&
-    offerings.availablePackages &&
-    offerings.availablePackages.length > 0;
+  const offeringsAvailable = (offerings?.availablePackages?.length ?? 0) > 0;
 
   const styles = StyleSheet.create({
     container: {
@@ -246,82 +243,6 @@ export default function PremiumFeaturesScreen() {
       marginBottom: 40,
       marginTop: 8,
     },
-    heading: {
-      fontSize: 24,
-      fontWeight: "bold",
-      marginBottom: 10,
-      textAlign: "center",
-    },
-    subheading: {
-      fontSize: 16,
-      marginBottom: 20,
-      textAlign: "center",
-      opacity: 0.8,
-    },
-    packagesContainer: {
-      marginBottom: 24,
-    },
-    packageOption: {
-      borderWidth: 2,
-      borderRadius: 8,
-      padding: 16,
-      marginBottom: 12,
-    },
-    packageOptionSelected: {
-      borderWidth: 2,
-      borderRadius: 8,
-      padding: 16,
-      marginBottom: 12,
-    },
-    packageDescription: {
-      marginTop: 4,
-      opacity: 0.7,
-    },
-    packageBadge: {
-      position: "absolute",
-      top: -10,
-      right: 10,
-      paddingHorizontal: 10,
-      paddingVertical: 5,
-      borderRadius: 12,
-    },
-    packageBadgeText: {
-      fontSize: 12,
-      fontWeight: "bold",
-    },
-    benefitsContainer: {
-      marginBottom: 24,
-    },
-    benefitItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 10,
-    },
-    benefitIcon: {
-      marginRight: 10,
-    },
-    benefitText: {
-      fontSize: 16,
-    },
-    upgradeButton: {
-      paddingVertical: 12,
-      marginBottom: 16,
-    },
-    upgradeButtonText: {
-      fontSize: 18,
-      fontWeight: "bold",
-    },
-    restoreButton: {
-      marginBottom: 16,
-    },
-    restoreButtonText: {
-      fontSize: 16,
-    },
-    termsText: {
-      fontSize: 12,
-      opacity: 0.6,
-      textAlign: "center",
-    },
     alreadyPremiumMessage: {
       paddingVertical: 16,
       alignItems: "center",
@@ -412,7 +333,7 @@ export default function PremiumFeaturesScreen() {
       console.log(
         `[Premium] Found package with identifier: ${premiumPackage.identifier}`
       );
-      const customerInfo = await purchasePackage(premiumPackage);
+      await purchasePackage(premiumPackage);
       console.log(
         `[Premium] Purchase completed. isPremium: ${
           useUserStore.getState().userData?.isPremium
@@ -433,18 +354,25 @@ export default function PremiumFeaturesScreen() {
           },
         ],
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // User cancelled purchase, don't show an error
-      if (error.code === "PURCHASE_CANCELLED_ERROR") {
+      if (
+        error &&
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "PURCHASE_CANCELLED_ERROR"
+      ) {
         return;
       }
 
       // Don't show server-side errors to users as they may be related to profile updating
-      if (error.message && !error.message.includes("500")) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage && !errorMessage.includes("500")) {
         alertDialog.showAlert({
           title: "Purchase Error",
           message:
-            error.message ||
+            errorMessage ||
             "There was an error processing your purchase. Please try again later.",
           buttons: [{ text: "OK", onPress: () => {} }],
         });
@@ -463,11 +391,13 @@ export default function PremiumFeaturesScreen() {
         message: "Your previous purchases have been restored successfully.",
         buttons: [{ text: "OK", onPress: () => {} }],
       });
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to restore purchases:", error);
 
       // Don't show server-side errors to users
-      if (error.message && !error.message.includes("500")) {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      if (errorMessage && !errorMessage.includes("500")) {
         alertDialog.showAlert({
           title: "Restore Failed",
           message:
@@ -572,7 +502,7 @@ export default function PremiumFeaturesScreen() {
       <View style={styles.header}>
         <View style={styles.imageContainer}>
           <Image
-            source={require("assets/images/premium_screen.jpeg")}
+            source={require("../../../../assets/images/premium_screen.jpeg")}
             style={styles.premiumImage}
             accessibilityLabel="Premium features illustration"
           />
@@ -589,8 +519,8 @@ export default function PremiumFeaturesScreen() {
       <Text style={styles.sectionTitle}>Premium Advantages</Text>
 
       <List.Section style={{ marginTop: -8, marginBottom: 8 }}>
-        {FEATURES.map((feature, index) => (
-          <React.Fragment key={index}>
+        {FEATURES.map((feature) => (
+          <React.Fragment key={feature.icon}>
             <List.Item
               title={feature.text}
               titleNumberOfLines={3}
@@ -628,8 +558,8 @@ export default function PremiumFeaturesScreen() {
           </View>
 
           {/* Table Rows */}
-          {COMPARISON_DATA.map((item, index) => (
-            <React.Fragment key={index}>
+          {COMPARISON_DATA.map((item) => (
+            <React.Fragment key={item.feature}>
               <Divider style={styles.divider} />
               <View style={styles.tableRow}>
                 <View style={[styles.tableCell, styles.tableCellFirst]}>

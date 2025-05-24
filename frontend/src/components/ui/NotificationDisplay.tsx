@@ -1,6 +1,5 @@
 import React from "react";
-import { StyleSheet } from "react-native";
-import { View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { Button, Avatar } from "react-native-paper";
 import CustomText from "./CustomText";
 
@@ -21,7 +20,7 @@ const NotificationDisplay: React.FC<NotificationDisplayProps> = ({
     <View style={styles.container}>
       <Avatar.Image
         size={100}
-        source={require("assets/images/icon.png")}
+        source={require("../../../assets/images/icon.png")}
         style={styles.logo}
       />
       <CustomText variant="headlineMedium" style={styles.title}>

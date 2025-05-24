@@ -1,7 +1,7 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Surface, Text, Button, useTheme } from "react-native-paper";
-import { MAX_FREE_MESSAGES_PER_DAY } from "@hooks/useChat";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Surface, Text, Button, useTheme } from 'react-native-paper';
+import { MAX_FREE_MESSAGES_PER_DAY } from '@hooks/useChat';
 
 interface ChatUsageLimitInfoProps {
   dailyMessageCount: number;
@@ -33,7 +33,7 @@ const ChatUsageLimitInfo: React.FC<ChatUsageLimitInfoProps> = ({
             },
           ]}
         >
-          {MAX_FREE_MESSAGES_PER_DAY - dailyMessageCount} of{" "}
+          {MAX_FREE_MESSAGES_PER_DAY - dailyMessageCount} of{' '}
           {MAX_FREE_MESSAGES_PER_DAY} free messages left today
         </Text>
         <Button
@@ -57,12 +57,12 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   content: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   text: {
-    textAlign: "center",
+    textAlign: 'center',
   },
   button: {
     marginLeft: 8,

@@ -1,5 +1,4 @@
-import React, { useEffect, useRef } from "react";
-import { useUserStore } from "@stores/useUserStore";
+import React, { useEffect, useRef, useCallback } from "react";
 import { useRouter } from "expo-router";
 import {
   hydrateUserSessionAndProfile,
@@ -21,8 +20,9 @@ const AuthInitializer: React.FC = () => {
   const activeProcessingId = useRef<string | null>(null);
   const isProcessingSessionUpdate = useRef<boolean>(false);
   const pendingSessionUpdate = useRef<Session | null | undefined>(undefined);
+  const processLatestSessionUpdateRef = useRef<() => Promise<void>>();
 
-  const processLatestSessionUpdate = async () => {
+  const processLatestSessionUpdate = useCallback(async () => {
     if (
       isProcessingSessionUpdate.current ||
       pendingSessionUpdate.current === undefined
@@ -66,12 +66,16 @@ const AuthInitializer: React.FC = () => {
         Promise.resolve().then(processLatestSessionUpdate);
       }
     }
-  };
+  }, []);
 
-  const handleSessionUpdate = async (session: Session | null) => {
+  // Store the latest version in a ref for stable access
+  processLatestSessionUpdateRef.current = processLatestSessionUpdate;
+
+  const handleSessionUpdate = useCallback(async (session: Session | null) => {
     pendingSessionUpdate.current = session;
-    processLatestSessionUpdate();
-  };
+    // Use ref to avoid dependency issues
+    processLatestSessionUpdateRef.current?.();
+  }, []);
 
   useEffect(() => {
     let initialCheckCompleted = false;
@@ -112,7 +116,9 @@ const AuthInitializer: React.FC = () => {
     );
 
     (async () => {
-      if (initialCheckCompleted) return;
+      if (initialCheckCompleted) {
+        return;
+      }
       try {
         const {
           data: { session: initialSession },
@@ -148,7 +154,7 @@ const AuthInitializer: React.FC = () => {
       );
       subscription.unsubscribe();
     };
-  }, [showAlert, router, setLoading]);
+  }, [showAlert, router, setLoading, handleSessionUpdate]);
 
   useEffect(() => {
     const refreshToken = async () => {
@@ -173,6 +179,7 @@ const AuthInitializer: React.FC = () => {
             handleSessionUpdate(null);
           }
         } else if (refreshedSession) {
+          // Token was refreshed successfully, session is already handled by auth state listener
         } else {
           const {
             data: { session: currentSession },
@@ -184,15 +191,19 @@ const AuthInitializer: React.FC = () => {
             handleSessionUpdate(null);
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         console.error(
           "[AuthInitializer] Unexpected error during Supabase token refresh:",
           error
         );
         if (
-          error.message?.includes("Invalid refresh token") ||
-          error.status === 401 ||
-          error.status === 403
+          error &&
+          typeof error === "object" &&
+          (("message" in error &&
+            typeof error.message === "string" &&
+            error.message.includes("Invalid refresh token")) ||
+            ("status" in error &&
+              (error.status === 401 || error.status === 403)))
         ) {
           console.warn(
             "[AuthInitializer] Unexpected error indicates invalid token. Clearing session."
@@ -212,7 +223,7 @@ const AuthInitializer: React.FC = () => {
       clearInterval(interval);
       clearTimeout(timerId);
     };
-  }, []);
+  }, [handleSessionUpdate]);
 
   return null;
 };

@@ -63,7 +63,7 @@ export default function FlashcardChallengeScreen() {
         onRetry={handleRetry}
         onSecondaryAction={() => router.replace("/(app)/(tabs)/flashcard")}
         secondaryButtonText="Back to Categories"
-        fullScreen={true}
+        fullScreen
       />
     );
   }
@@ -114,21 +114,5 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 16,
     textAlign: "center",
-  },
-  card: {
-    width: "100%",
-    maxWidth: 400,
-  },
-  errorTitle: {
-    textAlign: "center",
-    marginBottom: 12,
-  },
-  errorText: {
-    textAlign: "center",
-    marginBottom: 20,
-  },
-  cardActions: {
-    flexDirection: "column",
-    alignItems: "stretch",
   },
 });

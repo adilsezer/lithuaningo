@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import ChallengeComponent from "@components/ui/ChallengeComponent";
-import { ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { router, useLocalSearchParams } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
@@ -12,7 +12,6 @@ import {
 import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
 import ChallengeService from "@services/data/challengeService";
 import ErrorMessage from "@components/ui/ErrorMessage";
-import { useTheme } from "react-native-paper";
 
 /**
  * Daily Challenge Screen - Simplified with direct service calls
@@ -30,7 +29,7 @@ export default function DailyChallengeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<ChallengeQuestionResponse[]>([]);
-  const [stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
+  const [_stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
 
   // Challenge state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,11 +79,9 @@ export default function DailyChallengeScreen() {
 
         setError(null);
         setShowCompletionScreen(false);
-      } catch (err) {
-        console.error("Failed to load challenge data:", err);
-        setError(
-          typeof err === "string" ? err : "Failed to load challenge data"
-        );
+      } catch {
+        // console.error("Failed to load challenge data:", err);
+        setError("Failed to load challenge data");
       } finally {
         setIsLoading(false);
       }
@@ -103,7 +100,9 @@ export default function DailyChallengeScreen() {
   // Handle answer submission - simplified with direct service call
   const handleAnswer = useCallback(
     async (answer: string) => {
-      if (!userId || !currentQuestion || isCorrectAnswer !== null) return;
+      if (!userId || !currentQuestion || isCorrectAnswer !== null) {
+        return;
+      }
 
       const isCorrect = answer === currentQuestion.correctAnswer;
 
@@ -117,9 +116,11 @@ export default function DailyChallengeScreen() {
 
         // Update local state
         setIsCorrectAnswer(isCorrect);
-        if (isCorrect) setScore((prev) => prev + 1);
-      } catch (err) {
-        console.error("Failed to submit answer:", err);
+        if (isCorrect) {
+          setScore((prev) => prev + 1);
+        }
+      } catch {
+        // console.error("Failed to submit answer:", err);
       }
     },
     [userId, currentQuestion, isCorrectAnswer]
@@ -143,7 +144,7 @@ export default function DailyChallengeScreen() {
       await loadData(true);
       setIsCorrectAnswer(null);
       setShowCompletionScreen(false);
-    } catch (err) {
+    } catch {
       setError("Failed to reload challenge questions");
     } finally {
       setIsLoading(false);
@@ -174,7 +175,7 @@ export default function DailyChallengeScreen() {
         onRetry={handleRetry}
         onSecondaryAction={() => router.back()}
         secondaryButtonText="Go Back"
-        fullScreen={true}
+        fullScreen
       />
     );
   }
@@ -205,17 +206,14 @@ export default function DailyChallengeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    padding: 16,
+    backgroundColor: "#F5F5F5",
   },
   centerContainer: {
     flex: 1,
     padding: 16,
     justifyContent: "center",
     alignItems: "center",
-  },
-  title: {
-    textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 16,
   },
   text: {
     textAlign: "center",

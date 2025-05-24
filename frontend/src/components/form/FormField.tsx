@@ -3,22 +3,22 @@ import { FormField as FormFieldType } from "./form.types";
 import CustomSwitch from "@components/ui/CustomSwitch";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import CustomText from "@components/ui/CustomText";
+import { TextInput } from "react-native";
 
 interface FormFieldProps {
   field: FormFieldType;
-  onChange: (value: any) => void;
+  onChange: (value: string | boolean) => void;
   onBlur: () => void;
-  value: any;
+  value: string | boolean;
   error?: string;
 }
 
-export const FormField = forwardRef<any, FormFieldProps>(
+export const FormField = forwardRef<TextInput, FormFieldProps>(
   ({ field, onChange, onBlur, value, error }, ref) => {
     const { label, category, type, defaultValue, ...inputProps } = field;
     const props = {
       label,
       error,
-      value,
       onBlur,
       ...inputProps,
     };
@@ -29,7 +29,8 @@ export const FormField = forwardRef<any, FormFieldProps>(
           <CustomTextInput
             {...props}
             ref={ref}
-            onChangeText={onChange}
+            value={typeof value === "string" ? value : ""}
+            onChangeText={(text: string) => onChange(text)}
             secureTextEntry={type === "password"}
             keyboardType={type === "email" ? "email-address" : "default"}
             autoCapitalize={field.autoCapitalize || "none"}
@@ -37,7 +38,13 @@ export const FormField = forwardRef<any, FormFieldProps>(
         );
 
       case "toggle":
-        return <CustomSwitch {...props} onValueChange={onChange} />;
+        return (
+          <CustomSwitch
+            {...props}
+            value={typeof value === "boolean" ? value : false}
+            onValueChange={(newValue: boolean) => onChange(newValue)}
+          />
+        );
 
       case "link":
         return (
@@ -48,6 +55,11 @@ export const FormField = forwardRef<any, FormFieldProps>(
             {field.linkText || field.label}
           </CustomText>
         );
+
+      default:
+        return null;
     }
   }
 );
+
+FormField.displayName = "FormField";

@@ -1,6 +1,6 @@
-import React from "react";
-import ErrorBoundary from "@components/error/ErrorBoundary";
-import { useAlertActions } from "@stores/useAlertStore";
+import React from 'react';
+import ErrorBoundary from '@components/error/ErrorBoundary';
+import { useAlertActions } from '@stores/useAlertStore';
 
 /**
  * Provider component that wraps the app with an error boundary

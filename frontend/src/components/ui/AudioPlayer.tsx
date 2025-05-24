@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, TouchableOpacity, Platform } from "react-native";
-import { useTheme } from "react-native-paper";
-import { Audio, AVPlaybackStatus } from "expo-av";
-import Icon from "@expo/vector-icons/MaterialIcons";
-import CustomText from "./CustomText";
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, View, TouchableOpacity } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import { Audio, AVPlaybackStatus } from 'expo-av';
+import Icon from '@expo/vector-icons/MaterialIcons';
+import CustomText from './CustomText';
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -41,13 +41,15 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
           staysActiveInBackground: false,
         });
 
-        if (!audioUrl) return;
+        if (!audioUrl) {
+          return;
+        }
 
         // Create and load the Sound object
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: audioUrl },
           { shouldPlay: false },
-          _onPlaybackStatusUpdate
+          _onPlaybackStatusUpdate,
         );
 
         // Only update state if component is still mounted
@@ -59,7 +61,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
           newSound.unloadAsync();
         }
       } catch (error) {
-        console.error("Failed to load audio:", error);
+        console.error('Failed to load audio:', error);
         setIsLoaded(false);
       }
     };
@@ -81,7 +83,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
       // Update state if there was an error during playback
       if (status.error) {
         console.error(
-          `Encountered a fatal error during playback: ${status.error}`
+          `Encountered a fatal error during playback: ${status.error}`,
         );
         setIsPlaying(false);
       }
@@ -99,7 +101,9 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
 
   // Handle play/pause button press
   const handleTogglePlayback = async () => {
-    if (!sound.current || !isLoaded) return;
+    if (!sound.current || !isLoaded) {
+      return;
+    }
 
     try {
       const status = await sound.current.getStatusAsync();
@@ -117,7 +121,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
         }
       }
     } catch (error) {
-      console.error("Error toggling playback:", error);
+      console.error('Error toggling playback:', error);
     }
   };
 
@@ -133,7 +137,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
         disabled={!isLoaded}
       >
         <Icon
-          name={isPlaying ? "pause" : "play-arrow"}
+          name={isPlaying ? 'pause' : 'play-arrow'}
           size={36}
           color={isLoaded ? theme.colors.onPrimary : theme.colors.outline}
         />
@@ -142,7 +146,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
         variant="bodyMedium"
         style={[styles.listenText, !isLoaded && styles.textDisabled]}
       >
-        {isLoaded ? (isPlaying ? "Pause" : "Listen") : "Loading..."}
+        {isLoaded ? (isPlaying ? 'Pause' : 'Listen') : 'Loading...'}
       </CustomText>
     </View>
   );
@@ -150,23 +154,23 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
 
 const styles = StyleSheet.create({
   audioContainer: {
-    flexDirection: "column",
-    alignItems: "center",
+    flexDirection: 'column',
+    alignItems: 'center',
   },
   audioButton: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 8,
   },
   audioButtonDisabled: {
-    backgroundColor: "#f0f0f0",
+    backgroundColor: '#f0f0f0',
     opacity: 0.7,
   },
   listenText: {
-    textAlign: "center",
+    textAlign: 'center',
   },
   textDisabled: {
     opacity: 0.5,

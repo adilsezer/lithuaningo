@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useState } from "react";
 import { ScrollView, Image, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
@@ -37,7 +37,9 @@ export default function ChallengeScreen() {
 
   // Load data function - only loads stats and leaderboard, not questions
   const loadData = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) {
+      return;
+    }
 
     try {
       setIsLoading(true);
@@ -52,8 +54,8 @@ export default function ChallengeScreen() {
       // Update state with the data
       setStats(userStats);
       setEntries(leaderboardEntries);
-    } catch (err) {
-      console.error("Failed to load challenge data:", err);
+    } catch {
+      // console.error("Failed to load challenge data:", err);
       setError("Failed to load challenge data. Please try again.");
     } finally {
       setIsLoading(false);
@@ -98,7 +100,7 @@ export default function ChallengeScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <Image
-        source={require("assets/images/challenge_screen.png")}
+        source={require("../../../../assets/images/challenge_screen.png")}
         style={styles.image}
         resizeMode="contain"
       />

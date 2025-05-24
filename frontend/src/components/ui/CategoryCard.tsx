@@ -6,12 +6,12 @@ import CustomText from "./CustomText";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useIsPremium } from "@stores/useUserStore";
 
-export type FlashcardCategory = {
+export interface FlashcardCategory {
   id: string;
   name: string;
   description?: string;
   color?: string;
-};
+}
 
 interface CategoryCardProps {
   category: FlashcardCategory;
@@ -19,92 +19,105 @@ interface CategoryCardProps {
   onPressMaster?: (category: FlashcardCategory) => void;
 }
 
-const CategoryCard: React.FC<CategoryCardProps> = ({
-  category,
-  onPressPractice,
-  onPressMaster,
-}) => {
-  const theme = useTheme();
-  const { showConfirm } = useAlertDialog();
-  const isPremium = useIsPremium();
-  const categoryIndicatorColor =
-    category.color || theme.colors.primaryContainer;
+const CategoryCard: React.FC<CategoryCardProps> = React.memo(
+  ({ category, onPressPractice, onPressMaster }) => {
+    const theme = useTheme();
+    const { showConfirm } = useAlertDialog();
+    const isPremium = useIsPremium();
 
-  const handleMasterPress = () => {
-    if (!isPremium) {
-      showConfirm({
-        title: "Premium Feature",
-        message:
-          "Master challenges are available for premium users only. Would you like to upgrade to premium?",
-        confirmText: "Upgrade",
-        cancelText: "Not Now",
-        onConfirm: () => {
-          router.push("/(app)/premium");
-        },
-      });
-    } else {
-      onPressMaster?.(category);
-    }
-  };
+    // Memoize the color calculation
+    const categoryIndicatorColor = React.useMemo(
+      () => category.color || theme.colors.primaryContainer,
+      [category.color, theme.colors.primaryContainer]
+    );
 
-  return (
-    <Surface
-      style={[styles.surface, { backgroundColor: theme.colors.background }]}
-      elevation={0}
-    >
-      <View style={styles.container}>
-        <View
-          style={[
-            styles.colorIndicator,
-            { backgroundColor: categoryIndicatorColor },
-          ]}
-        />
-        <View style={styles.content}>
-          <CustomText variant="titleMedium" style={styles.title}>
-            {category.name}
-          </CustomText>
-          {category.description && (
-            <CustomText variant="bodyMedium" style={styles.description}>
-              {category.description}
+    // Memoize the master press handler
+    const handleMasterPress = React.useCallback(() => {
+      if (!isPremium) {
+        showConfirm({
+          title: "Premium Feature",
+          message:
+            "Master challenges are available for premium users only. Would you like to upgrade to premium?",
+          confirmText: "Upgrade",
+          cancelText: "Not Now",
+          onConfirm: () => {
+            router.push("/(app)/premium");
+          },
+        });
+      } else {
+        onPressMaster?.(category);
+      }
+    }, [isPremium, showConfirm, onPressMaster, category]);
+
+    // Memoize the practice press handler
+    const handlePracticePress = React.useCallback(() => {
+      onPressPractice(category);
+    }, [onPressPractice, category]);
+
+    return (
+      <Surface
+        style={[styles.surface, { backgroundColor: theme.colors.background }]}
+        elevation={0}
+      >
+        <View style={styles.container}>
+          <View
+            style={[
+              styles.colorIndicator,
+              { backgroundColor: categoryIndicatorColor },
+            ]}
+          />
+          <View style={styles.content}>
+            <CustomText variant="titleMedium" style={styles.title}>
+              {category.name}
             </CustomText>
-          )}
-          <View style={styles.buttonsContainer}>
-            <Button
-              mode="contained"
-              onPress={() => onPressPractice(category)}
-              style={[styles.button, { backgroundColor: theme.colors.primary }]}
-              labelStyle={styles.buttonLabel}
-              icon="cards-outline"
-            >
-              Practice
-            </Button>
-            {onPressMaster && (
+            {category.description && (
+              <CustomText variant="bodyMedium" style={styles.description}>
+                {category.description}
+              </CustomText>
+            )}
+            <View style={styles.buttonsContainer}>
               <Button
                 mode="contained"
-                onPress={handleMasterPress}
+                onPress={handlePracticePress}
                 style={[
                   styles.button,
-                  {
-                    backgroundColor: theme.colors.secondary,
-                  },
+                  { backgroundColor: theme.colors.primary },
                 ]}
-                labelStyle={[
-                  styles.buttonLabel,
-                  {
-                    color: theme.colors.onSecondary,
-                  },
-                ]}
-                icon={isPremium ? "clipboard-text-search-outline" : "lock"}
+                labelStyle={styles.buttonLabel}
+                icon="cards-outline"
               >
-                Master
+                Practice
               </Button>
-            )}
+              {onPressMaster && (
+                <Button
+                  mode="contained"
+                  onPress={handleMasterPress}
+                  style={[
+                    styles.button,
+                    {
+                      backgroundColor: theme.colors.secondary,
+                    },
+                  ]}
+                  labelStyle={[
+                    styles.buttonLabel,
+                    {
+                      color: theme.colors.onSecondary,
+                    },
+                  ]}
+                  icon={isPremium ? "clipboard-text-search-outline" : "lock"}
+                >
+                  Master
+                </Button>
+              )}
+            </View>
           </View>
         </View>
-      </View>
-    </Surface>
-  );
-};
+      </Surface>
+    );
+  }
+);
+
+CategoryCard.displayName = "CategoryCard";
 
 const styles = StyleSheet.create({
   surface: {

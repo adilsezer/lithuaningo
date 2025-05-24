@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
-import { ChallengeQuestionResponse } from "@src/types";
-import { UserFlashcardStatsService } from "@services/data/userFlashcardStatsService";
-import ChallengeService from "@services/data/challengeService"; // Assuming this service can fetch category-specific questions
-import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useCallback, useEffect, useState } from 'react';
+import { ChallengeQuestionResponse } from '@src/types';
+import { UserFlashcardStatsService } from '@services/data/userFlashcardStatsService';
+import ChallengeService from '@services/data/challengeService'; // Assuming this service can fetch category-specific questions
+import { useAlertDialog } from '@hooks/useAlertDialog';
 
 interface UseFlashcardChallengeProps {
   categoryId: string | undefined;
@@ -28,12 +28,12 @@ export const useFlashcardChallenge = ({
   const loadChallengeData = useCallback(
     async (isRetry = false) => {
       if (!userId) {
-        setError("User ID is required to start the challenge.");
+        setError('User ID is required to start the challenge.');
         setIsLoading(false);
         return;
       }
       if (!categoryId) {
-        setError("Category ID is required to load the challenge.");
+        setError('Category ID is required to load the challenge.');
         setIsLoading(false);
         return;
       }
@@ -62,12 +62,12 @@ export const useFlashcardChallenge = ({
           setQuestions([]);
           // Show specific alert for insufficient flashcards
           showAlert({
-            title: "Practice More Flashcards",
+            title: 'Practice More Flashcards',
             message:
-              "You need to practice more flashcards in this category before you can start the Master challenge. Try studying some flashcards first!",
+              'You need to practice more flashcards in this category before you can start the Master challenge. Try studying some flashcards first!',
             buttons: [
               {
-                text: "OK",
+                text: 'OK',
                 onPress: () => {
                   // User can navigate back or the component will handle this
                 },
@@ -88,20 +88,20 @@ export const useFlashcardChallenge = ({
           setScore(0);
         }
       } catch (err) {
-        console.error("Failed to load flashcard challenge data:", err);
+        console.error('Failed to load flashcard challenge data:', err);
 
         // Check if this is specifically the "no flashcards" error
         if (
           err instanceof Error &&
-          err.message.includes("No flashcards found")
+          err.message.includes('No flashcards found')
         ) {
           showAlert({
-            title: "Practice More Flashcards",
+            title: 'Practice More Flashcards',
             message:
-              "You need to practice more flashcards in this category before you can start the Master challenge. Try studying some flashcards first!",
+              'You need to practice more flashcards in this category before you can start the Master challenge. Try studying some flashcards first!',
             buttons: [
               {
-                text: "OK",
+                text: 'OK',
                 onPress: () => {
                   // User can navigate back or the component will handle this
                 },
@@ -113,7 +113,7 @@ export const useFlashcardChallenge = ({
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to load challenge questions."
+              : 'Failed to load challenge questions.',
           );
         }
         setQuestions([]);
@@ -121,7 +121,7 @@ export const useFlashcardChallenge = ({
         setIsLoading(false);
       }
     },
-    [userId, categoryId, showAlert]
+    [userId, categoryId, showAlert],
   );
 
   useEffect(() => {
@@ -132,7 +132,7 @@ export const useFlashcardChallenge = ({
 
   const handleAnswer = useCallback(
     async (answer: string) => {
-      if (!userId || !currentQuestion || isCorrectAnswer !== null) return;
+      if (!userId || !currentQuestion || isCorrectAnswer !== null) {return;}
 
       const isCorrect = answer === currentQuestion.correctAnswer;
       setIsCorrectAnswer(isCorrect);
@@ -152,15 +152,15 @@ export const useFlashcardChallenge = ({
           });
         } else {
           console.warn(
-            "Challenge question missing flashcardId - cannot track flashcard performance"
+            'Challenge question missing flashcardId - cannot track flashcard performance',
           );
         }
       } catch (err) {
-        console.error("Failed to submit flashcard challenge answer:", err);
+        console.error('Failed to submit flashcard challenge answer:', err);
         // Optionally set an error state or notify user
       }
     },
-    [userId, currentQuestion, isCorrectAnswer]
+    [userId, currentQuestion, isCorrectAnswer],
   );
 
   const handleNextQuestion = useCallback(() => {

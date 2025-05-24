@@ -1,7 +1,7 @@
-import { useSetLoading, useSetError } from "@stores/useUIStore";
-import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useCallback } from "react";
-import { AuthResponse } from "@src/types/auth.types";
+import { useSetLoading, useSetError } from '@stores/useUIStore';
+import { useAlertDialog } from '@hooks/useAlertDialog';
+import { useCallback } from 'react';
+import { AuthResponse } from '@src/types/auth.types';
 
 export const useAuthOperation = () => {
   const setLoading = useSetLoading();
@@ -9,15 +9,16 @@ export const useAuthOperation = () => {
   const { showError, showSuccess } = useAlertDialog();
 
   const handleError = useCallback(
-    (error: any, title: string) => {
-      const message = error.message || "An error occurred";
+    (error: unknown, title: string) => {
+      const message =
+        error instanceof Error ? error.message : 'An error occurred';
       console.error(`${title}:`, error);
       setError(message);
       //crashlytics().recordError(error);
       showError(message, title);
       return { success: false, message };
     },
-    [setError, showError]
+    [setError, showError],
   );
 
   const clearError = useCallback(() => {
@@ -28,7 +29,7 @@ export const useAuthOperation = () => {
     async (
       operation: () => Promise<AuthResponse>,
       errorTitle: string,
-      options?: { showSuccessAlert?: boolean }
+      options?: { showSuccessAlert?: boolean },
     ) => {
       setLoading(true);
       clearError();
@@ -37,23 +38,23 @@ export const useAuthOperation = () => {
         const result = await operation();
 
         if (!result.success) {
-          const error = new Error(result.message || "Operation failed");
+          const error = new Error(result.message || 'Operation failed');
           return handleError(error, errorTitle);
         }
 
         // Show success alert if requested and there's a message
         if (options?.showSuccessAlert && result.message) {
-          showSuccess(result.message, "Success");
+          showSuccess(result.message, 'Success');
         }
 
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         return handleError(error, errorTitle);
       } finally {
         setLoading(false);
       }
     },
-    [handleError, clearError, setLoading, showSuccess]
+    [handleError, clearError, setLoading, showSuccess],
   );
 
   return {

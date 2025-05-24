@@ -1,7 +1,7 @@
-import CustomText from "@components/ui/CustomText";
-import React from "react";
-import { View, StyleProp, ViewStyle, TextStyle } from "react-native";
-import { Switch, Text, useTheme } from "react-native-paper";
+import CustomText from '@components/ui/CustomText';
+import React from 'react';
+import { View, StyleProp, ViewStyle, TextStyle } from 'react-native';
+import { Switch, Text, useTheme } from 'react-native-paper';
 
 interface CustomSwitchProps {
   value: boolean;
@@ -29,20 +29,20 @@ export default function CustomSwitch({
   // Default styles that can be overridden
   const defaultContainerStyle: ViewStyle = {
     marginVertical: 12,
-    width: "100%",
+    width: '100%',
   };
 
   const defaultSwitchContainerStyle: ViewStyle = {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    width: "100%",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
   };
 
   const defaultLabelStyle: TextStyle = {
     flex: 1,
     marginRight: 16,
-    textAlign: "left",
+    textAlign: 'left',
     marginVertical: 0,
   };
 

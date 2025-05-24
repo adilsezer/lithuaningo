@@ -1,27 +1,27 @@
-import React from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
-import { useAuth } from "@hooks/useAuth";
+import React from 'react';
+import { View, ScrollView, StyleSheet } from 'react-native';
+import { useAuth } from '@hooks/useAuth';
 import {
   useUserData,
   useIsAuthenticated,
   useIsAdmin,
-} from "@stores/useUserStore";
-import CustomButton from "@components/ui/CustomButton";
-import { useRouter } from "expo-router";
-import CustomSwitch from "@components/ui/CustomSwitch";
-import CustomText from "@components/ui/CustomText";
-import { useIsDarkMode, useThemeActions } from "@stores/useThemeStore";
+} from '@stores/useUserStore';
+import CustomButton from '@components/ui/CustomButton';
+import { useRouter } from 'expo-router';
+import CustomSwitch from '@components/ui/CustomSwitch';
+import CustomText from '@components/ui/CustomText';
+import { useIsDarkMode, useThemeActions } from '@stores/useThemeStore';
 
 const PROFILE_ACTIONS = [
-  { title: "Edit Profile", path: "/profile/edit-profile" },
-  { title: "Change Password", path: "/profile/change-password" },
-  { title: "Delete Account", path: "/profile/delete-account" },
-  { title: "Settings", path: "/profile/settings" },
-  { title: "About the App", path: "/about" },
+  { title: 'Edit Profile', path: '/profile/edit-profile' },
+  { title: 'Change Password', path: '/profile/change-password' },
+  { title: 'Delete Account', path: '/profile/delete-account' },
+  { title: 'Settings', path: '/profile/settings' },
+  { title: 'About the App', path: '/about' },
 ] as const;
 
 const ADMIN_ACTIONS = [
-  { title: "Review Flashcards", path: "/admin/flashcard-review" },
+  { title: 'Review Flashcards', path: '/admin/flashcard-review' },
 ] as const;
 
 const ProfileActions = ({
@@ -84,7 +84,7 @@ export default function ProfileScreen() {
 
   if (!isAuthenticated || !userData) {
     return (
-      <View style={[styles.container]}>
+      <View style={styles.container}>
         <CustomText>No user data available</CustomText>
       </View>
     );
@@ -99,8 +99,8 @@ export default function ProfileScreen() {
       />
 
       <ProfileHeader
-        fullName={userData?.fullName || "No name"}
-        email={userData?.email || "No email"}
+        fullName={userData?.fullName || 'No name'}
+        email={userData?.email || 'No email'}
       />
 
       <ProfileActions onNavigate={handleNavigation} isAdmin={isAdmin} />

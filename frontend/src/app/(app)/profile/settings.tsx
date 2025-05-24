@@ -1,11 +1,8 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
-import { Button, List, Switch, Divider, Card } from "react-native-paper";
-import { router } from "expo-router";
+import { StyleSheet, ScrollView } from "react-native";
+import { List, Switch, Divider, Card } from "react-native-paper";
 import { createTheme } from "@src/styles/theme";
-import { useIsDarkMode } from "@stores/useThemeStore";
-import useThemeStore from "@stores/useThemeStore";
-import { useAuth } from "@hooks/useAuth";
+import useThemeStore, { useIsDarkMode } from "@stores/useThemeStore";
 import { useRevenueCat } from "@hooks/useRevenueCat";
 import useNotificationPreferencesStore from "@stores/useNotificationPreferencesStore";
 import { useUserData } from "@stores/useUserStore";
@@ -14,7 +11,6 @@ export default function SettingsScreen() {
   const isDarkMode = useIsDarkMode();
   const toggleTheme = useThemeStore((state) => state.toggleTheme);
   const theme = createTheme(isDarkMode);
-  const { deleteAccount } = useAuth();
   const userData = useUserData();
   const { showManageSubscriptions, isPremium } = useRevenueCat();
 
@@ -93,12 +89,5 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 20,
-  },
-  buttonGroup: {
-    marginTop: 8,
-  },
-  dangerButton: {
-    marginVertical: 8,
-    borderColor: "transparent",
   },
 });

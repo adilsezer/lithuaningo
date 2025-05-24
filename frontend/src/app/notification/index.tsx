@@ -1,26 +1,26 @@
-import React from "react";
-import { useAppInfo } from "@hooks/useAppInfo";
-import NotificationDisplay from "@components/ui/NotificationDisplay";
-import ErrorMessage from "@components/ui/ErrorMessage";
+import React from 'react';
+import { useAppInfo } from '@hooks/useAppInfo';
+import NotificationDisplay from '@components/ui/NotificationDisplay';
+import ErrorMessage from '@components/ui/ErrorMessage';
 
 const NOTIFICATION_CONFIGS = {
   maintenance: {
-    title: "Under Maintenance",
+    title: 'Under Maintenance',
     subtitle: (message?: string) =>
       message ||
       "We're currently performing maintenance. Please try again later.",
   },
   update: {
-    title: "Update Required",
+    title: 'Update Required',
     subtitle: (notes?: string, version?: string) =>
       `Please update to the latest version${
-        version ? ` (${version})` : ""
-      } to continue using the app.${notes ? `\n\nWhat's New:\n${notes}` : ""}`,
-    buttonText: "Update Now",
+        version ? ` (${version})` : ''
+      } to continue using the app.${notes ? `\n\nWhat's New:\n${notes}` : ''}`,
+    buttonText: 'Update Now',
   },
   loading: {
-    title: "Checking App Status",
-    subtitle: "Please wait while we verify application status...",
+    title: 'Checking App Status',
+    subtitle: 'Please wait while we verify application status...',
   },
 } as const;
 
@@ -64,7 +64,7 @@ const NotificationScreen: React.FC = () => {
         title={NOTIFICATION_CONFIGS.update.title}
         subtitle={NOTIFICATION_CONFIGS.update.subtitle(
           releaseNotes,
-          appInfo?.currentVersion
+          appInfo?.currentVersion,
         )}
         buttonText={NOTIFICATION_CONFIGS.update.buttonText}
         buttonAction={openUpdateUrl}

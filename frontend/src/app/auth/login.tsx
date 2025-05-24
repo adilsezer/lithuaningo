@@ -1,30 +1,29 @@
-import React, { useEffect, useCallback } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { useAuth } from "@hooks/useAuth";
-import { useIsLoading } from "@stores/useUIStore";
-import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
-import CustomDivider from "@components/ui/CustomDivider";
-import { Form } from "@components/form/Form";
-import type { FormField } from "@components/form/form.types";
-import type { SocialProvider } from "@hooks/useAuth";
-import { loginFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/ui/CustomText";
-import { router } from "expo-router";
+import React, { useCallback } from 'react';
+import { ScrollView } from 'react-native';
+import { useAuth, type SocialProvider } from '@hooks/useAuth';
+import { useIsLoading } from '@stores/useUIStore';
+import { SocialAuthButtons } from '@components/auth/SocialAuthButtons';
+import CustomDivider from '@components/ui/CustomDivider';
+import { Form } from '@components/form/Form';
+import type { FormField } from '@components/form/form.types';
+import { loginFormSchema } from '@utils/zodSchemas';
+import CustomText from '@components/ui/CustomText';
+import { router } from 'expo-router';
 
 const loginFields: FormField[] = [
   {
-    name: "email",
-    label: "Email",
-    category: "text-input",
-    type: "email",
-    placeholder: "Email",
+    name: 'email',
+    label: 'Email',
+    category: 'text-input',
+    type: 'email',
+    placeholder: 'Email',
   },
   {
-    name: "password",
-    label: "Password",
-    category: "text-input",
-    type: "password",
-    placeholder: "Password",
+    name: 'password',
+    label: 'Password',
+    category: 'text-input',
+    type: 'password',
+    placeholder: 'Password',
   },
 ];
 
@@ -36,7 +35,7 @@ const LoginScreen: React.FC = () => {
     (provider: SocialProvider) => {
       signInWithSocial(provider);
     },
-    [signInWithSocial]
+    [signInWithSocial],
   );
 
   return (
@@ -48,16 +47,16 @@ const LoginScreen: React.FC = () => {
         }}
         submitButtonText="Sign In"
         isLoading={loading}
-        options={{ mode: "onBlur" }}
+        options={{ mode: 'onBlur' }}
         zodSchema={loginFormSchema}
       />
 
       <CustomText
         variant="bodyMedium"
         onPress={() => {
-          router.push("/auth/forgot-password");
+          router.push('/auth/forgot-password');
         }}
-        style={{ textDecorationLine: "underline" }}
+        style={{ textDecorationLine: 'underline' }}
       >
         Forgot Password?
       </CustomText>
@@ -65,23 +64,21 @@ const LoginScreen: React.FC = () => {
       <CustomDivider content="Or" />
 
       <SocialAuthButtons
-        onGooglePress={() => handleSocialAuth("google")}
-        onApplePress={() => handleSocialAuth("apple")}
+        onGooglePress={() => handleSocialAuth('google')}
+        onApplePress={() => handleSocialAuth('apple')}
       />
 
       <CustomText
         variant="bodyMedium"
         onPress={() => {
-          router.push("/auth/signup");
+          router.push('/auth/signup');
         }}
-        style={{ textDecorationLine: "underline" }}
+        style={{ textDecorationLine: 'underline' }}
       >
         Don't have an account? Sign Up
       </CustomText>
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({});
 
 export default LoginScreen;

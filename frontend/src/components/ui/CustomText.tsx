@@ -1,10 +1,10 @@
-import React from "react";
-import { StyleProp, TextStyle } from "react-native";
+import React from 'react';
+import { StyleProp, TextStyle } from 'react-native';
 import {
   Text as PaperText,
   TextProps as PaperTextProps,
   useTheme,
-} from "react-native-paper";
+} from 'react-native-paper';
 
 interface CustomTextProps extends PaperTextProps<Text> {
   children: React.ReactNode;
@@ -28,8 +28,8 @@ const CustomText: React.FC<CustomTextProps> = ({
       style={[
         {
           color: color || theme.colors.onBackground,
-          textAlign: "center",
-          fontWeight: bold ? "bold" : "normal",
+          textAlign: 'center',
+          fontWeight: bold ? 'bold' : 'normal',
           marginVertical: 6,
         },
         style,

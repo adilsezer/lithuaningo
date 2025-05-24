@@ -1,9 +1,9 @@
-import React from "react";
-import { ScrollView, StyleProp, StyleSheet, TextStyle } from "react-native";
-import * as Linking from "expo-linking";
-import CustomText from "@components/ui/CustomText";
+import React from 'react';
+import { ScrollView, StyleProp, StyleSheet, TextStyle } from 'react-native';
+import * as Linking from 'expo-linking';
+import CustomText from '@components/ui/CustomText';
 // Define a local union type for the variants used in this file.
-type ValidVariant = "titleLarge" | "titleMedium" | "bodyMedium";
+type ValidVariant = 'titleLarge' | 'titleMedium' | 'bodyMedium';
 
 // Define a helper type for the paragraph props.
 interface ParagraphProps {
@@ -14,7 +14,7 @@ interface ParagraphProps {
 const TermsOfService = () => {
   // Create a helper object for body text props.
   const paragraphProps: ParagraphProps = {
-    variant: "bodyMedium",
+    variant: 'bodyMedium',
     style: styles.justifiedText,
   };
 
@@ -204,10 +204,10 @@ const TermsOfService = () => {
         For questions about these terms, please contact us:
       </CustomText>
       <CustomText {...paragraphProps}>
-        By email:{" "}
+        By email:{' '}
         <CustomText
           style={[paragraphProps.style, styles.link]}
-          onPress={() => Linking.openURL("mailto:lithuaningo@gmail.com")}
+          onPress={() => Linking.openURL('mailto:lithuaningo@gmail.com')}
         >
           lithuaningo@gmail.com
         </CustomText>
@@ -218,11 +218,11 @@ const TermsOfService = () => {
 
 const styles = StyleSheet.create({
   justifiedText: {
-    textAlign: "justify",
+    textAlign: 'justify',
   },
   link: {
-    color: "#0000FF",
-    textDecorationLine: "underline",
+    color: '#0000FF',
+    textDecorationLine: 'underline',
   },
 });
 

@@ -1,9 +1,9 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { Card, ProgressBar, useTheme } from "react-native-paper";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
-import CustomText from "@components/ui/CustomText";
-import { UserChallengeStatsResponse } from "@src/types";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { Card, ProgressBar, useTheme } from 'react-native-paper';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import CustomText from '@components/ui/CustomText';
+import { UserChallengeStatsResponse } from '@src/types';
 
 interface UserChallengeStatItemProps {
   icon: keyof typeof MaterialCommunityIcons.glyphMap;
@@ -72,7 +72,7 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
             label={`Streak${
               stats.longestStreak > stats.currentStreak
                 ? ` (Best: ${stats.longestStreak})`
-                : ""
+                : ''
             }`}
             color={theme.colors.error}
           />
@@ -138,29 +138,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   statsContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     marginBottom: 24,
   },
   statItem: {
-    alignItems: "center",
+    alignItems: 'center',
     flex: 1,
   },
   statValue: {
-    fontWeight: "600",
+    fontWeight: '600',
     marginTop: 8,
   },
   statLabel: {
     marginTop: 4,
-    textAlign: "center",
+    textAlign: 'center',
   },
   weeklyProgress: {
     marginBottom: 16,
   },
   weeklyGoalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   progressBar: {

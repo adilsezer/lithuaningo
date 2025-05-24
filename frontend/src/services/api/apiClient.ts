@@ -44,7 +44,7 @@ const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
  * Custom API error class to handle API errors with status and data
  */
 export class ApiError extends Error {
-  constructor(public status: number, public data: any, message?: string) {
+  constructor(public status: number, public data: unknown, message?: string) {
     super(message || "API Error");
     this.name = "ApiError";
   }
@@ -110,10 +110,6 @@ class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             // Log the token for testing purposes
-            if (__DEV__) {
-              // Only log in development mode
-              console.log("Retrieved JWT for testing:", token);
-            }
           }
         } catch (error) {
           console.error(
@@ -169,20 +165,19 @@ class ApiClient {
   /**
    * Convert Axios errors to ApiError instances
    */
-  private handleError(error: any): ApiError | Error {
-    if (error.response) {
+  private handleError(error: unknown): ApiError | Error {
+    if (axios.isAxiosError(error) && error.response) {
       // Server responded with error status
       const status = error.response.status;
       const data = error.response.data;
       const message = data?.message || `Error ${status}: Server error occurred`;
       return new ApiError(status, data, message);
-    } else if (error.request) {
+    } else if (axios.isAxiosError(error) && error.request) {
       // Request made but no response received
       return new Error("Network error: No response from server");
-    } else {
-      // Something else happened while setting up the request
-      return error instanceof Error ? error : new Error(String(error));
     }
+    // Something else happened while setting up the request
+    return error instanceof Error ? error : new Error(String(error));
   }
 
   /**
@@ -190,7 +185,7 @@ class ApiClient {
    */
   async get<T>(
     endpoint: string,
-    params?: any,
+    params?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
     return this.request<T>(endpoint, { method: "GET", params, ...options });
@@ -201,7 +196,7 @@ class ApiClient {
    */
   async post<T>(
     endpoint: string,
-    data?: any,
+    data?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
     return this.request<T>(endpoint, { method: "POST", data, ...options });
@@ -212,7 +207,7 @@ class ApiClient {
    */
   async put<T>(
     endpoint: string,
-    data?: any,
+    data?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
     return this.request<T>(endpoint, { method: "PUT", data, ...options });
@@ -223,7 +218,7 @@ class ApiClient {
    */
   async patch<T>(
     endpoint: string,
-    data?: any,
+    data?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
     return this.request<T>(endpoint, { method: "PATCH", data, ...options });
@@ -234,7 +229,7 @@ class ApiClient {
    */
   async delete<T>(
     endpoint: string,
-    params?: any,
+    params?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
     return this.request<T>(endpoint, { method: "DELETE", params, ...options });
@@ -247,8 +242,8 @@ class ApiClient {
     endpoint: string,
     options?: {
       method?: string;
-      data?: any;
-      params?: any;
+      data?: unknown;
+      params?: unknown;
       headers?: Record<string, string>;
       timeout?: number;
     }
@@ -318,7 +313,7 @@ class ApiClient {
       context,
     };
 
-    const response = await this.request<AIResponse>(`/api/v1/ai/process`, {
+    const response = await this.request<AIResponse>("/api/v1/ai/process", {
       method: "POST",
       data: request,
     });
@@ -335,7 +330,7 @@ class ApiClient {
       context,
     };
 
-    const response = await this.request<AIResponse>(`/api/v1/ai/chat`, {
+    const response = await this.request<AIResponse>("/api/v1/ai/chat", {
       method: "POST",
       data: request,
     });
@@ -358,7 +353,7 @@ class ApiClient {
     request: SubmitChallengeAnswerRequest
   ): Promise<UserChallengeStatsResponse> {
     return this.request<UserChallengeStatsResponse>(
-      `/api/v1/UserChallengeStats/submit-answer`,
+      "/api/v1/UserChallengeStats/submit-answer",
       {
         method: "POST",
         data: request,
@@ -369,7 +364,7 @@ class ApiClient {
   // Leaderboard Controller
   async getCurrentWeekLeaderboard(): Promise<LeaderboardEntryResponse[]> {
     return this.request<LeaderboardEntryResponse[]>(
-      `/api/v1/Leaderboard/current`,
+      "/api/v1/Leaderboard/current",
       {
         method: "GET",
       }
@@ -379,7 +374,7 @@ class ApiClient {
   async updateLeaderboardEntry(
     request: UpdateLeaderboardEntryRequest
   ): Promise<LeaderboardEntryResponse> {
-    return this.request<LeaderboardEntryResponse>(`/api/v1/Leaderboard/entry`, {
+    return this.request<LeaderboardEntryResponse>("/api/v1/Leaderboard/entry", {
       method: "POST",
       data: request,
     });
@@ -388,7 +383,7 @@ class ApiClient {
   // Challenge Controller
   async getDailyChallengeQuestions(): Promise<ChallengeQuestionResponse[]> {
     return this.request<ChallengeQuestionResponse[]>(
-      `/api/v1/Challenge/daily`,
+      "/api/v1/Challenge/daily",
       {
         method: "GET",
       }
@@ -399,10 +394,16 @@ class ApiClient {
     request: GetReviewChallengeQuestionsRequest
   ): Promise<ChallengeQuestionResponse[]> {
     const endpoint = "/api/v1/challenge/review";
-    const params: any = {};
-    if (request.count) params.count = request.count;
-    if (request.categoryId) params.categoryId = request.categoryId;
-    if (request.userId) params.userId = request.userId;
+    const params: Record<string, unknown> = {};
+    if (request.count) {
+      params.count = request.count;
+    }
+    if (request.categoryId) {
+      params.categoryId = request.categoryId;
+    }
+    if (request.userId) {
+      params.userId = request.userId;
+    }
 
     return this.request<ChallengeQuestionResponse[]>(endpoint, {
       method: "GET",
@@ -412,7 +413,7 @@ class ApiClient {
 
   // Flashcard Controller
   async getFlashcards(request: FlashcardRequest): Promise<FlashcardResponse[]> {
-    return this.request<FlashcardResponse[]>(`/api/v1/Flashcard/learning`, {
+    return this.request<FlashcardResponse[]>("/api/v1/Flashcard/learning", {
       method: "GET",
       params: request,
     });
@@ -434,7 +435,7 @@ class ApiClient {
     request: SubmitFlashcardAnswerRequest
   ): Promise<UserFlashcardStatResponse> {
     return this.request<UserFlashcardStatResponse>(
-      `/api/v1/UserFlashcardStats/submit-answer`,
+      "/api/v1/UserFlashcardStats/submit-answer",
       {
         method: "POST",
         data: request,
@@ -495,7 +496,7 @@ class ApiClient {
     request: TrackMessageRequest
   ): Promise<UserChatStatsResponse> {
     return this.request<UserChatStatsResponse>(
-      `/api/v1/UserChatStats/track-message`,
+      "/api/v1/UserChatStats/track-message",
       {
         method: "POST",
         data: request,

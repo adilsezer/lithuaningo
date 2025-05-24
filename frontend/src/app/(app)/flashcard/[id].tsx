@@ -222,7 +222,7 @@ export default function CategoryFlashcardsScreen() {
       <View style={[styles.container, styles.centered]}>
         <LoadingIndicator modal={false} />
         <CustomText style={{ marginTop: 16 }}>
-          🤖 Lithuaningo AI is generating your flashcards (~30s).
+          🤖 Lithuaningo AI is generating your flashcards (~15s).
         </CustomText>
         <CustomText variant="bodySmall">
           No need to wait—come back to this screen anytime!
@@ -452,11 +452,6 @@ const styles = StyleSheet.create({
   header: {
     marginBottom: 20,
     alignItems: "center",
-  },
-  errorText: {
-    color: "red",
-    marginBottom: 16,
-    textAlign: "center",
   },
   disclaimer: {
     marginTop: 20,

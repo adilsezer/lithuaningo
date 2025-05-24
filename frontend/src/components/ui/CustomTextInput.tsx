@@ -21,6 +21,7 @@ export interface CustomTextInputProps {
   autoCorrect?: boolean;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 const CustomTextInput = forwardRef<any, CustomTextInputProps>(
   (
     {
@@ -38,8 +39,8 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
       right,
       mode = "outlined",
       keyboardType = "default",
-      autoCapitalize = "none",
-      autoCorrect = false,
+      autoCapitalize = "sentences",
+      autoCorrect = true,
     },
     ref
   ) => {
@@ -49,36 +50,25 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
       <>
         <TextInput
           ref={ref}
-          value={value}
-          onChangeText={onChangeText}
           label={label}
           placeholder={placeholder}
-          error={!!error}
+          value={value}
+          onChangeText={onChangeText}
+          mode={mode}
           secureTextEntry={secureTextEntry}
           disabled={disabled}
           multiline={multiline}
           numberOfLines={numberOfLines}
-          mode={mode}
-          style={[
-            {
-              backgroundColor: theme.colors.background,
-              marginTop: 12,
-            },
-            style,
-          ]}
-          outlineColor={theme.colors.primary}
+          style={[{ backgroundColor: theme.colors.background }, style]}
           left={left}
           right={right}
           keyboardType={keyboardType}
           autoCapitalize={autoCapitalize}
           autoCorrect={autoCorrect}
+          error={!!error}
         />
         {error && (
-          <HelperText
-            type="error"
-            visible={!!error}
-            style={{ marginHorizontal: 16 }}
-          >
+          <HelperText type="error" visible={!!error}>
             {error}
           </HelperText>
         )}
@@ -86,5 +76,7 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
     );
   }
 );
+
+CustomTextInput.displayName = "CustomTextInput";
 
 export default CustomTextInput;

@@ -1,9 +1,8 @@
-import React from "react";
-import { View, StyleSheet, TextStyle, ViewStyle } from "react-native";
-import { Card } from "react-native-paper";
-import CustomButton from "./CustomButton";
-import CustomText from "@components/ui/CustomText";
-import { useTheme } from "react-native-paper";
+import React from 'react';
+import { View, StyleSheet, TextStyle, ViewStyle } from 'react-native';
+import { Card, useTheme } from 'react-native-paper';
+import CustomButton from './CustomButton';
+import CustomText from '@components/ui/CustomText';
 
 interface ErrorMessageProps {
   title?: string;
@@ -20,7 +19,7 @@ interface ErrorMessageProps {
 }
 
 export const ErrorMessage: React.FC<ErrorMessageProps> = ({
-  title = "Oops! Something went wrong.",
+  title = 'Oops! Something went wrong.',
   message,
   onRetry,
   onSecondaryAction,
@@ -28,7 +27,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
   textStyle,
   containerStyle,
   fullScreen = false,
-  buttonText = "Try Again",
+  buttonText = 'Try Again',
   showCard = true,
   icon,
 }) => {
@@ -60,7 +59,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
         )}
         {onSecondaryAction && (
           <CustomButton
-            title={secondaryButtonText || "Go Back"}
+            title={secondaryButtonText || 'Go Back'}
             onPress={onSecondaryAction}
             mode="outlined"
             style={styles.button}
@@ -91,34 +90,34 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    alignItems: "center",
+    alignItems: 'center',
   },
   fullScreenContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   card: {
-    width: "100%",
+    width: '100%',
     maxWidth: 400,
   },
   title: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 12,
   },
   message: {
     fontSize: 14,
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 20,
   },
   buttonsContainer: {
-    flexDirection: "column",
-    alignItems: "stretch",
+    flexDirection: 'column',
+    alignItems: 'stretch',
     gap: 8,
   },
   button: {
-    width: "100%",
+    width: '100%',
   },
 });
 

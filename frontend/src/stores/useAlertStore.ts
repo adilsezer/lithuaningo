@@ -1,10 +1,10 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 import type {
   AlertOptions,
   ConfirmOptions,
   AlertMode,
   ButtonOption,
-} from "../types/alert";
+} from '../types/alert';
 
 interface AlertState {
   visible: boolean;
@@ -37,10 +37,10 @@ interface AlertActions {
 const initialState: AlertState = {
   visible: false,
   alertMode: null,
-  title: "",
-  message: "",
-  confirmText: "OK",
-  cancelText: "Cancel",
+  title: '',
+  message: '',
+  confirmText: 'OK',
+  cancelText: 'Cancel',
   buttons: [],
   onConfirm: null,
   onCancel: null,
@@ -52,13 +52,13 @@ const useAlertStore = create<AlertState & AlertActions>((set, get) => ({
   hideDialog: () => set(initialState),
 
   showAlert: (options) => {
-    const { title = "Alert", message, buttons, type = "ALERT" } = options;
+    const { title = 'Alert', message, buttons, type = 'ALERT' } = options;
     set({
       visible: true,
       alertMode: type,
       title,
       message,
-      buttons: buttons || [{ text: "OK", onPress: () => get().hideDialog() }],
+      buttons: buttons || [{ text: 'OK', onPress: () => get().hideDialog() }],
     });
   },
 
@@ -66,11 +66,11 @@ const useAlertStore = create<AlertState & AlertActions>((set, get) => ({
     const { onConfirm } = options;
     set({
       visible: true,
-      alertMode: "CONFIRM",
+      alertMode: 'CONFIRM',
       title: options.title,
       message: options.message,
-      confirmText: options.confirmText ?? "OK",
-      cancelText: options.cancelText ?? "Cancel",
+      confirmText: options.confirmText ?? 'OK',
+      cancelText: options.cancelText ?? 'Cancel',
       onConfirm: async () => {
         if (onConfirm) {
           await onConfirm();
@@ -80,12 +80,12 @@ const useAlertStore = create<AlertState & AlertActions>((set, get) => ({
     });
   },
 
-  showSuccess: (message, title = "Success", buttons) => {
-    get().showAlert({ title, message, buttons, type: "SUCCESS" });
+  showSuccess: (message, title = 'Success', buttons) => {
+    get().showAlert({ title, message, buttons, type: 'SUCCESS' });
   },
 
-  showError: (message, title = "Error", buttons) => {
-    get().showAlert({ title, message, buttons, type: "ERROR" });
+  showError: (message, title = 'Error', buttons) => {
+    get().showAlert({ title, message, buttons, type: 'ERROR' });
   },
 }));
 

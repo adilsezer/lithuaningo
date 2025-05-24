@@ -1,24 +1,24 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
-import { useRouter } from "expo-router";
-import { adminFlashcardService } from "@services/admin/adminFlashcardService";
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useRouter } from 'expo-router';
+import { adminFlashcardService } from '@services/admin/adminFlashcardService';
 import {
   FlashcardResponse,
   UpdateFlashcardAdminRequest,
   FlashcardCategory,
   DifficultyLevel,
-} from "@src/types/Flashcard";
-import { getErrorMessage } from "@utils/errorMessages";
+} from '@src/types/Flashcard';
+import { getErrorMessage } from '@utils/errorMessages';
 
 // Simple console logger as a snackbar placeholder
 const showSnackbar = (
   message: string,
-  type: "info" | "success" | "error" = "info"
+  type: 'info' | 'success' | 'error' = 'info',
 ) => {
   console.log(`[Snackbar-${type.toUpperCase()}] ${message}`);
 };
 
 export const useAdminFlashcardReview = (
-  scrollToTop?: () => void // Add scrollToTop as an optional callback
+  scrollToTop?: () => void, // Add scrollToTop as an optional callback
 ) => {
   const router = useRouter();
   // const showSnackbar = useSnackbar(); // Replaced with console log
@@ -36,13 +36,13 @@ export const useAdminFlashcardReview = (
   const updateField = useCallback(
     <K extends keyof UpdateFlashcardAdminRequest>(
       field: K,
-      value: UpdateFlashcardAdminRequest[K]
+      value: UpdateFlashcardAdminRequest[K],
     ) => {
       setCurrentFlashcardData((prev) =>
-        prev ? { ...prev, [field]: value } : null
+        prev ? { ...prev, [field]: value } : null,
       );
     },
-    []
+    [],
   );
 
   // --- Menu/Dialog State ---
@@ -54,7 +54,7 @@ export const useAdminFlashcardReview = (
   const [isDifficultyDialogVisible, setIsDifficultyDialogVisible] =
     useState(false);
   const [tempDifficulty, setTempDifficulty] = useState<DifficultyLevel | null>(
-    null
+    null,
   );
 
   // --- Handlers ---
@@ -75,14 +75,14 @@ export const useAdminFlashcardReview = (
       setTempCategories((prev) =>
         prev.includes(category)
           ? prev.filter((c) => c !== category)
-          : [...prev, category]
+          : [...prev, category],
       );
     },
-    []
+    [],
   );
 
   const confirmCategorySelection = useCallback(() => {
-    updateField("categories", tempCategories);
+    updateField('categories', tempCategories);
     closeCategoryDialog();
   }, [tempCategories, updateField, closeCategoryDialog]);
 
@@ -100,12 +100,12 @@ export const useAdminFlashcardReview = (
     (difficulty: DifficultyLevel) => {
       setTempDifficulty(difficulty);
     },
-    []
+    [],
   );
 
   const confirmDifficultySelection = useCallback(() => {
     if (tempDifficulty !== null) {
-      updateField("difficulty", tempDifficulty);
+      updateField('difficulty', tempDifficulty);
     }
     closeDifficultyDialog();
   }, [tempDifficulty, updateField, closeDifficultyDialog]);
@@ -127,12 +127,12 @@ export const useAdminFlashcardReview = (
       const editableData: UpdateFlashcardAdminRequest = {
         frontText: currentFlashcard.frontText,
         backText: currentFlashcard.backText,
-        exampleSentence: currentFlashcard.exampleSentence || "", // Ensure defaults for optional fields
+        exampleSentence: currentFlashcard.exampleSentence || '', // Ensure defaults for optional fields
         exampleSentenceTranslation:
-          currentFlashcard.exampleSentenceTranslation || "",
-        imageUrl: currentFlashcard.imageUrl || "",
-        audioUrl: currentFlashcard.audioUrl || "",
-        notes: currentFlashcard.notes || "",
+          currentFlashcard.exampleSentenceTranslation || '',
+        imageUrl: currentFlashcard.imageUrl || '',
+        audioUrl: currentFlashcard.audioUrl || '',
+        notes: currentFlashcard.notes || '',
         // Ensure categories and difficulty are handled correctly
         // If categories can be null/undefined in FlashcardResponse but required in UpdateRequest, provide default
         categories: currentFlashcard.categories || [],
@@ -156,14 +156,14 @@ export const useAdminFlashcardReview = (
       setFlashcards(fetchedFlashcards);
       setCurrentIndex(0);
       if (fetchedFlashcards.length === 0) {
-        showSnackbar("No unverified flashcards found.", "info");
+        showSnackbar('No unverified flashcards found.', 'info');
       }
     } catch (err) {
       const message = getErrorMessage(
-        err instanceof Error ? err.message : String(err)
+        err instanceof Error ? err.message : String(err),
       );
       setError(message);
-      showSnackbar(`Error loading flashcards: ${message}`, "error");
+      showSnackbar(`Error loading flashcards: ${message}`, 'error');
     } finally {
       setIsLoading(false);
     }
@@ -175,7 +175,7 @@ export const useAdminFlashcardReview = (
       setCurrentIndex((prev) => prev + 1);
       scrollToTop?.(); // Call scrollToTop if provided
     } else {
-      showSnackbar("All flashcards reviewed!", "success");
+      showSnackbar('All flashcards reviewed!', 'success');
       // Optionally navigate back or show a completion message
       router.back();
     }
@@ -183,31 +183,31 @@ export const useAdminFlashcardReview = (
 
   // Handle verifying the current flashcard and moving to the next
   const handleVerifyAndNext = async () => {
-    if (!currentFlashcard || !currentFlashcardData) return;
+    if (!currentFlashcard || !currentFlashcardData) {return;}
 
     setIsUpdating(true);
     setError(null);
     try {
       if (!currentFlashcardData) {
-        throw new Error("Current flashcard data is missing.");
+        throw new Error('Current flashcard data is missing.');
       }
       const updateData = { ...currentFlashcardData };
 
       await adminFlashcardService.updateFlashcard(
         currentFlashcard.id,
-        updateData
+        updateData,
       );
       showSnackbar(
         `Flashcard "${currentFlashcard.frontText}" verified.`,
-        "success"
+        'success',
       );
       advanceToNext();
     } catch (err) {
       const message = getErrorMessage(
-        err instanceof Error ? err.message : String(err)
+        err instanceof Error ? err.message : String(err),
       );
       setError(message);
-      showSnackbar(`Error verifying flashcard: ${message}`, "error");
+      showSnackbar(`Error verifying flashcard: ${message}`, 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -220,22 +220,22 @@ export const useAdminFlashcardReview = (
 
   // Handle regenerating the image
   const handleRegenerateImage = async () => {
-    if (!currentFlashcard) return;
+    if (!currentFlashcard) {return;}
 
     setIsRegenerating(true);
     setError(null);
     try {
       const newImageUrl = await adminFlashcardService.regenerateImage(
-        currentFlashcard.id
+        currentFlashcard.id,
       );
-      updateField("imageUrl", newImageUrl);
-      showSnackbar("Image regenerated successfully.", "success");
+      updateField('imageUrl', newImageUrl);
+      showSnackbar('Image regenerated successfully.', 'success');
     } catch (err) {
       const message = getErrorMessage(
-        err instanceof Error ? err.message : String(err)
+        err instanceof Error ? err.message : String(err),
       );
       setError(message);
-      showSnackbar(`Error regenerating image: ${message}`, "error");
+      showSnackbar(`Error regenerating image: ${message}`, 'error');
     } finally {
       setIsRegenerating(false);
     }
@@ -243,22 +243,22 @@ export const useAdminFlashcardReview = (
 
   // Handle regenerating the audio
   const handleRegenerateAudio = async () => {
-    if (!currentFlashcard) return;
+    if (!currentFlashcard) {return;}
 
     setIsRegenerating(true);
     setError(null);
     try {
       const newAudioUrl = await adminFlashcardService.regenerateAudio(
-        currentFlashcard.id
+        currentFlashcard.id,
       );
-      updateField("audioUrl", newAudioUrl);
-      showSnackbar("Audio regenerated successfully.", "success");
+      updateField('audioUrl', newAudioUrl);
+      showSnackbar('Audio regenerated successfully.', 'success');
     } catch (err) {
       const message = getErrorMessage(
-        err instanceof Error ? err.message : String(err)
+        err instanceof Error ? err.message : String(err),
       );
       setError(message);
-      showSnackbar(`Error regenerating audio: ${message}`, "error");
+      showSnackbar(`Error regenerating audio: ${message}`, 'error');
     } finally {
       setIsRegenerating(false);
     }

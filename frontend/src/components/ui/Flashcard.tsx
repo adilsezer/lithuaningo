@@ -1,11 +1,11 @@
-import React from "react";
-import { StyleSheet, View, Image } from "react-native";
-import { Card, useTheme, Chip } from "react-native-paper";
-import { FlashcardResponse, DifficultyLevel } from "@src/types/Flashcard";
-import CustomText from "./CustomText";
-import CustomDivider from "./CustomDivider";
-import Icon from "@expo/vector-icons/MaterialIcons";
-import AudioPlayer from "./AudioPlayer";
+import React from 'react';
+import { StyleSheet, View, Image } from 'react-native';
+import { Card, useTheme, Chip } from 'react-native-paper';
+import { FlashcardResponse, DifficultyLevel } from '@src/types/Flashcard';
+import CustomText from './CustomText';
+import CustomDivider from './CustomDivider';
+import Icon from '@expo/vector-icons/MaterialIcons';
+import AudioPlayer from './AudioPlayer';
 
 interface FlashcardProps {
   flashcard: FlashcardResponse;
@@ -24,13 +24,13 @@ export default function Flashcard({
   const getDifficultyLabel = (difficulty: DifficultyLevel): string => {
     switch (difficulty) {
       case DifficultyLevel.Basic:
-        return "Basic";
+        return 'Basic';
       case DifficultyLevel.Intermediate:
-        return "Intermediate";
+        return 'Intermediate';
       case DifficultyLevel.Advanced:
-        return "Advanced";
+        return 'Advanced';
       default:
-        return "Unknown";
+        return 'Unknown';
     }
   };
 
@@ -171,20 +171,20 @@ const styles = StyleSheet.create({
   cardContent: {
     padding: 16,
     minHeight: 250,
-    display: "flex",
-    flexDirection: "column",
+    display: 'flex',
+    flexDirection: 'column',
   },
   headerContainer: {
-    width: "100%",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: 8,
   },
   contentContainer: {
-    width: "100%",
-    alignItems: "center",
-    justifyContent: "center",
+    width: '100%',
+    alignItems: 'center',
+    justifyContent: 'center',
     flex: 1,
   },
   spacer: {
@@ -197,43 +197,43 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   image: {
-    width: "100%",
+    width: '100%',
     height: 180,
     borderRadius: 8,
     marginBottom: 16,
   },
   cardText: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 16,
   },
   exampleContainer: {
-    width: "100%",
+    width: '100%',
     marginTop: 8,
   },
   exampleText: {
-    fontStyle: "italic",
+    fontStyle: 'italic',
     marginBottom: 8,
-    textAlign: "center",
+    textAlign: 'center',
   },
   translationText: {
-    textAlign: "center",
+    textAlign: 'center',
   },
   notesContainer: {
-    width: "100%",
+    width: '100%',
     marginTop: 12,
   },
   notesTitle: {
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginBottom: 4,
   },
   notesText: {
     lineHeight: 18,
   },
   flipIndicator: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     opacity: 0.7,
-    width: "100%",
+    width: '100%',
   },
 });

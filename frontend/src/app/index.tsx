@@ -1,5 +1,5 @@
-import { Redirect } from "expo-router";
-import { useUserStore } from "@stores/useUserStore";
+import { Redirect } from 'expo-router';
+import { useUserStore } from '@stores/useUserStore';
 
 /**
  * Root index redirect - handles initial navigation based on auth state
@@ -12,7 +12,7 @@ export default function Index() {
   // Redirect based on authentication state
   if (isAuthenticated) {
     return <Redirect href="/(app)" />;
-  } else {
-    return <Redirect href="/auth" />;
   }
+    return <Redirect href="/auth" />;
+
 }

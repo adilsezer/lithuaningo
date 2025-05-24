@@ -1,21 +1,21 @@
-import React from "react";
-import { ScrollView, View, StyleSheet } from "react-native";
-import { useAuth } from "@hooks/useAuth";
-import { useIsLoading } from "@stores/useUIStore";
-import { Form } from "@components/form/Form";
-import type { FormField } from "@components/form/form.types";
-import { deleteAccountFormSchema } from "@utils/zodSchemas";
-import CustomText from "@components/ui/CustomText";
-import { useUserData } from "@stores/useUserStore";
+import React from 'react';
+import { ScrollView, View, StyleSheet } from 'react-native';
+import { useAuth } from '@hooks/useAuth';
+import { useIsLoading } from '@stores/useUIStore';
+import { Form } from '@components/form/Form';
+import type { FormField } from '@components/form/form.types';
+import { deleteAccountFormSchema } from '@utils/zodSchemas';
+import CustomText from '@components/ui/CustomText';
+import { useUserData } from '@stores/useUserStore';
 const getDeleteAccountFields = (authProvider: string): FormField[] => {
-  if (authProvider === "email") {
+  if (authProvider === 'email') {
     return [
       {
-        name: "password",
-        label: "Current Password",
-        category: "text-input",
-        type: "password",
-        placeholder: "Password",
+        name: 'password',
+        label: 'Current Password',
+        category: 'text-input',
+        type: 'password',
+        placeholder: 'Password',
       },
     ];
   }
@@ -27,7 +27,7 @@ const DeleteAccountScreen: React.FC = () => {
   const { deleteAccount } = useAuth();
   const userData = useUserData();
 
-  if (!userData) return null;
+  if (!userData) {return null;}
 
   const handleSubmit = async (values: { password?: string }) => {
     await deleteAccount(values.password, userData.authProvider);
@@ -42,8 +42,8 @@ const DeleteAccountScreen: React.FC = () => {
         </CustomText>
 
         <CustomText variant="bodyMedium">
-          {userData.authProvider === "email"
-            ? "Please enter your password to confirm account deletion."
+          {userData.authProvider === 'email'
+            ? 'Please enter your password to confirm account deletion.'
             : `You are signed in with ${userData.authProvider}. You will need to verify your ${userData.authProvider} account before deletion. Click delete to proceed.`}
         </CustomText>
 
@@ -52,7 +52,7 @@ const DeleteAccountScreen: React.FC = () => {
           onSubmit={handleSubmit}
           submitButtonText="Delete Account"
           isLoading={loading}
-          options={{ mode: "onBlur" }}
+          options={{ mode: 'onBlur' }}
           zodSchema={deleteAccountFormSchema}
           submitButtonStyle={styles.deleteButton}
         />
@@ -66,7 +66,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   warning: {
-    color: "red",
+    color: 'red',
   },
   deleteButton: {
     marginTop: 24,

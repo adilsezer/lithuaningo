@@ -1,9 +1,9 @@
-import { apiClient } from "@services/api/apiClient";
+import { apiClient } from '@services/api/apiClient';
 import {
   SubmitFlashcardAnswerRequest,
   UserFlashcardStatResponse,
   UserFlashcardStatsSummaryResponse,
-} from "@src/types/UserFlashcardStats";
+} from '@src/types/UserFlashcardStats';
 
 export class UserFlashcardStatsService {
   /**
@@ -12,12 +12,12 @@ export class UserFlashcardStatsService {
    * @returns Promise<UserFlashcardStatsSummaryResponse>
    */
   static async getUserFlashcardStatsSummary(
-    userId: string
+    userId: string,
   ): Promise<UserFlashcardStatsSummaryResponse> {
     try {
       return await apiClient.getUserFlashcardStatsSummary(userId);
     } catch (error) {
-      console.error("[UserFlashcardStatsService] Error:", error);
+      console.error('[UserFlashcardStatsService] Error:', error);
       throw error;
     }
   }
@@ -28,14 +28,14 @@ export class UserFlashcardStatsService {
    * @returns Promise<UserFlashcardStatResponse>
    */
   static async submitFlashcardAnswer(
-    request: SubmitFlashcardAnswerRequest
+    request: SubmitFlashcardAnswerRequest,
   ): Promise<UserFlashcardStatResponse> {
     try {
       return await apiClient.submitFlashcardAnswer(request);
     } catch (error) {
       console.error(
-        "[UserFlashcardStatsService] Error submitting flashcard answer:",
-        error
+        '[UserFlashcardStatsService] Error submitting flashcard answer:',
+        error,
       );
       throw error;
     }
@@ -49,14 +49,14 @@ export class UserFlashcardStatsService {
    */
   static async getFlashcardStats(
     userId: string,
-    flashcardId: string
+    flashcardId: string,
   ): Promise<UserFlashcardStatResponse> {
     try {
       return await apiClient.getFlashcardStats(userId, flashcardId);
     } catch (error) {
       console.error(
-        "[UserFlashcardStatsService] Error fetching flashcard stats:",
-        error
+        '[UserFlashcardStatsService] Error fetching flashcard stats:',
+        error,
       );
       throw error;
     }

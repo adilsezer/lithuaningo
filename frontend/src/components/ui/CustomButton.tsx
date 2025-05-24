@@ -1,6 +1,6 @@
-import React from "react";
-import { StyleProp, ViewStyle } from "react-native";
-import { Button, useTheme } from "react-native-paper";
+import React from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
+import { Button } from 'react-native-paper';
 
 interface CustomButtonProps {
   onPress: () => void;
@@ -9,7 +9,7 @@ interface CustomButtonProps {
   style?: StyleProp<ViewStyle>;
   contentStyle?: StyleProp<ViewStyle>;
   textColor?: string;
-  mode?: "text" | "outlined" | "contained" | "contained-tonal" | "elevated";
+  mode?: 'text' | 'outlined' | 'contained' | 'contained-tonal' | 'elevated';
   loading?: boolean;
   disabled?: boolean;
 }
@@ -21,7 +21,7 @@ const CustomButton: React.FC<CustomButtonProps> = ({
   style,
   contentStyle,
   textColor,
-  mode = "contained",
+  mode = 'contained',
   loading = false,
   disabled = false,
 }) => {
