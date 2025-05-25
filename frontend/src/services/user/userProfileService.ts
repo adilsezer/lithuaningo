@@ -1,7 +1,7 @@
-import { Session } from '@supabase/supabase-js';
-import { apiClient } from '../api/apiClient';
-import { useUserStore, UserData } from '../../stores/useUserStore'; // Adjusted path
-import Purchases from 'react-native-purchases';
+import { Session } from "@supabase/supabase-js";
+import { apiClient } from "../api/apiClient";
+import { useUserStore, UserData } from "../../stores/useUserStore"; // Adjusted path
+import Purchases from "react-native-purchases";
 // import { getErrorMessage } from "@utils/errorMessages"; // Assuming this is not needed if just returning boolean for now
 
 export const hydrateUserSessionAndProfile = async (
@@ -10,7 +10,7 @@ export const hydrateUserSessionAndProfile = async (
   const { user } = session;
   if (!user?.email) {
     console.error(
-      '[UserProfileService] No user or email in session for hydration. Cannot proceed.',
+      "[UserProfileService] No user or email in session for hydration. Cannot proceed.",
     );
     return false;
   }
@@ -62,17 +62,17 @@ export const hydrateUserSessionAndProfile = async (
 
 export const clearUserSessionAndLogout = async () => {
   console.log(
-    '[UserProfileService] Clearing user session and logging out from RevenueCat.',
+    "[UserProfileService] Clearing user session and logging out from RevenueCat.",
   );
   useUserStore.getState().logOut();
   try {
     await Purchases.logOut();
     console.log(
-      '[UserProfileService] Logged out from RevenueCat successfully.',
+      "[UserProfileService] Logged out from RevenueCat successfully.",
     );
   } catch (rcError) {
     console.warn(
-      '[UserProfileService] Failed to logOut from RevenueCat during clearUserSession:',
+      "[UserProfileService] Failed to logOut from RevenueCat during clearUserSession:",
       rcError,
     );
   }

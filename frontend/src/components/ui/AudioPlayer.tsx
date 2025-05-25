@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { StyleSheet, View, TouchableOpacity } from 'react-native';
-import { useTheme } from 'react-native-paper';
-import { Audio, AVPlaybackStatus } from 'expo-av';
-import Icon from '@expo/vector-icons/MaterialIcons';
-import CustomText from './CustomText';
+import React, { useState, useEffect, useRef } from "react";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { useTheme } from "react-native-paper";
+import { Audio, AVPlaybackStatus } from "expo-av";
+import Icon from "@expo/vector-icons/MaterialIcons";
+import CustomText from "./CustomText";
 
 interface AudioPlayerProps {
   audioUrl: string;
@@ -61,7 +61,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
           newSound.unloadAsync();
         }
       } catch (error) {
-        console.error('Failed to load audio:', error);
+        console.error("Failed to load audio:", error);
         setIsLoaded(false);
       }
     };
@@ -121,7 +121,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
         }
       }
     } catch (error) {
-      console.error('Error toggling playback:', error);
+      console.error("Error toggling playback:", error);
     }
   };
 
@@ -137,16 +137,16 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
         disabled={!isLoaded}
       >
         <Icon
-          name={isPlaying ? 'pause' : 'play-arrow'}
+          name={isPlaying ? "pause" : "play-arrow"}
           size={36}
           color={isLoaded ? theme.colors.onPrimary : theme.colors.outline}
         />
       </TouchableOpacity>
       <CustomText
-        variant='bodyMedium'
+        variant="bodyMedium"
         style={[styles.listenText, !isLoaded && styles.textDisabled]}
       >
-        {isLoaded ? (isPlaying ? 'Pause' : 'Listen') : 'Loading...'}
+        {isLoaded ? (isPlaying ? "Pause" : "Listen") : "Loading..."}
       </CustomText>
     </View>
   );
@@ -154,23 +154,23 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
 
 const styles = StyleSheet.create({
   audioContainer: {
-    flexDirection: 'column',
-    alignItems: 'center',
+    flexDirection: "column",
+    alignItems: "center",
   },
   audioButton: {
     width: 72,
     height: 72,
     borderRadius: 36,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 8,
   },
   audioButtonDisabled: {
-    backgroundColor: '#f0f0f0',
+    backgroundColor: "#f0f0f0",
     opacity: 0.7,
   },
   listenText: {
-    textAlign: 'center',
+    textAlign: "center",
   },
   textDisabled: {
     opacity: 0.5,

@@ -1,6 +1,6 @@
-import { create } from 'zustand';
-import { Appearance } from 'react-native';
-import { storeData, retrieveData } from '@utils/storageUtils';
+import { create } from "zustand";
+import { Appearance } from "react-native";
+import { storeData, retrieveData } from "@utils/storageUtils";
 
 interface ThemeState {
   isDarkMode: boolean;
@@ -15,7 +15,7 @@ interface ThemeActions {
 }
 
 const THEME_KEYS = {
-  THEME: 'theme',
+  THEME: "theme",
 };
 
 const useThemeStore = create<ThemeState & ThemeActions>((set, _get) => ({
@@ -27,11 +27,11 @@ const useThemeStore = create<ThemeState & ThemeActions>((set, _get) => ({
     try {
       set((state) => {
         const newMode = !state.isDarkMode;
-        storeData(THEME_KEYS.THEME, newMode ? 'dark' : 'light');
+        storeData(THEME_KEYS.THEME, newMode ? "dark" : "light");
         return { isDarkMode: newMode, manualMode: true };
       });
     } catch (error) {
-      console.error('Failed to save theme', error);
+      console.error("Failed to save theme", error);
     }
   },
 
@@ -39,15 +39,15 @@ const useThemeStore = create<ThemeState & ThemeActions>((set, _get) => ({
     try {
       const storedTheme = await retrieveData<string>(THEME_KEYS.THEME);
       if (storedTheme !== null) {
-        set({ isDarkMode: storedTheme === 'dark', manualMode: true });
+        set({ isDarkMode: storedTheme === "dark", manualMode: true });
       } else {
         const colorScheme = Appearance.getColorScheme();
-        set({ isDarkMode: colorScheme === 'dark', manualMode: false });
+        set({ isDarkMode: colorScheme === "dark", manualMode: false });
       }
     } catch (error) {
-      console.error('Failed to load theme', error);
+      console.error("Failed to load theme", error);
       const colorScheme = Appearance.getColorScheme();
-      set({ isDarkMode: colorScheme === 'dark', manualMode: false });
+      set({ isDarkMode: colorScheme === "dark", manualMode: false });
     } finally {
       set({ isLoading: false });
     }
@@ -57,7 +57,7 @@ const useThemeStore = create<ThemeState & ThemeActions>((set, _get) => ({
     set({ manualMode: manual });
     if (!manual) {
       const colorScheme = Appearance.getColorScheme();
-      set({ isDarkMode: colorScheme === 'dark' });
+      set({ isDarkMode: colorScheme === "dark" });
     }
   },
 }));

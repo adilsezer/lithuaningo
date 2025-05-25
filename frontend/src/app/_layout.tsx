@@ -1,21 +1,21 @@
 // src/RootLayout.tsx
 
-import React, { useEffect } from 'react';
-import { Stack, useRouter, useSegments } from 'expo-router';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LoadingIndicator } from '@components/ui/LoadingIndicator';
-import AuthInitializer from '@services/initializers/AuthInitializer';
-import NotificationInitializer from '@services/initializers/NotificationInitializer';
-import ErrorBoundaryProvider from '@providers/ErrorBoundaryProvider';
-import { PaperProvider } from 'react-native-paper';
-import { StyleSheet } from 'react-native';
-import { AlertDialog } from '@components/ui/AlertDialog';
-import { createTheme } from '@src/styles/theme';
-import { useIsDarkMode } from '@stores/useThemeStore';
-import InitializationProvider from '@providers/InitializationProvider';
-import { useUserStore } from '@stores/useUserStore';
-import { useIsLoading } from '@stores/useUIStore';
-import * as SplashScreen from 'expo-splash-screen';
+import React, { useEffect } from "react";
+import { Stack, useRouter, useSegments } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { LoadingIndicator } from "@components/ui/LoadingIndicator";
+import AuthInitializer from "@services/initializers/AuthInitializer";
+import NotificationInitializer from "@services/initializers/NotificationInitializer";
+import ErrorBoundaryProvider from "@providers/ErrorBoundaryProvider";
+import { PaperProvider } from "react-native-paper";
+import { StyleSheet } from "react-native";
+import { AlertDialog } from "@components/ui/AlertDialog";
+import { createTheme } from "@src/styles/theme";
+import { useIsDarkMode } from "@stores/useThemeStore";
+import InitializationProvider from "@providers/InitializationProvider";
+import { useUserStore } from "@stores/useUserStore";
+import { useIsLoading } from "@stores/useUIStore";
+import * as SplashScreen from "expo-splash-screen";
 
 // Keep the splash screen visible while we initialize
 SplashScreen.preventAutoHideAsync();
@@ -35,17 +35,17 @@ function useProtectedRoutes() {
       return;
     }
 
-    const inAuthGroup = segments[0] === 'auth';
+    const inAuthGroup = segments[0] === "auth";
 
     if (!isAuthenticated && !inAuthGroup) {
-      router.replace('/auth');
+      router.replace("/auth");
     } else if (isAuthenticated && inAuthGroup) {
-      router.replace('/(app)');
+      router.replace("/(app)");
     }
   }, [isAuthenticated, segments, isLoading, router, isVerifyingEmail]);
 }
 
-const ROOT_SCREENS = [{ name: 'index' }, { name: 'auth' }, { name: '(app)' }];
+const ROOT_SCREENS = [{ name: "index" }, { name: "auth" }, { name: "(app)" }];
 
 /**
  * Root layout component that sets up the app's providers and core UI structure.
@@ -93,7 +93,7 @@ export default function RootLayout() {
                   backgroundColor: theme.colors.background,
                   paddingHorizontal: 25,
                 },
-                animation: 'none',
+                animation: "none",
               }}
             >
               {ROOT_SCREENS.map((screen) => (

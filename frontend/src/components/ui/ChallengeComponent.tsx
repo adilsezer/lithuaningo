@@ -1,5 +1,5 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { View, ScrollView, StyleSheet } from 'react-native';
+import React, { useRef, useEffect, useState } from "react";
+import { View, ScrollView, StyleSheet } from "react-native";
 import {
   useTheme,
   Button,
@@ -10,12 +10,12 @@ import {
   ProgressBar,
   Divider,
   Avatar,
-} from 'react-native-paper';
-import { router } from 'expo-router';
-import { ErrorMessage } from '@components/ui/ErrorMessage';
-import CustomDivider from '@components/ui/CustomDivider';
-import { ChallengeQuestionResponse, ChallengeQuestionType } from '@src/types';
-import CustomText from './CustomText';
+} from "react-native-paper";
+import { router } from "expo-router";
+import { ErrorMessage } from "@components/ui/ErrorMessage";
+import CustomDivider from "@components/ui/CustomDivider";
+import { ChallengeQuestionResponse, ChallengeQuestionType } from "@src/types";
+import CustomText from "./CustomText";
 
 // Define props interface for the reusable component
 interface ChallengeComponentProps {
@@ -81,24 +81,24 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
     const isRevealed = isCorrectAnswer !== null;
 
     let mode:
-      | 'text'
-      | 'contained'
-      | 'outlined'
-      | 'elevated'
-      | 'contained-tonal' = 'outlined';
+      | "text"
+      | "contained"
+      | "outlined"
+      | "elevated"
+      | "contained-tonal" = "outlined";
     let color = theme.colors.primary;
     let textColor = theme.colors.onBackground;
 
     // For incorrect selection
     if (isRevealed && isSelected && !isCorrect) {
-      mode = 'contained';
+      mode = "contained";
       color = theme.colors.error;
       textColor = theme.colors.onError;
     }
 
     // For correct answer reveal
     if (isRevealed && isCorrect) {
-      mode = 'contained';
+      mode = "contained";
       color = theme.colors.primary;
       textColor = theme.colors.onPrimary;
     }
@@ -109,7 +109,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
         styles.optionButton,
         {
           borderColor: color,
-          backgroundColor: mode === 'contained' ? color : undefined,
+          backgroundColor: mode === "contained" ? color : undefined,
         },
       ],
       labelStyle: [styles.optionButtonLabel, { color: textColor }],
@@ -143,8 +143,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
       case ChallengeQuestionType.MultipleChoice:
         // For vocabulary questions, hide if example contains answer
         if (
-          question.question.includes('mean') ||
-          question.question.includes('translation')
+          question.question.includes("mean") ||
+          question.question.includes("translation")
         ) {
           return !question.exampleSentence.includes(question.correctAnswer);
         }
@@ -161,24 +161,24 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
       <Surface style={styles.centeredContainer} elevation={0}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator
-            size='large'
+            size="large"
             color={theme.colors.primary}
             animating
           />
           <View style={styles.loadingTextContainer}>
             <CustomText
-              variant='titleMedium'
+              variant="titleMedium"
               style={{ color: theme.colors.primary }}
             >
               🤖 Lithuaningo AI is setting up your challenge...
             </CustomText>
-            <CustomText variant='bodySmall'>
+            <CustomText variant="bodySmall">
               No need to wait—come back to this screen anytime!
             </CustomText>
             <Text
-              variant='bodySmall'
+              variant="bodySmall"
               style={{
-                textAlign: 'center',
+                textAlign: "center",
                 color: theme.colors.onSurfaceVariant,
               }}
             >
@@ -197,7 +197,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
         message={error}
         onRetry={onRetry}
         fullScreen
-        buttonText='Try Again'
+        buttonText="Try Again"
       />
     );
   }
@@ -209,18 +209,18 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
         <View style={styles.emptyStateContainer}>
           <Avatar.Icon
             size={64}
-            icon='help-circle-outline'
+            icon="help-circle-outline"
             color={theme.colors.onSurfaceDisabled}
-            style={{ backgroundColor: 'transparent' }}
+            style={{ backgroundColor: "transparent" }}
           />
           <View style={styles.emptyStateTextContainer}>
-            <Text variant='titleMedium' style={{ color: theme.colors.primary }}>
+            <Text variant="titleMedium" style={{ color: theme.colors.primary }}>
               No Questions Available
             </Text>
             <Text
-              variant='bodyMedium'
+              variant="bodyMedium"
               style={{
-                textAlign: 'center',
+                textAlign: "center",
                 color: theme.colors.onSurfaceVariant,
               }}
             >
@@ -229,7 +229,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
           </View>
           {onGenerateNew && (
             <Button
-              mode='contained'
+              mode="contained"
               onPress={onGenerateNew}
               style={{ marginTop: 24 }}
             >
@@ -262,19 +262,19 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
           <Card.Content style={styles.completionContent}>
             <Avatar.Icon
               size={80}
-              icon={isHighScore ? 'trophy' : 'check-circle'}
+              icon={isHighScore ? "trophy" : "check-circle"}
               color={
                 isHighScore ? theme.colors.primary : theme.colors.secondary
               }
-              style={{ backgroundColor: 'transparent' }}
+              style={{ backgroundColor: "transparent" }}
             />
 
             <View style={styles.completionHeaderContainer}>
-              <Text variant='headlineMedium'>Challenge Completed!</Text>
+              <Text variant="headlineMedium">Challenge Completed!</Text>
               <Text
-                variant='bodyMedium'
+                variant="bodyMedium"
                 style={{
-                  textAlign: 'center',
+                  textAlign: "center",
                   color: theme.colors.onSurfaceVariant,
                 }}
               >
@@ -291,7 +291,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                 style={styles.progressBar}
               />
 
-              <Text variant='titleLarge' style={{ marginTop: 8 }}>
+              <Text variant="titleLarge" style={{ marginTop: 8 }}>
                 {score}/{questions.length} Points
               </Text>
             </View>
@@ -300,9 +300,9 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
             <View style={styles.feedbackContainer}>
               <Text
-                variant='bodyMedium'
+                variant="bodyMedium"
                 style={{
-                  textAlign: 'center',
+                  textAlign: "center",
                   color: theme.colors.onSurfaceVariant,
                   marginTop: 8,
                 }}
@@ -315,9 +315,9 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
           <Card.Actions style={styles.buttonContainer}>
             <Button
-              mode='contained'
+              mode="contained"
               style={styles.button}
-              icon='home'
+              icon="home"
               onPress={onGoBack}
             >
               Return to Home
@@ -337,7 +337,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
       <Surface style={styles.challengeSurface} elevation={0}>
         {/* Progress indicator */}
         <View style={styles.progressContainer}>
-          <Text variant='titleMedium' style={{ color: theme.colors.primary }}>
+          <Text variant="titleMedium" style={{ color: theme.colors.primary }}>
             Question {currentIndex + 1} of {questions.length}
           </Text>
           <ProgressBar
@@ -352,9 +352,9 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             {/* First question intro only appears on first question */}
             {currentIndex === 0 && (
               <Text
-                variant='bodySmall'
+                variant="bodySmall"
                 style={{
-                  textAlign: 'center',
+                  textAlign: "center",
                   color: theme.colors.onSurfaceVariant,
                   marginBottom: 12,
                 }}
@@ -373,7 +373,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             >
               <Card.Content style={styles.questionContent}>
                 <Text
-                  variant='bodySmall'
+                  variant="bodySmall"
                   style={{
                     color: theme.colors.onSurfaceVariant,
                     marginBottom: 8,
@@ -381,7 +381,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                 >
                   Question:
                 </Text>
-                <Text variant='headlineSmall' style={styles.questionText}>
+                <Text variant="headlineSmall" style={styles.questionText}>
                   {currentQuestion.question}
                 </Text>
 
@@ -392,7 +392,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                   shouldShowExampleSentence(currentQuestion) && (
                     <>
                       <Text
-                        variant='bodySmall'
+                        variant="bodySmall"
                         style={{
                           color: theme.colors.onSurfaceVariant,
                           marginTop: 12,
@@ -401,7 +401,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       >
                         Example:
                       </Text>
-                      <Text variant='bodyMedium' style={styles.exampleSentence}>
+                      <Text variant="bodyMedium" style={styles.exampleSentence}>
                         "{currentQuestion.exampleSentence}"
                       </Text>
                     </>
@@ -411,7 +411,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
             <View style={styles.optionLabelContainer}>
               <Text
-                variant='bodyMedium'
+                variant="bodyMedium"
                 style={{
                   color: theme.colors.onSurfaceVariant,
                 }}
@@ -458,31 +458,31 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                   <View style={styles.feedbackIconContainer}>
                     <Avatar.Icon
                       size={48}
-                      icon={isCorrectAnswer ? 'check-circle' : 'close-circle'}
+                      icon={isCorrectAnswer ? "check-circle" : "close-circle"}
                       color={
                         isCorrectAnswer
                           ? theme.colors.onPrimary
                           : theme.colors.error
                       }
-                      style={{ backgroundColor: 'transparent' }}
+                      style={{ backgroundColor: "transparent" }}
                     />
                   </View>
 
                   <View style={styles.feedbackTextContainer}>
                     <Text
-                      variant='titleMedium'
+                      variant="titleMedium"
                       style={{
                         color: isCorrectAnswer
                           ? theme.colors.onPrimary
                           : theme.colors.error,
-                        fontWeight: '600',
+                        fontWeight: "600",
                       }}
                     >
-                      {isCorrectAnswer ? 'Correct!' : 'Incorrect!'}
+                      {isCorrectAnswer ? "Correct!" : "Incorrect!"}
                     </Text>
 
                     <Text
-                      variant='bodyMedium'
+                      variant="bodyMedium"
                       style={{
                         color: isCorrectAnswer
                           ? theme.colors.onPrimary
@@ -491,7 +491,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       }}
                     >
                       {isCorrectAnswer
-                        ? 'Puiku! Keep up the good work!'
+                        ? "Puiku! Keep up the good work!"
                         : `The correct answer is: ${currentQuestion.correctAnswer}`}
                     </Text>
                   </View>
@@ -499,12 +499,12 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
                 <Card.Actions style={styles.feedbackActions}>
                   <Button
-                    mode='contained'
+                    mode="contained"
                     onPress={onNextQuestion}
                     icon={
                       currentIndex < questions.length - 1
-                        ? 'arrow-right'
-                        : 'check'
+                        ? "arrow-right"
+                        : "check"
                     }
                     contentStyle={styles.feedbackButtonContent}
                     style={{
@@ -514,8 +514,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                     }}
                   >
                     {currentIndex < questions.length - 1
-                      ? 'Next Question'
-                      : 'Complete Challenge'}
+                      ? "Next Question"
+                      : "Complete Challenge"}
                   </Button>
                 </Card.Actions>
               </Card>
@@ -530,8 +530,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 const styles = StyleSheet.create({
   centeredContainer: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     padding: 20,
   },
   scrollContent: {
@@ -543,22 +543,22 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   loadingContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   loadingTextContainer: {
     marginTop: 24,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   emptyStateContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   emptyStateTextContainer: {
     marginTop: 24,
     marginBottom: 24,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 4,
   },
   questionCard: {
@@ -569,25 +569,25 @@ const styles = StyleSheet.create({
   },
   questionContent: {
     padding: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   questionText: {
-    fontWeight: '600',
-    textAlign: 'center',
+    fontWeight: "600",
+    textAlign: "center",
     marginBottom: 16,
   },
   progressContainer: {
-    alignItems: 'center',
+    alignItems: "center",
   },
   progressBar: {
     height: 6,
     borderRadius: 3,
     marginTop: 8,
-    width: '100%',
+    width: "100%",
   },
   optionLabelContainer: {
     marginBottom: 12,
-    alignItems: 'center',
+    alignItems: "center",
   },
   optionsContainer: {
     gap: 10,
@@ -600,40 +600,40 @@ const styles = StyleSheet.create({
   optionButtonLabel: {
     fontSize: 16,
     paddingVertical: 4,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   optionButtonContent: {
     height: 52,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   exampleSentence: {
-    fontStyle: 'italic',
-    textAlign: 'center',
+    fontStyle: "italic",
+    textAlign: "center",
     marginTop: 8,
   },
   completionCard: {
-    width: '100%',
+    width: "100%",
     padding: 8,
     borderRadius: 12,
   },
   completionContent: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 8,
   },
   completionHeaderContainer: {
     marginTop: 16,
     marginBottom: 24,
-    alignItems: 'center',
+    alignItems: "center",
     gap: 8,
   },
   scoreContainer: {
-    width: '100%',
+    width: "100%",
     marginBottom: 24,
-    alignItems: 'center',
+    alignItems: "center",
   },
   feedbackContainer: {
     marginVertical: 16,
-    alignItems: 'center',
+    alignItems: "center",
   },
   feedbackCard: {
     marginTop: 20,
@@ -642,18 +642,18 @@ const styles = StyleSheet.create({
   },
   feedbackContent: {
     padding: 16,
-    overflow: 'hidden',
+    overflow: "hidden",
   },
   feedbackIconContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 8,
   },
   feedbackTextContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 8,
   },
   feedbackActions: {
-    alignSelf: 'center',
+    alignSelf: "center",
     paddingHorizontal: 16,
     paddingBottom: 16,
   },
@@ -661,16 +661,16 @@ const styles = StyleSheet.create({
     height: 48,
   },
   buttonContainer: {
-    flexDirection: 'column',
+    flexDirection: "column",
     padding: 16,
   },
   button: {
     marginVertical: 8,
     borderRadius: 8,
-    width: '100%',
+    width: "100%",
   },
   divider: {
-    width: '80%',
+    width: "80%",
     marginVertical: 16,
   },
 });

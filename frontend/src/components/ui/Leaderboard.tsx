@@ -1,9 +1,9 @@
-import React from 'react';
-import { StyleSheet, View } from 'react-native';
-import { DataTable, useTheme } from 'react-native-paper';
-import FontAwesome from '@expo/vector-icons/FontAwesome';
-import CustomText from './CustomText';
-import { LeaderboardEntryResponse } from '@src/types';
+import React from "react";
+import { StyleSheet, View } from "react-native";
+import { DataTable, useTheme } from "react-native-paper";
+import FontAwesome from "@expo/vector-icons/FontAwesome";
+import CustomText from "./CustomText";
+import { LeaderboardEntryResponse } from "@src/types";
 
 interface LeaderboardProps {
   entries: LeaderboardEntryResponse[];
@@ -21,7 +21,7 @@ const TrophyIcon = ({ position }: { position: number; color: string }) => {
     return null;
   }
   return (
-    <FontAwesome name='trophy' size={20} color={positionColors[position]} />
+    <FontAwesome name="trophy" size={20} color={positionColors[position]} />
   );
 };
 
@@ -38,7 +38,7 @@ const Leaderboard = ({ entries }: LeaderboardProps) => {
           style={[styles.header, { backgroundColor: theme.colors.primary }]}
         >
           <DataTable.Title style={styles.titleCell}>
-            <CustomText variant='titleSmall' bold color='white'>
+            <CustomText variant="titleSmall" bold color="white">
               Top 20 Leaders This Week
             </CustomText>
           </DataTable.Title>
@@ -73,7 +73,7 @@ const Leaderboard = ({ entries }: LeaderboardProps) => {
           <DataTable.Row>
             <DataTable.Cell style={styles.emptyCell}>
               <CustomText>
-                Be the first to make it to the leaderboard!{'\n'}
+                Be the first to make it to the leaderboard!{"\n"}
                 We're currently waiting for new leaders to emerge.
               </CustomText>
             </DataTable.Cell>
@@ -95,15 +95,15 @@ const styles = StyleSheet.create({
     borderTopRightRadius: 10,
   },
   titleCell: {
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   emptyCell: {
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   nameView: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 8,
   },
 });

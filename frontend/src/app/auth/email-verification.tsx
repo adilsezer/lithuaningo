@@ -1,22 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { Form } from '@components/form/Form';
-import { FormField } from '@components/form/form.types';
-import { useAuth } from '@hooks/useAuth';
-import { useIsLoading } from '@stores/useUIStore';
-import { verifyEmailFormSchema } from '@utils/zodSchemas';
-import CustomText from '@components/ui/CustomText';
-import CustomButton from '@components/ui/CustomButton';
+import React, { useState, useEffect } from "react";
+import { ScrollView, View, StyleSheet } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { Form } from "@components/form/Form";
+import { FormField } from "@components/form/form.types";
+import { useAuth } from "@hooks/useAuth";
+import { useIsLoading } from "@stores/useUIStore";
+import { verifyEmailFormSchema } from "@utils/zodSchemas";
+import CustomText from "@components/ui/CustomText";
+import CustomButton from "@components/ui/CustomButton";
 
 const verifyEmailFields: FormField[] = [
   {
-    name: 'token',
-    label: 'Verification Code',
-    category: 'text-input',
-    type: 'text',
-    placeholder: 'Enter the 6-digit code',
-    keyboardType: 'number-pad',
+    name: "token",
+    label: "Verification Code",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter the 6-digit code",
+    keyboardType: "number-pad",
   },
 ];
 
@@ -48,10 +48,10 @@ const EmailVerificationScreen: React.FC = () => {
     return (
       <ScrollView>
         <View style={styles.container}>
-          <CustomText variant='titleMedium' bold>
+          <CustomText variant="titleMedium" bold>
             Error
           </CustomText>
-          <CustomText variant='bodyLarge' style={styles.description}>
+          <CustomText variant="bodyLarge" style={styles.description}>
             Invalid verification request. Please try again.
           </CustomText>
         </View>
@@ -80,11 +80,11 @@ const EmailVerificationScreen: React.FC = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-        <CustomText variant='titleMedium' bold>
+        <CustomText variant="titleMedium" bold>
           Verify Your Email
         </CustomText>
 
-        <CustomText variant='bodyLarge' style={styles.description}>
+        <CustomText variant="bodyLarge" style={styles.description}>
           We've sent a verification code to {email}. Please enter the code below
           to verify your email address.
         </CustomText>
@@ -94,9 +94,9 @@ const EmailVerificationScreen: React.FC = () => {
           onSubmit={async (data) => {
             await verifyEmail(email, data.token);
           }}
-          submitButtonText='Verify Email'
+          submitButtonText="Verify Email"
           isLoading={loading}
-          options={{ mode: 'onBlur' }}
+          options={{ mode: "onBlur" }}
           zodSchema={verifyEmailFormSchema}
         />
 
@@ -104,14 +104,14 @@ const EmailVerificationScreen: React.FC = () => {
           <CustomButton
             onPress={handleResend}
             title={
-              resendDisabled ? `Resend code in ${countdown}s` : 'Resend code'
+              resendDisabled ? `Resend code in ${countdown}s` : "Resend code"
             }
             disabled={resendDisabled}
-            mode='text'
+            mode="text"
           />
         </View>
 
-        <CustomText variant='bodyMedium' style={styles.note}>
+        <CustomText variant="bodyMedium" style={styles.note}>
           Please check your spam folder if you don't see the code in your inbox.
         </CustomText>
       </View>
@@ -127,12 +127,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   resendContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
   },
   note: {
     marginTop: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 

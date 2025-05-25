@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Image } from 'react-native';
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, ScrollView, Image } from "react-native";
 import {
   useTheme,
   Card,
@@ -7,48 +7,48 @@ import {
   Surface,
   List,
   Divider,
-} from 'react-native-paper';
-import { router } from 'expo-router';
-import { useRevenueCat } from '@hooks/useRevenueCat';
-import CustomButton from '@components/ui/CustomButton';
-import LoadingIndicator from '@components/ui/LoadingIndicator';
-import { useAlertDialog } from '@hooks/useAlertDialog';
-import { useIsLoading, useSetLoading, useSetError } from '@stores/useUIStore';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { RC_PACKAGE_TYPES } from '@config/revenuecat.config';
-import { useUserStore } from '@stores/useUserStore';
+} from "react-native-paper";
+import { router } from "expo-router";
+import { useRevenueCat } from "@hooks/useRevenueCat";
+import CustomButton from "@components/ui/CustomButton";
+import LoadingIndicator from "@components/ui/LoadingIndicator";
+import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useIsLoading, useSetLoading, useSetError } from "@stores/useUIStore";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
+import { RC_PACKAGE_TYPES } from "@config/revenuecat.config";
+import { useUserStore } from "@stores/useUserStore";
 
 // Feature list definition with icons
 const FEATURES = [
   {
-    icon: 'robot' as const,
-    text: 'AI-Powered Language Coach Available 24/7',
+    icon: "robot" as const,
+    text: "AI-Powered Language Coach Available 24/7",
     description:
-      'Master Lithuanian faster with personalized guidance whenever you need it',
+      "Master Lithuanian faster with personalized guidance whenever you need it",
   },
   {
-    icon: 'cards' as const,
-    text: 'Unlimited Flashcards',
-    description: 'Build vocabulary and memorize phrases with no restrictions',
+    icon: "cards" as const,
+    text: "Unlimited Flashcards",
+    description: "Build vocabulary and memorize phrases with no restrictions",
   },
   {
-    icon: 'check-decagram' as const,
-    text: '100% Ad-Free Experience',
-    description: 'Focus on learning without any advertisements',
+    icon: "check-decagram" as const,
+    text: "100% Ad-Free Experience",
+    description: "Focus on learning without any advertisements",
   },
   {
-    icon: 'headset' as const,
-    text: 'Priority Support',
-    description: 'Get faster assistance whenever you need help',
+    icon: "headset" as const,
+    text: "Priority Support",
+    description: "Get faster assistance whenever you need help",
   },
 ];
 
 // Comparison table data
 const COMPARISON_DATA = [
-  { feature: 'AI chat sessions', free: '5/month', premium: 'Unlimited' },
-  { feature: 'Flashcards', free: 'Limited', premium: 'Unlimited' },
-  { feature: 'Ad-free experience', free: false, premium: true },
-  { feature: 'Priority support', free: false, premium: true },
+  { feature: "AI chat sessions", free: "5/month", premium: "Unlimited" },
+  { feature: "Flashcards", free: "Limited", premium: "Unlimited" },
+  { feature: "Ad-free experience", free: false, premium: true },
+  { feature: "Priority support", free: false, premium: true },
 ];
 
 export default function PremiumFeaturesScreen() {
@@ -65,7 +65,7 @@ export default function PremiumFeaturesScreen() {
   const setError = useSetError();
   const alertDialog = useAlertDialog();
   const [selectedPackage, setSelectedPackage] = useState<string | null>(
-    'yearly'
+    "yearly"
   );
 
   // Clear any existing errors when entering this screen
@@ -85,32 +85,32 @@ export default function PremiumFeaturesScreen() {
       paddingBottom: 40,
     },
     imageContainer: {
-      width: '100%',
+      width: "100%",
       marginBottom: 20,
     },
     premiumImage: {
-      width: '100%',
+      width: "100%",
       height: 240,
-      resizeMode: 'cover',
+      resizeMode: "cover",
       borderRadius: 20,
       borderWidth: 1,
       borderColor: theme.colors.primary,
     },
     header: {
-      alignItems: 'center',
+      alignItems: "center",
     },
     title: {
       fontSize: 28,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: theme.colors.primary,
-      textAlign: 'center',
+      textAlign: "center",
       marginTop: 16,
       marginBottom: 8,
     },
     subtitle: {
       fontSize: 16,
       color: theme.colors.onSurfaceVariant,
-      textAlign: 'center',
+      textAlign: "center",
       marginBottom: 24,
     },
     valueTag: {
@@ -122,11 +122,11 @@ export default function PremiumFeaturesScreen() {
     },
     valueTagText: {
       color: theme.colors.onPrimaryContainer,
-      fontWeight: 'bold',
+      fontWeight: "bold",
     },
     sectionTitle: {
       fontSize: 18,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       marginBottom: 12,
       marginTop: 20,
     },
@@ -143,7 +143,7 @@ export default function PremiumFeaturesScreen() {
       backgroundColor: theme.colors.background,
     },
     tableRow: {
-      flexDirection: 'row',
+      flexDirection: "row",
       backgroundColor: theme.colors.background,
     },
     tableHeader: {
@@ -151,19 +151,19 @@ export default function PremiumFeaturesScreen() {
       padding: 12,
     },
     tableHeaderText: {
-      fontWeight: 'bold',
+      fontWeight: "bold",
       fontSize: 14,
     },
     tableCell: {
       flex: 1,
       padding: 12,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       backgroundColor: theme.colors.background,
     },
     tableCellFirst: {
       flex: 2,
-      alignItems: 'flex-start',
+      alignItems: "flex-start",
     },
     divider: {
       height: 1,
@@ -183,7 +183,7 @@ export default function PremiumFeaturesScreen() {
       borderColor: theme.colors.primary,
     },
     bestValueBadge: {
-      position: 'absolute',
+      position: "absolute",
       top: 10,
       right: 10,
       backgroundColor: theme.colors.error,
@@ -193,16 +193,16 @@ export default function PremiumFeaturesScreen() {
       zIndex: 1,
     },
     bestValueText: {
-      color: 'white',
+      color: "white",
       fontSize: 12,
-      fontWeight: 'bold',
+      fontWeight: "bold",
     },
     cardContent: {
       padding: 20,
     },
     packageTitle: {
       fontSize: 18,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       marginBottom: 4,
     },
     packagePrice: {
@@ -210,23 +210,23 @@ export default function PremiumFeaturesScreen() {
       color: theme.colors.onSurfaceVariant,
     },
     priceRow: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
     },
     originalPrice: {
       fontSize: 13,
-      textDecorationLine: 'line-through',
+      textDecorationLine: "line-through",
       color: theme.colors.outline,
       marginRight: 8,
     },
     savings: {
       fontSize: 13,
       color: theme.colors.error,
-      fontWeight: 'bold',
+      fontWeight: "bold",
     },
     infoSection: {
-      flexDirection: 'row',
-      alignItems: 'center',
+      flexDirection: "row",
+      alignItems: "center",
       backgroundColor: theme.colors.secondaryContainer,
       padding: 16,
       borderRadius: 12,
@@ -245,30 +245,30 @@ export default function PremiumFeaturesScreen() {
     },
     alreadyPremiumMessage: {
       paddingVertical: 16,
-      alignItems: 'center',
+      alignItems: "center",
     },
     alreadyPremiumText: {
       fontSize: 18,
-      fontWeight: 'bold',
+      fontWeight: "bold",
       color: theme.colors.primary,
       marginBottom: 8,
     },
     alreadyPremiumDescription: {
       fontSize: 16,
-      textAlign: 'center',
+      textAlign: "center",
       marginBottom: 16,
       color: theme.colors.onSurfaceVariant,
     },
     unavailableContainer: {
       paddingVertical: 40,
-      alignItems: 'center',
-      justifyContent: 'center',
+      alignItems: "center",
+      justifyContent: "center",
       paddingHorizontal: 20,
     },
     unavailableText: {
       fontSize: 16,
       color: theme.colors.onSurfaceVariant,
-      textAlign: 'center',
+      textAlign: "center",
       lineHeight: 24,
     },
   });
@@ -279,10 +279,10 @@ export default function PremiumFeaturesScreen() {
         (pkg) => pkg.packageType === packageType.toUpperCase()
       )?.product?.priceString ||
       (packageType === RC_PACKAGE_TYPES.MONTHLY
-        ? '$4.99'
+        ? "$4.99"
         : packageType === RC_PACKAGE_TYPES.ANNUAL
-        ? '$39.99'
-        : '$99.99')
+        ? "$39.99"
+        : "$99.99")
     );
   };
 
@@ -290,27 +290,27 @@ export default function PremiumFeaturesScreen() {
     try {
       if (!offerings) {
         alertDialog.showAlert({
-          title: 'Offerings Not Available',
+          title: "Offerings Not Available",
           message:
-            'Unable to fetch subscription options. Please try again later.',
-          buttons: [{ text: 'OK', onPress: () => {} }],
+            "Unable to fetch subscription options. Please try again later.",
+          buttons: [{ text: "OK", onPress: () => {} }],
         });
         return;
       }
 
       if (!selectedPackage) {
         alertDialog.showAlert({
-          title: 'Select a Plan',
-          message: 'Please select a subscription plan first.',
-          buttons: [{ text: 'OK', onPress: () => {} }],
+          title: "Select a Plan",
+          message: "Please select a subscription plan first.",
+          buttons: [{ text: "OK", onPress: () => {} }],
         });
         return;
       }
 
       const packageType =
-        selectedPackage === 'monthly'
+        selectedPackage === "monthly"
           ? RC_PACKAGE_TYPES.MONTHLY
-          : selectedPackage === 'yearly'
+          : selectedPackage === "yearly"
           ? RC_PACKAGE_TYPES.ANNUAL
           : RC_PACKAGE_TYPES.LIFETIME;
 
@@ -322,10 +322,10 @@ export default function PremiumFeaturesScreen() {
 
       if (!premiumPackage) {
         alertDialog.showAlert({
-          title: 'Premium Not Available',
+          title: "Premium Not Available",
           message:
-            'Selected premium subscription is not available at the moment. Please try again later.',
-          buttons: [{ text: 'OK', onPress: () => {} }],
+            "Selected premium subscription is not available at the moment. Please try again later.",
+          buttons: [{ text: "OK", onPress: () => {} }],
         });
         return;
       }
@@ -341,12 +341,12 @@ export default function PremiumFeaturesScreen() {
       );
 
       alertDialog.showAlert({
-        title: 'Subscription Successful',
+        title: "Subscription Successful",
         message:
-          'You are now a premium user! Enjoy all premium features of Lithuaningo.',
+          "You are now a premium user! Enjoy all premium features of Lithuaningo.",
         buttons: [
           {
-            text: 'Great!',
+            text: "Great!",
             onPress: () => {
               // Navigate back to the previous screen
               router.back();
@@ -358,9 +358,9 @@ export default function PremiumFeaturesScreen() {
       // User cancelled purchase, don't show an error
       if (
         error &&
-        typeof error === 'object' &&
-        'code' in error &&
-        error.code === 'PURCHASE_CANCELLED_ERROR'
+        typeof error === "object" &&
+        "code" in error &&
+        error.code === "PURCHASE_CANCELLED_ERROR"
       ) {
         return;
       }
@@ -368,16 +368,16 @@ export default function PremiumFeaturesScreen() {
       // Don't show server-side errors to users as they may be related to profile updating
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      if (errorMessage && !errorMessage.includes('500')) {
+      if (errorMessage && !errorMessage.includes("500")) {
         alertDialog.showAlert({
-          title: 'Purchase Error',
+          title: "Purchase Error",
           message:
             errorMessage ||
-            'There was an error processing your purchase. Please try again later.',
-          buttons: [{ text: 'OK', onPress: () => {} }],
+            "There was an error processing your purchase. Please try again later.",
+          buttons: [{ text: "OK", onPress: () => {} }],
         });
       } else {
-        console.error('Server error during purchase process:', error);
+        console.error("Server error during purchase process:", error);
       }
     }
   };
@@ -387,25 +387,25 @@ export default function PremiumFeaturesScreen() {
       setLoading(true);
       await restorePurchases();
       alertDialog.showAlert({
-        title: 'Purchases Restored',
-        message: 'Your previous purchases have been restored successfully.',
-        buttons: [{ text: 'OK', onPress: () => {} }],
+        title: "Purchases Restored",
+        message: "Your previous purchases have been restored successfully.",
+        buttons: [{ text: "OK", onPress: () => {} }],
       });
     } catch (error: unknown) {
-      console.error('Failed to restore purchases:', error);
+      console.error("Failed to restore purchases:", error);
 
       // Don't show server-side errors to users
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      if (errorMessage && !errorMessage.includes('500')) {
+      if (errorMessage && !errorMessage.includes("500")) {
         alertDialog.showAlert({
-          title: 'Restore Failed',
+          title: "Restore Failed",
           message:
             "We couldn't restore your purchases. Please try again later.",
-          buttons: [{ text: 'OK', onPress: () => {} }],
+          buttons: [{ text: "OK", onPress: () => {} }],
         });
       } else {
-        console.error('Server error during restore process:', error);
+        console.error("Server error during restore process:", error);
       }
     } finally {
       setLoading(false);
@@ -426,7 +426,7 @@ export default function PremiumFeaturesScreen() {
       >
         <View style={styles.alreadyPremiumMessage}>
           <MaterialCommunityIcons
-            name='check-decagram'
+            name="check-decagram"
             size={60}
             color={theme.colors.primary}
           />
@@ -439,8 +439,8 @@ export default function PremiumFeaturesScreen() {
           </Text>
 
           <CustomButton
-            title='Manage Subscription'
-            mode='contained'
+            title="Manage Subscription"
+            mode="contained"
             onPress={() => showManageSubscriptions()}
             style={{ marginTop: 16 }}
           />
@@ -456,7 +456,7 @@ export default function PremiumFeaturesScreen() {
       <Card
         style={[styles.card, isSelected && styles.selectedCard]}
         onPress={() => setSelectedPackage(type)}
-        mode='elevated'
+        mode="elevated"
       >
         {isBestValue && (
           <View style={styles.bestValueBadge}>
@@ -466,7 +466,7 @@ export default function PremiumFeaturesScreen() {
         <Card.Content style={styles.cardContent}>
           <Text style={styles.packageTitle}>{title}</Text>
 
-          {type === 'yearly' ? (
+          {type === "yearly" ? (
             <>
               <View style={styles.priceRow}>
                 <Text style={styles.originalPrice}>$59.88</Text>
@@ -476,7 +476,7 @@ export default function PremiumFeaturesScreen() {
               </View>
               <Text style={styles.savings}>Save 33% with annual plan</Text>
             </>
-          ) : type === 'lifetime' ? (
+          ) : type === "lifetime" ? (
             <>
               <Text style={styles.packagePrice}>
                 {getPriceString(RC_PACKAGE_TYPES.LIFETIME)} one-time payment
@@ -502,9 +502,9 @@ export default function PremiumFeaturesScreen() {
       <View style={styles.header}>
         <View style={styles.imageContainer}>
           <Image
-            source={require('../../../../assets/images/premium_screen.jpeg')}
+            source={require("../../../../assets/images/premium_screen.jpeg")}
             style={styles.premiumImage}
-            accessibilityLabel='Premium features illustration'
+            accessibilityLabel="Premium features illustration"
           />
         </View>
         <Text style={styles.title}>Elevate Your Lithuanian</Text>
@@ -568,9 +568,9 @@ export default function PremiumFeaturesScreen() {
                   </Text>
                 </View>
                 <View style={styles.tableCell}>
-                  {typeof item.free === 'boolean' ? (
+                  {typeof item.free === "boolean" ? (
                     <MaterialCommunityIcons
-                      name={item.free ? 'check' : 'close'}
+                      name={item.free ? "check" : "close"}
                       size={20}
                       color={
                         item.free ? theme.colors.primary : theme.colors.error
@@ -581,9 +581,9 @@ export default function PremiumFeaturesScreen() {
                   )}
                 </View>
                 <View style={styles.tableCell}>
-                  {typeof item.premium === 'boolean' ? (
+                  {typeof item.premium === "boolean" ? (
                     <MaterialCommunityIcons
-                      name={item.premium ? 'check' : 'close'}
+                      name={item.premium ? "check" : "close"}
                       size={20}
                       color={
                         item.premium ? theme.colors.primary : theme.colors.error
@@ -603,9 +603,9 @@ export default function PremiumFeaturesScreen() {
         <>
           <Text style={styles.sectionTitle}>Choose Your Membership</Text>
           <View style={styles.planContainer}>
-            {renderPlanCard('monthly', 'Monthly')}
-            {renderPlanCard('yearly', 'Annual', true)}
-            {renderPlanCard('lifetime', 'Lifetime')}
+            {renderPlanCard("monthly", "Monthly")}
+            {renderPlanCard("yearly", "Annual", true)}
+            {renderPlanCard("lifetime", "Lifetime")}
           </View>
 
           <Surface
@@ -613,7 +613,7 @@ export default function PremiumFeaturesScreen() {
             elevation={1}
           >
             <MaterialCommunityIcons
-              name='shield-check'
+              name="shield-check"
               size={24}
               color={theme.colors.onSecondaryContainer}
               style={styles.infoIcon}
@@ -627,21 +627,21 @@ export default function PremiumFeaturesScreen() {
           <View style={styles.buttonContainer}>
             <CustomButton
               title={`Start Premium ${
-                selectedPackage === 'monthly'
-                  ? 'Monthly'
-                  : selectedPackage === 'yearly'
-                  ? 'Annual'
-                  : selectedPackage === 'lifetime'
-                  ? 'Lifetime'
-                  : ''
+                selectedPackage === "monthly"
+                  ? "Monthly"
+                  : selectedPackage === "yearly"
+                  ? "Annual"
+                  : selectedPackage === "lifetime"
+                  ? "Lifetime"
+                  : ""
               }`}
-              mode='contained'
+              mode="contained"
               onPress={handleUpgradeToPremium}
               disabled={!selectedPackage || globalIsLoading}
             />
             <CustomButton
-              title='Restore Purchases'
-              mode='text'
+              title="Restore Purchases"
+              mode="text"
               onPress={handleRestorePurchases}
               style={{ marginTop: 12 }}
             />
@@ -650,7 +650,7 @@ export default function PremiumFeaturesScreen() {
       ) : (
         <View style={styles.unavailableContainer}>
           <MaterialCommunityIcons
-            name='cloud-off-outline'
+            name="cloud-off-outline"
             size={48}
             color={theme.colors.onSurfaceVariant}
             style={{ marginBottom: 16 }}

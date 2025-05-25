@@ -1,52 +1,52 @@
-import axios, { AxiosInstance, AxiosError } from 'axios';
-import { Platform } from 'react-native';
-import { supabase } from '@services/supabase/supabaseClient';
-import { useUserStore } from '../../stores/useUserStore';
-import Constants from 'expo-constants';
-import { AppInfoResponse } from '@src/types/AppInfo';
+import axios, { AxiosInstance, AxiosError } from "axios";
+import { Platform } from "react-native";
+import { supabase } from "@services/supabase/supabaseClient";
+import { useUserStore } from "../../stores/useUserStore";
+import Constants from "expo-constants";
+import { AppInfoResponse } from "@src/types/AppInfo";
 import {
   LeaderboardEntryResponse,
   UpdateLeaderboardEntryRequest,
-} from '@src/types/Leaderboard';
+} from "@src/types/Leaderboard";
 import {
   ChallengeQuestionResponse,
   GetReviewChallengeQuestionsRequest,
-} from '@src/types/ChallengeQuestion';
+} from "@src/types/ChallengeQuestion";
 import {
   FlashcardRequest,
   FlashcardResponse,
   UpdateFlashcardAdminRequest,
-} from '@src/types/Flashcard';
+} from "@src/types/Flashcard";
 import {
   SubmitFlashcardAnswerRequest,
   UserFlashcardStatResponse,
   UserFlashcardStatsSummaryResponse,
-} from '@src/types/UserFlashcardStats';
+} from "@src/types/UserFlashcardStats";
 import {
   SubmitChallengeAnswerRequest,
   UserChallengeStatsResponse,
-} from '@src/types/UserChallengeStats';
+} from "@src/types/UserChallengeStats";
 import {
   UserProfileResponse,
   UpdateUserProfileRequest,
-} from '@src/types/UserProfile';
-import { AIRequest, AIResponse } from '@src/types/AI';
+} from "@src/types/UserProfile";
+import { AIRequest, AIResponse } from "@src/types/AI";
 import {
   UserChatStatsResponse,
   TrackMessageRequest,
-} from '@src/types/UserChatStats';
-import { API_URL } from '@config/apiConfig'; // Use alias
+} from "@src/types/UserChatStats";
+import { API_URL } from "@config/apiConfig"; // Use alias
 
 // Get the app version from Expo constants
-const APP_VERSION = Constants.expoConfig?.version || '1.0.0';
+const APP_VERSION = Constants.expoConfig?.version || "1.0.0";
 
 /**
  * Custom API error class to handle API errors with status and data
  */
 export class ApiError extends Error {
   constructor(public status: number, public data: unknown, message?: string) {
-    super(message || 'API Error');
-    this.name = 'ApiError';
+    super(message || "API Error");
+    this.name = "ApiError";
   }
 }
 
@@ -54,9 +54,9 @@ export class ApiError extends Error {
  * Get the base URL for API requests, handling Android emulator localhost
  */
 const getBaseUrl = () => {
-  if (__DEV__ && Platform.OS === 'android') {
+  if (__DEV__ && Platform.OS === "android") {
     // Replace localhost with 10.0.2.2 for Android emulator
-    return API_URL.replace('localhost', '10.0.2.2');
+    return API_URL.replace("localhost", "10.0.2.2");
   }
   return API_URL;
 };
@@ -75,9 +75,9 @@ class ApiClient {
       baseURL: this.baseURL,
       timeout: 300000, // 300 seconds (5 minutes)
       headers: {
-        'Content-Type': 'application/json',
-        'X-Platform': Platform.OS,
-        'X-App-Version': APP_VERSION,
+        "Content-Type": "application/json",
+        "X-Platform": Platform.OS,
+        "X-App-Version": APP_VERSION,
       },
     });
 
@@ -110,17 +110,18 @@ class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             // Log the token for testing purposes
+            console.log("[ApiClient] Token:", token);
           }
         } catch (error) {
           console.error(
-            '[ApiClient] Auth error in request interceptor:',
+            "[ApiClient] Auth error in request interceptor:",
             error
           );
         }
         return config;
       },
       (error) => {
-        console.error('[ApiClient] Request interceptor error:', error);
+        console.error("[ApiClient] Request interceptor error:", error);
         return Promise.reject(error);
       }
     );
@@ -135,12 +136,12 @@ class ApiClient {
         // Handle unauthorized errors (401)
         if (error.response?.status === 401) {
           try {
-            console.warn('[ApiClient] Unauthorized request, signing out user');
+            console.warn("[ApiClient] Unauthorized request, signing out user");
             const { setAuthenticated } = useUserStore.getState();
             await supabase.auth.signOut();
             setAuthenticated(false);
           } catch (signOutError) {
-            console.error('[ApiClient] Error during sign out:', signOutError);
+            console.error("[ApiClient] Error during sign out:", signOutError);
           }
         }
 
@@ -153,7 +154,7 @@ class ApiClient {
    * Log API errors with detailed information
    */
   private logApiError(error: AxiosError) {
-    console.error('[ApiClient] Response error:', {
+    console.error("[ApiClient] Response error:", {
       message: error.message,
       status: error.response?.status,
       url: error.config?.url,
@@ -174,7 +175,7 @@ class ApiClient {
       return new ApiError(status, data, message);
     } else if (axios.isAxiosError(error) && error.request) {
       // Request made but no response received
-      return new Error('Network error: No response from server');
+      return new Error("Network error: No response from server");
     }
     // Something else happened while setting up the request
     return error instanceof Error ? error : new Error(String(error));
@@ -188,7 +189,7 @@ class ApiClient {
     params?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
-    return this.request<T>(endpoint, { method: 'GET', params, ...options });
+    return this.request<T>(endpoint, { method: "GET", params, ...options });
   }
 
   /**
@@ -199,7 +200,7 @@ class ApiClient {
     data?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
-    return this.request<T>(endpoint, { method: 'POST', data, ...options });
+    return this.request<T>(endpoint, { method: "POST", data, ...options });
   }
 
   /**
@@ -210,7 +211,7 @@ class ApiClient {
     data?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
-    return this.request<T>(endpoint, { method: 'PUT', data, ...options });
+    return this.request<T>(endpoint, { method: "PUT", data, ...options });
   }
 
   /**
@@ -221,7 +222,7 @@ class ApiClient {
     data?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
-    return this.request<T>(endpoint, { method: 'PATCH', data, ...options });
+    return this.request<T>(endpoint, { method: "PATCH", data, ...options });
   }
 
   /**
@@ -232,7 +233,7 @@ class ApiClient {
     params?: Record<string, unknown>,
     options?: RequestOptions
   ): Promise<T> {
-    return this.request<T>(endpoint, { method: 'DELETE', params, ...options });
+    return this.request<T>(endpoint, { method: "DELETE", params, ...options });
   }
 
   /**
@@ -251,7 +252,7 @@ class ApiClient {
     const requestId = `req_${Date.now()}_${Math.random()
       .toString(36)
       .substring(2, 9)}`;
-    const method = options?.method || 'GET';
+    const method = options?.method || "GET";
 
     console.log(`[API] [${requestId}] Making request: ${method} ${endpoint}`);
 
@@ -292,7 +293,7 @@ class ApiClient {
       );
       return response;
     } catch (error) {
-      console.error('[getAppInfo] Error', {
+      console.error("[getAppInfo] Error", {
         message: error instanceof Error ? error.message : String(error),
         platform,
         baseURL: this.baseURL,
@@ -304,7 +305,7 @@ class ApiClient {
   // AI API methods
   async processAIRequest(
     prompt: string,
-    serviceType: string = 'chat',
+    serviceType: string = "chat",
     context?: Record<string, string>
   ): Promise<string> {
     const request: AIRequest = {
@@ -313,8 +314,8 @@ class ApiClient {
       context,
     };
 
-    const response = await this.request<AIResponse>('/api/v1/ai/process', {
-      method: 'POST',
+    const response = await this.request<AIResponse>("/api/v1/ai/process", {
+      method: "POST",
       data: request,
     });
     return response.response;
@@ -326,12 +327,12 @@ class ApiClient {
   ): Promise<string> {
     const request: AIRequest = {
       prompt: message,
-      serviceType: 'chat',
+      serviceType: "chat",
       context,
     };
 
-    const response = await this.request<AIResponse>('/api/v1/ai/chat', {
-      method: 'POST',
+    const response = await this.request<AIResponse>("/api/v1/ai/chat", {
+      method: "POST",
       data: request,
     });
     return response.response;
@@ -344,7 +345,7 @@ class ApiClient {
     return this.request<UserChallengeStatsResponse>(
       `/api/v1/UserChallengeStats/${userId}/stats`,
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -353,9 +354,9 @@ class ApiClient {
     request: SubmitChallengeAnswerRequest
   ): Promise<UserChallengeStatsResponse> {
     return this.request<UserChallengeStatsResponse>(
-      '/api/v1/UserChallengeStats/submit-answer',
+      "/api/v1/UserChallengeStats/submit-answer",
       {
-        method: 'POST',
+        method: "POST",
         data: request,
       }
     );
@@ -364,9 +365,9 @@ class ApiClient {
   // Leaderboard Controller
   async getCurrentWeekLeaderboard(): Promise<LeaderboardEntryResponse[]> {
     return this.request<LeaderboardEntryResponse[]>(
-      '/api/v1/Leaderboard/current',
+      "/api/v1/Leaderboard/current",
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -374,8 +375,8 @@ class ApiClient {
   async updateLeaderboardEntry(
     request: UpdateLeaderboardEntryRequest
   ): Promise<LeaderboardEntryResponse> {
-    return this.request<LeaderboardEntryResponse>('/api/v1/Leaderboard/entry', {
-      method: 'POST',
+    return this.request<LeaderboardEntryResponse>("/api/v1/Leaderboard/entry", {
+      method: "POST",
       data: request,
     });
   }
@@ -383,9 +384,9 @@ class ApiClient {
   // Challenge Controller
   async getDailyChallengeQuestions(): Promise<ChallengeQuestionResponse[]> {
     return this.request<ChallengeQuestionResponse[]>(
-      '/api/v1/Challenge/daily',
+      "/api/v1/Challenge/daily",
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -393,7 +394,7 @@ class ApiClient {
   async getReviewChallengeQuestions(
     request: GetReviewChallengeQuestionsRequest
   ): Promise<ChallengeQuestionResponse[]> {
-    const endpoint = '/api/v1/challenge/review';
+    const endpoint = "/api/v1/challenge/review";
     const params: Record<string, unknown> = {};
     if (request.count) {
       params.count = request.count;
@@ -406,15 +407,15 @@ class ApiClient {
     }
 
     return this.request<ChallengeQuestionResponse[]>(endpoint, {
-      method: 'GET',
+      method: "GET",
       params,
     });
   }
 
   // Flashcard Controller
   async getFlashcards(request: FlashcardRequest): Promise<FlashcardResponse[]> {
-    return this.request<FlashcardResponse[]>('/api/v1/Flashcard/learning', {
-      method: 'GET',
+    return this.request<FlashcardResponse[]>("/api/v1/Flashcard/learning", {
+      method: "GET",
       params: request,
     });
   }
@@ -426,7 +427,7 @@ class ApiClient {
     return this.request<UserFlashcardStatsSummaryResponse>(
       `/api/v1/UserFlashcardStats/${userId}/summary-stats`,
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -435,9 +436,9 @@ class ApiClient {
     request: SubmitFlashcardAnswerRequest
   ): Promise<UserFlashcardStatResponse> {
     return this.request<UserFlashcardStatResponse>(
-      '/api/v1/UserFlashcardStats/submit-answer',
+      "/api/v1/UserFlashcardStats/submit-answer",
       {
-        method: 'POST',
+        method: "POST",
         data: request,
       }
     );
@@ -453,14 +454,14 @@ class ApiClient {
     profile: UpdateUserProfileRequest
   ): Promise<UserProfileResponse> {
     return this.request<UserProfileResponse>(`/api/v1/UserProfile/${userId}`, {
-      method: 'PUT',
+      method: "PUT",
       data: profile,
     });
   }
 
   async deleteUserProfile(userId: string): Promise<void> {
     await this.request<void>(`/api/v1/UserProfile/${userId}`, {
-      method: 'DELETE',
+      method: "DELETE",
     });
   }
 
@@ -477,7 +478,7 @@ class ApiClient {
     return this.request<UserFlashcardStatResponse>(
       `/api/v1/UserFlashcardStats/${userId}/flashcard/${flashcardId}`,
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -487,7 +488,7 @@ class ApiClient {
     return this.request<UserChatStatsResponse>(
       `/api/v1/UserChatStats/${userId}/stats`,
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -496,9 +497,9 @@ class ApiClient {
     request: TrackMessageRequest
   ): Promise<UserChatStatsResponse> {
     return this.request<UserChatStatsResponse>(
-      '/api/v1/UserChatStats/track-message',
+      "/api/v1/UserChatStats/track-message",
       {
-        method: 'POST',
+        method: "POST",
         data: request,
       }
     );
@@ -511,7 +512,7 @@ class ApiClient {
     return this.request<boolean>(
       `/api/v1/UserChatStats/${userId}/has-reached-limit?isPremium=${isPremium}`,
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -528,7 +529,7 @@ class ApiClient {
     return this.request<FlashcardResponse[]>(
       `/api/v1/Admin/flashcards/unverified?limit=${limit}`,
       {
-        method: 'GET',
+        method: "GET",
       }
     );
   }
@@ -546,7 +547,7 @@ class ApiClient {
     return this.request<FlashcardResponse>(
       `/api/v1/Admin/flashcards/${flashcardId}`,
       {
-        method: 'PUT',
+        method: "PUT",
         data: request,
       }
     );
@@ -563,7 +564,7 @@ class ApiClient {
     return this.request<{ imageUrl: string }>(
       `/api/v1/Admin/flashcards/${flashcardId}/regenerate-image`,
       {
-        method: 'POST',
+        method: "POST",
       }
     );
   }
@@ -579,7 +580,7 @@ class ApiClient {
     return this.request<{ audioUrl: string }>(
       `/api/v1/Admin/flashcards/${flashcardId}/regenerate-audio`,
       {
-        method: 'POST',
+        method: "POST",
       }
     );
   }
@@ -587,9 +588,9 @@ class ApiClient {
   async incrementFlashcardViewCount(
     flashcardId: string
   ): Promise<UserFlashcardStatResponse> {
-    const endpoint = '/api/v1/UserFlashcardStats/increment-view';
+    const endpoint = "/api/v1/UserFlashcardStats/increment-view";
     return this.request<UserFlashcardStatResponse>(endpoint, {
-      method: 'POST',
+      method: "POST",
       data: { flashcardId },
     });
   }

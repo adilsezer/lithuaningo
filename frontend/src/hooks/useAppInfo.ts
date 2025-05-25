@@ -1,8 +1,8 @@
-import { useEffect } from 'react';
-import { Linking } from 'react-native';
-import useAppInfoStore from '@src/stores/useAppInfoStore';
-import { useIsLoading, useError } from '@src/stores/useUIStore';
-import { getCurrentVersion } from '@src/services/data/appInfoService';
+import { useEffect } from "react";
+import { Linking } from "react-native";
+import useAppInfoStore from "@src/stores/useAppInfoStore";
+import { useIsLoading, useError } from "@src/stores/useUIStore";
+import { getCurrentVersion } from "@src/services/data/appInfoService";
 
 /**
  * Hook to manage app information and version checks
@@ -40,7 +40,7 @@ export const useAppInfo = () => {
   // Handle update URL opening
   const openUpdateUrl = async () => {
     if (!appInfo?.updateUrl) {
-      console.warn('[useAppInfo] No update URL available');
+      console.warn("[useAppInfo] No update URL available");
       return;
     }
 
@@ -49,10 +49,10 @@ export const useAppInfo = () => {
       if (canOpen) {
         await Linking.openURL(appInfo.updateUrl);
       } else {
-        console.warn('[useAppInfo] Cannot open update URL:', appInfo.updateUrl);
+        console.warn("[useAppInfo] Cannot open update URL:", appInfo.updateUrl);
       }
     } catch (error) {
-      console.error('[useAppInfo] Error opening update URL:', error);
+      console.error("[useAppInfo] Error opening update URL:", error);
     }
   };
 
@@ -74,8 +74,8 @@ export const useAppInfo = () => {
     lastError,
 
     // Content
-    maintenanceMessage: appInfo?.maintenanceMessage || '',
-    releaseNotes: appInfo?.releaseNotes || '',
+    maintenanceMessage: appInfo?.maintenanceMessage || "",
+    releaseNotes: appInfo?.releaseNotes || "",
 
     // Actions
     checkAppStatus,

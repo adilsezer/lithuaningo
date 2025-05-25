@@ -1,7 +1,7 @@
-import { useSetLoading, useSetError } from '@stores/useUIStore';
-import { useAlertDialog } from '@hooks/useAlertDialog';
-import { useCallback } from 'react';
-import { AuthResponse } from '@src/types/auth.types';
+import { useSetLoading, useSetError } from "@stores/useUIStore";
+import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useCallback } from "react";
+import { AuthResponse } from "@src/types/auth.types";
 
 export const useAuthOperation = () => {
   const setLoading = useSetLoading();
@@ -11,7 +11,7 @@ export const useAuthOperation = () => {
   const handleError = useCallback(
     (error: unknown, title: string) => {
       const message =
-        error instanceof Error ? error.message : 'An error occurred';
+        error instanceof Error ? error.message : "An error occurred";
       console.error(`${title}:`, error);
       setError(message);
       //crashlytics().recordError(error);
@@ -38,13 +38,13 @@ export const useAuthOperation = () => {
         const result = await operation();
 
         if (!result.success) {
-          const error = new Error(result.message || 'Operation failed');
+          const error = new Error(result.message || "Operation failed");
           return handleError(error, errorTitle);
         }
 
         // Show success alert if requested and there's a message
         if (options?.showSuccessAlert && result.message) {
-          showSuccess(result.message, 'Success');
+          showSuccess(result.message, "Success");
         }
 
         return result;

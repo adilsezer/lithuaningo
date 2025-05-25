@@ -1,7 +1,7 @@
-import { create } from 'zustand';
-import { retrieveData, storeData } from '@utils/storageUtils';
-import * as notificationService from '@services/notification/notificationService';
-import { NOTIFICATION_KEYS } from '@services/notification/notificationService'; // Assuming NOTIFICATION_KEYS is exported
+import { create } from "zustand";
+import { retrieveData, storeData } from "@utils/storageUtils";
+import * as notificationService from "@services/notification/notificationService";
+import { NOTIFICATION_KEYS } from "@services/notification/notificationService"; // Assuming NOTIFICATION_KEYS is exported
 
 interface NotificationPreferencesState {
   arePushNotificationsEnabled: boolean;
@@ -14,7 +14,7 @@ interface NotificationPreferencesState {
 }
 
 const USER_PREF_PUSH_NOTIFICATIONS_ENABLED =
-  'user_pref_push_notifications_enabled';
+  "user_pref_push_notifications_enabled";
 
 const useNotificationPreferencesStore = create<NotificationPreferencesState>(
   (set, _get) => ({
@@ -35,7 +35,7 @@ const useNotificationPreferencesStore = create<NotificationPreferencesState>(
           await storeData(USER_PREF_PUSH_NOTIFICATIONS_ENABLED, true);
         }
       } catch (error) {
-        console.error('Failed to load push notification preference:', error);
+        console.error("Failed to load push notification preference:", error);
         // Keep default true in case of error
         set({ arePushNotificationsEnabled: true });
       } finally {
@@ -70,7 +70,7 @@ const useNotificationPreferencesStore = create<NotificationPreferencesState>(
           await notificationService.cancelAllScheduledNotifications();
         }
       } catch (error) {
-        console.error('Failed to set push notification preference:', error);
+        console.error("Failed to set push notification preference:", error);
         // Revert state on error if needed, or handle appropriately
       } finally {
         set({ isLoading: false });

@@ -1,9 +1,9 @@
-import { apiClient } from '@services/api/apiClient';
+import { apiClient } from "@services/api/apiClient";
 import {
   SubmitFlashcardAnswerRequest,
   UserFlashcardStatResponse,
   UserFlashcardStatsSummaryResponse,
-} from '@src/types/UserFlashcardStats';
+} from "@src/types/UserFlashcardStats";
 
 export class UserFlashcardStatsService {
   /**
@@ -18,7 +18,7 @@ export class UserFlashcardStatsService {
       return await apiClient.getUserFlashcardStatsSummary(userId);
     } catch (error) {
       console.error(
-        '[UserFlashcardStatsService] Error fetching flashcard stats summary:',
+        "[UserFlashcardStatsService] Error fetching flashcard stats summary:",
         error
       );
       throw error;
@@ -37,7 +37,7 @@ export class UserFlashcardStatsService {
       return await apiClient.submitFlashcardAnswer(request);
     } catch (error) {
       console.error(
-        '[UserFlashcardStatsService] Error submitting flashcard answer:',
+        "[UserFlashcardStatsService] Error submitting flashcard answer:",
         error
       );
       throw error;
@@ -58,7 +58,7 @@ export class UserFlashcardStatsService {
       return await apiClient.getFlashcardStats(userId, flashcardId);
     } catch (error) {
       console.error(
-        '[UserFlashcardStatsService] Error fetching flashcard stats:',
+        "[UserFlashcardStatsService] Error fetching flashcard stats:",
         error
       );
       throw error;

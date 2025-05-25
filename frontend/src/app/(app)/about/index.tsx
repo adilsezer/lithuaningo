@@ -1,9 +1,9 @@
-import React from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
-import { useAbout } from '@hooks/useAbout';
-import { useAppInfo } from '@hooks/useAppInfo';
-import CustomText from '@components/ui/CustomText';
-import { useTheme } from 'react-native-paper';
+import React from "react";
+import { StyleSheet, ScrollView } from "react-native";
+import { useAbout } from "@hooks/useAbout";
+import { useAppInfo } from "@hooks/useAppInfo";
+import CustomText from "@components/ui/CustomText";
+import { useTheme } from "react-native-paper";
 
 const AboutScreen = () => {
   const {
@@ -28,11 +28,11 @@ const AboutScreen = () => {
         Lithuanian.
       </CustomText>
 
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         Contact Us
       </CustomText>
       <CustomText>
-        Email:{' '}
+        Email:{" "}
         <CustomText
           onPress={() => handleLinkPress(links.email)}
           style={[styles.link, { color: theme.colors.primary }]}
@@ -41,7 +41,7 @@ const AboutScreen = () => {
         </CustomText>
       </CustomText>
 
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         Legal
       </CustomText>
       <CustomText
@@ -57,12 +57,12 @@ const AboutScreen = () => {
         {links.termsOfService.label}
       </CustomText>
 
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         License
       </CustomText>
       <CustomText>This app is licensed under the MIT License.</CustomText>
 
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         Version
       </CustomText>
       <CustomText>{currentVersion}</CustomText>
@@ -81,11 +81,11 @@ const AboutScreen = () => {
 
 const styles = StyleSheet.create({
   justifiedText: {
-    textAlign: 'justify',
+    textAlign: "justify",
     marginBottom: 20,
   },
   link: {
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
 });
 

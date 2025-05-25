@@ -1,10 +1,10 @@
-import { UseFormProps, FieldValues } from 'react-hook-form';
-import { KeyboardType, ViewStyle } from 'react-native';
-import { z } from 'zod';
+import { UseFormProps, FieldValues } from "react-hook-form";
+import { KeyboardType, ViewStyle } from "react-native";
+import { z } from "zod";
 
-export type FieldCategory = 'text-input' | 'toggle' | 'link';
+export type FieldCategory = "text-input" | "toggle" | "link";
 
-export type FieldType = 'text' | 'email' | 'password' | 'switch' | 'link';
+export type FieldType = "text" | "email" | "password" | "switch" | "link";
 
 export interface FormField {
   name: string;
@@ -17,7 +17,7 @@ export interface FormField {
   placeholder?: string;
   secureTextEntry?: boolean;
   keyboardType?: KeyboardType;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
+  autoCapitalize?: "none" | "sentences" | "words" | "characters";
   editable?: boolean;
   multiline?: boolean;
   numberOfLines?: number;
@@ -35,7 +35,7 @@ export interface FormProps<T extends FieldValues> {
   onSubmit: (data: T) => Promise<void> | void;
   submitButtonText: string;
   isLoading?: boolean;
-  options?: Omit<UseFormProps<T>, 'defaultValues' | 'resolver'>;
+  options?: Omit<UseFormProps<T>, "defaultValues" | "resolver">;
   defaultValues?: T;
   style?: ViewStyle;
   submitButtonStyle?: ViewStyle;

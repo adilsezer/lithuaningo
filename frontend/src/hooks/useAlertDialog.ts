@@ -1,6 +1,6 @@
 // src/hooks/useAlertDialog.ts
 
-import { useAlertActions } from '@stores/useAlertStore';
+import { useAlertActions } from "@stores/useAlertStore";
 
 export interface AlertButton {
   text: string;

@@ -1,22 +1,22 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, SafeAreaView, FlatList, View } from 'react-native';
-import { useTheme } from 'react-native-paper';
-import { router, useFocusEffect } from 'expo-router';
-import CustomText from '@components/ui/CustomText';
-import CategoryGrid from '@components/ui/CategoryGrid';
-import { FlashcardCategory } from '@components/ui/CategoryCard';
-import CustomDivider from '@components/ui/CustomDivider';
+import React, { useEffect } from "react";
+import { StyleSheet, SafeAreaView, FlatList, View } from "react-native";
+import { useTheme } from "react-native-paper";
+import { router, useFocusEffect } from "expo-router";
+import CustomText from "@components/ui/CustomText";
+import CategoryGrid from "@components/ui/CategoryGrid";
+import { FlashcardCategory } from "@components/ui/CategoryCard";
+import CustomDivider from "@components/ui/CustomDivider";
 import {
   FlashcardCategory as FlashcardCategoryEnum,
   DifficultyLevel,
-} from '@src/types/Flashcard';
-import { UserFlashcardStatsSummaryResponse } from '@src/types/UserFlashcardStats';
-import { UserFlashcardStatsCard } from '@components/ui/UserFlashcardStatsCard';
-import { useUserData, useIsPremium } from '@stores/useUserStore';
+} from "@src/types/Flashcard";
+import { UserFlashcardStatsSummaryResponse } from "@src/types/UserFlashcardStats";
+import { UserFlashcardStatsCard } from "@components/ui/UserFlashcardStatsCard";
+import { useUserData, useIsPremium } from "@stores/useUserStore";
 import {
   useFlashcardStore,
   DAILY_FLASHCARD_LIMIT,
-} from '@stores/useFlashcardStore';
+} from "@stores/useFlashcardStore";
 
 export default function FlashcardScreen() {
   const theme = useTheme();
@@ -28,6 +28,7 @@ export default function FlashcardScreen() {
     flashcardsViewedToday,
     syncFlashcardCount,
     isLoading: isSyncingCount,
+    error: syncError,
     statsSummary,
     isLoadingStats,
     resetSession,
@@ -71,20 +72,20 @@ export default function FlashcardScreen() {
     const difficultyCategories: FlashcardCategory[] = [
       {
         id: DifficultyLevel.Basic.toString(),
-        name: 'Basic',
-        description: 'Essential words for beginners',
+        name: "Basic",
+        description: "Essential words for beginners",
         color: theme.colors.secondary,
       },
       {
         id: DifficultyLevel.Intermediate.toString(),
-        name: 'Intermediate',
-        description: 'Medium difficulty words and phrases',
+        name: "Intermediate",
+        description: "Medium difficulty words and phrases",
         color: theme.colors.primary,
       },
       {
         id: DifficultyLevel.Advanced.toString(),
-        name: 'Advanced',
-        description: 'Complex words and expressions',
+        name: "Advanced",
+        description: "Complex words and expressions",
         color: theme.colors.tertiary,
       },
     ];
@@ -93,38 +94,38 @@ export default function FlashcardScreen() {
     const grammaticalCategories: FlashcardCategory[] = [
       {
         id: FlashcardCategoryEnum.Verb.toString(),
-        name: 'Verbs',
-        description: 'Action words like eat, sleep, run',
+        name: "Verbs",
+        description: "Action words like eat, sleep, run",
         color: getColor(0),
       },
       {
         id: FlashcardCategoryEnum.Noun.toString(),
-        name: 'Nouns',
-        description: 'People, places, things, and ideas',
+        name: "Nouns",
+        description: "People, places, things, and ideas",
         color: getColor(1),
       },
       {
         id: FlashcardCategoryEnum.Adjective.toString(),
-        name: 'Adjectives',
-        description: 'Words that describe nouns',
+        name: "Adjectives",
+        description: "Words that describe nouns",
         color: getColor(2),
       },
       {
         id: FlashcardCategoryEnum.Adverb.toString(),
-        name: 'Adverbs',
-        description: 'Words that modify verbs, adjectives, or other adverbs',
+        name: "Adverbs",
+        description: "Words that modify verbs, adjectives, or other adverbs",
         color: getColor(0),
       },
       {
         id: FlashcardCategoryEnum.Pronoun.toString(),
-        name: 'Pronouns',
-        description: 'Words that replace nouns',
+        name: "Pronouns",
+        description: "Words that replace nouns",
         color: getColor(1),
       },
       {
         id: FlashcardCategoryEnum.Connector.toString(),
-        name: 'Connectors',
-        description: 'Words that connect phrases or sentences',
+        name: "Connectors",
+        description: "Words that connect phrases or sentences",
         color: getColor(2),
       },
     ];
@@ -133,56 +134,56 @@ export default function FlashcardScreen() {
     const thematicCategories: FlashcardCategory[] = [
       {
         id: FlashcardCategoryEnum.Greeting.toString(),
-        name: 'Greetings',
-        description: 'Common expressions to say hello',
+        name: "Greetings",
+        description: "Common expressions to say hello",
         color: getColor(0),
       },
       {
         id: FlashcardCategoryEnum.Phrase.toString(),
-        name: 'Phrases',
-        description: 'Useful everyday expressions',
+        name: "Phrases",
+        description: "Useful everyday expressions",
         color: getColor(1),
       },
       {
         id: FlashcardCategoryEnum.Number.toString(),
-        name: 'Numbers',
-        description: 'Counting, quantities, and math terms',
+        name: "Numbers",
+        description: "Counting, quantities, and math terms",
         color: getColor(2),
       },
       {
         id: FlashcardCategoryEnum.TimeWord.toString(),
-        name: 'Time',
-        description: 'Days, months, seasons, and time expressions',
+        name: "Time",
+        description: "Days, months, seasons, and time expressions",
         color: getColor(0),
       },
       {
         id: FlashcardCategoryEnum.Food.toString(),
-        name: 'Food',
-        description: 'Food, drinks, and cooking terms',
+        name: "Food",
+        description: "Food, drinks, and cooking terms",
         color: getColor(1),
       },
       {
         id: FlashcardCategoryEnum.Travel.toString(),
-        name: 'Travel',
-        description: 'Transportation, directions, and travel vocabulary',
+        name: "Travel",
+        description: "Transportation, directions, and travel vocabulary",
         color: getColor(2),
       },
       {
         id: FlashcardCategoryEnum.Family.toString(),
-        name: 'Family',
-        description: 'Family members and relationships',
+        name: "Family",
+        description: "Family members and relationships",
         color: getColor(0),
       },
       {
         id: FlashcardCategoryEnum.Work.toString(),
-        name: 'Work',
-        description: 'Jobs, professions, and workplace vocabulary',
+        name: "Work",
+        description: "Jobs, professions, and workplace vocabulary",
         color: getColor(1),
       },
       {
         id: FlashcardCategoryEnum.Nature.toString(),
-        name: 'Nature',
-        description: 'Animals, plants, and natural phenomena',
+        name: "Nature",
+        description: "Animals, plants, and natural phenomena",
         color: getColor(2),
       },
     ];
@@ -191,40 +192,40 @@ export default function FlashcardScreen() {
     const allCategories: FlashcardCategory[] = [
       {
         id: FlashcardCategoryEnum.AllCategories.toString(),
-        name: 'All Categories',
-        description: 'Flashcards from all categories',
+        name: "All Categories",
+        description: "Flashcards from all categories",
         color: theme.colors.tertiary,
       },
     ];
 
     return [
-      { id: 'header', type: 'header' },
-      { id: 'stats-subtitle', type: 'stats-subtitle' },
-      { id: 'stats', type: 'stats' },
-      { id: 'limit-info', type: 'limit-info' },
-      { id: 'category-subtitle', type: 'category-subtitle' },
+      { id: "header", type: "header" },
+      { id: "stats-subtitle", type: "stats-subtitle" },
+      { id: "stats", type: "stats" },
+      { id: "limit-info", type: "limit-info" },
+      { id: "category-subtitle", type: "category-subtitle" },
       {
-        id: 'all',
-        type: 'category',
-        title: 'All Flashcards',
+        id: "all",
+        type: "category",
+        title: "All Flashcards",
         data: allCategories,
       },
       {
-        id: 'difficulty',
-        type: 'category',
-        title: 'By Difficulty',
+        id: "difficulty",
+        type: "category",
+        title: "By Difficulty",
         data: difficultyCategories,
       },
       {
-        id: 'grammatical',
-        type: 'category',
-        title: 'Grammatical Categories',
+        id: "grammatical",
+        type: "category",
+        title: "Grammatical Categories",
         data: grammaticalCategories,
       },
       {
-        id: 'thematic',
-        type: 'category',
-        title: 'Thematic Categories',
+        id: "thematic",
+        type: "category",
+        title: "Thematic Categories",
         data: thematicCategories,
       },
     ];
@@ -235,7 +236,7 @@ export default function FlashcardScreen() {
     (category: FlashcardCategory) => {
       // Navigate to category flashcards screen
       router.push({
-        pathname: '/(app)/flashcard/[id]',
+        pathname: "/(app)/flashcard/[id]",
         params: {
           id: category.id,
           name: category.name,
@@ -249,7 +250,7 @@ export default function FlashcardScreen() {
   const handleSelectMaster = React.useCallback(
     (category: FlashcardCategory) => {
       router.push({
-        pathname: '/(app)/flashcard-challenge/[id]', // Navigate to the new screen
+        pathname: "/(app)/flashcard-challenge/[id]", // Navigate to the new screen
         params: { id: category.id, name: category.name }, // Pass category id and name
       });
     },
@@ -259,29 +260,31 @@ export default function FlashcardScreen() {
   // Memoize each section type component to prevent unnecessary re-renders
   const HeaderSection = React.memo(() => (
     <View>
-      <CustomText variant='titleLarge' bold style={styles.title}>
+      <CustomText variant="titleLarge" bold style={styles.title}>
         Flashcards
       </CustomText>
     </View>
   ));
-  HeaderSection.displayName = 'HeaderSection';
+  HeaderSection.displayName = "HeaderSection";
 
   const CategorySubtitleSection = React.memo(() => (
-    <CustomText variant='bodyLarge' style={styles.subtitle}>
+    <CustomText variant="bodyLarge" style={styles.subtitle}>
       Choose a category to practice
     </CustomText>
   ));
-  CategorySubtitleSection.displayName = 'CategorySubtitleSection';
+  CategorySubtitleSection.displayName = "CategorySubtitleSection";
 
   const StatsSubtitleSection = React.memo(() => (
-    <CustomText variant='bodyLarge' style={styles.subtitle}>
+    <CustomText variant="bodyLarge" style={styles.subtitle}>
       Your Learning Progress
     </CustomText>
   ));
-  StatsSubtitleSection.displayName = 'StatsSubtitleSection';
+  StatsSubtitleSection.displayName = "StatsSubtitleSection";
 
-  const LimitInfoSection = React.memo(() =>
-    !isPremium ? (
+  const LimitInfoSection = React.useCallback(() => {
+    if (isPremium) return null;
+
+    return (
       <View
         style={[
           styles.limitInfoContainer,
@@ -290,13 +293,30 @@ export default function FlashcardScreen() {
           },
         ]}
       >
-        <CustomText variant='bodyMedium'>
-          Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{' '}
-          flashcards viewed
-        </CustomText>
+        {isSyncingCount ? (
+          <CustomText variant="bodyMedium">Syncing usage data...</CustomText>
+        ) : syncError ? (
+          <View>
+            <CustomText
+              variant="bodyMedium"
+              style={{ color: theme.colors.error }}
+            >
+              Failed to sync usage data
+            </CustomText>
+            <CustomText variant="bodySmall">
+              Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+              flashcards viewed (may be outdated)
+            </CustomText>
+          </View>
+        ) : (
+          <CustomText variant="bodyMedium">
+            Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+            flashcards viewed
+          </CustomText>
+        )}
         {flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT && (
           <CustomText
-            variant='bodySmall'
+            variant="bodySmall"
             style={[styles.limitWarning, { color: theme.colors.error }]}
           >
             You've reached your daily limit. Upgrade to premium for unlimited
@@ -304,9 +324,14 @@ export default function FlashcardScreen() {
           </CustomText>
         )}
       </View>
-    ) : null
-  );
-  LimitInfoSection.displayName = 'LimitInfoSection';
+    );
+  }, [
+    isPremium,
+    isSyncingCount,
+    syncError,
+    flashcardsViewedToday,
+    theme.colors,
+  ]);
 
   const StatsSection = React.memo(() =>
     userData?.id ? (
@@ -323,7 +348,7 @@ export default function FlashcardScreen() {
       ) : null
     ) : null
   );
-  StatsSection.displayName = 'StatsSection';
+  StatsSection.displayName = "StatsSection";
 
   const CategorySection = React.memo(
     ({ title, data }: { title?: string; data?: FlashcardCategory[] }) => (
@@ -340,7 +365,7 @@ export default function FlashcardScreen() {
       </>
     )
   );
-  CategorySection.displayName = 'CategorySection';
+  CategorySection.displayName = "CategorySection";
 
   // Define section item type
   interface SectionItem {
@@ -354,24 +379,30 @@ export default function FlashcardScreen() {
   const renderItem = React.useCallback(
     ({ item }: { item: SectionItem }) => {
       switch (item.type) {
-        case 'header':
+        case "header":
           return <HeaderSection />;
-        case 'category-subtitle':
+        case "category-subtitle":
           return <CategorySubtitleSection />;
-        case 'stats-subtitle':
+        case "stats-subtitle":
           return <StatsSubtitleSection />;
-        case 'limit-info':
+        case "limit-info":
           return <LimitInfoSection />;
-        case 'stats':
+        case "stats":
           return <StatsSection />;
-        case 'category':
+        case "category":
           return <CategorySection title={item.title} data={item.data} />;
         default:
           return null;
       }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [] // No dependencies needed since components are memoized and stable
+    [
+      HeaderSection,
+      CategorySubtitleSection,
+      StatsSubtitleSection,
+      LimitInfoSection,
+      StatsSection,
+      CategorySection,
+    ]
   );
 
   // Memoize keyExtractor

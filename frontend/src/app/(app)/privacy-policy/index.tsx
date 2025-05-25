@@ -1,10 +1,10 @@
-import React from 'react';
-import { ScrollView, StyleSheet, StyleProp, TextStyle } from 'react-native';
-import * as Linking from 'expo-linking';
-import CustomText from '@components/ui/CustomText';
+import React from "react";
+import { ScrollView, StyleSheet, StyleProp, TextStyle } from "react-native";
+import * as Linking from "expo-linking";
+import CustomText from "@components/ui/CustomText";
 
 // Define a local union type for the variants used here.
-type ValidVariant = 'titleLarge' | 'titleMedium' | 'bodyMedium';
+type ValidVariant = "titleLarge" | "titleMedium" | "bodyMedium";
 
 // Define a helper type for the paragraph props.
 interface ParagraphProps {
@@ -15,7 +15,7 @@ interface ParagraphProps {
 const PrivacyPolicy = () => {
   // Create a helper object for body text props.
   const paragraphProps: ParagraphProps = {
-    variant: 'bodyMedium',
+    variant: "bodyMedium",
     style: styles.justifiedText,
   };
 
@@ -36,7 +36,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         1. Information We Collect
       </CustomText>
 
@@ -123,7 +123,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         2. How We Use Your Information
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -155,7 +155,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         3. Data Storage and Security
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -172,7 +172,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         4. Third-Party Services
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -197,7 +197,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         5. Data Deletion
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -215,7 +215,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         6. Updates and Notifications
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -229,7 +229,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         7. Children's Privacy
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -239,30 +239,30 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         8. Contact Us
       </CustomText>
       <CustomText {...paragraphProps}>
         If you have questions about this Privacy Policy, please contact us:
       </CustomText>
       <CustomText {...paragraphProps}>
-        By email:{' '}
+        By email:{" "}
         <CustomText
           {...paragraphProps}
           style={[paragraphProps.style, styles.link]}
-          onPress={() => Linking.openURL('mailto:lithuaningo@gmail.com')}
+          onPress={() => Linking.openURL("mailto:lithuaningo@gmail.com")}
         >
           lithuaningo@gmail.com
         </CustomText>
       </CustomText>
       <CustomText {...paragraphProps}>
-        By visiting this page on our website:{' '}
+        By visiting this page on our website:{" "}
         <CustomText
           {...paragraphProps}
           style={[paragraphProps.style, styles.link]}
           onPress={() =>
             Linking.openURL(
-              'https://adilsezer.github.io/lithuaningo/privacy-policy',
+              "https://adilsezer.github.io/lithuaningo/privacy-policy",
             )
           }
         >
@@ -271,7 +271,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant='titleMedium' bold>
+      <CustomText variant="titleMedium" bold>
         9. Changes to This Policy
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -285,14 +285,14 @@ const PrivacyPolicy = () => {
 
 const styles = StyleSheet.create({
   justifiedText: {
-    textAlign: 'justify',
+    textAlign: "justify",
   },
   nestedList: {
     paddingLeft: 20,
   },
   link: {
-    color: '#0000FF',
-    textDecorationLine: 'underline',
+    color: "#0000FF",
+    textDecorationLine: "underline",
   },
 });
 

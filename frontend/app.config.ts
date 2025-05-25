@@ -1,5 +1,5 @@
-import 'dotenv/config';
-import { ExpoConfig, ConfigContext } from '@expo/config';
+import "dotenv/config";
+import { ExpoConfig, ConfigContext } from "@expo/config";
 
 export default ({ config }: ConfigContext): ExpoConfig => {
   // Native configuration values – needed at build time
@@ -24,32 +24,32 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     androidProductId: process.env.ANDROID_PRODUCT_ID,
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-    privacyPolicyUrl: 'https://adilsezer.github.io/lithuaningo/privacy-policy',
+    privacyPolicyUrl: "https://adilsezer.github.io/lithuaningo/privacy-policy",
     keywords:
-      'Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language challenges, Interactive learning',
+      "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language challenges, Interactive learning",
   };
 
   return {
     ...config,
-    name: 'Lithuaningo',
-    slug: 'lithuaningo',
-    version: '3.0.0',
-    orientation: 'portrait',
-    icon: './assets/icons/ios/icon.png',
-    userInterfaceStyle: 'automatic',
-    scheme: 'com.adilsezer.lithuaningo',
+    name: "Lithuaningo",
+    slug: "lithuaningo",
+    version: "3.0.0",
+    orientation: "portrait",
+    icon: "./assets/icons/ios/icon.png",
+    userInterfaceStyle: "automatic",
+    scheme: "com.adilsezer.lithuaningo",
     splash: {
-      image: './assets/images/splash.jpeg',
-      resizeMode: 'contain',
-      backgroundColor: '#ffffff',
+      image: "./assets/images/splash.jpeg",
+      resizeMode: "contain",
+      backgroundColor: "#ffffff",
     },
-    assetBundlePatterns: ['**/*'],
+    assetBundlePatterns: ["**/*"],
     ios: {
       supportsTablet: true,
-      bundleIdentifier: 'com.adilsezer.lithuaningo',
+      bundleIdentifier: "com.adilsezer.lithuaningo",
       infoPlist: {
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: ['fetch'],
+        UIBackgroundModes: ["fetch"],
         NSAppTransportSecurity: {
           NSAllowsArbitraryLoads: true,
           NSExceptionDomains: {
@@ -63,7 +63,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           {
             CFBundleURLSchemes: [
               `com.googleusercontent.apps.${
-                nativeGoogleConfig.iosClientId?.split('.')[0]
+                nativeGoogleConfig.iosClientId?.split(".")[0]
               }`,
             ],
           },
@@ -72,50 +72,50 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       usesAppleSignIn: true,
     },
     android: {
-      icon: './assets/icons/android/xxxhdpi/icon.png',
+      icon: "./assets/icons/android/xxxhdpi/icon.png",
       adaptiveIcon: {
-        foregroundImage: './assets/icons/android/foreground.png',
-        backgroundImage: './assets/icons/android/background.png',
+        foregroundImage: "./assets/icons/android/foreground.png",
+        backgroundImage: "./assets/icons/android/background.png",
       },
-      package: 'com.adilsezer.lithuaningo',
+      package: "com.adilsezer.lithuaningo",
       versionCode: 20,
       permissions: [
-        'INTERNET',
-        'ACCESS_NETWORK_STATE',
-        'READ_EXTERNAL_STORAGE',
-        'WRITE_EXTERNAL_STORAGE',
-        'RECEIVE_BOOT_COMPLETED',
-        'SCHEDULE_EXACT_ALARM',
-        'POST_NOTIFICATIONS',
-        'BILLING',
+        "INTERNET",
+        "ACCESS_NETWORK_STATE",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE",
+        "RECEIVE_BOOT_COMPLETED",
+        "SCHEDULE_EXACT_ALARM",
+        "POST_NOTIFICATIONS",
+        "BILLING",
       ],
     },
     web: {
-      favicon: './assets/images/favicon.png',
+      favicon: "./assets/images/favicon.png",
     },
     plugins: [
-      'expo-router',
+      "expo-router",
       [
-        'expo-build-properties',
+        "expo-build-properties",
         {
           ios: {
-            useFrameworks: 'static',
+            useFrameworks: "static",
           },
           android: {
             enableProguardInReleaseBuilds: true,
-            extraProguardRules: '-keep public class com.horcrux.svg.** {*;}',
+            extraProguardRules: "-keep public class com.horcrux.svg.** {*;}",
             allowBackup: false,
           },
         },
       ],
-      'expo-font',
-      'expo-apple-authentication',
+      "expo-font",
+      "expo-apple-authentication",
       [
-        'expo-notifications',
+        "expo-notifications",
         {
-          icon: './assets/images/icon.png',
-          color: '#ffffff',
-          defaultChannel: 'default',
+          icon: "./assets/images/icon.png",
+          color: "#ffffff",
+          defaultChannel: "default",
         },
       ],
     ],

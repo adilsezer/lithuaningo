@@ -1,27 +1,27 @@
-import { create } from 'zustand';
-import { UserFlashcardStatsService } from '@services/data/userFlashcardStatsService';
-import flashcardService from '@services/data/flashcardService';
+import { create } from "zustand";
+import { UserFlashcardStatsService } from "@services/data/userFlashcardStatsService";
+import flashcardService from "@services/data/flashcardService";
 import {
   FlashcardResponse,
   FlashcardRequest,
   FlashcardCategory,
   DifficultyLevel,
-} from '@src/types/Flashcard';
+} from "@src/types/Flashcard";
 import {
   UserFlashcardStatResponse,
   UserFlashcardStatsSummaryResponse,
   SubmitFlashcardAnswerRequest,
-} from '@src/types/UserFlashcardStats';
-import { useUserStore } from './useUserStore';
-import { apiClient } from '@services/api/apiClient';
+} from "@src/types/UserFlashcardStats";
+import { useUserStore } from "./useUserStore";
+import { apiClient } from "@services/api/apiClient";
 
 // Constants
-export const DAILY_FLASHCARD_LIMIT = 25;
+export const DAILY_FLASHCARD_LIMIT = 10;
 
 // Types
 export interface FlashcardMessage {
   text: string;
-  type: 'success' | 'error' | 'info';
+  type: "success" | "error" | "info";
 }
 
 interface FlashcardStore {
@@ -117,8 +117,8 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
         hasAttemptedLoad: true,
         isDeckCompleted: true,
         submissionMessage: {
-          text: 'Daily flashcard limit reached. Upgrade to premium for unlimited access!',
-          type: 'error',
+          text: "Daily flashcard limit reached. Upgrade to premium for unlimited access!",
+          type: "error",
         },
       });
       return;
@@ -152,7 +152,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     } catch (err) {
       set({
         isLoadingFlashcards: false,
-        error: err instanceof Error ? err.message : 'Failed to load flashcards',
+        error: err instanceof Error ? err.message : "Failed to load flashcards",
         flashcards: [],
         hasAttemptedLoad: true,
       });
@@ -168,7 +168,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
           isDeckCompleted: true,
           submissionMessage: {
             text: "You've completed all cards in this deck!",
-            type: 'info',
+            type: "info",
           },
           currentFlashcardStats: null,
           currentFlashcardId: null,
@@ -189,7 +189,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
 
   advanceCardAndProcess: async (flashcardId: string, userId: string) => {
     if (!flashcardId || !userId) {
-      set({ error: 'Cannot advance card: missing card or user ID.' });
+      set({ error: "Cannot advance card: missing card or user ID." });
       return;
     }
 
@@ -201,10 +201,10 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     if (!viewCountIncremented) {
       set({
         error:
-          'Failed to track flashcard progress after multiple attempts. Your daily count may not be accurate.',
+          "Failed to track flashcard progress after multiple attempts. Your daily count may not be accurate.",
         submissionMessage: {
-          text: 'Warning: Progress tracking failed. Please check your connection.',
-          type: 'error',
+          text: "Warning: Progress tracking failed. Please check your connection.",
+          type: "error",
         },
       });
     }
@@ -215,8 +215,8 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
       } catch {
         set({
           submissionMessage: {
-            text: 'Progress saved, but display may be outdated. Refresh to see current count.',
-            type: 'info',
+            text: "Progress saved, but display may be outdated. Refresh to see current count.",
+            type: "info",
           },
         });
       }
@@ -257,16 +257,18 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     try {
       const stats =
         await UserFlashcardStatsService.getUserFlashcardStatsSummary(userId);
+
       set({
         flashcardsViewedToday: stats.flashcardsViewedToday,
         lastSyncTime: new Date(),
         statsSummary: stats,
         isLoading: false,
       });
-    } catch {
+    } catch (err) {
+      console.error("[FlashcardStore] Sync failed:", err);
       set({
         isLoading: false,
-        error: 'Failed to sync flashcard count. Please try again.',
+        error: "Failed to sync flashcard count. Please try again.",
       });
     }
   },
@@ -307,7 +309,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
         error:
           err instanceof Error
             ? err.message
-            : 'Failed to fetch flashcard stats',
+            : "Failed to fetch flashcard stats",
         isLoadingStats: false,
       });
     }
@@ -316,7 +318,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
   submitFlashcardAnswer: async (answer) => {
     const userId = answer.userId;
     if (!userId) {
-      set({ error: 'User ID is required to submit answers' });
+      set({ error: "User ID is required to submit answers" });
       return;
     }
 
@@ -327,8 +329,8 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     if (!isPremium && currentViewCount >= DAILY_FLASHCARD_LIMIT) {
       set({
         submissionMessage: {
-          text: 'Daily flashcard viewing limit reached. Upgrade to premium for unlimited access!',
-          type: 'error',
+          text: "Daily flashcard viewing limit reached. Upgrade to premium for unlimited access!",
+          type: "error",
         },
       });
       return;
@@ -345,9 +347,9 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
 
       const message = {
         text: answer.wasCorrect
-          ? 'Great job! Moving to the next card...'
-          : 'Keep practicing! This card will appear again later.',
-        type: answer.wasCorrect ? ('success' as const) : ('error' as const),
+          ? "Great job! Moving to the next card..."
+          : "Keep practicing! This card will appear again later.",
+        type: answer.wasCorrect ? ("success" as const) : ("error" as const),
       };
 
       set({
@@ -360,7 +362,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
           set({
             submissionMessage: {
               text: "You've reached your daily viewing limit! Upgrade to premium for unlimited access.",
-              type: 'error',
+              type: "error",
             },
           });
         }, 2000);
@@ -372,8 +374,8 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     } catch {
       set({
         submissionMessage: {
-          text: 'Error recording your answer. Please try again.',
-          type: 'error',
+          text: "Error recording your answer. Please try again.",
+          type: "error",
         },
       });
 

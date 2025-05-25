@@ -1,8 +1,8 @@
-import { apiClient, ApiError } from '@services/api/apiClient';
+import { apiClient, ApiError } from "@services/api/apiClient";
 import {
   LeaderboardEntryResponse,
   UpdateLeaderboardEntryRequest,
-} from '@src/types';
+} from "@src/types";
 
 class LeaderboardService {
   async getCurrentWeekLeaderboard(): Promise<LeaderboardEntryResponse[]> {
@@ -12,7 +12,7 @@ class LeaderboardService {
       if (error instanceof ApiError) {
         console.error(`API Error ${error.status}:`, error.data);
       } else {
-        console.error('Error fetching current week leaderboard:', error);
+        console.error("Error fetching current week leaderboard:", error);
       }
       throw error;
     }
@@ -27,7 +27,7 @@ class LeaderboardService {
       if (error instanceof ApiError) {
         console.error(`API Error ${error.status}:`, error.data);
       } else {
-        console.error('Error updating leaderboard entry:', error);
+        console.error("Error updating leaderboard entry:", error);
       }
       throw error;
     }

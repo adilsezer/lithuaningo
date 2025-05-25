@@ -1,9 +1,9 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 import {
   UserChallengeStatsResponse,
   SubmitChallengeAnswerRequest,
-} from '@src/types';
-import { UserChallengeStatsService } from '@services/data/userChallengeStatsService';
+} from "@src/types";
+import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
 
 export const useChallengeStats = (userId?: string) => {
   const [stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
@@ -12,7 +12,7 @@ export const useChallengeStats = (userId?: string) => {
 
   const getUserChallengeStats = useCallback(async () => {
     if (!userId) {
-      setError('User ID is required');
+      setError("User ID is required");
       return null;
     }
 
@@ -28,7 +28,7 @@ export const useChallengeStats = (userId?: string) => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : 'Failed to fetch user challenge stats';
+          : "Failed to fetch user challenge stats";
       setError(errorMessage);
       throw err;
     } finally {
@@ -39,7 +39,7 @@ export const useChallengeStats = (userId?: string) => {
   const submitChallengeAnswer = useCallback(
     async (request: SubmitChallengeAnswerRequest) => {
       if (!userId) {
-        setError('User ID is required');
+        setError("User ID is required");
         return null;
       }
 
@@ -56,7 +56,7 @@ export const useChallengeStats = (userId?: string) => {
         const errorMessage =
           err instanceof Error
             ? err.message
-            : 'Failed to submit challenge answer';
+            : "Failed to submit challenge answer";
         setError(errorMessage);
         throw err;
       } finally {

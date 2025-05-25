@@ -1,15 +1,15 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, ScrollView } from 'react-native';
-import { useUserData } from '@stores/useUserStore';
-import CustomText from '@components/ui/CustomText';
-import { useSetError } from '@src/stores/useUIStore';
-import { DailyChallengeCard } from '@components/ui/DailyChallengeCard';
-import { router } from 'expo-router';
-import CustomButton from '@components/ui/CustomButton';
-import Leaderboard from '@components/ui/Leaderboard';
-import { useLeaderboard } from '@src/hooks/useLeaderboard';
-import { useChallengeStats } from '@hooks/useChallengeStats';
-import ErrorMessage from '@components/ui/ErrorMessage';
+import React, { useEffect } from "react";
+import { StyleSheet, ScrollView } from "react-native";
+import { useUserData } from "@stores/useUserStore";
+import CustomText from "@components/ui/CustomText";
+import { useSetError } from "@src/stores/useUIStore";
+import { DailyChallengeCard } from "@components/ui/DailyChallengeCard";
+import { router } from "expo-router";
+import CustomButton from "@components/ui/CustomButton";
+import Leaderboard from "@components/ui/Leaderboard";
+import { useLeaderboard } from "@src/hooks/useLeaderboard";
+import { useChallengeStats } from "@hooks/useChallengeStats";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 export default function HomeScreen() {
   const userData = useUserData();
@@ -45,15 +45,15 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <CustomText variant='titleLarge' bold>
-        Hi, {userData?.fullName || 'there'} 👋
+      <CustomText variant="titleLarge" bold>
+        Hi, {userData?.fullName || "there"} 👋
       </CustomText>
 
       {statsError ? (
         <ErrorMessage
           message={`Unable to load challenge stats: ${statsError}`}
           onRetry={getUserChallengeStats}
-          buttonText='Try Again'
+          buttonText="Try Again"
         />
       ) : (
         <DailyChallengeCard
@@ -63,19 +63,19 @@ export default function HomeScreen() {
         />
       )}
 
-      <CustomText variant='bodyMedium'>
+      <CustomText variant="bodyMedium">
         Practice flashcards with our AI assistant.
       </CustomText>
       <CustomButton
-        title='Browse Flashcards'
-        onPress={() => router.push('(app)/(tabs)/flashcard')}
+        title="Browse Flashcards"
+        onPress={() => router.push("(app)/(tabs)/flashcard")}
       />
-      <CustomText variant='bodyMedium'>
+      <CustomText variant="bodyMedium">
         Join the Daily Challenge and compete on the leaderboard!
       </CustomText>
       <CustomButton
-        title='Start Daily Challenge'
-        onPress={() => router.push('(app)/(tabs)/challenge')}
+        title="Start Daily Challenge"
+        onPress={() => router.push("(app)/(tabs)/challenge")}
       />
       <Leaderboard entries={entries} />
     </ScrollView>

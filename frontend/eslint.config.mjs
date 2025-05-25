@@ -125,10 +125,10 @@ export default [
       // Code style
       quotes: [
         "error",
-        "single",
+        "double",
         { avoidEscape: true, allowTemplateLiterals: true },
       ],
-      "jsx-quotes": ["error", "prefer-single"],
+      "jsx-quotes": ["error", "prefer-double"],
     },
     settings: {
       react: {

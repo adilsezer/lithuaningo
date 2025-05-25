@@ -1,11 +1,11 @@
-import React, { useEffect } from 'react';
-import { Appearance, Platform } from 'react-native';
-import useThemeStore from '@stores/useThemeStore';
-import useAppInfoStore from '@stores/useAppInfoStore';
-import { useUserData, useUserStore } from '@stores/useUserStore';
-import Purchases, { LOG_LEVEL, CustomerInfo } from 'react-native-purchases';
-import { REVENUECAT_API_KEYS, DEBUG_SETTINGS } from '@config/revenuecat.config';
-import { useSetLoading } from '@stores/useUIStore';
+import React, { useEffect } from "react";
+import { Appearance, Platform } from "react-native";
+import useThemeStore from "@stores/useThemeStore";
+import useAppInfoStore from "@stores/useAppInfoStore";
+import { useUserData, useUserStore } from "@stores/useUserStore";
+import Purchases, { LOG_LEVEL, CustomerInfo } from "react-native-purchases";
+import { REVENUECAT_API_KEYS, DEBUG_SETTINGS } from "@config/revenuecat.config";
+import { useSetLoading } from "@stores/useUIStore";
 
 /**
  * Provider component that handles core app initialization:
@@ -33,7 +33,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
         checkAppStatus();
       }
     } catch (error) {
-      console.error('Initialization error:', error);
+      console.error("Initialization error:", error);
     }
   }, [
     initializeTheme,
@@ -62,22 +62,22 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
         };
 
         // Configure based on platform
-        if (Platform.OS === 'ios') {
+        if (Platform.OS === "ios") {
           await Purchases.configure({
             apiKey: REVENUECAT_API_KEYS.ios,
             ...configOptions,
           });
-        } else if (Platform.OS === 'android') {
+        } else if (Platform.OS === "android") {
           await Purchases.configure({
             apiKey: REVENUECAT_API_KEYS.android,
             ...configOptions,
           });
         }
 
-        console.log('RevenueCat initialized successfully');
+        console.log("RevenueCat initialized successfully");
       } catch (error) {
         // Log detailed error but don't surface to UI since this is initialization
-        console.error('Failed to initialize RevenueCat:', error);
+        console.error("Failed to initialize RevenueCat:", error);
       } finally {
         setLoading(false);
       }
@@ -97,9 +97,9 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
       try {
         setLoading(true);
         await Purchases.logIn(userData.id);
-        console.log('RevenueCat user identified:', userData.id);
+        console.log("RevenueCat user identified:", userData.id);
       } catch (error) {
-        console.error('Failed to identify user with RevenueCat:', error);
+        console.error("Failed to identify user with RevenueCat:", error);
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
         subscription.remove();
       };
     } catch (error) {
-      console.error('Theme listener error:', error);
+      console.error("Theme listener error:", error);
     }
   }, [setManualMode]);
 
@@ -129,16 +129,16 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
       return;
     }
 
-    console.log('[InitProvider] Setting up CustomerInfo update listener');
+    console.log("[InitProvider] Setting up CustomerInfo update listener");
     const customerInfoUpdateListener = (info: CustomerInfo) => {
-      console.log('[InitProvider] CustomerInfo updated from RevenueCat');
+      console.log("[InitProvider] CustomerInfo updated from RevenueCat");
 
       // For debugging
       const hasPremium = info.entitlements.active.Premium !== undefined;
-      console.log('[InitProvider] Premium entitlement active:', hasPremium);
+      console.log("[InitProvider] Premium entitlement active:", hasPremium);
 
       if (hasPremium && userData) {
-        console.log('[InitProvider] Updating premium status in user store');
+        console.log("[InitProvider] Updating premium status in user store");
         updateUserStore(userData.id, info);
       }
     };

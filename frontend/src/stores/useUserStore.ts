@@ -1,19 +1,19 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserProfileResponse } from '@src/types';
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { UserProfileResponse } from "@src/types";
 
 // Types
 export type UserData = Pick<
   UserProfileResponse,
-  | 'id'
-  | 'email'
-  | 'fullName'
-  | 'avatarUrl'
-  | 'emailVerified'
-  | 'isAdmin'
-  | 'isPremium'
-  | 'authProvider'
+  | "id"
+  | "email"
+  | "fullName"
+  | "avatarUrl"
+  | "emailVerified"
+  | "isAdmin"
+  | "isPremium"
+  | "authProvider"
 >;
 
 interface UserState {
@@ -40,12 +40,12 @@ export const useUserStore = create<UserState>()(
 
       // Actions
       logIn: (userData) => {
-        console.log('[AuthStore] Logging in user:', userData.id);
+        console.log("[AuthStore] Logging in user:", userData.id);
         set({ isAuthenticated: true, userData, sessionLoading: false });
       },
 
       logOut: () => {
-        console.log('[AuthStore] Logging out user.');
+        console.log("[AuthStore] Logging out user.");
         set({
           isAuthenticated: false,
           userData: null,
@@ -72,7 +72,7 @@ export const useUserStore = create<UserState>()(
         set({ isVerifyingEmail: isVerifying }),
     }),
     {
-      name: 'user-auth-storage',
+      name: "user-auth-storage",
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),

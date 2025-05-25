@@ -1,14 +1,14 @@
-import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import * as AppleAuthentication from 'expo-apple-authentication';
-import { useUserStore } from '@stores/useUserStore';
-import { getErrorMessage } from '@utils/errorMessages';
-import { supabase } from '@services/supabase/supabaseClient';
-import { Session } from '@supabase/supabase-js';
-import { AUTH_PATTERNS } from '@utils/validationPatterns';
-import { AuthResponse } from '@src/types/auth.types';
-import { generateAnonymousName } from '@utils/userUtils';
-import Purchases from 'react-native-purchases';
-import { apiClient } from '../api/apiClient';
+import { GoogleSignin } from "@react-native-google-signin/google-signin";
+import * as AppleAuthentication from "expo-apple-authentication";
+import { useUserStore } from "@stores/useUserStore";
+import { getErrorMessage } from "@utils/errorMessages";
+import { supabase } from "@services/supabase/supabaseClient";
+import { Session } from "@supabase/supabase-js";
+import { AUTH_PATTERNS } from "@utils/validationPatterns";
+import { AuthResponse } from "@src/types/auth.types";
+import { generateAnonymousName } from "@utils/userUtils";
+import Purchases from "react-native-purchases";
+import { apiClient } from "../api/apiClient";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -20,24 +20,24 @@ GoogleSignin.configure({
 // Auth state management
 export const updateAuthState = async (session: Session | null) => {
   console.log(
-    '[authService.ts] updateAuthState: Called with session for user:',
-    session?.user?.id || 'NO SESSION',
+    "[authService.ts] updateAuthState: Called with session for user:",
+    session?.user?.id || "NO SESSION",
   );
   const isVerifying = useUserStore.getState().isVerifyingEmail;
 
   if (!session?.user) {
     console.error(
-      '[AuthService] updateAuthState: No user in session or session is null. Clearing local state.',
+      "[AuthService] updateAuthState: No user in session or session is null. Clearing local state.",
     );
     useUserStore.getState().logOut();
     try {
       await Purchases.logOut();
       console.log(
-        '[AuthService] updateAuthState: RevenueCat logout successful on null session.',
+        "[AuthService] updateAuthState: RevenueCat logout successful on null session.",
       );
     } catch (rcError) {
       console.warn(
-        '[AuthService] updateAuthState: Failed to logOut from RevenueCat on null session:',
+        "[AuthService] updateAuthState: Failed to logOut from RevenueCat on null session:",
         rcError,
       );
     }
@@ -47,14 +47,14 @@ export const updateAuthState = async (session: Session | null) => {
   const { user } = session;
   if (!user.email) {
     console.error(
-      '[AuthService] updateAuthState: No email in user data. This should not happen.',
+      "[AuthService] updateAuthState: No email in user data. This should not happen.",
     );
     useUserStore.getState().logOut();
     try {
       await Purchases.logOut();
     } catch (e) {
       console.warn(
-        '[AuthService] RC Logout failed after missing email error.',
+        "[AuthService] RC Logout failed after missing email error.",
         e,
       );
     }
@@ -76,12 +76,12 @@ export const updateAuthState = async (session: Session | null) => {
 
     if (!isVerifying) {
       console.log(
-        '[authService.ts] updateAuthState: NOT verifying email, calling userStore.logIn().',
+        "[authService.ts] updateAuthState: NOT verifying email, calling userStore.logIn().",
       );
       useUserStore.getState().logIn(userData);
     } else {
       console.log(
-        '[authService.ts] updateAuthState: IS verifying email, SKIPPING userStore.logIn().',
+        "[authService.ts] updateAuthState: IS verifying email, SKIPPING userStore.logIn().",
       );
     }
 
@@ -95,7 +95,7 @@ export const updateAuthState = async (session: Session | null) => {
     try {
       await Purchases.logOut();
       console.log(
-        '[AuthService] updateAuthState: RevenueCat logout successful after error.',
+        "[AuthService] updateAuthState: RevenueCat logout successful after error.",
       );
     } catch (rcError) {
       console.warn(
@@ -108,21 +108,21 @@ export const updateAuthState = async (session: Session | null) => {
 
 // Helper Functions
 const handleAuthError = (error: unknown): AuthResponse => {
-  console.error('[AuthService] Auth operation failed:', error);
+  console.error("[AuthService] Auth operation failed:", error);
 
   if (
     error &&
-    typeof error === 'object' &&
-    'message' in error &&
-    typeof error.message === 'string' &&
-    error.message.includes('Email not confirmed')
+    typeof error === "object" &&
+    "message" in error &&
+    typeof error.message === "string" &&
+    error.message.includes("Email not confirmed")
   ) {
     return {
       success: false,
-      message: 'Please verify your email before logging in.',
-      code: 'EMAIL_NOT_VERIFIED',
+      message: "Please verify your email before logging in.",
+      code: "EMAIL_NOT_VERIFIED",
       email:
-        error && typeof error === 'object' && 'email' in error
+        error && typeof error === "object" && "email" in error
           ? String(error.email)
           : undefined,
     };
@@ -130,13 +130,13 @@ const handleAuthError = (error: unknown): AuthResponse => {
 
   // Extract error code or message for getErrorMessage
   const errorCode =
-    error && typeof error === 'object' && 'code' in error
+    error && typeof error === "object" && "code" in error
       ? String(error.code)
-      : 'default';
+      : "default";
 
   return {
     success: false,
-    message: getErrorMessage(errorCode) || 'Authentication failed',
+    message: getErrorMessage(errorCode) || "Authentication failed",
   };
 };
 
@@ -148,7 +148,7 @@ export const signUpWithEmail = async (
 ): Promise<AuthResponse> => {
   try {
     if (!AUTH_PATTERNS.EMAIL.test(email)) {
-      return { success: false, message: 'Please enter a valid email address.' };
+      return { success: false, message: "Please enter a valid email address." };
     }
 
     const { data, error } = await supabase.auth.signUp({
@@ -157,10 +157,10 @@ export const signUpWithEmail = async (
       options: {
         data: {
           display_name: name || generateAnonymousName(crypto.randomUUID()),
-          avatar_url: '',
+          avatar_url: "",
           is_admin: false,
           is_premium: false,
-          provider: 'email',
+          provider: "email",
         },
       },
     });
@@ -172,14 +172,14 @@ export const signUpWithEmail = async (
     if (data.user?.identities?.length === 0) {
       return {
         success: false,
-        message: 'The email address is already registered.',
+        message: "The email address is already registered.",
       };
     }
 
     return {
       success: true,
       message:
-        'Registration successful! Please verify your email with the code sent.',
+        "Registration successful! Please verify your email with the code sent.",
     };
   } catch (error) {
     return handleAuthError(error);
@@ -190,14 +190,14 @@ export const verifyEmail = async (
   email: string,
   token: string,
 ): Promise<AuthResponse> => {
-  console.log('[authService.ts] verifyEmail: Started for email:', email);
+  console.log("[authService.ts] verifyEmail: Started for email:", email);
   try {
     useUserStore.getState().setVerifyingEmail(true);
     const { data: _verifyData, error: verifyError } =
       await supabase.auth.verifyOtp({
         email,
         token,
-        type: 'signup',
+        type: "signup",
       });
 
     if (verifyError) {
@@ -206,17 +206,17 @@ export const verifyEmail = async (
 
     await supabase.auth.signOut();
 
-    console.log('[authService.ts] verifyEmail: Process successful for:', email);
+    console.log("[authService.ts] verifyEmail: Process successful for:", email);
     return {
       success: true,
-      message: 'Email verified successfully! You can now log in.',
+      message: "Email verified successfully! You can now log in.",
     };
   } catch (error) {
-    console.error('[authService.ts] verifyEmail: Error for', email, error);
+    console.error("[authService.ts] verifyEmail: Error for", email, error);
     return handleAuthError(error);
   } finally {
     useUserStore.getState().setVerifyingEmail(false);
-    console.log('[authService.ts] verifyEmail: Finished for:', email);
+    console.log("[authService.ts] verifyEmail: Finished for:", email);
   }
 };
 
@@ -231,16 +231,16 @@ export const signInWithEmail = async (
     });
 
     if (error) {
-      if (error.message?.toLowerCase().includes('email not confirmed')) {
+      if (error.message?.toLowerCase().includes("email not confirmed")) {
         return {
           success: false,
-          message: 'Please verify your email before logging in.',
-          code: 'EMAIL_NOT_VERIFIED',
+          message: "Please verify your email before logging in.",
+          code: "EMAIL_NOT_VERIFIED",
           email,
         };
       }
       console.error(
-        '[authService] signInWithEmail: Supabase signInWithPassword error:',
+        "[authService] signInWithEmail: Supabase signInWithPassword error:",
         error,
       );
       throw error;
@@ -248,11 +248,11 @@ export const signInWithEmail = async (
 
     if (!data.user || !data.session) {
       console.error(
-        '[authService] signInWithEmail: No user data or session received from Supabase.',
+        "[authService] signInWithEmail: No user data or session received from Supabase.",
       );
-      throw new Error('No user data received');
+      throw new Error("No user data received");
     }
-    return { success: true, message: 'Successfully logged in' };
+    return { success: true, message: "Successfully logged in" };
   } catch (error) {
     return handleAuthError(error);
   }
@@ -266,13 +266,13 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
 
     if (!userInfo.idToken) {
       console.error(
-        '[authService] signInWithGoogle: Failed to get ID token from Google Sign-In.',
+        "[authService] signInWithGoogle: Failed to get ID token from Google Sign-In.",
       );
-      throw new Error('Failed to get ID token from Google Sign-In');
+      throw new Error("Failed to get ID token from Google Sign-In");
     }
 
     const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'google',
+      provider: "google",
       token: userInfo.idToken,
       access_token: tokens.accessToken,
     });
@@ -283,9 +283,9 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
 
     if (!data.user || !data.session) {
       console.error(
-        '[authService] signInWithGoogle: No user data or session received from Supabase.',
+        "[authService] signInWithGoogle: No user data or session received from Supabase.",
       );
-      throw new Error('No user data received from authentication');
+      throw new Error("No user data received from authentication");
     }
 
     const displayName =
@@ -296,22 +296,22 @@ export const signInWithGoogle = async (): Promise<AuthResponse> => {
     const { error: updateError } = await supabase.auth.updateUser({
       data: {
         display_name: displayName,
-        avatar_url: userInfo.user.photo || '',
+        avatar_url: userInfo.user.photo || "",
       },
     });
 
     if (updateError) {
       console.warn(
-        '[authService] signInWithGoogle: Failed to update user metadata:',
+        "[authService] signInWithGoogle: Failed to update user metadata:",
         updateError,
       );
     }
 
     if (!data.session) {
       console.error(
-        '[authService] signInWithGoogle: No session data received after Google Sign-In (post-metadata update).',
+        "[authService] signInWithGoogle: No session data received after Google Sign-In (post-metadata update).",
       );
-      throw new Error('No session data received after Google Sign-In');
+      throw new Error("No session data received after Google Sign-In");
     }
     return { success: true };
   } catch (error) {
@@ -330,13 +330,13 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
 
     if (!credential.identityToken) {
       console.error(
-        '[authService] signInWithApple: No identity token from Apple Sign-In.',
+        "[authService] signInWithApple: No identity token from Apple Sign-In.",
       );
-      throw new Error('No identity token from Apple Sign-In');
+      throw new Error("No identity token from Apple Sign-In");
     }
 
     const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: 'apple',
+      provider: "apple",
       token: credential.identityToken,
       access_token: credential.authorizationCode || undefined,
     });
@@ -347,9 +347,9 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
 
     if (!data.user || !data.session) {
       console.error(
-        '[authService] signInWithApple: No user data or session received from Supabase.',
+        "[authService] signInWithApple: No user data or session received from Supabase.",
       );
-      throw new Error('No user data received from authentication');
+      throw new Error("No user data received from authentication");
     }
 
     const displayName =
@@ -363,22 +363,22 @@ export const signInWithApple = async (): Promise<AuthResponse> => {
     const { error: updateError } = await supabase.auth.updateUser({
       data: {
         display_name: displayName,
-        avatar_url: data.user.user_metadata?.avatar_url || '',
+        avatar_url: data.user.user_metadata?.avatar_url || "",
       },
     });
 
     if (updateError) {
       console.warn(
-        '[authService] signInWithApple: Failed to update user metadata:',
+        "[authService] signInWithApple: Failed to update user metadata:",
         updateError,
       );
     }
 
     if (!data.session) {
       console.error(
-        '[authService] signInWithApple: No session data received after Apple Sign-In (post-metadata update).',
+        "[authService] signInWithApple: No session data received after Apple Sign-In (post-metadata update).",
       );
-      throw new Error('No session data received after Apple Sign-In');
+      throw new Error("No session data received after Apple Sign-In");
     }
 
     return { success: true };
@@ -399,7 +399,7 @@ export const signOut = async (): Promise<AuthResponse> => {
     }
 
     // Only attempt Google sign out if the user is signed in with Google
-    if (provider === 'google') {
+    if (provider === "google") {
       try {
         const isSignedIn = await GoogleSignin.isSignedIn();
         if (isSignedIn) {
@@ -407,7 +407,7 @@ export const signOut = async (): Promise<AuthResponse> => {
           await GoogleSignin.signOut();
         }
       } catch (googleError) {
-        console.error('Google sign out error:', googleError);
+        console.error("Google sign out error:", googleError);
       }
     }
 
@@ -423,7 +423,7 @@ export const signOut = async (): Promise<AuthResponse> => {
 export const resendOTP = async (email: string): Promise<AuthResponse> => {
   try {
     const { error } = await supabase.auth.resend({
-      type: 'signup',
+      type: "signup",
       email,
     });
 
@@ -432,7 +432,7 @@ export const resendOTP = async (email: string): Promise<AuthResponse> => {
     }
     return {
       success: true,
-      message: 'A new verification code has been sent to your email.',
+      message: "A new verification code has been sent to your email.",
     };
   } catch (error) {
     return handleAuthError(error);
@@ -453,17 +453,17 @@ export const updateProfile = async (
       throw sessionError;
     }
     if (!sessionData.session?.user) {
-      throw new Error('No active session');
+      throw new Error("No active session");
     }
 
-    const provider = sessionData.session.user.app_metadata?.provider || 'email';
+    const provider = sessionData.session.user.app_metadata?.provider || "email";
 
     // Validate current password for email users
-    if (provider === 'email') {
+    if (provider === "email") {
       if (!currentPassword) {
         return {
           success: false,
-          message: 'Current password is required for email users',
+          message: "Current password is required for email users",
         };
       }
 
@@ -476,7 +476,7 @@ export const updateProfile = async (
       if (signInError) {
         return {
           success: false,
-          message: 'Current password is incorrect',
+          message: "Current password is incorrect",
         };
       }
     }
@@ -502,7 +502,7 @@ export const updateProfile = async (
       throw updateError;
     }
     if (!userData.user) {
-      throw new Error('Failed to update user');
+      throw new Error("Failed to update user");
     }
 
     // After updating the user, get the current full session
@@ -510,15 +510,15 @@ export const updateProfile = async (
       await supabase.auth.getSession();
     if (updatedSessionError) {
       console.warn(
-        '[AuthService] Could not get session after user update in updateProfile. This might be an issue if updateAuthState relies on it.',
+        "[AuthService] Could not get session after user update in updateProfile. This might be an issue if updateAuthState relies on it.",
       );
       throw updatedSessionError;
     }
     if (!updatedSessionData.session) {
       console.warn(
-        '[AuthService] No active session found after user update in updateProfile. This might be an issue if updateAuthState relies on it.',
+        "[AuthService] No active session found after user update in updateProfile. This might be an issue if updateAuthState relies on it.",
       );
-      throw new Error('No active session after profile update.');
+      throw new Error("No active session after profile update.");
     }
 
     // Call updateAuthState with the full, current session
@@ -526,7 +526,7 @@ export const updateProfile = async (
 
     return {
       success: true,
-      message: 'Profile updated successfully.',
+      message: "Profile updated successfully.",
     };
   } catch (error) {
     return handleAuthError(error);
@@ -545,7 +545,7 @@ export const updatePassword = async (
       throw sessionError;
     }
     if (!sessionData.session?.user?.email) {
-      throw new Error('No active session or email');
+      throw new Error("No active session or email");
     }
 
     // Verify current password by attempting to sign in
@@ -557,7 +557,7 @@ export const updatePassword = async (
     if (signInError) {
       return {
         success: false,
-        message: 'Current password is incorrect',
+        message: "Current password is incorrect",
       };
     }
 
@@ -567,7 +567,7 @@ export const updatePassword = async (
       throw error;
     }
 
-    return { success: true, message: 'Password updated successfully.' };
+    return { success: true, message: "Password updated successfully." };
   } catch (error) {
     return handleAuthError(error);
   }
@@ -583,8 +583,8 @@ export const resetPassword = async (email: string): Promise<AuthResponse> => {
     }
     return {
       success: true,
-      message: 'Password reset code sent. Please check your email.',
-      code: 'OTP_SENT',
+      message: "Password reset code sent. Please check your email.",
+      code: "OTP_SENT",
       email,
     };
   } catch (error) {
@@ -602,18 +602,18 @@ export const verifyPasswordReset = async (
     const { error } = await supabase.auth.verifyOtp({
       email,
       token,
-      type: 'recovery',
+      type: "recovery",
     });
 
     if (error) {
       if (
-        error.message.includes('Invalid otp') ||
-        error.message.includes('expired')
+        error.message.includes("Invalid otp") ||
+        error.message.includes("expired")
       ) {
         return {
           success: false,
           message:
-            'Token has expired or is invalid. Please request a new code.',
+            "Token has expired or is invalid. Please request a new code.",
         };
       }
       throw error;
@@ -628,7 +628,7 @@ export const verifyPasswordReset = async (
       return {
         success: false,
         message:
-          'There was a problem updating your password. Please try again.',
+          "There was a problem updating your password. Please try again.",
       };
     }
 
@@ -639,18 +639,18 @@ export const verifyPasswordReset = async (
     try {
       await Purchases.logOut();
       console.log(
-        '[AuthService] RevenueCat logout successful after password reset.',
+        "[AuthService] RevenueCat logout successful after password reset.",
       );
     } catch (rcError) {
       console.error(
-        '[AuthService] Failed to logOut from RevenueCat after password reset:',
+        "[AuthService] Failed to logOut from RevenueCat after password reset:",
         rcError,
       );
     }
 
     return {
       success: true,
-      message: 'Password has been reset successfully. You can now log in.',
+      message: "Password has been reset successfully. You can now log in.",
     };
   } catch (error) {
     return handleAuthError(error);
@@ -663,13 +663,13 @@ const reAuthenticateWithGoogle = async (): Promise<AuthResponse> => {
     await GoogleSignin.hasPlayServices();
     const { idToken } = await GoogleSignin.signIn();
     if (!idToken) {
-      throw new Error('Failed to authenticate with Google');
+      throw new Error("Failed to authenticate with Google");
     }
     return { success: true };
   } catch {
     return {
       success: false,
-      message: 'Failed to verify Google account',
+      message: "Failed to verify Google account",
     };
   }
 };
@@ -686,7 +686,7 @@ const reAuthenticateWithApple = async (): Promise<AuthResponse> => {
   } catch {
     return {
       success: false,
-      message: 'Failed to verify Apple ID',
+      message: "Failed to verify Apple ID",
     };
   }
 };
@@ -697,17 +697,17 @@ export const deleteAccount = async (
   try {
     const session = await supabase.auth.getSession();
     if (!session.data.session) {
-      return handleAuthError(new Error('No active session'));
+      return handleAuthError(new Error("No active session"));
     }
 
     const { user } = session.data.session;
     const provider = user.app_metadata.provider;
 
     // Re-authenticate based on provider
-    if (provider === 'email') {
+    if (provider === "email") {
       if (!password) {
         return handleAuthError(
-          new Error('Password is required for account deletion'),
+          new Error("Password is required for account deletion"),
         );
       }
 
@@ -719,24 +719,24 @@ export const deleteAccount = async (
       if (error) {
         return handleAuthError(error);
       }
-    } else if (provider === 'google') {
+    } else if (provider === "google") {
       const authResponse = await reAuthenticateWithGoogle();
       if (!authResponse.success) {
         return handleAuthError(
-          new Error('Please verify your Google account before deletion'),
+          new Error("Please verify your Google account before deletion"),
         );
       }
-    } else if (provider === 'apple') {
+    } else if (provider === "apple") {
       const authResponse = await reAuthenticateWithApple();
       if (!authResponse.success) {
         return handleAuthError(
-          new Error('Please verify your Apple ID before deletion'),
+          new Error("Please verify your Apple ID before deletion"),
         );
       }
     }
 
     // Delete user RPC function
-    const { error: deleteError } = await supabase.rpc('delete_user');
+    const { error: deleteError } = await supabase.rpc("delete_user");
     if (deleteError) {
       return handleAuthError(deleteError);
     }
@@ -744,25 +744,25 @@ export const deleteAccount = async (
     // Return success with cleanup function
     return {
       success: true,
-      message: 'Your account has been successfully deleted.',
+      message: "Your account has been successfully deleted.",
       cleanup: async () => {
-        if (provider === 'google') {
+        if (provider === "google") {
           try {
             await GoogleSignin.revokeAccess();
             await GoogleSignin.signOut();
           } catch (error) {
-            console.error('Error revoking Google access:', error);
+            console.error("Error revoking Google access:", error);
           }
         }
         // Log out from RevenueCat before clearing Supabase session and local store
         try {
           await Purchases.logOut();
           console.log(
-            '[AuthService] RevenueCat logout successful during account deletion.',
+            "[AuthService] RevenueCat logout successful during account deletion.",
           );
         } catch (rcError) {
           console.error(
-            '[AuthService] Failed to logOut from RevenueCat during account deletion cleanup:',
+            "[AuthService] Failed to logOut from RevenueCat during account deletion cleanup:",
             rcError,
           );
         }

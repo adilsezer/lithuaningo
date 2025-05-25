@@ -1,35 +1,35 @@
-import React, { useState, useEffect } from 'react';
-import { ScrollView, View, StyleSheet } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
-import { Form } from '@components/form/Form';
-import { FormField } from '@components/form/form.types';
-import { useAuth } from '@hooks/useAuth';
-import { useIsLoading } from '@stores/useUIStore';
-import { resetPasswordVerifyFormSchema } from '@utils/zodSchemas';
-import CustomText from '@components/ui/CustomText';
-import CustomButton from '@components/ui/CustomButton';
+import React, { useState, useEffect } from "react";
+import { ScrollView, View, StyleSheet } from "react-native";
+import { useLocalSearchParams } from "expo-router";
+import { Form } from "@components/form/Form";
+import { FormField } from "@components/form/form.types";
+import { useAuth } from "@hooks/useAuth";
+import { useIsLoading } from "@stores/useUIStore";
+import { resetPasswordVerifyFormSchema } from "@utils/zodSchemas";
+import CustomText from "@components/ui/CustomText";
+import CustomButton from "@components/ui/CustomButton";
 const resetPasswordVerifyFields: FormField[] = [
   {
-    name: 'token',
-    label: 'Reset Code',
-    category: 'text-input',
-    type: 'text',
-    placeholder: 'Enter the 6-digit code',
-    keyboardType: 'number-pad',
+    name: "token",
+    label: "Reset Code",
+    category: "text-input",
+    type: "text",
+    placeholder: "Enter the 6-digit code",
+    keyboardType: "number-pad",
   },
   {
-    name: 'newPassword',
-    label: 'New Password',
-    category: 'text-input',
-    type: 'password',
-    placeholder: 'Enter your new password',
+    name: "newPassword",
+    label: "New Password",
+    category: "text-input",
+    type: "password",
+    placeholder: "Enter your new password",
   },
   {
-    name: 'confirmPassword',
-    label: 'Confirm Password',
-    category: 'text-input',
-    type: 'password',
-    placeholder: 'Confirm your new password',
+    name: "confirmPassword",
+    label: "Confirm Password",
+    category: "text-input",
+    type: "password",
+    placeholder: "Confirm your new password",
   },
 ];
 
@@ -61,10 +61,10 @@ const PasswordResetVerificationScreen: React.FC = () => {
     return (
       <ScrollView>
         <View style={styles.container}>
-          <CustomText variant='titleMedium' bold>
+          <CustomText variant="titleMedium" bold>
             Error
           </CustomText>
-          <CustomText variant='bodyLarge' style={styles.description}>
+          <CustomText variant="bodyLarge" style={styles.description}>
             Invalid reset password request. Please try again.
           </CustomText>
         </View>
@@ -93,7 +93,7 @@ const PasswordResetVerificationScreen: React.FC = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-        <CustomText variant='bodyLarge' style={styles.description}>
+        <CustomText variant="bodyLarge" style={styles.description}>
           Enter the verification code sent to {email} and set your new password.
         </CustomText>
 
@@ -102,9 +102,9 @@ const PasswordResetVerificationScreen: React.FC = () => {
           onSubmit={async (data) => {
             await verifyPasswordReset(email, data.token, data.newPassword);
           }}
-          submitButtonText='Reset Password'
+          submitButtonText="Reset Password"
           isLoading={loading}
-          options={{ mode: 'onBlur' }}
+          options={{ mode: "onBlur" }}
           zodSchema={resetPasswordVerifyFormSchema}
         />
 
@@ -112,14 +112,14 @@ const PasswordResetVerificationScreen: React.FC = () => {
           <CustomButton
             onPress={handleResend}
             title={
-              resendDisabled ? `Resend code in ${countdown}s` : 'Resend code'
+              resendDisabled ? `Resend code in ${countdown}s` : "Resend code"
             }
             disabled={resendDisabled}
-            mode='text'
+            mode="text"
           />
         </View>
 
-        <CustomText variant='bodyMedium' style={styles.note}>
+        <CustomText variant="bodyMedium" style={styles.note}>
           Please check your spam folder if you don't see the code in your inbox.
         </CustomText>
       </View>
@@ -135,12 +135,12 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   resendContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 16,
   },
   note: {
     marginTop: 16,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });
 

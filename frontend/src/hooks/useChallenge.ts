@@ -1,6 +1,6 @@
-import { useState, useCallback } from 'react';
-import { ChallengeQuestionResponse } from '@src/types';
-import ChallengeService from '@services/data/challengeService';
+import { useState, useCallback } from "react";
+import { ChallengeQuestionResponse } from "@src/types";
+import ChallengeService from "@services/data/challengeService";
 
 export const useChallenge = () => {
   const [questions, setQuestions] = useState<ChallengeQuestionResponse[]>([]);
@@ -18,7 +18,7 @@ export const useChallenge = () => {
       const errorMessage =
         err instanceof Error
           ? err.message
-          : 'Failed to fetch daily challenge questions';
+          : "Failed to fetch daily challenge questions";
       setError(errorMessage);
       throw err;
     } finally {

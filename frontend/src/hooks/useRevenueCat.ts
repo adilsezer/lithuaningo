@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback } from "react";
 import Purchases, {
   CustomerInfo,
   PurchasesOffering,
   PurchasesPackage,
   PurchasesError,
   PURCHASES_ERROR_CODE,
-} from 'react-native-purchases';
-import { useUserStore } from '@stores/useUserStore';
-import { ENTITLEMENTS } from '@config/revenuecat.config';
-import { useSetLoading, useSetError } from '@src/stores/useUIStore';
+} from "react-native-purchases";
+import { useUserStore } from "@stores/useUserStore";
+import { ENTITLEMENTS } from "@config/revenuecat.config";
+import { useSetLoading, useSetError } from "@src/stores/useUIStore";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -33,8 +33,8 @@ export const useRevenueCat = () => {
         }
         return null;
       } catch (error) {
-        console.error('Error fetching offerings:', error);
-        setError('Failed to fetch subscription offerings');
+        console.error("Error fetching offerings:", error);
+        setError("Failed to fetch subscription offerings");
         return null;
       } finally {
         setLoading(false);
@@ -46,7 +46,7 @@ export const useRevenueCat = () => {
     async (info: CustomerInfo) => {
       // Check if the premium entitlement exists and is active
       const premiumEntitlement = info.entitlements.active[ENTITLEMENTS.premium];
-      const hasPremium = typeof premiumEntitlement !== 'undefined';
+      const hasPremium = typeof premiumEntitlement !== "undefined";
 
       // Optimistically set local isPremium state based on RevenueCat CustomerInfo for immediate UI feedback.
       // This allows the UI to react instantly to purchases or restores.
@@ -59,9 +59,9 @@ export const useRevenueCat = () => {
       const currentUserData = useUserStore.getState().userData;
       if (currentUserData?.id) {
         console.log(
-          '[useRevenueCat] CustomerInfo updated. Local isPremium set to:',
+          "[useRevenueCat] CustomerInfo updated. Local isPremium set to:",
           hasPremium,
-          'Backend will be updated via webhooks.'
+          "Backend will be updated via webhooks."
         );
       }
     },
@@ -77,8 +77,8 @@ export const useRevenueCat = () => {
       setCustomerInfo(info);
       await checkPremiumEntitlement(info);
     } catch (error) {
-      console.error('Error getting customer info:', error);
-      setError('Failed to retrieve subscription status');
+      console.error("Error getting customer info:", error);
+      setError("Failed to retrieve subscription status");
     } finally {
       setLoading(false);
     }
@@ -96,7 +96,7 @@ export const useRevenueCat = () => {
   const purchasePackage = async (pack: PurchasesPackage) => {
     try {
       console.log(
-        '[RevenueCat] Starting purchase for package:',
+        "[RevenueCat] Starting purchase for package:",
         pack.identifier
       );
       setLoading(true);
@@ -107,7 +107,7 @@ export const useRevenueCat = () => {
       const userData = useUserStore.getState().userData;
       if (userData?.id) {
         console.log(
-          '[RevenueCat] Ensuring user is logged in with ID:',
+          "[RevenueCat] Ensuring user is logged in with ID:",
           userData.id
         );
         await Purchases.logIn(userData.id);
@@ -118,11 +118,11 @@ export const useRevenueCat = () => {
       setCustomerInfo(purchasedCustomerInfo);
 
       console.log(
-        '[RevenueCat] Purchase successful for package:',
+        "[RevenueCat] Purchase successful for package:",
         pack.identifier
       );
       console.log(
-        '[RevenueCat] Customer info:',
+        "[RevenueCat] Customer info:",
         JSON.stringify(purchasedCustomerInfo)
       );
 
@@ -130,11 +130,11 @@ export const useRevenueCat = () => {
       const hasPremium =
         purchasedCustomerInfo.entitlements.active[ENTITLEMENTS.premium] !==
         undefined;
-      console.log('[RevenueCat] Premium entitlement active:', hasPremium);
+      console.log("[RevenueCat] Premium entitlement active:", hasPremium);
 
       if (hasPremium) {
         // Update user store with premium status
-        console.log('[RevenueCat] Updating user store with premium status');
+        console.log("[RevenueCat] Updating user store with premium status");
         useUserStore.getState().updateUserData({
           isPremium: true,
         });
@@ -145,12 +145,12 @@ export const useRevenueCat = () => {
 
       return purchasedCustomerInfo;
     } catch (error: unknown) {
-      console.error('Error purchasing package:', error);
+      console.error("Error purchasing package:", error);
 
       const purchaseErr = error as PurchasesError;
       if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
-          (error as Error).message || 'An error occurred during purchase';
+          (error as Error).message || "An error occurred during purchase";
         setPurchaseError(errorMessage);
         setError(errorMessage);
       }
@@ -183,12 +183,12 @@ export const useRevenueCat = () => {
 
       return restoredCustomerInfo;
     } catch (error) {
-      console.error('Error restoring purchases:', error);
+      console.error("Error restoring purchases:", error);
       const purchaseErr = error as PurchasesError; // Renamed
       if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
           (error as Error).message || // Type assertion
-          'An error occurred while restoring purchases';
+          "An error occurred while restoring purchases";
         setPurchaseError(errorMessage);
         setError(errorMessage);
       }
@@ -204,8 +204,8 @@ export const useRevenueCat = () => {
       setLoading(true);
       await Purchases.showManageSubscriptions();
     } catch (error) {
-      console.error('Error showing subscription management:', error);
-      setError('Failed to open subscription management');
+      console.error("Error showing subscription management:", error);
+      setError("Failed to open subscription management");
     } finally {
       setLoading(false);
     }
@@ -219,8 +219,8 @@ export const useRevenueCat = () => {
       setCustomerInfo(null);
       setIsPremium(false);
     } catch (error) {
-      console.error('Error logging out from RevenueCat:', error);
-      setError('Failed to sign out from subscription service');
+      console.error("Error logging out from RevenueCat:", error);
+      setError("Failed to sign out from subscription service");
     } finally {
       setLoading(false);
     }

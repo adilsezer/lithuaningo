@@ -23,4 +23,4 @@ export interface AlertOptions {
 }
 
 // Type for different alert modes
-export type AlertMode = 'ALERT' | 'CONFIRM' | 'SUCCESS' | 'ERROR' | null;
+export type AlertMode = "ALERT" | "CONFIRM" | "SUCCESS" | "ERROR" | null;

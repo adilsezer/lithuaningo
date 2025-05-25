@@ -1,8 +1,8 @@
-import React, { useEffect } from 'react';
-import { useUserData } from '@stores/useUserStore';
-import { useSetLoading, useSetError } from '@stores/useUIStore';
-import { initializeNotifications } from '@services/notification/notificationService';
-import useNotificationPreferencesStore from '@stores/useNotificationPreferencesStore';
+import React, { useEffect } from "react";
+import { useUserData } from "@stores/useUserStore";
+import { useSetLoading, useSetError } from "@stores/useUIStore";
+import { initializeNotifications } from "@services/notification/notificationService";
+import useNotificationPreferencesStore from "@stores/useNotificationPreferencesStore";
 
 /**
  * Service component that initializes push notifications
@@ -25,8 +25,8 @@ const NotificationInitializer: React.FC = () => {
         await loadPushNotificationPreference();
         await initializeNotifications(userData.id);
       } catch (error) {
-        setError('Failed to initialize notifications');
-        console.error('Error initializing notifications:', error);
+        setError("Failed to initialize notifications");
+        console.error("Error initializing notifications:", error);
       } finally {
         setLoading(false);
       }

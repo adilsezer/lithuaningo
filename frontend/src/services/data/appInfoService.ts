@@ -1,7 +1,7 @@
-import Constants from 'expo-constants';
-import { AppInfoResponse } from '@src/types/AppInfo';
-import { Platform } from 'react-native';
-import { apiClient } from '@services/api/apiClient';
+import Constants from "expo-constants";
+import { AppInfoResponse } from "@src/types/AppInfo";
+import { Platform } from "react-native";
+import { apiClient } from "@services/api/apiClient";
 
 // Local version regex pattern to validate X.Y.Z format
 const VERSION_REGEX = /^\d+\.\d+\.\d+$/;
@@ -22,12 +22,12 @@ const isValidVersion = (version: string): boolean => {
 export const compareVersions = (v1: string, v2: string): number => {
   // Validate inputs
   if (!isValidVersion(v1) || !isValidVersion(v2)) {
-    throw new Error('Invalid version format. Must be X.Y.Z');
+    throw new Error("Invalid version format. Must be X.Y.Z");
   }
 
   // Split and convert to numbers
-  const v1Parts = v1.split('.').map(Number);
-  const v2Parts = v2.split('.').map(Number);
+  const v1Parts = v1.split(".").map(Number);
+  const v2Parts = v2.split(".").map(Number);
 
   // Compare each segment
   for (let i = 0; i < 3; i++) {
@@ -47,7 +47,7 @@ export const getLatestAppInfo = async (): Promise<AppInfoResponse | null> => {
   try {
     return await apiClient.getAppInfo(Platform.OS);
   } catch (error) {
-    console.error('[appInfoService] Error getting app info:', error);
+    console.error("[appInfoService] Error getting app info:", error);
     return null;
   }
 };
@@ -58,7 +58,7 @@ export const getLatestAppInfo = async (): Promise<AppInfoResponse | null> => {
 export const getCurrentVersion = (): string => {
   const version = Constants.expoConfig?.version;
   if (!version || !isValidVersion(version)) {
-    return '0.0.0';
+    return "0.0.0";
   }
   return version;
 };

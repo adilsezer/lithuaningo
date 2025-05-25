@@ -1,12 +1,12 @@
-import { create } from 'zustand';
-import { router } from 'expo-router';
+import { create } from "zustand";
+import { router } from "expo-router";
 import {
   getLatestAppInfo,
   getCurrentVersion,
   compareVersions,
-} from '@services/data/appInfoService';
-import type { AppInfoResponse } from '@src/types/AppInfo';
-import useUIStore from './useUIStore';
+} from "@services/data/appInfoService";
+import type { AppInfoResponse } from "@src/types/AppInfo";
+import useUIStore from "./useUIStore";
 
 interface AppInfoState {
   appInfo: AppInfoResponse | null;
@@ -50,7 +50,7 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
       const latestAppInfo = await getLatestAppInfo();
 
       if (!latestAppInfo) {
-        throw new Error('Failed to fetch app info');
+        throw new Error("Failed to fetch app info");
       }
 
       const needsUpdate =
@@ -67,13 +67,13 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
       });
 
       if (needsUpdate || latestAppInfo.isMaintenance) {
-        router.replace('/notification');
+        router.replace("/notification");
       }
     } catch (err) {
       const errorMessage =
-        err instanceof Error ? err.message : 'Failed to fetch app info';
+        err instanceof Error ? err.message : "Failed to fetch app info";
       setError(errorMessage);
-      console.error('[useAppInfoStore] Error checking app status:', err);
+      console.error("[useAppInfoStore] Error checking app status:", err);
       set({
         hasFailedCheck: true,
         lastError: errorMessage,

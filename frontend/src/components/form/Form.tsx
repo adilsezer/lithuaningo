@@ -1,5 +1,5 @@
-import React, { forwardRef, useImperativeHandle, useRef } from 'react';
-import { View, StyleSheet, TextInput } from 'react-native';
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
+import { View, StyleSheet, TextInput } from "react-native";
 import {
   useForm,
   Controller,
@@ -7,19 +7,19 @@ import {
   Path,
   DefaultValues,
   FieldError,
-} from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import CustomButton from '@components/ui/CustomButton';
-import { FormProps, FormField as FormFieldType } from './form.types';
-import { FormField } from './FormField';
-import { useAlertDialog } from '@hooks/useAlertDialog';
+} from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import CustomButton from "@components/ui/CustomButton";
+import { FormProps, FormField as FormFieldType } from "./form.types";
+import { FormField } from "./FormField";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 
 const getDefaultValueByCategory = (field: FormFieldType): string | boolean => {
   switch (field.category) {
-    case 'toggle':
+    case "toggle":
       return false;
     default:
-      return '';
+      return "";
   }
 };
 
@@ -43,8 +43,8 @@ export const Form = forwardRef(function Form<T extends FieldValues>(
 ) {
   const firstFieldRef = useRef<TextInput>(null);
   const form = useForm<T>({
-    mode: 'onSubmit',
-    reValidateMode: 'onChange',
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     ...options,
     ...(zodSchema && { resolver: zodResolver(zodSchema) }),
     defaultValues: {
@@ -81,7 +81,7 @@ export const Form = forwardRef(function Form<T extends FieldValues>(
     try {
       await onSubmit(data);
     } catch {
-      showError('An error occurred while submitting the form');
+      showError("An error occurred while submitting the form");
     }
   };
 
@@ -91,7 +91,7 @@ export const Form = forwardRef(function Form<T extends FieldValues>(
         const fieldConfig = fields.find((f) => f.name === field);
         return error?.message || `${fieldConfig?.label || field} is required`;
       })
-      .join('\n');
+      .join("\n");
     showError(errorMessages);
   };
 
@@ -123,7 +123,7 @@ export const Form = forwardRef(function Form<T extends FieldValues>(
       ))}
       <CustomButton
         onPress={formHandleSubmit(handleFormSubmit, onError)}
-        title={isSubmitting ? 'Submitting...' : submitButtonText}
+        title={isSubmitting ? "Submitting..." : submitButtonText}
         disabled={isLoading || isSubmitting}
         style={submitButtonStyle}
       />

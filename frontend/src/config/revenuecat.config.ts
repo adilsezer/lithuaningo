@@ -7,29 +7,29 @@
 
 // API Keys
 export const REVENUECAT_API_KEYS = {
-  ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || '',
-  android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY || '',
+  ios: process.env.EXPO_PUBLIC_REVENUECAT_IOS_API_KEY || "",
+  android: process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_API_KEY || "",
 };
 
 // Entitlement IDs
 export const ENTITLEMENTS = {
   premium:
-    process.env.EXPO_PUBLIC_REVENUECAT_PREMIUM_ENTITLEMENT_ID || 'Premium',
+    process.env.EXPO_PUBLIC_REVENUECAT_PREMIUM_ENTITLEMENT_ID || "Premium",
 };
 
 // Package Identifiers
 export const PACKAGE_IDENTIFIERS = {
-  premium_monthly: process.env.EXPO_PUBLIC_REVENUECAT_MONTHLY_PACKAGE_ID || '',
-  premium_yearly: process.env.EXPO_PUBLIC_REVENUECAT_YEARLY_PACKAGE_ID || '',
+  premium_monthly: process.env.EXPO_PUBLIC_REVENUECAT_MONTHLY_PACKAGE_ID || "",
+  premium_yearly: process.env.EXPO_PUBLIC_REVENUECAT_YEARLY_PACKAGE_ID || "",
   premium_lifetime:
-    process.env.EXPO_PUBLIC_REVENUECAT_LIFETIME_PACKAGE_ID || '',
+    process.env.EXPO_PUBLIC_REVENUECAT_LIFETIME_PACKAGE_ID || "",
 };
 
 // RevenueCat Package Types (as strings, matching RevenueCat's expected values)
 export const RC_PACKAGE_TYPES = {
-  MONTHLY: 'MONTHLY',
-  ANNUAL: 'ANNUAL',
-  LIFETIME: 'LIFETIME',
+  MONTHLY: "MONTHLY",
+  ANNUAL: "ANNUAL",
+  LIFETIME: "LIFETIME",
 };
 
 // Debug settings

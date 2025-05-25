@@ -1,17 +1,17 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, StyleSheet } from 'react-native';
-import ChallengeComponent from '@components/ui/ChallengeComponent';
-import { ActivityIndicator, useTheme } from 'react-native-paper';
-import CustomText from '@components/ui/CustomText';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useUserData } from '@stores/useUserStore';
+import React, { useCallback, useEffect, useState } from "react";
+import { View, StyleSheet } from "react-native";
+import ChallengeComponent from "@components/ui/ChallengeComponent";
+import { ActivityIndicator, useTheme } from "react-native-paper";
+import CustomText from "@components/ui/CustomText";
+import { router, useLocalSearchParams } from "expo-router";
+import { useUserData } from "@stores/useUserStore";
 import {
   ChallengeQuestionResponse,
   UserChallengeStatsResponse,
-} from '@src/types';
-import { UserChallengeStatsService } from '@services/data/userChallengeStatsService';
-import ChallengeService from '@services/data/challengeService';
-import ErrorMessage from '@components/ui/ErrorMessage';
+} from "@src/types";
+import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
+import ChallengeService from "@services/data/challengeService";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 /**
  * Daily Challenge Screen - Simplified with direct service calls
@@ -23,7 +23,7 @@ export default function DailyChallengeScreen() {
   const theme = useTheme();
 
   // Check if we should generate new questions
-  const shouldGenerateQuestions = params.generateQuestions === 'true';
+  const shouldGenerateQuestions = params.generateQuestions === "true";
 
   // Local state
   const [isLoading, setIsLoading] = useState(true);
@@ -42,7 +42,7 @@ export default function DailyChallengeScreen() {
     async (generateNewQuestions = false) => {
       // Don't load if no userId
       if (!userId) {
-        setError('User ID is required');
+        setError("User ID is required");
         setIsLoading(false);
         return;
       }
@@ -81,7 +81,7 @@ export default function DailyChallengeScreen() {
         setShowCompletionScreen(false);
       } catch {
         // console.error("Failed to load challenge data:", err);
-        setError('Failed to load challenge data');
+        setError("Failed to load challenge data");
       } finally {
         setIsLoading(false);
       }
@@ -145,7 +145,7 @@ export default function DailyChallengeScreen() {
       setIsCorrectAnswer(null);
       setShowCompletionScreen(false);
     } catch {
-      setError('Failed to reload challenge questions');
+      setError("Failed to reload challenge questions");
     } finally {
       setIsLoading(false);
     }
@@ -155,11 +155,11 @@ export default function DailyChallengeScreen() {
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size='large' color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.primary} />
         <CustomText style={styles.text}>
           Lithuaningo AI is loading your challenge...
         </CustomText>
-        <CustomText variant='bodySmall'>
+        <CustomText variant="bodySmall">
           No need to wait—come back to this screen anytime!
         </CustomText>
       </View>
@@ -170,11 +170,11 @@ export default function DailyChallengeScreen() {
   if (error) {
     return (
       <ErrorMessage
-        title='Something went wrong'
+        title="Something went wrong"
         message={error}
         onRetry={handleRetry}
         onSecondaryAction={() => router.back()}
-        secondaryButtonText='Go Back'
+        secondaryButtonText="Go Back"
         fullScreen
       />
     );
@@ -184,7 +184,7 @@ export default function DailyChallengeScreen() {
   return (
     <View style={styles.container}>
       <ChallengeComponent
-        title='Daily Challenge'
+        title="Daily Challenge"
         questions={questions}
         currentIndex={currentIndex}
         currentQuestion={currentQuestion}
@@ -207,16 +207,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 16,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: "#F5F5F5",
   },
   centerContainer: {
     flex: 1,
     padding: 16,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   text: {
-    textAlign: 'center',
+    textAlign: "center",
     marginTop: 16,
     marginBottom: 16,
   },

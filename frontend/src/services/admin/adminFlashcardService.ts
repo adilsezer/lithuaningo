@@ -1,8 +1,8 @@
-import { apiClient } from '@services/api/apiClient';
+import { apiClient } from "@services/api/apiClient";
 import {
   FlashcardResponse,
   UpdateFlashcardAdminRequest,
-} from '@src/types/Flashcard';
+} from "@src/types/Flashcard";
 
 export const adminFlashcardService = {
   /**
@@ -17,7 +17,7 @@ export const adminFlashcardService = {
       return await apiClient.getUnverifiedFlashcards(limit);
     } catch (error) {
       console.error(
-        '[AdminFlashcardService] Error fetching unverified flashcards:',
+        "[AdminFlashcardService] Error fetching unverified flashcards:",
         error,
       );
       throw error; // Re-throw to be handled by the calling hook/component
@@ -37,7 +37,7 @@ export const adminFlashcardService = {
     try {
       return await apiClient.updateFlashcardAdmin(flashcardId, request);
     } catch (error) {
-      console.error('[AdminFlashcardService] Error updating flashcard:', error);
+      console.error("[AdminFlashcardService] Error updating flashcard:", error);
       throw error;
     }
   },
@@ -53,7 +53,7 @@ export const adminFlashcardService = {
       return response.imageUrl;
     } catch (error) {
       console.error(
-        '[AdminFlashcardService] Error regenerating flashcard image:',
+        "[AdminFlashcardService] Error regenerating flashcard image:",
         error,
       );
       throw error;
@@ -71,7 +71,7 @@ export const adminFlashcardService = {
       return response.audioUrl;
     } catch (error) {
       console.error(
-        '[AdminFlashcardService] Error regenerating flashcard audio:',
+        "[AdminFlashcardService] Error regenerating flashcard audio:",
         error,
       );
       throw error;

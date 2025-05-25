@@ -1,5 +1,5 @@
-import { apiClient } from '@services/api/apiClient';
-import { FlashcardRequest, FlashcardResponse } from '@src/types/Flashcard';
+import { apiClient } from "@services/api/apiClient";
+import { FlashcardRequest, FlashcardResponse } from "@src/types/Flashcard";
 
 /**
  * Service for managing flashcards
@@ -13,7 +13,7 @@ class FlashcardService {
     try {
       return await apiClient.getFlashcards(request);
     } catch (error) {
-      console.error('[FlashcardService] Error fetching flashcards:', error);
+      console.error("[FlashcardService] Error fetching flashcards:", error);
       throw error;
     }
   }

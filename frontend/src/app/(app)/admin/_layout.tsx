@@ -1,10 +1,10 @@
-import React from 'react';
-import { Stack, Redirect } from 'expo-router';
-import { useIsAdmin } from '@stores/useUserStore';
-import { useTheme } from 'react-native-paper';
+import React from "react";
+import { Stack, Redirect } from "expo-router";
+import { useIsAdmin } from "@stores/useUserStore";
+import { useTheme } from "react-native-paper";
 
 const ADMIN_SCREENS = [
-  { name: 'flashcard-review', title: 'Review Flashcards' },
+  { name: "flashcard-review", title: "Review Flashcards" },
   // Add future admin screens here
 ];
 
@@ -16,7 +16,7 @@ export default function AdminLayout() {
   if (!isAdmin) {
     // You can redirect to the home screen or a specific "access denied" screen.
     // For now, redirecting to the main app stack.
-    return <Redirect href='/(app)' />;
+    return <Redirect href="/(app)" />;
   }
 
   // This layout can contain navigation configuration like screen titles.
@@ -27,7 +27,7 @@ export default function AdminLayout() {
           backgroundColor: theme.colors.background,
         },
         headerShown: false,
-        animation: 'none',
+        animation: "none",
       }}
     >
       {ADMIN_SCREENS.map((screen) => (

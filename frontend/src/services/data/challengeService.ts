@@ -1,8 +1,8 @@
-import { apiClient } from '@services/api/apiClient';
+import { apiClient } from "@services/api/apiClient";
 import {
   ChallengeQuestionResponse,
   GetReviewChallengeQuestionsRequest,
-} from '@src/types';
+} from "@src/types";
 
 /**
  * Service for managing daily challenges
@@ -17,7 +17,7 @@ class ChallengeService {
       return await apiClient.getDailyChallengeQuestions();
     } catch (error) {
       console.error(
-        '[ChallengeService] Error fetching daily challenge questions:',
+        "[ChallengeService] Error fetching daily challenge questions:",
         error,
       );
       throw error;
@@ -36,7 +36,7 @@ class ChallengeService {
       return await apiClient.getReviewChallengeQuestions(request);
     } catch (error) {
       console.error(
-        '[ChallengeService] Error fetching review challenge questions:',
+        "[ChallengeService] Error fetching review challenge questions:",
         error,
       );
       throw error;

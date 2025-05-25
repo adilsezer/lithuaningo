@@ -1,8 +1,8 @@
-import { apiClient } from '@services/api/apiClient';
+import { apiClient } from "@services/api/apiClient";
 import {
   UserChallengeStatsResponse,
   SubmitChallengeAnswerRequest,
-} from '@src/types';
+} from "@src/types";
 
 export class UserChallengeStatsService {
   /**
@@ -17,12 +17,12 @@ export class UserChallengeStatsService {
     try {
       const response = await apiClient.getUserChallengeStats(userId);
       console.log(
-        '[UserChallengeStatsService] HasCompletedTodayChallenge:',
+        "[UserChallengeStatsService] HasCompletedTodayChallenge:",
         response.hasCompletedTodayChallenge,
       );
       return response;
     } catch (error) {
-      console.error('[UserChallengeStatsService] Error:', error);
+      console.error("[UserChallengeStatsService] Error:", error);
       throw error;
     }
   }
@@ -34,7 +34,7 @@ export class UserChallengeStatsService {
       return await apiClient.submitChallengeAnswer(request);
     } catch (error) {
       console.error(
-        '[UserChallengeStatsService] Error submitting challenge answer:',
+        "[UserChallengeStatsService] Error submitting challenge answer:",
         error,
       );
       throw error;
