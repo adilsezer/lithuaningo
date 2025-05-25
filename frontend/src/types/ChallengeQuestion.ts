@@ -24,6 +24,6 @@ export interface GetReviewChallengeQuestionsRequest {
   count?: number;
   /** Optional category ID to filter flashcards by specific category */
   categoryId?: string;
-  /** Optional difficulty level to filter flashcards by difficulty (0=Basic, 1=Intermediate, 2=Advanced) */
+  /** Optional difficulty level to filter flashcards by difficulty (0=Basic, 1=Intermediate, 2=Advanced). If not provided, challenges from all difficulty levels will be included. */
   difficulty?: number;
 }

@@ -29,7 +29,7 @@ public class GetReviewChallengeQuestionsRequest
 
     /// <summary>
     /// Optional difficulty level to filter flashcards by difficulty.
-    /// If not provided, flashcards of all difficulty levels will be considered.
+    /// If not provided, challenges from all difficulty levels will be included.
     /// </summary>
     public DifficultyLevel? Difficulty { get; set; }
 }

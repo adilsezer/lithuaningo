@@ -35,8 +35,8 @@ export const useFlashcardChallenge = ({
       return detectedDifficulty;
     }
 
-    // Default to Basic difficulty for all other categories
-    return 0;
+    // No default difficulty - let backend use all difficulties
+    return undefined;
   }, [categoryId, difficulty]);
 
   // When difficulty categories are selected, we should not filter by categoryId in the backend
@@ -79,13 +79,19 @@ export const useFlashcardChallenge = ({
 
       try {
         // Fetch category-specific review challenge questions
+        const requestParams: any = {
+          count: 10,
+          categoryId: effectiveCategoryId,
+          userId,
+        };
+
+        // Only include difficulty if it's defined
+        if (effectiveDifficulty !== undefined) {
+          requestParams.difficulty = effectiveDifficulty;
+        }
+
         const fetchedQuestions =
-          await ChallengeService.getReviewChallengeQuestions({
-            count: 10,
-            categoryId: effectiveCategoryId,
-            userId,
-            difficulty: effectiveDifficulty,
-          });
+          await ChallengeService.getReviewChallengeQuestions(requestParams);
 
         if (fetchedQuestions && fetchedQuestions.length > 0) {
           setQuestions(fetchedQuestions);

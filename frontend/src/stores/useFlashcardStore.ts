@@ -76,12 +76,15 @@ const createFlashcardRequest = (
     count: 10,
     userId,
     primaryCategory: FlashcardCategory.AllCategories,
-    difficulty: DifficultyLevel.Basic,
+    difficulty: DifficultyLevel.Basic, // Will be overridden for specific cases
   };
 
   if (numericId >= 0 && numericId <= 2) {
+    // For difficulty categories, use the specific difficulty
     request.difficulty = numericId as DifficultyLevel;
   } else {
+    // For regular categories, use the specific category but keep Basic as default
+    // This maintains existing behavior for regular flashcard learning
     request.primaryCategory = numericId as FlashcardCategory;
   }
 
