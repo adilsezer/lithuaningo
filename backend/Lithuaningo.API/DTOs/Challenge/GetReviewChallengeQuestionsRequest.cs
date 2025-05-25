@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Lithuaningo.API.DTOs.Flashcard;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace Lithuaningo.API.DTOs.Challenge;
@@ -25,4 +26,10 @@ public class GetReviewChallengeQuestionsRequest
     /// If not provided, questions will be generated from all categories.
     /// </summary>
     public string? CategoryId { get; set; }
+
+    /// <summary>
+    /// Optional difficulty level to filter flashcards by difficulty.
+    /// If not provided, flashcards of all difficulty levels will be considered.
+    /// </summary>
+    public DifficultyLevel? Difficulty { get; set; }
 }

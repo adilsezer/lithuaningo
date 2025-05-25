@@ -24,6 +24,7 @@ namespace Lithuaningo.API.Services.Challenges
         private readonly IMapper _mapper;
         private readonly IAIService _aiService;
         private readonly IUserFlashcardStatService _userFlashcardStatService;
+        private readonly Random _random;
 
         public ChallengeService(
             ISupabaseService supabaseService,
@@ -32,7 +33,8 @@ namespace Lithuaningo.API.Services.Challenges
             ILogger<ChallengeService> logger,
             IMapper mapper,
             IAIService aiService,
-            IUserFlashcardStatService userFlashcardStatService)
+            IUserFlashcardStatService userFlashcardStatService,
+            Random random)
         {
             _supabaseClient = supabaseService.Client ?? throw new ArgumentNullException(nameof(supabaseService));
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
@@ -41,6 +43,7 @@ namespace Lithuaningo.API.Services.Challenges
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
             _userFlashcardStatService = userFlashcardStatService ?? throw new ArgumentNullException(nameof(userFlashcardStatService));
+            _random = random ?? throw new ArgumentNullException(nameof(random));
         }
 
         /// <summary>
@@ -106,7 +109,8 @@ namespace Lithuaningo.API.Services.Challenges
 
             var count = request.Count <= 0 ? 10 : request.Count;
 
-            var seenFlashcardIds = await _userFlashcardStatService.GetLastSeenFlashcardIdsAsync(request.UserId, count * 2); // Get more flashcards initially to ensure we find enough questions
+            var seenFlashcardIds = await _userFlashcardStatService.GetLastSeenFlashcardIdsAsync(request.UserId, count * 2);
+
             if (!seenFlashcardIds.Any())
             {
                 return new List<ChallengeQuestionResponse>();
@@ -114,21 +118,35 @@ namespace Lithuaningo.API.Services.Challenges
 
             List<Guid> filteredFlashcardIds = seenFlashcardIds;
 
-            // If categoryId is provided, filter flashcards by category
-            if (!string.IsNullOrEmpty(request.CategoryId) && int.TryParse(request.CategoryId, out var categoryInt))
+            // Apply category and/or difficulty filtering if specified
+            bool needsFiltering = request.Difficulty.HasValue ||
+                (!string.IsNullOrEmpty(request.CategoryId) && int.TryParse(request.CategoryId, out var categoryInt) && categoryInt != -1);
+
+            if (needsFiltering)
             {
-                // First, get flashcards that match the category from the seen flashcard IDs
                 // Convert Guid list to object list for the IN operator
                 var seenFlashcardIdsAsObjects = seenFlashcardIds.Cast<object>().ToList();
 
-                var flashcardsInCategory = await _supabaseClient.From<Flashcard>()
-                    .Filter(f => f.Id, Operator.In, seenFlashcardIdsAsObjects)
-                    .Filter(f => f.Categories, Operator.Contains, new List<object> { categoryInt })
-                    .Get();
+                var query = _supabaseClient.From<Flashcard>()
+                    .Filter(f => f.Id, Operator.In, seenFlashcardIdsAsObjects);
 
-                if (flashcardsInCategory.Models != null && flashcardsInCategory.Models.Any())
+                // Apply category filter if specified and not AllCategories (-1)
+                if (!string.IsNullOrEmpty(request.CategoryId) && int.TryParse(request.CategoryId, out categoryInt) && categoryInt != -1)
                 {
-                    filteredFlashcardIds = flashcardsInCategory.Models.Select(f => f.Id).ToList();
+                    query = query.Filter(f => f.Categories, Operator.Contains, new List<object> { categoryInt });
+                }
+
+                // Apply difficulty filter if specified
+                if (request.Difficulty.HasValue)
+                {
+                    query = query.Filter(f => f.Difficulty, Operator.Equals, (int)request.Difficulty.Value);
+                }
+
+                var filteredFlashcards = await query.Get();
+
+                if (filteredFlashcards.Models != null && filteredFlashcards.Models.Any())
+                {
+                    filteredFlashcardIds = filteredFlashcards.Models.Select(f => f.Id).ToList();
                 }
                 else
                 {
@@ -137,7 +155,6 @@ namespace Lithuaningo.API.Services.Challenges
             }
 
             // Fetch all challenges associated with these filtered flashcard IDs
-            // Convert Guid list to object list for the IN operator
             var filteredFlashcardIdsAsObjects = filteredFlashcardIds.Cast<object>().ToList();
 
             var allReviewChallenges = await _supabaseClient.From<ChallengeQuestion>()
@@ -150,7 +167,11 @@ namespace Lithuaningo.API.Services.Challenges
             }
 
             // Shuffle all available challenges and take the required count
-            var selectedChallengeModels = allReviewChallenges.Models
+            var shuffledChallenges = allReviewChallenges.Models
+                .OrderBy(x => _random.Next())
+                .ToList();
+
+            var selectedChallengeModels = shuffledChallenges
                 .Take(count)
                 .ToList();
 
@@ -159,7 +180,16 @@ namespace Lithuaningo.API.Services.Challenges
                 return new List<ChallengeQuestionResponse>();
             }
 
+            // Log a warning if we're returning fewer challenges than requested
+            if (selectedChallengeModels.Count < count)
+            {
+                _logger.LogWarning("Returning {ActualCount} challenges instead of requested {RequestedCount}. " +
+                    "User needs to practice more flashcards to get more review challenges.",
+                    selectedChallengeModels.Count, count);
+            }
+
             var response = _mapper.Map<List<ChallengeQuestionResponse>>(selectedChallengeModels);
+
             return response;
         }
 

@@ -111,9 +111,6 @@ namespace Lithuaningo.API.Services.Stats
                     throw new ArgumentNullException(nameof(userId));
                 }
 
-                // This method is for fetching IDs for review challenges, typically not cached
-                // as it needs to be fresh. If caching is desired later, it can be added.
-
                 var query = _supabaseService.Client
                     .From<UserFlashcardStat>()
                     .Filter("user_id", Operator.Equals, userId.ToString())
@@ -122,10 +119,11 @@ namespace Lithuaningo.API.Services.Stats
                     .Select("flashcard_id");
 
                 var result = await query.Get();
-
-                return result.Models?
+                var flashcardIds = result.Models?
                     .Select(s => s.FlashcardId)
                     .ToList() ?? new List<Guid>();
+
+                return flashcardIds;
             }
             catch (Exception ex)
             {

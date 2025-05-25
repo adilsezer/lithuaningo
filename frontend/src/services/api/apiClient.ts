@@ -405,6 +405,9 @@ class ApiClient {
     if (request.userId) {
       params.userId = request.userId;
     }
+    if (request.difficulty !== undefined) {
+      params.difficulty = request.difficulty;
+    }
 
     return this.request<ChallengeQuestionResponse[]>(endpoint, {
       method: "GET",

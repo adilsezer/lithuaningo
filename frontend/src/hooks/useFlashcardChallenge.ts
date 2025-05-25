@@ -3,22 +3,52 @@ import { ChallengeQuestionResponse } from "@src/types";
 import { UserFlashcardStatsService } from "@services/data/userFlashcardStatsService";
 import ChallengeService from "@services/data/challengeService"; // Assuming this service can fetch category-specific questions
 import { useAlertDialog } from "@hooks/useAlertDialog";
+import React from "react";
 
 interface UseFlashcardChallengeProps {
   categoryId: string | undefined;
   userId: string | undefined;
   categoryName?: string; // For potential use in titles or context
+  difficulty?: number; // 0=Basic, 1=Intermediate, 2=Advanced
 }
 
 export const useFlashcardChallenge = ({
   categoryId,
   userId,
+  difficulty, // Don't provide a default here anymore
 }: UseFlashcardChallengeProps) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<ChallengeQuestionResponse[]>([]);
   // Note: For flashcard challenges, we track individual flashcard performance rather than general challenge stats
   const { showAlert } = useAlertDialog();
+
+  // Auto-detect difficulty level based on categoryId
+  const effectiveDifficulty = React.useMemo(() => {
+    if (difficulty !== undefined) {
+      return difficulty; // Use explicitly provided difficulty
+    }
+
+    // Auto-detect difficulty from categoryId for difficulty categories
+    if (categoryId === "0" || categoryId === "1" || categoryId === "2") {
+      const detectedDifficulty = parseInt(categoryId, 10);
+      return detectedDifficulty;
+    }
+
+    // Default to Basic difficulty for all other categories
+    return 0;
+  }, [categoryId, difficulty]);
+
+  // When difficulty categories are selected, we should not filter by categoryId in the backend
+  // Instead, we should pass undefined/null for categoryId to get challenges from all categories
+  const effectiveCategoryId = React.useMemo(() => {
+    if (categoryId === "0" || categoryId === "1" || categoryId === "2") {
+      // For difficulty categories, use AllCategories (-1) to get challenges from all categories
+      return "-1";
+    }
+    // For regular categories, use the categoryId as-is
+    return categoryId;
+  }, [categoryId]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [score, setScore] = useState(0);
@@ -52,12 +82,30 @@ export const useFlashcardChallenge = ({
         const fetchedQuestions =
           await ChallengeService.getReviewChallengeQuestions({
             count: 10,
-            categoryId,
+            categoryId: effectiveCategoryId,
             userId,
+            difficulty: effectiveDifficulty,
           });
 
         if (fetchedQuestions && fetchedQuestions.length > 0) {
           setQuestions(fetchedQuestions);
+
+          // Check if we got fewer questions than requested (indicating limited flashcards in category)
+          if (fetchedQuestions.length < 10) {
+            // Show informational alert for partial challenge set
+            showAlert({
+              title: "Limited Challenge Questions",
+              message: `You have ${fetchedQuestions.length} challenge questions available for this category. Practice more flashcards in this category to unlock additional challenges!`,
+              buttons: [
+                {
+                  text: `Continue with ${fetchedQuestions.length} Questions`,
+                  onPress: () => {
+                    // User continues with available questions
+                  },
+                },
+              ],
+            });
+          }
         } else {
           setQuestions([]);
           // Show specific alert for insufficient flashcards
@@ -88,8 +136,6 @@ export const useFlashcardChallenge = ({
           setScore(0);
         }
       } catch (err) {
-        console.error("Failed to load flashcard challenge data:", err);
-
         // Check if this is specifically the "no flashcards" error
         if (
           err instanceof Error &&
@@ -113,7 +159,7 @@ export const useFlashcardChallenge = ({
           setError(
             err instanceof Error
               ? err.message
-              : "Failed to load challenge questions.",
+              : "Failed to load challenge questions."
           );
         }
         setQuestions([]);
@@ -121,7 +167,7 @@ export const useFlashcardChallenge = ({
         setIsLoading(false);
       }
     },
-    [userId, categoryId, showAlert],
+    [userId, effectiveCategoryId, effectiveDifficulty, showAlert]
   );
 
   useEffect(() => {
@@ -132,7 +178,9 @@ export const useFlashcardChallenge = ({
 
   const handleAnswer = useCallback(
     async (answer: string) => {
-      if (!userId || !currentQuestion || isCorrectAnswer !== null) {return;}
+      if (!userId || !currentQuestion || isCorrectAnswer !== null) {
+        return;
+      }
 
       const isCorrect = answer === currentQuestion.correctAnswer;
       setIsCorrectAnswer(isCorrect);
@@ -150,17 +198,12 @@ export const useFlashcardChallenge = ({
             wasCorrect: isCorrect,
             userId,
           });
-        } else {
-          console.warn(
-            "Challenge question missing flashcardId - cannot track flashcard performance",
-          );
         }
       } catch (err) {
-        console.error("Failed to submit flashcard challenge answer:", err);
         // Optionally set an error state or notify user
       }
     },
-    [userId, currentQuestion, isCorrectAnswer],
+    [userId, currentQuestion, isCorrectAnswer]
   );
 
   const handleNextQuestion = useCallback(() => {

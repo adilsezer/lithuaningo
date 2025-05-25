@@ -18,7 +18,7 @@ class ChallengeService {
     } catch (error) {
       console.error(
         "[ChallengeService] Error fetching daily challenge questions:",
-        error,
+        error
       );
       throw error;
     }
@@ -30,14 +30,14 @@ class ChallengeService {
    * @param request Request object containing count, categoryId, and optional userId
    */
   async getReviewChallengeQuestions(
-    request: GetReviewChallengeQuestionsRequest,
+    request: GetReviewChallengeQuestionsRequest
   ): Promise<ChallengeQuestionResponse[]> {
     try {
       return await apiClient.getReviewChallengeQuestions(request);
     } catch (error) {
       console.error(
         "[ChallengeService] Error fetching review challenge questions:",
-        error,
+        error
       );
       throw error;
     }
