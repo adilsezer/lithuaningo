@@ -33,8 +33,8 @@ export default function TabsLayout() {
           backgroundColor: 'transparent',
         },
       }}
-      initialRouteName="index"
-      backBehavior="history"
+      initialRouteName='index'
+      backBehavior='history'
     >
       {TAB_ITEMS.map(({ name, title, icon }) => (
         <Tabs.Screen

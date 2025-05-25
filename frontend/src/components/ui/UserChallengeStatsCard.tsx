@@ -23,13 +23,13 @@ const UserChallengeStatItem: React.FC<UserChallengeStatItemProps> = ({
     <View style={styles.statItem}>
       <MaterialCommunityIcons name={icon} size={24} color={color} />
       <CustomText
-        variant="titleMedium"
+        variant='titleMedium'
         style={[styles.statValue, { color: theme.colors.onBackground }]}
       >
         {value}
       </CustomText>
       <CustomText
-        variant="bodySmall"
+        variant='bodySmall'
         style={[styles.statLabel, { color: theme.colors.onSurface }]}
       >
         {label}
@@ -67,7 +67,7 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
       <Card.Content>
         <View style={styles.statsContainer}>
           <UserChallengeStatItem
-            icon="fire"
+            icon='fire'
             value={stats.currentStreak}
             label={`Streak${
               stats.longestStreak > stats.currentStreak
@@ -77,13 +77,13 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
             color={theme.colors.error}
           />
           <UserChallengeStatItem
-            icon="check"
+            icon='check'
             value={stats.todayCorrectAnswers}
             label="Today's Correct"
             color={theme.colors.primary}
           />
           <UserChallengeStatItem
-            icon="close"
+            icon='close'
             value={stats.todayIncorrectAnswers}
             label="Today's Incorrect"
             color={theme.colors.error}
@@ -92,9 +92,9 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
 
         <View style={styles.weeklyProgress}>
           <View style={styles.weeklyGoalHeader}>
-            <CustomText variant="bodyMedium">Overall Accuracy</CustomText>
+            <CustomText variant='bodyMedium'>Overall Accuracy</CustomText>
             <CustomText
-              variant="bodySmall"
+              variant='bodySmall'
               style={{ color: theme.colors.onSurfaceVariant }}
             >
               {accuracy.toFixed(1)}%
@@ -109,19 +109,19 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
 
         <View style={styles.totalStats}>
           <CustomText
-            variant="bodySmall"
+            variant='bodySmall'
             style={{ color: theme.colors.onSurfaceVariant }}
           >
             Total Challenges: {stats.totalChallengesCompleted}
           </CustomText>
           <CustomText
-            variant="bodySmall"
+            variant='bodySmall'
             style={{ color: theme.colors.onSurfaceVariant }}
           >
             Total Correct: {stats.totalCorrectAnswers}
           </CustomText>
           <CustomText
-            variant="bodySmall"
+            variant='bodySmall'
             style={{ color: theme.colors.onSurfaceVariant }}
           >
             Total Incorrect: {stats.totalIncorrectAnswers}

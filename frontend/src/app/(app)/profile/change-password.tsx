@@ -54,7 +54,7 @@ const ChangePasswordScreen: React.FC = () => {
         onSubmit={async (data) => {
           await updatePassword(data.currentPassword, data.newPassword);
         }}
-        submitButtonText="Change Password"
+        submitButtonText='Change Password'
         isLoading={loading}
         options={{ mode: 'onBlur' }}
         zodSchema={changePasswordFormSchema}

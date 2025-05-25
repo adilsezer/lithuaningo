@@ -28,7 +28,7 @@ const AboutScreen = () => {
         Lithuanian.
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         Contact Us
       </CustomText>
       <CustomText>
@@ -41,7 +41,7 @@ const AboutScreen = () => {
         </CustomText>
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         Legal
       </CustomText>
       <CustomText
@@ -57,12 +57,12 @@ const AboutScreen = () => {
         {links.termsOfService.label}
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         License
       </CustomText>
       <CustomText>This app is licensed under the MIT License.</CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         Version
       </CustomText>
       <CustomText>{currentVersion}</CustomText>

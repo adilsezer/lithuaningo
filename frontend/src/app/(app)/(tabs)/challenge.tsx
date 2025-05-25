@@ -1,25 +1,25 @@
-import React, { useCallback, useState } from "react";
-import { ScrollView, Image, StyleSheet, View } from "react-native";
+import React, { useCallback, useState } from 'react';
+import { ScrollView, Image, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
   Card,
   IconButton,
   useTheme,
-} from "react-native-paper";
-import { router, useFocusEffect } from "expo-router";
-import CustomText from "@components/ui/CustomText";
-import CustomButton from "@components/ui/CustomButton";
-import CustomDivider from "@components/ui/CustomDivider";
-import Leaderboard from "@components/ui/Leaderboard";
-import { UserChallengeStatsCard } from "@components/ui/UserChallengeStatsCard";
-import { useUserData } from "@stores/useUserStore";
-import ErrorMessage from "@components/ui/ErrorMessage";
+} from 'react-native-paper';
+import { router, useFocusEffect } from 'expo-router';
+import CustomText from '@components/ui/CustomText';
+import CustomButton from '@components/ui/CustomButton';
+import CustomDivider from '@components/ui/CustomDivider';
+import Leaderboard from '@components/ui/Leaderboard';
+import { UserChallengeStatsCard } from '@components/ui/UserChallengeStatsCard';
+import { useUserData } from '@stores/useUserStore';
+import ErrorMessage from '@components/ui/ErrorMessage';
 import {
   LeaderboardEntryResponse,
   UserChallengeStatsResponse,
-} from "@src/types";
-import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
-import LeaderboardService from "@services/data/leaderboardService";
+} from '@src/types';
+import { UserChallengeStatsService } from '@services/data/userChallengeStatsService';
+import LeaderboardService from '@services/data/leaderboardService';
 
 /**
  * Challenge Tab Screen - Using direct service calls
@@ -56,7 +56,7 @@ export default function ChallengeScreen() {
       setEntries(leaderboardEntries);
     } catch {
       // console.error("Failed to load challenge data:", err);
-      setError("Failed to load challenge data. Please try again.");
+      setError('Failed to load challenge data. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -76,15 +76,15 @@ export default function ChallengeScreen() {
   const startChallenge = useCallback(() => {
     // Pass a query parameter to indicate we want to generate new questions
     router.push({
-      pathname: "/daily-challenge",
-      params: { generateQuestions: "true" },
+      pathname: '/daily-challenge',
+      params: { generateQuestions: 'true' },
     });
   }, []);
 
   // Handle continue challenge button press
   const continueChallenge = useCallback(() => {
     // Just navigate to the challenge screen without generating new questions
-    router.push("/daily-challenge");
+    router.push('/daily-challenge');
   }, []);
 
   // Calculate simple derived values
@@ -100,13 +100,13 @@ export default function ChallengeScreen() {
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
       <Image
-        source={require("../../../../assets/images/challenge_screen.png")}
+        source={require('../../../../assets/images/challenge_screen.png')}
         style={styles.image}
-        resizeMode="contain"
+        resizeMode='contain'
       />
 
       <View style={styles.headerContainer}>
-        <CustomText variant="titleLarge">Daily Challenge</CustomText>
+        <CustomText variant='titleLarge'>Daily Challenge</CustomText>
         <CustomText>
           Test your Lithuanian skills with daily challenges!
         </CustomText>
@@ -117,11 +117,11 @@ export default function ChallengeScreen() {
         <ErrorMessage
           message={`Unable to load challenge data: ${error}`}
           onRetry={loadData}
-          buttonText="Try Again"
+          buttonText='Try Again'
         />
       ) : isLoading ? (
         <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <ActivityIndicator size='large' color={theme.colors.primary} />
           <CustomText style={styles.loadingText}>
             Loading challenge data...
           </CustomText>
@@ -138,11 +138,11 @@ export default function ChallengeScreen() {
         >
           <Card.Content style={styles.cardContent}>
             <IconButton
-              icon="check-circle"
+              icon='check-circle'
               size={28}
               iconColor={theme.colors.primary}
             />
-            <CustomText variant="titleMedium" style={styles.cardTitle}>
+            <CustomText variant='titleMedium' style={styles.cardTitle}>
               {hasCompletedAllQuestions
                 ? "Today's Challenge Completed!"
                 : "Today's Challenge Started"}
@@ -156,7 +156,7 @@ export default function ChallengeScreen() {
             </CustomText>
             {!hasCompletedAllQuestions && (
               <CustomButton
-                title="Continue Challenge"
+                title='Continue Challenge'
                 onPress={continueChallenge}
               />
             )}
@@ -174,17 +174,17 @@ export default function ChallengeScreen() {
         >
           <Card.Content style={styles.cardContent}>
             <IconButton
-              icon="star"
+              icon='star'
               size={28}
               iconColor={theme.colors.primary}
             />
-            <CustomText variant="titleMedium" style={styles.cardTitle}>
+            <CustomText variant='titleMedium' style={styles.cardTitle}>
               Daily Challenge Available
             </CustomText>
             <CustomText style={styles.cardText}>
               Start today's challenge to test your knowledge!
             </CustomText>
-            <CustomButton title="Start Challenge" onPress={startChallenge} />
+            <CustomButton title='Start Challenge' onPress={startChallenge} />
           </Card.Content>
         </Card>
       )}
@@ -194,7 +194,7 @@ export default function ChallengeScreen() {
 
       {/* Leaderboard */}
       <CustomDivider />
-      <CustomText variant="titleMedium" style={styles.sectionTitle}>
+      <CustomText variant='titleMedium' style={styles.sectionTitle}>
         Weekly Leaderboard
       </CustomText>
       <Leaderboard entries={entries} />
@@ -213,12 +213,12 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   image: {
-    width: "100%",
+    width: '100%',
     height: 200,
     marginVertical: 16,
   },
   loadingContainer: {
-    alignItems: "center",
+    alignItems: 'center',
     padding: 20,
   },
   loadingText: {
@@ -229,18 +229,18 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   cardContent: {
-    alignItems: "center",
+    alignItems: 'center',
   },
   cardTitle: {
-    textAlign: "center",
-    fontWeight: "bold",
+    textAlign: 'center',
+    fontWeight: 'bold',
     marginBottom: 8,
   },
   cardText: {
-    textAlign: "center",
+    textAlign: 'center',
   },
   sectionTitle: {
     marginVertical: 8,
-    textAlign: "center",
+    textAlign: 'center',
   },
 });

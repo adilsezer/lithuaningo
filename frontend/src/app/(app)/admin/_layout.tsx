@@ -16,7 +16,7 @@ export default function AdminLayout() {
   if (!isAdmin) {
     // You can redirect to the home screen or a specific "access denied" screen.
     // For now, redirecting to the main app stack.
-    return <Redirect href="/(app)" />;
+    return <Redirect href='/(app)' />;
   }
 
   // This layout can contain navigation configuration like screen titles.

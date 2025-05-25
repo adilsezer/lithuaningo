@@ -56,7 +56,7 @@ const EditProfileScreen: React.FC = () => {
             displayName: data.displayName,
           });
         }}
-        submitButtonText="Save Changes"
+        submitButtonText='Save Changes'
         isLoading={loading}
         options={{ mode: 'onBlur' }}
         zodSchema={editProfileFormSchema}

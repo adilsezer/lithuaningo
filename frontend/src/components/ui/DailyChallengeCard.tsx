@@ -1,7 +1,7 @@
-import CustomText from "@components/ui/CustomText";
-import React from "react";
-import { View, StyleProp, ViewStyle, ActivityIndicator } from "react-native";
-import { Card, ProgressBar, useTheme, IconButton } from "react-native-paper";
+import CustomText from '@components/ui/CustomText';
+import React from 'react';
+import { View, StyleProp, ViewStyle, ActivityIndicator } from 'react-native';
+import { Card, ProgressBar, useTheme, IconButton } from 'react-native-paper';
 
 interface StatItem {
   label: string;
@@ -29,14 +29,14 @@ export const StatsCard: React.FC<StatsCardProps> = ({
   style,
   largeStats,
   isLoading = false,
-  loadingText = "Loading stats...",
+  loadingText = 'Loading stats...',
 }) => {
   const theme = useTheme();
 
   if (isLoading) {
     return (
-      <View style={{ padding: 20, alignItems: "center" }}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+      <View style={{ padding: 20, alignItems: 'center' }}>
+        <ActivityIndicator size='large' color={theme.colors.primary} />
         <CustomText style={{ marginTop: 10 }}>{loadingText}</CustomText>
       </View>
     );
@@ -62,15 +62,15 @@ export const StatsCard: React.FC<StatsCardProps> = ({
       )}
       <View
         style={{
-          flexDirection: "row",
-          flexWrap: "wrap",
-          justifyContent: "space-between",
+          flexDirection: 'row',
+          flexWrap: 'wrap',
+          justifyContent: 'space-between',
         }}
       >
         {stats.map((stat) => (
           <View
             key={stat.label}
-            style={{ alignItems: "center", flex: 1, minWidth: 80 }}
+            style={{ alignItems: 'center', flex: 1, minWidth: 80 }}
           >
             {stat.icon && (
               <IconButton
@@ -81,15 +81,15 @@ export const StatsCard: React.FC<StatsCardProps> = ({
               />
             )}
             <View
-              style={{ flexDirection: "row", alignItems: "center", gap: 4 }}
+              style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}
             >
               <CustomText
-                variant={largeStats ? "headlineMedium" : "titleMedium"}
-                style={{ textAlign: "center" }}
+                variant={largeStats ? 'headlineMedium' : 'titleMedium'}
+                style={{ textAlign: 'center' }}
               >
                 {stat.value}
               </CustomText>
-              <CustomText variant="bodyMedium">{stat.label}</CustomText>
+              <CustomText variant='bodyMedium'>{stat.label}</CustomText>
             </View>
           </View>
         ))}
@@ -116,29 +116,29 @@ export const DailyChallengeCard: React.FC<{
 
   const stats = [
     {
-      label: "Questions\nAnswered",
+      label: 'Questions\nAnswered',
       value: answeredQuestions,
-      icon: "help",
+      icon: 'help',
       iconColor: theme.colors.secondary,
     },
     {
-      label: "Correct\nAnswers",
+      label: 'Correct\nAnswers',
       value: correctAnswers,
-      icon: "check",
+      icon: 'check',
       iconColor: theme.colors.primary,
     },
     {
-      label: "Wrong\nAnswers",
+      label: 'Wrong\nAnswers',
       value: wrongAnswers,
-      icon: "close",
+      icon: 'close',
       iconColor: theme.colors.tertiary,
     },
   ];
 
   return (
     <StatsCard
-      title="Daily Challenge"
-      subtitle="Here is your progress for today."
+      title='Daily Challenge'
+      subtitle='Here is your progress for today.'
       stats={stats}
       progress={answeredQuestions > 0 ? answeredQuestions / 10 : 0}
       largeStats

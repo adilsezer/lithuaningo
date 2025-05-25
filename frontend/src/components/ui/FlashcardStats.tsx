@@ -68,7 +68,7 @@ const FlashcardStats: React.FC<FlashcardStatsProps> = ({
       ]}
     >
       <Card.Content>
-        <CustomText variant="titleMedium" style={styles.title}>
+        <CustomText variant='titleMedium' style={styles.title}>
           Stats for this flashcard
         </CustomText>
 

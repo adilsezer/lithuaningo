@@ -1,9 +1,9 @@
-import React, { forwardRef } from "react";
-import { FormField as FormFieldType } from "./form.types";
-import CustomSwitch from "@components/ui/CustomSwitch";
-import CustomTextInput from "@components/ui/CustomTextInput";
-import CustomText from "@components/ui/CustomText";
-import { TextInput } from "react-native";
+import React, { forwardRef } from 'react';
+import { FormField as FormFieldType } from './form.types';
+import CustomSwitch from '@components/ui/CustomSwitch';
+import CustomTextInput from '@components/ui/CustomTextInput';
+import CustomText from '@components/ui/CustomText';
+import { TextInput } from 'react-native';
 
 interface FormFieldProps {
   field: FormFieldType;
@@ -24,32 +24,32 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(
     };
 
     switch (category) {
-      case "text-input":
+      case 'text-input':
         return (
           <CustomTextInput
             {...props}
             ref={ref}
-            value={typeof value === "string" ? value : ""}
+            value={typeof value === 'string' ? value : ''}
             onChangeText={(text: string) => onChange(text)}
-            secureTextEntry={type === "password"}
-            keyboardType={type === "email" ? "email-address" : "default"}
-            autoCapitalize={field.autoCapitalize || "none"}
+            secureTextEntry={type === 'password'}
+            keyboardType={type === 'email' ? 'email-address' : 'default'}
+            autoCapitalize={field.autoCapitalize || 'none'}
           />
         );
 
-      case "toggle":
+      case 'toggle':
         return (
           <CustomSwitch
             {...props}
-            value={typeof value === "boolean" ? value : false}
+            value={typeof value === 'boolean' ? value : false}
             onValueChange={(newValue: boolean) => onChange(newValue)}
           />
         );
 
-      case "link":
+      case 'link':
         return (
           <CustomText
-            style={{ textDecorationLine: "underline" }}
+            style={{ textDecorationLine: 'underline' }}
             onPress={field.onPress}
           >
             {field.linkText || field.label}
@@ -62,4 +62,4 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(
   }
 );
 
-FormField.displayName = "FormField";
+FormField.displayName = 'FormField';

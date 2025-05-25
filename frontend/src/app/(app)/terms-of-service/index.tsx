@@ -22,7 +22,7 @@ const TermsOfService = () => {
     <ScrollView>
       <CustomText {...paragraphProps}>Last updated: March 10, 2024</CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         1. Content Creation and Ownership
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -42,7 +42,7 @@ const TermsOfService = () => {
         including AI training
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         2. Content Guidelines
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -67,7 +67,7 @@ const TermsOfService = () => {
         • Deliberately provides incorrect translations
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         3. Public Content and Sharing
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -86,7 +86,7 @@ const TermsOfService = () => {
         • We may feature your content in promotional materials
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         4. Content Moderation
       </CustomText>
       <CustomText {...paragraphProps}>We reserve the right to:</CustomText>
@@ -103,7 +103,7 @@ const TermsOfService = () => {
         • Use automated systems for content moderation
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         5. Intellectual Property
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -118,7 +118,7 @@ const TermsOfService = () => {
         • Users must respect third-party intellectual property rights
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         6. Limitation of Liability
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -136,7 +136,7 @@ const TermsOfService = () => {
         applicable
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         7. Indemnification
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -153,7 +153,7 @@ const TermsOfService = () => {
         • Your violation of any rights of another party
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         8. Content Reporting
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -166,7 +166,7 @@ const TermsOfService = () => {
         • False reporting may result in account suspension
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         9. Data Usage and Privacy
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -179,7 +179,7 @@ const TermsOfService = () => {
         • We may share anonymized data with third parties
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         10. Changes to Terms
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -189,7 +189,7 @@ const TermsOfService = () => {
         • Continued use after changes constitutes acceptance
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         11. Governing Law
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -197,7 +197,7 @@ const TermsOfService = () => {
         subject to the exclusive jurisdiction of the courts of Lithuania.
       </CustomText>
 
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         12. Contact Us
       </CustomText>
       <CustomText {...paragraphProps}>

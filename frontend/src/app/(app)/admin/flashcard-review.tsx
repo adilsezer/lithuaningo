@@ -62,14 +62,14 @@ export default function AdminFlashcardReviewScreen() {
   } = useAdminFlashcardReview(scrollToTop); // Pass scrollToTop to the hook
 
   if (isLoading) {
-    return <LoadingIndicator size="large" style={styles.loader} />;
+    return <LoadingIndicator size='large' style={styles.loader} />;
   }
 
   if (error && !currentFlashcardData) {
     return (
       <View>
         <ErrorMessage message={`Error: ${error}`} />
-        <CustomButton onPress={handleComplete} title="Back to Profile" />
+        <CustomButton onPress={handleComplete} title='Back to Profile' />
       </View>
     );
   }
@@ -78,7 +78,7 @@ export default function AdminFlashcardReviewScreen() {
     return (
       <View>
         <CustomText>No flashcard to review or all reviewed.</CustomText>
-        <CustomButton onPress={handleComplete} title="Back to Profile" />
+        <CustomButton onPress={handleComplete} title='Back to Profile' />
       </View>
     );
   }
@@ -109,9 +109,9 @@ export default function AdminFlashcardReviewScreen() {
         styles.scrollContainer,
         { backgroundColor: theme.colors.background },
       ]}
-      keyboardShouldPersistTaps="handled"
+      keyboardShouldPersistTaps='handled'
     >
-      <Card mode="contained" style={styles.card}>
+      <Card mode='contained' style={styles.card}>
         <Card.Title
           title={`Review Flashcard (ID: ${currentFlashcard.id.substring(
             0,
@@ -160,12 +160,12 @@ export default function AdminFlashcardReviewScreen() {
             <Image
               source={{ uri: currentFlashcardData.imageUrl }}
               style={styles.imagePreview}
-              resizeMode="contain"
+              resizeMode='contain'
             />
           ) : null}
           <CustomButton
             onPress={handleRegenerateImage}
-            title="Regenerate Image"
+            title='Regenerate Image'
             loading={isRegenerating}
             disabled={isUpdating || isRegenerating}
             style={styles.actionButton}
@@ -180,7 +180,7 @@ export default function AdminFlashcardReviewScreen() {
           ) : null}
           <CustomButton
             onPress={handleRegenerateAudio}
-            title="Regenerate Audio"
+            title='Regenerate Audio'
             loading={isRegenerating}
             disabled={isUpdating || isRegenerating}
             style={styles.actionButton}
@@ -198,7 +198,7 @@ export default function AdminFlashcardReviewScreen() {
                     .join(', ')}`
                 : 'Select Categories'
             }
-            mode="outlined"
+            mode='outlined'
             style={styles.input}
             disabled={isUpdating || isRegenerating}
           />
@@ -234,11 +234,11 @@ export default function AdminFlashcardReviewScreen() {
                 </ScrollView>
               </Dialog.Content>
               <Dialog.Actions>
-                <CustomButton onPress={closeCategoryDialog} title="Cancel" />
+                <CustomButton onPress={closeCategoryDialog} title='Cancel' />
                 <CustomButton
                   onPress={confirmCategorySelection}
-                  title="Done"
-                  mode="contained"
+                  title='Done'
+                  mode='contained'
                 />
               </Dialog.Actions>
             </Dialog>
@@ -252,7 +252,7 @@ export default function AdminFlashcardReviewScreen() {
                 ? DifficultyLevel[currentFlashcardData.difficulty]
                 : 'Select'
             }`}
-            mode="outlined"
+            mode='outlined'
             style={styles.input}
             disabled={isUpdating || isRegenerating}
           />
@@ -283,11 +283,11 @@ export default function AdminFlashcardReviewScreen() {
                 </RadioButton.Group>
               </Dialog.Content>
               <Dialog.Actions>
-                <CustomButton onPress={closeDifficultyDialog} title="Cancel" />
+                <CustomButton onPress={closeDifficultyDialog} title='Cancel' />
                 <CustomButton
                   onPress={confirmDifficultySelection}
-                  title="Done"
-                  mode="contained"
+                  title='Done'
+                  mode='contained'
                 />
               </Dialog.Actions>
             </Dialog>
@@ -295,7 +295,7 @@ export default function AdminFlashcardReviewScreen() {
 
           {/* Verified Switch */}
           <CustomSwitch
-            label="Verified:"
+            label='Verified:'
             value={currentFlashcardData.isVerified}
             onValueChange={(value) => updateField('isVerified', value)}
             style={styles.switchContainer}
@@ -304,23 +304,23 @@ export default function AdminFlashcardReviewScreen() {
         <Card.Actions style={styles.cardActions}>
           <CustomButton
             onPress={handleSkip}
-            title="Skip"
+            title='Skip'
             disabled={isUpdating || isRegenerating}
             style={styles.controlButton}
           />
           <CustomButton
             onPress={handleVerifyAndNext}
-            title="Verify & Next"
+            title='Verify & Next'
             loading={isUpdating}
             disabled={isUpdating || isRegenerating}
-            mode="contained"
+            mode='contained'
             style={styles.controlButton}
           />
         </Card.Actions>
       </Card>
       <CustomButton
         onPress={handleComplete}
-        title="Complete Review Session"
+        title='Complete Review Session'
         style={styles.completeButton}
       />
     </ScrollView>

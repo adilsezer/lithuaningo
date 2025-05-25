@@ -1,13 +1,13 @@
-import React from "react";
-import { Portal, Dialog, Button, Text, useTheme } from "react-native-paper";
-import { StyleSheet } from "react-native";
+import React from 'react';
+import { Portal, Dialog, Button, Text, useTheme } from 'react-native-paper';
+import { StyleSheet } from 'react-native';
 import useAlertStore, {
   useAlertVisible,
   useAlertMode,
   useAlertDetails,
   useAlertCallbacks,
   useAlertActions,
-} from "@stores/useAlertStore";
+} from '@stores/useAlertStore';
 
 export const AlertDialog: React.FC = () => {
   const theme = useTheme();
@@ -23,16 +23,16 @@ export const AlertDialog: React.FC = () => {
       backgroundColor: theme.colors.surface,
     },
     title: {
-      textAlign: "center",
+      textAlign: 'center',
       color: theme.colors.onSurface,
     },
     message: {
-      textAlign: "center",
+      textAlign: 'center',
       color: theme.colors.onSurface,
     },
     actionsContainer: {
-      flexDirection: "row",
-      justifyContent: "center",
+      flexDirection: 'row',
+      justifyContent: 'center',
       paddingHorizontal: 16,
       gap: 8,
     },
@@ -68,20 +68,20 @@ export const AlertDialog: React.FC = () => {
         {/* Icon changes based on alert mode */}
         <Dialog.Icon
           icon={
-            alertMode === "CONFIRM"
-              ? "help-circle"
-              : alertMode === "SUCCESS"
-              ? "check-circle"
-              : alertMode === "ERROR"
-              ? "alert-circle"
-              : "information"
+            alertMode === 'CONFIRM'
+              ? 'help-circle'
+              : alertMode === 'SUCCESS'
+              ? 'check-circle'
+              : alertMode === 'ERROR'
+              ? 'alert-circle'
+              : 'information'
           }
           color={
-            alertMode === "CONFIRM"
+            alertMode === 'CONFIRM'
               ? theme.colors.primary
-              : alertMode === "SUCCESS"
+              : alertMode === 'SUCCESS'
               ? theme.colors.primary
-              : alertMode === "ERROR"
+              : alertMode === 'ERROR'
               ? theme.colors.error
               : theme.colors.primary
           }
@@ -96,10 +96,10 @@ export const AlertDialog: React.FC = () => {
         </Dialog.Content>
         {/* Dialog Actions */}
         <Dialog.Actions style={styles.actionsContainer}>
-          {alertMode === "CONFIRM" ? (
+          {alertMode === 'CONFIRM' ? (
             <>
               <Button
-                mode="outlined"
+                mode='outlined'
                 onPress={() => {
                   hideDialog();
                   onCancel?.();
@@ -110,16 +110,16 @@ export const AlertDialog: React.FC = () => {
                 {cancelText}
               </Button>
               <Button
-                mode="contained"
+                mode='contained'
                 onPress={async () => {
                   try {
                     hideDialog(); // Hide dialog first
                     await onConfirm?.();
                   } catch (err) {
-                    console.error("Error in confirmation:", err);
+                    console.error('Error in confirmation:', err);
                     useAlertStore
                       .getState()
-                      .showError("An error occurred during confirmation.");
+                      .showError('An error occurred during confirmation.');
                   }
                 }}
                 style={styles.buttonBase}
@@ -136,8 +136,8 @@ export const AlertDialog: React.FC = () => {
                 key={button.text}
                 mode={
                   button === buttons[buttons.length - 1]
-                    ? "contained"
-                    : "outlined"
+                    ? 'contained'
+                    : 'outlined'
                 }
                 onPress={() => {
                   hideDialog();

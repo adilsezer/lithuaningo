@@ -45,7 +45,7 @@ export default function HomeScreen() {
 
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <CustomText variant="titleLarge" bold>
+      <CustomText variant='titleLarge' bold>
         Hi, {userData?.fullName || 'there'} 👋
       </CustomText>
 
@@ -53,7 +53,7 @@ export default function HomeScreen() {
         <ErrorMessage
           message={`Unable to load challenge stats: ${statsError}`}
           onRetry={getUserChallengeStats}
-          buttonText="Try Again"
+          buttonText='Try Again'
         />
       ) : (
         <DailyChallengeCard
@@ -63,18 +63,18 @@ export default function HomeScreen() {
         />
       )}
 
-      <CustomText variant="bodyMedium">
+      <CustomText variant='bodyMedium'>
         Practice flashcards with our AI assistant.
       </CustomText>
       <CustomButton
-        title="Browse Flashcards"
+        title='Browse Flashcards'
         onPress={() => router.push('(app)/(tabs)/flashcard')}
       />
-      <CustomText variant="bodyMedium">
+      <CustomText variant='bodyMedium'>
         Join the Daily Challenge and compete on the leaderboard!
       </CustomText>
       <CustomButton
-        title="Start Daily Challenge"
+        title='Start Daily Challenge'
         onPress={() => router.push('(app)/(tabs)/challenge')}
       />
       <Leaderboard entries={entries} />

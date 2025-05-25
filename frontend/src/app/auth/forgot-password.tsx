@@ -39,7 +39,7 @@ const ForgotPasswordScreen: React.FC = () => {
       <Form
         fields={forgotPasswordFields}
         onSubmit={handleSubmit}
-        submitButtonText="Reset Password"
+        submitButtonText='Reset Password'
         options={{ mode: 'onBlur' }}
         zodSchema={forgotPasswordFormSchema}
       />

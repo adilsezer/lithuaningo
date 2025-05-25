@@ -1,21 +1,21 @@
-import React, { useMemo } from "react";
+import React, { useMemo } from 'react';
 import {
   View,
   FlatList,
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
-} from "react-native";
-import { Text, ActivityIndicator, Avatar } from "react-native-paper";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useChat, MAX_FREE_MESSAGES_PER_DAY, Message } from "@hooks/useChat";
-import CustomText from "@components/ui/CustomText";
-import CustomDivider from "@components/ui/CustomDivider";
-import ChatMessage from "@components/chat/ChatMessage";
-import ChatInput from "@components/chat/ChatInput";
-import ChatExampleSuggestions from "@components/chat/ChatExampleSuggestions";
-import ChatUsageLimitInfo from "@components/chat/ChatUsageLimitInfo";
-import LoginPrompt from "@components/chat/LoginPrompt";
+} from 'react-native';
+import { Text, ActivityIndicator, Avatar } from 'react-native-paper';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useChat, MAX_FREE_MESSAGES_PER_DAY, Message } from '@hooks/useChat';
+import CustomText from '@components/ui/CustomText';
+import CustomDivider from '@components/ui/CustomDivider';
+import ChatMessage from '@components/chat/ChatMessage';
+import ChatInput from '@components/chat/ChatInput';
+import ChatExampleSuggestions from '@components/chat/ChatExampleSuggestions';
+import ChatUsageLimitInfo from '@components/chat/ChatUsageLimitInfo';
+import LoginPrompt from '@components/chat/LoginPrompt';
 
 export default function ChatScreen(): JSX.Element {
   const {
@@ -70,22 +70,22 @@ export default function ChatScreen(): JSX.Element {
     return (
       <View
         style={{
-          flexDirection: "row",
-          alignItems: "flex-start",
+          flexDirection: 'row',
+          alignItems: 'flex-start',
           marginVertical: 8,
         }}
       >
         <Avatar.Image
-          source={require("../../../../assets/images/icon-transparent.png")}
+          source={require('../../../../assets/images/icon-transparent.png')}
           size={35}
           style={{ marginRight: 8, marginTop: 6 }}
         />
         <View
-          style={{ flexDirection: "row", alignItems: "center", marginTop: 12 }}
+          style={{ flexDirection: 'row', alignItems: 'center', marginTop: 12 }}
         >
-          <ActivityIndicator size="small" />
+          <ActivityIndicator size='small' />
           <Text
-            variant="bodyMedium"
+            variant='bodyMedium'
             style={{ marginLeft: 8, color: theme.colors.outline }}
           >
             Lithuaningo AI is typing...
@@ -102,10 +102,10 @@ export default function ChatScreen(): JSX.Element {
         backgroundColor: theme.colors.background,
         paddingBottom: insets.bottom,
       }}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
-      keyboardVerticalOffset={Platform.OS === "ios" ? 64 : 0}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 64 : 0}
     >
-      <CustomText variant="titleLarge" bold>
+      <CustomText variant='titleLarge' bold>
         Lithuaningo AI Assistant
       </CustomText>
 

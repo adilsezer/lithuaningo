@@ -121,6 +121,14 @@ export default [
       "no-var": "error",
       "no-empty": "warn",
       "no-debugger": "error",
+
+      // Code style
+      quotes: [
+        "error",
+        "single",
+        { avoidEscape: true, allowTemplateLiterals: true },
+      ],
+      "jsx-quotes": ["error", "prefer-single"],
     },
     settings: {
       react: {

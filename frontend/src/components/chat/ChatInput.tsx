@@ -31,7 +31,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
 
   return (
     <TextInput
-      mode="outlined"
+      mode='outlined'
       placeholder={
         isDisabled && hasReachedLimit
           ? 'Daily message limit reached'
@@ -57,7 +57,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       left={
         showClearButton && isAuthenticated ? (
           <TextInput.Icon
-            icon="trash-can-outline"
+            icon='trash-can-outline'
             color={theme.colors.secondary}
             onPress={onClearChat}
             style={styles.iconStyle}
@@ -66,7 +66,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
       }
       right={
         <TextInput.Icon
-          icon="send"
+          icon='send'
           color={theme.colors.primary}
           disabled={isDisabled || value.trim() === ''}
           onPress={onSend}

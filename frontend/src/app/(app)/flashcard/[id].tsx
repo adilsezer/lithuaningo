@@ -1,19 +1,19 @@
-import React, { useCallback, useEffect } from "react";
-import { ScrollView, StyleSheet, View } from "react-native";
-import { useTheme, Button } from "react-native-paper";
-import { useLocalSearchParams, router } from "expo-router";
-import { useFocusEffect } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
+import { useTheme, Button } from 'react-native-paper';
+import { useLocalSearchParams, router } from 'expo-router';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   useFlashcardStore,
   DAILY_FLASHCARD_LIMIT,
   FlashcardMessage,
-} from "@stores/useFlashcardStore";
-import { useUserData, useIsPremium } from "@stores/useUserStore";
-import CustomText from "@components/ui/CustomText";
-import Flashcard from "@components/ui/Flashcard";
-import FlashcardStats from "@components/ui/FlashcardStats";
-import LoadingIndicator from "@components/ui/LoadingIndicator";
-import ErrorMessage from "@components/ui/ErrorMessage";
+} from '@stores/useFlashcardStore';
+import { useUserData, useIsPremium } from '@stores/useUserStore';
+import CustomText from '@components/ui/CustomText';
+import Flashcard from '@components/ui/Flashcard';
+import FlashcardStats from '@components/ui/FlashcardStats';
+import LoadingIndicator from '@components/ui/LoadingIndicator';
+import ErrorMessage from '@components/ui/ErrorMessage';
 
 export default function CategoryFlashcardsScreen() {
   const theme = useTheme();
@@ -68,8 +68,8 @@ export default function CategoryFlashcardsScreen() {
     router.back();
   }, [resetSession]);
 
-  const handleGoToLogin = useCallback(() => router.push("/auth/login"), []);
-  const handleGoToPremium = useCallback(() => router.push("/premium"), []);
+  const handleGoToLogin = useCallback(() => router.push('/auth/login'), []);
+  const handleGoToPremium = useCallback(() => router.push('/premium'), []);
 
   // Initialize when screen loads
   useEffect(() => {
@@ -105,32 +105,42 @@ export default function CategoryFlashcardsScreen() {
   // Create a daily flashcard progress component
   const DailyFlashcardProgress = () => (
     <>
-      <CustomText variant="bodySmall" style={styles.limitInfo}>
+      <CustomText variant='bodySmall' style={styles.limitInfo}>
         <CustomText bold>
           {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}
-        </CustomText>{" "}
+        </CustomText>{' '}
         daily flashcards viewed
       </CustomText>
     </>
   );
 
-  // New handler for the "Next Flashcard" button
-  const handleAdvanceToNextCard = useCallback(() => {
-    if (currentFlashcard?.id && userData?.id) {
-      // Call the store action to handle all logic
-      useFlashcardStore
-        .getState()
-        .advanceCardAndProcess(currentFlashcard.id, userData.id);
-    } else {
-      console.warn(
-        "[handleAdvanceToNextCard] Missing currentFlashcard.id or userData.id"
-      );
-      // Optionally, provide feedback to the user or set an error state in the store
+  // Add state to track if we're processing a card advance
+  const [isAdvancing, setIsAdvancing] = useState(false);
+
+  // Handler for the "Next Flashcard" button with proper async handling and race condition prevention
+  const handleAdvanceToNextCard = useCallback(async () => {
+    if (currentFlashcard?.id && userData?.id && !isAdvancing) {
+      setIsAdvancing(true);
+
+      try {
+        // Properly await the async operation to prevent race conditions
+        await useFlashcardStore
+          .getState()
+          .advanceCardAndProcess(currentFlashcard.id, userData.id);
+      } catch (error) {
+        console.error('Error advancing card:', error);
+        useFlashcardStore.setState({
+          error: 'Failed to advance to next card. Please try again.',
+        });
+      } finally {
+        setIsAdvancing(false);
+      }
+    } else if (!currentFlashcard?.id || !userData?.id) {
       useFlashcardStore.setState({
-        error: "Could not advance card. User or card data missing.",
+        error: 'Could not advance card. User or card data missing.',
       });
     }
-  }, [currentFlashcard, userData?.id]);
+  }, [currentFlashcard, userData?.id, isAdvancing]);
 
   // Handler for fetching a new batch of cards
   const handleFetchNewCards = useCallback(() => {
@@ -147,13 +157,13 @@ export default function CategoryFlashcardsScreen() {
 
   // Function to get message background color based on message type
   const getMessageBackgroundColor = useCallback(
-    (messageType: FlashcardMessage["type"]) => {
+    (messageType: FlashcardMessage['type']) => {
       switch (messageType) {
-        case "success":
+        case 'success':
           return theme.colors.primary;
-        case "error":
+        case 'error':
           return theme.colors.error;
-        case "info":
+        case 'info':
         default:
           return theme.colors.background;
       }
@@ -167,13 +177,13 @@ export default function CategoryFlashcardsScreen() {
   if (!userData?.id) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <CustomText variant="titleLarge" style={{ marginBottom: 16 }}>
+        <CustomText variant='titleLarge' style={{ marginBottom: 16 }}>
           User Login Required
         </CustomText>
-        <CustomText style={{ textAlign: "center", marginBottom: 24 }}>
+        <CustomText style={{ textAlign: 'center', marginBottom: 24 }}>
           Please log in to track your flashcard progress.
         </CustomText>
-        <Button mode="contained" onPress={handleGoToLogin}>
+        <Button mode='contained' onPress={handleGoToLogin}>
           Go to Login
         </Button>
       </View>
@@ -184,28 +194,28 @@ export default function CategoryFlashcardsScreen() {
   if (!isPremium && dailyLimitReached) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <CustomText variant="headlineSmall" style={styles.completedText}>
+        <CustomText variant='headlineSmall' style={styles.completedText}>
           Daily Limit Reached! 🔒
         </CustomText>
-        <CustomText variant="bodyLarge" style={styles.completedSubtext}>
-          You've viewed {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+        <CustomText variant='bodyLarge' style={styles.completedSubtext}>
+          You've viewed {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{' '}
           flashcards today, which is the daily limit for free users.
         </CustomText>
-        <CustomText variant="bodyMedium" style={styles.premiumMessage}>
+        <CustomText variant='bodyMedium' style={styles.premiumMessage}>
           Upgrade to Premium to access unlimited flashcards and accelerate your
           learning!
         </CustomText>
         <View style={styles.completedButtonsContainer}>
           <Button
-            mode="contained"
+            mode='contained'
             onPress={handleGoToPremium}
             style={styles.completedButton}
-            icon="star"
+            icon='star'
           >
             Upgrade to Premium
           </Button>
           <Button
-            mode="outlined"
+            mode='outlined'
             onPress={handleGoBack}
             style={styles.completedButton}
           >
@@ -224,7 +234,7 @@ export default function CategoryFlashcardsScreen() {
         <CustomText style={{ marginTop: 16 }}>
           🤖 Lithuaningo AI is generating your flashcards (~15s).
         </CustomText>
-        <CustomText variant="bodySmall">
+        <CustomText variant='bodySmall'>
           No need to wait—come back to this screen anytime!
         </CustomText>
 
@@ -251,10 +261,10 @@ export default function CategoryFlashcardsScreen() {
   if (totalCards === 0 && hasAttemptedLoad) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <CustomText variant="bodyLarge">
+        <CustomText variant='bodyLarge'>
           No flashcards found for this category.
         </CustomText>
-        <Button mode="contained" onPress={handleGoBack}>
+        <Button mode='contained' onPress={handleGoBack}>
           Go Back
         </Button>
         {!isPremium && <DailyFlashcardProgress />}
@@ -280,11 +290,11 @@ export default function CategoryFlashcardsScreen() {
     >
       {/* Header Section */}
       <View style={styles.header}>
-        <CustomText variant="titleLarge" bold>
+        <CustomText variant='titleLarge' bold>
           {name} Flashcards
         </CustomText>
         {!isDeckCompleted && (
-          <CustomText variant="bodyMedium">
+          <CustomText variant='bodyMedium'>
             Card {currentIndex + 1} of {totalCards}
           </CustomText>
         )}
@@ -304,8 +314,8 @@ export default function CategoryFlashcardsScreen() {
           ]}
         >
           <CustomText
-            variant="bodyLarge"
-            style={{ textAlign: "center", color: theme.colors.onPrimary }}
+            variant='bodyLarge'
+            style={{ textAlign: 'center', color: theme.colors.onPrimary }}
           >
             {submissionMessage.text}
           </CustomText>
@@ -315,18 +325,18 @@ export default function CategoryFlashcardsScreen() {
       {/* Deck Completed View */}
       {isDeckCompleted ? (
         <View style={styles.completedContainer}>
-          <CustomText variant="headlineSmall" style={styles.completedText}>
+          <CustomText variant='headlineSmall' style={styles.completedText}>
             Congratulations! 🎉
           </CustomText>
 
-          <CustomText variant="bodyLarge" style={styles.completedSubtext}>
+          <CustomText variant='bodyLarge' style={styles.completedSubtext}>
             {isPremium
               ? "You've completed all flashcards in this deck."
               : "You've completed all free flashcards in this deck."}
           </CustomText>
 
           {!isPremium && (
-            <CustomText variant="bodyMedium" style={styles.premiumMessage}>
+            <CustomText variant='bodyMedium' style={styles.premiumMessage}>
               {dailyLimitReached
                 ? `You've reached your daily limit of ${DAILY_FLASHCARD_LIMIT} flashcards. Upgrade to Premium for unlimited access!`
                 : `You still have ${cardsRemainingToday} flashcard views remaining today. You can get new cards or upgrade to Premium for unlimited access!`}
@@ -338,24 +348,24 @@ export default function CategoryFlashcardsScreen() {
             let getNewCardsButtonProps;
             if (isPremium) {
               getNewCardsButtonProps = {
-                text: "Get New Cards",
+                text: 'Get New Cards',
                 onPress: handleFetchNewCards,
-                icon: "refresh",
-                mode: "contained" as const,
+                icon: 'refresh',
+                mode: 'contained' as const,
               };
             } else if (!dailyLimitReached) {
               getNewCardsButtonProps = {
-                text: "Get New Cards",
+                text: 'Get New Cards',
                 onPress: handleFetchNewCards,
-                icon: "refresh",
-                mode: "contained" as const,
+                icon: 'refresh',
+                mode: 'contained' as const,
               };
             } else {
               getNewCardsButtonProps = {
-                text: "Unlock All Cards (Premium ✨)",
+                text: 'Unlock All Cards (Premium ✨)',
                 onPress: handleGoToPremium,
-                icon: "star",
-                mode: "contained" as const,
+                icon: 'star',
+                mode: 'contained' as const,
               };
             }
 
@@ -382,10 +392,10 @@ export default function CategoryFlashcardsScreen() {
                 {/* Upgrade to Premium button: Shown only if NOT premium AND daily limit NOT reached */}
                 {!isPremium && !dailyLimitReached && (
                   <Button
-                    mode="contained"
+                    mode='contained'
                     onPress={handleGoToPremium}
                     style={styles.completedButton}
-                    icon="star"
+                    icon='star'
                   >
                     Upgrade to Premium
                   </Button>
@@ -393,7 +403,7 @@ export default function CategoryFlashcardsScreen() {
 
                 {/* Return to Categories button: Always shown */}
                 <Button
-                  mode="outlined"
+                  mode='outlined'
                   onPress={handleGoBack}
                   style={styles.completedButton}
                 >
@@ -416,10 +426,12 @@ export default function CategoryFlashcardsScreen() {
             {flipped && (
               <View style={styles.answerButtonsContainer}>
                 <Button
-                  mode="contained"
+                  mode='contained'
                   style={styles.answerButton}
                   onPress={handleAdvanceToNextCard}
-                  icon="arrow-right-circle"
+                  icon='arrow-right-circle'
+                  loading={isAdvancing}
+                  disabled={isAdvancing}
                 >
                   Next Flashcard
                 </Button>
@@ -431,7 +443,7 @@ export default function CategoryFlashcardsScreen() {
         )
       )}
 
-      <CustomText variant="bodySmall" style={styles.disclaimer}>
+      <CustomText variant='bodySmall' style={styles.disclaimer}>
         Note: These flashcards are generated by AI and may contain inaccuracies.
         They are regularly reviewed, and a verified sign will appear if approved
         by our team.
@@ -446,16 +458,16 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   centered: {
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   header: {
     marginBottom: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   disclaimer: {
     marginTop: 20,
-    textAlign: "center",
+    textAlign: 'center',
   },
   messageContainer: {
     padding: 10,
@@ -463,9 +475,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   answerButtonsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
-    width: "100%",
+    flexDirection: 'row',
+    justifyContent: 'center',
+    width: '100%',
     marginTop: 20,
     marginBottom: 20,
   },
@@ -474,8 +486,8 @@ const styles = StyleSheet.create({
     marginHorizontal: 5,
   },
   completedContainer: {
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     padding: 24,
     marginTop: 20,
     marginBottom: 20,
@@ -483,14 +495,14 @@ const styles = StyleSheet.create({
   },
   completedText: {
     marginBottom: 12,
-    textAlign: "center",
+    textAlign: 'center',
   },
   completedSubtext: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 24,
   },
   completedButtonsContainer: {
-    width: "100%",
+    width: '100%',
     marginTop: 16,
     gap: 12,
   },
@@ -498,12 +510,12 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   premiumMessage: {
-    textAlign: "center",
+    textAlign: 'center',
     marginBottom: 16,
-    fontStyle: "italic",
+    fontStyle: 'italic',
   },
   limitInfo: {
     marginTop: 4,
-    color: "gray",
+    color: 'gray',
   },
 });

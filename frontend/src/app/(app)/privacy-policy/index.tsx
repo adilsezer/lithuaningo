@@ -36,7 +36,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         1. Information We Collect
       </CustomText>
 
@@ -123,7 +123,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         2. How We Use Your Information
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -155,7 +155,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         3. Data Storage and Security
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -172,7 +172,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         4. Third-Party Services
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -197,7 +197,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         5. Data Deletion
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -215,7 +215,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         6. Updates and Notifications
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -229,7 +229,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         7. Children's Privacy
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -239,7 +239,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         8. Contact Us
       </CustomText>
       <CustomText {...paragraphProps}>
@@ -271,7 +271,7 @@ const PrivacyPolicy = () => {
       </CustomText>
 
       {/* Section Heading */}
-      <CustomText variant="titleMedium" bold>
+      <CustomText variant='titleMedium' bold>
         9. Changes to This Policy
       </CustomText>
       <CustomText {...paragraphProps}>

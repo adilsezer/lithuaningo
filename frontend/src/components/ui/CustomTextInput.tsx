@@ -1,6 +1,6 @@
-import React, { forwardRef } from "react";
-import { StyleProp, ViewStyle } from "react-native";
-import { TextInput, HelperText, useTheme } from "react-native-paper";
+import React, { forwardRef } from 'react';
+import { StyleProp, ViewStyle } from 'react-native';
+import { TextInput, HelperText, useTheme } from 'react-native-paper';
 
 export interface CustomTextInputProps {
   value: string;
@@ -15,9 +15,9 @@ export interface CustomTextInputProps {
   style?: StyleProp<ViewStyle>;
   left?: React.ReactNode;
   right?: React.ReactNode;
-  mode?: "flat" | "outlined";
-  keyboardType?: "default" | "email-address" | "numeric" | "phone-pad";
-  autoCapitalize?: "none" | "sentences" | "words" | "characters";
+  mode?: 'flat' | 'outlined';
+  keyboardType?: 'default' | 'email-address' | 'numeric' | 'phone-pad';
+  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
   autoCorrect?: boolean;
 }
 
@@ -37,9 +37,9 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
       style,
       left,
       right,
-      mode = "outlined",
-      keyboardType = "default",
-      autoCapitalize = "sentences",
+      mode = 'outlined',
+      keyboardType = 'default',
+      autoCapitalize = 'sentences',
       autoCorrect = true,
     },
     ref
@@ -68,7 +68,7 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
           error={!!error}
         />
         {error && (
-          <HelperText type="error" visible={!!error}>
+          <HelperText type='error' visible={!!error}>
             {error}
           </HelperText>
         )}
@@ -77,6 +77,6 @@ const CustomTextInput = forwardRef<any, CustomTextInputProps>(
   }
 );
 
-CustomTextInput.displayName = "CustomTextInput";
+CustomTextInput.displayName = 'CustomTextInput';
 
 export default CustomTextInput;

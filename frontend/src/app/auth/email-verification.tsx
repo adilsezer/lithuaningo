@@ -48,10 +48,10 @@ const EmailVerificationScreen: React.FC = () => {
     return (
       <ScrollView>
         <View style={styles.container}>
-          <CustomText variant="titleMedium" bold>
+          <CustomText variant='titleMedium' bold>
             Error
           </CustomText>
-          <CustomText variant="bodyLarge" style={styles.description}>
+          <CustomText variant='bodyLarge' style={styles.description}>
             Invalid verification request. Please try again.
           </CustomText>
         </View>
@@ -80,11 +80,11 @@ const EmailVerificationScreen: React.FC = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-        <CustomText variant="titleMedium" bold>
+        <CustomText variant='titleMedium' bold>
           Verify Your Email
         </CustomText>
 
-        <CustomText variant="bodyLarge" style={styles.description}>
+        <CustomText variant='bodyLarge' style={styles.description}>
           We've sent a verification code to {email}. Please enter the code below
           to verify your email address.
         </CustomText>
@@ -94,7 +94,7 @@ const EmailVerificationScreen: React.FC = () => {
           onSubmit={async (data) => {
             await verifyEmail(email, data.token);
           }}
-          submitButtonText="Verify Email"
+          submitButtonText='Verify Email'
           isLoading={loading}
           options={{ mode: 'onBlur' }}
           zodSchema={verifyEmailFormSchema}
@@ -107,11 +107,11 @@ const EmailVerificationScreen: React.FC = () => {
               resendDisabled ? `Resend code in ${countdown}s` : 'Resend code'
             }
             disabled={resendDisabled}
-            mode="text"
+            mode='text'
           />
         </View>
 
-        <CustomText variant="bodyMedium" style={styles.note}>
+        <CustomText variant='bodyMedium' style={styles.note}>
           Please check your spam folder if you don't see the code in your inbox.
         </CustomText>
       </View>

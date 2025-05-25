@@ -1,4 +1,4 @@
-import { useRouter } from "expo-router";
+import { useRouter } from 'expo-router';
 import {
   signUpWithEmail,
   signInWithEmail,
@@ -12,14 +12,14 @@ import {
   verifyEmail as verifyEmailService,
   resendOTP,
   verifyPasswordReset,
-} from "@services/auth/authService";
-import { useAuthOperation } from "./useAuthOperation";
-import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useCallback } from "react";
-import { Platform } from "react-native";
-import { useUserStore } from "@stores/useUserStore";
+} from '@services/auth/authService';
+import { useAuthOperation } from './useAuthOperation';
+import { useAlertDialog } from '@hooks/useAlertDialog';
+import { useCallback } from 'react';
+import { Platform } from 'react-native';
+import { useUserStore } from '@stores/useUserStore';
 
-export type SocialProvider = "google" | "apple";
+export type SocialProvider = 'google' | 'apple';
 
 export const useAuth = () => {
   const router = useRouter();
@@ -37,7 +37,7 @@ export const useAuth = () => {
   const navigateToVerification = useCallback(
     (email: string) => {
       router.push({
-        pathname: "/auth/email-verification",
+        pathname: '/auth/email-verification',
         params: { email },
       });
     },
@@ -51,18 +51,18 @@ export const useAuth = () => {
         const response = await signUpWithEmail(email, password, name);
         if (response.success) {
           showAlert({
-            title: "Verification Required",
-            message: "Please check your email for the verification code.",
+            title: 'Verification Required',
+            message: 'Please check your email for the verification code.',
             buttons: [
               {
-                text: "OK",
+                text: 'OK',
                 onPress: () => navigateToVerification(email),
               },
             ],
           });
         }
         return response;
-      }, "Sign Up Failed");
+      }, 'Sign Up Failed');
       return result;
     },
     [performAuthOperation, showAlert, navigateToVerification]
@@ -74,24 +74,24 @@ export const useAuth = () => {
         const response = await signInWithEmail(email, password);
 
         if (response.success) {
-          navigateAfterAuth("/(app)");
+          navigateAfterAuth('/(app)');
           return response;
         }
 
-        if (response.code === "EMAIL_NOT_VERIFIED") {
+        if (response.code === 'EMAIL_NOT_VERIFIED') {
           const emailToVerify = response.email ?? email;
 
           navigateToVerification(emailToVerify);
 
           showAlert({
-            title: "Email Not Verified",
-            message: "Please verify your email before logging in.",
-            buttons: [{ text: "OK", onPress: () => {} }],
+            title: 'Email Not Verified',
+            message: 'Please verify your email before logging in.',
+            buttons: [{ text: 'OK', onPress: () => {} }],
           });
         }
 
         return response;
-      }, "Login Failed");
+      }, 'Login Failed');
       return result;
     },
     [performAuthOperation, navigateAfterAuth, showAlert, navigateToVerification]
@@ -101,9 +101,9 @@ export const useAuth = () => {
     async (provider: SocialProvider) => {
       const result = await performAuthOperation(async () => {
         let response;
-        if (provider === "google") {
+        if (provider === 'google') {
           response = await signInWithGoogle();
-        } else if (provider === "apple" && Platform.OS === "ios") {
+        } else if (provider === 'apple' && Platform.OS === 'ios') {
           response = await signInWithApple();
         } else {
           console.error(
@@ -114,7 +114,7 @@ export const useAuth = () => {
 
         if (response.success) {
           // crashlytics().log(`User signed in with ${provider}`);
-          navigateAfterAuth("/(app)");
+          navigateAfterAuth('/(app)');
         }
         return response;
       }, `${provider} Login Failed`);
@@ -124,15 +124,15 @@ export const useAuth = () => {
   );
 
   const handleSignOut = useCallback(async () => {
-    console.log("[useAuth] handleSignOut: Initiating sign-out process."); // Keep this high-level log
+    console.log('[useAuth] handleSignOut: Initiating sign-out process.'); // Keep this high-level log
     const result = await performAuthOperation(async () => {
       const response = await signOut();
       if (response.success) {
         // crashlytics().log("User signed out");
-        navigateAfterAuth("/");
+        navigateAfterAuth('/');
       }
       return response;
-    }, "Sign Out Failed");
+    }, 'Sign Out Failed');
     return result;
   }, [performAuthOperation, navigateAfterAuth]);
 
@@ -152,18 +152,18 @@ export const useAuth = () => {
               .updateUserData({ fullName: updates.displayName });
           }
           showAlert({
-            title: "Success",
-            message: "Your profile has been updated successfully.",
+            title: 'Success',
+            message: 'Your profile has been updated successfully.',
             buttons: [
               {
-                text: "OK",
-                onPress: () => navigateAfterAuth("/(app)/profile"),
+                text: 'OK',
+                onPress: () => navigateAfterAuth('/(app)/profile'),
               },
             ],
           });
         }
         return response;
-      }, "Profile Update Failed");
+      }, 'Profile Update Failed');
       return result;
     },
     [performAuthOperation, navigateAfterAuth, showAlert]
@@ -175,18 +175,18 @@ export const useAuth = () => {
         const response = await updatePassword(currentPassword, newPassword);
         if (response.success) {
           showAlert({
-            title: "Success",
-            message: "Your password has been updated successfully.",
+            title: 'Success',
+            message: 'Your password has been updated successfully.',
             buttons: [
               {
-                text: "OK",
-                onPress: () => navigateAfterAuth("/(app)/profile"),
+                text: 'OK',
+                onPress: () => navigateAfterAuth('/(app)/profile'),
               },
             ],
           });
         }
         return response;
-      }, "Password Update Failed");
+      }, 'Password Update Failed');
       return result;
     },
     [performAuthOperation, navigateAfterAuth, showAlert]
@@ -198,14 +198,14 @@ export const useAuth = () => {
         const response = await resetPassword(email);
         if (response.success) {
           showAlert({
-            title: "Check Your Email",
+            title: 'Check Your Email',
             message: "We've sent you a code to reset your password.",
             buttons: [
               {
-                text: "OK",
+                text: 'OK',
                 onPress: () => {
                   router.push({
-                    pathname: "/auth/password-reset-verification",
+                    pathname: '/auth/password-reset-verification',
                     params: { email },
                   });
                 },
@@ -214,7 +214,7 @@ export const useAuth = () => {
           });
         }
         return response;
-      }, "Password Reset Failed");
+      }, 'Password Reset Failed');
       return result;
     },
     [performAuthOperation, showAlert, router]
@@ -226,15 +226,15 @@ export const useAuth = () => {
         const response = await verifyPasswordReset(email, token, newPassword);
         if (response.success) {
           showAlert({
-            title: "Success",
-            message: "Your password has been reset. You can now log in.",
+            title: 'Success',
+            message: 'Your password has been reset. You can now log in.',
             buttons: [
-              { text: "OK", onPress: () => navigateAfterAuth("/auth/login") },
+              { text: 'OK', onPress: () => navigateAfterAuth('/auth/login') },
             ],
           });
         }
         return response;
-      }, "Password Reset Verification Failed");
+      }, 'Password Reset Verification Failed');
       return result;
     },
     [performAuthOperation, showAlert, navigateAfterAuth]
@@ -245,36 +245,36 @@ export const useAuth = () => {
     async (password?: string, authProvider?: string) => {
       return new Promise((resolve) => {
         showConfirm({
-          title: "Confirm Deletion",
+          title: 'Confirm Deletion',
           message:
-            authProvider === "email"
-              ? "Are you sure you want to delete your account? This action cannot be undone."
+            authProvider === 'email'
+              ? 'Are you sure you want to delete your account? This action cannot be undone.'
               : `You'll need to verify your ${authProvider} account before deletion. Are you sure you want to proceed?`,
-          confirmText: "Delete",
-          cancelText: "Cancel",
+          confirmText: 'Delete',
+          cancelText: 'Cancel',
           onConfirm: async () => {
             const result = await performAuthOperation(async () => {
               const response = await deleteAccount(password);
               if (response.success) {
                 showAlert({
-                  title: "Account Deleted",
+                  title: 'Account Deleted',
                   message:
                     "Your account has been successfully deleted. We're sorry to see you go.",
                   buttons: [
                     {
-                      text: "OK",
+                      text: 'OK',
                       onPress: async () => {
                         if (response.cleanup) {
                           await response.cleanup();
                         }
-                        navigateAfterAuth("/");
+                        navigateAfterAuth('/');
                       },
                     },
                   ],
                 });
               }
               return response;
-            }, "Account Deletion Failed");
+            }, 'Account Deletion Failed');
             resolve(result);
           },
           onCancel: () => resolve({ success: false }),
@@ -290,15 +290,15 @@ export const useAuth = () => {
         const response = await verifyEmailService(email, token);
         if (response.success) {
           showAlert({
-            title: "Success",
-            message: "Your email has been verified. You can now log in.",
+            title: 'Success',
+            message: 'Your email has been verified. You can now log in.',
             buttons: [
-              { text: "OK", onPress: () => navigateAfterAuth("/auth/login") },
+              { text: 'OK', onPress: () => navigateAfterAuth('/auth/login') },
             ],
           });
         }
         return response;
-      }, "Email Verification Failed");
+      }, 'Email Verification Failed');
       return result;
     },
     [performAuthOperation, navigateAfterAuth, showAlert]
@@ -310,13 +310,13 @@ export const useAuth = () => {
         const response = await resendOTP(email);
         if (response.success) {
           showAlert({
-            title: "Code Sent",
-            message: "A new verification code has been sent to your email.",
-            buttons: [{ text: "OK", onPress: () => {} }],
+            title: 'Code Sent',
+            message: 'A new verification code has been sent to your email.',
+            buttons: [{ text: 'OK', onPress: () => {} }],
           });
         }
         return response;
-      }, "Resend Failed");
+      }, 'Resend Failed');
       return result.success;
     },
     [performAuthOperation, showAlert]

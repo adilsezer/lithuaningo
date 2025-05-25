@@ -66,7 +66,7 @@ export default function Flashcard({
 
           {flashcard.isVerified && (
             <Chip
-              icon="check-decagram"
+              icon='check-decagram'
               style={[
                 styles.verifiedBadge,
                 { backgroundColor: theme.colors.primaryContainer },
@@ -92,11 +92,11 @@ export default function Flashcard({
                 <Image
                   source={{ uri: flashcard.imageUrl }}
                   style={styles.image}
-                  resizeMode="cover"
+                  resizeMode='cover'
                 />
               )}
 
-              <CustomText variant="headlineSmall" style={styles.cardText}>
+              <CustomText variant='headlineSmall' style={styles.cardText}>
                 {flashcard.backText}
               </CustomText>
 
@@ -107,11 +107,11 @@ export default function Flashcard({
               {flashcard.exampleSentence && (
                 <View style={styles.exampleContainer}>
                   <CustomDivider />
-                  <CustomText variant="bodyLarge" style={styles.exampleText}>
+                  <CustomText variant='bodyLarge' style={styles.exampleText}>
                     {flashcard.exampleSentence}
                   </CustomText>
                   <CustomText
-                    variant="bodyMedium"
+                    variant='bodyMedium'
                     style={styles.translationText}
                   >
                     {flashcard.exampleSentenceTranslation}
@@ -123,10 +123,10 @@ export default function Flashcard({
               {flashcard.notes && (
                 <View style={styles.notesContainer}>
                   <CustomDivider />
-                  <CustomText variant="bodyMedium" style={styles.notesTitle}>
+                  <CustomText variant='bodyMedium' style={styles.notesTitle}>
                     Notes:
                   </CustomText>
-                  <CustomText variant="bodySmall" style={styles.notesText}>
+                  <CustomText variant='bodySmall' style={styles.notesText}>
                     {flashcard.notes}
                   </CustomText>
                 </View>
@@ -134,7 +134,7 @@ export default function Flashcard({
             </>
           ) : (
             // Front side of card
-            <CustomText variant="headlineSmall" style={styles.cardText}>
+            <CustomText variant='headlineSmall' style={styles.cardText}>
               {flashcard.frontText}
             </CustomText>
           )}
@@ -146,12 +146,12 @@ export default function Flashcard({
         {/* Flip indicator at the bottom */}
         <View style={styles.flipIndicator}>
           <Icon
-            name="3d-rotation"
+            name='3d-rotation'
             size={20}
             color={theme.colors.onSurfaceVariant}
           />
           <CustomText
-            variant="bodySmall"
+            variant='bodySmall'
             style={{ marginLeft: 8, color: theme.colors.onSurfaceVariant }}
           >
             Tap to flip

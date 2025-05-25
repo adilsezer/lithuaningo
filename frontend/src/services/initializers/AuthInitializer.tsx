@@ -1,13 +1,13 @@
-import React, { useEffect, useRef, useCallback } from "react";
-import { useRouter } from "expo-router";
+import React, { useEffect, useRef, useCallback } from 'react';
+import { useRouter } from 'expo-router';
 import {
   hydrateUserSessionAndProfile,
   clearUserSessionAndLogout,
-} from "../user/userProfileService";
-import { useAlertActions } from "@stores/useAlertStore";
-import { supabase } from "@services/supabase/supabaseClient";
-import { AuthChangeEvent, Session } from "@supabase/supabase-js";
-import { useSetLoading } from "@stores/useUIStore";
+} from '../user/userProfileService';
+import { useAlertActions } from '@stores/useAlertStore';
+import { supabase } from '@services/supabase/supabaseClient';
+import { AuthChangeEvent, Session } from '@supabase/supabase-js';
+import { useSetLoading } from '@stores/useUIStore';
 
 /**
  * Service component that listens to Supabase authentication state changes
@@ -36,7 +36,7 @@ const AuthInitializer: React.FC = () => {
 
     const sessionIdForLogging =
       sessionToProcess?.user?.id ||
-      (sessionToProcess === null ? "null_session" : "undefined_session_state");
+      (sessionToProcess === null ? 'null_session' : 'undefined_session_state');
     activeProcessingId.current = sessionIdForLogging;
 
     try {
@@ -52,7 +52,7 @@ const AuthInitializer: React.FC = () => {
       }
     } catch (error) {
       console.error(
-        "[AuthInitializer] Critical error in processLatestSessionUpdate:",
+        '[AuthInitializer] Critical error in processLatestSessionUpdate:',
         error
       );
       if (sessionToProcess !== null) {
@@ -79,7 +79,7 @@ const AuthInitializer: React.FC = () => {
 
   useEffect(() => {
     let initialCheckCompleted = false;
-    console.log("[AuthInitializer] Setting up Supabase auth state listener.");
+    console.log('[AuthInitializer] Setting up Supabase auth state listener.');
     setLoading(true);
 
     const {
@@ -88,18 +88,18 @@ const AuthInitializer: React.FC = () => {
       async (event: AuthChangeEvent, session: Session | null) => {
         console.log(
           `[AuthInitializer] onAuthStateChange event: ${event}, session: ${
-            session ? "exists" : "null"
+            session ? 'exists' : 'null'
           }`
         );
 
         if (session) {
           if (
-            event === "SIGNED_IN" ||
-            event === "INITIAL_SESSION" ||
-            event === "TOKEN_REFRESHED"
+            event === 'SIGNED_IN' ||
+            event === 'INITIAL_SESSION' ||
+            event === 'TOKEN_REFRESHED'
           ) {
             handleSessionUpdate(session);
-          } else if (event === "USER_UPDATED") {
+          } else if (event === 'USER_UPDATED') {
             console.log(
               `[AuthInitializer] USER_UPDATED event for user: ${session.user.id}. No automatic profile refresh.`
             );
@@ -125,18 +125,18 @@ const AuthInitializer: React.FC = () => {
         } = await supabase.auth.getSession();
         if (initialSession) {
           console.log(
-            "[AuthInitializer] Initial session found via getSession."
+            '[AuthInitializer] Initial session found via getSession.'
           );
           handleSessionUpdate(initialSession);
         } else {
           console.log(
-            "[AuthInitializer] No initial session found via getSession."
+            '[AuthInitializer] No initial session found via getSession.'
           );
           handleSessionUpdate(null);
         }
       } catch (e) {
         console.error(
-          "[AuthInitializer] Error during explicit getSession check:",
+          '[AuthInitializer] Error during explicit getSession check:',
           e
         );
         handleSessionUpdate(null);
@@ -150,7 +150,7 @@ const AuthInitializer: React.FC = () => {
 
     return () => {
       console.log(
-        "[AuthInitializer] Unsubscribing Supabase auth state listener."
+        '[AuthInitializer] Unsubscribing Supabase auth state listener.'
       );
       subscription.unsubscribe();
     };
@@ -165,16 +165,16 @@ const AuthInitializer: React.FC = () => {
         } = await supabase.auth.refreshSession();
         if (error) {
           console.warn(
-            "[AuthInitializer] Error refreshing Supabase token:",
+            '[AuthInitializer] Error refreshing Supabase token:',
             error.message
           );
           if (
-            error.message.includes("Invalid refresh token") ||
+            error.message.includes('Invalid refresh token') ||
             error.status === 401 ||
             error.status === 403
           ) {
             console.warn(
-              "[AuthInitializer] Invalid refresh token detected. Clearing session."
+              '[AuthInitializer] Invalid refresh token detected. Clearing session.'
             );
             handleSessionUpdate(null);
           }
@@ -186,27 +186,27 @@ const AuthInitializer: React.FC = () => {
           } = await supabase.auth.getSession();
           if (!currentSession) {
             console.log(
-              "[AuthInitializer] No current session after token refresh attempt led to no new session. Clearing session."
+              '[AuthInitializer] No current session after token refresh attempt led to no new session. Clearing session.'
             );
             handleSessionUpdate(null);
           }
         }
       } catch (error: unknown) {
         console.error(
-          "[AuthInitializer] Unexpected error during Supabase token refresh:",
+          '[AuthInitializer] Unexpected error during Supabase token refresh:',
           error
         );
         if (
           error &&
-          typeof error === "object" &&
-          (("message" in error &&
-            typeof error.message === "string" &&
-            error.message.includes("Invalid refresh token")) ||
-            ("status" in error &&
+          typeof error === 'object' &&
+          (('message' in error &&
+            typeof error.message === 'string' &&
+            error.message.includes('Invalid refresh token')) ||
+            ('status' in error &&
               (error.status === 401 || error.status === 403)))
         ) {
           console.warn(
-            "[AuthInitializer] Unexpected error indicates invalid token. Clearing session."
+            '[AuthInitializer] Unexpected error indicates invalid token. Clearing session.'
           );
           handleSessionUpdate(null);
         }

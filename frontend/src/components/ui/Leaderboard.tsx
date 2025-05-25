@@ -21,7 +21,7 @@ const TrophyIcon = ({ position }: { position: number; color: string }) => {
     return null;
   }
   return (
-    <FontAwesome name="trophy" size={20} color={positionColors[position]} />
+    <FontAwesome name='trophy' size={20} color={positionColors[position]} />
   );
 };
 
@@ -38,7 +38,7 @@ const Leaderboard = ({ entries }: LeaderboardProps) => {
           style={[styles.header, { backgroundColor: theme.colors.primary }]}
         >
           <DataTable.Title style={styles.titleCell}>
-            <CustomText variant="titleSmall" bold color="white">
+            <CustomText variant='titleSmall' bold color='white'>
               Top 20 Leaders This Week
             </CustomText>
           </DataTable.Title>

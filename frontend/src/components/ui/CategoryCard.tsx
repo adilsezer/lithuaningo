@@ -1,10 +1,10 @@
-import React from "react";
-import { StyleSheet, View } from "react-native";
-import { Surface, Button, useTheme } from "react-native-paper";
-import { router } from "expo-router";
-import CustomText from "./CustomText";
-import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useIsPremium } from "@stores/useUserStore";
+import React from 'react';
+import { StyleSheet, View } from 'react-native';
+import { Surface, Button, useTheme } from 'react-native-paper';
+import { router } from 'expo-router';
+import CustomText from './CustomText';
+import { useAlertDialog } from '@hooks/useAlertDialog';
+import { useIsPremium } from '@stores/useUserStore';
 
 export interface FlashcardCategory {
   id: string;
@@ -35,13 +35,13 @@ const CategoryCard: React.FC<CategoryCardProps> = React.memo(
     const handleMasterPress = React.useCallback(() => {
       if (!isPremium) {
         showConfirm({
-          title: "Premium Feature",
+          title: 'Premium Feature',
           message:
-            "Master challenges are available for premium users only. Would you like to upgrade to premium?",
-          confirmText: "Upgrade",
-          cancelText: "Not Now",
+            'Master challenges are available for premium users only. Would you like to upgrade to premium?',
+          confirmText: 'Upgrade',
+          cancelText: 'Not Now',
           onConfirm: () => {
-            router.push("/(app)/premium");
+            router.push('/(app)/premium');
           },
         });
       } else {
@@ -67,30 +67,30 @@ const CategoryCard: React.FC<CategoryCardProps> = React.memo(
             ]}
           />
           <View style={styles.content}>
-            <CustomText variant="titleMedium" style={styles.title}>
+            <CustomText variant='titleMedium' style={styles.title}>
               {category.name}
             </CustomText>
             {category.description && (
-              <CustomText variant="bodyMedium" style={styles.description}>
+              <CustomText variant='bodyMedium' style={styles.description}>
                 {category.description}
               </CustomText>
             )}
             <View style={styles.buttonsContainer}>
               <Button
-                mode="contained"
+                mode='contained'
                 onPress={handlePracticePress}
                 style={[
                   styles.button,
                   { backgroundColor: theme.colors.primary },
                 ]}
                 labelStyle={styles.buttonLabel}
-                icon="cards-outline"
+                icon='cards-outline'
               >
                 Practice
               </Button>
               {onPressMaster && (
                 <Button
-                  mode="contained"
+                  mode='contained'
                   onPress={handleMasterPress}
                   style={[
                     styles.button,
@@ -104,7 +104,7 @@ const CategoryCard: React.FC<CategoryCardProps> = React.memo(
                       color: theme.colors.onSecondary,
                     },
                   ]}
-                  icon={isPremium ? "clipboard-text-search-outline" : "lock"}
+                  icon={isPremium ? 'clipboard-text-search-outline' : 'lock'}
                 >
                   Master
                 </Button>
@@ -117,7 +117,7 @@ const CategoryCard: React.FC<CategoryCardProps> = React.memo(
   }
 );
 
-CategoryCard.displayName = "CategoryCard";
+CategoryCard.displayName = 'CategoryCard';
 
 const styles = StyleSheet.create({
   surface: {
@@ -126,13 +126,13 @@ const styles = StyleSheet.create({
     marginHorizontal: 4,
   },
   container: {
-    flexDirection: "row",
-    alignItems: "center",
+    flexDirection: 'row',
+    alignItems: 'center',
     padding: 16,
   },
   colorIndicator: {
     width: 10,
-    height: "100%",
+    height: '100%',
     borderRadius: 5,
     marginRight: 16,
   },
@@ -140,18 +140,18 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   title: {
-    textAlign: "left",
-    fontWeight: "bold",
+    textAlign: 'left',
+    fontWeight: 'bold',
     marginBottom: 4,
   },
   description: {
-    textAlign: "left",
+    textAlign: 'left',
     opacity: 0.7,
     marginBottom: 12,
   },
   buttonsContainer: {
-    flexDirection: "row",
-    justifyContent: "center",
+    flexDirection: 'row',
+    justifyContent: 'center',
     gap: 8,
     marginTop: 8,
   },

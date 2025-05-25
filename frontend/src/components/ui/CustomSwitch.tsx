@@ -49,7 +49,7 @@ export default function CustomSwitch({
   return (
     <View style={[defaultContainerStyle, style, containerStyle]}>
       <View style={[defaultSwitchContainerStyle, switchContainerStyle]}>
-        <CustomText variant="bodyLarge" style={[defaultLabelStyle, labelStyle]}>
+        <CustomText variant='bodyLarge' style={[defaultLabelStyle, labelStyle]}>
           {label}
         </CustomText>
         <Switch
@@ -60,7 +60,7 @@ export default function CustomSwitch({
       </View>
       {error && (
         <Text
-          variant="bodySmall"
+          variant='bodySmall'
           style={{ color: theme.colors.error, marginTop: 4 }}
         >
           {error}

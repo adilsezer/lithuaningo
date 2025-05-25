@@ -77,7 +77,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
         size={size}
         color={indicatorColor}
         style={style}
-        accessibilityLabel="Loading content"
+        accessibilityLabel='Loading content'
       />
     );
   }
@@ -95,10 +95,10 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
       >
         <Surface style={styles.surface} elevation={4}>
           <ActivityIndicator
-            size="large"
+            size='large'
             color={indicatorColor}
             animating={showLoading}
-            accessibilityLabel="Loading content"
+            accessibilityLabel='Loading content'
           />
         </Surface>
       </Modal>

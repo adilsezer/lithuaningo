@@ -1,8 +1,8 @@
-import React from "react";
-import { View, StyleSheet, Platform } from "react-native";
-import { Text, Card, Avatar, useTheme } from "react-native-paper";
-import { Message } from "@hooks/useChat";
-import MarkdownDisplay from "react-native-markdown-display";
+import React from 'react';
+import { View, StyleSheet, Platform } from 'react-native';
+import { Text, Card, Avatar, useTheme } from 'react-native-paper';
+import { Message } from '@hooks/useChat';
+import MarkdownDisplay from 'react-native-markdown-display';
 
 interface ChatMessageProps {
   message: Message;
@@ -13,7 +13,7 @@ interface ChatMessageProps {
 const ChatMessage: React.FC<ChatMessageProps> = React.memo(
   ({ message, userData, formatTimestamp }) => {
     const theme = useTheme();
-    const isUser = message.sender === "user";
+    const isUser = message.sender === 'user';
 
     // Memoize the formatted timestamp to avoid recalculation
     const formattedTime = React.useMemo(
@@ -32,23 +32,23 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(
         heading1: {
           color: theme.colors.onSurface,
           fontSize: 24, // Example size, adjust as needed
-          fontWeight: "bold" as const,
+          fontWeight: 'bold' as const,
           marginTop: 10,
           marginBottom: 5,
         },
         heading2: {
           color: theme.colors.onSurface,
           fontSize: 20, // Example size
-          fontWeight: "bold" as const,
+          fontWeight: 'bold' as const,
           marginTop: 8,
           marginBottom: 4,
         },
         // Add more styles for other markdown elements like strong, em, listItem, etc.
         strong: {
-          fontWeight: "bold" as const,
+          fontWeight: 'bold' as const,
         },
         em: {
-          fontStyle: "italic" as const,
+          fontStyle: 'italic' as const,
         },
         listItemBullet: {
           color: theme.colors.onSurfaceVariant || theme.colors.onSurface, // Use theme color for bullets
@@ -56,7 +56,7 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(
         },
         listItemNumber: {
           color: theme.colors.onSurfaceVariant || theme.colors.onSurface, // Use theme color for numbers
-          fontWeight: "bold" as const,
+          fontWeight: 'bold' as const,
         },
         // You might need to style `list` and `listItem` for padding/margin if default isn't ideal
         code_inline: {
@@ -66,7 +66,7 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(
           paddingHorizontal: 4,
           paddingVertical: 2,
           borderRadius: 4,
-          fontFamily: Platform.OS === "ios" ? "Menlo" : "monospace", // Monospace font
+          fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', // Monospace font
         },
       }),
       [theme.colors]
@@ -77,14 +77,14 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(
         style={[
           styles.container,
           {
-            justifyContent: isUser ? "flex-end" : "flex-start",
+            justifyContent: isUser ? 'flex-end' : 'flex-start',
           },
         ]}
       >
         {!isUser && (
           <Avatar.Image
             size={35}
-            source={require("../../../assets/images/icon-transparent.png")}
+            source={require('../../../assets/images/icon-transparent.png')}
             style={styles.aiAvatar}
           />
         )}
@@ -102,7 +102,7 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(
                   : theme.colors.primary,
               },
             ]}
-            mode="outlined"
+            mode='outlined'
           >
             <Card.Content style={[styles.cardContent, { paddingVertical: 10 }]}>
               {/* Use MarkdownDisplay to render message.text */}
@@ -113,12 +113,12 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(
           </Card>
 
           <Text
-            variant="labelSmall"
+            variant='labelSmall'
             style={[
               styles.timestamp,
               {
                 color: theme.colors.outline,
-                alignSelf: isUser ? "flex-end" : "flex-start",
+                alignSelf: isUser ? 'flex-end' : 'flex-start',
               },
             ]}
           >
@@ -144,12 +144,12 @@ const ChatMessage: React.FC<ChatMessageProps> = React.memo(
   }
 );
 
-ChatMessage.displayName = "ChatMessage";
+ChatMessage.displayName = 'ChatMessage';
 
 const styles = StyleSheet.create({
   container: {
-    flexDirection: "row",
-    alignItems: "flex-start",
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     marginVertical: 8,
   },
   aiAvatar: {
@@ -161,7 +161,7 @@ const styles = StyleSheet.create({
     marginTop: 6,
   },
   messageWrapper: {
-    maxWidth: "80%",
+    maxWidth: '80%',
   },
   messageCard: {
     borderRadius: 16,

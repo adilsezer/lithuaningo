@@ -1,12 +1,12 @@
-import React from "react";
-import { View, StyleSheet } from "react-native";
-import { ActivityIndicator, useTheme } from "react-native-paper";
-import { router, useLocalSearchParams } from "expo-router";
-import CustomText from "@components/ui/CustomText";
-import ChallengeComponent from "@components/ui/ChallengeComponent";
-import ErrorMessage from "@components/ui/ErrorMessage";
-import { useUserData } from "@stores/useUserStore";
-import { useFlashcardChallenge } from "@hooks/useFlashcardChallenge";
+import React from 'react';
+import { View, StyleSheet } from 'react-native';
+import { ActivityIndicator, useTheme } from 'react-native-paper';
+import { router, useLocalSearchParams } from 'expo-router';
+import CustomText from '@components/ui/CustomText';
+import ChallengeComponent from '@components/ui/ChallengeComponent';
+import ErrorMessage from '@components/ui/ErrorMessage';
+import { useUserData } from '@stores/useUserStore';
+import { useFlashcardChallenge } from '@hooks/useFlashcardChallenge';
 
 export default function FlashcardChallengeScreen() {
   const theme = useTheme();
@@ -36,21 +36,21 @@ export default function FlashcardChallengeScreen() {
 
   const screenTitle = categoryName
     ? `${categoryName} Challenge`
-    : "Flashcard Challenge";
+    : 'Flashcard Challenge';
 
   // Handle redirect when no questions are available
   React.useEffect(() => {
     if (!isLoading && !error && (!questions || questions.length === 0)) {
-      router.replace("/(app)/(tabs)/flashcard");
+      router.replace('/(app)/(tabs)/flashcard');
     }
   }, [isLoading, error, questions]);
 
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size='large' color={theme.colors.primary} />
         <CustomText style={styles.loadingText}>
-          Preparing your {categoryName || "Flashcard"} Challenge...
+          Preparing your {categoryName || 'Flashcard'} Challenge...
         </CustomText>
       </View>
     );
@@ -61,8 +61,8 @@ export default function FlashcardChallengeScreen() {
       <ErrorMessage
         message={error}
         onRetry={handleRetry}
-        onSecondaryAction={() => router.replace("/(app)/(tabs)/flashcard")}
-        secondaryButtonText="Back to Categories"
+        onSecondaryAction={() => router.replace('/(app)/(tabs)/flashcard')}
+        secondaryButtonText='Back to Categories'
         fullScreen
       />
     );
@@ -73,7 +73,7 @@ export default function FlashcardChallengeScreen() {
     // The useEffect above will handle the redirect
     return (
       <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size='large' color={theme.colors.primary} />
         <CustomText style={styles.loadingText}>Redirecting...</CustomText>
       </View>
     );
@@ -94,7 +94,7 @@ export default function FlashcardChallengeScreen() {
         onAnswer={handleAnswer}
         onNextQuestion={handleNextQuestion}
         onRetry={handleRetry}
-        onGoBack={() => router.replace("/(app)/(tabs)/flashcard")}
+        onGoBack={() => router.replace('/(app)/(tabs)/flashcard')}
         // customCompletionComponent can be added if needed
       />
     </View>
@@ -107,12 +107,12 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
+    justifyContent: 'center',
+    alignItems: 'center',
     padding: 20,
   },
   loadingText: {
     marginTop: 16,
-    textAlign: "center",
+    textAlign: 'center',
   },
 });

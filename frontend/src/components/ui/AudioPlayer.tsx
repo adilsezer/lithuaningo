@@ -143,7 +143,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
         />
       </TouchableOpacity>
       <CustomText
-        variant="bodyMedium"
+        variant='bodyMedium'
         style={[styles.listenText, !isLoaded && styles.textDisabled]}
       >
         {isLoaded ? (isPlaying ? 'Pause' : 'Listen') : 'Loading...'}

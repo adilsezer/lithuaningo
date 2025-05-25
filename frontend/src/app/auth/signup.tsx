@@ -55,13 +55,13 @@ const SignUpScreen: React.FC = () => {
         onSubmit={async (data) => {
           await signUp(data.email, data.password, data.displayName);
         }}
-        submitButtonText="Sign Up"
+        submitButtonText='Sign Up'
         isLoading={loading}
         options={{ mode: 'onBlur' }}
         zodSchema={signupFormSchema}
       />
 
-      <CustomDivider content="Or" />
+      <CustomDivider content='Or' />
 
       <SocialAuthButtons
         onGooglePress={() => signInWithSocial('google')}
@@ -69,7 +69,7 @@ const SignUpScreen: React.FC = () => {
       />
 
       <CustomText
-        variant="bodyMedium"
+        variant='bodyMedium'
         onPress={() => {
           router.push('/auth/login');
         }}

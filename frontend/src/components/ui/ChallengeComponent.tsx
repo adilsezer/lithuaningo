@@ -161,22 +161,22 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
       <Surface style={styles.centeredContainer} elevation={0}>
         <View style={styles.loadingContainer}>
           <ActivityIndicator
-            size="large"
+            size='large'
             color={theme.colors.primary}
             animating
           />
           <View style={styles.loadingTextContainer}>
             <CustomText
-              variant="titleMedium"
+              variant='titleMedium'
               style={{ color: theme.colors.primary }}
             >
               🤖 Lithuaningo AI is setting up your challenge...
             </CustomText>
-            <CustomText variant="bodySmall">
+            <CustomText variant='bodySmall'>
               No need to wait—come back to this screen anytime!
             </CustomText>
             <Text
-              variant="bodySmall"
+              variant='bodySmall'
               style={{
                 textAlign: 'center',
                 color: theme.colors.onSurfaceVariant,
@@ -197,7 +197,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
         message={error}
         onRetry={onRetry}
         fullScreen
-        buttonText="Try Again"
+        buttonText='Try Again'
       />
     );
   }
@@ -209,16 +209,16 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
         <View style={styles.emptyStateContainer}>
           <Avatar.Icon
             size={64}
-            icon="help-circle-outline"
+            icon='help-circle-outline'
             color={theme.colors.onSurfaceDisabled}
             style={{ backgroundColor: 'transparent' }}
           />
           <View style={styles.emptyStateTextContainer}>
-            <Text variant="titleMedium" style={{ color: theme.colors.primary }}>
+            <Text variant='titleMedium' style={{ color: theme.colors.primary }}>
               No Questions Available
             </Text>
             <Text
-              variant="bodyMedium"
+              variant='bodyMedium'
               style={{
                 textAlign: 'center',
                 color: theme.colors.onSurfaceVariant,
@@ -229,7 +229,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
           </View>
           {onGenerateNew && (
             <Button
-              mode="contained"
+              mode='contained'
               onPress={onGenerateNew}
               style={{ marginTop: 24 }}
             >
@@ -270,9 +270,9 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             />
 
             <View style={styles.completionHeaderContainer}>
-              <Text variant="headlineMedium">Challenge Completed!</Text>
+              <Text variant='headlineMedium'>Challenge Completed!</Text>
               <Text
-                variant="bodyMedium"
+                variant='bodyMedium'
                 style={{
                   textAlign: 'center',
                   color: theme.colors.onSurfaceVariant,
@@ -291,7 +291,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                 style={styles.progressBar}
               />
 
-              <Text variant="titleLarge" style={{ marginTop: 8 }}>
+              <Text variant='titleLarge' style={{ marginTop: 8 }}>
                 {score}/{questions.length} Points
               </Text>
             </View>
@@ -300,7 +300,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
             <View style={styles.feedbackContainer}>
               <Text
-                variant="bodyMedium"
+                variant='bodyMedium'
                 style={{
                   textAlign: 'center',
                   color: theme.colors.onSurfaceVariant,
@@ -315,9 +315,9 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
           <Card.Actions style={styles.buttonContainer}>
             <Button
-              mode="contained"
+              mode='contained'
               style={styles.button}
-              icon="home"
+              icon='home'
               onPress={onGoBack}
             >
               Return to Home
@@ -337,7 +337,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
       <Surface style={styles.challengeSurface} elevation={0}>
         {/* Progress indicator */}
         <View style={styles.progressContainer}>
-          <Text variant="titleMedium" style={{ color: theme.colors.primary }}>
+          <Text variant='titleMedium' style={{ color: theme.colors.primary }}>
             Question {currentIndex + 1} of {questions.length}
           </Text>
           <ProgressBar
@@ -352,7 +352,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             {/* First question intro only appears on first question */}
             {currentIndex === 0 && (
               <Text
-                variant="bodySmall"
+                variant='bodySmall'
                 style={{
                   textAlign: 'center',
                   color: theme.colors.onSurfaceVariant,
@@ -373,7 +373,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
             >
               <Card.Content style={styles.questionContent}>
                 <Text
-                  variant="bodySmall"
+                  variant='bodySmall'
                   style={{
                     color: theme.colors.onSurfaceVariant,
                     marginBottom: 8,
@@ -381,7 +381,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                 >
                   Question:
                 </Text>
-                <Text variant="headlineSmall" style={styles.questionText}>
+                <Text variant='headlineSmall' style={styles.questionText}>
                   {currentQuestion.question}
                 </Text>
 
@@ -392,7 +392,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                   shouldShowExampleSentence(currentQuestion) && (
                     <>
                       <Text
-                        variant="bodySmall"
+                        variant='bodySmall'
                         style={{
                           color: theme.colors.onSurfaceVariant,
                           marginTop: 12,
@@ -401,7 +401,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       >
                         Example:
                       </Text>
-                      <Text variant="bodyMedium" style={styles.exampleSentence}>
+                      <Text variant='bodyMedium' style={styles.exampleSentence}>
                         "{currentQuestion.exampleSentence}"
                       </Text>
                     </>
@@ -411,7 +411,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
             <View style={styles.optionLabelContainer}>
               <Text
-                variant="bodyMedium"
+                variant='bodyMedium'
                 style={{
                   color: theme.colors.onSurfaceVariant,
                 }}
@@ -470,7 +470,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
                   <View style={styles.feedbackTextContainer}>
                     <Text
-                      variant="titleMedium"
+                      variant='titleMedium'
                       style={{
                         color: isCorrectAnswer
                           ? theme.colors.onPrimary
@@ -482,7 +482,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                     </Text>
 
                     <Text
-                      variant="bodyMedium"
+                      variant='bodyMedium'
                       style={{
                         color: isCorrectAnswer
                           ? theme.colors.onPrimary
@@ -499,7 +499,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
                 <Card.Actions style={styles.feedbackActions}>
                   <Button
-                    mode="contained"
+                    mode='contained'
                     onPress={onNextQuestion}
                     icon={
                       currentIndex < questions.length - 1

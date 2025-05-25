@@ -61,10 +61,10 @@ const PasswordResetVerificationScreen: React.FC = () => {
     return (
       <ScrollView>
         <View style={styles.container}>
-          <CustomText variant="titleMedium" bold>
+          <CustomText variant='titleMedium' bold>
             Error
           </CustomText>
-          <CustomText variant="bodyLarge" style={styles.description}>
+          <CustomText variant='bodyLarge' style={styles.description}>
             Invalid reset password request. Please try again.
           </CustomText>
         </View>
@@ -93,7 +93,7 @@ const PasswordResetVerificationScreen: React.FC = () => {
   return (
     <ScrollView>
       <View style={styles.container}>
-        <CustomText variant="bodyLarge" style={styles.description}>
+        <CustomText variant='bodyLarge' style={styles.description}>
           Enter the verification code sent to {email} and set your new password.
         </CustomText>
 
@@ -102,7 +102,7 @@ const PasswordResetVerificationScreen: React.FC = () => {
           onSubmit={async (data) => {
             await verifyPasswordReset(email, data.token, data.newPassword);
           }}
-          submitButtonText="Reset Password"
+          submitButtonText='Reset Password'
           isLoading={loading}
           options={{ mode: 'onBlur' }}
           zodSchema={resetPasswordVerifyFormSchema}
@@ -115,11 +115,11 @@ const PasswordResetVerificationScreen: React.FC = () => {
               resendDisabled ? `Resend code in ${countdown}s` : 'Resend code'
             }
             disabled={resendDisabled}
-            mode="text"
+            mode='text'
           />
         </View>
 
-        <CustomText variant="bodyMedium" style={styles.note}>
+        <CustomText variant='bodyMedium' style={styles.note}>
           Please check your spam folder if you don't see the code in your inbox.
         </CustomText>
       </View>

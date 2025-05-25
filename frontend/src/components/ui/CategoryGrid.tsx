@@ -1,8 +1,8 @@
-import React from "react";
-import { View, StyleSheet, FlatList } from "react-native";
-import { useTheme } from "react-native-paper";
-import CategoryCard, { FlashcardCategory } from "./CategoryCard";
-import CustomText from "./CustomText";
+import React from 'react';
+import { View, StyleSheet, FlatList } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import CategoryCard, { FlashcardCategory } from './CategoryCard';
+import CustomText from './CustomText';
 
 interface CategoryGridProps {
   categories: FlashcardCategory[];
@@ -37,7 +37,7 @@ const CategoryGrid: React.FC<CategoryGridProps> = React.memo(
       <View style={styles.container}>
         {title && (
           <CustomText
-            variant="titleMedium"
+            variant='titleMedium'
             style={[styles.title, { color: theme.colors.onSurface }]}
           >
             {title}
@@ -61,17 +61,17 @@ const CategoryGrid: React.FC<CategoryGridProps> = React.memo(
   }
 );
 
-CategoryGrid.displayName = "CategoryGrid";
+CategoryGrid.displayName = 'CategoryGrid';
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   title: {
-    textAlign: "left",
+    textAlign: 'left',
     marginBottom: 12,
     marginLeft: 6,
-    fontWeight: "bold",
+    fontWeight: 'bold',
   },
   listContent: {
     paddingBottom: 20,

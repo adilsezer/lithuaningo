@@ -1,9 +1,9 @@
-import React from "react";
-import { ScrollView, View, Image, StyleSheet } from "react-native";
-import CustomButton from "@components/ui/CustomButton";
-import CustomSwitch from "@components/ui/CustomSwitch";
-import CustomText from "@components/ui/CustomText";
-import { useWelcome } from "@hooks/useWelcome";
+import React from 'react';
+import { ScrollView, View, Image, StyleSheet } from 'react-native';
+import CustomButton from '@components/ui/CustomButton';
+import CustomSwitch from '@components/ui/CustomSwitch';
+import CustomText from '@components/ui/CustomText';
+import { useWelcome } from '@hooks/useWelcome';
 
 const WelcomeScreen = () => {
   const { isDarkMode, toggleTheme, navigateToAuth } = useWelcome();
@@ -14,7 +14,7 @@ const WelcomeScreen = () => {
         <CustomSwitch
           onValueChange={toggleTheme}
           value={isDarkMode}
-          label="Dark Mode"
+          label='Dark Mode'
         />
         <WelcomeImage />
         <WelcomeText />
@@ -27,20 +27,20 @@ const WelcomeScreen = () => {
 const WelcomeImage = () => (
   <View style={styles.imageContainer}>
     <Image
-      source={require("../../../assets/images/welcome-image.png")}
+      source={require('../../../assets/images/welcome-image.png')}
       style={styles.image}
-      accessibilityLabel="Welcome to Lithuaningo"
+      accessibilityLabel='Welcome to Lithuaningo'
     />
   </View>
 );
 
 const WelcomeText = () => (
   <View style={styles.textContainer}>
-    <CustomText variant="bodyLarge">
+    <CustomText variant='bodyLarge'>
       Learn Lithuanian with daily sentences, flashcards, and reinforcing
       challenges.
     </CustomText>
-    <CustomText variant="bodyLarge">
+    <CustomText variant='bodyLarge'>
       Join now and compete on our leaderboard!
     </CustomText>
   </View>
@@ -49,11 +49,11 @@ const WelcomeText = () => (
 const AuthButtons = ({
   onNavigate,
 }: {
-  onNavigate: (route: "login" | "signup") => void;
+  onNavigate: (route: 'login' | 'signup') => void;
 }) => (
   <View style={styles.buttonContainer}>
-    <CustomButton onPress={() => onNavigate("login")} title="Log In" />
-    <CustomButton onPress={() => onNavigate("signup")} title="Create Account" />
+    <CustomButton onPress={() => onNavigate('login')} title='Log In' />
+    <CustomButton onPress={() => onNavigate('signup')} title='Create Account' />
   </View>
 );
 
@@ -62,27 +62,27 @@ export default WelcomeScreen;
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   container: {
     flex: 1,
-    justifyContent: "space-between",
+    justifyContent: 'space-between',
   },
   buttonContainer: {
-    justifyContent: "center",
+    justifyContent: 'center',
   },
   image: {
-    width: "100%",
-    height: "100%",
-    resizeMode: "cover",
+    width: '100%',
+    height: '100%',
+    resizeMode: 'cover',
     borderRadius: 10,
   },
   imageContainer: {
-    width: "100%",
+    width: '100%',
     aspectRatio: 1,
   },
   textContainer: {
-    width: "100%",
-    alignItems: "center",
+    width: '100%',
+    alignItems: 'center',
   },
 });

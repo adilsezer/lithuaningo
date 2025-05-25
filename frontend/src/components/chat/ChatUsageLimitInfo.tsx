@@ -37,7 +37,7 @@ const ChatUsageLimitInfo: React.FC<ChatUsageLimitInfoProps> = ({
           {MAX_FREE_MESSAGES_PER_DAY} free messages left today
         </Text>
         <Button
-          mode="text"
+          mode='text'
           compact
           onPress={onUpgradePress}
           style={styles.button}

@@ -45,14 +45,14 @@ const LoginScreen: React.FC = () => {
         onSubmit={async (data) => {
           await signIn(data.email, data.password);
         }}
-        submitButtonText="Sign In"
+        submitButtonText='Sign In'
         isLoading={loading}
         options={{ mode: 'onBlur' }}
         zodSchema={loginFormSchema}
       />
 
       <CustomText
-        variant="bodyMedium"
+        variant='bodyMedium'
         onPress={() => {
           router.push('/auth/forgot-password');
         }}
@@ -61,7 +61,7 @@ const LoginScreen: React.FC = () => {
         Forgot Password?
       </CustomText>
 
-      <CustomDivider content="Or" />
+      <CustomDivider content='Or' />
 
       <SocialAuthButtons
         onGooglePress={() => handleSocialAuth('google')}
@@ -69,7 +69,7 @@ const LoginScreen: React.FC = () => {
       />
 
       <CustomText
-        variant="bodyMedium"
+        variant='bodyMedium'
         onPress={() => {
           router.push('/auth/signup');
         }}

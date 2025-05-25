@@ -47,7 +47,7 @@ const ProfileActions = ({
           title={title}
           onPress={() => onNavigate(path)}
           style={[styles.buttonContainer, styles.adminButton]}
-          mode="outlined"
+          mode='outlined'
         />
       ))}
   </View>
@@ -61,10 +61,10 @@ const ProfileHeader = ({
   email: string;
 }) => (
   <>
-    <CustomText variant="titleLarge" bold>
+    <CustomText variant='titleLarge' bold>
       {fullName}
     </CustomText>
-    <CustomText variant="bodyLarge">{email}</CustomText>
+    <CustomText variant='bodyLarge'>{email}</CustomText>
   </>
 );
 
@@ -95,7 +95,7 @@ export default function ProfileScreen() {
       <CustomSwitch
         onValueChange={toggleTheme}
         value={isDarkMode}
-        label="Dark Mode"
+        label='Dark Mode'
       />
 
       <ProfileHeader
@@ -106,7 +106,7 @@ export default function ProfileScreen() {
       <ProfileActions onNavigate={handleNavigation} isAdmin={isAdmin} />
 
       <CustomButton
-        title="Logout"
+        title='Logout'
         onPress={signOut}
         style={styles.buttonContainer}
       />

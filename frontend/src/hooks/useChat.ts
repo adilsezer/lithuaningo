@@ -1,28 +1,28 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { FlatList, Keyboard } from "react-native";
-import { useTheme } from "react-native-paper";
-import { router } from "expo-router";
-import { apiClient } from "@services/api/apiClient";
+import { useState, useRef, useEffect, useCallback } from 'react';
+import { FlatList, Keyboard } from 'react-native';
+import { useTheme } from 'react-native-paper';
+import { router } from 'expo-router';
+import { apiClient } from '@services/api/apiClient';
 import {
   useIsAuthenticated,
   useIsPremium,
   useUserData,
-} from "@stores/useUserStore";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import useAlertDialog from "@hooks/useAlertDialog";
-import { useAlertActions } from "@stores/useAlertStore";
+} from '@stores/useUserStore';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import useAlertDialog from '@hooks/useAlertDialog';
+import { useAlertActions } from '@stores/useAlertStore';
 
 // Message interface
 export interface Message {
   id: string;
   text: string;
-  sender: "user" | "ai";
+  sender: 'user' | 'ai';
   timestamp: Date;
-  status?: "sending" | "sent" | "delivered" | "error";
+  status?: 'sending' | 'sent' | 'delivered' | 'error';
 }
 
 // Session ID storage key
-const SESSION_ID_KEY = "lithuaningo:chat:session_id";
+const SESSION_ID_KEY = 'lithuaningo:chat:session_id';
 
 // Maximum messages for free users per day
 export const MAX_FREE_MESSAGES_PER_DAY = 5;
@@ -30,24 +30,24 @@ export const MAX_FREE_MESSAGES_PER_DAY = 5;
 // Example suggestions for new users
 export const CHAT_EXAMPLES = [
   "How say 'hello' in Lithuanian?",
-  "Explain basic Lithuanian grammar",
-  "Show Lithuanian alphabet basics",
+  'Explain basic Lithuanian grammar',
+  'Show Lithuanian alphabet basics',
 ];
 
 const getInitialMessages = (): Message[] => [
   {
-    id: "1",
-    text: "Hello! How can I help you learn Lithuanian?",
-    sender: "ai",
+    id: '1',
+    text: 'Hello! How can I help you learn Lithuanian?',
+    sender: 'ai',
     timestamp: new Date(), // Note: this will be a new timestamp each time
-    status: "delivered",
+    status: 'delivered',
   },
 ];
 
 export const useChat = () => {
   // Core chat state
   const [messages, setMessages] = useState<Message[]>(getInitialMessages());
-  const [inputText, setInputText] = useState<string>("");
+  const [inputText, setInputText] = useState<string>('');
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [showExamples, setShowExamples] = useState<boolean>(true);
   const [dailyMessageCount, setDailyMessageCount] = useState<number>(0);
@@ -77,7 +77,7 @@ export const useChat = () => {
       const stats = await apiClient.getUserChatStats(userData.id);
       setDailyMessageCount(stats.todayMessageCount);
     } catch (error) {
-      console.error("Error loading chat stats:", error);
+      console.error('Error loading chat stats:', error);
     }
   }, [isAuthenticated, userData?.id]);
 
@@ -116,7 +116,7 @@ export const useChat = () => {
         setSessionId(newSessionId);
       }
     } catch (error) {
-      console.error("Error initializing chat session ID:", error);
+      console.error('Error initializing chat session ID:', error);
       // Fallback to a temporary session ID
       setSessionId(`temp_session_${Date.now()}`);
     }
@@ -125,8 +125,8 @@ export const useChat = () => {
   // Format timestamp for UI
   const formatTimestamp = (timestamp: Date): string => {
     return timestamp.toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -144,7 +144,7 @@ export const useChat = () => {
 
       setDailyMessageCount(response.todayMessageCount);
     } catch (error) {
-      console.error("Error tracking message usage:", error);
+      console.error('Error tracking message usage:', error);
     }
   };
 
@@ -158,9 +158,9 @@ export const useChat = () => {
     const newMessage: Message = {
       id: Date.now().toString(),
       text: message,
-      sender: "user",
+      sender: 'user',
       timestamp: new Date(),
-      status: "sending",
+      status: 'sending',
     };
     setMessages((prevMessages) => [...prevMessages, newMessage]);
 
@@ -180,7 +180,7 @@ export const useChat = () => {
       // Update message status to "sent"
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: "sent" } : msg
+          msg.id === newMessage.id ? { ...msg, status: 'sent' } : msg
         )
       );
 
@@ -195,7 +195,7 @@ export const useChat = () => {
       // Update message status to "delivered"
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: "delivered" } : msg
+          msg.id === newMessage.id ? { ...msg, status: 'delivered' } : msg
         )
       );
 
@@ -203,18 +203,18 @@ export const useChat = () => {
       const aiResponse: Message = {
         id: `ai-${Date.now()}`,
         text: aiResponseText,
-        sender: "ai",
+        sender: 'ai',
         timestamp: new Date(),
       };
 
       setMessages((prevMessages) => [...prevMessages, aiResponse]);
     } catch (error) {
-      console.error("Error sending message:", error);
+      console.error('Error sending message:', error);
 
       // Update message status to "error"
       setMessages((prevMessages) =>
         prevMessages.map((msg) =>
-          msg.id === newMessage.id ? { ...msg, status: "error" } : msg
+          msg.id === newMessage.id ? { ...msg, status: 'error' } : msg
         )
       );
 
@@ -222,7 +222,7 @@ export const useChat = () => {
       const errorMessage: Message = {
         id: `error-${Date.now()}`,
         text: "Sorry, I couldn't process your message. Please try again later.",
-        sender: "ai",
+        sender: 'ai',
         timestamp: new Date(),
       };
 
@@ -243,7 +243,7 @@ export const useChat = () => {
 
   // Clear input field
   const clearInput = (): void => {
-    setInputText("");
+    setInputText('');
   };
 
   // Check if user has reached daily limit
@@ -266,7 +266,7 @@ export const useChat = () => {
       // If not exceeded locally, double-check with the API
       return await apiClient.hasReachedChatLimit(userData.id, isPremium);
     } catch (error) {
-      console.error("Error checking message limit:", error);
+      console.error('Error checking message limit:', error);
       // Fallback to local count if API call fails
       return dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY;
     }
@@ -274,7 +274,7 @@ export const useChat = () => {
 
   // Clear chat session (for logout or reset)
   const clearChatSession = async (): Promise<void> => {
-    console.log("Attempting to clear chat session...");
+    console.log('Attempting to clear chat session...');
     try {
       // Generate a new session ID
       const newSessionId = `session_${Date.now()}`;
@@ -283,11 +283,11 @@ export const useChat = () => {
 
       // Clear messages and reset state
       setMessages(getInitialMessages());
-      setInputText("");
+      setInputText('');
       setShowExamples(true);
-      console.log("Chat session supposedly cleared. Messages set to initial.");
+      console.log('Chat session supposedly cleared. Messages set to initial.');
     } catch (error) {
-      console.error("Error clearing chat session:", error);
+      console.error('Error clearing chat session:', error);
     }
   };
 
@@ -295,7 +295,7 @@ export const useChat = () => {
 
   // Handle message sending
   const handleSend = async () => {
-    if (inputText.trim() === "") {
+    if (inputText.trim() === '') {
       return;
     }
 
@@ -314,14 +314,14 @@ export const useChat = () => {
   // Show limit reached dialog for free users
   const showLimitReachedDialog = () => {
     alertDialog.showAlert({
-      title: "Daily Limit Reached",
+      title: 'Daily Limit Reached',
       message: `Free users can only send ${MAX_FREE_MESSAGES_PER_DAY} messages per day. Upgrade to premium for unlimited messages!`,
       buttons: [
-        { text: "Later", onPress: () => {} },
+        { text: 'Later', onPress: () => {} },
         {
-          text: "Upgrade",
+          text: 'Upgrade',
           onPress: () => {
-            router.push("/premium");
+            router.push('/premium');
           },
         },
       ],
@@ -337,10 +337,10 @@ export const useChat = () => {
   const handleClearChat = () => {
     Keyboard.dismiss();
     alertDialog.showConfirm({
-      title: "Clear Chat",
-      message: "Are you sure you want to clear all chat messages?",
-      confirmText: "Clear",
-      cancelText: "Cancel",
+      title: 'Clear Chat',
+      message: 'Are you sure you want to clear all chat messages?',
+      confirmText: 'Clear',
+      cancelText: 'Cancel',
       onConfirm: async () => {
         await clearChatSession();
         hideDialog();
@@ -353,7 +353,7 @@ export const useChat = () => {
 
   // Navigate to premium features
   const navigateToPremium = () => {
-    router.push("/premium");
+    router.push('/premium');
   };
 
   return {

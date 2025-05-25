@@ -1,11 +1,11 @@
-import React, { useEffect } from "react";
-import { StyleSheet, ScrollView } from "react-native";
-import { List, Switch, Divider, Card } from "react-native-paper";
-import { createTheme } from "@src/styles/theme";
-import useThemeStore, { useIsDarkMode } from "@stores/useThemeStore";
-import { useRevenueCat } from "@hooks/useRevenueCat";
-import useNotificationPreferencesStore from "@stores/useNotificationPreferencesStore";
-import { useUserData } from "@stores/useUserStore";
+import React, { useEffect } from 'react';
+import { StyleSheet, ScrollView } from 'react-native';
+import { List, Switch, Divider, Card } from 'react-native-paper';
+import { createTheme } from '@src/styles/theme';
+import useThemeStore, { useIsDarkMode } from '@stores/useThemeStore';
+import { useRevenueCat } from '@hooks/useRevenueCat';
+import useNotificationPreferencesStore from '@stores/useNotificationPreferencesStore';
+import { useUserData } from '@stores/useUserStore';
 
 export default function SettingsScreen() {
   const isDarkMode = useIsDarkMode();
@@ -32,9 +32,9 @@ export default function SettingsScreen() {
         <List.Section>
           <List.Subheader>Appearance</List.Subheader>
           <List.Item
-            title="Dark Mode"
-            description="Toggle between light and dark theme"
-            left={(props) => <List.Icon {...props} icon="theme-light-dark" />}
+            title='Dark Mode'
+            description='Toggle between light and dark theme'
+            left={(props) => <List.Icon {...props} icon='theme-light-dark' />}
             right={() => (
               <Switch
                 value={isDarkMode}
@@ -48,9 +48,9 @@ export default function SettingsScreen() {
 
           <List.Subheader>Notifications</List.Subheader>
           <List.Item
-            title="Push Notifications"
-            description="Receive push notifications"
-            left={(props) => <List.Icon {...props} icon="bell" />}
+            title='Push Notifications'
+            description='Receive push notifications'
+            left={(props) => <List.Icon {...props} icon='bell' />}
             right={() => (
               <Switch
                 value={arePushNotificationsEnabled}
@@ -67,13 +67,13 @@ export default function SettingsScreen() {
 
           <List.Subheader>Subscription</List.Subheader>
           <List.Item
-            title="Manage Subscription"
+            title='Manage Subscription'
             description={
               isPremium
-                ? "View, change, or cancel your subscription"
-                : "Subscribe to premium to unlock this feature"
+                ? 'View, change, or cancel your subscription'
+                : 'Subscribe to premium to unlock this feature'
             }
-            left={(props) => <List.Icon {...props} icon="star" />}
+            left={(props) => <List.Icon {...props} icon='star' />}
             onPress={() => showManageSubscriptions()}
             disabled={!isPremium}
           />

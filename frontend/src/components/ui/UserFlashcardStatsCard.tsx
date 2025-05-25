@@ -23,13 +23,13 @@ const UserFlashcardStatItem: React.FC<UserFlashcardStatItemProps> = ({
     <View style={styles.statItem}>
       <MaterialCommunityIcons name={icon} size={24} color={color} />
       <CustomText
-        variant="titleMedium"
+        variant='titleMedium'
         style={[styles.statValue, { color: theme.colors.onBackground }]}
       >
         {value}
       </CustomText>
       <CustomText
-        variant="bodySmall"
+        variant='bodySmall'
         style={[styles.statLabel, { color: theme.colors.onSurface }]}
       >
         {label}
@@ -80,30 +80,30 @@ export const UserFlashcardStatsCard: React.FC<UserFlashcardStatsCardProps> = ({
       <Card.Content>
         <View style={styles.statsContainer}>
           <UserFlashcardStatItem
-            icon="cards"
+            icon='cards'
             value={stats.totalCorrectAnswers + stats.totalIncorrectAnswers}
-            label="Total Cards"
+            label='Total Cards'
             color={theme.colors.tertiary}
           />
           <UserFlashcardStatItem
-            icon="check"
+            icon='check'
             value={stats.totalCorrectAnswers}
-            label="Correct"
+            label='Correct'
             color={theme.colors.primary}
           />
           <UserFlashcardStatItem
-            icon="close"
+            icon='close'
             value={stats.totalIncorrectAnswers}
-            label="Incorrect"
+            label='Incorrect'
             color={theme.colors.error}
           />
         </View>
 
         <View style={styles.progressSection}>
           <View style={styles.progressHeader}>
-            <CustomText variant="bodyMedium">Success Rate</CustomText>
+            <CustomText variant='bodyMedium'>Success Rate</CustomText>
             <CustomText
-              variant="bodySmall"
+              variant='bodySmall'
               style={{ color: theme.colors.onSurfaceVariant }}
             >
               {stats.successRate.toFixed(1)}%
@@ -118,9 +118,9 @@ export const UserFlashcardStatsCard: React.FC<UserFlashcardStatsCardProps> = ({
 
         <View style={styles.progressSection}>
           <View style={styles.progressHeader}>
-            <CustomText variant="bodyMedium">Mastery Level</CustomText>
+            <CustomText variant='bodyMedium'>Mastery Level</CustomText>
             <CustomText
-              variant="bodySmall"
+              variant='bodySmall'
               style={{ color: theme.colors.onSurfaceVariant }}
             >
               {stats.averageMasteryLevel.toFixed(1)}/5.0

@@ -37,7 +37,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
     <>
       {title && (
         <CustomText
-          variant="titleLarge"
+          variant='titleLarge'
           style={[styles.title, { color: theme.colors.error }]}
         >
           {title}
@@ -61,7 +61,7 @@ export const ErrorMessage: React.FC<ErrorMessageProps> = ({
           <CustomButton
             title={secondaryButtonText || 'Go Back'}
             onPress={onSecondaryAction}
-            mode="outlined"
+            mode='outlined'
             style={styles.button}
           />
         )}
