@@ -657,6 +657,11 @@ namespace Lithuaningo.API.Services.Flashcards
                 var response = await _supabaseService.Client.From<Flashcard>().Insert(flashcards);
                 _logger.LogInformation("{Count} flashcards saved to Supabase", flashcards.Count);
 
+                // CRITICAL: Invalidate all flashcard caches after inserting new flashcards
+                // This ensures that newly generated flashcards are immediately available for subsequent operations
+                // and prevents duplicate generation due to stale cache data
+                await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
+
                 // No need to trigger challenge generation here, it's handled in GenerateUniqueFlashcardsAsync
             }
             catch (Exception ex)
