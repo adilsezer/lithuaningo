@@ -110,7 +110,7 @@ class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             // Log the token for testing purposes
-            console.log("[ApiClient] Token:", token);
+            //console.log("[ApiClient] Token:", token);
           }
         } catch (error) {
           console.error(
