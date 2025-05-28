@@ -22,33 +22,31 @@ import { useUserStore } from "@stores/useUserStore";
 const FEATURES = [
   {
     icon: "robot" as const,
-    text: "AI-Powered Language Coach Available 24/7",
+    text: "Master Lithuanian Faster",
     description:
-      "Master Lithuanian faster with personalized guidance whenever you need it",
+      "Get instant help from your AI tutor whenever you're stuck - no daily limits holding you back",
   },
   {
     icon: "cards" as const,
-    text: "Unlimited Flashcards",
-    description: "Build vocabulary and memorize phrases with no restrictions",
+    text: "Practice Without Interruptions",
+    description:
+      "Study at your own pace with unlimited flashcards - perfect your vocabulary daily",
   },
   {
-    icon: "check-decagram" as const,
-    text: "100% Ad-Free Experience",
-    description: "Focus on learning without any advertisements",
-  },
-  {
-    icon: "headset" as const,
-    text: "Priority Support",
-    description: "Get faster assistance whenever you need help",
+    icon: "shield-check" as const,
+    text: "Distraction-Free Learning",
+    description:
+      "Focus completely on Lithuanian without ads breaking your concentration",
   },
 ];
 
 // Comparison table data
 const COMPARISON_DATA = [
-  { feature: "AI chat sessions", free: "5/month", premium: "Unlimited" },
-  { feature: "Flashcards", free: "Limited", premium: "Unlimited" },
+  { feature: "AI chat messages", free: "5/day", premium: "Unlimited" },
+  { feature: "Flashcard views", free: "10/day", premium: "Unlimited" },
+  { feature: "Daily challenges", free: "✓ Included", premium: "✓ Included" },
+  { feature: "Weekly leaderboard", free: "✓ Included", premium: "✓ Included" },
   { feature: "Ad-free experience", free: false, premium: true },
-  { feature: "Priority support", free: false, premium: true },
 ];
 
 export default function PremiumFeaturesScreen() {
@@ -209,18 +207,9 @@ export default function PremiumFeaturesScreen() {
       fontSize: 15,
       color: theme.colors.onSurfaceVariant,
     },
-    priceRow: {
-      flexDirection: "row",
-      alignItems: "center",
-    },
-    originalPrice: {
-      fontSize: 13,
-      textDecorationLine: "line-through",
-      color: theme.colors.outline,
-      marginRight: 8,
-    },
     savings: {
       fontSize: 13,
+      marginTop: 4,
       color: theme.colors.error,
       fontWeight: "bold",
     },
@@ -279,10 +268,10 @@ export default function PremiumFeaturesScreen() {
         (pkg) => pkg.packageType === packageType.toUpperCase()
       )?.product?.priceString ||
       (packageType === RC_PACKAGE_TYPES.MONTHLY
-        ? "$4.99"
+        ? "€4.99"
         : packageType === RC_PACKAGE_TYPES.ANNUAL
-        ? "$39.99"
-        : "$99.99")
+        ? "€39.99"
+        : "€99.99")
     );
   };
 
@@ -468,20 +457,19 @@ export default function PremiumFeaturesScreen() {
 
           {type === "yearly" ? (
             <>
-              <View style={styles.priceRow}>
-                <Text style={styles.originalPrice}>$59.88</Text>
-                <Text style={styles.packagePrice}>
-                  {getPriceString(RC_PACKAGE_TYPES.ANNUAL)} per year
-                </Text>
-              </View>
-              <Text style={styles.savings}>Save 33% with annual plan</Text>
+              <Text style={styles.packagePrice}>
+                {getPriceString(RC_PACKAGE_TYPES.ANNUAL)} per year
+              </Text>
+              <Text style={styles.savings}>
+                Save 33% - Most Popular Choice!
+              </Text>
             </>
           ) : type === "lifetime" ? (
             <>
               <Text style={styles.packagePrice}>
                 {getPriceString(RC_PACKAGE_TYPES.LIFETIME)} one-time payment
               </Text>
-              <Text style={styles.savings}>Best long-term value</Text>
+              <Text style={styles.savings}>Pay once, learn forever!</Text>
             </>
           ) : (
             <Text style={styles.packagePrice}>
@@ -507,16 +495,19 @@ export default function PremiumFeaturesScreen() {
             accessibilityLabel="Premium features illustration"
           />
         </View>
-        <Text style={styles.title}>Elevate Your Lithuanian</Text>
+        <Text style={styles.title}>Master Lithuanian Without Limits</Text>
         <View style={styles.valueTag}>
-          <Text style={styles.valueTagText}>UNLOCK FULL ACCESS</Text>
+          <Text style={styles.valueTagText}>UNLOCK UNLIMITED</Text>
         </View>
         <Text style={styles.subtitle}>
-          Learn faster with our premium tools and reach fluency in less time
+          Join thousands learning Lithuanian with unlimited AI coaching and
+          practice
         </Text>
       </View>
 
-      <Text style={styles.sectionTitle}>Premium Advantages</Text>
+      <Text style={styles.sectionTitle}>
+        Transform Your Learning Experience
+      </Text>
 
       <List.Section style={{ marginTop: -8, marginBottom: 8 }}>
         {FEATURES.map((feature) => (
