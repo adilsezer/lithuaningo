@@ -118,7 +118,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
   // Example sentence visibility based on question type
   const shouldShowExampleSentence = (
-    question: ChallengeQuestionResponse,
+    question: ChallengeQuestionResponse
   ): boolean => {
     // No example to show
     if (!question.exampleSentence) {
@@ -449,8 +449,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                   styles.feedbackCard,
                   {
                     backgroundColor: isCorrectAnswer
-                      ? theme.colors.primaryContainer
-                      : theme.colors.errorContainer,
+                      ? theme.colors.primary
+                      : theme.colors.error,
                   },
                 ]}
               >
@@ -462,7 +462,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       color={
                         isCorrectAnswer
                           ? theme.colors.onPrimary
-                          : theme.colors.error
+                          : theme.colors.onError
                       }
                       style={{ backgroundColor: "transparent" }}
                     />
@@ -474,7 +474,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       style={{
                         color: isCorrectAnswer
                           ? theme.colors.onPrimary
-                          : theme.colors.error,
+                          : theme.colors.onError,
                         fontWeight: "600",
                       }}
                     >
@@ -486,13 +486,25 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       style={{
                         color: isCorrectAnswer
                           ? theme.colors.onPrimary
-                          : theme.colors.error,
+                          : theme.colors.onError,
                         marginTop: 4,
                       }}
                     >
-                      {isCorrectAnswer
-                        ? "Puiku! Keep up the good work!"
-                        : `The correct answer is: ${currentQuestion.correctAnswer}`}
+                      {isCorrectAnswer ? (
+                        "Puiku! Keep up the good work!"
+                      ) : (
+                        <>
+                          The correct answer is:{" "}
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: 16,
+                            }}
+                          >
+                            {currentQuestion.correctAnswer}
+                          </Text>
+                        </>
+                      )}
                     </Text>
                   </View>
                 </Card.Content>
@@ -507,10 +519,15 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                         : "check"
                     }
                     contentStyle={styles.feedbackButtonContent}
-                    style={{
-                      backgroundColor: isCorrectAnswer
+                    labelStyle={{
+                      color: isCorrectAnswer
                         ? theme.colors.primary
                         : theme.colors.error,
+                    }}
+                    style={{
+                      backgroundColor: isCorrectAnswer
+                        ? theme.colors.onPrimary
+                        : theme.colors.onError,
                     }}
                   >
                     {currentIndex < questions.length - 1

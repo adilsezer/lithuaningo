@@ -59,6 +59,8 @@ namespace Lithuaningo.API.Services.Challenges
             var cachedQuestions = await _cache.GetAsync<List<ChallengeQuestionResponse>>(cacheKey);
             if (cachedQuestions != null && cachedQuestions.Any())
             {
+                // Randomize options for cached questions too, so each user gets different order
+                RandomizeQuestionOptions(cachedQuestions);
                 return cachedQuestions;
             }
 
@@ -78,9 +80,14 @@ namespace Lithuaningo.API.Services.Challenges
 
                     var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(questions);
 
+                    // Cache the questions without randomized options
                     var settings = await _cacheSettingsService.GetCacheSettingsAsync();
                     var expiration = TimeSpan.FromHours(settings.DefaultExpirationMinutes > 0 ? settings.DefaultExpirationMinutes / 60.0 : 24); // Example: 24 hours
                     await _cache.SetAsync(cacheKey, questionResponses, expiration);
+
+                    // Randomize the order of options for each question before returning
+                    RandomizeQuestionOptions(questionResponses);
+
                     return questionResponses;
                 }
                 else
@@ -190,6 +197,9 @@ namespace Lithuaningo.API.Services.Challenges
 
             var response = _mapper.Map<List<ChallengeQuestionResponse>>(selectedChallengeModels);
 
+            // Randomize the order of options for each question
+            RandomizeQuestionOptions(response);
+
             return response;
         }
 
@@ -257,6 +267,34 @@ namespace Lithuaningo.API.Services.Challenges
             {
                 _logger.LogError(ex, "Error clearing challenge questions");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Randomizes the order of options for each challenge question to prevent predictable answer patterns.
+        /// Only randomizes options for question types that have multiple options (e.g., MultipleChoice, FillInTheBlank, RearrangeTheSentence).
+        /// TrueFalse questions are not randomized since they always have "True" and "False" in a specific order.
+        /// </summary>
+        /// <param name="questions">The list of challenge questions to randomize options for</param>
+        private void RandomizeQuestionOptions(IEnumerable<ChallengeQuestionResponse> questions)
+        {
+            if (questions == null) return;
+
+            foreach (var question in questions)
+            {
+                // Only randomize options for question types that have multiple meaningful options
+                // TrueFalse questions typically have ["True", "False"] in a specific order
+                if (question.Type != ChallengeQuestionType.TrueFalse &&
+                    question.Options != null &&
+                    question.Options.Count > 1)
+                {
+                    // Create a copy of the options and shuffle them
+                    var shuffledOptions = question.Options
+                        .OrderBy(x => _random.Next())
+                        .ToList();
+
+                    question.Options = shuffledOptions;
+                }
             }
         }
     }

@@ -116,5 +116,41 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while retrieving review challenge questions.");
             }
         }
+
+        [HttpGet("next-challenge-time")]
+        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
+        [ProducesResponseType(typeof(NextChallengeTimeResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [SwaggerOperation(
+            Summary = "Gets the time when the next daily challenge becomes available",
+            Description = "Returns timing information for when the next daily challenge will reset (00:00 UTC)",
+            OperationId = "GetNextChallengeTime",
+            Tags = new[] { "Challenge" }
+        )]
+        public ActionResult<NextChallengeTimeResponse> GetNextChallengeTime()
+        {
+            try
+            {
+                var currentTimeUtc = DateTime.UtcNow;
+                var nextChallengeTimeUtc = currentTimeUtc.Date.AddDays(1); // Tomorrow at 00:00 UTC
+                var timeDiff = nextChallengeTimeUtc - currentTimeUtc;
+                var secondsUntilNext = (long)timeDiff.TotalSeconds;
+
+                var response = new NextChallengeTimeResponse
+                {
+                    CurrentTimeUtc = currentTimeUtc,
+                    NextChallengeTimeUtc = nextChallengeTimeUtc,
+                    SecondsUntilNext = Math.Max(0, secondsUntilNext),
+                    IsNewChallengeAvailable = secondsUntilNext <= 0
+                };
+
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving next challenge time");
+                return StatusCode(500, "An error occurred while retrieving next challenge time");
+            }
+        }
     }
 }

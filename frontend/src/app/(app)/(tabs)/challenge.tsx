@@ -12,6 +12,7 @@ import CustomButton from "@components/ui/CustomButton";
 import CustomDivider from "@components/ui/CustomDivider";
 import Leaderboard from "@components/ui/Leaderboard";
 import { UserChallengeStatsCard } from "@components/ui/UserChallengeStatsCard";
+import CountdownTimer from "@components/ui/CountdownTimer";
 import { useUserData } from "@stores/useUserStore";
 import ErrorMessage from "@components/ui/ErrorMessage";
 import {
@@ -20,6 +21,7 @@ import {
 } from "@src/types";
 import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
 import LeaderboardService from "@services/data/leaderboardService";
+import { useNextDailyChallengeTimer } from "@hooks/useNextDailyChallengeTimer";
 
 /**
  * Challenge Tab Screen - Using direct service calls
@@ -34,6 +36,9 @@ export default function ChallengeScreen() {
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
   const [entries, setEntries] = useState<LeaderboardEntryResponse[]>([]);
+
+  // Countdown timer for next daily challenge
+  const { formattedTime, isNextDay } = useNextDailyChallengeTimer();
 
   // Load data function - only loads stats and leaderboard, not questions
   const loadData = useCallback(async () => {
@@ -139,8 +144,9 @@ export default function ChallengeScreen() {
           <Card.Content style={styles.cardContent}>
             <IconButton
               icon="check-circle"
-              size={28}
+              size={32}
               iconColor={theme.colors.primary}
+              style={styles.iconButton}
             />
             <CustomText variant="titleMedium" style={styles.cardTitle}>
               {hasCompletedAllQuestions
@@ -158,6 +164,7 @@ export default function ChallengeScreen() {
               <CustomButton
                 title="Continue Challenge"
                 onPress={continueChallenge}
+                style={styles.button}
               />
             )}
           </Card.Content>
@@ -175,8 +182,9 @@ export default function ChallengeScreen() {
           <Card.Content style={styles.cardContent}>
             <IconButton
               icon="star"
-              size={28}
+              size={32}
               iconColor={theme.colors.primary}
+              style={styles.iconButton}
             />
             <CustomText variant="titleMedium" style={styles.cardTitle}>
               Daily Challenge Available
@@ -184,9 +192,24 @@ export default function ChallengeScreen() {
             <CustomText style={styles.cardText}>
               Start today's challenge to test your knowledge!
             </CustomText>
-            <CustomButton title="Start Challenge" onPress={startChallenge} />
+            <CustomButton
+              title="Start Challenge"
+              onPress={startChallenge}
+              style={styles.button}
+            />
           </Card.Content>
         </Card>
+      )}
+
+      {/* Show countdown timer when challenge is completed */}
+      {hasCompletedAllQuestions && (
+        <CountdownTimer
+          formattedTime={formattedTime}
+          title="Next Daily Challenge"
+          subtitle="New challenge available in:"
+          icon="calendar-clock"
+          onRefresh={isNextDay ? loadData : undefined}
+        />
       )}
 
       {/* Stats */}
@@ -206,12 +229,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
-  content: {
-    paddingBottom: 32,
-  },
-  headerContainer: {
-    marginBottom: 16,
-  },
+  content: {},
+  headerContainer: {},
   image: {
     width: "100%",
     height: 200,
@@ -225,11 +244,17 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   card: {
-    marginBottom: 16,
     borderWidth: 1,
+    marginTop: 16,
   },
   cardContent: {
     alignItems: "center",
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+  },
+  iconButton: {
+    margin: 0,
+    marginBottom: 8,
   },
   cardTitle: {
     textAlign: "center",
@@ -238,6 +263,10 @@ const styles = StyleSheet.create({
   },
   cardText: {
     textAlign: "center",
+    marginBottom: 16,
+  },
+  button: {
+    marginTop: 8,
   },
   sectionTitle: {
     marginVertical: 8,

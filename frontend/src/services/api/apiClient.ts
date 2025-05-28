@@ -11,6 +11,7 @@ import {
 import {
   ChallengeQuestionResponse,
   GetReviewChallengeQuestionsRequest,
+  NextChallengeTimeResponse,
 } from "@src/types/ChallengeQuestion";
 import {
   FlashcardRequest,
@@ -110,7 +111,7 @@ class ApiClient {
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
             // Log the token for testing purposes
-            //console.log("[ApiClient] Token:", token);
+            console.log("[ApiClient] Token:", token);
           }
         } catch (error) {
           console.error(
@@ -413,6 +414,15 @@ class ApiClient {
       method: "GET",
       params,
     });
+  }
+
+  async getNextChallengeTime(): Promise<NextChallengeTimeResponse> {
+    return this.request<NextChallengeTimeResponse>(
+      "/api/v1/challenge/next-challenge-time",
+      {
+        method: "GET",
+      }
+    );
   }
 
   // Flashcard Controller

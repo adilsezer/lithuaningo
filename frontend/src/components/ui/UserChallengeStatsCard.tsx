@@ -136,6 +136,7 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: 12,
     borderWidth: 1,
+    marginTop: 16,
   },
   statsContainer: {
     flexDirection: "row",

@@ -27,3 +27,14 @@ export interface GetReviewChallengeQuestionsRequest {
   /** Optional difficulty level to filter flashcards by difficulty (0=Basic, 1=Intermediate, 2=Advanced). If not provided, challenges from all difficulty levels will be included. */
   difficulty?: number;
 }
+
+export interface NextChallengeTimeResponse {
+  /** The current server time in UTC */
+  currentTimeUtc: string;
+  /** When the next daily challenge becomes available (00:00 UTC tomorrow) */
+  nextChallengeTimeUtc: string;
+  /** Number of seconds until the next challenge becomes available */
+  secondsUntilNext: number;
+  /** Whether a new challenge is already available (happens when it's past midnight UTC) */
+  isNewChallengeAvailable: boolean;
+}

@@ -206,14 +206,12 @@ export default function DailyChallengeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 16,
-    backgroundColor: "#F5F5F5",
   },
   centerContainer: {
     flex: 1,
-    padding: 16,
     justifyContent: "center",
     alignItems: "center",
+    padding: 20,
   },
   text: {
     textAlign: "center",
