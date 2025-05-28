@@ -1,9 +1,8 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useMemo } from "react";
 import { ChallengeQuestionResponse } from "@src/types";
 import { UserFlashcardStatsService } from "@services/data/userFlashcardStatsService";
 import ChallengeService from "@services/data/challengeService"; // Assuming this service can fetch category-specific questions
 import { useAlertDialog } from "@hooks/useAlertDialog";
-import React from "react";
 
 interface UseFlashcardChallengeProps {
   categoryId: string | undefined;
@@ -24,7 +23,7 @@ export const useFlashcardChallenge = ({
   const { showAlert } = useAlertDialog();
 
   // Auto-detect difficulty level based on categoryId
-  const effectiveDifficulty = React.useMemo(() => {
+  const effectiveDifficulty = useMemo(() => {
     if (difficulty !== undefined) {
       return difficulty; // Use explicitly provided difficulty
     }
@@ -41,7 +40,7 @@ export const useFlashcardChallenge = ({
 
   // When difficulty categories are selected, we should not filter by categoryId in the backend
   // Instead, we should pass undefined/null for categoryId to get challenges from all categories
-  const effectiveCategoryId = React.useMemo(() => {
+  const effectiveCategoryId = useMemo(() => {
     if (categoryId === "0" || categoryId === "1" || categoryId === "2") {
       // For difficulty categories, use AllCategories (-1) to get challenges from all categories
       return "-1";
@@ -79,11 +78,20 @@ export const useFlashcardChallenge = ({
 
       try {
         // Fetch category-specific review challenge questions
-        const requestParams: any = {
+        const requestParams: {
+          count: number;
+          categoryId?: string;
+          userId: string;
+          difficulty?: number;
+        } = {
           count: 10,
-          categoryId: effectiveCategoryId,
           userId,
         };
+
+        // Only include categoryId if it's defined
+        if (effectiveCategoryId) {
+          requestParams.categoryId = effectiveCategoryId;
+        }
 
         // Only include difficulty if it's defined
         if (effectiveDifficulty !== undefined) {
@@ -141,11 +149,11 @@ export const useFlashcardChallenge = ({
           setCurrentIndex(0);
           setScore(0);
         }
-      } catch (err) {
+      } catch (error) {
         // Check if this is specifically the "no flashcards" error
         if (
-          err instanceof Error &&
-          err.message.includes("No flashcards found")
+          error instanceof Error &&
+          error.message.includes("No flashcards found")
         ) {
           showAlert({
             title: "Practice More Flashcards",
@@ -163,8 +171,8 @@ export const useFlashcardChallenge = ({
           // Don't set this as an error - it's a normal state
         } else {
           setError(
-            err instanceof Error
-              ? err.message
+            error instanceof Error
+              ? error.message
               : "Failed to load challenge questions."
           );
         }
@@ -173,7 +181,7 @@ export const useFlashcardChallenge = ({
         setIsLoading(false);
       }
     },
-    [userId, effectiveCategoryId, effectiveDifficulty, showAlert]
+    [userId, categoryId, effectiveCategoryId, effectiveDifficulty, showAlert]
   );
 
   useEffect(() => {
@@ -205,8 +213,9 @@ export const useFlashcardChallenge = ({
             userId,
           });
         }
-      } catch (err) {
+      } catch (error) {
         // Optionally set an error state or notify user
+        console.warn("Failed to submit flashcard answer:", error);
       }
     },
     [userId, currentQuestion, isCorrectAnswer]
