@@ -77,6 +77,8 @@ const createFlashcardRequest = (
     userId,
     primaryCategory: FlashcardCategory.AllCategories,
     difficulty: DifficultyLevel.Basic, // Will be overridden for specific cases
+    generateImages: true,
+    generateAudio: true,
   };
 
   if (numericId >= 0 && numericId <= 2) {

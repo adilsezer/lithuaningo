@@ -92,7 +92,7 @@ export default function Flashcard({
                 <Image
                   source={{ uri: flashcard.imageUrl }}
                   style={styles.image}
-                  resizeMode="cover"
+                  resizeMode="contain"
                 />
               )}
 
@@ -198,7 +198,8 @@ const styles = StyleSheet.create({
   },
   image: {
     width: "100%",
-    height: 180,
+    minHeight: 150,
+    maxHeight: 250,
     borderRadius: 8,
     marginBottom: 16,
   },

@@ -142,5 +142,15 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// The difficulty level of flashcards to generate
         /// </summary>
         public DifficultyLevel Difficulty { get; set; } = DifficultyLevel.Basic;
+
+        /// <summary>
+        /// Whether to automatically generate images for new flashcards (default: true)
+        /// </summary>
+        public bool GenerateImages { get; set; } = true;
+
+        /// <summary>
+        /// Whether to automatically generate audio for new flashcards (default: true)
+        /// </summary>
+        public bool GenerateAudio { get; set; } = true;
     }
 }

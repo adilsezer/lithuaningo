@@ -362,8 +362,8 @@ To authorize in Swagger UI:
 
     // Storage Configuration with secure defaults
     services.Configure<StorageSettings>(configuration.GetSection("Storage"));
-    services.AddScoped<IStorageConfiguration, StorageConfiguration>();
-    services.AddScoped<IStorageService, StorageService>();
+    services.AddSingleton<IStorageConfiguration, StorageConfiguration>();
+    services.AddSingleton<IStorageService, StorageService>();
 
     // Core Services
     services.AddScoped<IUserProfileService, UserProfileService>();

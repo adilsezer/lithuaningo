@@ -618,6 +618,44 @@ namespace Lithuaningo.API.Services.Flashcards
                         }
                     }
                 });
+
+                // Asynchronously generate images and audio for each new flashcard (if requested)
+                if (request.GenerateImages || request.GenerateAudio)
+                {
+                    _ = Task.Run(async () =>
+                    {
+                        foreach (var flashcard in generatedFlashcards)
+                        {
+                            if (request.GenerateImages)
+                            {
+                                try
+                                {
+                                    // Generate image for the flashcard
+                                    await GenerateFlashcardImageAsync(flashcard.Id);
+                                    _logger.LogInformation("Successfully generated image for flashcard ID {FlashcardId}", flashcard.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error generating image for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                }
+                            }
+
+                            if (request.GenerateAudio)
+                            {
+                                try
+                                {
+                                    // Generate audio for the flashcard
+                                    await GenerateFlashcardAudioAsync(flashcard.Id);
+                                    _logger.LogInformation("Successfully generated audio for flashcard ID {FlashcardId}", flashcard.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error generating audio for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                }
+                            }
+                        }
+                    });
+                }
             }
 
             return generatedFlashcards;
