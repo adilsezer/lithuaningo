@@ -199,7 +199,8 @@ export const useAuth = () => {
         if (response.success) {
           showAlert({
             title: "Check Your Email",
-            message: "We've sent you a code to reset your password.",
+            message:
+              "If your account exists, we've sent you a code to reset your password.",
             buttons: [
               {
                 text: "OK",
