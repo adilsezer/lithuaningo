@@ -81,7 +81,8 @@ public class AIController : BaseApiController
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing AI request for service type {ServiceType}", request.ServiceType);
+            string sanitizedServiceType = request.ServiceType?.Replace("\n", "").Replace("\r", "");
+            _logger.LogError(ex, "Error processing AI request for service type {ServiceType}", sanitizedServiceType);
             return StatusCode(StatusCodes.Status500InternalServerError,
                 "An error occurred processing your request.");
         }
