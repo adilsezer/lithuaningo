@@ -112,9 +112,9 @@ EXAMPLE OUTPUT:
     public const string IMAGE_GENERATION_PROMPT =
     "Generate a **minimalist flat icon** representing the Lithuanian word: '{0}'. " +
     "The icon's theme and style should be inspired by its usage in the English sentence: '{1}'. " +
-    "The image MUST feature '{0}' as the **primary subject**, rendered in a **clean, vector-like style with 2-4 distinct solid colors**, on a **fully transparent background**. " +
+    "The image MUST feature '{0}' as the **primary subject**, rendered in a **clean, vector-like style with 4-8 vibrant solid colors**, on a **fully transparent background**. " +
     "While the sentence '{1}' provides context, the icon should focus on a simple, clear representation of '{0}'. Avoid overly complex scenes. " +
-    "**Strictly prohibit any text, letters, numbers, symbols, borders, or frames** in the image. " +
+    "**CRITICAL: NO TEXT OR WRITING OF ANY KIND - PURE VISUAL SHAPES AND COLORS ONLY.** " +
     "The final image must be an easily recognizable icon of '{0}', suitable for a language learning flashcard, reflecting the context of '{1}'.";
 
     /// <summary>
