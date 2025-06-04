@@ -51,7 +51,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ["fetch"],
         NSAppTransportSecurity: {
-          NSAllowsArbitraryLoads: true,
+          NSAllowsArbitraryLoads: __DEV__ ? true : false,
           NSExceptionDomains: {
             localhost: {
               NSExceptionAllowsInsecureHTTPLoads: true,

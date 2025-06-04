@@ -9,11 +9,13 @@ public class GlobalExceptionHandlingMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<GlobalExceptionHandlingMiddleware> _logger;
+    private readonly IWebHostEnvironment _environment;
 
-    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger)
+    public GlobalExceptionHandlingMiddleware(RequestDelegate next, ILogger<GlobalExceptionHandlingMiddleware> logger, IWebHostEnvironment environment)
     {
         _next = next;
         _logger = logger;
+        _environment = environment;
     }
 
     public async Task InvokeAsync(HttpContext context)
@@ -34,12 +36,13 @@ public class GlobalExceptionHandlingMiddleware
 
         var response = context.Response;
         response.ContentType = "application/json";
+        response.StatusCode = (int)GetStatusCode(exception);
 
         var errorResponse = new ProblemDetails
         {
             Status = (int)GetStatusCode(exception),
             Title = GetTitle(exception),
-            Detail = exception.Message,
+            Detail = GetSafeErrorMessage(exception),
             Instance = context.Request.Path
         };
 
@@ -68,4 +71,22 @@ public class GlobalExceptionHandlingMiddleware
             _ => "Server Error"
         };
     }
-} 
+
+    private string GetSafeErrorMessage(Exception exception)
+    {
+        // In development, show detailed error messages for debugging
+        if (_environment.IsDevelopment())
+        {
+            return exception.Message;
+        }
+
+        // In production, return safe generic messages to prevent information disclosure
+        return exception switch
+        {
+            ValidationException => exception.Message, // Validation errors are safe to expose
+            KeyNotFoundException => "The requested resource was not found.",
+            UnauthorizedAccessException => "Access denied.",
+            _ => "An internal server error occurred. Please try again later."
+        };
+    }
+}

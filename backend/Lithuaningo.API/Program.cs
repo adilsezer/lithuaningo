@@ -391,7 +391,10 @@ To authorize in Swagger UI:
 
     services.AddCors(options =>
     {
-        // Mobile app CORS policy - allows any origin for React Native apps
+        // Mobile app CORS policy - INTENTIONALLY allows any origin for React Native apps
+        // This is required for mobile apps as they don't have a fixed origin like web browsers
+        // React Native apps can come from any IP address and don't have a predictable origin
+        // Security is handled through JWT authentication rather than CORS origin restrictions
         options.AddPolicy("AllowMobile", policy =>
         {
             policy.AllowAnyOrigin()
@@ -534,12 +537,14 @@ void ConfigureMiddleware(WebApplication app)
     // Use different CORS policies based on environment
     if (app.Environment.IsDevelopment())
     {
-        // Use web frontend policy in development for easier debugging
+        // Use web frontend policy in development for easier debugging with specific origins
         app.UseCors("AllowWebFrontend");
     }
     else
     {
         // Use mobile-friendly policy in production
+        // INTENTIONAL: AllowMobile policy uses AllowAnyOrigin() for React Native compatibility
+        // This is a standard practice for mobile APIs as mobile apps don't have fixed origins
         app.UseCors("AllowMobile");
     }
 
