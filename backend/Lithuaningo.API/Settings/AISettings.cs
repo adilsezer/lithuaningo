@@ -64,17 +64,10 @@ public class AISettings
     public string GeminiApiKey { get; set; } = string.Empty;
 
     /// <summary>
-    /// The model to use for Gemini text generation (Pro version, for tasks like flashcard generation)
+    /// The model to use for Gemini text generation (used for all text generation tasks)
     /// </summary>
     [Required]
-    //public string GeminiProModelName { get; set; } = "gemini-2.5-pro-preview-05-06";
-    public string GeminiProModelName { get; set; } = "gemini-2.5-flash-preview-05-20";
-
-    /// <summary>
-    /// The model to use for Gemini text generation (Flash version, for tasks like chat and challenge generation)
-    /// </summary>
-    [Required]
-    public string GeminiFlashModelName { get; set; } = "gemini-2.5-flash-preview-05-20";
+    public string GeminiTextModelName { get; set; } = "gemini-2.5-flash-preview-05-20";
 
     /// <summary>
     /// Base URL for Gemini API

@@ -76,7 +76,7 @@ public class AIService : IAIService
     /// Gets the model name used by this service (primary text model)
     /// </summary>
     /// <returns>The name of the AI model</returns>
-    public string GetModelName() => _aiSettings.GeminiProModelName;
+    public string GetModelName() => _aiSettings.GeminiTextModelName;
 
     /// <summary>
     /// Processes an AI request and returns a response
@@ -122,7 +122,7 @@ public class AIService : IAIService
         }
 
         var httpClient = _httpClientFactory.CreateClient("Gemini");
-        var requestUrl = $"{_aiSettings.GeminiApiBaseUrl}/{_aiSettings.GeminiApiVersion}/models/{_aiSettings.GeminiFlashModelName}:generateContent?key={_aiSettings.GeminiApiKey}";
+        var requestUrl = $"{_aiSettings.GeminiApiBaseUrl}/{_aiSettings.GeminiApiVersion}/models/{_aiSettings.GeminiTextModelName}:generateContent?key={_aiSettings.GeminiApiKey}";
 
         var geminiRequest = new GeminiTextRequest(
             Contents: conversationHistory.ToList(), // Send the current history
@@ -386,7 +386,7 @@ public class AIService : IAIService
             var flashcardGenerationUserPrompt = BuildFlashcardGenerationUserPrompt(request, existingFlashcardFrontTexts);
 
             var aiResponseText = await ExecuteGeminiGenerationRequestAsync(
-                _aiSettings.GeminiProModelName,
+                _aiSettings.GeminiTextModelName,
                 AIPrompts.FLASHCARD_SYSTEM_INSTRUCTIONS,
                 flashcardGenerationUserPrompt,
                 new GeminiGenerationConfig // Use default generation config for flashcards
@@ -486,7 +486,7 @@ public class AIService : IAIService
             };
 
             var extractedJson = await ExecuteGeminiGenerationRequestAsync(
-                _aiSettings.GeminiFlashModelName,
+                _aiSettings.GeminiTextModelName,
                 AIPrompts.FLASHCARD_CHALLENGE_GENERATION_SYSTEM_INSTRUCTIONS,
                 userPrompt,
                 generationConfig
