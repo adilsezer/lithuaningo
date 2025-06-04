@@ -27,7 +27,7 @@ const DeleteAccountScreen: React.FC = () => {
   const { deleteAccount } = useAuth();
   const userData = useUserData();
 
-  if (!userData) return null;
+  if (!userData) {return null;}
 
   const handleSubmit = async (values: { password?: string }) => {
     await deleteAccount(values.password, userData.authProvider);

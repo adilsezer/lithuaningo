@@ -19,7 +19,7 @@ class LeaderboardService {
   }
 
   async updateLeaderboardEntry(
-    request: UpdateLeaderboardEntryRequest
+    request: UpdateLeaderboardEntryRequest,
   ): Promise<LeaderboardEntryResponse> {
     try {
       return await apiClient.updateLeaderboardEntry(request);

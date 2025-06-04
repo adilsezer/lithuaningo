@@ -2,11 +2,10 @@ import React, { useEffect } from "react";
 import { Appearance, Platform } from "react-native";
 import useThemeStore from "@stores/useThemeStore";
 import useAppInfoStore from "@stores/useAppInfoStore";
-import { useUserData } from "@stores/useUserStore";
+import { useUserData, useUserStore } from "@stores/useUserStore";
 import Purchases, { LOG_LEVEL, CustomerInfo } from "react-native-purchases";
 import { REVENUECAT_API_KEYS, DEBUG_SETTINGS } from "@config/revenuecat.config";
 import { useSetLoading } from "@stores/useUIStore";
-import { useUserStore } from "@stores/useUserStore";
 
 /**
  * Provider component that handles core app initialization:
@@ -52,7 +51,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Set log level based on debug settings
         Purchases.setLogLevel(
-          DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR
+          DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR,
         );
 
         // Base configuration options shared between platforms
@@ -90,7 +89,9 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Identify user with RevenueCat when user data changes
   useEffect(() => {
     // Only attempt to identify if we have a valid user ID
-    if (!userData?.id) return;
+    if (!userData?.id) {
+      return;
+    }
 
     const identifyUser = async () => {
       try {
@@ -110,7 +111,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
   // Listen for system theme changes when not in manual mode
   useEffect(() => {
     try {
-      const subscription = Appearance.addChangeListener(({ colorScheme }) => {
+      const subscription = Appearance.addChangeListener((_colorScheme) => {
         setManualMode(false);
       });
 
@@ -124,7 +125,9 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Set up RevenueCat CustomerInfo update listener
   useEffect(() => {
-    if (!userData) return;
+    if (!userData) {
+      return;
+    }
 
     console.log("[InitProvider] Setting up CustomerInfo update listener");
     const customerInfoUpdateListener = (info: CustomerInfo) => {
@@ -152,10 +155,10 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
     const hasPremium = info.entitlements.active.Premium !== undefined;
 
     console.log(
-      `[InitProvider] Updating user store - isPremium: ${hasPremium}`
+      `[InitProvider] Updating user store - isPremium: ${hasPremium}`,
     );
 
-    useUserStore.getState().updateUserProfile({
+    useUserStore.getState().updateUserData({
       isPremium: hasPremium,
     });
   };

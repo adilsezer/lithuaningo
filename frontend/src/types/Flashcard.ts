@@ -30,6 +30,8 @@ export interface FlashcardRequest {
   count: number;
   userId?: string;
   difficulty: DifficultyLevel;
+  generateImages: boolean;
+  generateAudio: boolean;
 }
 
 export interface FlashcardResponse {
@@ -41,6 +43,19 @@ export interface FlashcardResponse {
   imageUrl: string;
   audioUrl: string;
   notes: string;
+  categories: FlashcardCategory[];
+  difficulty: DifficultyLevel;
+  isVerified: boolean;
+}
+
+export interface UpdateFlashcardAdminRequest {
+  frontText: string;
+  backText: string;
+  exampleSentence?: string;
+  exampleSentenceTranslation?: string;
+  imageUrl?: string;
+  audioUrl?: string;
+  notes?: string;
   categories: FlashcardCategory[];
   difficulty: DifficultyLevel;
   isVerified: boolean;

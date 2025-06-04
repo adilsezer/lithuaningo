@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { View, StyleSheet } from "react-native";
 import ChallengeComponent from "@components/ui/ChallengeComponent";
-import { Card, ActivityIndicator } from "react-native-paper";
+import { ActivityIndicator, useTheme } from "react-native-paper";
 import CustomText from "@components/ui/CustomText";
 import { router, useLocalSearchParams } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
@@ -11,8 +11,7 @@ import {
 } from "@src/types";
 import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
 import ChallengeService from "@services/data/challengeService";
-import CustomButton from "@components/ui/CustomButton";
-import { useTheme } from "react-native-paper";
+import ErrorMessage from "@components/ui/ErrorMessage";
 
 /**
  * Daily Challenge Screen - Simplified with direct service calls
@@ -30,7 +29,7 @@ export default function DailyChallengeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [questions, setQuestions] = useState<ChallengeQuestionResponse[]>([]);
-  const [stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
+  const [_stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
 
   // Challenge state
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -80,11 +79,9 @@ export default function DailyChallengeScreen() {
 
         setError(null);
         setShowCompletionScreen(false);
-      } catch (err) {
-        console.error("Failed to load challenge data:", err);
-        setError(
-          typeof err === "string" ? err : "Failed to load challenge data"
-        );
+      } catch {
+        // console.error("Failed to load challenge data:", err);
+        setError("Failed to load challenge data");
       } finally {
         setIsLoading(false);
       }
@@ -103,7 +100,9 @@ export default function DailyChallengeScreen() {
   // Handle answer submission - simplified with direct service call
   const handleAnswer = useCallback(
     async (answer: string) => {
-      if (!userId || !currentQuestion || isCorrectAnswer !== null) return;
+      if (!userId || !currentQuestion || isCorrectAnswer !== null) {
+        return;
+      }
 
       const isCorrect = answer === currentQuestion.correctAnswer;
 
@@ -117,9 +116,11 @@ export default function DailyChallengeScreen() {
 
         // Update local state
         setIsCorrectAnswer(isCorrect);
-        if (isCorrect) setScore((prev) => prev + 1);
-      } catch (err) {
-        console.error("Failed to submit answer:", err);
+        if (isCorrect) {
+          setScore((prev) => prev + 1);
+        }
+      } catch {
+        // console.error("Failed to submit answer:", err);
       }
     },
     [userId, currentQuestion, isCorrectAnswer]
@@ -143,7 +144,7 @@ export default function DailyChallengeScreen() {
       await loadData(true);
       setIsCorrectAnswer(null);
       setShowCompletionScreen(false);
-    } catch (err) {
+    } catch {
       setError("Failed to reload challenge questions");
     } finally {
       setIsLoading(false);
@@ -155,7 +156,12 @@ export default function DailyChallengeScreen() {
     return (
       <View style={styles.centerContainer}>
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <CustomText style={styles.text}>Loading challenge...</CustomText>
+        <CustomText style={styles.text}>
+          Lithuaningo AI is loading your challenge...
+        </CustomText>
+        <CustomText variant="bodySmall">
+          No need to wait—come back to this screen anytime!
+        </CustomText>
       </View>
     );
   }
@@ -163,20 +169,14 @@ export default function DailyChallengeScreen() {
   // Show error state
   if (error) {
     return (
-      <View style={styles.centerContainer}>
-        <Card>
-          <Card.Content>
-            <CustomText variant="titleLarge" style={styles.title}>
-              Something went wrong
-            </CustomText>
-            <CustomText style={styles.text}>{error}</CustomText>
-            <Card.Actions style={{ justifyContent: "center", width: "100%" }}>
-              <CustomButton title="Try Again" onPress={handleRetry} />
-              <CustomButton title="Go Back" onPress={() => router.back()} />
-            </Card.Actions>
-          </Card.Content>
-        </Card>
-      </View>
+      <ErrorMessage
+        title="Something went wrong"
+        message={error}
+        onRetry={handleRetry}
+        onSecondaryAction={() => router.back()}
+        secondaryButtonText="Go Back"
+        fullScreen
+      />
     );
   }
 
@@ -209,14 +209,9 @@ const styles = StyleSheet.create({
   },
   centerContainer: {
     flex: 1,
-    padding: 16,
     justifyContent: "center",
     alignItems: "center",
-  },
-  title: {
-    textAlign: "center",
-    fontWeight: "bold",
-    marginBottom: 16,
+    padding: 20,
   },
   text: {
     textAlign: "center",

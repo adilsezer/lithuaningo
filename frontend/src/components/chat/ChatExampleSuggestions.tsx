@@ -25,9 +25,9 @@ const ChatExampleSuggestions: React.FC<ChatExampleSuggestionsProps> = ({
       <Card.Title title="Try asking:" titleStyle={styles.title} />
       <Card.Content>
         <View style={styles.buttonContainer}>
-          {CHAT_EXAMPLES.map((example, index) => (
+          {CHAT_EXAMPLES.map((example) => (
             <Button
-              key={index}
+              key={example}
               mode="outlined"
               style={[
                 styles.exampleButton,

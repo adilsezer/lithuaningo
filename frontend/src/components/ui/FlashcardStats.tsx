@@ -93,7 +93,7 @@ const FlashcardStats: React.FC<FlashcardStatsProps> = ({
 
         <View style={styles.statRow}>
           <CustomText>Last answer:</CustomText>
-          {stats.lastAnsweredCorrectly !== undefined ? (
+          {stats.lastAnsweredCorrectly != null ? (
             <CustomText
               bold
               style={{

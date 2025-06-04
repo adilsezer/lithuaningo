@@ -42,6 +42,9 @@ namespace Lithuaningo.API.Mappings
                         : new List<int>()))
                 .ForMember(dest => dest.Difficulty, opt => opt.MapFrom(src => src.Difficulty))
                 .ForMember(dest => dest.IsVerified, opt => opt.MapFrom(src => src.IsVerified));
+
+            CreateMap<UpdateFlashcardAdminRequest, Flashcard>()
+                .ForMember(dest => dest.Id, opt => opt.Ignore());
         }
     }
 }

@@ -9,7 +9,7 @@ import { useRouter } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
 const getEditProfileFields = (
   authProvider: string,
-  displayName: string
+  displayName: string,
 ): FormField[] => {
   const fields: FormField[] = [
     {

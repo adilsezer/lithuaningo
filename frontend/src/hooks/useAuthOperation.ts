@@ -9,15 +9,16 @@ export const useAuthOperation = () => {
   const { showError, showSuccess } = useAlertDialog();
 
   const handleError = useCallback(
-    (error: any, title: string) => {
-      const message = error.message || "An error occurred";
+    (error: unknown, title: string) => {
+      const message =
+        error instanceof Error ? error.message : "An error occurred";
       console.error(`${title}:`, error);
       setError(message);
       //crashlytics().recordError(error);
       showError(message, title);
       return { success: false, message };
     },
-    [setError, showError]
+    [setError, showError],
   );
 
   const clearError = useCallback(() => {
@@ -28,7 +29,7 @@ export const useAuthOperation = () => {
     async (
       operation: () => Promise<AuthResponse>,
       errorTitle: string,
-      options?: { showSuccessAlert?: boolean }
+      options?: { showSuccessAlert?: boolean },
     ) => {
       setLoading(true);
       clearError();
@@ -47,13 +48,13 @@ export const useAuthOperation = () => {
         }
 
         return result;
-      } catch (error: any) {
+      } catch (error: unknown) {
         return handleError(error, errorTitle);
       } finally {
         setLoading(false);
       }
     },
-    [handleError, clearError, setLoading, showSuccess]
+    [handleError, clearError, setLoading, showSuccess],
   );
 
   return {

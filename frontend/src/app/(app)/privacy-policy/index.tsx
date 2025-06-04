@@ -262,7 +262,7 @@ const PrivacyPolicy = () => {
           style={[paragraphProps.style, styles.link]}
           onPress={() =>
             Linking.openURL(
-              "https://adilsezer.github.io/lithuaningo/privacy-policy"
+              "https://adilsezer.github.io/lithuaningo/privacy-policy",
             )
           }
         >

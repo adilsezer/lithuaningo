@@ -6,12 +6,12 @@ export type FieldCategory = "text-input" | "toggle" | "link";
 
 export type FieldType = "text" | "email" | "password" | "switch" | "link";
 
-export type FormField = {
+export interface FormField {
   name: string;
   label: string;
   category: FieldCategory;
   type: FieldType;
-  defaultValue?: any;
+  defaultValue?: string | boolean;
 
   // Text inputs
   placeholder?: string;
@@ -23,15 +23,15 @@ export type FormField = {
   numberOfLines?: number;
 
   // Selection/Toggle
-  options?: Array<{ label: string; value: any }>;
+  options?: Array<{ label: string; value: string | number }>;
 
   // Link
   linkText?: string;
   onPress?: () => void;
-};
+}
 
 export interface FormProps<T extends FieldValues> {
-  fields: Array<FormField>;
+  fields: FormField[];
   onSubmit: (data: T) => Promise<void> | void;
   submitButtonText: string;
   isLoading?: boolean;

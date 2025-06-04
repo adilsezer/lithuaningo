@@ -11,7 +11,7 @@ export interface UserFlashcardStatResponse {
   viewCount: number;
   correctCount: number;
   incorrectCount: number;
-  lastAnsweredCorrectly?: boolean;
+  lastAnsweredCorrectly: boolean | null;
   masteryLevel: number;
 }
 
@@ -22,6 +22,6 @@ export interface UserFlashcardStatsSummaryResponse {
   totalCorrectAnswers: number;
   totalIncorrectAnswers: number;
   averageMasteryLevel: number;
-  flashcardsAnsweredToday: number;
+  flashcardsViewedToday: number;
   successRate: number;
 }

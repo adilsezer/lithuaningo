@@ -3,11 +3,11 @@ import { useRouter } from "expo-router";
 import * as Linking from "expo-linking";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 
-export type AboutLink = {
+export interface AboutLink {
   type: "email" | "url" | "internal";
   value: string;
   label: string;
-};
+}
 
 export const ABOUT_LINKS = {
   email: {
@@ -35,7 +35,7 @@ export const useAbout = () => {
     async (link: AboutLink) => {
       try {
         switch (link.type) {
-          case "email":
+          case "email": {
             const emailUrl = `mailto:${link.value}`;
             const canOpenEmail = await Linking.canOpenURL(emailUrl);
             if (canOpenEmail) {
@@ -44,8 +44,9 @@ export const useAbout = () => {
               throw new Error("No email app configured");
             }
             break;
+          }
 
-          case "url":
+          case "url": {
             const canOpenUrl = await Linking.canOpenURL(link.value);
             if (canOpenUrl) {
               await Linking.openURL(link.value);
@@ -53,6 +54,7 @@ export const useAbout = () => {
               throw new Error("Cannot open URL");
             }
             break;
+          }
 
           case "internal":
             router.push(link.value);
@@ -66,11 +68,11 @@ export const useAbout = () => {
         showError(
           error instanceof Error
             ? error.message
-            : "Failed to open link. Please try again later."
+            : "Failed to open link. Please try again later.",
         );
       }
     },
-    [router, showError]
+    [router, showError],
   );
 
   const navigateToPrivacyPolicy = useCallback(() => {

@@ -17,7 +17,7 @@ import { useAuthOperation } from "./useAuthOperation";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 import { useCallback } from "react";
 import { Platform } from "react-native";
-import { useRevenueCat } from "@hooks/useRevenueCat";
+import { useUserStore } from "@stores/useUserStore";
 
 export type SocialProvider = "google" | "apple";
 
@@ -25,7 +25,6 @@ export const useAuth = () => {
   const router = useRouter();
   const { performAuthOperation } = useAuthOperation();
   const { showAlert, showConfirm } = useAlertDialog();
-  const { logout: logoutRevenueCat } = useRevenueCat();
 
   // Navigation helpers
   const navigateAfterAuth = useCallback(
@@ -80,7 +79,7 @@ export const useAuth = () => {
         }
 
         if (response.code === "EMAIL_NOT_VERIFIED") {
-          const emailToVerify = response.email || email;
+          const emailToVerify = response.email ?? email;
 
           navigateToVerification(emailToVerify);
 
@@ -107,7 +106,10 @@ export const useAuth = () => {
         } else if (provider === "apple" && Platform.OS === "ios") {
           response = await signInWithApple();
         } else {
-          throw new Error(`Unsupported provider: ${provider}`);
+          console.error(
+            `[useAuth] signInWithSocial: Unsupported provider or platform for ${provider}`
+          );
+          throw new Error(`Unsupported provider or platform for ${provider}`);
         }
 
         if (response.success) {
@@ -122,9 +124,8 @@ export const useAuth = () => {
   );
 
   const handleSignOut = useCallback(async () => {
+    console.log("[useAuth] handleSignOut: Initiating sign-out process."); // Keep this high-level log
     const result = await performAuthOperation(async () => {
-      // Sign out from RevenueCat to clear any user-specific data
-      await logoutRevenueCat();
       const response = await signOut();
       if (response.success) {
         // crashlytics().log("User signed out");
@@ -133,14 +134,23 @@ export const useAuth = () => {
       return response;
     }, "Sign Out Failed");
     return result;
-  }, [performAuthOperation, navigateAfterAuth, logoutRevenueCat]);
+  }, [performAuthOperation, navigateAfterAuth]);
 
   // Profile management
   const handleUpdateProfile = useCallback(
-    async (currentPassword: string, updates: any) => {
+    async (
+      currentPassword: string,
+      updates: { displayName?: string; email?: string }
+    ) => {
       const result = await performAuthOperation(async () => {
         const response = await updateProfile(currentPassword, updates);
         if (response.success) {
+          // Update user store with new display name
+          if (updates.displayName) {
+            useUserStore
+              .getState()
+              .updateUserData({ fullName: updates.displayName });
+          }
           showAlert({
             title: "Success",
             message: "Your profile has been updated successfully.",
@@ -189,7 +199,8 @@ export const useAuth = () => {
         if (response.success) {
           showAlert({
             title: "Check Your Email",
-            message: "We've sent you a code to reset your password.",
+            message:
+              "If your account exists, we've sent you a code to reset your password.",
             buttons: [
               {
                 text: "OK",
@@ -207,7 +218,7 @@ export const useAuth = () => {
       }, "Password Reset Failed");
       return result;
     },
-    [performAuthOperation, showAlert]
+    [performAuthOperation, showAlert, router]
   );
 
   const handleVerifyPasswordReset = useCallback(

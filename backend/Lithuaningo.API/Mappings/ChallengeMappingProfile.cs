@@ -9,8 +9,10 @@ namespace Lithuaningo.API.Mappings
         public ChallengeMappingProfile()
         {
             // Challenge mappings
-            CreateMap<ChallengeQuestion, ChallengeQuestionResponse>();
-            CreateMap<ChallengeQuestionResponse, ChallengeQuestion>();
+            CreateMap<ChallengeQuestion, ChallengeQuestionResponse>()
+                .ForMember(dest => dest.FlashcardId, opt => opt.MapFrom(src => src.FlashcardId));
+            CreateMap<ChallengeQuestionResponse, ChallengeQuestion>()
+                .ForMember(dest => dest.FlashcardId, opt => opt.MapFrom(src => src.FlashcardId));
         }
     }
 }

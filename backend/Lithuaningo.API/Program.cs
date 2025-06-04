@@ -109,9 +109,10 @@ static X509Certificate2? LoadCertificate(IWebHostEnvironment environment, IConfi
 
 // Configure caching
 builder.Services.AddMemoryCache(); // Use in-memory cache instead of Redis
-builder.Services.AddScoped<ICacheService, InMemoryCacheService>();
-builder.Services.AddScoped<CacheInvalidator>(); // Register the cache invalidator
-builder.Services.AddScoped<ICacheSettingsService, CacheSettingsService>(); // Register the cache settings service
+// Change Scoped to Singleton for cache services to ensure a single instance
+builder.Services.AddSingleton<ICacheService, InMemoryCacheService>();
+builder.Services.AddSingleton<CacheInvalidator>(); // Register the cache invalidator as Singleton
+builder.Services.AddSingleton<ICacheSettingsService, CacheSettingsService>(); // Register the cache settings service as Singleton
 
 // Use NewtonsoftJson instead of the default System.Text.Json with secure settings
 builder.Services.AddControllers()
@@ -228,6 +229,9 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
 
     // Health Checks
     services.AddHealthChecks();
+
+    // Register IHttpClientFactory
+    services.AddHttpClient();
 
     // Basic Services
     services.AddControllers();
@@ -358,8 +362,8 @@ To authorize in Swagger UI:
 
     // Storage Configuration with secure defaults
     services.Configure<StorageSettings>(configuration.GetSection("Storage"));
-    services.AddScoped<IStorageConfiguration, StorageConfiguration>();
-    services.AddScoped<IStorageService, StorageService>();
+    services.AddSingleton<IStorageConfiguration, StorageConfiguration>();
+    services.AddSingleton<IStorageService, StorageService>();
 
     // Core Services
     services.AddScoped<IUserProfileService, UserProfileService>();
@@ -374,9 +378,9 @@ To authorize in Swagger UI:
     services.AddScoped<IChallengeService, ChallengeService>();
     services.AddScoped<IRevenueCatWebhookService, RevenueCatWebhookService>();
 
-    // OpenAI Services
-    services.AddOptions<OpenAISettings>()
-        .Bind(configuration.GetSection(OpenAISettings.SectionName))
+    // AI Services (formerly OpenAI Services)
+    services.AddOptions<AISettings>() // Changed from OpenAISettings
+        .Bind(configuration.GetSection(AISettings.SectionName)) // Changed from OpenAISettings.SectionName
         .ValidateDataAnnotations()
         .ValidateOnStart();
     services.AddScoped<IAIService, AIService>();
@@ -387,7 +391,10 @@ To authorize in Swagger UI:
 
     services.AddCors(options =>
     {
-        // Mobile app CORS policy - allows any origin for React Native apps
+        // Mobile app CORS policy - INTENTIONALLY allows any origin for React Native apps
+        // This is required for mobile apps as they don't have a fixed origin like web browsers
+        // React Native apps can come from any IP address and don't have a predictable origin
+        // Security is handled through JWT authentication rather than CORS origin restrictions
         options.AddPolicy("AllowMobile", policy =>
         {
             policy.AllowAnyOrigin()
@@ -530,12 +537,14 @@ void ConfigureMiddleware(WebApplication app)
     // Use different CORS policies based on environment
     if (app.Environment.IsDevelopment())
     {
-        // Use web frontend policy in development for easier debugging
+        // Use web frontend policy in development for easier debugging with specific origins
         app.UseCors("AllowWebFrontend");
     }
     else
     {
         // Use mobile-friendly policy in production
+        // INTENTIONAL: AllowMobile policy uses AllowAnyOrigin() for React Native compatibility
+        // This is a standard practice for mobile APIs as mobile apps don't have fixed origins
         app.UseCors("AllowMobile");
     }
 
@@ -556,7 +565,13 @@ void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment env
             { "Supabase:Url", "Supabase URL" },
             { "Supabase:ServiceKey", "Supabase service key" },
             { "Supabase:JwtSecret", "JWT secret" },
-            { "OpenAI:ApiKey", "OpenAI API key" },
+            { "AI:GeminiApiBaseUrl", "Gemini API Base URL" },
+            { "AI:GeminiApiKey", "Gemini API key" },
+            { "AI:GeminiTextModelName", "Gemini Text Model Name" },
+            { "AI:OpenAIApiKey", "OpenAI API key for audio services" },
+            { "AI:OpenAIImageModelName", "OpenAI Image Model Name" },
+            { "AI:OpenAIAudioModelName", "OpenAI Audio Model Name" },
+            { "AI:OpenAIApiBaseUrl", "OpenAI API Base URL" },
             { "RevenueCat:WebhookAuthHeader", "RevenueCat Webhook Auth Header" }
         };
 

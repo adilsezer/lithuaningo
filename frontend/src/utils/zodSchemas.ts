@@ -12,7 +12,7 @@ export const passwordSchema = z
   .min(8, "Password must be at least 8 characters")
   .regex(
     AUTH_PATTERNS.PASSWORD,
-    "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character"
+    "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
   );
 
 export const nameSchema = z
@@ -71,7 +71,7 @@ export const editProfileFormSchema = z
     {
       message: "Current password is required for email users",
       path: ["currentPassword"],
-    }
+    },
   );
 
 export const deleteAccountFormSchema = z
@@ -82,14 +82,14 @@ export const deleteAccountFormSchema = z
       .optional(),
   })
   .refine(
-    (data) => {
+    (_data) => {
       // Password is not required for social auth users
       return true;
     },
     {
       message: "Password is required for email/password users",
       path: ["password"],
-    }
+    },
   );
 
 export const challengeFormSchema = z.object({

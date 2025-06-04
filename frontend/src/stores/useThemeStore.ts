@@ -18,7 +18,7 @@ const THEME_KEYS = {
   THEME: "theme",
 };
 
-const useThemeStore = create<ThemeState & ThemeActions>((set, get) => ({
+const useThemeStore = create<ThemeState & ThemeActions>((set, _get) => ({
   isDarkMode: false,
   manualMode: false,
   isLoading: true,

@@ -3,12 +3,12 @@ import React from "react";
 import { View, StyleProp, ViewStyle, ActivityIndicator } from "react-native";
 import { Card, ProgressBar, useTheme, IconButton } from "react-native-paper";
 
-type StatItem = {
+interface StatItem {
   label: string;
   value: string | number;
   icon?: string;
   iconColor?: string;
-};
+}
 
 interface StatsCardProps {
   title: string;
@@ -67,9 +67,9 @@ export const StatsCard: React.FC<StatsCardProps> = ({
           justifyContent: "space-between",
         }}
       >
-        {stats.map((stat, index) => (
+        {stats.map((stat) => (
           <View
-            key={index}
+            key={stat.label}
             style={{ alignItems: "center", flex: 1, minWidth: 80 }}
           >
             {stat.icon && (

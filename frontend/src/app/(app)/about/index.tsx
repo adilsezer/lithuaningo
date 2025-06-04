@@ -21,7 +21,7 @@ const AboutScreen = () => {
 
   return (
     <ScrollView>
-      <CustomText style={[styles.justifiedText]}>
+      <CustomText style={styles.justifiedText}>
         Lithuaningo is your gateway to mastering Lithuanian! Dive into learning
         with ease and fun. Our app provides a comprehensive learning experience
         with various features and tools to help you become proficient in
@@ -35,7 +35,7 @@ const AboutScreen = () => {
         Email:{" "}
         <CustomText
           onPress={() => handleLinkPress(links.email)}
-          style={styles.link}
+          style={[styles.link, { color: theme.colors.primary }]}
         >
           {links.email.value}
         </CustomText>
@@ -44,10 +44,16 @@ const AboutScreen = () => {
       <CustomText variant="titleMedium" bold>
         Legal
       </CustomText>
-      <CustomText onPress={navigateToPrivacyPolicy} style={styles.link}>
+      <CustomText
+        onPress={navigateToPrivacyPolicy}
+        style={[styles.link, { color: theme.colors.primary }]}
+      >
         {links.privacyPolicy.label}
       </CustomText>
-      <CustomText onPress={navigateToTermsOfService} style={styles.link}>
+      <CustomText
+        onPress={navigateToTermsOfService}
+        style={[styles.link, { color: theme.colors.primary }]}
+      >
         {links.termsOfService.label}
       </CustomText>
 
@@ -79,7 +85,6 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   link: {
-    color: "blue",
     textDecorationLine: "underline",
   },
 });

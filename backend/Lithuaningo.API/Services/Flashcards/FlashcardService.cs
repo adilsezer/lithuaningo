@@ -1,15 +1,11 @@
-using System.Collections.Concurrent;
-using System.Text;
-using System.Text.Json;
 using AutoMapper;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
+using Lithuaningo.API.Services.Challenges;
 using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Supabase;
-using Lithuaningo.API.Utilities;
-using Supabase;
 using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services.Flashcards
@@ -32,6 +28,7 @@ namespace Lithuaningo.API.Services.Flashcards
         private readonly CacheInvalidator _cacheInvalidator;
         private const string CacheKeyPrefix = "flashcard:";
         private const double ReviewFlashcardsRatio = 0.3; // 30% review cards, 70% new cards
+        private readonly IChallengeService _challengeService;
 
         #endregion
 
@@ -46,7 +43,8 @@ namespace Lithuaningo.API.Services.Flashcards
             ICacheService cache,
             ICacheSettingsService cacheSettingsService,
             CacheInvalidator cacheInvalidator,
-            Random random)
+            Random random,
+            IChallengeService challengeService)
         {
             _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
             _supabaseService = supabaseService ?? throw new ArgumentNullException(nameof(supabaseService));
@@ -57,6 +55,7 @@ namespace Lithuaningo.API.Services.Flashcards
             _cacheSettingsService = cacheSettingsService ?? throw new ArgumentNullException(nameof(cacheSettingsService));
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
             _random = random ?? throw new ArgumentNullException(nameof(random));
+            _challengeService = challengeService ?? throw new ArgumentNullException(nameof(challengeService));
         }
 
         #endregion
@@ -102,16 +101,18 @@ namespace Lithuaningo.API.Services.Flashcards
         /// <param name="category">The flashcard category</param>
         /// <param name="difficulty">The difficulty level</param>
         /// <param name="limit">Maximum number of flashcards to retrieve</param>
+        /// <param name="isVerified">Filter by verification status</param>
         /// <returns>A collection of Flashcard model objects</returns>
         public async Task<IEnumerable<Flashcard>> RetrieveFlashcardModelsAsync(
             FlashcardCategory? category = null,
             DifficultyLevel? difficulty = null,
-            int? limit = null)
+            int? limit = null,
+            bool? isVerified = null)
         {
             try
             {
                 // Construct a unique cache key based on parameters
-                string cacheKey = BuildCacheKey(category, difficulty, limit);
+                string cacheKey = BuildCacheKey(category, difficulty, limit, isVerified);
 
                 // Try to get from cache first
                 var cached = await _cache.GetAsync<List<Flashcard>>(cacheKey);
@@ -139,6 +140,14 @@ namespace Lithuaningo.API.Services.Flashcards
                     query = (dynamic)difficultyFilter;
                 }
 
+                // Add filter for verification status
+                if (isVerified.HasValue)
+                {
+                    // Pass boolean value as lowercase string for Supabase filter
+                    var verifiedFilter = query.Filter("is_verified", Operator.Equals, isVerified.Value.ToString().ToUpper());
+                    query = (dynamic)verifiedFilter;
+                }
+
                 if (limit.HasValue)
                 {
                     var limitedQuery = query.Limit(limit.Value);
@@ -151,8 +160,8 @@ namespace Lithuaningo.API.Services.Flashcards
 
                 // Cache the results
                 var settings = await _cacheSettingsService.GetCacheSettingsAsync();
-                await _cache.SetAsync(cacheKey, flashcards,
-                    TimeSpan.FromMinutes(settings.FlashcardCacheMinutes));
+                var expiration = TimeSpan.FromMinutes(settings.FlashcardCacheMinutes);
+                await _cache.SetAsync(cacheKey, flashcards, expiration);
 
                 return flashcards;
             }
@@ -214,12 +223,21 @@ namespace Lithuaningo.API.Services.Flashcards
                 // Get existing flashcard data for context
                 var existingFrontTexts = await GetExistingFrontTextsAsync(primaryCategoryValue, contextSampleSize);
 
-                // Generate flashcards with retries if needed
-                var flashcards = await GenerateUniqueFlashcardsAsync(request, existingFrontTexts);
+                // Generate all unique flashcards (potentially more than request.Count due to overhead factor)
+                var allGeneratedUniqueFlashcards = await GenerateUniqueFlashcardsAsync(request, existingFrontTexts);
 
-                // Save and return the generated flashcards
-                await SaveFlashcardsToSupabaseAsync(flashcards, request.UserId);
-                return _mapper.Map<IEnumerable<FlashcardResponse>>(flashcards);
+                // The flashcards are already saved by GenerateUniqueFlashcardsAsync.
+                // We just need to return the requested count.
+                if (!allGeneratedUniqueFlashcards.Any())
+                {
+                    _logger.LogWarning("No unique flashcards were generated by AI for request");
+                    return Enumerable.Empty<FlashcardResponse>(); // Return empty if nothing was generated
+                }
+
+                // Now, take only the number of flashcards originally requested to return to the client
+                var flashcardsToReturn = allGeneratedUniqueFlashcards.Take(request.Count).ToList();
+
+                return _mapper.Map<IEnumerable<FlashcardResponse>>(flashcardsToReturn);
             }
             catch (Exception ex)
             {
@@ -238,19 +256,32 @@ namespace Lithuaningo.API.Services.Flashcards
             try
             {
                 var flashcard = await GetFlashcardByIdAsync(flashcardId);
+                if (flashcard == null)
+                {
+                    _logger.LogWarning("Flashcard with ID {FlashcardId} not found for image generation.", flashcardId);
+                    throw new InvalidOperationException($"Flashcard with ID {flashcardId} not found.");
+                }
 
-                // Generate the image using the back text (English)
-                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackText);
+                // AIService now handles the upload and returns the URL directly.
+                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackText, flashcard.ExampleSentenceTranslation);
 
-                // Update and save the flashcard
+                if (string.IsNullOrEmpty(imageUrl))
+                {
+                    // This case should ideally be caught within AIService if upload fails, 
+                    // but an extra check here doesn't hurt.
+                    _logger.LogError("AI service returned an empty or null URL for flashcard {FlashcardId} (BackText: {BackText}).", flashcardId, flashcard.BackText);
+                    throw new InvalidOperationException("AI service failed to return a valid image URL.");
+                }
+
                 flashcard.ImageUrl = imageUrl;
-                await UpdateFlashcardAsync(flashcard);
+                await UpdateFlashcardAsync(flashcard); // This also handles cache invalidation
 
+                _logger.LogInformation("Successfully generated, uploaded, and attached image for flashcard {FlashcardId}. Image URL: {ImageUrl}", flashcardId, imageUrl);
                 return imageUrl;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating image for flashcard");
+                _logger.LogError(ex, "Error in GenerateFlashcardImageAsync for flashcard {FlashcardId}", flashcardId);
                 throw;
             }
         }
@@ -292,6 +323,53 @@ namespace Lithuaningo.API.Services.Flashcards
 
         #endregion
 
+        #region Admin Methods
+
+        public async Task<Flashcard> UpdateFlashcardAdminAsync(Guid flashcardId, UpdateFlashcardAdminRequest request)
+        {
+            try
+            {
+                var existingFlashcard = await GetFlashcardByIdAsync(flashcardId);
+                if (existingFlashcard == null)
+                {
+                    throw new KeyNotFoundException($"Flashcard not found.");
+                }
+
+                // Use AutoMapper to map updates, ignoring ID and timestamps
+                _mapper.Map(request, existingFlashcard);
+
+                // Update the flashcard in Supabase
+                await UpdateFlashcardAsync(existingFlashcard); // This also handles cache invalidation
+
+                // Invalidate all flashcard list caches as admin updates can affect any list query.
+                await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
+
+                // After updating the flashcard, clear its old challenges and generate new ones based on the updated content.
+                _logger.LogInformation("Flashcard {FlashcardId} updated by admin. Regenerating associated challenge questions.", existingFlashcard.Id);
+                try
+                {
+                    await _challengeService.ClearChallengesByFlashcardIdAsync(existingFlashcard.Id);
+                    await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(existingFlashcard);
+                    _logger.LogInformation("Successfully regenerated challenge questions for updated flashcard {FlashcardId}.", existingFlashcard.Id);
+                }
+                catch (Exception challengeEx)
+                {
+                    _logger.LogError(challengeEx, "Error regenerating challenges for updated flashcard {FlashcardId} after admin update. The flashcard was updated, but challenges may be outdated or missing.", existingFlashcard.Id);
+                    // Depending on requirements, you might want to re-throw or handle this more specifically.
+                    // For now, the flashcard update itself is considered successful.
+                }
+
+                return existingFlashcard;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating flashcard (admin)");
+                throw;
+            }
+        }
+
+        #endregion
+
         #region Private Helper Methods - Data Retrieval
 
         private async Task<List<Flashcard>> GetFlashcardsForReviewAsync(
@@ -317,50 +395,119 @@ namespace Lithuaningo.API.Services.Flashcards
         private async Task<IEnumerable<FlashcardResponse>> GetFlashcardsWithSpacedRepetitionAsync(
             List<Flashcard> allFlashcards, FlashcardRequest request, string userId)
         {
-            // Get all previously shown flashcard IDs
-            var shownFlashcardIds = await _userFlashcardStatService.GetShownFlashcardIdsAsync(userId);
+            var shownFlashcardIds = await _userFlashcardStatService.GetAllUserInteractedFlashcardIdsAsync(userId);
 
-            // STEP 1: Get flashcards for review based on mastery level
+            // STEP 1: Get flashcards for review
             int reviewCount = (int)Math.Ceiling(request.Count * ReviewFlashcardsRatio);
             var reviewFlashcards = await GetFlashcardsForReviewAsync(allFlashcards, userId, reviewCount);
 
-            // STEP 2: Fill the rest with new flashcards the user hasn't seen
-            int newCardsNeeded = request.Count - reviewFlashcards.Count;
-            var newFlashcards = allFlashcards
-                .Where(f => !shownFlashcardIds.Contains(f.Id))
+            // STEP 2: Fill the rest with new flashcards the user hasn't seen from the existing pool
+            int newCardsNeededFromPool = request.Count - reviewFlashcards.Count;
+            var newFlashcardsFromPool = allFlashcards
+                .Where(f => !shownFlashcardIds.Contains(f.Id) && !reviewFlashcards.Any(rf => rf.Id == f.Id))
                 .OrderBy(_ => _random.Next())
-                .Take(newCardsNeeded)
+                .Take(newCardsNeededFromPool > 0 ? newCardsNeededFromPool : 0) // Ensure Take count is not negative
                 .ToList();
 
-            // STEP 3: Combine the review and new flashcards
-            var selectedFlashcards = reviewFlashcards.Concat(newFlashcards).ToList();
+            // Combine current models from review and pool
+            var flashcardModelsForSession = new List<Flashcard>();
+            flashcardModelsForSession.AddRange(reviewFlashcards);
+            flashcardModelsForSession.AddRange(newFlashcardsFromPool);
 
-            // STEP 4: If we still need more flashcards, generate them with AI
-            int remainingCount = request.Count - selectedFlashcards.Count;
-            if (remainingCount > 0)
+            // STEP 3: If we still need more flashcards, generate them with AI
+            int remainingToAIMake = request.Count - flashcardModelsForSession.Count;
+            if (remainingToAIMake > 0)
             {
-                // Create a copy of the request with adjusted count
+                _logger.LogInformation("Need to generate {Count} flashcards with AI to meet request count.", remainingToAIMake);
                 var generationRequest = new FlashcardRequest
                 {
                     PrimaryCategory = request.PrimaryCategory,
-                    Count = remainingCount,
+                    Count = remainingToAIMake, // Request only the number actually needed for this step
                     UserId = userId,
                     Difficulty = request.Difficulty
                 };
 
-                // Generate new flashcards
-                var newFlashcardResponses = await GenerateFlashcardsAsync(generationRequest);
+                // GenerateUniqueFlashcardsAsync returns models and queues initial challenge generation for these new AI cards
+                // We need to provide some context of existing front texts to avoid duplicates from AI.
+                var contextFrontTexts = allFlashcards.Select(f => f.FrontText)
+                                       .Concat(flashcardModelsForSession.Select(f => f.FrontText))
+                                       .Distinct()
+                                       .ToList();
 
-                // Map existing flashcards to response DTOs
-                var selectedResponses = _mapper.Map<IEnumerable<FlashcardResponse>>(selectedFlashcards);
-
-                // Combine both sets
-                return selectedResponses.Concat(newFlashcardResponses);
+                var uniqueAiGeneratedFlashcards = await GenerateUniqueFlashcardsAsync(generationRequest, contextFrontTexts);
+                flashcardModelsForSession.AddRange(uniqueAiGeneratedFlashcards.Take(remainingToAIMake)); // Add AI generated cards
             }
 
-            // STEP 5: Shuffle and return the final selection
-            return _mapper.Map<IEnumerable<FlashcardResponse>>(
-                selectedFlashcards.OrderBy(_ => _random.Next()).ToList());
+            // Ensure we don't exceed the originally requested count due to rounding or minimums
+            var finalModelsForSession = flashcardModelsForSession.Take(request.Count).ToList();
+
+            // STEP 4: Ensure all flashcards in the session have the correct number of challenge questions.
+            // If not, existing challenges for that flashcard are cleared and new ones are regenerated.
+            if (finalModelsForSession.Any())
+            {
+                const int RequiredChallengeQuestionCount = 4; // Define the required count
+                var sessionFlashcardIds = finalModelsForSession.Select(f => f.Id).Distinct().ToList();
+
+                // Fetch all challenge questions for the flashcards in the session to count them
+                var allChallengesForSessionQuery = await _supabaseService.Client
+                    .From<ChallengeQuestion>()
+                    .Select("id, flashcard_id") // Select id for potential deletion and flashcard_id for grouping
+                    .Filter("flashcard_id", Operator.In, sessionFlashcardIds.Select(id => id.ToString()).ToList())
+                    .Get();
+
+                var challengeCountsByFlashcardId = allChallengesForSessionQuery.Models
+                    .Where(cq => cq.FlashcardId.HasValue) // Ensure FlashcardId is not null before grouping
+                    .GroupBy(cq => cq.FlashcardId!.Value)
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                var flashcardsToRegenerateChallenges = new List<Flashcard>();
+
+                foreach (var flashcard in finalModelsForSession)
+                {
+                    challengeCountsByFlashcardId.TryGetValue(flashcard.Id, out int currentChallengeCount);
+                    // If currentChallengeCount is 0 (flashcard.Id not in dictionary) or not equal to required, regenerate.
+                    if (currentChallengeCount != RequiredChallengeQuestionCount)
+                    {
+                        _logger.LogInformation(
+                            "Flashcard ID {FlashcardId} has {CurrentCount} challenges, but requires {RequiredCount}. Queuing for regeneration.",
+                            flashcard.Id, currentChallengeCount, RequiredChallengeQuestionCount);
+                        flashcardsToRegenerateChallenges.Add(flashcard);
+                    }
+                }
+
+                if (flashcardsToRegenerateChallenges.Any())
+                {
+                    _logger.LogInformation("Found {Count} flashcards in session needing challenge regeneration.", flashcardsToRegenerateChallenges.Count);
+                    foreach (var flashcardForRegeneration in flashcardsToRegenerateChallenges)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                _logger.LogInformation(
+                                    "Asynchronously clearing and regenerating challenges for flashcard ID {FlashcardId}.",
+                                    flashcardForRegeneration.Id);
+
+                                // Assumes IChallengeService has ClearChallengesByFlashcardIdAsync
+                                // This method needs to be implemented in ChallengeService to delete existing challenges.
+                                await _challengeService.ClearChallengesByFlashcardIdAsync(flashcardForRegeneration.Id);
+                                await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcardForRegeneration);
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogError(ex,
+                                    "Error during asynchronous challenge clearing/regeneration for flashcard ID {FlashcardId}.",
+                                    flashcardForRegeneration.Id);
+                            }
+                        });
+                    }
+                }
+            }
+
+            // STEP 5: Shuffle the final list of models and map to DTOs for the response
+            var shuffledFlashcards = finalModelsForSession.OrderBy(f => _random.Next()).ToList();
+            _logger.LogInformation("Returning {Count} flashcards for user {UserId} learning session.", shuffledFlashcards.Count, userId);
+            return _mapper.Map<IEnumerable<FlashcardResponse>>(shuffledFlashcards);
         }
 
         private async Task<List<string>> GetExistingFrontTextsAsync(
@@ -444,66 +591,74 @@ namespace Lithuaningo.API.Services.Flashcards
             FlashcardRequest request,
             List<string> existingFrontTexts)
         {
-            const int maxAttempts = 3;
-            int attemptCount = 0;
-            List<Flashcard> flashcards = new List<Flashcard>();
+            if (request == null) throw new ArgumentNullException(nameof(request));
 
-            // Create a case-insensitive HashSet of front texts to efficiently check for duplicates
-            var frontTextLookup = new HashSet<string>(
-                existingFrontTexts.Select(text => text.ToLowerInvariant()),
-                StringComparer.OrdinalIgnoreCase);
+            // _aiService.GenerateFlashcardsAsync returns List<Flashcard> (model objects)
+            var generatedFlashcards = await _aiService.GenerateFlashcardsAsync(request, existingFrontTexts);
 
-            // Create request
-            var currentRequest = new FlashcardRequest
+            if (generatedFlashcards.Any())
             {
-                PrimaryCategory = request.PrimaryCategory,
-                Count = request.Count * 2,
-                UserId = request.UserId,
-                Difficulty = request.Difficulty
-            };
+                // Save the newly generated flashcards to the database.
+                // This is the single point where these AI-generated cards are saved.
+                await SaveFlashcardsToSupabaseAsync(generatedFlashcards, request.UserId);
 
-            // Retry generation until we have enough flashcards or reach max attempts
-            while (flashcards.Count < request.Count && attemptCount < maxAttempts)
-            {
-                attemptCount++;
-
-                // Generate flashcards
-                var newFlashcards = await _aiService.GenerateFlashcardsAsync(currentRequest, existingFrontTexts);
-
-                // Filter out duplicates based on front text only
-                var uniqueNewFlashcards = newFlashcards
-                    .Where(f => !frontTextLookup.Contains(f.FrontText.ToLowerInvariant()))
-                    .ToList();
-
-                // Add unique flashcards to our collection
-                flashcards.AddRange(uniqueNewFlashcards);
-
-                // Update tracking to avoid duplicates in next attempt
-                foreach (var card in uniqueNewFlashcards)
+                // Asynchronously generate and save challenges for each new flashcard
+                _ = Task.Run(async () =>
                 {
-                    frontTextLookup.Add(card.FrontText.ToLowerInvariant());
-                }
+                    foreach (var flashcard in generatedFlashcards)
+                    {
+                        try
+                        {
+                            await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcard);
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error generating or saving challenges for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                            // Optionally, implement a retry mechanism or dead-letter queue for failed challenge generations
+                        }
+                    }
+                });
 
-                // If we got enough flashcards, break early
-                if (flashcards.Count >= request.Count)
+                // Asynchronously generate images and audio for each new flashcard (if requested)
+                if (request.GenerateImages || request.GenerateAudio)
                 {
-                    break;
+                    _ = Task.Run(async () =>
+                    {
+                        foreach (var flashcard in generatedFlashcards)
+                        {
+                            if (request.GenerateImages)
+                            {
+                                try
+                                {
+                                    // Generate image for the flashcard
+                                    await GenerateFlashcardImageAsync(flashcard.Id);
+                                    _logger.LogInformation("Successfully generated image for flashcard ID {FlashcardId}", flashcard.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error generating image for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                }
+                            }
+
+                            if (request.GenerateAudio)
+                            {
+                                try
+                                {
+                                    // Generate audio for the flashcard
+                                    await GenerateFlashcardAudioAsync(flashcard.Id);
+                                    _logger.LogInformation("Successfully generated audio for flashcard ID {FlashcardId}", flashcard.Id);
+                                }
+                                catch (Exception ex)
+                                {
+                                    _logger.LogError(ex, "Error generating audio for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                }
+                            }
+                        }
+                    });
                 }
             }
 
-            // Log the final result if we couldn't generate enough
-            if (flashcards.Count < request.Count)
-            {
-                _logger.LogWarning("Could not generate enough flashcards");
-            }
-
-            // Trim if we got more than requested
-            if (flashcards.Count > request.Count)
-            {
-                flashcards = flashcards.Take(request.Count).ToList();
-            }
-
-            return flashcards;
+            return generatedFlashcards;
         }
 
         #endregion
@@ -516,71 +671,41 @@ namespace Lithuaningo.API.Services.Flashcards
                 .From<Flashcard>()
                 .Update(flashcard);
 
-            // Invalidate caches
-            await InvalidateFlashcardCachesAsync(flashcard);
-        }
-
-        private async Task InvalidateFlashcardCachesAsync(Flashcard flashcard)
-        {
-            // Invalidate the specific flashcard cache
-            await _cacheInvalidator.InvalidateFlashcardAsync(flashcard.Id.ToString());
-
-            // Also invalidate category-based caches
-            if (flashcard.Categories?.Count > 0)
-            {
-                foreach (var category in flashcard.Categories)
-                {
-                    await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
-                }
-            }
+            // Directly invalidate all flashcard list caches
+            await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
         }
 
         private async Task SaveFlashcardsToSupabaseAsync(List<Flashcard> flashcards, string? userId = null)
         {
-            try
+            if (flashcards == null || !flashcards.Any())
             {
-                var result = await _supabaseService.Client
-                    .From<Flashcard>()
-                    .Insert(flashcards);
-
-                int insertedCount = result.Models?.Count ?? 0;
-
-                // Invalidate relevant caches
-                await InvalidateCategoryCachesForFlashcardsAsync(result.Models);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving flashcards to Supabase");
-                throw;
-            }
-        }
-
-        private async Task InvalidateCategoryCachesForFlashcardsAsync(IEnumerable<Flashcard>? flashcards)
-        {
-            if (flashcards == null)
-            {
+                _logger.LogWarning("Attempted to save a null or empty list of flashcards.");
                 return;
             }
 
-            // Use a HashSet to track unique categories
-            var uniqueCategories = new HashSet<int>();
-
-            // Collect all affected categories
-            foreach (var flashcard in flashcards)
+            // Ensure CreatedAt and UpdatedAt are set
+            var now = DateTime.UtcNow;
+            foreach (var card in flashcards)
             {
-                if (flashcard.Categories != null)
-                {
-                    foreach (var category in flashcard.Categories)
-                    {
-                        uniqueCategories.Add(category);
-                    }
-                }
+                if (card.Id == Guid.Empty) card.Id = Guid.NewGuid();
             }
 
-            // Invalidate caches for each category
-            foreach (var category in uniqueCategories)
+            try
             {
-                await _cacheInvalidator.InvalidateAllFlashcardCachesForCategoryAsync(category);
+                var response = await _supabaseService.Client.From<Flashcard>().Insert(flashcards);
+                _logger.LogInformation("{Count} flashcards saved to Supabase", flashcards.Count);
+
+                // CRITICAL: Invalidate all flashcard caches after inserting new flashcards
+                // This ensures that newly generated flashcards are immediately available for subsequent operations
+                // and prevents duplicate generation due to stale cache data
+                await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
+
+                // No need to trigger challenge generation here, it's handled in GenerateUniqueFlashcardsAsync
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error saving flashcards to Supabase.");
+                throw; // Re-throw to indicate failure in the calling method
             }
         }
 
@@ -605,9 +730,14 @@ namespace Lithuaningo.API.Services.Flashcards
             }
         }
 
-        private static string BuildCacheKey(FlashcardCategory? category, DifficultyLevel? difficulty, int? limit)
+        private static string BuildCacheKey(FlashcardCategory? category, DifficultyLevel? difficulty, int? limit, bool? isVerified)
         {
-            var components = new List<string> { CacheKeyPrefix };
+            var components = new List<string> { CacheKeyPrefix.TrimEnd(':') }; // Start with prefix without trailing colon
+
+            if (isVerified.HasValue)
+            {
+                components.Add(isVerified.Value ? "status:verified" : "status:unverified");
+            }
 
             if (category.HasValue && category.Value != FlashcardCategory.AllCategories)
             {
@@ -624,7 +754,8 @@ namespace Lithuaningo.API.Services.Flashcards
                 components.Add($"limit:{limit.Value}");
             }
 
-            return string.Join(":", components);
+            // Join non-empty components with a single colon
+            return string.Join(":", components.Where(c => !string.IsNullOrEmpty(c)));
         }
 
         #endregion

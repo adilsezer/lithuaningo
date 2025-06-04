@@ -14,7 +14,7 @@ import { FormProps, FormField as FormFieldType } from "./form.types";
 import { FormField } from "./FormField";
 import { useAlertDialog } from "@hooks/useAlertDialog";
 
-const getDefaultValueByCategory = (field: FormFieldType): any => {
+const getDefaultValueByCategory = (field: FormFieldType): string | boolean => {
   switch (field.category) {
     case "toggle":
       return false;
@@ -39,7 +39,7 @@ export const Form = forwardRef(function Form<T extends FieldValues>(
     submitButtonStyle,
     zodSchema,
   }: FormProps<T>,
-  ref: React.Ref<{ reset: () => void }>
+  ref: React.Ref<{ reset: () => void }>,
 ) {
   const firstFieldRef = useRef<TextInput>(null);
   const form = useForm<T>({
@@ -53,7 +53,7 @@ export const Form = forwardRef(function Form<T extends FieldValues>(
           ...acc,
           [field.name]: field.defaultValue ?? getDefaultValueByCategory(field),
         }),
-        {}
+        {},
       ),
       ...defaultValues,
     } as DefaultValues<T>,
@@ -80,16 +80,16 @@ export const Form = forwardRef(function Form<T extends FieldValues>(
   const handleFormSubmit = async (data: T) => {
     try {
       await onSubmit(data);
-    } catch (error) {
+    } catch {
       showError("An error occurred while submitting the form");
     }
   };
 
-  const onError = (errors: any) => {
+  const onError = (errors: FieldValues) => {
     const errorMessages = Object.entries(errors)
-      .map(([field, error]: [string, any]) => {
+      .map(([field, error]: [string, FieldError | undefined]) => {
         const fieldConfig = fields.find((f) => f.name === field);
-        return error.message || `${fieldConfig?.label || field} is required`;
+        return error?.message || `${fieldConfig?.label || field} is required`;
       })
       .join("\n");
     showError(errorMessages);

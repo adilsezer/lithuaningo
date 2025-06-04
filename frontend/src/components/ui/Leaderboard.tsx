@@ -9,13 +9,7 @@ interface LeaderboardProps {
   entries: LeaderboardEntryResponse[];
 }
 
-const TrophyIcon = ({
-  position,
-  color,
-}: {
-  position: number;
-  color: string;
-}) => {
+const TrophyIcon = ({ position }: { position: number; color: string }) => {
   const theme = useTheme();
   const positionColors = [
     theme.colors.primary,
@@ -23,7 +17,9 @@ const TrophyIcon = ({
     theme.colors.tertiary,
   ];
 
-  if (position < 0 || position > 2) return null;
+  if (position < 0 || position > 2) {
+    return null;
+  }
   return (
     <FontAwesome name="trophy" size={20} color={positionColors[position]} />
   );

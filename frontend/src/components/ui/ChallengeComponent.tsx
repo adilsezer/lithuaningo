@@ -15,6 +15,7 @@ import { router } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomDivider from "@components/ui/CustomDivider";
 import { ChallengeQuestionResponse, ChallengeQuestionType } from "@src/types";
+import CustomText from "./CustomText";
 
 // Define props interface for the reusable component
 interface ChallengeComponentProps {
@@ -44,7 +45,6 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
   score,
   isCorrectAnswer,
   isCompleted,
-  title = "Challenge",
   onAnswer,
   onNextQuestion,
   onRetry,
@@ -121,10 +121,14 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
     question: ChallengeQuestionResponse
   ): boolean => {
     // No example to show
-    if (!question.exampleSentence) return false;
+    if (!question.exampleSentence) {
+      return false;
+    }
 
     // Don't show if example is directly part of the question
-    if (question.question.includes(question.exampleSentence)) return false;
+    if (question.question.includes(question.exampleSentence)) {
+      return false;
+    }
 
     // Type-specific rules
     switch (question.type) {
@@ -159,12 +163,18 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
           <ActivityIndicator
             size="large"
             color={theme.colors.primary}
-            animating={true}
+            animating
           />
           <View style={styles.loadingTextContainer}>
-            <Text variant="titleMedium" style={{ color: theme.colors.primary }}>
-              Loading Challenge
-            </Text>
+            <CustomText
+              variant="titleMedium"
+              style={{ color: theme.colors.primary }}
+            >
+              🤖 Lithuaningo AI is setting up your challenge...
+            </CustomText>
+            <CustomText variant="bodySmall">
+              No need to wait—come back to this screen anytime!
+            </CustomText>
             <Text
               variant="bodySmall"
               style={{
@@ -361,7 +371,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                 },
               ]}
             >
-              <Card.Content style={[styles.questionContent]}>
+              <Card.Content style={styles.questionContent}>
                 <Text
                   variant="bodySmall"
                   style={{
@@ -439,8 +449,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                   styles.feedbackCard,
                   {
                     backgroundColor: isCorrectAnswer
-                      ? theme.colors.primaryContainer
-                      : theme.colors.errorContainer,
+                      ? theme.colors.primary
+                      : theme.colors.error,
                   },
                 ]}
               >
@@ -451,8 +461,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       icon={isCorrectAnswer ? "check-circle" : "close-circle"}
                       color={
                         isCorrectAnswer
-                          ? theme.colors.primary
-                          : theme.colors.error
+                          ? theme.colors.onPrimary
+                          : theme.colors.onError
                       }
                       style={{ backgroundColor: "transparent" }}
                     />
@@ -463,8 +473,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       variant="titleMedium"
                       style={{
                         color: isCorrectAnswer
-                          ? theme.colors.primary
-                          : theme.colors.error,
+                          ? theme.colors.onPrimary
+                          : theme.colors.onError,
                         fontWeight: "600",
                       }}
                     >
@@ -475,14 +485,26 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       variant="bodyMedium"
                       style={{
                         color: isCorrectAnswer
-                          ? theme.colors.primary
-                          : theme.colors.error,
+                          ? theme.colors.onPrimary
+                          : theme.colors.onError,
                         marginTop: 4,
                       }}
                     >
-                      {isCorrectAnswer
-                        ? "Puiku! Keep up the good work!"
-                        : `The correct answer is: ${currentQuestion.correctAnswer}`}
+                      {isCorrectAnswer ? (
+                        "Puiku! Keep up the good work!"
+                      ) : (
+                        <>
+                          The correct answer is:{" "}
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              fontSize: 16,
+                            }}
+                          >
+                            {currentQuestion.correctAnswer}
+                          </Text>
+                        </>
+                      )}
                     </Text>
                   </View>
                 </Card.Content>
@@ -497,10 +519,15 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                         : "check"
                     }
                     contentStyle={styles.feedbackButtonContent}
-                    style={{
-                      backgroundColor: isCorrectAnswer
+                    labelStyle={{
+                      color: isCorrectAnswer
                         ? theme.colors.primary
                         : theme.colors.error,
+                    }}
+                    style={{
+                      backgroundColor: isCorrectAnswer
+                        ? theme.colors.onPrimary
+                        : theme.colors.onError,
                     }}
                   >
                     {currentIndex < questions.length - 1

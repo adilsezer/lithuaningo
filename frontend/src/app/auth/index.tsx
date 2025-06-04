@@ -27,7 +27,7 @@ const WelcomeScreen = () => {
 const WelcomeImage = () => (
   <View style={styles.imageContainer}>
     <Image
-      source={require("assets/images/welcome-image.png")}
+      source={require("../../../assets/images/welcome-image.png")}
       style={styles.image}
       accessibilityLabel="Welcome to Lithuaningo"
     />
@@ -84,8 +84,5 @@ const styles = StyleSheet.create({
   textContainer: {
     width: "100%",
     alignItems: "center",
-  },
-  sectionSpacing: {
-    marginTop: 10,
   },
 });

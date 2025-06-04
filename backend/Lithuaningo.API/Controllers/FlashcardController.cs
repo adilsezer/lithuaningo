@@ -39,7 +39,7 @@ namespace Lithuaningo.API.Controllers
         [HttpGet("learning")]
         [SwaggerOperation(
             Summary = "Get learning flashcards for a user",
-            Description = "Retrieves flashcards for the specified category and difficulty level with spaced repetition. If there are not enough unseen flashcards, generates new ones using AI.",
+            Description = "Retrieves flashcards for the specified category and difficulty level with spaced repetition. If there are not enough unseen flashcards, generates new ones using AI. Optionally generates images and audio for new flashcards.",
             OperationId = "GetUserLearningFlashcards",
             Tags = new[] { "Flashcard" }
         )]

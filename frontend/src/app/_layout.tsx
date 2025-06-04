@@ -27,22 +27,22 @@ function useProtectedRoutes() {
   const segments = useSegments();
   const router = useRouter();
   const isAuthenticated = useUserStore((state) => state.isAuthenticated);
+  const isVerifyingEmail = useUserStore((state) => state.isVerifyingEmail);
   const isLoading = useIsLoading();
 
   useEffect(() => {
-    // Don't redirect if still loading
-    if (isLoading) return;
+    if (isLoading || isVerifyingEmail) {
+      return;
+    }
 
     const inAuthGroup = segments[0] === "auth";
 
     if (!isAuthenticated && !inAuthGroup) {
-      // If not authenticated and not in auth group, redirect to auth
       router.replace("/auth");
     } else if (isAuthenticated && inAuthGroup) {
-      // If authenticated and in auth group, redirect to app
       router.replace("/(app)");
     }
-  }, [isAuthenticated, segments, isLoading, router]);
+  }, [isAuthenticated, segments, isLoading, router, isVerifyingEmail]);
 }
 
 const ROOT_SCREENS = [{ name: "index" }, { name: "auth" }, { name: "(app)" }];

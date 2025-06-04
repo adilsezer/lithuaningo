@@ -48,7 +48,7 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   const [delayedIsLoading, setDelayedIsLoading] = useState(false);
 
   useEffect(() => {
-    if (!modal) return;
+    if (!modal) {return;}
 
     let timer: ReturnType<typeof setTimeout>;
 

@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { View, StyleSheet, ScrollView } from "react-native";
+import { StyleSheet, ScrollView } from "react-native";
 import { useUserData } from "@stores/useUserStore";
 import CustomText from "@components/ui/CustomText";
 import { useSetError } from "@src/stores/useUIStore";
@@ -44,7 +44,7 @@ export default function HomeScreen() {
   }, [userData?.id, getUserChallengeStats]);
 
   return (
-    <ScrollView style={[styles.container]} showsVerticalScrollIndicator={false}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <CustomText variant="titleLarge" bold>
         Hi, {userData?.fullName || "there"} 👋
       </CustomText>

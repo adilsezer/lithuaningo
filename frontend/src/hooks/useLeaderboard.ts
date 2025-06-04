@@ -18,7 +18,7 @@ export const useLeaderboard = () => {
       setEntries(newEntries);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to fetch leaderboard"
+        err instanceof Error ? err.message : "Failed to fetch leaderboard",
       );
     } finally {
       setLoading(false);
@@ -36,12 +36,12 @@ export const useLeaderboard = () => {
         await fetchLeaderboard(); // Refresh the leaderboard after update
       } catch (err) {
         setError(
-          err instanceof Error ? err.message : "Failed to update leaderboard"
+          err instanceof Error ? err.message : "Failed to update leaderboard",
         );
         setLoading(false);
       }
     },
-    [fetchLeaderboard, setLoading, setError]
+    [fetchLeaderboard, setLoading, setError],
   );
 
   return {

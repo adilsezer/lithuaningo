@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView } from "react-native";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
@@ -80,7 +80,5 @@ const SignUpScreen: React.FC = () => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({});
 
 export default SignUpScreen;

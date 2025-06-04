@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { FlatList } from "react-native";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { FlatList, Keyboard } from "react-native";
 import { useTheme } from "react-native-paper";
 import { router } from "expo-router";
 import { apiClient } from "@services/api/apiClient";
@@ -10,6 +10,7 @@ import {
 } from "@stores/useUserStore";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import useAlertDialog from "@hooks/useAlertDialog";
+import { useAlertActions } from "@stores/useAlertStore";
 
 // Message interface
 export interface Message {
@@ -33,19 +34,19 @@ export const CHAT_EXAMPLES = [
   "Show Lithuanian alphabet basics",
 ];
 
-const initialMessages: Message[] = [
+const getInitialMessages = (): Message[] => [
   {
     id: "1",
     text: "Hello! How can I help you learn Lithuanian?",
     sender: "ai",
-    timestamp: new Date(),
+    timestamp: new Date(), // Note: this will be a new timestamp each time
     status: "delivered",
   },
 ];
 
 export const useChat = () => {
   // Core chat state
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [messages, setMessages] = useState<Message[]>(getInitialMessages());
   const [inputText, setInputText] = useState<string>("");
   const [refreshing, setRefreshing] = useState<boolean>(false);
   const [showExamples, setShowExamples] = useState<boolean>(true);
@@ -58,6 +59,7 @@ export const useChat = () => {
   const isPremium = useIsPremium();
   const userData = useUserData();
   const alertDialog = useAlertDialog();
+  const { hideDialog } = useAlertActions();
   const theme = useTheme();
 
   // UI refs
@@ -65,12 +67,26 @@ export const useChat = () => {
 
   // ===== Core Chat Logic =====
 
+  // Load chat stats from the server
+  const loadChatStats = useCallback(async (): Promise<void> => {
+    if (!isAuthenticated || !userData?.id) {
+      return;
+    }
+
+    try {
+      const stats = await apiClient.getUserChatStats(userData.id);
+      setDailyMessageCount(stats.todayMessageCount);
+    } catch (error) {
+      console.error("Error loading chat stats:", error);
+    }
+  }, [isAuthenticated, userData?.id]);
+
   // Load and track daily message count
   useEffect(() => {
     if (isAuthenticated && userData?.id) {
       loadChatStats();
     }
-  }, [isAuthenticated, userData?.id]);
+  }, [isAuthenticated, userData?.id, loadChatStats]);
 
   // Initialize session ID on component mount
   useEffect(() => {
@@ -85,18 +101,6 @@ export const useChat = () => {
       }, 200);
     }
   }, [messages]);
-
-  // Load chat stats from the server
-  const loadChatStats = async (): Promise<void> => {
-    if (!isAuthenticated || !userData?.id) return;
-
-    try {
-      const stats = await apiClient.getUserChatStats(userData.id);
-      setDailyMessageCount(stats.todayMessageCount);
-    } catch (error) {
-      console.error("Error loading chat stats:", error);
-    }
-  };
 
   // Initialize session ID
   const initSessionId = async (): Promise<void> => {
@@ -128,7 +132,9 @@ export const useChat = () => {
 
   // Track message usage on the server
   const trackMessageUsage = async (): Promise<void> => {
-    if (!isAuthenticated || !userData?.id) return;
+    if (!isAuthenticated || !userData?.id) {
+      return;
+    }
 
     try {
       const response = await apiClient.trackChatMessage({
@@ -144,7 +150,9 @@ export const useChat = () => {
 
   // Send a new message
   const sendMessage = async (message: string): Promise<void> => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated) {
+      return;
+    }
 
     // Add the user's message to the chat with "sending" status
     const newMessage: Message = {
@@ -240,10 +248,14 @@ export const useChat = () => {
 
   // Check if user has reached daily limit
   const checkDailyLimit = async (): Promise<boolean> => {
-    if (!isAuthenticated || !userData?.id) return false;
+    if (!isAuthenticated || !userData?.id) {
+      return false;
+    }
 
     // For premium users, always return false (no limit)
-    if (isPremium) return false;
+    if (isPremium) {
+      return false;
+    }
 
     // Use local count for quick check if already exceeded
     if (dailyMessageCount >= MAX_FREE_MESSAGES_PER_DAY) {
@@ -262,6 +274,7 @@ export const useChat = () => {
 
   // Clear chat session (for logout or reset)
   const clearChatSession = async (): Promise<void> => {
+    console.log("Attempting to clear chat session...");
     try {
       // Generate a new session ID
       const newSessionId = `session_${Date.now()}`;
@@ -269,9 +282,10 @@ export const useChat = () => {
       setSessionId(newSessionId);
 
       // Clear messages and reset state
-      setMessages(initialMessages);
+      setMessages(getInitialMessages());
       setInputText("");
       setShowExamples(true);
+      console.log("Chat session supposedly cleared. Messages set to initial.");
     } catch (error) {
       console.error("Error clearing chat session:", error);
     }
@@ -281,7 +295,9 @@ export const useChat = () => {
 
   // Handle message sending
   const handleSend = async () => {
-    if (inputText.trim() === "") return;
+    if (inputText.trim() === "") {
+      return;
+    }
 
     // Check for message limit for free users
     const hasReachedLimit = await checkDailyLimit();
@@ -319,20 +335,20 @@ export const useChat = () => {
 
   // Handle clear chat confirmation
   const handleClearChat = () => {
+    Keyboard.dismiss();
     alertDialog.showConfirm({
       title: "Clear Chat",
       message: "Are you sure you want to clear all chat messages?",
       confirmText: "Clear",
       cancelText: "Cancel",
-      onConfirm: () => clearChatSession(),
-      onCancel: () => {},
+      onConfirm: async () => {
+        await clearChatSession();
+        hideDialog();
+      },
+      onCancel: () => {
+        hideDialog();
+      },
     });
-  };
-
-  // Process message text (format bold text)
-  const processText = (text: string) => {
-    // Replace **text** with bold
-    return text.replace(/\*\*(.*?)\*\*/g, "$1");
   };
 
   // Navigate to premium features
@@ -356,7 +372,6 @@ export const useChat = () => {
 
     // Data operations
     formatTimestamp,
-    processText,
 
     // User actions
     refreshChat,

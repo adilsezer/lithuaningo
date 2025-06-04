@@ -20,7 +20,7 @@ export const useChallengeStats = (userId?: string) => {
     setError(null);
     try {
       const data = await UserChallengeStatsService.getUserChallengeStats(
-        userId
+        userId,
       );
       setStats(data);
       return data;
@@ -63,7 +63,7 @@ export const useChallengeStats = (userId?: string) => {
         setIsLoading(false);
       }
     },
-    [userId]
+    [userId],
   );
 
   return {

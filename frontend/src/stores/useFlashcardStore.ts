@@ -13,9 +13,10 @@ import {
   SubmitFlashcardAnswerRequest,
 } from "@src/types/UserFlashcardStats";
 import { useUserStore } from "./useUserStore";
+import { apiClient } from "@services/api/apiClient";
 
 // Constants
-export const DAILY_FLASHCARD_LIMIT = 25;
+export const DAILY_FLASHCARD_LIMIT = 10;
 
 // Types
 export interface FlashcardMessage {
@@ -23,34 +24,25 @@ export interface FlashcardMessage {
   type: "success" | "error" | "info";
 }
 
-// Store state organized by domain
-interface FlashcardState {
+interface FlashcardStore {
+  // State
   flashcards: FlashcardResponse[];
   currentIndex: number;
   currentFlashcardId: string | null;
   flipped: boolean;
   isDeckCompleted: boolean;
   hasAttemptedLoad: boolean;
-}
-
-interface StatsState {
-  flashcardsAnsweredToday: number;
+  flashcardsViewedToday: number;
   lastSyncTime: Date | null;
   statsSummary: UserFlashcardStatsSummaryResponse | null;
   currentFlashcardStats: UserFlashcardStatResponse | null;
-}
-
-interface UIState {
   isLoading: boolean;
   isLoadingStats: boolean;
   isLoadingFlashcards: boolean;
   error: string | null;
   submissionMessage: FlashcardMessage | null;
-}
 
-// Combined store interface
-interface FlashcardStoreState extends FlashcardState, StatsState, UIState {
-  // Flashcard actions
+  // Actions
   fetchFlashcards: (params: {
     categoryId: string;
     userId?: string;
@@ -59,55 +51,73 @@ interface FlashcardStoreState extends FlashcardState, StatsState, UIState {
   handleFlip: () => void;
   goToNextCard: () => void;
   resetSession: () => void;
-
-  // Stats actions
+  advanceCardAndProcess: (flashcardId: string, userId: string) => Promise<void>;
   syncFlashcardCount: (userId?: string) => Promise<void>;
   resetFlashcardCount: () => void;
   fetchFlashcardStats: (flashcardId: string, userId?: string) => Promise<void>;
   submitFlashcardAnswer: (
     answer: SubmitFlashcardAnswerRequest & { userId?: string }
   ) => Promise<void>;
-
-  // Helper functions
   isDailyLimitReached: (isPremium: boolean) => boolean;
   canFetchNewCards: (isPremium: boolean) => boolean;
+  retryIncrementViewCount: (
+    flashcardId: string,
+    userId: string,
+    maxRetries?: number
+  ) => Promise<boolean>;
 }
 
-export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
-  // ===== INITIAL STATE =====
+const createFlashcardRequest = (
+  categoryId: string,
+  userId?: string
+): FlashcardRequest => {
+  const numericId = parseInt(categoryId, 10);
+  const request: FlashcardRequest = {
+    count: 10,
+    userId,
+    primaryCategory: FlashcardCategory.AllCategories,
+    difficulty: DifficultyLevel.Basic, // Will be overridden for specific cases
+    generateImages: true,
+    generateAudio: true,
+  };
 
-  // Flashcard state
+  if (numericId >= 0 && numericId <= 2) {
+    // For difficulty categories, use the specific difficulty
+    request.difficulty = numericId as DifficultyLevel;
+  } else {
+    // For regular categories, use the specific category but keep Basic as default
+    // This maintains existing behavior for regular flashcard learning
+    request.primaryCategory = numericId as FlashcardCategory;
+  }
+
+  return request;
+};
+
+export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
+  // Initial State
   flashcards: [],
   currentIndex: 0,
   currentFlashcardId: null,
   flipped: false,
   isDeckCompleted: false,
   hasAttemptedLoad: false,
-
-  // Stats state
-  flashcardsAnsweredToday: 0,
+  flashcardsViewedToday: 0,
   lastSyncTime: null,
   statsSummary: null,
   currentFlashcardStats: null,
-
-  // UI state
   isLoading: false,
   isLoadingStats: false,
   isLoadingFlashcards: false,
   error: null,
   submissionMessage: null,
 
-  // ===== FLASHCARD ACTIONS =====
-
+  // Actions
   fetchFlashcards: async ({ categoryId, userId, isPremium }) => {
-    // Always sync with server first to get the latest count
     if (userId) {
       await get().syncFlashcardCount(userId);
     }
 
-    // Skip if daily limit reached for non-premium users
-    if (!isPremium && get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT) {
-      // Set explicit message when trying to fetch with limit reached
+    if (!isPremium && get().flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT) {
       set({
         hasAttemptedLoad: true,
         isDeckCompleted: true,
@@ -124,27 +134,11 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       error: null,
       isDeckCompleted: false,
       currentFlashcardId: null,
+      flipped: false,
     });
 
     try {
-      const numericId = parseInt(categoryId);
-      const request: FlashcardRequest = {
-        count: 10,
-        userId,
-        // Default values
-        primaryCategory: FlashcardCategory.AllCategories,
-        difficulty: DifficultyLevel.Basic,
-      };
-
-      // Set category or difficulty based on ID
-      if (numericId >= 0 && numericId <= 2) {
-        // It's a difficulty level
-        request.difficulty = numericId as DifficultyLevel;
-      } else {
-        // It's a category
-        request.primaryCategory = numericId as FlashcardCategory;
-      }
-
+      const request = createFlashcardRequest(categoryId, userId);
       const flashcards = await flashcardService.getFlashcards(request);
 
       set({
@@ -154,19 +148,16 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         isLoadingFlashcards: false,
         currentFlashcardId: flashcards.length > 0 ? flashcards[0].id : null,
         hasAttemptedLoad: true,
+        flipped: false,
       });
 
-      // Fetch stats for first flashcard if available
       if (flashcards.length > 0 && userId) {
         get().fetchFlashcardStats(flashcards[0].id, userId);
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to load flashcards";
-
       set({
         isLoadingFlashcards: false,
-        error: errorMessage,
+        error: err instanceof Error ? err.message : "Failed to load flashcards",
         flashcards: [],
         hasAttemptedLoad: true,
       });
@@ -176,36 +167,75 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
   handleFlip: () => set((state) => ({ flipped: !state.flipped })),
 
   goToNextCard: () => {
-    const { currentIndex, flashcards } = get();
+    set((state) => {
+      if (state.currentIndex >= state.flashcards.length - 1) {
+        return {
+          isDeckCompleted: true,
+          submissionMessage: {
+            text: "You've completed all cards in this deck!",
+            type: "info",
+          },
+          currentFlashcardStats: null,
+          currentFlashcardId: null,
+        };
+      }
 
-    // Check if we've reached the end of the deck
-    if (currentIndex >= flashcards.length - 1) {
-      set({
-        isDeckCompleted: true,
-        submissionMessage: {
-          text: "You've completed all cards in this deck!",
-          type: "info",
-        },
-      });
+      const nextIndex = state.currentIndex + 1;
+      const nextFlashcard = state.flashcards[nextIndex];
+      return {
+        currentIndex: nextIndex,
+        currentFlashcardId: nextFlashcard.id,
+        flipped: false,
+        submissionMessage: null,
+        currentFlashcardStats: null,
+      };
+    });
+  },
+
+  advanceCardAndProcess: async (flashcardId: string, userId: string) => {
+    if (!flashcardId || !userId) {
+      set({ error: "Cannot advance card: missing card or user ID." });
       return;
     }
 
-    // Move to next card
-    const nextIndex = currentIndex + 1;
-    const nextFlashcard = flashcards[nextIndex];
+    const viewCountIncremented = await get().retryIncrementViewCount(
+      flashcardId,
+      userId
+    );
 
-    set({
-      currentIndex: nextIndex,
-      currentFlashcardId: nextFlashcard.id,
-      flipped: false,
-      submissionMessage: null,
-      currentFlashcardStats: null,
-    });
+    if (!viewCountIncremented) {
+      set({
+        error:
+          "Failed to track flashcard progress after multiple attempts. Your daily count may not be accurate.",
+        submissionMessage: {
+          text: "Warning: Progress tracking failed. Please check your connection.",
+          type: "error",
+        },
+      });
+    }
 
-    // Fetch stats for the new card
-    const userId = get().statsSummary?.userId;
-    if (userId) {
-      get().fetchFlashcardStats(nextFlashcard.id, userId);
+    if (viewCountIncremented) {
+      try {
+        await get().syncFlashcardCount(userId);
+      } catch {
+        set({
+          submissionMessage: {
+            text: "Progress saved, but display may be outdated. Refresh to see current count.",
+            type: "info",
+          },
+        });
+      }
+    }
+
+    get().goToNextCard();
+
+    const { currentFlashcardId, isDeckCompleted } = get();
+    if (!isDeckCompleted && currentFlashcardId) {
+      try {
+        await get().fetchFlashcardStats(currentFlashcardId, userId);
+      } catch {
+        // Non-critical error, don't block user flow
+      }
     }
   },
 
@@ -220,10 +250,9 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       error: null,
       submissionMessage: null,
       hasAttemptedLoad: false,
+      isLoadingFlashcards: false,
     });
   },
-
-  // ===== STATS ACTIONS =====
 
   syncFlashcardCount: async (userId?: string) => {
     if (!userId) return;
@@ -235,13 +264,13 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         await UserFlashcardStatsService.getUserFlashcardStatsSummary(userId);
 
       set({
-        flashcardsAnsweredToday: stats.flashcardsAnsweredToday,
+        flashcardsViewedToday: stats.flashcardsViewedToday,
         lastSyncTime: new Date(),
         statsSummary: stats,
         isLoading: false,
       });
-    } catch (error) {
-      console.error("Failed to sync flashcard count:", error);
+    } catch (err) {
+      console.error("[FlashcardStore] Sync failed:", err);
       set({
         isLoading: false,
         error: "Failed to sync flashcard count. Please try again.",
@@ -251,7 +280,7 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
 
   resetFlashcardCount: () => {
     set({
-      flashcardsAnsweredToday: 0,
+      flashcardsViewedToday: 0,
       lastSyncTime: null,
     });
   },
@@ -259,7 +288,6 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
   fetchFlashcardStats: async (flashcardId: string, userId?: string) => {
     if (!userId || !flashcardId) return;
 
-    // Skip if we already have stats for this card
     const state = get();
     if (
       flashcardId === state.currentFlashcardId &&
@@ -275,8 +303,6 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         userId,
         flashcardId
       );
-
-      // Only update if this is still the current flashcard
       if (get().currentFlashcardId === flashcardId) {
         set({
           currentFlashcardStats: stats,
@@ -284,12 +310,11 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         });
       }
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to fetch flashcard stats";
-      console.error(`[FlashcardStats] Error: ${errorMessage}`);
-
       set({
-        error: errorMessage,
+        error:
+          err instanceof Error
+            ? err.message
+            : "Failed to fetch flashcard stats",
         isLoadingStats: false,
       });
     }
@@ -302,18 +327,14 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
       return;
     }
 
-    // Get premium status from the user store
     const userData = useUserStore.getState().userData;
     const isPremium = userData?.isPremium ?? false;
+    const currentViewCount = get().flashcardsViewedToday;
 
-    // Use existing count - no need to sync here since we already sync when entering screen
-    const currentCount = get().flashcardsAnsweredToday;
-
-    // Check daily limit for non-premium users
-    if (!isPremium && currentCount >= DAILY_FLASHCARD_LIMIT) {
+    if (!isPremium && currentViewCount >= DAILY_FLASHCARD_LIMIT) {
       set({
         submissionMessage: {
-          text: "Daily flashcard limit reached. Upgrade to premium for unlimited access!",
+          text: "Daily flashcard viewing limit reached. Upgrade to premium for unlimited access!",
           type: "error",
         },
       });
@@ -321,17 +342,14 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
     }
 
     try {
-      // Submit answer to server - this call also returns updated stats including the new count
       const updatedStats =
         await UserFlashcardStatsService.submitFlashcardAnswer({
           ...answer,
           userId,
         });
 
-      // Update local state with the response data
       await get().syncFlashcardCount(userId);
 
-      // Show appropriate feedback message
       const message = {
         text: answer.wasCorrect
           ? "Great job! Moving to the next card..."
@@ -344,31 +362,21 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         currentFlashcardStats: updatedStats,
       });
 
-      // Check if we reached limit after this submission
-      if (
-        !isPremium &&
-        get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT
-      ) {
-        // Set timeout to update the message after showing the success/error message
+      if (!isPremium && get().flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT) {
         setTimeout(() => {
           set({
             submissionMessage: {
-              text: "You've reached your daily limit! Upgrade to premium for unlimited access.",
+              text: "You've reached your daily viewing limit! Upgrade to premium for unlimited access.",
               type: "error",
             },
           });
         }, 2000);
       }
 
-      // Delay before moving to next card
       setTimeout(() => {
         get().goToNextCard();
       }, 1500);
-    } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : "Failed to submit answer";
-      console.error(`[SubmitAnswer] Error: ${errorMessage}`);
-
+    } catch {
       set({
         submissionMessage: {
           text: "Error recording your answer. Please try again.",
@@ -376,26 +384,38 @@ export const useFlashcardStore = create<FlashcardStoreState>((set, get) => ({
         },
       });
 
-      // Clear error message after delay
       setTimeout(() => {
         set({ submissionMessage: null });
       }, 2000);
     }
   },
 
-  // ===== HELPER FUNCTIONS =====
-
   isDailyLimitReached: (isPremium: boolean) => {
-    // Premium users have no limit
-    if (isPremium) return false;
-
-    // Check against daily limit for free users using server data
-    return get().flashcardsAnsweredToday >= DAILY_FLASHCARD_LIMIT;
+    return !isPremium && get().flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT;
   },
 
-  // Check if we're allowed to fetch new cards
   canFetchNewCards: (isPremium: boolean) => {
-    if (isPremium) return true;
-    return get().flashcardsAnsweredToday < DAILY_FLASHCARD_LIMIT;
+    return isPremium || get().flashcardsViewedToday < DAILY_FLASHCARD_LIMIT;
+  },
+
+  retryIncrementViewCount: async (
+    flashcardId: string,
+    userId: string,
+    maxRetries = 2
+  ) => {
+    const totalAttempts = maxRetries + 1;
+
+    for (let attempt = 1; attempt <= totalAttempts; attempt++) {
+      try {
+        await apiClient.incrementFlashcardViewCount(flashcardId);
+        return true;
+      } catch {
+        if (attempt === totalAttempts) {
+          return false;
+        }
+        await new Promise((resolve) => setTimeout(resolve, attempt * 1000));
+      }
+    }
+    return false;
   },
 }));

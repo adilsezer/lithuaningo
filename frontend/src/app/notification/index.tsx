@@ -64,7 +64,7 @@ const NotificationScreen: React.FC = () => {
         title={NOTIFICATION_CONFIGS.update.title}
         subtitle={NOTIFICATION_CONFIGS.update.subtitle(
           releaseNotes,
-          appInfo?.currentVersion
+          appInfo?.currentVersion,
         )}
         buttonText={NOTIFICATION_CONFIGS.update.buttonText}
         buttonAction={openUpdateUrl}

@@ -12,7 +12,7 @@ export default function Index() {
   // Redirect based on authentication state
   if (isAuthenticated) {
     return <Redirect href="/(app)" />;
-  } else {
-    return <Redirect href="/auth" />;
   }
+    return <Redirect href="/auth" />;
+
 }

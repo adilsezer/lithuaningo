@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import Purchases, {
   CustomerInfo,
   PurchasesOffering,
@@ -6,10 +6,9 @@ import Purchases, {
   PurchasesError,
   PURCHASES_ERROR_CODE,
 } from "react-native-purchases";
-import { useUserData } from "@stores/useUserStore";
+import { useUserStore } from "@stores/useUserStore";
 import { ENTITLEMENTS } from "@config/revenuecat.config";
 import { useSetLoading, useSetError } from "@src/stores/useUIStore";
-import { useUserStore } from "@stores/useUserStore";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -21,37 +20,56 @@ export const useRevenueCat = () => {
   const setLoading = useSetLoading();
   const setError = useSetError();
 
-  const userData = useUserData();
-
-  // Load offerings and customer info when the hook is mounted or userData changes
-  useEffect(() => {
-    // RevenueCat is already initialized in InitializationProvider
-    fetchOfferings();
-    getCustomerInfo();
-  }, []); // Run only once when component mounts since getCustomerInfo handles userData internally
-
   // Fetch available offerings
-  const fetchOfferings = async (): Promise<PurchasesOffering | null> => {
-    try {
-      setLoading(true);
-      setError(null);
-      const offeringsResponse = await Purchases.getOfferings(); // Renamed to avoid conflict with state variable
-      if (offeringsResponse.current) {
-        setOfferings(offeringsResponse.current);
-        return offeringsResponse.current;
+  const fetchOfferings =
+    useCallback(async (): Promise<PurchasesOffering | null> => {
+      try {
+        setLoading(true);
+        setError(null);
+        const offeringsResponse = await Purchases.getOfferings(); // Renamed to avoid conflict with state variable
+        if (offeringsResponse.current) {
+          setOfferings(offeringsResponse.current);
+          return offeringsResponse.current;
+        }
+        return null;
+      } catch (error) {
+        console.error("Error fetching offerings:", error);
+        setError("Failed to fetch subscription offerings");
+        return null;
+      } finally {
+        setLoading(false);
       }
-      return null;
-    } catch (error) {
-      console.error("Error fetching offerings:", error);
-      setError("Failed to fetch subscription offerings");
-      return null;
-    } finally {
-      setLoading(false);
-    }
-  };
+    }, [setLoading, setError]);
+
+  // Check if user has premium entitlement
+  const checkPremiumEntitlement = useCallback(
+    async (info: CustomerInfo) => {
+      // Check if the premium entitlement exists and is active
+      const premiumEntitlement = info.entitlements.active[ENTITLEMENTS.premium];
+      const hasPremium = typeof premiumEntitlement !== "undefined";
+
+      // Optimistically set local isPremium state based on RevenueCat CustomerInfo for immediate UI feedback.
+      // This allows the UI to react instantly to purchases or restores.
+      // The authoritative state will come from the backend (via webhooks and profile fetch).
+      setIsPremium(hasPremium);
+
+      // NOTE: Direct calls to UserProfileService for premium status updates were removed previously.
+      // Backend is updated by RevenueCat webhooks.
+
+      const currentUserData = useUserStore.getState().userData;
+      if (currentUserData?.id) {
+        console.log(
+          "[useRevenueCat] CustomerInfo updated. Local isPremium set to:",
+          hasPremium,
+          "Backend will be updated via webhooks."
+        );
+      }
+    },
+    [] // Remove userData dependency to prevent recreation
+  );
 
   // Get current customer info
-  const getCustomerInfo = async () => {
+  const getCustomerInfo = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -64,30 +82,15 @@ export const useRevenueCat = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setLoading, setError, checkPremiumEntitlement]);
 
-  // Check if user has premium entitlement
-  const checkPremiumEntitlement = async (info: CustomerInfo) => {
-    // Check if the premium entitlement exists and is active
-    const premiumEntitlement = info.entitlements.active[ENTITLEMENTS.premium];
-    const hasPremium = typeof premiumEntitlement !== "undefined";
-
-    // Optimistically set local isPremium state based on RevenueCat CustomerInfo for immediate UI feedback.
-    // This allows the UI to react instantly to purchases or restores.
-    // The authoritative state will come from the backend (via webhooks and profile fetch).
-    setIsPremium(hasPremium);
-
-    // NOTE: Direct calls to UserProfileService for premium status updates were removed previously.
-    // Backend is updated by RevenueCat webhooks.
-
-    if (userData?.id) {
-      console.log(
-        "[useRevenueCat] CustomerInfo updated. Local isPremium set to:",
-        hasPremium,
-        "Backend will be updated via webhooks."
-      );
-    }
-  };
+  // Load offerings and customer info when the hook is mounted - RUN ONLY ONCE
+  useEffect(() => {
+    // RevenueCat is already initialized in InitializationProvider
+    fetchOfferings();
+    getCustomerInfo();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Intentionally empty - we want this to run only once on mount
 
   // Purchase a package
   const purchasePackage = async (pack: PurchasesPackage) => {
@@ -132,7 +135,7 @@ export const useRevenueCat = () => {
       if (hasPremium) {
         // Update user store with premium status
         console.log("[RevenueCat] Updating user store with premium status");
-        useUserStore.getState().updateUserProfile({
+        useUserStore.getState().updateUserData({
           isPremium: true,
         });
       }
@@ -141,13 +144,13 @@ export const useRevenueCat = () => {
       await checkPremiumEntitlement(purchasedCustomerInfo);
 
       return purchasedCustomerInfo;
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Error purchasing package:", error);
 
       const purchaseErr = error as PurchasesError;
       if (purchaseErr.code !== PURCHASES_ERROR_CODE.PURCHASE_CANCELLED_ERROR) {
         const errorMessage =
-          error.message || "An error occurred during purchase";
+          (error as Error).message || "An error occurred during purchase";
         setPurchaseError(errorMessage);
         setError(errorMessage);
       }
@@ -160,7 +163,9 @@ export const useRevenueCat = () => {
 
   // Ensure offerings are loaded - useful to call before showing paywall
   const ensureOfferings = async (): Promise<PurchasesOffering | null> => {
-    if (offerings) return offerings;
+    if (offerings) {
+      return offerings;
+    }
     return fetchOfferings();
   };
 

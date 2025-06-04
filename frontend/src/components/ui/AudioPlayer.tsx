@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { StyleSheet, View, TouchableOpacity, Platform } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { useTheme } from "react-native-paper";
 import { Audio, AVPlaybackStatus } from "expo-av";
 import Icon from "@expo/vector-icons/MaterialIcons";
@@ -41,13 +41,15 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
           staysActiveInBackground: false,
         });
 
-        if (!audioUrl) return;
+        if (!audioUrl) {
+          return;
+        }
 
         // Create and load the Sound object
         const { sound: newSound } = await Audio.Sound.createAsync(
           { uri: audioUrl },
           { shouldPlay: false },
-          _onPlaybackStatusUpdate
+          _onPlaybackStatusUpdate,
         );
 
         // Only update state if component is still mounted
@@ -81,7 +83,7 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
       // Update state if there was an error during playback
       if (status.error) {
         console.error(
-          `Encountered a fatal error during playback: ${status.error}`
+          `Encountered a fatal error during playback: ${status.error}`,
         );
         setIsPlaying(false);
       }
@@ -99,7 +101,9 @@ export default function AudioPlayer({ audioUrl }: AudioPlayerProps) {
 
   // Handle play/pause button press
   const handleTogglePlayback = async () => {
-    if (!sound.current || !isLoaded) return;
+    if (!sound.current || !isLoaded) {
+      return;
+    }
 
     try {
       const status = await sound.current.getStatusAsync();

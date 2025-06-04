@@ -6,40 +6,62 @@ import CustomText from "./CustomText";
 
 interface CategoryGridProps {
   categories: FlashcardCategory[];
-  onSelectCategory: (category: FlashcardCategory) => void;
+  onPressPractice: (category: FlashcardCategory) => void;
+  onPressMaster?: (category: FlashcardCategory) => void;
   title?: string;
 }
 
-const CategoryGrid: React.FC<CategoryGridProps> = ({
-  categories,
-  onSelectCategory,
-  title,
-}) => {
-  const theme = useTheme();
+const CategoryGrid: React.FC<CategoryGridProps> = React.memo(
+  ({ categories, onPressPractice, onPressMaster, title }) => {
+    const theme = useTheme();
 
-  return (
-    <View style={styles.container}>
-      {title && (
-        <CustomText
-          variant="titleMedium"
-          style={[styles.title, { color: theme.colors.onSurface }]}
-        >
-          {title}
-        </CustomText>
-      )}
+    // Memoize renderItem to prevent recreations
+    const renderCategory = React.useCallback(
+      ({ item }: { item: FlashcardCategory }) => (
+        <CategoryCard
+          category={item}
+          onPressPractice={onPressPractice}
+          onPressMaster={onPressMaster}
+        />
+      ),
+      [onPressPractice, onPressMaster]
+    );
 
-      <FlatList
-        data={categories}
-        renderItem={({ item }) => (
-          <CategoryCard category={item} onPress={onSelectCategory} />
+    // Memoize keyExtractor
+    const keyExtractor = React.useCallback(
+      (item: FlashcardCategory) => item.id,
+      []
+    );
+
+    return (
+      <View style={styles.container}>
+        {title && (
+          <CustomText
+            variant="titleMedium"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
+            {title}
+          </CustomText>
         )}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
-    </View>
-  );
-};
+
+        <FlatList
+          data={categories}
+          renderItem={renderCategory}
+          keyExtractor={keyExtractor}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          // Performance optimizations
+          removeClippedSubviews={true}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          initialNumToRender={5}
+        />
+      </View>
+    );
+  }
+);
+
+CategoryGrid.displayName = "CategoryGrid";
 
 const styles = StyleSheet.create({
   container: {

@@ -17,7 +17,10 @@ export class UserFlashcardStatsService {
     try {
       return await apiClient.getUserFlashcardStatsSummary(userId);
     } catch (error) {
-      console.error("[UserFlashcardStatsService] Error:", error);
+      console.error(
+        "[UserFlashcardStatsService] Error fetching flashcard stats summary:",
+        error
+      );
       throw error;
     }
   }

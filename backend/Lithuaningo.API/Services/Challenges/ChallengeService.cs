@@ -3,10 +3,11 @@ using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
-using Lithuaningo.API.Services.Flashcards;
+using Lithuaningo.API.Services.Stats;
 using Lithuaningo.API.Services.Supabase;
 using Supabase;
 using static Supabase.Postgrest.Constants;
+
 namespace Lithuaningo.API.Services.Challenges
 {
     /// <summary>
@@ -22,7 +23,7 @@ namespace Lithuaningo.API.Services.Challenges
         private readonly ILogger<ChallengeService> _logger;
         private readonly IMapper _mapper;
         private readonly IAIService _aiService;
-        private readonly IFlashcardService _flashcardService;
+        private readonly IUserFlashcardStatService _userFlashcardStatService;
         private readonly Random _random;
 
         public ChallengeService(
@@ -32,17 +33,17 @@ namespace Lithuaningo.API.Services.Challenges
             ILogger<ChallengeService> logger,
             IMapper mapper,
             IAIService aiService,
-            IFlashcardService flashcardService,
+            IUserFlashcardStatService userFlashcardStatService,
             Random random)
         {
-            _supabaseClient = supabaseService.Client;
-            _cache = cache;
-            _cacheSettingsService = cacheSettingsService;
-            _logger = logger;
-            _mapper = mapper;
-            _aiService = aiService;
-            _flashcardService = flashcardService;
-            _random = random;
+            _supabaseClient = supabaseService.Client ?? throw new ArgumentNullException(nameof(supabaseService));
+            _cache = cache ?? throw new ArgumentNullException(nameof(cache));
+            _cacheSettingsService = cacheSettingsService ?? throw new ArgumentNullException(nameof(cacheSettingsService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
+            _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
+            _userFlashcardStatService = userFlashcardStatService ?? throw new ArgumentNullException(nameof(userFlashcardStatService));
+            _random = random ?? throw new ArgumentNullException(nameof(random));
         }
 
         /// <summary>
@@ -52,113 +53,248 @@ namespace Lithuaningo.API.Services.Challenges
         /// <returns>The daily challenge questions</returns>
         public async Task<IEnumerable<ChallengeQuestionResponse>> GetDailyChallengeQuestionsAsync()
         {
-            // Create a daily cache key in the format "challenge:daily:YYYY-MM-DD"
-            string cacheKey = $"{CacheKeyPrefix}daily:{DateTime.UtcNow:yyyy-MM-dd}";
+            var today = DateTime.UtcNow.ToString("yyyy-MM-dd");
+            var cacheKey = $"{CacheKeyPrefix}daily:{today}";
 
-            // Try to get from cache first
             var cachedQuestions = await _cache.GetAsync<List<ChallengeQuestionResponse>>(cacheKey);
-            if (cachedQuestions != null && cachedQuestions.Count > 0)
+            if (cachedQuestions != null && cachedQuestions.Any())
             {
+                // Randomize options for cached questions too, so each user gets different order
+                RandomizeQuestionOptions(cachedQuestions);
                 return cachedQuestions;
             }
 
-            // Retrieve cache settings once - will be used in both paths
-            var cacheSettings = await _cacheSettingsService.GetCacheSettingsAsync();
-            var cacheExpiration = TimeSpan.FromHours(cacheSettings.DefaultExpirationMinutes);
-
-            // Check if we already have questions for today in the database
-            var today = DateTime.UtcNow.Date;
-            var tomorrow = today.AddDays(1);
-
-            var existingQuestions = await _supabaseClient
-                .From<ChallengeQuestion>()
-                .Filter("created_at", Operator.GreaterThanOrEqual, today.ToString("yyyy-MM-dd"))
-                .Filter("created_at", Operator.LessThan, tomorrow.ToString("yyyy-MM-dd"))
-                .Order("created_at", Ordering.Descending)
-                .Limit(10)
-                .Get();
-
-            if (existingQuestions.Models != null && existingQuestions.Models.Count > 0)
-            {
-                var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(existingQuestions.Models);
-
-                // Cache the results
-                await _cache.SetAsync(cacheKey, questionResponses, cacheExpiration);
-
-                return questionResponses;
-            }
-
-            // If we get here, we need to generate new questions
-            var newQuestions = await GenerateAIChallengeQuestionsAsync();
-
-            // Cache the results for today
-            await _cache.SetAsync(cacheKey, newQuestions.ToList(), cacheExpiration);
-
-            return newQuestions;
-        }
-
-        /// <summary>
-        /// Generates new challenge questions using AI based on random flashcards as context.
-        /// </summary>
-        public async Task<IEnumerable<ChallengeQuestionResponse>> GenerateAIChallengeQuestionsAsync()
-        {
             try
             {
-                // Get a larger set of random flashcards from the database for context
-                // We retrieve more flashcards to ensure sufficient diversity for all question types
-                var flashcards = await _flashcardService.RetrieveFlashcardModelsAsync(
-                    limit: 25); // Increased from 10 to 25 to ensure more diversity
+                // Call the Supabase RPC function
+                var response = await _supabaseClient.Rpc("get_random_challenge_questions", new Dictionary<string, object> { { "count", 10 } });
 
-                if (flashcards.Any())
+                if (response.ResponseMessage != null && response.ResponseMessage.IsSuccessStatusCode && !string.IsNullOrEmpty(response.Content))
                 {
-                    // Shuffle the flashcards for better randomization
-                    var shuffledFlashcards = flashcards.ToList().OrderBy(x => _random.Next()).ToList();
+                    var questions = Newtonsoft.Json.JsonConvert.DeserializeObject<List<ChallengeQuestion>>(response.Content);
 
-                    // Generate challenges based on the flashcard data
-                    var questions = await _aiService.GenerateChallengesAsync(shuffledFlashcards);
+                    if (questions == null || !questions.Any())
+                    {
+                        return Enumerable.Empty<ChallengeQuestionResponse>();
+                    }
 
-                    // Save the generated questions to the database
-                    await SaveChallengeQuestionsToDatabase(questions);
+                    var questionResponses = _mapper.Map<List<ChallengeQuestionResponse>>(questions);
 
-                    return questions;
+                    // Cache the questions without randomized options
+                    var settings = await _cacheSettingsService.GetCacheSettingsAsync();
+                    var expiration = TimeSpan.FromHours(settings.DefaultExpirationMinutes > 0 ? settings.DefaultExpirationMinutes / 60.0 : 24); // Example: 24 hours
+                    await _cache.SetAsync(cacheKey, questionResponses, expiration);
+
+                    // Randomize the order of options for each question before returning
+                    RandomizeQuestionOptions(questionResponses);
+
+                    return questionResponses;
                 }
                 else
                 {
-                    _logger.LogWarning("No flashcards found to use as context for challenge generation. Generating challenges without context.");
-                    return await _aiService.GenerateChallengesAsync();
+                    _logger.LogError("Error calling Supabase RPC get_random_challenge_questions");
+                    return Enumerable.Empty<ChallengeQuestionResponse>();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error generating AI challenge questions");
+                _logger.LogError(ex, "Error fetching daily challenge questions via RPC");
+                return Enumerable.Empty<ChallengeQuestionResponse>();
+            }
+        }
+
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GetChallengeQuestionsForSeenFlashcardsAsync(GetReviewChallengeQuestionsRequest request)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+            if (string.IsNullOrEmpty(request.UserId))
+            {
+                throw new ArgumentException("UserId must be provided in the request", nameof(request));
+            }
+
+            var count = request.Count <= 0 ? 10 : request.Count;
+
+            var seenFlashcardIds = await _userFlashcardStatService.GetLastSeenFlashcardIdsAsync(request.UserId, count * 2);
+
+            if (!seenFlashcardIds.Any())
+            {
+                return new List<ChallengeQuestionResponse>();
+            }
+
+            List<Guid> filteredFlashcardIds = seenFlashcardIds;
+
+            // Apply category and/or difficulty filtering if specified
+            bool needsFiltering = request.Difficulty.HasValue ||
+                (!string.IsNullOrEmpty(request.CategoryId) && int.TryParse(request.CategoryId, out var categoryInt) && categoryInt != -1);
+
+            if (needsFiltering)
+            {
+                // Convert Guid list to object list for the IN operator
+                var seenFlashcardIdsAsObjects = seenFlashcardIds.Cast<object>().ToList();
+
+                var query = _supabaseClient.From<Flashcard>()
+                    .Filter(f => f.Id, Operator.In, seenFlashcardIdsAsObjects);
+
+                // Apply category filter if specified and not AllCategories (-1)
+                if (!string.IsNullOrEmpty(request.CategoryId) && int.TryParse(request.CategoryId, out categoryInt) && categoryInt != -1)
+                {
+                    query = query.Filter(f => f.Categories, Operator.Contains, new List<object> { categoryInt });
+                }
+
+                // Apply difficulty filter if specified
+                if (request.Difficulty.HasValue)
+                {
+                    query = query.Filter(f => f.Difficulty, Operator.Equals, (int)request.Difficulty.Value);
+                }
+
+                var filteredFlashcards = await query.Get();
+
+                if (filteredFlashcards.Models != null && filteredFlashcards.Models.Any())
+                {
+                    filteredFlashcardIds = filteredFlashcards.Models.Select(f => f.Id).ToList();
+                }
+                else
+                {
+                    return new List<ChallengeQuestionResponse>();
+                }
+            }
+
+            // Fetch all challenges associated with these filtered flashcard IDs
+            var filteredFlashcardIdsAsObjects = filteredFlashcardIds.Cast<object>().ToList();
+
+            var allReviewChallenges = await _supabaseClient.From<ChallengeQuestion>()
+                .Filter(cq => cq.FlashcardId!, Operator.In, filteredFlashcardIdsAsObjects)
+                .Get();
+
+            if (allReviewChallenges.Models == null || !allReviewChallenges.Models.Any())
+            {
+                return new List<ChallengeQuestionResponse>();
+            }
+
+            // Shuffle all available challenges and take the required count
+            var shuffledChallenges = allReviewChallenges.Models
+                .OrderBy(x => _random.Next())
+                .ToList();
+
+            var selectedChallengeModels = shuffledChallenges
+                .Take(count)
+                .ToList();
+
+            if (!selectedChallengeModels.Any())
+            {
+                return new List<ChallengeQuestionResponse>();
+            }
+
+            // Log a warning if we're returning fewer challenges than requested
+            if (selectedChallengeModels.Count < count)
+            {
+                _logger.LogWarning("Returning {ActualCount} challenges instead of requested {RequestedCount}. " +
+                    "User needs to practice more flashcards to get more review challenges.",
+                    selectedChallengeModels.Count, count);
+            }
+
+            var response = _mapper.Map<List<ChallengeQuestionResponse>>(selectedChallengeModels);
+
+            // Randomize the order of options for each question
+            RandomizeQuestionOptions(response);
+
+            return response;
+        }
+
+        public async Task GenerateAndSaveChallengesForFlashcardAsync(Flashcard flashcard)
+        {
+            if (flashcard == null)
+            {
+                throw new ArgumentNullException(nameof(flashcard));
+            }
+
+            try
+            {
+                var challengeDtos = await _aiService.GenerateChallengesForFlashcardAsync(flashcard);
+
+                if (challengeDtos == null || !challengeDtos.Any())
+                {
+                    return;
+                }
+
+                var challengeModels = _mapper.Map<List<ChallengeQuestion>>(challengeDtos);
+                if (challengeModels == null || !challengeModels.Any())
+                {
+                    return;
+                }
+
+                foreach (var model in challengeModels)
+                {
+                    model.FlashcardId = flashcard.Id; // Ensure FlashcardId is set
+                    if (model.Id == Guid.Empty) model.Id = Guid.NewGuid();
+                    // CreatedAt/UpdatedAt are handled by DB
+                }
+
+                try
+                {
+                    await _supabaseClient.From<ChallengeQuestion>().Insert(challengeModels);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error saving challenge questions to database");
+                    throw;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating or saving challenges for flashcard");
+                throw new InvalidOperationException("Failed to generate and save challenges for flashcard.", ex);
+            }
+        }
+
+        public async Task ClearChallengesByFlashcardIdAsync(Guid flashcardId)
+        {
+            if (flashcardId == Guid.Empty)
+            {
+                return;
+            }
+
+            try
+            {
+                await _supabaseClient
+                    .From<ChallengeQuestion>()
+                    .Where(cq => cq.FlashcardId == flashcardId)
+                    .Delete();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error clearing challenge questions");
                 throw;
             }
         }
 
         /// <summary>
-        /// Saves challenge questions to the Supabase database
+        /// Randomizes the order of options for each challenge question to prevent predictable answer patterns.
+        /// Only randomizes options for question types that have multiple options (e.g., MultipleChoice, FillInTheBlank, RearrangeTheSentence).
+        /// TrueFalse questions are not randomized since they always have "True" and "False" in a specific order.
         /// </summary>
-        private async Task SaveChallengeQuestionsToDatabase(IEnumerable<ChallengeQuestionResponse> questions)
+        /// <param name="questions">The list of challenge questions to randomize options for</param>
+        private void RandomizeQuestionOptions(IEnumerable<ChallengeQuestionResponse> questions)
         {
-            try
+            if (questions == null) return;
+
+            foreach (var question in questions)
             {
-                // Map DTO responses to database models
-                var questionModels = _mapper.Map<List<ChallengeQuestion>>(questions);
-
-                // Save to database
-                var result = await _supabaseClient
-                    .From<ChallengeQuestion>()
-                    .Insert(questionModels);
-
-                if (result.Models == null)
+                // Only randomize options for question types that have multiple meaningful options
+                // TrueFalse questions typically have ["True", "False"] in a specific order
+                if (question.Type != ChallengeQuestionType.TrueFalse &&
+                    question.Options != null &&
+                    question.Options.Count > 1)
                 {
-                    _logger.LogWarning("No challenge questions were saved to the database");
+                    // Create a copy of the options and shuffle them
+                    var shuffledOptions = question.Options
+                        .OrderBy(x => _random.Next())
+                        .ToList();
+
+                    question.Options = shuffledOptions;
                 }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving challenge questions to database");
-                // Don't rethrow - treat database save as best-effort
             }
         }
     }

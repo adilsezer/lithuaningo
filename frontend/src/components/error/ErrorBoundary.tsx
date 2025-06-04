@@ -47,13 +47,19 @@ class ErrorBoundary extends Component<Props, State> {
           <Card style={styles.card} mode="elevated">
             <Card.Content style={styles.content}>
               <Image
-                source={require("assets/images/icon.png")}
+                source={require("../../../assets/images/icon.png")}
                 style={styles.logo}
               />
-              <Text variant="titleLarge" style={styles.title}>
+              <Text
+                variant="titleLarge"
+                style={[styles.title, { color: "black" }]}
+              >
                 Oops! Something went wrong.
               </Text>
-              <Text variant="bodyMedium" style={styles.description}>
+              <Text
+                variant="bodyMedium"
+                style={[styles.description, { color: "black" }]}
+              >
                 Please try again or contact support if the issue persists.
               </Text>
               <Button

@@ -1,12 +1,11 @@
-import React, { useEffect, useCallback } from "react";
-import { ScrollView, StyleSheet } from "react-native";
-import { useAuth } from "@hooks/useAuth";
+import React, { useCallback } from "react";
+import { ScrollView } from "react-native";
+import { useAuth, type SocialProvider } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import CustomDivider from "@components/ui/CustomDivider";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
-import type { SocialProvider } from "@hooks/useAuth";
 import { loginFormSchema } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { router } from "expo-router";
@@ -36,7 +35,7 @@ const LoginScreen: React.FC = () => {
     (provider: SocialProvider) => {
       signInWithSocial(provider);
     },
-    [signInWithSocial]
+    [signInWithSocial],
   );
 
   return (
@@ -81,7 +80,5 @@ const LoginScreen: React.FC = () => {
     </ScrollView>
   );
 };
-
-const styles = StyleSheet.create({});
 
 export default LoginScreen;

@@ -1,5 +1,5 @@
 import React from "react";
-import { ScrollView, StyleSheet } from "react-native";
+import { ScrollView } from "react-native";
 import { Form } from "@components/form/Form";
 import { FormField } from "@components/form/form.types";
 import { forgotPasswordFormSchema } from "@utils/zodSchemas";

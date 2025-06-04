@@ -187,5 +187,68 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(500, "An error occurred while retrieving flashcard stats");
             }
         }
+
+        /// <summary>
+        /// Increments the view count for a specific flashcard.
+        /// </summary>
+        /// <remarks>
+        /// Sample request:
+        /// 
+        ///     POST /api/v1/UserFlashcardStats/increment-view
+        ///     {
+        ///         "flashcardId": "0000000-0000-0000-0000-0000000000",
+        ///         "userId": null // Optional: system will use authenticated user's ID if null
+        ///     }
+        /// 
+        /// Notes:
+        /// - This endpoint ONLY increments the view count.
+        /// - Other statistics like correct/incorrect counts or mastery level are not affected.
+        /// - If a stat record for the user and flashcard doesn't exist, it will be created with ViewCount = 1.
+        /// </remarks>
+        /// <param name="request">The request object containing the flashcard ID and optional user ID</param>
+        /// <returns>The updated user flashcard statistics with the incremented view count</returns>
+        /// <response code="200">Returns the updated flashcard statistics</response>
+        /// <response code="400">If the request parameters are invalid</response>
+        /// <response code="401">If the user is not authenticated</response>
+        /// <response code="500">If there was an error processing the request</response>
+        [HttpPost("increment-view")]
+        [SwaggerOperation(
+            Summary = "Increments flashcard view count",
+            Description = "Increments the view count for a specific flashcard. Creates a stat record if one doesn't exist.",
+            OperationId = "IncrementFlashcardViewCount",
+            Tags = new[] { "UserFlashcardStats" }
+        )]
+        [ProducesResponseType(typeof(UserFlashcardStatResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<UserFlashcardStatResponse>> IncrementFlashcardViewCount([FromBody] IncrementViewCountRequest request)
+        {
+            try
+            {
+                var effectiveUserId = request.UserId ?? User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (string.IsNullOrEmpty(effectiveUserId))
+                {
+                    _logger.LogWarning("User ID could not be determined for incrementing view count.");
+                    return Unauthorized("User ID could not be determined.");
+                }
+
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
+                var result = await _userFlashcardStatService.IncrementFlashcardViewCountAsync(
+                    effectiveUserId,
+                    request.FlashcardId);
+
+                return Ok(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error incrementing flashcard view count via controller.");
+                return StatusCode(StatusCodes.Status500InternalServerError, "An error occurred while incrementing flashcard view count.");
+            }
+        }
     }
 }
