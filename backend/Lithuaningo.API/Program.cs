@@ -578,13 +578,15 @@ void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment env
         foreach (var setting in criticalSettings)
         {
             var value = configuration[setting.Key];
-            if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < 10)
+
+            // Special validation for model names that can be shorter
+            var isModelNameSetting = setting.Key.Contains("ModelName");
+            var minLength = isModelNameSetting ? 3 : 10; // Model names can be as short as 3 chars (e.g., "tts-1")
+
+            if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < minLength)
             {
-                if (string.IsNullOrWhiteSpace(value) || value.Contains("YOUR_") || value.Length < 10)
-                {
-                    throw new InvalidOperationException($"Missing or invalid configuration for {setting.Value}. " +
-                        $"Please set environment variable or update configuration.");
-                }
+                throw new InvalidOperationException($"Missing or invalid configuration for {setting.Value}. " +
+                    $"Please set environment variable or update configuration.");
             }
         }
 
