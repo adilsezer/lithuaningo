@@ -28,6 +28,13 @@ namespace Lithuaningo.API.Services.Subscription
         {
             _logger.LogInformation("Adding subscription event");
 
+            // Validate userId can be parsed as GUID
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                _logger.LogError("Cannot parse userId '{UserId}' as GUID. Subscription event not saved.", userId);
+                throw new ArgumentException($"User ID '{userId}' is not a valid GUID format", nameof(userId));
+            }
+
             try
             {
                 // Create metadata object with fields that aren't direct columns
@@ -52,7 +59,7 @@ namespace Lithuaningo.API.Services.Subscription
                 var subscription = new Models.Subscription
                 {
                     Id = Guid.NewGuid(),
-                    UserId = Guid.Parse(userId),
+                    UserId = userGuid,
                     IsPremium = isPremium,
                     ProductId = evt.ProductId,
                     Store = evt.Store,
@@ -94,11 +101,17 @@ namespace Lithuaningo.API.Services.Subscription
 
         public async Task<Models.Subscription?> GetLatestSubscriptionAsync(string userId)
         {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                _logger.LogError("Cannot parse userId '{UserId}' as GUID. Cannot fetch subscription.", userId);
+                throw new ArgumentException($"User ID '{userId}' is not a valid GUID format", nameof(userId));
+            }
+
             try
             {
                 var response = await _supabaseClient
                     .From<Models.Subscription>()
-                    .Where(s => s.UserId == Guid.Parse(userId))
+                    .Where(s => s.UserId == userGuid)
                     .Order("created_at", Ordering.Descending)
                     .Limit(1)
                     .Get();
@@ -114,11 +127,17 @@ namespace Lithuaningo.API.Services.Subscription
 
         public async Task<List<Models.Subscription>> GetSubscriptionHistoryAsync(string userId)
         {
+            if (!Guid.TryParse(userId, out var userGuid))
+            {
+                _logger.LogError("Cannot parse userId '{UserId}' as GUID. Cannot fetch subscription history.", userId);
+                throw new ArgumentException($"User ID '{userId}' is not a valid GUID format", nameof(userId));
+            }
+
             try
             {
                 var response = await _supabaseClient
                     .From<Models.Subscription>()
-                    .Where(s => s.UserId == Guid.Parse(userId))
+                    .Where(s => s.UserId == userGuid)
                     .Order("created_at", Ordering.Descending)
                     .Get();
 
