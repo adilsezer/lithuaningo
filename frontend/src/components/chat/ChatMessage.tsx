@@ -2,7 +2,7 @@ import React from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import { Text, Card, Avatar, useTheme } from "react-native-paper";
 import { Message } from "@hooks/useChat";
-import MarkdownDisplay from "react-native-markdown-display";
+import MarkdownDisplay from "@ronradtke/react-native-markdown-display";
 
 interface ChatMessageProps {
   message: Message;
