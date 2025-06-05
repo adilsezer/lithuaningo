@@ -67,8 +67,8 @@ public class AIController : BaseApiController
             }
             else
             {
-                _logger.LogWarning("ProcessRequest called with unsupported service type: {ServiceType}", request.ServiceType);
-                return BadRequest($"Service type '{request.ServiceType}' is not supported by this endpoint or the underlying AI service's current generic processing capabilities.");
+                _logger.LogWarning("ProcessRequest called with unsupported service type");
+                return BadRequest("The specified service type is not supported by this endpoint.");
             }
 
             // Return the response
@@ -81,8 +81,7 @@ public class AIController : BaseApiController
         }
         catch (Exception ex)
         {
-            string sanitizedServiceType = request.ServiceType?.Replace("\n", "").Replace("\r", "");
-            _logger.LogError(ex, "Error processing AI request for service type {ServiceType}", sanitizedServiceType);
+            _logger.LogError(ex, "Error processing AI request");
             return StatusCode(StatusCodes.Status500InternalServerError,
                 "An error occurred processing your request.");
         }

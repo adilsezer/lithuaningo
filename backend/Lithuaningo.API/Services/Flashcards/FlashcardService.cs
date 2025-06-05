@@ -269,14 +269,14 @@ namespace Lithuaningo.API.Services.Flashcards
                 {
                     // This case should ideally be caught within AIService if upload fails, 
                     // but an extra check here doesn't hurt.
-                    _logger.LogError("AI service returned an empty or null URL for flashcard {FlashcardId} (BackText: {BackText}).", flashcardId, flashcard.BackText);
+                    _logger.LogError("AI service returned an empty or null URL for flashcard {FlashcardId}.", flashcardId);
                     throw new InvalidOperationException("AI service failed to return a valid image URL.");
                 }
 
                 flashcard.ImageUrl = imageUrl;
                 await UpdateFlashcardAsync(flashcard); // This also handles cache invalidation
 
-                _logger.LogInformation("Successfully generated, uploaded, and attached image for flashcard {FlashcardId}. Image URL: {ImageUrl}", flashcardId, imageUrl);
+                _logger.LogInformation("Successfully generated and attached image for flashcard {FlashcardId}", flashcardId);
                 return imageUrl;
             }
             catch (Exception ex)
@@ -506,7 +506,7 @@ namespace Lithuaningo.API.Services.Flashcards
 
             // STEP 5: Shuffle the final list of models and map to DTOs for the response
             var shuffledFlashcards = finalModelsForSession.OrderBy(f => _random.Next()).ToList();
-            _logger.LogInformation("Returning {Count} flashcards for user {UserId} learning session.", shuffledFlashcards.Count, userId);
+            _logger.LogInformation("Returning {Count} flashcards for user learning session.", shuffledFlashcards.Count);
             return _mapper.Map<IEnumerable<FlashcardResponse>>(shuffledFlashcards);
         }
 
