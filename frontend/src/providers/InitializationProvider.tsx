@@ -51,7 +51,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Set log level based on debug settings
         Purchases.setLogLevel(
-          DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR,
+          DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR
         );
 
         // Base configuration options shared between platforms
@@ -96,8 +96,19 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
     const identifyUser = async () => {
       try {
         setLoading(true);
-        await Purchases.logIn(userData.id);
-        console.log("RevenueCat user identified:", userData.id);
+
+        // Ensure we're using the GUID format for RevenueCat
+        const userIdForRevenueCat = userData.id;
+        console.log(
+          "RevenueCat identifying user with GUID:",
+          userIdForRevenueCat
+        );
+
+        await Purchases.logIn(userIdForRevenueCat);
+        console.log(
+          "RevenueCat user identified successfully:",
+          userIdForRevenueCat
+        );
       } catch (error) {
         console.error("Failed to identify user with RevenueCat:", error);
       } finally {
@@ -155,7 +166,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
     const hasPremium = info.entitlements.active.Premium !== undefined;
 
     console.log(
-      `[InitProvider] Updating user store - isPremium: ${hasPremium}`,
+      `[InitProvider] Updating user store - isPremium: ${hasPremium}`
     );
 
     useUserStore.getState().updateUserData({

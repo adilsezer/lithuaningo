@@ -117,12 +117,18 @@ namespace Lithuaningo.API.Services.RevenueCat
 
                     if (updatedProfile == null)
                     {
-                        _logger.LogWarning("User profile update failed");
+                        _logger.LogWarning("User profile update failed - user ID may not be in GUID format or user may not exist");
                     }
                     else
                     {
                         _logger.LogInformation("Successfully updated user profile");
                     }
+                }
+                catch (ArgumentException ex) when (ex.ParamName == "userId")
+                {
+                    _logger.LogError(ex, "Cannot process subscription event - AppUserId '{AppUserId}' is not in GUID format", evt.AppUserId);
+                    // Don't re-throw ArgumentException for GUID format issues - this is expected for some RevenueCat setups
+                    // The webhook should return success to prevent RevenueCat from retrying
                 }
                 catch (Exception ex)
                 {
