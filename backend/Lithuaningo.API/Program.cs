@@ -572,7 +572,6 @@ void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment env
             { "Supabase:ServiceKey", "Supabase service key" },
             { "Supabase:JwtSecret", "JWT secret" },
             { "AI:OpenAIApiKey", "OpenAI API key" },
-            { "AI:OpenAIApiBaseUrl", "OpenAI API Base URL" },
             { "AI:OpenAITextModelName", "OpenAI Text Model Name" },
             { "AI:OpenAIImageModelName", "OpenAI Image Model Name" },
             { "AI:OpenAIAudioModelName", "OpenAI Audio Model Name" },

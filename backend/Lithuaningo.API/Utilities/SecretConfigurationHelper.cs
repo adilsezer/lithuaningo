@@ -22,14 +22,13 @@ public static class SecretConfigurationHelper
                 { "LITHUANINGO_SUPABASE_SERVICE_KEY", "Supabase:ServiceKey" },
                 { "LITHUANINGO_SUPABASE_JWT_SECRET", "Supabase:JwtSecret" },
                 { "LITHUANINGO_OPENAI_API_KEY", "AI:OpenAIApiKey" },
-                { "LITHUANINGO_OPENAI_IMAGE_MODEL_NAME", "AI:OpenAIImageModelName" },
-                { "LITHUANINGO_OPENAI_AUDIO_MODEL_NAME", "AI:OpenAIAudioModelName" },
                 { "LITHUANINGO_STORAGE_R2_ACCESS_KEY_ID", "Storage:R2AccessKeyId" },
                 { "LITHUANINGO_STORAGE_R2_ACCESS_KEY_SECRET", "Storage:R2AccessKeySecret" },
                 { "LITHUANINGO_STORAGE_BUCKET_NAME", "Storage:BucketName" },
                 { "LITHUANINGO_STORAGE_CUSTOM_DOMAIN", "Storage:CustomDomain" },
                 { "LITHUANINGO_STORAGE_R2_ACCOUNT_ID", "Storage:R2AccountId" },
                 { "REVENUECAT_WEBHOOK_AUTH_HEADER", "RevenueCat:WebhookAuthHeader" },
+                { "LITHUANINGO_CERT_PASSWORD", "DataProtection:CertificatePassword" },
             };
 
             // Add environment variables to configuration

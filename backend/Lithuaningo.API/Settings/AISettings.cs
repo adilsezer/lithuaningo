@@ -19,12 +19,6 @@ public class AISettings
     public string OpenAIApiKey { get; set; } = string.Empty;
 
     /// <summary>
-    /// The base URL for the OpenAI API
-    /// </summary>
-    [Required]
-    public string OpenAIApiBaseUrl { get; set; } = "https://api.openai.com";
-
-    /// <summary>
     /// The model name for text generation (e.g., gpt-4o)
     /// </summary>
     [Required]
@@ -64,23 +58,4 @@ public class AISettings
     /// </summary>
     [Range(1, 8192, ErrorMessage = "Token count must be between 1 and 8192.")]
     public int MaxTokens { get; set; } = 8192;
-
-    /// <summary>
-    /// Default temperature for controlling randomness in generation.
-    /// </summary>
-    [Range(0.0, 2.0, ErrorMessage = "Temperature must be between 0.0 and 2.0.")]
-    public double DefaultTemperature { get; set; } = 0.7;
-
-    /// <summary>
-    /// Default TopP for controlling nucleus sampling.
-    /// </summary>
-    [Range(0.0, 1.0, ErrorMessage = "TopP must be between 0.0 and 1.0.")]
-    public double DefaultTopP { get; set; } = 0.9;
-
-
-    /// <summary>
-    /// Request timeout in seconds
-    /// </summary>
-    [Range(5, 300, ErrorMessage = "Timeout must be between 5 and 300 seconds.")]
-    public int RequestTimeoutSeconds { get; set; } = 120;
 }
