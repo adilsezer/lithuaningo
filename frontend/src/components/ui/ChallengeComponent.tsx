@@ -140,6 +140,10 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
         // For true/false, only show if it doesn't contain the answer
         return !question.exampleSentence.includes(question.correctAnswer);
 
+      case ChallengeQuestionType.RearrangeTheSentence:
+        // Never show example sentence for sentence rearrangement as it gives away the answer
+        return false;
+
       case ChallengeQuestionType.MultipleChoice:
         // For vocabulary questions, hide if example contains answer
         if (
