@@ -32,7 +32,7 @@ Return a JSON array of flashcard objects. Each object MUST include these propert
   ""backText"": ""(string) The accurate and natural English translation of frontText."",
   ""exampleSentence"": ""(string) A practical, common, and natural-sounding example sentence in Lithuanian using the frontText. This sentence MUST be grammatically perfect and contextually appropriate."",
   ""exampleSentenceTranslation"": ""(string) An accurate and natural English translation of the exampleSentence."",
-  ""notes"": ""(string) VERY brief usage notes (max 1-2 short sentences), cultural context, or grammatical tips related to the frontText/phrase. Focus on essential, high-value information. Avoid lengthy explanations."",
+  ""notes"": ""(string) VERY brief usage notes in English (max 1-2 short sentences), cultural context, or grammatical tips related to the frontText/phrase. Focus on essential, high-value information. Avoid lengthy explanations."",
   ""difficulty"": ""(integer) The difficulty level: 0 for Basic, 1 for Intermediate, 2 for Advanced. This MUST match the user's request."",
   ""categories"": ""(integer[]) An array of numeric category codes. ALWAYS include the primary category requested by the user. Add other relevant categories from the list below.""
 }
@@ -158,10 +158,12 @@ True/False (type=1): (Test correctness of translation or a statement about the f
   *   Question: ""Is this statement about '{flashcard.frontText}' true?\n\n'{Statement about the flashcard item, could be related to its category or a simple fact related to it}'""
 
 Fill in the Blank (type=2): (Use the flashcard's example sentence)
-  *   Question: ""Complete the sentence:\n\n'{flashcard.exampleSentence with frontText or a key word blanked out with ____}'?"" (Options: The correct word from the blank and 3 plausible but incorrect Lithuanian words that could fit grammatically but change meaning or are contextually wrong)
+  *   Question: ""Complete the sentence:\n\n'{flashcard.exampleSentence with frontText or a key word blanked out with ____}'?"" (Options: The correct word from the blank and 3 plausible but incorrect Lithuanian words that could fit grammatically but change meaning or are contextually wrong. CRITICAL: Ensure only ONE option makes logical sense in the context - avoid creating ambiguous scenarios where multiple options could reasonably fit.)
 
 Rearrange The Sentence (type=3): (Use the flashcard's example sentence)
-  *   Question: ""Arrange these words into a correct sentence:\n\n'{Scrambled words from flashcard.exampleSentence}'"" (Options: Four different orderings of the words, one being the correct flashcard.exampleSentence, and three being plausible but incorrect orderings.)
+  *   Question: ""Arrange these words into a correct sentence:\n\n'{Scrambled words from flashcard.exampleSentence}'"" 
+  *   CRITICAL: When presenting the scrambled words in the question, convert ALL words to lowercase to avoid giving away the first word through capitalization.
+  *   (Options: Four different orderings of the words, one being the correct flashcard.exampleSentence, and three being plausible but incorrect orderings.)
 
 EXAMPLE OUTPUT (Illustrative, for a flashcard like: frontText=""knyga"", backText=""book"", exampleSentence=""Aš skaitau įdomią knygą."", difficulty=0):
 [
@@ -187,7 +189,7 @@ EXAMPLE OUTPUT (Illustrative, for a flashcard like: frontText=""knyga"", backTex
     ""type"": 2
   },
   {
-    ""question"": ""Arrange these words into a correct sentence:\n\n'įdomią Aš knygą skaitau'"",
+    ""question"": ""Arrange these words into a correct sentence:\n\n'įdomią aš knygą skaitau'"",
     ""options"": [
         ""Aš skaitau įdomią knygą."",
         ""Skaitau Aš knygą įdomią."",
