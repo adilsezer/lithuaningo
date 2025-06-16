@@ -7,6 +7,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Lithuaningo.API.DTOs.AI;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
@@ -379,6 +380,80 @@ public class AIService : IAIService
                 throw new InvalidOperationException("Failed to deserialize AI-generated challenge questions for flashcard.", jsonEx);
             }
         });
+    }
+
+    /// <summary>
+    /// Generates a brief explanation about a challenge question and its answer for educational purposes
+    /// </summary>
+    public async Task<string> GenerateQuestionExplanationAsync(QuestionExplanationRequest request)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+        if (string.IsNullOrWhiteSpace(request.Question))
+        {
+            throw new ArgumentNullException(nameof(request.Question));
+        }
+        if (string.IsNullOrWhiteSpace(request.CorrectAnswer))
+        {
+            throw new ArgumentNullException(nameof(request.CorrectAnswer));
+        }
+        if (string.IsNullOrWhiteSpace(request.UserAnswer))
+        {
+            throw new ArgumentNullException(nameof(request.UserAnswer));
+        }
+
+        var isCorrect = request.UserAnswer.Equals(request.CorrectAnswer, StringComparison.OrdinalIgnoreCase);
+        var resultText = isCorrect ? "correct" : "incorrect";
+
+        // Sanitize question text to remove newlines for a more stable prompt
+        var sanitizedQuestion = request.Question.ReplaceLineEndings(" ");
+
+        var userPrompt = $@"Question: {sanitizedQuestion}
+Correct Answer: {request.CorrectAnswer}
+User's Answer: {request.UserAnswer} ({resultText})
+Question Type: {request.QuestionType}
+All Options: {string.Join(", ", request.Options)}";
+
+        if (!string.IsNullOrWhiteSpace(request.ExampleSentence))
+        {
+            userPrompt += $"\nExample Sentence: {request.ExampleSentence}";
+        }
+
+        userPrompt += "\n\nProvide a brief educational explanation about this question and answer.";
+
+        try
+        {
+            var messages = new List<ChatMessage>
+            {
+                new SystemChatMessage(AIPrompts.QUESTION_EXPLANATION_SYSTEM_INSTRUCTIONS),
+                new UserChatMessage(userPrompt)
+            };
+
+            var chatCompletionOptions = new ChatCompletionOptions
+            {
+                MaxOutputTokenCount = 1000,
+            };
+
+            ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatCompletionOptions);
+            var explanation = completion.Content[0].Text?.Trim();
+
+            // Handle cases where the AI returns an empty or whitespace response
+            if (string.IsNullOrWhiteSpace(explanation))
+            {
+                _logger.LogWarning("AI generated an empty or whitespace explanation for question: {Question}", request.Question);
+                return "Sorry, I could not generate an explanation for this question.";
+            }
+
+            _logger.LogInformation("Generated question explanation for question: {Question}", request.Question);
+            return explanation;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating question explanation for question: {Question}", request.Question);
+            throw new InvalidOperationException("Failed to generate question explanation.", ex);
+        }
     }
 
     #endregion

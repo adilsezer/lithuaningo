@@ -63,11 +63,23 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Configure based on platform
         if (Platform.OS === "ios") {
+          if (!REVENUECAT_API_KEYS.ios) {
+            console.warn(
+              "RevenueCat iOS API key is missing. Skipping initialization."
+            );
+            return;
+          }
           await Purchases.configure({
             apiKey: REVENUECAT_API_KEYS.ios,
             ...configOptions,
           });
         } else if (Platform.OS === "android") {
+          if (!REVENUECAT_API_KEYS.android) {
+            console.warn(
+              "RevenueCat Android API key is missing. Skipping initialization."
+            );
+            return;
+          }
           await Purchases.configure({
             apiKey: REVENUECAT_API_KEYS.android,
             ...configOptions,

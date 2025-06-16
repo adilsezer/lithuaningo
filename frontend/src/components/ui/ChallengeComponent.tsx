@@ -15,6 +15,8 @@ import { router } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomDivider from "@components/ui/CustomDivider";
 import { ChallengeQuestionResponse, ChallengeQuestionType } from "@src/types";
+import { useIsPremium } from "@stores/useUserStore";
+import { useChallengeExplanation } from "@hooks/useChallengeExplanation";
 import CustomText from "./CustomText";
 
 // Define props interface for the reusable component
@@ -55,24 +57,50 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
   const theme = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
+  const isPremium = useIsPremium();
+  const {
+    explanation,
+    isLoading: isLoadingExplanation,
+    error: explanationError,
+    fetchExplanation,
+    clearExplanation,
+  } = useChallengeExplanation();
 
-  // Reset selected answer when currentIndex changes or when isCorrectAnswer is reset
+  // Reset states when the question changes
   useEffect(() => {
     if (isCorrectAnswer === null) {
       setSelectedAnswer(null);
+      clearExplanation();
     }
-  }, [currentIndex, isCorrectAnswer]);
+  }, [currentIndex, isCorrectAnswer, clearExplanation]);
 
-  // Scroll to bottom when feedback appears
+  // Scroll to bottom when feedback or explanation appears
   useEffect(() => {
-    if (isCorrectAnswer !== null && scrollViewRef.current) {
-      // The setTimeout is necessary to ensure the feedback component
-      // is fully rendered before scrolling
+    if ((isCorrectAnswer !== null || explanation) && scrollViewRef.current) {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 150);
     }
-  }, [isCorrectAnswer]);
+  }, [isCorrectAnswer, explanation]);
+
+  // Handler for Learn More button
+  const handleLearnMore = () => {
+    if (!currentQuestion || !selectedAnswer) return;
+
+    if (!isPremium) {
+      router.push("/(app)/premium");
+      return;
+    }
+
+    fetchExplanation({
+      question: currentQuestion.question,
+      correctAnswer: currentQuestion.correctAnswer,
+      userAnswer: selectedAnswer,
+      options: currentQuestion.options,
+      exampleSentence: currentQuestion.exampleSentence,
+      questionType: ChallengeQuestionType[currentQuestion.type],
+    });
+  };
 
   // Simple helper for button styling
   const getOptionButtonProps = (option: string) => {
@@ -514,6 +542,23 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                 </Card.Content>
 
                 <Card.Actions style={styles.feedbackActions}>
+                  {/* AI Explanation Button */}
+                  <Button
+                    mode="text"
+                    onPress={handleLearnMore}
+                    icon={isPremium ? "lightbulb-on-outline" : "lock-outline"}
+                    loading={isLoadingExplanation}
+                    disabled={isLoadingExplanation}
+                    labelStyle={{
+                      color: isCorrectAnswer
+                        ? theme.colors.onPrimary
+                        : theme.colors.onError,
+                    }}
+                  >
+                    {isPremium ? "Explain Answer" : "Explain Answer (Premium)"}
+                  </Button>
+
+                  {/* Next/Complete Button */}
                   <Button
                     mode="contained"
                     onPress={onNextQuestion}
@@ -539,6 +584,77 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                       : "Complete Challenge"}
                   </Button>
                 </Card.Actions>
+
+                {/* AI Explanation */}
+                {explanation && (
+                  <Card
+                    style={[
+                      styles.explanationCard,
+                      {
+                        backgroundColor: theme.colors.background,
+                        borderColor: theme.colors.primary,
+                        borderWidth: 1,
+                        marginTop: 12,
+                      },
+                    ]}
+                  >
+                    <Card.Content>
+                      <View style={styles.explanationHeader}>
+                        <Avatar.Icon
+                          size={32}
+                          icon="robot"
+                          color={theme.colors.primary}
+                          style={{ backgroundColor: "transparent" }}
+                        />
+                        <Text
+                          variant="titleSmall"
+                          style={{
+                            color: theme.colors.primary,
+                            fontWeight: "600",
+                            marginLeft: 8,
+                          }}
+                        >
+                          AI Explanation
+                        </Text>
+                      </View>
+                      <Text
+                        variant="bodyMedium"
+                        style={{
+                          color: theme.colors.onSurfaceVariant,
+                          lineHeight: 20,
+                          marginTop: 8,
+                        }}
+                      >
+                        {explanation}
+                      </Text>
+                    </Card.Content>
+                  </Card>
+                )}
+
+                {/* Explanation Error */}
+                {explanationError && (
+                  <Card
+                    style={[
+                      styles.explanationCard,
+                      {
+                        backgroundColor: theme.colors.errorContainer,
+                        marginTop: 12,
+                      },
+                    ]}
+                  >
+                    <Card.Content>
+                      <Text
+                        variant="bodyMedium"
+                        style={{
+                          color: theme.colors.onErrorContainer,
+                          textAlign: "center",
+                        }}
+                      >
+                        {explanationError}
+                      </Text>
+                    </Card.Content>
+                  </Card>
+                )}
               </Card>
             )}
           </>
@@ -671,12 +787,13 @@ const styles = StyleSheet.create({
   },
   feedbackTextContainer: {
     alignItems: "center",
-    marginBottom: 8,
   },
   feedbackActions: {
-    alignSelf: "center",
     paddingHorizontal: 16,
     paddingBottom: 16,
+    flexDirection: "column",
+    alignItems: "stretch",
+    gap: 8,
   },
   feedbackButtonContent: {
     height: 48,
@@ -693,6 +810,14 @@ const styles = StyleSheet.create({
   divider: {
     width: "80%",
     marginVertical: 16,
+  },
+  explanationCard: {
+    borderRadius: 12,
+    elevation: 2,
+  },
+  explanationHeader: {
+    flexDirection: "row",
+    alignItems: "center",
   },
 });
 

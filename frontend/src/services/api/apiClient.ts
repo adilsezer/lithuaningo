@@ -31,7 +31,11 @@ import {
   UserProfileResponse,
   UpdateUserProfileRequest,
 } from "@src/types/UserProfile";
-import { AIRequest, AIResponse } from "@src/types/AI";
+import {
+  AIRequest,
+  AIResponse,
+  QuestionExplanationRequest,
+} from "@src/types/AI";
 import {
   UserChatStatsResponse,
   TrackMessageRequest,
@@ -338,6 +342,17 @@ class ApiClient {
       method: "POST",
       data: request,
     });
+    return response.response;
+  }
+
+  async explainQuestion(request: QuestionExplanationRequest): Promise<string> {
+    const response = await this.request<AIResponse>(
+      "/api/v1/ai/explain-question",
+      {
+        method: "POST",
+        data: request,
+      }
+    );
     return response.response;
   }
 

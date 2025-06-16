@@ -75,4 +75,13 @@ public interface IAIService
     /// <exception cref="ArgumentNullException">Thrown when flashcard is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails.</exception>
     Task<List<ChallengeQuestionResponse>> GenerateChallengesForFlashcardAsync(Flashcard flashcard);
+
+    /// <summary>
+    /// Generates a brief explanation about a challenge question and its answer for educational purposes.
+    /// </summary>
+    /// <param name="request">The request object containing all question details.</param>
+    /// <returns>A brief plain text explanation without formatting</returns>
+    /// <exception cref="ArgumentNullException">Thrown when required parameters are null or empty</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AI response generation fails</exception>
+    Task<string> GenerateQuestionExplanationAsync(DTOs.AI.QuestionExplanationRequest request);
 }
