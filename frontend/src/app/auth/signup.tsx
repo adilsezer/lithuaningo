@@ -1,14 +1,16 @@
-import React from "react";
-import { ScrollView } from "react-native";
+import React, { useState } from "react";
+import { ScrollView, View, StyleSheet } from "react-native";
 import { Form } from "@components/form/Form";
 import type { FormField } from "@components/form/form.types";
 import { useAuth } from "@hooks/useAuth";
 import { useIsLoading } from "@stores/useUIStore";
-import { signupFormSchema } from "@utils/zodSchemas";
+import { signupFormSchemaWithoutLegal } from "@utils/zodSchemas";
 import CustomText from "@components/ui/CustomText";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import { router } from "expo-router";
 import CustomDivider from "@components/ui/CustomDivider";
+import CustomSwitch from "@components/ui/CustomSwitch";
+import { useAlertDialog } from "@hooks/useAlertDialog";
 
 const signupFields: FormField[] = [
   {
@@ -43,64 +45,89 @@ const signupFields: FormField[] = [
     placeholder: "Confirm Password",
     secureTextEntry: true,
   },
-  {
-    name: "legalAgreement",
-    label:
-      "I am at least 13 years old and agree to the Terms of Service and Privacy Policy",
-    category: "toggle",
-    type: "switch",
-    defaultValue: false,
-  },
 ];
 
 const SignUpScreen: React.FC = () => {
   const loading = useIsLoading();
   const { signUp, signInWithSocial } = useAuth();
+  const { showAlert } = useAlertDialog();
+  const [legalAgreement, setLegalAgreement] = useState(false);
+
+  const handleEmailSignup = async (data: {
+    email: string;
+    password: string;
+    displayName: string;
+  }) => {
+    if (!legalAgreement) {
+      showAlert({
+        title: "Legal Agreement Required",
+        message:
+          "You must confirm you are at least 13 years old and agree to our Terms of Service and Privacy Policy before signing up.",
+        buttons: [{ text: "OK", onPress: () => {} }],
+      });
+      return;
+    }
+    await signUp(data.email, data.password, data.displayName);
+  };
+
+  const handleSocialSignup = (provider: "google" | "apple") => {
+    if (!legalAgreement) {
+      showAlert({
+        title: "Legal Agreement Required",
+        message:
+          "You must confirm you are at least 13 years old and agree to our Terms of Service and Privacy Policy before signing up.",
+        buttons: [{ text: "OK", onPress: () => {} }],
+      });
+      return;
+    }
+    signInWithSocial(provider);
+  };
 
   return (
     <ScrollView>
       <Form
         fields={signupFields}
-        onSubmit={async (data) => {
-          await signUp(data.email, data.password, data.displayName);
-        }}
+        onSubmit={handleEmailSignup}
         submitButtonText="Sign Up"
         isLoading={loading}
         options={{ mode: "onBlur" }}
-        zodSchema={signupFormSchema}
+        zodSchema={signupFormSchemaWithoutLegal}
       />
 
-      <CustomText
-        variant="bodySmall"
-        style={{
-          textAlign: "center",
-          marginVertical: 8,
-        }}
-      >
-        By signing up, you confirm you are 13+ and agree to our{" "}
-        <CustomText
-          variant="bodySmall"
-          style={{ textDecorationLine: "underline", color: "#0066CC" }}
-          onPress={() => router.push("/auth/terms-of-service")}
-        >
-          Terms of Service
-        </CustomText>{" "}
-        and{" "}
-        <CustomText
-          variant="bodySmall"
-          style={{ textDecorationLine: "underline", color: "#0066CC" }}
-          onPress={() => router.push("/auth/privacy-policy")}
-        >
-          Privacy Policy
-        </CustomText>
-      </CustomText>
-
-      <CustomDivider content="Or" />
+      <CustomDivider content="Or sign up with" />
 
       <SocialAuthButtons
-        onGooglePress={() => signInWithSocial("google")}
-        onApplePress={() => signInWithSocial("apple")}
+        onGooglePress={() => handleSocialSignup("google")}
+        onApplePress={() => handleSocialSignup("apple")}
       />
+
+      {/* Universal Legal Agreement - Better positioned */}
+      <View style={styles.legalContainer}>
+        <CustomSwitch
+          value={legalAgreement}
+          onValueChange={setLegalAgreement}
+          label="I am at least 13 years old and agree to the Terms of Service and Privacy Policy"
+          labelStyle={styles.switchLabel}
+        />
+        <CustomText variant="bodySmall" style={styles.legalLinks}>
+          Read our{" "}
+          <CustomText
+            variant="bodySmall"
+            style={{ textDecorationLine: "underline", color: "#0066CC" }}
+            onPress={() => router.push("/auth/terms-of-service")}
+          >
+            Terms of Service
+          </CustomText>{" "}
+          and{" "}
+          <CustomText
+            variant="bodySmall"
+            style={{ textDecorationLine: "underline", color: "#0066CC" }}
+            onPress={() => router.push("/auth/privacy-policy")}
+          >
+            Privacy Policy
+          </CustomText>
+        </CustomText>
+      </View>
 
       <CustomText
         variant="bodyMedium"
@@ -114,5 +141,21 @@ const SignUpScreen: React.FC = () => {
     </ScrollView>
   );
 };
+
+const styles = StyleSheet.create({
+  legalContainer: {
+    marginVertical: 16,
+    paddingHorizontal: 4,
+  },
+  switchLabel: {
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  legalLinks: {
+    textAlign: "center",
+    marginTop: 8,
+    fontSize: 13,
+  },
+});
 
 export default SignUpScreen;

@@ -43,6 +43,18 @@ export const signupFormSchema = z
     path: ["confirmPassword"],
   });
 
+export const signupFormSchemaWithoutLegal = z
+  .object({
+    displayName: nameSchema,
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
 export const forgotPasswordFormSchema = z.object({
   email: emailSchema,
 });
