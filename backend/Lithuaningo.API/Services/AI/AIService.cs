@@ -1,38 +1,48 @@
+using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Lithuaningo.API.DTOs.AI;
 using Lithuaningo.API.DTOs.Challenge;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
 using Lithuaningo.API.Services.Storage;
 using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenAI;
+using OpenAI.Audio;
+using OpenAI.Chat;
+using OpenAI.Images;
 
 namespace Lithuaningo.API.Services.AI;
 
 /// <summary>
-/// Unified service for handling AI interactions with configured providers (Gemini and OpenAI)
+/// Unified service for handling AI interactions with OpenAI
 /// </summary>
 public class AIService : IAIService
 {
-    #region Constants
 
-    // private const string GeminiApiVersion = "v1beta"; // Removed, now in AISettings
 
-    #endregion
 
     #region Private Fields
 
-    // Store conversation history for sessions (will need adaptation for Gemini)
-    private readonly ConcurrentDictionary<string, List<GeminiContent>> _conversationHistories = new(); // Corrected type
+    // Store conversation history for sessions
+    private readonly ConcurrentDictionary<string, List<ChatMessage>> _conversationHistories = new();
 
-    private readonly IHttpClientFactory _httpClientFactory;
     private readonly AISettings _aiSettings;
     private readonly ILogger<AIService> _logger;
     private readonly IStorageService _storageService;
     private readonly StorageSettings _storageSettings;
+    private readonly OpenAIClient _openAIClient;
+    private readonly ChatClient _chatClient;
+    private readonly ImageClient _imageClient;
+    private readonly AudioClient _audioClient;
 
     #endregion
 
@@ -45,21 +55,25 @@ public class AIService : IAIService
     /// <param name="logger">The logger</param>
     /// <param name="storageService">The storage service</param>
     /// <param name="storageSettingsOptions">The storage settings</param>
-    /// <param name="httpClientFactory">The HTTP client factory</param>
+    /// <param name="openAIClient">The OpenAI client</param>
     public AIService(
         IOptions<AISettings> aiSettingsOptions,
         ILogger<AIService> logger,
         IStorageService storageService,
         IOptions<StorageSettings> storageSettingsOptions,
-        IHttpClientFactory httpClientFactory)
+        OpenAIClient openAIClient)
     {
         _logger = logger;
         _aiSettings = aiSettingsOptions.Value;
         _storageSettings = storageSettingsOptions.Value;
         _storageService = storageService;
-        _httpClientFactory = httpClientFactory;
+        _openAIClient = openAIClient;
 
-        _logger.LogInformation("AIService initialized for Gemini & OpenAI (audio)");
+        _chatClient = _openAIClient.GetChatClient(_aiSettings.OpenAITextModelName);
+        _imageClient = _openAIClient.GetImageClient(_aiSettings.OpenAIImageModelName);
+        _audioClient = _openAIClient.GetAudioClient(_aiSettings.OpenAIAudioModelName);
+
+        _logger.LogInformation("AIService initialized for OpenAI.");
     }
 
     #endregion
@@ -70,13 +84,13 @@ public class AIService : IAIService
     /// Gets the service name
     /// </summary>
     /// <returns>The name of the AI service</returns>
-    public string GetServiceName() => "Gemini & OpenAI (Audio)";
+    public string GetServiceName() => "OpenAI";
 
     /// <summary>
     /// Gets the model name used by this service (primary text model)
     /// </summary>
     /// <returns>The name of the AI model</returns>
-    public string GetModelName() => _aiSettings.GeminiTextModelName;
+    public string GetModelName() => _aiSettings.OpenAITextModelName;
 
     /// <summary>
     /// Processes an AI request and returns a response
@@ -86,104 +100,44 @@ public class AIService : IAIService
     /// <returns>The AI's response text</returns>
     public async Task<string> GenerateChatResponseAsync(string prompt, Dictionary<string, string>? context = null)
     {
-        _logger.LogInformation("Processing AI chat request with Gemini.");
-
+        _logger.LogInformation("Processing AI chat request with OpenAI.");
         var sessionId = context?.GetValueOrDefault("sessionId") ?? "default_session";
 
         var conversationHistory = _conversationHistories.GetOrAdd(sessionId, _ =>
         {
             _logger.LogInformation("Creating new conversation history for session ID: {SessionId} with system message.", sessionId);
-            // Initialize with system message as first user turn, and a model ack.
-            return new List<GeminiContent>
-            {
-                new GeminiContent(new List<GeminiPart> { new GeminiPart(_aiSettings.SystemMessage) }, "user"),
-                new GeminiContent(new List<GeminiPart> { new GeminiPart("Okay, I will act as a helpful assistant for Lithuaningo.") }, "model") // Model's acknowledgment of the system prompt
-            };
+            return new List<ChatMessage> { new SystemChatMessage(AIPrompts.CHAT_SYSTEM_INSTRUCTIONS) };
         });
 
-        // Add current user prompt
-        conversationHistory.Add(new GeminiContent(new List<GeminiPart> { new GeminiPart(prompt) }, "user"));
+        conversationHistory.Add(new UserChatMessage(prompt));
 
-        // Manage conversation history length (e.g., keep last 10 turns + initial system message pair)
-        // Each "turn" is a user message + a model message. So 10 turns = 20 messages.
-        // Plus the initial 2 system setup messages, so 22.
-        // Let's aim for roughly 10 user/model exchanges after setup = 22 items. Max 11 user prompts + 11 model responses.
-        // Current limit in old code was 11 messages total (1 system + 5 user + 5 model, or 1 system + 10 user/model messages with truncation).
-        // Let's keep it similar: Max 10 user messages + initial system message. (approx 22 history items including model replies)
-        const int maxHistoryItems = 22; // (System User + System Model) + 10 * (User + Model)
+        const int maxHistoryItems = 22; // 1 system message + 10 user/model pairs + 1 new user message
         if (conversationHistory.Count > maxHistoryItems)
         {
             _logger.LogWarning("Conversation history for session {SessionId} exceeds {MaxItems}. Truncating.", sessionId, maxHistoryItems);
-            // Keep the first two (system setup) and the last (maxHistoryItems - 2) items.
-            var oldHistory = conversationHistory.ToList(); // ToList for safe removal/re-add
+            var oldHistory = conversationHistory.ToList();
             conversationHistory.Clear();
-            conversationHistory.AddRange(oldHistory.Take(2)); // System setup
-            conversationHistory.AddRange(oldHistory.Skip(oldHistory.Count - (maxHistoryItems - 2)));
+            conversationHistory.Add(oldHistory.First()); // Keep system message
+            conversationHistory.AddRange(oldHistory.Skip(oldHistory.Count - (maxHistoryItems - 1)));
         }
-
-        var httpClient = _httpClientFactory.CreateClient("Gemini");
-        var requestUrl = $"{_aiSettings.GeminiApiBaseUrl}/{_aiSettings.GeminiApiVersion}/models/{_aiSettings.GeminiTextModelName}:generateContent?key={_aiSettings.GeminiApiKey}";
-
-        var geminiRequest = new GeminiTextRequest(
-            Contents: conversationHistory.ToList(), // Send the current history
-            GenerationConfig: new GeminiGenerationConfig
-            {
-                Temperature = _aiSettings.DefaultTemperature,
-                TopP = _aiSettings.DefaultTopP,
-                MaxOutputTokens = _aiSettings.MaxTokens
-            }
-        );
 
         try
         {
-            var jsonPayload = JsonSerializer.Serialize(geminiRequest, JsonSettings.DefaultOptions); // Assuming JsonSettings.DefaultOptions is compatible or create new options
-            var httpContent = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-
-            var httpRequest = new HttpRequestMessage(HttpMethod.Post, requestUrl) { Content = httpContent };
-            var httpResponse = await httpClient.SendAsync(httpRequest);
-
-            if (!httpResponse.IsSuccessStatusCode)
+            var chatCompletionOptions = new ChatCompletionOptions
             {
-                var errorBody = await httpResponse.Content.ReadAsStringAsync();
-                _logger.LogError("Gemini API request failed. Status: {StatusCode}, Body: {ErrorBody}", httpResponse.StatusCode, errorBody);
-                throw new HttpRequestException($"Gemini API request failed with status {httpResponse.StatusCode}: {errorBody}");
-            }
+                MaxOutputTokenCount = _aiSettings.MaxTokens,
+            };
 
-            var responseBody = await httpResponse.Content.ReadAsStringAsync();
-            var geminiResponse = JsonSerializer.Deserialize<GeminiTextResponse>(responseBody, JsonSettings.DefaultOptions);
+            ChatCompletion completion = await _chatClient.CompleteChatAsync(conversationHistory, chatCompletionOptions);
 
-            string aiResponseText = "I'm sorry, I couldn't generate a response."; // Default
-            if (geminiResponse?.Candidates != null && geminiResponse.Candidates.Any())
-            {
-                var candidate = geminiResponse.Candidates[0];
-                if (candidate.Content?.Parts != null && candidate.Content.Parts.Any())
-                {
-                    aiResponseText = candidate.Content.Parts[0].Text ?? aiResponseText;
-                }
-                // Log safety ratings or finish reason if needed
-                if (candidate.FinishReason != null && candidate.FinishReason != "STOP")
-                {
-                    _logger.LogWarning("Gemini generation finished with reason: {FinishReason}", candidate.FinishReason);
-                }
-            }
-            else
-            {
-                _logger.LogWarning("Gemini response did not contain any candidates or parts. Response: {ResponseBody}", responseBody);
-            }
-
-            // Add AI response to history
-            conversationHistory.Add(new GeminiContent(new List<GeminiPart> { new GeminiPart(aiResponseText) }, "model"));
+            string aiResponseText = completion.Content[0].Text;
+            conversationHistory.Add(new AssistantChatMessage(aiResponseText));
             return aiResponseText;
-        }
-        catch (JsonException jsonEx)
-        {
-            _logger.LogError(jsonEx, "Error deserializing Gemini API response.");
-            throw new InvalidOperationException("Error processing response from AI service.", jsonEx);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error processing AI request with Gemini.");
-            throw; // Re-throw original exception to be caught by higher level handler
+            _logger.LogError(ex, "Error processing AI request with OpenAI.");
+            throw;
         }
     }
 
@@ -209,79 +163,43 @@ public class AIService : IAIService
 
         try
         {
-            // Step 1: Generate image data using AI
-            var httpClient = _httpClientFactory.CreateClient("OpenAI");
-            string apiUrl = $"{_aiSettings.OpenAIApiBaseUrl}/v1/images/generations";
             string combinedPrompt = string.Format(
                 AIPrompts.IMAGE_GENERATION_PROMPT,
                 flashcardFrontText,
                 exampleSentenceTranslation ?? string.Empty
             );
 
-            var payload = new
+            var imageOptions = new ImageGenerationOptions
             {
-                model = _aiSettings.OpenAIImageModelName,
-                prompt = combinedPrompt,
-                n = 1,
-                size = _aiSettings.OpenAIImageSize,
-                quality = _aiSettings.OpenAIImageQuality,
-                background = "transparent" // Explicitly set transparent background
+                Quality = ParseImageQuality(_aiSettings.OpenAIImageQuality),
+                Size = ParseImageSize(_aiSettings.OpenAIImageSize),
             };
 
-            var jsonPayload = JsonSerializer.Serialize(payload, JsonSettings.DefaultOptions);
-            var httpContent = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
-            var request = new HttpRequestMessage(HttpMethod.Post, apiUrl) { Content = httpContent };
-            request.Headers.Add("Authorization", $"Bearer {_aiSettings.OpenAIApiKey}");
+            _logger.LogInformation("Requesting image generation from OpenAI with prompt: {Prompt}", combinedPrompt);
 
-            _logger.LogInformation("Requesting image generation from OpenAI with prompt: {Prompt}", payload.prompt);
-            var response = await httpClient.SendAsync(request);
+            var imageResult = await _imageClient.GenerateImageAsync(combinedPrompt, imageOptions);
+            GeneratedImage image = imageResult.Value;
 
-            if (!response.IsSuccessStatusCode)
+            if (image.ImageBytes == null || image.ImageBytes.ToMemory().IsEmpty)
             {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to generate image from OpenAI. Status: {StatusCode}, Response: {ErrorResponse}", response.StatusCode, errorContent);
-                throw new InvalidOperationException($"Failed to generate image from OpenAI. Status: {response.StatusCode}, Details: {errorContent}");
+                _logger.LogError("OpenAI response did not contain image bytes.");
+                throw new InvalidOperationException("OpenAI response did not contain image bytes.");
             }
 
-            var responseBody = await response.Content.ReadAsStringAsync();
-            using var openAIResponse = JsonDocument.Parse(responseBody);
-            string? base64ImageData = null;
-            if (openAIResponse.RootElement.TryGetProperty("data", out var dataArray) && dataArray.GetArrayLength() > 0)
-            {
-                if (dataArray[0].TryGetProperty("b64_json", out var b64JsonElement))
-                {
-                    base64ImageData = b64JsonElement.GetString();
-                }
-            }
-
-            if (string.IsNullOrEmpty(base64ImageData))
-            {
-                _logger.LogError("OpenAI response did not contain base64 image data. Response: {ResponseBody}", responseBody);
-                throw new InvalidOperationException("OpenAI response did not contain base64 image data.");
-            }
-
-            byte[] imageBytes = Convert.FromBase64String(base64ImageData);
-            if (imageBytes == null || imageBytes.Length == 0)
-            {
-                _logger.LogError("Generated image bytes are null or empty after base64 decoding.");
-                throw new InvalidOperationException("Generated image bytes are null or empty after base64 decoding.");
-            }
-
-            // Step 2: Upload image data to storage using _storageService
-            _logger.LogInformation("Uploading generated image data to storage. Size: {ImageSize} bytes.", imageBytes.Length);
+            _logger.LogInformation("Uploading generated image binary data to storage");
 
             var uploadedUrl = await _storageService.UploadBinaryDataAsync(
-                imageBytes,
-                "image/png", // Content type
-                _storageSettings.Paths.Flashcards, // Folder from settings
-                _storageSettings.Paths.Images,     // Subfolder from settings
-                ".png"                             // File extension
+                image.ImageBytes.ToArray(),
+                "image/png",
+                _storageSettings.Paths.Flashcards,
+                _storageSettings.Paths.Images,
+                ".png"
             );
 
             if (string.IsNullOrEmpty(uploadedUrl))
             {
-                _logger.LogError("Storage service returned an empty URL after uploading image data.");
-                throw new InvalidOperationException("Storage service returned an empty URL after uploading image data.");
+                _logger.LogError("Storage service returned an empty URL after uploading image binary data.");
+                throw new InvalidOperationException("Storage service returned an empty URL after uploading image binary data.");
             }
 
             _logger.LogInformation("Successfully generated and uploaded image. URL: {UploadedUrl}", uploadedUrl);
@@ -312,51 +230,34 @@ public class AIService : IAIService
 
         try
         {
-            var httpClient = _httpClientFactory.CreateClient("OpenAI");
-
             string textToSpeak = $"{flashcardText}. \n\n{exampleSentence}";
 
-            var payload = new
+            GeneratedSpeechVoice voice = _aiSettings.DefaultVoice.ToLowerInvariant() switch
             {
-                model = _aiSettings.OpenAIAudioModelName,
-                input = textToSpeak,
-                voice = _aiSettings.DefaultVoice.ToLowerInvariant(), // Ensure voice is lowercase as per OpenAI docs
-                // speed = 1.0f // Optional: map from settings if needed
+                "alloy" => GeneratedSpeechVoice.Alloy,
+                "echo" => GeneratedSpeechVoice.Echo,
+                "fable" => GeneratedSpeechVoice.Fable,
+                "onyx" => GeneratedSpeechVoice.Onyx,
+                "nova" => GeneratedSpeechVoice.Nova,
+                "shimmer" => GeneratedSpeechVoice.Shimmer,
+                _ => GeneratedSpeechVoice.Alloy,
             };
 
-            var jsonPayload = JsonSerializer.Serialize(payload, JsonSettings.DefaultOptions);
-            var httpContent = new StringContent(jsonPayload, Encoding.UTF8, "application/json");
+            var speechResult = await _audioClient.GenerateSpeechAsync(textToSpeak, voice);
+            BinaryData speechData = speechResult.Value;
 
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_aiSettings.OpenAIApiBaseUrl}/v1/audio/speech")
+            if (speechData == null || speechData.ToMemory().IsEmpty)
             {
-                Content = httpContent
-            };
-            request.Headers.Add("Authorization", $"Bearer {_aiSettings.OpenAIApiKey}");
-
-            var response = await httpClient.SendAsync(request);
-
-            if (!response.IsSuccessStatusCode)
-            {
-                var errorContent = await response.Content.ReadAsStringAsync();
-                _logger.LogError("Failed to generate audio from OpenAI. Status: {StatusCode}, Response: {ErrorResponse}", response.StatusCode, errorContent);
-                throw new InvalidOperationException($"Failed to generate audio from OpenAI. Status: {response.StatusCode}, Details: {errorContent}");
+                _logger.LogError("Failed to generate audio: empty response from OpenAI");
+                throw new InvalidOperationException("Failed to generate audio: empty response from OpenAI");
             }
 
-            var speechBytes = await response.Content.ReadAsByteArrayAsync();
-
-            if (speechBytes == null || speechBytes.Length == 0)
-            {
-                _logger.LogError("Failed to generate audio: empty byte array response from OpenAI");
-                throw new InvalidOperationException("Failed to generate audio: empty byte array response from OpenAI");
-            }
-
-            // Upload audio to storage
             var uploadedUrl = await _storageService.UploadBinaryDataAsync(
-                speechBytes,
-                "audio/mpeg", // OpenAI TTS typically returns mp3, which has MIME type audio/mpeg
+                speechData.ToArray(),
+                "audio/mpeg",
                 _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Audio,
-                ".mp3" // Specify file extension
+                ".mp3"
             );
 
             return uploadedUrl;
@@ -383,19 +284,11 @@ public class AIService : IAIService
         return await RetryWithBackoffAsync(async attempt =>
         {
             _logger.LogInformation("Generating flashcards with AI - Attempt: {Attempt}, Category: {Category}, Difficulty: {Difficulty}", attempt, request.PrimaryCategory, request.Difficulty);
-            var flashcardGenerationUserPrompt = BuildFlashcardGenerationUserPrompt(request, existingFlashcardFrontTexts);
+            var userPrompt = BuildFlashcardGenerationUserPrompt(request, existingFlashcardFrontTexts);
 
-            var aiResponseText = await ExecuteGeminiGenerationRequestAsync(
-                _aiSettings.GeminiTextModelName,
+            var aiResponseText = await ExecuteOpenAIGenerationRequestAsync(
                 AIPrompts.FLASHCARD_SYSTEM_INSTRUCTIONS,
-                flashcardGenerationUserPrompt,
-                new GeminiGenerationConfig // Use default generation config for flashcards
-                {
-                    Temperature = _aiSettings.DefaultTemperature,
-                    TopP = _aiSettings.DefaultTopP,
-                    MaxOutputTokens = _aiSettings.MaxTokens,
-                    // CandidateCount is typically 1 for Gemini text models and might not be needed here
-                }
+                userPrompt
             );
 
             if (string.IsNullOrWhiteSpace(aiResponseText))
@@ -406,21 +299,13 @@ public class AIService : IAIService
 
             try
             {
-                // aiResponseText from ExecuteGeminiGenerationRequestAsync is already the cleaned JSON string for flashcards.
-                // No need to deserialize as GeminiTextResponse first or call ExtractJsonFromAiResponse again.
                 var flashcards = JsonSerializer.Deserialize<List<Flashcard>>(aiResponseText, JsonSettings.AiOptions);
-
-                if (flashcards == null || !flashcards.Any())
+                if (flashcards == null || !flashcards.Any() || !ValidateGeneratedFlashcards(flashcards))
                 {
-                    _logger.LogWarning("Deserialized flashcards list is null or empty on attempt {Attempt}. Cleaned JSON: {CleanedJson}", attempt, aiResponseText);
-                    throw new InvalidOperationException("Deserialized flashcards list is null or empty.");
-                }
-
-                if (!ValidateGeneratedFlashcards(flashcards))
-                {
-                    _logger.LogWarning("Generated flashcards failed validation on attempt {Attempt}. Count: {FlashcardCount}", attempt, flashcards.Count);
+                    _logger.LogWarning("Generated flashcards failed validation on attempt {Attempt}. Count: {FlashcardCount}", attempt, flashcards?.Count);
                     throw new InvalidOperationException("Generated flashcards failed validation.");
                 }
+
                 _logger.LogInformation("Successfully generated and validated {FlashcardCount} flashcards on attempt {Attempt}.", flashcards.Count, attempt);
                 return flashcards;
             }
@@ -429,11 +314,6 @@ public class AIService : IAIService
                 _logger.LogError(jsonEx, "Failed to deserialize flashcards JSON on attempt {Attempt}. JSON: {JsonResponse}", attempt, aiResponseText);
                 throw new InvalidOperationException("Failed to deserialize flashcards JSON", jsonEx);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "An unexpected error occurred during flashcard generation on attempt {Attempt}.", attempt);
-                throw; // Re-throw original exception to be caught by RetryWithBackoffAsync for retries
-            }
         });
     }
 
@@ -441,7 +321,7 @@ public class AIService : IAIService
     /// Clears conversation history for testing purposes
     /// </summary>
     /// <param name="sessionId">Optional specific session ID to clear, or all if null</param>
-    public virtual void ClearConversationHistory(string? sessionId = null)
+    public void ClearConversationHistory(string? sessionId = null)
     {
         if (sessionId != null)
         {
@@ -478,111 +358,139 @@ public class AIService : IAIService
 
             var userPrompt = $"Generate challenges for the following flashcard:\n{flashcardJson}";
 
-            var generationConfig = new GeminiGenerationConfig
-            {
-                Temperature = _aiSettings.DefaultTemperature,
-                MaxOutputTokens = _aiSettings.MaxTokens,
-                TopP = _aiSettings.DefaultTopP
-            };
-
-            var extractedJson = await ExecuteGeminiGenerationRequestAsync(
-                _aiSettings.GeminiTextModelName,
+            var extractedJson = await ExecuteOpenAIGenerationRequestAsync(
                 AIPrompts.FLASHCARD_CHALLENGE_GENERATION_SYSTEM_INSTRUCTIONS,
-                userPrompt,
-                generationConfig
+                userPrompt
             );
 
-            List<ChallengeQuestionResponse>? challengeResponses;
             try
             {
-                challengeResponses = JsonSerializer.Deserialize<List<ChallengeQuestionResponse>>(extractedJson, JsonSettings.AiOptions);
+                var challengeResponses = JsonSerializer.Deserialize<List<ChallengeQuestionResponse>>(extractedJson, JsonSettings.AiOptions);
+                if (challengeResponses == null || !challengeResponses.Any() || !ValidateGeneratedChallenges(challengeResponses))
+                {
+                    _logger.LogWarning("Generated challenges for flashcard {FlashcardId} on attempt {Attempt} are null, empty, or invalid. JSON: {ExtractedJson}", flashcard.Id, attempt, extractedJson);
+                    throw new InvalidOperationException("AI generated invalid or empty challenge questions for flashcard.");
+                }
+                _logger.LogInformation("Successfully generated {Count} challenges for flashcard ID: {FlashcardId} on attempt {Attempt}", challengeResponses.Count, flashcard.Id, attempt);
+                return challengeResponses;
             }
             catch (JsonException jsonEx)
             {
                 _logger.LogError(jsonEx, "Error deserializing challenge questions JSON for flashcard {FlashcardId} on attempt {Attempt}. Extracted JSON: {ExtractedJson}", flashcard.Id, attempt, extractedJson);
                 throw new InvalidOperationException("Failed to deserialize AI-generated challenge questions for flashcard.", jsonEx);
             }
+        });
+    }
 
-            if (challengeResponses == null || !challengeResponses.Any() || !ValidateGeneratedChallenges(challengeResponses))
+    /// <summary>
+    /// Generates a brief explanation about a challenge question and its answer for educational purposes
+    /// </summary>
+    public async Task<string> GenerateQuestionExplanationAsync(QuestionExplanationRequest request)
+    {
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+        if (string.IsNullOrWhiteSpace(request.Question))
+        {
+            throw new ArgumentNullException(nameof(request.Question));
+        }
+        if (string.IsNullOrWhiteSpace(request.CorrectAnswer))
+        {
+            throw new ArgumentNullException(nameof(request.CorrectAnswer));
+        }
+        if (string.IsNullOrWhiteSpace(request.UserAnswer))
+        {
+            throw new ArgumentNullException(nameof(request.UserAnswer));
+        }
+
+        var isCorrect = request.UserAnswer.Equals(request.CorrectAnswer, StringComparison.OrdinalIgnoreCase);
+        var resultText = isCorrect ? "correct" : "incorrect";
+
+        // Sanitize question text to remove newlines for a more stable prompt
+        var sanitizedQuestion = request.Question.ReplaceLineEndings(" ");
+
+        var userPrompt = $@"Question: {sanitizedQuestion}
+Correct Answer: {request.CorrectAnswer}
+User's Answer: {request.UserAnswer} ({resultText})
+Question Type: {request.QuestionType}
+All Options: {string.Join(", ", request.Options)}";
+
+        if (!string.IsNullOrWhiteSpace(request.ExampleSentence))
+        {
+            userPrompt += $"\nExample Sentence: {request.ExampleSentence}";
+        }
+
+        userPrompt += "\n\nProvide a brief educational explanation about this question and answer.";
+
+        try
+        {
+            var messages = new List<ChatMessage>
             {
-                _logger.LogWarning("Generated challenges for flashcard {FlashcardId} on attempt {Attempt} are null, empty, or invalid. JSON: {ExtractedJson}", flashcard.Id, attempt, extractedJson);
-                throw new InvalidOperationException("AI generated invalid or empty challenge questions for flashcard.");
+                new SystemChatMessage(AIPrompts.QUESTION_EXPLANATION_SYSTEM_INSTRUCTIONS),
+                new UserChatMessage(userPrompt)
+            };
+
+            var chatCompletionOptions = new ChatCompletionOptions
+            {
+                MaxOutputTokenCount = 1000,
+            };
+
+            ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatCompletionOptions);
+            var explanation = completion.Content[0].Text?.Trim();
+
+            // Handle cases where the AI returns an empty or whitespace response
+            if (string.IsNullOrWhiteSpace(explanation))
+            {
+                _logger.LogWarning("AI generated an empty or whitespace explanation for question: {Question}", request.Question);
+                return "Sorry, I could not generate an explanation for this question.";
             }
 
-            _logger.LogInformation("Successfully generated {Count} challenges for flashcard ID: {FlashcardId} on attempt {Attempt}", challengeResponses.Count, flashcard.Id, attempt);
-            return challengeResponses;
-        });
+            _logger.LogInformation("Generated question explanation for question: {Question}", request.Question);
+            return explanation;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating question explanation for question: {Question}", request.Question);
+            throw new InvalidOperationException("Failed to generate question explanation.", ex);
+        }
     }
 
     #endregion
 
     #region Private Methods
 
-    private async Task<string> ExecuteGeminiGenerationRequestAsync(
-        string modelName,
-        string systemPrompt,
-        string userPrompt,
-        GeminiGenerationConfig generationConfig,
-        string? clientName = "GeminiApiClient") // Allow specifying client name if needed, defaults to GeminiApiClient
+    private async Task<string> ExecuteOpenAIGenerationRequestAsync(string systemPrompt, string userPrompt)
     {
-        var client = _httpClientFactory.CreateClient(clientName ?? "GeminiApiClient");
-        var requestUrl = $"{_aiSettings.GeminiApiBaseUrl}/v1beta/models/{modelName}:generateContent?key={_aiSettings.GeminiApiKey}";
-
-        // Correctly structure contents for Gemini: System instruction as first user message, then model ack, then actual user prompt
-        var contents = new List<GeminiContent>
+        var messages = new List<ChatMessage>
         {
-            new GeminiContent(Parts: new List<GeminiPart> { new GeminiPart(systemPrompt) }, Role: "user"), // System prompt as first user turn
-            new GeminiContent(Parts: new List<GeminiPart> { new GeminiPart("Okay, I understand the instructions.") }, Role: "model"), // Model's acknowledgment
-            new GeminiContent(Parts: new List<GeminiPart> { new GeminiPart(userPrompt) }, Role: "user") // Actual user prompt
+            new SystemChatMessage(systemPrompt),
+            new UserChatMessage(userPrompt)
         };
 
-        var geminiRequest = new GeminiTextRequest(
-            Contents: contents,
-            GenerationConfig: generationConfig
-        );
-
-        var jsonRequest = JsonSerializer.Serialize(geminiRequest, JsonSettings.AiOptions);
-        string? rawResponseString;
-
-        var httpResponse = await client.PostAsync(requestUrl, new StringContent(jsonRequest, Encoding.UTF8, "application/json"));
-        rawResponseString = await httpResponse.Content.ReadAsStringAsync();
-
-        if (!httpResponse.IsSuccessStatusCode)
+        var chatCompletionOptions = new ChatCompletionOptions
         {
-            _logger.LogError("Gemini API error. Status: {StatusCode}, Response: {RawResponse}", httpResponse.StatusCode, rawResponseString);
-            httpResponse.EnsureSuccessStatusCode(); // Let this throw for handling by RetryWithBackoffAsync or the caller
-        }
+            MaxOutputTokenCount = _aiSettings.MaxTokens,
+        };
 
-        if (string.IsNullOrWhiteSpace(rawResponseString))
+        try
         {
-            _logger.LogError("Received null or empty response from Gemini API.");
-            throw new InvalidOperationException("AI service returned an empty response.");
+            ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatCompletionOptions);
+            var contentText = completion.Content[0].Text;
+            var extractedJson = ExtractJsonFromAiResponse(contentText);
+
+            if (string.IsNullOrWhiteSpace(extractedJson))
+            {
+                _logger.LogError("Could not extract valid JSON from the AI's text content. Original content text: {ContentText}", contentText);
+                throw new InvalidOperationException("Failed to extract JSON from AI's text content.");
+            }
+            return extractedJson;
         }
-
-        // Attempt to deserialize the entire response to get to the actual content
-        var geminiResponse = JsonSerializer.Deserialize<GeminiTextResponse>(rawResponseString, JsonSettings.AiOptions);
-
-        if (geminiResponse?.Candidates == null || !geminiResponse.Candidates.Any() ||
-            geminiResponse.Candidates[0].Content?.Parts == null || !geminiResponse.Candidates[0].Content.Parts.Any() ||
-            string.IsNullOrWhiteSpace(geminiResponse.Candidates[0].Content.Parts[0].Text))
+        catch (Exception ex)
         {
-            _logger.LogError("Could not extract valid content text from Gemini API response. Raw response: {RawResponse}", rawResponseString);
-            throw new InvalidOperationException("Failed to extract content text from AI response.");
+            _logger.LogError(ex, "OpenAI API error during generation request.");
+            throw;
         }
-
-        // The actual text content is what we expect to be the JSON payload (for flashcards/challenges)
-        var contentText = geminiResponse.Candidates[0].Content.Parts[0].Text;
-
-        // Now, extract the JSON from the content text, which might be wrapped in markdown
-        var extractedJson = ExtractJsonFromAiResponse(contentText);
-
-        if (string.IsNullOrWhiteSpace(extractedJson))
-        {
-            _logger.LogError("Could not extract valid JSON from the AI's text content. Original content text: {ContentText}, Raw response: {RawResponse}", contentText, rawResponseString);
-            throw new InvalidOperationException("Failed to extract JSON from AI's text content.");
-        }
-
-        return extractedJson;
     }
 
     /// <summary>
@@ -616,33 +524,12 @@ public class AIService : IAIService
 
         string content = aiResponse.Trim();
 
-        // Pattern 1: Standard complete markdown block (e.g., ```json\n{...}\n```)
-        // Regex accounts for optional "json" language specifier and ensures it captures content between the fences.
-        var fullBlockMatch = Regex.Match(content, @"^```(?:json)?\s*\n([\s\S]+?)\n```$", RegexOptions.Multiline);
-        if (fullBlockMatch.Success && fullBlockMatch.Groups.Count > 1)
+        var match = Regex.Match(content, @"```(json)?(?<json>[\s\S]*)```");
+        if (match.Success)
         {
-            return fullBlockMatch.Groups[1].Value.Trim();
+            return match.Groups["json"].Value.Trim();
         }
 
-        // Pattern 2: Starts with markdown prefix (e.g., ```json\n{...), but possibly truncated (no proper closing ```)
-        // Regex captures content after the initial fence.
-        var prefixOnlyMatch = Regex.Match(content, @"^```(?:json)?\s*\n([\s\S]+)");
-        if (prefixOnlyMatch.Success && prefixOnlyMatch.Groups.Count > 1)
-        {
-            string extractedContent = prefixOnlyMatch.Groups[1].Value.Trim();
-            // If the extracted content itself ends with ``` (e.g., due to very short or malformed block), remove it.
-            if (extractedContent.EndsWith("```"))
-            {
-                extractedContent = extractedContent.Substring(0, extractedContent.Length - 3).Trim();
-            }
-            return extractedContent; // This might be an incomplete JSON string if the original response was truncated
-        }
-
-        // Pattern 3: If it's not in a markdown block (or the patterns above didn't catch it),
-        // assume it's direct JSON or a plain text error message from the AI.
-        // If the content still starts with "```" here, it means our patterns failed unexpectedly for a markdown-like string.
-        // In such a case, returning an empty string or logging an error might be preferable to passing invalid content to the deserializer.
-        // However, for now, we pass the content as is, assuming it might be valid JSON or a non-JSON error message.
         return content;
     }
 
@@ -656,12 +543,12 @@ public class AIService : IAIService
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Operation failed");
+                _logger.LogError(ex, "Operation failed on attempt {Attempt} of {MaxAttempts}", attempt, maxAttempts);
                 if (attempt >= maxAttempts)
                 {
                     throw;
                 }
-                await Task.Delay(100 * attempt); // Simple exponential backoff
+                await Task.Delay(1000 * attempt); // Simple exponential backoff
             }
         }
         throw new InvalidOperationException($"Operation failed after {maxAttempts} attempts");
@@ -704,6 +591,24 @@ public class AIService : IAIService
         }
         return userPromptBuilder.ToString();
     }
+
+    private static GeneratedImageSize ParseImageSize(string size) => size switch
+    {
+        "1024x1024" => GeneratedImageSize.W1024xH1024,
+        "1792x1024" => GeneratedImageSize.W1792xH1024,
+        "1024x1792" => GeneratedImageSize.W1024xH1792,
+        _ => GeneratedImageSize.W1024xH1024,
+    };
+
+    private static GeneratedImageQuality ParseImageQuality(string quality) => quality switch
+    {
+        "low" => new GeneratedImageQuality("low"),       // Use string constructor for API-compatible values
+        "medium" => new GeneratedImageQuality("medium"),
+        "standard" => new GeneratedImageQuality("medium"), // Map standard to medium since API doesn't support standard
+        "high" => new GeneratedImageQuality("high"),
+        "hd" => new GeneratedImageQuality("high"),       // Map hd to high
+        _ => new GeneratedImageQuality("low"),           // Default to low quality
+    };
 
     #endregion
 }

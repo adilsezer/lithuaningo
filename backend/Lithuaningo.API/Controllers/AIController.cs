@@ -130,4 +130,59 @@ public class AIController : BaseApiController
                 "An error occurred processing your chat message.");
         }
     }
+
+    /// <summary>
+    /// Gets an AI explanation for a challenge question and its answer
+    /// </summary>
+    /// <param name="request">The question explanation request</param>
+    /// <returns>A brief explanation about the question and answer</returns>
+    [HttpPost("explain-question")]
+    [Authorize]
+    [SwaggerOperation(
+        Summary = "Get AI explanation for a challenge question",
+        Description = "Provides a brief educational explanation about a challenge question and its answer for premium users",
+        OperationId = "AI.ExplainQuestion",
+        Tags = new[] { "AI" }
+    )]
+    [ProducesResponseType(typeof(AIResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<AIResponse>> ExplainQuestion([FromBody] QuestionExplanationRequest request)
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(request.Question))
+            {
+                return BadRequest("Question cannot be empty.");
+            }
+            if (string.IsNullOrWhiteSpace(request.CorrectAnswer))
+            {
+                return BadRequest("Correct answer cannot be empty.");
+            }
+            if (string.IsNullOrWhiteSpace(request.UserAnswer))
+            {
+                return BadRequest("User answer cannot be empty.");
+            }
+            if (request.Options == null || request.Options.Count == 0)
+            {
+                return BadRequest("Options cannot be empty.");
+            }
+
+            var explanation = await _aiService.GenerateQuestionExplanationAsync(request);
+
+            return Ok(new AIResponse
+            {
+                Response = explanation,
+                ServiceType = "question-explanation",
+                Timestamp = DateTime.UtcNow
+            });
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error generating question explanation");
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                "An error occurred while generating the explanation.");
+        }
+    }
 }

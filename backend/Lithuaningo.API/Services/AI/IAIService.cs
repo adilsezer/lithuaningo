@@ -5,21 +5,21 @@ using Lithuaningo.API.Models;
 namespace Lithuaningo.API.Services.AI;
 
 /// <summary>
-/// Interface for handling AI interactions with configured providers (e.g., Gemini, OpenAI),
-/// providing functionality for chat, flashcard generation, image generation, audio generation, and challenge creation.
+/// Interface for handling AI interactions with a configured provider (e.g., OpenAI),
+/// providing a unified abstraction for different AI models.
 /// </summary>
 public interface IAIService
 {
     /// <summary>
-    /// Gets the name of the primary AI service provider or a composite name.
+    /// Gets the service name
     /// </summary>
-    /// <returns>The name of the AI service (e.g., "Gemini/OpenAI")</returns>
+    /// <returns>The name of the AI service (e.g., "OpenAI")</returns>
     string GetServiceName();
 
     /// <summary>
-    /// Gets the name of the primary AI model being used (typically for text generation).
+    /// Gets the model name used by this service (primary text model)
     /// </summary>
-    /// <returns>The name of the AI model (e.g., "gemini-1.5-flash", "gpt-4")</returns>
+    /// <returns>The name of the AI model (e.g., "gpt-4")</returns>
     string GetModelName();
 
     /// <summary>
@@ -75,4 +75,13 @@ public interface IAIService
     /// <exception cref="ArgumentNullException">Thrown when flashcard is null.</exception>
     /// <exception cref="InvalidOperationException">Thrown when AI response is invalid or validation fails.</exception>
     Task<List<ChallengeQuestionResponse>> GenerateChallengesForFlashcardAsync(Flashcard flashcard);
+
+    /// <summary>
+    /// Generates a brief explanation about a challenge question and its answer for educational purposes.
+    /// </summary>
+    /// <param name="request">The request object containing all question details.</param>
+    /// <returns>A brief plain text explanation without formatting</returns>
+    /// <exception cref="ArgumentNullException">Thrown when required parameters are null or empty</exception>
+    /// <exception cref="InvalidOperationException">Thrown when AI response generation fails</exception>
+    Task<string> GenerateQuestionExplanationAsync(DTOs.AI.QuestionExplanationRequest request);
 }

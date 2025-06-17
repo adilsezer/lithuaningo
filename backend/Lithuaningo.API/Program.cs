@@ -27,7 +27,9 @@ using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.Http.Features;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using OpenAI;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -230,8 +232,12 @@ void ConfigureServices(IServiceCollection services, IConfiguration configuration
     // Health Checks
     services.AddHealthChecks();
 
-    // Register IHttpClientFactory
-    services.AddHttpClient();
+    // Configure AI services
+    services.AddSingleton<OpenAIClient>(sp =>
+    {
+        var aiSettings = sp.GetRequiredService<IOptions<AISettings>>().Value;
+        return new OpenAIClient(aiSettings.OpenAIApiKey);
+    });
 
     // Basic Services
     services.AddControllers();
@@ -565,13 +571,10 @@ void ValidateConfiguration(IConfiguration configuration, IWebHostEnvironment env
             { "Supabase:Url", "Supabase URL" },
             { "Supabase:ServiceKey", "Supabase service key" },
             { "Supabase:JwtSecret", "JWT secret" },
-            { "AI:GeminiApiBaseUrl", "Gemini API Base URL" },
-            { "AI:GeminiApiKey", "Gemini API key" },
-            { "AI:GeminiTextModelName", "Gemini Text Model Name" },
-            { "AI:OpenAIApiKey", "OpenAI API key for audio services" },
+            { "AI:OpenAIApiKey", "OpenAI API key" },
+            { "AI:OpenAITextModelName", "OpenAI Text Model Name" },
             { "AI:OpenAIImageModelName", "OpenAI Image Model Name" },
             { "AI:OpenAIAudioModelName", "OpenAI Audio Model Name" },
-            { "AI:OpenAIApiBaseUrl", "OpenAI API Base URL" },
             { "RevenueCat:WebhookAuthHeader", "RevenueCat Webhook Auth Header" }
         };
 
