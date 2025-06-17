@@ -15,7 +15,7 @@ export const REVENUECAT_API_KEYS = {
 export const ENTITLEMENTS = {
   premium:
     process.env.EXPO_PUBLIC_REVENUECAT_PREMIUM_ENTITLEMENT_ID || "Premium",
-};
+} as const;
 
 // Package Identifiers
 export const PACKAGE_IDENTIFIERS = {
@@ -30,7 +30,7 @@ export const RC_PACKAGE_TYPES = {
   MONTHLY: "MONTHLY",
   ANNUAL: "ANNUAL",
   LIFETIME: "LIFETIME",
-};
+} as const;
 
 // Debug settings
 export const DEBUG_SETTINGS = {

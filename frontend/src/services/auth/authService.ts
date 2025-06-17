@@ -7,8 +7,8 @@ import { Session } from "@supabase/supabase-js";
 import { AUTH_PATTERNS } from "@utils/validationPatterns";
 import { AuthResponse } from "@src/types/auth.types";
 import { generateAnonymousName } from "@utils/userUtils";
-import Purchases from "react-native-purchases";
 import { apiClient } from "../api/apiClient";
+import RevenueCatService from "../subscription/revenueCatService";
 
 // Configure Google Sign-In
 GoogleSignin.configure({
@@ -30,17 +30,7 @@ export const updateAuthState = async (session: Session | null) => {
       "[AuthService] updateAuthState: No user in session or session is null. Clearing local state."
     );
     useUserStore.getState().logOut();
-    try {
-      await Purchases.logOut();
-      console.log(
-        "[AuthService] updateAuthState: RevenueCat logout successful on null session."
-      );
-    } catch (rcError) {
-      console.warn(
-        "[AuthService] updateAuthState: Failed to logOut from RevenueCat on null session:",
-        rcError
-      );
-    }
+    await RevenueCatService.safeLogout("updateAuthState on null session");
     return;
   }
 
@@ -50,14 +40,7 @@ export const updateAuthState = async (session: Session | null) => {
       "[AuthService] updateAuthState: No email in user data. This should not happen."
     );
     useUserStore.getState().logOut();
-    try {
-      await Purchases.logOut();
-    } catch (e) {
-      console.warn(
-        "[AuthService] RC Logout failed after missing email error.",
-        e
-      );
-    }
+    await RevenueCatService.safeLogout("missing email error");
     return;
   }
 
@@ -85,24 +68,16 @@ export const updateAuthState = async (session: Session | null) => {
       );
     }
 
-    await Purchases.logIn(user.id);
+    await RevenueCatService.safeLogin(user.id, "updateAuthState");
   } catch (error) {
     console.error(
       `[AuthService] updateAuthState: Error during state update for user ${user.id}:`,
       error
     );
     useUserStore.getState().logOut();
-    try {
-      await Purchases.logOut();
-      console.log(
-        "[AuthService] updateAuthState: RevenueCat logout successful after error."
-      );
-    } catch (rcError) {
-      console.warn(
-        `[AuthService] updateAuthState: Failed to logOut from RevenueCat for user ${user.id} after error:`,
-        rcError
-      );
-    }
+    await RevenueCatService.safeLogout(
+      `updateAuthState error for user ${user.id}`
+    );
   }
 };
 
@@ -668,17 +643,7 @@ export const verifyPasswordReset = async (
     await supabase.auth.signOut();
 
     // Log out from RevenueCat as well, since Supabase session is ended
-    try {
-      await Purchases.logOut();
-      console.log(
-        "[AuthService] RevenueCat logout successful after password reset."
-      );
-    } catch (rcError) {
-      console.error(
-        "[AuthService] Failed to logOut from RevenueCat after password reset:",
-        rcError
-      );
-    }
+    await RevenueCatService.safeLogout("password reset");
 
     return {
       success: true,
@@ -782,17 +747,7 @@ export const deleteAccount = async (
           await handleGoogleSignOut();
         }
         // Log out from RevenueCat before clearing Supabase session and local store
-        try {
-          await Purchases.logOut();
-          console.log(
-            "[AuthService] RevenueCat logout successful during account deletion."
-          );
-        } catch (rcError) {
-          console.error(
-            "[AuthService] Failed to logOut from RevenueCat during account deletion cleanup:",
-            rcError
-          );
-        }
+        await RevenueCatService.safeLogout("account deletion cleanup");
         await useUserStore.getState().logOut();
         await supabase.auth.signOut();
       },

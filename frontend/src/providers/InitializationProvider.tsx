@@ -6,6 +6,7 @@ import { useUserData, useUserStore } from "@stores/useUserStore";
 import Purchases, { LOG_LEVEL, CustomerInfo } from "react-native-purchases";
 import { REVENUECAT_API_KEYS, DEBUG_SETTINGS } from "@config/revenuecat.config";
 import { useSetLoading } from "@stores/useUIStore";
+import RevenueCatService from "@services/subscription/revenueCatService";
 
 /**
  * Provider component that handles core app initialization:
@@ -116,7 +117,10 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
           userIdForRevenueCat
         );
 
-        await Purchases.logIn(userIdForRevenueCat);
+        await RevenueCatService.safeLogin(
+          userIdForRevenueCat,
+          "InitializationProvider"
+        );
         console.log(
           "RevenueCat user identified successfully:",
           userIdForRevenueCat
@@ -157,7 +161,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
       console.log("[InitProvider] CustomerInfo updated from RevenueCat");
 
       // For debugging
-      const hasPremium = info.entitlements.active.Premium !== undefined;
+      const hasPremium = RevenueCatService.hasPremiumEntitlement(info);
       console.log("[InitProvider] Premium entitlement active:", hasPremium);
 
       if (hasPremium && userData) {
@@ -175,7 +179,7 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Helper function to update user store from CustomerInfo
   const updateUserStore = (userId: string, info: CustomerInfo) => {
-    const hasPremium = info.entitlements.active.Premium !== undefined;
+    const hasPremium = RevenueCatService.hasPremiumEntitlement(info);
 
     console.log(
       `[InitProvider] Updating user store - isPremium: ${hasPremium}`

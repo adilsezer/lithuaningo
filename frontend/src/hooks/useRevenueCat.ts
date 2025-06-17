@@ -7,8 +7,8 @@ import Purchases, {
   PURCHASES_ERROR_CODE,
 } from "react-native-purchases";
 import { useUserStore } from "@stores/useUserStore";
-import { ENTITLEMENTS } from "@config/revenuecat.config";
 import { useSetLoading, useSetError } from "@src/stores/useUIStore";
+import RevenueCatService from "@services/subscription/revenueCatService";
 
 export const useRevenueCat = () => {
   const [offerings, setOfferings] = useState<PurchasesOffering | null>(null);
@@ -45,8 +45,7 @@ export const useRevenueCat = () => {
   const checkPremiumEntitlement = useCallback(
     async (info: CustomerInfo) => {
       // Check if the premium entitlement exists and is active
-      const premiumEntitlement = info.entitlements.active[ENTITLEMENTS.premium];
-      const hasPremium = typeof premiumEntitlement !== "undefined";
+      const hasPremium = RevenueCatService.hasPremiumEntitlement(info);
 
       // Optimistically set local isPremium state based on RevenueCat CustomerInfo for immediate UI feedback.
       // This allows the UI to react instantly to purchases or restores.
@@ -110,7 +109,7 @@ export const useRevenueCat = () => {
           "[RevenueCat] Ensuring user is logged in with ID:",
           userData.id
         );
-        await Purchases.logIn(userData.id);
+        await RevenueCatService.safeLogin(userData.id, "purchase");
       }
 
       const result = await Purchases.purchasePackage(pack);
@@ -127,9 +126,9 @@ export const useRevenueCat = () => {
       );
 
       // Check and update premium status in user store
-      const hasPremium =
-        purchasedCustomerInfo.entitlements.active[ENTITLEMENTS.premium] !==
-        undefined;
+      const hasPremium = RevenueCatService.hasPremiumEntitlement(
+        purchasedCustomerInfo
+      );
       console.log("[RevenueCat] Premium entitlement active:", hasPremium);
 
       if (hasPremium) {
@@ -215,7 +214,7 @@ export const useRevenueCat = () => {
   const logout = async () => {
     try {
       setLoading(true);
-      await Purchases.logOut();
+      await RevenueCatService.safeLogout("useRevenueCat hook");
       setCustomerInfo(null);
       setIsPremium(false);
     } catch (error) {

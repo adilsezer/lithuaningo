@@ -159,6 +159,18 @@ const AuthInitializer: React.FC = () => {
   useEffect(() => {
     const refreshToken = async () => {
       try {
+        // Only attempt token refresh if there's an existing session
+        const {
+          data: { session: existingSession },
+        } = await supabase.auth.getSession();
+
+        if (!existingSession) {
+          console.log(
+            "[AuthInitializer] No existing session found, skipping token refresh."
+          );
+          return;
+        }
+
         const {
           data: { session: refreshedSession },
           error,
