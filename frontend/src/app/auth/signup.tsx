@@ -9,6 +9,7 @@ import CustomText from "@components/ui/CustomText";
 import { SocialAuthButtons } from "@components/auth/SocialAuthButtons";
 import { router } from "expo-router";
 import CustomDivider from "@components/ui/CustomDivider";
+
 const signupFields: FormField[] = [
   {
     name: "displayName",
@@ -42,6 +43,14 @@ const signupFields: FormField[] = [
     placeholder: "Confirm Password",
     secureTextEntry: true,
   },
+  {
+    name: "legalAgreement",
+    label:
+      "I am at least 13 years old and agree to the Terms of Service and Privacy Policy",
+    category: "toggle",
+    type: "switch",
+    defaultValue: false,
+  },
 ];
 
 const SignUpScreen: React.FC = () => {
@@ -60,6 +69,31 @@ const SignUpScreen: React.FC = () => {
         options={{ mode: "onBlur" }}
         zodSchema={signupFormSchema}
       />
+
+      <CustomText
+        variant="bodySmall"
+        style={{
+          textAlign: "center",
+          marginVertical: 8,
+        }}
+      >
+        By signing up, you confirm you are 13+ and agree to our{" "}
+        <CustomText
+          variant="bodySmall"
+          style={{ textDecorationLine: "underline", color: "#0066CC" }}
+          onPress={() => router.push("/auth/terms-of-service")}
+        >
+          Terms of Service
+        </CustomText>{" "}
+        and{" "}
+        <CustomText
+          variant="bodySmall"
+          style={{ textDecorationLine: "underline", color: "#0066CC" }}
+          onPress={() => router.push("/auth/privacy-policy")}
+        >
+          Privacy Policy
+        </CustomText>
+      </CustomText>
 
       <CustomDivider content="Or" />
 

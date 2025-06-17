@@ -33,6 +33,14 @@ const AUTH_SCREENS = [
     name: "password-reset-verification",
     title: "Password Reset Verification",
   },
+  {
+    name: "privacy-policy",
+    title: "Privacy Policy",
+  },
+  {
+    name: "terms-of-service",
+    title: "Terms of Service",
+  },
 ];
 
 export default function AuthLayout() {
