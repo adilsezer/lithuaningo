@@ -26,6 +26,7 @@ using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption;
 using Microsoft.AspNetCore.DataProtection.AuthenticatedEncryption.ConfigurationModel;
 using Microsoft.AspNetCore.Http.Features;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -179,7 +180,9 @@ builder.WebHost.ConfigureKestrel(serverOptions =>
     serverOptions.Limits.MinRequestBodyDataRate = new Microsoft.AspNetCore.Server.Kestrel.Core.MinDataRate(
         bytesPerSecond: 100, gracePeriod: TimeSpan.FromSeconds(10));
 
-    if (!builder.Environment.IsDevelopment())
+    // Only configure HTTPS options if not running in Azure App Service
+    // Azure App Service handles SSL termination at the load balancer level
+    if (!builder.Environment.IsDevelopment() && string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")))
     {
         // Configure HTTPS options for production
         serverOptions.ConfigureHttpsDefaults(httpsOptions =>
@@ -194,11 +197,26 @@ ConfigureServices(builder.Services, builder.Configuration);
 
 var app = builder.Build();
 
+// Configure forwarded headers for Azure App Service
+if (!string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")))
+{
+    app.UseForwardedHeaders(new ForwardedHeadersOptions
+    {
+        ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+    });
+}
+
 // Configure the HTTP request pipeline with security middleware
 if (!app.Environment.IsDevelopment())
 {
     app.UseHsts();
-    app.UseHttpsRedirection();
+
+    // Only use HTTPS redirection if not running in Azure App Service
+    // Azure App Service handles HTTPS termination at the load balancer level
+    if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")))
+    {
+        app.UseHttpsRedirection();
+    }
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
@@ -536,8 +554,12 @@ void ConfigureMiddleware(WebApplication app)
     }
     else
     {
-        // Enforce HTTPS in production
-        app.UseHttpsRedirection();
+        // Only enforce HTTPS redirection if not running in Azure App Service
+        // Azure App Service handles HTTPS termination at the load balancer level
+        if (string.IsNullOrEmpty(Environment.GetEnvironmentVariable("WEBSITE_SITE_NAME")))
+        {
+            app.UseHttpsRedirection();
+        }
     }
 
     // Use different CORS policies based on environment
