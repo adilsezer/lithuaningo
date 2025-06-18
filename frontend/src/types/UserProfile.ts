@@ -8,6 +8,7 @@ export interface UserProfileResponse {
   isAdmin: boolean;
   isPremium: boolean;
   authProvider: string;
+  termsAccepted: boolean;
 }
 
 export interface UpdateUserProfileRequest {
@@ -17,4 +18,5 @@ export interface UpdateUserProfileRequest {
   avatarUrl?: string;
   isAdmin: boolean;
   isPremium: boolean;
+  termsAccepted: boolean;
 }

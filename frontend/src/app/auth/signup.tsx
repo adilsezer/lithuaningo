@@ -49,7 +49,7 @@ const signupFields: FormField[] = [
 
 const SignUpScreen: React.FC = () => {
   const loading = useIsLoading();
-  const { signUp, signInWithSocial } = useAuth();
+  const { signUp, signUpWithSocial } = useAuth();
   const { showAlert } = useAlertDialog();
   const [legalAgreement, setLegalAgreement] = useState(false);
 
@@ -80,7 +80,7 @@ const SignUpScreen: React.FC = () => {
       });
       return;
     }
-    signInWithSocial(provider);
+    signUpWithSocial(provider);
   };
 
   return (
@@ -99,6 +99,7 @@ const SignUpScreen: React.FC = () => {
       <SocialAuthButtons
         onGooglePress={() => handleSocialSignup("google")}
         onApplePress={() => handleSocialSignup("apple")}
+        mode="signup"
       />
 
       {/* Universal Legal Agreement - Better positioned */}

@@ -35,7 +35,7 @@ const LoginScreen: React.FC = () => {
     (provider: SocialProvider) => {
       signInWithSocial(provider);
     },
-    [signInWithSocial],
+    [signInWithSocial]
   );
 
   return (
@@ -66,6 +66,7 @@ const LoginScreen: React.FC = () => {
       <SocialAuthButtons
         onGooglePress={() => handleSocialAuth("google")}
         onApplePress={() => handleSocialAuth("apple")}
+        mode="login"
       />
 
       <CustomText

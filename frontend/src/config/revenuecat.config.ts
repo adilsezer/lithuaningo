@@ -32,8 +32,13 @@ export const RC_PACKAGE_TYPES = {
   LIFETIME: "LIFETIME",
 } as const;
 
+// RevenueCat Log Levels
+export type RevenueCatLogLevel = "DEBUG" | "INFO" | "WARN" | "ERROR";
+
 // Debug settings
 export const DEBUG_SETTINGS = {
   // Set to true during development, false in production
   enableDebugLogs: __DEV__,
+  // Log level for RevenueCat - can be DEBUG, INFO, WARN, or ERROR
+  logLevel: (__DEV__ ? "INFO" : "ERROR") as RevenueCatLogLevel, // INFO for development, ERROR for production
 };

@@ -3,7 +3,7 @@ import * as AppleAuthentication from "expo-apple-authentication";
 import { useUserStore } from "@stores/useUserStore";
 import { getErrorMessage } from "@utils/errorMessages";
 import { supabase } from "@services/supabase/supabaseClient";
-import { Session } from "@supabase/supabase-js";
+import { Session, User } from "@supabase/supabase-js";
 import { AUTH_PATTERNS } from "@utils/validationPatterns";
 import { AuthResponse } from "@src/types/auth.types";
 import { generateAnonymousName } from "@utils/userUtils";
@@ -55,6 +55,7 @@ export const updateAuthState = async (session: Session | null) => {
       isAdmin: userProfile.isAdmin,
       isPremium: userProfile.isPremium,
       authProvider: userProfile.authProvider,
+      termsAccepted: userProfile.termsAccepted,
     };
 
     if (!isVerifying) {
@@ -176,6 +177,7 @@ export const signUpWithEmail = async (
           is_admin: false,
           is_premium: false,
           provider: "email",
+          terms_accepted: true,
         },
       },
     });
@@ -273,129 +275,246 @@ export const signInWithEmail = async (
   }
 };
 
+// Helper function for Google authentication
+const authenticateWithGoogle = async (): Promise<{
+  data: { user: User | null; session: Session | null };
+  displayName: string;
+  avatarUrl: string;
+}> => {
+  await GoogleSignin.hasPlayServices();
+  const userInfo = await GoogleSignin.signIn();
+  const tokens = await GoogleSignin.getTokens();
+
+  if (!userInfo.idToken) {
+    console.error(
+      "[authService] authenticateWithGoogle: Failed to get ID token from Google Sign-In."
+    );
+    throw new Error("Failed to get ID token from Google Sign-In");
+  }
+
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: "google",
+    token: userInfo.idToken,
+    access_token: tokens.accessToken,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data.user || !data.session) {
+    console.error(
+      "[authService] authenticateWithGoogle: No user data or session received from Supabase."
+    );
+    throw new Error("No user data received from authentication");
+  }
+
+  const displayName =
+    userInfo.user.name ||
+    data.user.user_metadata?.name ||
+    generateAnonymousName(data.user.id);
+
+  return {
+    data,
+    displayName,
+    avatarUrl: userInfo.user.photo || "",
+  };
+};
+
+// Helper function for Apple authentication
+const authenticateWithApple = async (): Promise<{
+  data: { user: User | null; session: Session | null };
+  displayName: string;
+  avatarUrl: string;
+}> => {
+  const credential = await AppleAuthentication.signInAsync({
+    requestedScopes: [
+      AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+      AppleAuthentication.AppleAuthenticationScope.EMAIL,
+    ],
+  });
+
+  if (!credential.identityToken) {
+    console.error(
+      "[authService] authenticateWithApple: No identity token from Apple Sign-In."
+    );
+    throw new Error("No identity token from Apple Sign-In");
+  }
+
+  const { data, error } = await supabase.auth.signInWithIdToken({
+    provider: "apple",
+    token: credential.identityToken,
+    access_token: credential.authorizationCode || undefined,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!data.user || !data.session) {
+    console.error(
+      "[authService] authenticateWithApple: No user data or session received from Supabase."
+    );
+    throw new Error("No user data received from authentication");
+  }
+
+  const displayName =
+    (credential.fullName?.givenName && credential.fullName?.familyName
+      ? `${credential.fullName.givenName} ${credential.fullName.familyName}`.trim()
+      : null) ||
+    data.user.user_metadata?.display_name ||
+    data.user.user_metadata?.name ||
+    generateAnonymousName(data.user.id);
+
+  return {
+    data,
+    displayName,
+    avatarUrl: data.user.user_metadata?.avatar_url || "",
+  };
+};
+
+// Helper function to update user metadata
+const updateUserMetadata = async (
+  displayName: string,
+  avatarUrl: string,
+  setTermsAccepted: boolean,
+  provider: string
+): Promise<void> => {
+  const updateData: Record<string, string | boolean> = {
+    display_name: displayName,
+    avatar_url: avatarUrl,
+  };
+
+  if (setTermsAccepted) {
+    updateData.terms_accepted = true;
+  }
+
+  const { error: updateError } = await supabase.auth.updateUser({
+    data: updateData,
+  });
+
+  if (updateError) {
+    console.warn(
+      `[authService] Failed to update user metadata for ${provider}:`,
+      updateError
+    );
+  }
+};
+
+// Unified social auth function that handles both new and existing users
 export const signInWithGoogle = async (): Promise<AuthResponse> => {
   try {
-    await GoogleSignin.hasPlayServices();
-    const userInfo = await GoogleSignin.signIn();
-    const tokens = await GoogleSignin.getTokens();
+    const { data, displayName, avatarUrl } = await authenticateWithGoogle();
 
-    if (!userInfo.idToken) {
-      console.error(
-        "[authService] signInWithGoogle: Failed to get ID token from Google Sign-In."
-      );
-      throw new Error("Failed to get ID token from Google Sign-In");
-    }
+    // Always update basic metadata (display name and avatar)
+    await updateUserMetadata(displayName, avatarUrl, false, "signInWithGoogle");
 
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: "google",
-      token: userInfo.idToken,
-      access_token: tokens.accessToken,
-    });
+    // Check if user has accepted terms
+    if (data.user) {
+      try {
+        const userProfile = await apiClient.getUserProfile(data.user.id);
 
-    if (error) {
-      throw error;
-    }
-
-    if (!data.user || !data.session) {
-      console.error(
-        "[authService] signInWithGoogle: No user data or session received from Supabase."
-      );
-      throw new Error("No user data received from authentication");
-    }
-
-    const displayName =
-      userInfo.user.name ||
-      data.user.user_metadata?.name ||
-      generateAnonymousName(data.user.id);
-
-    const { error: updateError } = await supabase.auth.updateUser({
-      data: {
-        display_name: displayName,
-        avatar_url: userInfo.user.photo || "",
-      },
-    });
-
-    if (updateError) {
-      console.warn(
-        "[authService] signInWithGoogle: Failed to update user metadata:",
-        updateError
-      );
+        if (!userProfile.termsAccepted) {
+          // Sign out the user and show guidance
+          await supabase.auth.signOut();
+          return {
+            success: false,
+            message:
+              "Please use the signup page to agree to our Terms of Service and Privacy Policy.",
+            code: "TERMS_REQUIRED",
+          };
+        }
+      } catch {
+        // If we can't get the profile, it might be a new user
+        // Sign them out and direct to signup
+        await supabase.auth.signOut();
+        return {
+          success: false,
+          message:
+            "Please use the signup page to agree to our Terms of Service and Privacy Policy.",
+          code: "TERMS_REQUIRED",
+        };
+      }
     }
 
     if (!data.session) {
       console.error(
-        "[authService] signInWithGoogle: No session data received after Google Sign-In (post-metadata update)."
+        "[authService] signInWithGoogle: No session data received after Google Sign-In."
       );
       throw new Error("No session data received after Google Sign-In");
     }
+
     return { success: true };
   } catch (error) {
     return handleAuthError(error);
   }
 };
 
+// Unified social auth function for Apple
 export const signInWithApple = async (): Promise<AuthResponse> => {
   try {
-    const credential = await AppleAuthentication.signInAsync({
-      requestedScopes: [
-        AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
-        AppleAuthentication.AppleAuthenticationScope.EMAIL,
-      ],
-    });
+    const { data, displayName, avatarUrl } = await authenticateWithApple();
 
-    if (!credential.identityToken) {
-      console.error(
-        "[authService] signInWithApple: No identity token from Apple Sign-In."
-      );
-      throw new Error("No identity token from Apple Sign-In");
-    }
+    // Always update basic metadata (display name and avatar)
+    await updateUserMetadata(displayName, avatarUrl, false, "signInWithApple");
 
-    const { data, error } = await supabase.auth.signInWithIdToken({
-      provider: "apple",
-      token: credential.identityToken,
-      access_token: credential.authorizationCode || undefined,
-    });
+    // Check if user has accepted terms
+    if (data.user) {
+      try {
+        const userProfile = await apiClient.getUserProfile(data.user.id);
 
-    if (error) {
-      throw error;
-    }
-
-    if (!data.user || !data.session) {
-      console.error(
-        "[authService] signInWithApple: No user data or session received from Supabase."
-      );
-      throw new Error("No user data received from authentication");
-    }
-
-    const displayName =
-      (credential.fullName?.givenName && credential.fullName?.familyName
-        ? `${credential.fullName.givenName} ${credential.fullName.familyName}`.trim()
-        : null) ||
-      data.user.user_metadata?.display_name ||
-      data.user.user_metadata?.name ||
-      generateAnonymousName(data.user.id);
-
-    const { error: updateError } = await supabase.auth.updateUser({
-      data: {
-        display_name: displayName,
-        avatar_url: data.user.user_metadata?.avatar_url || "",
-      },
-    });
-
-    if (updateError) {
-      console.warn(
-        "[authService] signInWithApple: Failed to update user metadata:",
-        updateError
-      );
+        if (!userProfile.termsAccepted) {
+          // Sign out the user and show guidance
+          await supabase.auth.signOut();
+          return {
+            success: false,
+            message:
+              "Please use the signup page to agree to our Terms of Service and Privacy Policy.",
+            code: "TERMS_REQUIRED",
+          };
+        }
+      } catch {
+        // If we can't get the profile, it might be a new user
+        // Sign them out and direct to signup
+        await supabase.auth.signOut();
+        return {
+          success: false,
+          message:
+            "Please use the signup page to agree to our Terms of Service and Privacy Policy.",
+          code: "TERMS_REQUIRED",
+        };
+      }
     }
 
     if (!data.session) {
       console.error(
-        "[authService] signInWithApple: No session data received after Apple Sign-In (post-metadata update)."
+        "[authService] signInWithApple: No session data received after Apple Sign-In."
       );
       throw new Error("No session data received after Apple Sign-In");
     }
 
+    return { success: true };
+  } catch (error) {
+    return handleAuthError(error);
+  }
+};
+
+// Social auth for signup (sets terms_accepted: true)
+export const signUpWithGoogle = async (): Promise<AuthResponse> => {
+  try {
+    const { displayName, avatarUrl } = await authenticateWithGoogle();
+    await updateUserMetadata(displayName, avatarUrl, true, "signUpWithGoogle");
+    return { success: true };
+  } catch (error) {
+    return handleAuthError(error);
+  }
+};
+
+// Social auth for signup (sets terms_accepted: true)
+export const signUpWithApple = async (): Promise<AuthResponse> => {
+  try {
+    const { displayName, avatarUrl } = await authenticateWithApple();
+    await updateUserMetadata(displayName, avatarUrl, true, "signUpWithApple");
     return { success: true };
   } catch (error) {
     return handleAuthError(error);

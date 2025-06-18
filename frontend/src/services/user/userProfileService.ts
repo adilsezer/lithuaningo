@@ -40,6 +40,7 @@ export const hydrateUserSessionAndProfile = async (
       isAdmin: userProfile.isAdmin,
       isPremium: userProfile.isPremium,
       authProvider: userProfile.authProvider,
+      termsAccepted: userProfile.termsAccepted,
     };
 
     useUserStore.getState().logIn(userData);

@@ -4,7 +4,11 @@ import useThemeStore from "@stores/useThemeStore";
 import useAppInfoStore from "@stores/useAppInfoStore";
 import { useUserData, useUserStore } from "@stores/useUserStore";
 import Purchases, { LOG_LEVEL, CustomerInfo } from "react-native-purchases";
-import { REVENUECAT_API_KEYS, DEBUG_SETTINGS } from "@config/revenuecat.config";
+import {
+  REVENUECAT_API_KEYS,
+  DEBUG_SETTINGS,
+  RevenueCatLogLevel,
+} from "@config/revenuecat.config";
 import { useSetLoading } from "@stores/useUIStore";
 import RevenueCatService from "@services/subscription/revenueCatService";
 
@@ -23,6 +27,22 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
     useAppInfoStore();
   const userData = useUserData();
   const setLoading = useSetLoading();
+
+  // Helper function to map string log level to RevenueCat LOG_LEVEL enum
+  const getRevenueCatLogLevel = (logLevel: RevenueCatLogLevel) => {
+    switch (logLevel) {
+      case "DEBUG":
+        return LOG_LEVEL.DEBUG;
+      case "INFO":
+        return LOG_LEVEL.INFO;
+      case "WARN":
+        return LOG_LEVEL.WARN;
+      case "ERROR":
+        return LOG_LEVEL.ERROR;
+      default:
+        return LOG_LEVEL.ERROR;
+    }
+  };
 
   // Initialize theme and app info on mount
   useEffect(() => {
@@ -51,9 +71,8 @@ const InitializationProvider: React.FC<{ children: React.ReactNode }> = ({
         setLoading(true);
 
         // Set log level based on debug settings
-        Purchases.setLogLevel(
-          DEBUG_SETTINGS.enableDebugLogs ? LOG_LEVEL.DEBUG : LOG_LEVEL.ERROR
-        );
+        const logLevel = getRevenueCatLogLevel(DEBUG_SETTINGS.logLevel);
+        Purchases.setLogLevel(logLevel);
 
         // Base configuration options shared between platforms
         const configOptions = {
