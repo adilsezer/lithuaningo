@@ -1,29 +1,68 @@
 import "dotenv/config";
 import { ExpoConfig, ConfigContext } from "@expo/config";
 
+// Inline environment validation (can't import TS modules at config time)
+const REQUIRED_ENV_VARS = [
+  "EXPO_PUBLIC_SUPABASE_URL",
+  "EXPO_PUBLIC_SUPABASE_ANON_KEY",
+  "EXPO_PUBLIC_EAS_PROJECT_ID",
+] as const;
+
+const validateEnvironmentVariables = (): void => {
+  const missing: string[] = [];
+
+  REQUIRED_ENV_VARS.forEach((envVar) => {
+    if (!process.env[envVar]) {
+      missing.push(envVar);
+    }
+  });
+
+  if (missing.length > 0) {
+    throw new Error(
+      `Missing required environment variables: ${missing.join(", ")}\n` +
+        "Please check your .env file or environment configuration."
+    );
+  }
+};
+
+const getRequiredEnv = (key: string): string => {
+  const value = process.env[key];
+  if (!value) {
+    throw new Error(`Required environment variable ${key} is not set`);
+  }
+  return value;
+};
+
+const getOptionalEnv = (key: string, defaultValue = ""): string => {
+  return process.env[key] || defaultValue;
+};
+
+// Validate environment variables early
+validateEnvironmentVariables();
+
 export default ({ config }: ConfigContext): ExpoConfig => {
   // Native configuration values – needed at build time
   const nativeGoogleConfig = {
     iosGoogleServicesFile: process.env.IOS_GOOGLE_SERVICES_BASE64,
     androidGoogleServicesFile: process.env.ANDROID_GOOGLE_SERVICES_BASE64,
     // This should be the reversed client ID provided by Google for iOS.
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
+    iosClientId: getOptionalEnv("EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID"),
+    androidClientId: getOptionalEnv("EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID"),
   };
 
   // Runtime values – accessible in JavaScript via Constants.expoConfig.extra
   const runtimeConfig = {
     eas: {
-      projectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
+      projectId: getRequiredEnv("EXPO_PUBLIC_EAS_PROJECT_ID"),
     },
-    easProjectId: process.env.EXPO_PUBLIC_EAS_PROJECT_ID,
-    googleWebClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+    easProjectId: getRequiredEnv("EXPO_PUBLIC_EAS_PROJECT_ID"),
+    googleWebClientId: getOptionalEnv("EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID"),
     googleIosClientId: nativeGoogleConfig.iosClientId,
     googleAndroidClientId: nativeGoogleConfig.androidClientId,
     iosProductId: process.env.IOS_PRODUCT_ID,
     androidProductId: process.env.ANDROID_PRODUCT_ID,
-    supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
-    supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+    supabaseUrl: getRequiredEnv("EXPO_PUBLIC_SUPABASE_URL"),
+    supabaseAnonKey: getRequiredEnv("EXPO_PUBLIC_SUPABASE_ANON_KEY"),
     privacyPolicyUrl: "https://adilsezer.github.io/lithuaningo/privacy-policy",
     keywords:
       "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language challenges, Interactive learning",

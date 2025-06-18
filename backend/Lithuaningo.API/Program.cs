@@ -415,16 +415,26 @@ To authorize in Swagger UI:
 
     services.AddCors(options =>
     {
-        // Mobile app CORS policy - INTENTIONALLY allows any origin for React Native apps
-        // This is required for mobile apps as they don't have a fixed origin like web browsers
-        // React Native apps can come from any IP address and don't have a predictable origin
-        // Security is handled through JWT authentication rather than CORS origin restrictions
+        // Mobile app CORS policy - Secure approach for React Native apps
+        // Mobile apps can be identified by their User-Agent or custom headers
+        // This approach validates requests without allowing all origins
         options.AddPolicy("AllowMobile", policy =>
         {
-            policy.AllowAnyOrigin()
+            policy.SetIsOriginAllowed(origin =>
+                  {
+                      // Allow mobile apps (they typically don't send an Origin header or send 'null')
+                      // Allow localhost for development
+                      // Allow specific production origins
+                      return string.IsNullOrEmpty(origin) ||
+                             origin == "null" ||
+                             origin.StartsWith("http://localhost") ||
+                             origin.StartsWith("https://localhost") ||
+                             (corsSettings?.AllowedOrigins?.Contains(origin) ?? false);
+                  })
                   .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                  .WithHeaders("Authorization", "Content-Type", "X-XSRF-TOKEN")
-                  .WithExposedHeaders("Token-Expired", "X-XSRF-TOKEN");
+                  .WithHeaders("Authorization", "Content-Type", "X-XSRF-TOKEN", "User-Agent", "X-Mobile-App")
+                  .WithExposedHeaders("Token-Expired", "X-XSRF-TOKEN")
+                  .AllowCredentials();
         });
 
         // Web frontend CORS policy - for browser clients with specific origins

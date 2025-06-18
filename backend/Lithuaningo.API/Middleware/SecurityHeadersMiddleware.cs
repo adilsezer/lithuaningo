@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Hosting;
 
@@ -17,59 +18,112 @@ public class SecurityHeadersMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        // Remove server information headers
+        context.Response.Headers.Remove("Server");
+        context.Response.Headers.Remove("X-Powered-By");
+
+        // Add security headers
         var headers = context.Response.Headers;
 
-        // Security Headers
-        headers.Append("X-XSS-Protection", "1; mode=block");
-        headers.Append("X-Content-Type-Options", "nosniff");
-        headers.Append("X-Frame-Options", "DENY");
-        headers.Append("Referrer-Policy", "strict-origin-when-cross-origin");
-
-        // Add HSTS header in production (already enforced by ASP.NET middleware)
-        if (!_environment.IsDevelopment())
+        // Prevent MIME type sniffing
+        if (!headers.ContainsKey("X-Content-Type-Options"))
         {
-            headers.Append("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+            headers["X-Content-Type-Options"] = "nosniff";
         }
 
-        // Content Security Policy - Environment-specific
-        var cspBuilder = new StringBuilder();
-        cspBuilder.Append("default-src 'self'; ");
-        cspBuilder.Append("img-src 'self' data: https://storage.lithuaningo.com; ");
-        cspBuilder.Append("font-src 'self'; ");
-
-        if (_environment.IsDevelopment())
+        // Prevent clickjacking
+        if (!headers.ContainsKey("X-Frame-Options"))
         {
-            // More permissive in development
-            cspBuilder.Append("style-src 'self' 'unsafe-inline'; ");
-            cspBuilder.Append("script-src 'self' 'unsafe-inline' 'unsafe-eval'; ");
-        }
-        else
-        {
-            // Stricter in production
-            cspBuilder.Append("style-src 'self'; ");
-            cspBuilder.Append("script-src 'self'; ");
+            headers["X-Frame-Options"] = "DENY";
         }
 
-        cspBuilder.Append("connect-src 'self' https://api.lithuaningo.com https://xyltjnpggvctdbukzrjb.supabase.co; ");
-        cspBuilder.Append("media-src 'self' https://storage.lithuaningo.com; ");
-        cspBuilder.Append("object-src 'none'; ");
-        cspBuilder.Append("frame-ancestors 'none'; ");
-        cspBuilder.Append("base-uri 'self'; ");
-        cspBuilder.Append("form-action 'self';");
+        // Enable XSS protection
+        if (!headers.ContainsKey("X-XSS-Protection"))
+        {
+            headers["X-XSS-Protection"] = "1; mode=block";
+        }
 
-        headers.Append("Content-Security-Policy", cspBuilder.ToString());
+        // Referrer policy
+        if (!headers.ContainsKey("Referrer-Policy"))
+        {
+            headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+        }
 
-        // Permissions Policy
-        headers.Append("Permissions-Policy",
-            "accelerometer=(), " +
-            "camera=(), " +
-            "geolocation=(), " +
-            "gyroscope=(), " +
-            "magnetometer=(), " +
-            "microphone=(), " +
-            "payment=(), " +
-            "usb=()");
+        // Permissions policy (Feature Policy)
+        if (!headers.ContainsKey("Permissions-Policy"))
+        {
+            headers["Permissions-Policy"] =
+                "accelerometer=(), camera=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(), usb=()";
+        }
+
+        // Content Security Policy
+        if (!headers.ContainsKey("Content-Security-Policy"))
+        {
+            var csp = BuildContentSecurityPolicy();
+            headers["Content-Security-Policy"] = csp;
+        }
+
+        // HSTS (only in production)
+        if (!_environment.IsDevelopment() && !headers.ContainsKey("Strict-Transport-Security"))
+        {
+            headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains; preload";
+        }
+
+        // Cross-Origin policies for API
+        if (!headers.ContainsKey("Cross-Origin-Embedder-Policy"))
+        {
+            headers["Cross-Origin-Embedder-Policy"] = "require-corp";
+        }
+
+        if (!headers.ContainsKey("Cross-Origin-Opener-Policy"))
+        {
+            headers["Cross-Origin-Opener-Policy"] = "same-origin";
+        }
+
+        if (!headers.ContainsKey("Cross-Origin-Resource-Policy"))
+        {
+            headers["Cross-Origin-Resource-Policy"] = "cross-origin";
+        }
 
         await _next(context);
+    }
+
+    private string BuildContentSecurityPolicy()
+    {
+        var csp = new List<string>
+        {
+            "default-src 'self'",
+            "script-src 'self' 'unsafe-inline'", // unsafe-inline needed for Swagger UI
+            "style-src 'self' 'unsafe-inline'", // unsafe-inline needed for Swagger UI
+            "img-src 'self' data: https:",
+            "font-src 'self' data:",
+            "connect-src 'self' https://*.supabase.co https://api.openai.com",
+            "media-src 'self' https:",
+            "object-src 'none'",
+            "base-uri 'self'",
+            "form-action 'self'",
+            "frame-ancestors 'none'",
+            "upgrade-insecure-requests"
+        };
+
+        // More relaxed CSP for development
+        if (_environment.IsDevelopment())
+        {
+            csp = new List<string>
+            {
+                "default-src 'self' 'unsafe-inline' 'unsafe-eval'",
+                "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+                "style-src 'self' 'unsafe-inline'",
+                "img-src 'self' data: https: http:",
+                "font-src 'self' data:",
+                "connect-src 'self' https: http: ws: wss:",
+                "media-src 'self' https: http:",
+                "object-src 'none'",
+                "base-uri 'self'",
+                "form-action 'self'"
+            };
+        }
+
+        return string.Join("; ", csp);
     }
 }

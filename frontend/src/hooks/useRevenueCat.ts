@@ -57,11 +57,22 @@ export const useRevenueCat = () => {
 
       const currentUserData = useUserStore.getState().userData;
       if (currentUserData?.id) {
-        console.log(
-          "[useRevenueCat] CustomerInfo updated. Local isPremium set to:",
-          hasPremium,
-          "Backend will be updated via webhooks."
-        );
+        // Only log user context in development
+        if (__DEV__) {
+          console.log(
+            "[useRevenueCat] CustomerInfo updated for user:",
+            currentUserData.id,
+            "Local isPremium set to:",
+            hasPremium,
+            "Backend will be updated via webhooks."
+          );
+        } else {
+          console.log(
+            "[useRevenueCat] CustomerInfo updated. Local isPremium set to:",
+            hasPremium,
+            "Backend will be updated via webhooks."
+          );
+        }
       }
     },
     [] // Remove userData dependency to prevent recreation
@@ -105,10 +116,15 @@ export const useRevenueCat = () => {
       // Ensure user is logged in to RevenueCat with correct ID
       const userData = useUserStore.getState().userData;
       if (userData?.id) {
-        console.log(
-          "[RevenueCat] Ensuring user is logged in with ID:",
-          userData.id
-        );
+        // Only log user IDs in development
+        if (__DEV__) {
+          console.log(
+            "[RevenueCat] Ensuring user is logged in with ID:",
+            userData.id
+          );
+        } else {
+          console.log("[RevenueCat] Ensuring user is logged in");
+        }
         await RevenueCatService.safeLogin(userData.id, "purchase");
       }
 
@@ -120,10 +136,15 @@ export const useRevenueCat = () => {
         "[RevenueCat] Purchase successful for package:",
         pack.identifier
       );
-      console.log(
-        "[RevenueCat] Customer info:",
-        JSON.stringify(purchasedCustomerInfo)
-      );
+      // Don't log sensitive customer info in production
+      if (__DEV__) {
+        console.log("[RevenueCat] Customer info updated:", {
+          hasActiveSubscriptions: !!purchasedCustomerInfo.activeSubscriptions,
+          entitlementsCount: Object.keys(
+            purchasedCustomerInfo.entitlements.active
+          ).length,
+        });
+      }
 
       // Check and update premium status in user store
       const hasPremium = RevenueCatService.hasPremiumEntitlement(

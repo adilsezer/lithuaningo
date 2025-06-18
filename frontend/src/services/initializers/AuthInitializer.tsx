@@ -45,9 +45,16 @@ const AuthInitializer: React.FC = () => {
         hasEverHadSession.current = true; // Mark that we've had a session
         const success = await hydrateUserSessionAndProfile(sessionToProcess);
         if (!success) {
-          console.warn(
-            `[AuthInitializer] hydrateUserSessionAndProfile failed for user: ${sessionToProcess.user.id}`
-          );
+          // Only log user IDs in development
+          if (__DEV__) {
+            console.warn(
+              `[AuthInitializer] hydrateUserSessionAndProfile failed for user: ${sessionToProcess.user.id}`
+            );
+          } else {
+            console.warn(
+              "[AuthInitializer] hydrateUserSessionAndProfile failed"
+            );
+          }
         }
       } else {
         // Only clear session if we've previously had one (i.e., this is a logout, not initial state)
@@ -109,9 +116,16 @@ const AuthInitializer: React.FC = () => {
           ) {
             handleSessionUpdate(session);
           } else if (event === "USER_UPDATED") {
-            console.log(
-              `[AuthInitializer] USER_UPDATED event for user: ${session.user.id}. No automatic profile refresh.`
-            );
+            // Only log user IDs in development
+            if (__DEV__) {
+              console.log(
+                `[AuthInitializer] USER_UPDATED event for user: ${session.user.id}. No automatic profile refresh.`
+              );
+            } else {
+              console.log(
+                "[AuthInitializer] USER_UPDATED event received. No automatic profile refresh."
+              );
+            }
           }
         } else {
           handleSessionUpdate(null);
