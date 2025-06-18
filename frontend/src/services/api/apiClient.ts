@@ -83,6 +83,8 @@ class ApiClient {
         "Content-Type": "application/json",
         "X-Platform": Platform.OS,
         "X-App-Version": APP_VERSION,
+        "X-Mobile-App": "lithuaningo-mobile", // Mobile app identifier for CORS
+        "User-Agent": "LithuaningoMobile/2.7.0", // Identify mobile app requests
       },
     });
 
@@ -114,21 +116,33 @@ class ApiClient {
 
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
-            // Log token presence only (not the actual token)
+            // Add mobile app identifier header for CORS
+            config.headers["X-Mobile-App"] = "lithuaningo-mobile";
+
+            // Only log in development and never log sensitive data
             if (__DEV__) {
               console.log("[ApiClient] Auth token attached to request");
             }
           }
         } catch (error) {
-          console.error(
-            "[ApiClient] Auth error in request interceptor:",
-            error
-          );
+          // Only log error message, not the full error object which might contain sensitive data
+          if (__DEV__) {
+            console.error(
+              "[ApiClient] Auth error in request interceptor:",
+              error instanceof Error ? error.message : "Unknown auth error"
+            );
+          }
         }
         return config;
       },
       (error) => {
-        console.error("[ApiClient] Request interceptor error:", error);
+        // Only log in development and sanitize error data
+        if (__DEV__) {
+          console.error(
+            "[ApiClient] Request interceptor error:",
+            error instanceof Error ? error.message : "Unknown request error"
+          );
+        }
         return Promise.reject(error);
       }
     );
@@ -158,16 +172,26 @@ class ApiClient {
   }
 
   /**
-   * Log API errors with detailed information
+   * Log API errors with detailed information (sanitized for production)
    */
   private logApiError(error: AxiosError) {
-    console.error("[ApiClient] Response error:", {
-      message: error.message,
-      status: error.response?.status,
-      url: error.config?.url,
-      method: error.config?.method?.toUpperCase(),
-      data: error.response?.data,
-    });
+    // Only log detailed information in development
+    if (__DEV__) {
+      console.error("[ApiClient] Response error:", {
+        message: error.message,
+        status: error.response?.status,
+        url: error.config?.url,
+        method: error.config?.method?.toUpperCase(),
+        // Don't log response data as it might contain sensitive information
+        hasData: !!error.response?.data,
+      });
+    } else {
+      // In production, only log basic error information
+      console.error("[ApiClient] API Error:", {
+        status: error.response?.status,
+        method: error.config?.method?.toUpperCase(),
+      });
+    }
   }
 
   /**
@@ -256,12 +280,15 @@ class ApiClient {
       timeout?: number;
     }
   ): Promise<T> {
-    const requestId = `req_${Date.now()}_${Math.random()
-      .toString(36)
-      .substring(2, 9)}`;
     const method = options?.method || "GET";
 
-    console.log(`[API] [${requestId}] Making request: ${method} ${endpoint}`);
+    // Only log detailed request information in development
+    if (__DEV__) {
+      const requestId = `req_${Date.now()}_${Math.random()
+        .toString(36)
+        .substring(2, 9)}`;
+      console.log(`[API] [${requestId}] Making request: ${method} ${endpoint}`);
+    }
 
     try {
       const response = await this.axiosInstance({
@@ -275,18 +302,25 @@ class ApiClient {
 
       return response.data;
     } catch (error) {
-      console.error(
-        `[API] [${requestId}] ERROR ${method} ${endpoint}. Raw Error:`,
-        error
-      );
-      if (axios.isAxiosError(error)) {
-        console.error(`[API] [${requestId}] Axios Error Details:`, {
-          message: error.message,
-          status: error.response?.status,
-          configPath: error.config?.url,
-        });
-      } else {
-        console.error(`[API] [${requestId}] Non-Axios Error Details:`, error);
+      // Only log detailed error information in development
+      if (__DEV__) {
+        const requestId = `req_${Date.now()}_${Math.random()
+          .toString(36)
+          .substring(2, 9)}`;
+        console.error(`[API] [${requestId}] ERROR ${method} ${endpoint}`);
+
+        if (axios.isAxiosError(error)) {
+          console.error(`[API] [${requestId}] Axios Error Details:`, {
+            message: error.message,
+            status: error.response?.status,
+            configPath: error.config?.url,
+          });
+        } else {
+          console.error(
+            `[API] [${requestId}] Non-Axios Error Details:`,
+            error instanceof Error ? error.message : "Unknown error"
+          );
+        }
       }
       throw this.handleError(error);
     }

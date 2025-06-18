@@ -8,10 +8,15 @@ const supabaseUrl = Constants.expoConfig?.extra?.supabaseUrl;
 const supabaseAnonKey = Constants.expoConfig?.extra?.supabaseAnonKey;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error("[Supabase] Missing configuration:", {
-    hasUrl: !!supabaseUrl,
-    hasAnonKey: !!supabaseAnonKey,
-  });
+  // Only log detailed config info in development
+  if (__DEV__) {
+    console.error("[Supabase] Missing configuration:", {
+      hasUrl: !!supabaseUrl,
+      hasAnonKey: !!supabaseAnonKey,
+    });
+  } else {
+    console.error("[Supabase] Configuration missing");
+  }
   throw new Error("Supabase configuration is missing");
 }
 

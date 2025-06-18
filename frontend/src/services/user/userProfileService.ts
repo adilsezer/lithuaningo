@@ -15,7 +15,12 @@ export const hydrateUserSessionAndProfile = async (
     return false;
   }
 
-  console.log(`[UserProfileService] Starting hydration for user: ${user.id}`);
+  // Only log user IDs in development
+  if (__DEV__) {
+    console.log(`[UserProfileService] Starting hydration for user: ${user.id}`);
+  } else {
+    console.log("[UserProfileService] Starting user hydration");
+  }
 
   // Check if email verification is in progress
   if (useUserStore.getState().isVerifyingEmail) {
@@ -47,15 +52,28 @@ export const hydrateUserSessionAndProfile = async (
 
     await RevenueCatService.safeLogin(user.id, "hydrateUserSessionAndProfile");
 
-    console.log(
-      `[UserProfileService] Hydration successful for user: ${user.id}`
-    );
+    // Only log user IDs in development
+    if (__DEV__) {
+      console.log(
+        `[UserProfileService] Hydration successful for user: ${user.id}`
+      );
+    } else {
+      console.log("[UserProfileService] User hydration successful");
+    }
     return true;
   } catch (error) {
-    console.error(
-      `[UserProfileService] Error during user hydration for ${user.id}:`,
-      error
-    );
+    // Only log user IDs in development, sanitize error data
+    if (__DEV__) {
+      console.error(
+        `[UserProfileService] Error during user hydration for ${user.id}:`,
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    } else {
+      console.error(
+        "[UserProfileService] Error during user hydration:",
+        error instanceof Error ? error.message : "Unknown error"
+      );
+    }
     await clearUserSessionAndLogout();
     return false;
   }
