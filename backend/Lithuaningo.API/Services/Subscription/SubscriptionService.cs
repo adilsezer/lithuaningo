@@ -31,7 +31,7 @@ namespace Lithuaningo.API.Services.Subscription
             // Validate userId can be parsed as GUID
             if (!Guid.TryParse(userId, out var userGuid))
             {
-                _logger.LogError("Cannot parse userId '{UserId}' as GUID. Subscription event not saved.", userId);
+                _logger.LogError("Cannot parse userId as GUID. Subscription event not saved.");
                 throw new ArgumentException($"User ID '{userId}' is not a valid GUID format", nameof(userId));
             }
 

@@ -126,7 +126,7 @@ namespace Lithuaningo.API.Services.RevenueCat
                 }
                 catch (ArgumentException ex) when (ex.ParamName == "userId")
                 {
-                    _logger.LogError(ex, "Cannot process subscription event - AppUserId '{AppUserId}' is not in GUID format", evt.AppUserId);
+                    _logger.LogError(ex, "Cannot process subscription event, AppUserId is not in GUID format");
                     // Don't re-throw ArgumentException for GUID format issues - this is expected for some RevenueCat setups
                     // The webhook should return success to prevent RevenueCat from retrying
                 }

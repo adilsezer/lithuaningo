@@ -442,16 +442,16 @@ All Options: {string.Join(", ", request.Options)}";
             // Handle cases where the AI returns an empty or whitespace response
             if (string.IsNullOrWhiteSpace(explanation))
             {
-                _logger.LogWarning("AI generated an empty or whitespace explanation for question: {Question}", request.Question);
+                _logger.LogWarning("AI generated an empty or whitespace explanation");
                 return "Sorry, I could not generate an explanation for this question.";
             }
 
-            _logger.LogInformation("Generated question explanation for question: {Question}", request.Question);
+            _logger.LogInformation("Generated question explanation");
             return explanation;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error generating question explanation for question: {Question}", request.Question);
+            _logger.LogError(ex, "Error generating question explanation");
             throw new InvalidOperationException("Failed to generate question explanation.", ex);
         }
     }
