@@ -21,6 +21,7 @@ const AuthInitializer: React.FC = () => {
   const isProcessingSessionUpdate = useRef<boolean>(false);
   const pendingSessionUpdate = useRef<Session | null | undefined>(undefined);
   const processLatestSessionUpdateRef = useRef<() => Promise<void>>();
+  const hasEverHadSession = useRef<boolean>(false); // Track if we've ever had a session
 
   const processLatestSessionUpdate = useCallback(async () => {
     if (
@@ -41,6 +42,7 @@ const AuthInitializer: React.FC = () => {
 
     try {
       if (sessionToProcess?.user) {
+        hasEverHadSession.current = true; // Mark that we've had a session
         const success = await hydrateUserSessionAndProfile(sessionToProcess);
         if (!success) {
           console.warn(
@@ -48,14 +50,21 @@ const AuthInitializer: React.FC = () => {
           );
         }
       } else {
-        await clearUserSessionAndLogout();
+        // Only clear session if we've previously had one (i.e., this is a logout, not initial state)
+        if (hasEverHadSession.current) {
+          await clearUserSessionAndLogout();
+        } else {
+          console.log(
+            "[AuthInitializer] No session on app launch - skipping logout (no previous session to clear)"
+          );
+        }
       }
     } catch (error) {
       console.error(
         "[AuthInitializer] Critical error in processLatestSessionUpdate:",
         error
       );
-      if (sessionToProcess !== null) {
+      if (sessionToProcess !== null && hasEverHadSession.current) {
         await clearUserSessionAndLogout();
       }
     } finally {
