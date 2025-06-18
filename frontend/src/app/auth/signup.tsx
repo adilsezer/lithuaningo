@@ -11,6 +11,7 @@ import { router } from "expo-router";
 import CustomDivider from "@components/ui/CustomDivider";
 import CustomSwitch from "@components/ui/CustomSwitch";
 import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useTheme } from "react-native-paper";
 
 const signupFields: FormField[] = [
   {
@@ -51,7 +52,36 @@ const SignUpScreen: React.FC = () => {
   const loading = useIsLoading();
   const { signUp, signUpWithSocial } = useAuth();
   const { showAlert } = useAlertDialog();
+  const theme = useTheme();
   const [legalAgreement, setLegalAgreement] = useState(false);
+  const [highlightSwitch, setHighlightSwitch] = useState(false);
+
+  const showLegalAgreementAlert = () => {
+    showAlert({
+      title: "Legal Agreement Required",
+      message:
+        "You must confirm you are at least 13 years old and agree to our Terms of Service and Privacy Policy before signing up.",
+      buttons: [
+        {
+          text: "OK",
+          onPress: () => {
+            setHighlightSwitch(true);
+            // Remove highlight after 3 seconds
+            setTimeout(() => {
+              setHighlightSwitch(false);
+            }, 3000);
+          },
+        },
+      ],
+    });
+  };
+
+  const handleLegalAgreementChange = (value: boolean) => {
+    setLegalAgreement(value);
+    if (value && highlightSwitch) {
+      setHighlightSwitch(false);
+    }
+  };
 
   const handleEmailSignup = async (data: {
     email: string;
@@ -59,12 +89,7 @@ const SignUpScreen: React.FC = () => {
     displayName: string;
   }) => {
     if (!legalAgreement) {
-      showAlert({
-        title: "Legal Agreement Required",
-        message:
-          "You must confirm you are at least 13 years old and agree to our Terms of Service and Privacy Policy before signing up.",
-        buttons: [{ text: "OK", onPress: () => {} }],
-      });
+      showLegalAgreementAlert();
       return;
     }
     await signUp(data.email, data.password, data.displayName);
@@ -72,12 +97,7 @@ const SignUpScreen: React.FC = () => {
 
   const handleSocialSignup = (provider: "google" | "apple") => {
     if (!legalAgreement) {
-      showAlert({
-        title: "Legal Agreement Required",
-        message:
-          "You must confirm you are at least 13 years old and agree to our Terms of Service and Privacy Policy before signing up.",
-        buttons: [{ text: "OK", onPress: () => {} }],
-      });
+      showLegalAgreementAlert();
       return;
     }
     signUpWithSocial(provider);
@@ -103,10 +123,19 @@ const SignUpScreen: React.FC = () => {
       />
 
       {/* Universal Legal Agreement - Better positioned */}
-      <View style={styles.legalContainer}>
+      <View
+        style={[
+          styles.legalContainer,
+          { backgroundColor: theme.colors.background },
+          highlightSwitch && {
+            borderColor: theme.colors.error,
+            borderWidth: 2,
+          },
+        ]}
+      >
         <CustomSwitch
           value={legalAgreement}
-          onValueChange={setLegalAgreement}
+          onValueChange={handleLegalAgreementChange}
           label="I am at least 13 years old and agree to the Terms of Service and Privacy Policy"
           labelStyle={styles.switchLabel}
         />
@@ -147,6 +176,8 @@ const styles = StyleSheet.create({
   legalContainer: {
     marginVertical: 16,
     paddingHorizontal: 4,
+    borderRadius: 8,
+    padding: 8,
   },
   switchLabel: {
     fontSize: 14,
