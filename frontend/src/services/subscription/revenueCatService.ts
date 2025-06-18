@@ -12,13 +12,14 @@ class RevenueCatService {
    */
   static async safeLogout(context: string = ""): Promise<void> {
     try {
-      const customerInfo = await Purchases.getCustomerInfo();
-      if (customerInfo.originalAppUserId !== "$RCAnonymousID") {
+      // Check if user is anonymous before attempting logout
+      const isAnonymous = await this.isAnonymousUser();
+      if (!isAnonymous) {
         await Purchases.logOut();
         console.log(`[RevenueCatService] ${context}: Logout successful.`);
       } else {
         console.log(
-          `[RevenueCatService] ${context}: User is already anonymous, skipping logout.`
+          `[RevenueCatService] ${context}: User is anonymous, skipping logout.`
         );
       }
     } catch (rcError) {
