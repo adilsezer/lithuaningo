@@ -17,12 +17,12 @@ export const ABOUT_LINKS = {
   },
   privacyPolicy: {
     type: "internal" as const,
-    value: "/privacy-policy",
+    value: "/auth/privacy-policy",
     label: "Privacy Policy",
   },
   termsOfService: {
     type: "internal" as const,
-    value: "/terms-of-service",
+    value: "/auth/terms-of-service",
     label: "Terms of Service",
   },
 };
@@ -68,11 +68,11 @@ export const useAbout = () => {
         showError(
           error instanceof Error
             ? error.message
-            : "Failed to open link. Please try again later.",
+            : "Failed to open link. Please try again later."
         );
       }
     },
-    [router, showError],
+    [router, showError]
   );
 
   const navigateToPrivacyPolicy = useCallback(() => {

@@ -14,6 +14,7 @@ export type UserData = Pick<
   | "isAdmin"
   | "isPremium"
   | "authProvider"
+  | "termsAccepted"
 >;
 
 interface UserState {
@@ -59,13 +60,6 @@ export const useUserStore = create<UserState>()(
           userData: state.userData ? { ...state.userData, ...updates } : null,
         })),
 
-      deleteAccount: () => {
-        set({
-          userData: null,
-          isAuthenticated: false,
-        });
-      },
-
       setAuthenticated: (isAuthenticated) => set({ isAuthenticated }),
       setSessionLoading: (loading) => set({ sessionLoading: loading }),
       setVerifyingEmail: (isVerifying) =>
@@ -74,8 +68,8 @@ export const useUserStore = create<UserState>()(
     {
       name: "user-auth-storage",
       storage: createJSONStorage(() => AsyncStorage),
-    },
-  ),
+    }
+  )
 );
 
 // Hooks
@@ -90,3 +84,5 @@ export const useIsPremium = () =>
   useUserStore((state) => state.userData?.isPremium ?? false);
 export const useIsEmailVerified = () =>
   useUserStore((state) => state.userData?.emailVerified ?? false);
+export const useHasAcceptedTerms = () =>
+  useUserStore((state) => state.userData?.termsAccepted ?? false);

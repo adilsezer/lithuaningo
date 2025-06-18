@@ -6,10 +6,13 @@ import {
   AppleSocialButton,
 } from "react-native-social-buttons";
 
+type SocialAuthMode = "login" | "signup";
+
 export const SocialAuthButtons: React.FC<{
   onGooglePress: () => void;
   onApplePress: () => void;
-}> = ({ onGooglePress, onApplePress }) => {
+  mode?: SocialAuthMode;
+}> = ({ onGooglePress, onApplePress, mode = "login" }) => {
   const theme = useTheme();
 
   const buttonStyles = {
@@ -22,18 +25,25 @@ export const SocialAuthButtons: React.FC<{
     fontWeight: "500",
   };
 
+  const getButtonText = (provider: "google" | "apple") => {
+    const action = mode === "signup" ? "Sign up" : "Sign in";
+    return `${action} with ${provider === "google" ? "Google" : "Apple"}`;
+  };
+
   return (
     <View style={styles.container}>
       <GoogleSocialButton
         onPress={onGooglePress}
         buttonViewStyle={buttonStyles}
         textStyle={textStyles}
+        buttonText={getButtonText("google")}
       />
       {Platform.OS === "ios" && (
         <AppleSocialButton
           onPress={onApplePress}
           buttonViewStyle={buttonStyles}
           textStyle={textStyles}
+          buttonText={getButtonText("apple")}
         />
       )}
     </View>

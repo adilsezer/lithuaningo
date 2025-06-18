@@ -15,8 +15,6 @@ const AUTHENTICATED_SCREENS = [
   { name: "profile/delete-account", title: "Delete Account" },
   { name: "premium/index", title: "Premium Membership" },
   { name: "about/index", title: "About" },
-  { name: "terms-of-service/index", title: "Terms of Service" },
-  { name: "privacy-policy/index", title: "Privacy Policy" },
   { name: "flashcard/[id]", title: "Flashcards" },
   { name: "daily-challenge/index", title: "Daily Challenge" },
 ];

@@ -1,9 +1,17 @@
+import { useCallback } from "react";
+import { Platform } from "react-native";
 import { useRouter } from "expo-router";
+import { useAlertDialog } from "@hooks/useAlertDialog";
+import { useUserStore } from "@stores/useUserStore";
+import { useAuthOperation } from "@hooks/useAuthOperation";
+import { AuthResponse } from "@src/types/auth.types";
 import {
   signUpWithEmail,
   signInWithEmail,
   signInWithGoogle,
   signInWithApple,
+  signUpWithGoogle,
+  signUpWithApple,
   signOut,
   updateProfile,
   updatePassword,
@@ -13,18 +21,13 @@ import {
   resendOTP,
   verifyPasswordReset,
 } from "@services/auth/authService";
-import { useAuthOperation } from "./useAuthOperation";
-import { useAlertDialog } from "@hooks/useAlertDialog";
-import { useCallback } from "react";
-import { Platform } from "react-native";
-import { useUserStore } from "@stores/useUserStore";
 
 export type SocialProvider = "google" | "apple";
 
 export const useAuth = () => {
-  const router = useRouter();
   const { performAuthOperation } = useAuthOperation();
   const { showAlert, showConfirm } = useAlertDialog();
+  const router = useRouter();
 
   // Navigation helpers
   const navigateAfterAuth = useCallback(
@@ -97,10 +100,38 @@ export const useAuth = () => {
     [performAuthOperation, navigateAfterAuth, showAlert, navigateToVerification]
   );
 
-  const signInWithSocial = useCallback(
+  // Social auth for signup (sets terms_accepted: true)
+  const signUpWithSocial = useCallback(
     async (provider: SocialProvider) => {
       const result = await performAuthOperation(async () => {
         let response;
+        if (provider === "google") {
+          response = await signUpWithGoogle();
+        } else if (provider === "apple" && Platform.OS === "ios") {
+          response = await signUpWithApple();
+        } else {
+          console.error(
+            `[useAuth] signUpWithSocial: Unsupported provider or platform for ${provider}`
+          );
+          throw new Error(`Unsupported provider or platform for ${provider}`);
+        }
+
+        if (response.success) {
+          navigateAfterAuth("/(app)");
+        }
+        return response;
+      }, `${provider} Signup Failed`);
+      return result;
+    },
+    [performAuthOperation, navigateAfterAuth]
+  );
+
+  // Social auth for login (checks terms_accepted)
+  const signInWithSocial = useCallback(
+    async (provider: SocialProvider) => {
+      // Handle TERMS_REQUIRED outside of performAuthOperation to avoid generic error handling
+      try {
+        let response: AuthResponse;
         if (provider === "google") {
           response = await signInWithGoogle();
         } else if (provider === "apple" && Platform.OS === "ios") {
@@ -113,14 +144,53 @@ export const useAuth = () => {
         }
 
         if (response.success) {
-          // crashlytics().log(`User signed in with ${provider}`);
           navigateAfterAuth("/(app)");
+          return response;
+        } else if (response.code === "TERMS_REQUIRED") {
+          // Show alert guiding user to signup
+          console.log(
+            "[useAuth] Showing TERMS_REQUIRED alert with custom buttons"
+          );
+          showAlert({
+            title: "Terms Required",
+            message:
+              response.message ||
+              "Please use the signup page to agree to our Terms of Service and Privacy Policy.",
+            buttons: [
+              {
+                text: "SignUp",
+                onPress: () => {
+                  console.log(
+                    "[useAuth] SignUp button pressed, navigating to signup"
+                  );
+                  router.push("/auth/signup");
+                },
+              },
+              {
+                text: "Cancel",
+                onPress: () => {
+                  console.log("[useAuth] Cancel button pressed");
+                },
+              },
+            ],
+          });
+          return response;
+        } else {
+          // For other failures, use performAuthOperation for consistent error handling
+          const result = await performAuthOperation(async () => {
+            return response;
+          }, `${provider} Login Failed`);
+          return result;
         }
-        return response;
-      }, `${provider} Login Failed`);
-      return result;
+      } catch (error) {
+        // For unexpected errors, use performAuthOperation for consistent error handling
+        const result = await performAuthOperation(async () => {
+          throw error;
+        }, `${provider} Login Failed`);
+        return result;
+      }
     },
-    [performAuthOperation, navigateAfterAuth]
+    [performAuthOperation, navigateAfterAuth, showAlert, router]
   );
 
   const handleSignOut = useCallback(async () => {
@@ -327,6 +397,7 @@ export const useAuth = () => {
     signUp,
     signIn,
     signInWithSocial,
+    signUpWithSocial,
     signOut: handleSignOut,
     updateProfile: handleUpdateProfile,
     updatePassword: handleUpdatePassword,

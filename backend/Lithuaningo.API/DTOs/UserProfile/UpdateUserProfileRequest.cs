@@ -12,5 +12,6 @@ namespace Lithuaningo.API.DTOs.UserProfile
         public string? AvatarUrl { get; set; }
         public bool IsAdmin { get; set; }
         public bool IsPremium { get; set; }
+        public bool TermsAccepted { get; set; }
     }
 }

@@ -12,7 +12,7 @@ export const passwordSchema = z
   .min(8, "Password must be at least 8 characters")
   .regex(
     AUTH_PATTERNS.PASSWORD,
-    "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character",
+    "Password must contain at least one uppercase letter, one lowercase letter, one number and one special character"
   );
 
 export const nameSchema = z
@@ -28,6 +28,22 @@ export const loginFormSchema = z.object({
 });
 
 export const signupFormSchema = z
+  .object({
+    displayName: nameSchema,
+    email: emailSchema,
+    password: passwordSchema,
+    confirmPassword: z.string().min(1, "Please confirm your password"),
+    legalAgreement: z.boolean().refine((val) => val === true, {
+      message:
+        "You must be at least 13 years old and agree to our Terms of Service and Privacy Policy",
+    }),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
+
+export const signupFormSchemaWithoutLegal = z
   .object({
     displayName: nameSchema,
     email: emailSchema,
@@ -71,7 +87,7 @@ export const editProfileFormSchema = z
     {
       message: "Current password is required for email users",
       path: ["currentPassword"],
-    },
+    }
   );
 
 export const deleteAccountFormSchema = z
@@ -89,7 +105,7 @@ export const deleteAccountFormSchema = z
     {
       message: "Password is required for email/password users",
       path: ["password"],
-    },
+    }
   );
 
 export const challengeFormSchema = z.object({

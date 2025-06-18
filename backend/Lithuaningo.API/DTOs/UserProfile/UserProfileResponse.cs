@@ -51,5 +51,10 @@ namespace Lithuaningo.API.DTOs.UserProfile
         /// The provider of the user's authentication
         /// </summary>
         public string AuthProvider { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Whether the user has accepted the terms of service
+        /// </summary>
+        public bool TermsAccepted { get; set; }
     }
 }

@@ -18,7 +18,8 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.LastLoginAt, opt => opt.MapFrom(src => src.LastLoginAt))
                 .ForMember(dest => dest.IsAdmin, opt => opt.MapFrom(src => src.IsAdmin))
                 .ForMember(dest => dest.IsPremium, opt => opt.MapFrom(src => src.IsPremium))
-                .ForMember(dest => dest.AuthProvider, opt => opt.MapFrom(src => src.AuthProvider));
+                .ForMember(dest => dest.AuthProvider, opt => opt.MapFrom(src => src.AuthProvider))
+                .ForMember(dest => dest.TermsAccepted, opt => opt.MapFrom(src => src.TermsAccepted));
 
             CreateMap<UpdateUserProfileRequest, UserProfile>()
                 .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
@@ -26,7 +27,8 @@ namespace Lithuaningo.API.Mappings
                 .ForMember(dest => dest.FullName, opt => opt.MapFrom(src => src.FullName))
                 .ForMember(dest => dest.AvatarUrl, opt => opt.MapFrom(src => src.AvatarUrl))
                 .ForMember(dest => dest.IsAdmin, opt => opt.MapFrom(src => src.IsAdmin))
-                .ForMember(dest => dest.IsPremium, opt => opt.Ignore());
+                .ForMember(dest => dest.IsPremium, opt => opt.Ignore())
+                .ForMember(dest => dest.TermsAccepted, opt => opt.MapFrom(src => src.TermsAccepted));
         }
     }
 }

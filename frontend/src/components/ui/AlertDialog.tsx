@@ -39,10 +39,6 @@ export const AlertDialog: React.FC = () => {
     buttonBase: {
       minWidth: 100,
     },
-    outlinedButtonLabel: {
-      fontSize: 14,
-      color: theme.colors.primary,
-    },
     containedButtonLabel: {
       fontSize: 14,
       color: theme.colors.onPrimary,
@@ -129,31 +125,43 @@ export const AlertDialog: React.FC = () => {
                 {confirmText}
               </Button>
             </>
+          ) : // Render custom buttons or default "OK"
+          buttons && buttons.length > 0 ? (
+            buttons.map((button, index) => {
+              return (
+                <Button
+                  key={button.text}
+                  mode={"outlined"}
+                  onPress={() => {
+                    hideDialog();
+                    button.onPress();
+                  }}
+                  style={styles.buttonBase}
+                  buttonColor={
+                    index === buttons.length - 1
+                      ? theme.colors.primary
+                      : theme.colors.secondary
+                  }
+                  textColor={
+                    index === buttons.length - 1
+                      ? theme.colors.onPrimary
+                      : theme.colors.onSecondary
+                  }
+                >
+                  {button.text}
+                </Button>
+              );
+            })
           ) : (
-            // Render custom buttons or default "OK"
-            buttons.map((button) => (
-              <Button
-                key={button.text}
-                mode={
-                  button === buttons[buttons.length - 1]
-                    ? "contained"
-                    : "outlined"
-                }
-                onPress={() => {
-                  hideDialog();
-                  button.onPress();
-                }}
-                style={styles.buttonBase}
-                buttonColor={theme.colors.primary}
-                labelStyle={
-                  button === buttons[buttons.length - 1]
-                    ? styles.containedButtonLabel
-                    : styles.outlinedButtonLabel
-                }
-              >
-                {button.text}
-              </Button>
-            ))
+            <Button
+              mode="contained"
+              onPress={hideDialog}
+              style={styles.buttonBase}
+              buttonColor={theme.colors.primary}
+              textColor={theme.colors.onPrimary}
+            >
+              OK
+            </Button>
           )}
         </Dialog.Actions>
       </Dialog>

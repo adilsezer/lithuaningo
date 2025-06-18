@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: June 10, 2024
+Last updated: January 15, 2025
 Thank you for choosing Lithuaningo ("us", "we", or "our"). This Privacy Policy explains how we collect, use, and disclose information about you when you use our mobile application ("App").
 
 By using the App, you agree to the collection and use of information in accordance with this Privacy Policy.
@@ -14,8 +14,9 @@ We collect the following types of information:
 - Name and email address
 - Profile picture and preferences
 - Authentication data (Email, Google, or Apple Sign-In)
-- In-app purchase history
-- Premium subscription status
+- In-app purchase history and subscription status
+- Premium subscription entitlements
+- Payment transaction data (processed by third-party payment providers)
 
 ### Usage Data
 
@@ -25,6 +26,9 @@ We collect the following types of information:
 - Practice session statistics
 - Achievement progress
 - Word and sentence learning history
+- Chat conversation history and AI interaction data
+- Audio pronunciation usage
+- Learning preferences and difficulty settings
 
 ### Technical Data
 
@@ -33,15 +37,27 @@ We collect the following types of information:
 - Network connectivity status
 - Device specifications
 - Storage usage statistics
+- API usage patterns
+- Session management data
 
 ### Content Data
 
-- Flashcard
+- User-created flashcards and study materials
 - Custom practice sessions
-- Audio pronunciation recordings
-- Image attachments
-- Learning preferences
+- Audio pronunciation recordings and generated speech
+- AI-generated images and visual content
+- Learning preferences and progress tracking
 - Theme settings (Dark/Light mode)
+- Challenge answers and explanations
+
+### AI-Generated Content
+
+- Chat conversations with AI assistant
+- Personalized learning explanations
+- Generated flashcard content
+- Computer-generated images for learning materials
+- Text-to-speech audio files
+- Educational content recommendations
 
 ## 2. How We Use Your Information
 
@@ -52,8 +68,18 @@ We use the collected information for:
 - User authentication and account management
 - Progress tracking and statistics
 - Personalized learning experience
-- Flashcard management
+- Flashcard management and generation
 - Quiz generation and assessment
+- AI-powered chat assistance
+- Premium subscription management
+
+### AI-Enhanced Learning
+
+- Generating personalized flashcards using AI
+- Creating educational images and audio content
+- Providing intelligent explanations for learning materials
+- Customizing learning difficulty based on performance
+- Conversation-based language practice
 
 ### Service Improvement
 
@@ -62,59 +88,77 @@ We use the collected information for:
 - Feature enhancement
 - Bug fixing and troubleshooting
 - Usage pattern analysis
+- AI model training and improvement
 
 ### User Experience
 
 - Push notification delivery
-- Progress synchronization
+- Progress synchronization across devices
 - Offline mode management
 - Theme preferences
 - Accessibility settings
+- Subscription status management
 
 ## 3. Data Storage and Security
 
 ### Storage Methods
 
-- Firebase Authentication for user management
-- Google Cloud Firestore for cloud storage
-- AsyncStorage for local data
-- Firebase Crashlytics for error reporting
+- Supabase for primary data storage and user management
+- RevenueCat for subscription management and payment processing
+- OpenAI for AI-powered features and content generation
+- Cloud storage services for media files (images, audio)
+- AsyncStorage for local app data
+- Secure token management for authentication
 
 ### Security Measures
 
 - End-to-end encryption for sensitive data
-- Secure token management
-- Regular security audits
+- Secure API communication protocols
+- Regular security audits and monitoring
 - Automated backup systems
-- Data access controls
+- Data access controls and user permissions
+- Secure payment processing through verified providers
 
 ## 4. Third-Party Services
 
 We utilize the following services:
 
-### Authentication
+### Authentication & User Management
 
+- Supabase Authentication
 - Google Sign-In
 - Apple Sign-In
-- Email authentication
+- Email verification services
 
-### Cloud Services
+### Subscription & Payment Processing
 
-- Firebase Admin SDK
-- Google Cloud Platform
-- Expo services
+- RevenueCat for subscription management
+- App Store payment processing (iOS)
+- Google Play payment processing (Android)
+- Payment transaction security and fraud prevention
+
+### AI & Content Generation
+
+- OpenAI services for:
+  - Chat-based learning assistance
+  - Educational content generation
+  - Image creation for flashcards
+  - Text-to-speech audio generation
+  - Question explanation services
+
+### Cloud Services & Infrastructure
+
+- Supabase for database and real-time features
+- Cloudflare R2 for media file storage (images, audio)
+- Content delivery networks for global access
+- Performance monitoring services
 
 ### Analytics and Monitoring
 
-- Firebase Crashlytics
-- Performance monitoring
-- Usage analytics
-
-### Payment Processing
-
-- React Native IAP
-- App Store payments
-- Google Play payments
+- App performance analytics
+- Usage pattern analysis
+- Error reporting and crash analytics
+- Learning progress tracking
 
 ## 5. Data Management
 
@@ -122,43 +166,125 @@ We utilize the following services:
 
 - View and export learning progress
 - Download user-created content
-- Access practice history
+- Access practice history and statistics
 - Review achievement records
+- Export subscription and payment history
 
 ### Data Deletion
 
 - Account deletion through profile settings
 - Content removal options
+- AI conversation history clearing
 - Data export before deletion
-- Subscription cancellation
+- Subscription cancellation and data cleanup
 
-## 6. User Controls
+### Data Retention
+
+- Learning data retained for educational continuity
+- AI conversation history maintained for session context
+- Subscription data retained as required by payment processors
+- Generated content (images, audio) stored for app functionality
+
+## 6. Device Permissions and Data Access
+
+### Android Permissions
+
+When you use our Android app, we may request the following permissions:
+
+- **Internet Access**: Required for core app functionality and API communication
+- **Network State**: To detect connectivity and optimize performance
+- **Storage Access**: For local data caching and temporary file storage
+- **Notifications**: For daily review reminders and app updates (with your consent)
+- **Boot Completed**: To restore scheduled notifications after device restart
+- **Exact Alarms**: For precise daily reminder scheduling
+- **Billing**: For subscription management through Google Play
+
+### iOS Capabilities
+
+Our iOS app uses standard capabilities for:
+
+- Network communication
+- Background app refresh for notifications
+- In-app purchases through App Store
+- Push notifications (with your consent)
+
+All permissions are requested with clear explanations and can be managed through your device settings.
+
+## 7. Data Retention and Storage
+
+### Storage Locations
+
+- **Primary Database**: Supabase (secure cloud hosting)
+- **Media Files**: Cloudflare R2 with encrypted storage
+- **AI Conversations**: Temporarily stored in backend server memory (not persisted to database)
+- **Local Device**: AsyncStorage for app preferences and temporary data
+- **Payment Data**: Processed by platform stores and RevenueCat
+
+### Retention Periods
+
+- **Learning Data**: Retained while your account is active
+- **AI Conversations**: Stored temporarily in server memory during active sessions, automatically cleared when sessions end or server restarts
+- **Generated Media**: Retained to support app functionality, deleted upon account deletion
+- **Analytics Data**: Aggregated data retained for 2 years for service improvement
+
+## 8. User Controls
 
 ### Notification Management
 
 - Custom notification settings
 - Daily reminder preferences
-- Progress alerts
+- Learning progress alerts
 - Achievement notifications
-- Update notifications
+- Subscription and payment notifications
 
 ### Privacy Controls
 
 - Profile visibility settings
 - Data sharing preferences
+- AI interaction consent
 - Offline mode options
-- Sync settings
+- Sync settings and data controls
 
-## 7. Children's Privacy
+### Premium Features Control
+
+- Subscription management
+- Feature access controls
+- AI service usage limits
+- Content generation preferences
+
+## 9. AI and Automated Content
+
+### AI Data Processing
+
+- Chat conversations are processed to provide relevant responses
+- Learning patterns analyzed for personalized recommendations
+- Content generation based on user progress and preferences
+- Speech recognition and pronunciation feedback
+
+### Content Generation
+
+- AI-generated flashcards tailored to your learning level
+- Computer-generated images for visual learning aids
+- Text-to-speech audio for pronunciation practice
+- Personalized explanations for challenging concepts
+
+### Data Improvement
+
+- Anonymized usage patterns help improve AI responses
+- Learning effectiveness data enhances content generation
+- User feedback improves AI recommendation accuracy
+
+## 10. Children's Privacy
 
 Our App is suitable for ages 4 and up. We comply with COPPA (Children's Online Privacy Protection Act) and similar regulations:
 
 - Parental consent required for users under 13
 - Limited data collection for young users
-- Safe content filtering
-- Age-appropriate features
+- Safe content filtering and age-appropriate AI responses
+- Educational focus with child-safe AI interactions
+- Enhanced privacy protections for minors
 
-## 8. Contact Information
+## 11. Contact Information
 
 For privacy-related inquiries:
 
@@ -166,13 +292,37 @@ For privacy-related inquiries:
 - Website: [Privacy Policy](https://adilsezer.github.io/lithuaningo/privacy-policy)
 - Support: Available through in-app help center
 
-## 9. Policy Updates
+## 12. Policy Updates
 
 We regularly review and update this policy to reflect:
 
-- New features and functionality
+- New features and AI capabilities
 - Changes in data handling practices
 - Updated security measures
 - Regulatory requirements
+- Third-party service updates
 
-Last major update: June 10, 2024
+Last major update: January 15, 2025
+
+## 13. Legal Basis for Processing (GDPR Compliance)
+
+We process your personal data under the following legal bases:
+
+- **Contract Performance**: Processing necessary for app functionality and subscription services
+- **Legitimate Interest**: Service improvement, analytics, and educational content enhancement
+- **Consent**: Push notifications, marketing communications (where applicable)
+- **Legal Obligation**: Payment processing records and compliance requirements
+
+### Your Rights (EU Users)
+
+If you're in the EU, you have the right to:
+
+- Access your personal data
+- Rectify inaccurate data
+- Erase your data ("right to be forgotten")
+- Restrict processing
+- Data portability
+- Object to processing
+- Withdraw consent at any time
+
+To exercise these rights, contact us at lithuaningo@gmail.com.

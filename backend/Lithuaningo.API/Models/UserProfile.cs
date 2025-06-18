@@ -34,5 +34,8 @@ namespace Lithuaningo.API.Models
 
         [Column("auth_provider")]
         public string AuthProvider { get; set; } = string.Empty;
+
+        [Column("terms_accepted")]
+        public bool TermsAccepted { get; set; }
     }
 }
