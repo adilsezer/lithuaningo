@@ -37,11 +37,11 @@ const WelcomeImage = () => (
 const WelcomeText = () => (
   <View style={styles.textContainer}>
     <CustomText variant="bodyLarge">
-      Learn Lithuanian with daily sentences, flashcards, and reinforcing
-      challenges.
+      Master Lithuanian with AI-powered flashcards, daily challenges, and
+      personalized learning.
     </CustomText>
     <CustomText variant="bodyLarge">
-      Join now and compete on our leaderboard!
+      Track your progress and climb the leaderboard!
     </CustomText>
   </View>
 );
