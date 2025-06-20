@@ -243,8 +243,7 @@ public class AIService : IAIService
                 _ => GeneratedSpeechVoice.Alloy,
             };
 
-            var speechOptions = new SpeechGenerationOptions { SpeedRatio = 0.90F };
-            var speechResult = await _audioClient.GenerateSpeechAsync(textToSpeak, voice, speechOptions);
+            var speechResult = await _audioClient.GenerateSpeechAsync(textToSpeak, voice);
             BinaryData speechData = speechResult.Value;
 
             if (speechData == null || speechData.ToMemory().IsEmpty)
