@@ -230,7 +230,7 @@ public class AIService : IAIService
 
         try
         {
-            string textToSpeak = $"{flashcardText}. \n\n{exampleSentence}";
+            string textToSpeak = $"{flashcardText}... {exampleSentence}";
 
             GeneratedSpeechVoice voice = _aiSettings.DefaultVoice.ToLowerInvariant() switch
             {
@@ -243,7 +243,8 @@ public class AIService : IAIService
                 _ => GeneratedSpeechVoice.Alloy,
             };
 
-            var speechResult = await _audioClient.GenerateSpeechAsync(textToSpeak, voice);
+            var speechOptions = new SpeechGenerationOptions { SpeedRatio = 0.90F };
+            var speechResult = await _audioClient.GenerateSpeechAsync(textToSpeak, voice, speechOptions);
             BinaryData speechData = speechResult.Value;
 
             if (speechData == null || speechData.ToMemory().IsEmpty)

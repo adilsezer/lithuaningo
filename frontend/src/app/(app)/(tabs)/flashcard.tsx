@@ -17,6 +17,174 @@ import {
   useFlashcardStore,
   DAILY_FLASHCARD_LIMIT,
 } from "@stores/useFlashcardStore";
+import { UserData } from "@src/stores/useUserStore";
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
+  title: {
+    marginTop: 16,
+    marginHorizontal: 16,
+  },
+  subtitle: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+  },
+  categoryContainer: {
+    marginBottom: 16,
+  },
+  limitInfoContainer: {
+    marginHorizontal: 16,
+    marginBottom: 16,
+    padding: 12,
+    borderRadius: 8,
+  },
+  limitWarning: {
+    marginTop: 4,
+  },
+});
+
+// Memoized section components to prevent unnecessary re-renders
+
+const HeaderSection = React.memo(() => (
+  <View>
+    <CustomText variant="titleLarge" bold style={styles.title}>
+      Flashcards
+    </CustomText>
+  </View>
+));
+HeaderSection.displayName = "HeaderSection";
+
+const CategorySubtitleSection = React.memo(() => (
+  <CustomText variant="bodyLarge" style={styles.subtitle}>
+    Choose a category to practice
+  </CustomText>
+));
+CategorySubtitleSection.displayName = "CategorySubtitleSection";
+
+const StatsSubtitleSection = React.memo(() => (
+  <CustomText variant="bodyLarge" style={styles.subtitle}>
+    Your Learning Progress
+  </CustomText>
+));
+StatsSubtitleSection.displayName = "StatsSubtitleSection";
+
+interface LimitInfoSectionProps {
+  isPremium: boolean;
+  isSyncingCount: boolean;
+  syncError: string | null;
+  flashcardsViewedToday: number;
+}
+
+const LimitInfoSection = React.memo(
+  ({
+    isPremium,
+    isSyncingCount,
+    syncError,
+    flashcardsViewedToday,
+  }: LimitInfoSectionProps) => {
+    const theme = useTheme();
+    if (isPremium) return null;
+
+    return (
+      <View
+        style={[
+          styles.limitInfoContainer,
+          {
+            backgroundColor: theme.colors.background,
+          },
+        ]}
+      >
+        {isSyncingCount ? (
+          <CustomText variant="bodyMedium">Syncing usage data...</CustomText>
+        ) : syncError ? (
+          <View>
+            <CustomText
+              variant="bodyMedium"
+              style={{ color: theme.colors.error }}
+            >
+              Failed to sync usage data
+            </CustomText>
+            <CustomText variant="bodySmall">
+              Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+              flashcards viewed (may be outdated)
+            </CustomText>
+          </View>
+        ) : (
+          <CustomText variant="bodyMedium">
+            Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
+            flashcards viewed
+          </CustomText>
+        )}
+        {flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT && (
+          <CustomText
+            variant="bodySmall"
+            style={[styles.limitWarning, { color: theme.colors.error }]}
+          >
+            You've reached your daily limit. Upgrade to premium for unlimited
+            access!
+          </CustomText>
+        )}
+      </View>
+    );
+  }
+);
+LimitInfoSection.displayName = "LimitInfoSection";
+
+interface StatsSectionProps {
+  userData: UserData | null;
+  statsSummary: UserFlashcardStatsSummaryResponse | null;
+  isLoadingStats: boolean;
+  isSyncingCount: boolean;
+}
+
+const StatsSection = React.memo(
+  ({
+    userData,
+    statsSummary,
+    isLoadingStats,
+    isSyncingCount,
+  }: StatsSectionProps) => {
+    return userData?.id ? (
+      statsSummary ? (
+        <UserFlashcardStatsCard
+          stats={statsSummary}
+          isLoading={isLoadingStats || isSyncingCount}
+        />
+      ) : isLoadingStats || isSyncingCount ? (
+        <UserFlashcardStatsCard
+          stats={{} as UserFlashcardStatsSummaryResponse}
+          isLoading
+        />
+      ) : null
+    ) : null;
+  }
+);
+StatsSection.displayName = "StatsSection";
+
+interface CategorySectionProps {
+  title?: string;
+  data?: FlashcardCategory[];
+  onPressPractice: (category: FlashcardCategory) => void;
+  onPressMaster: (category: FlashcardCategory) => void;
+}
+const CategorySection = React.memo(
+  ({ title, data, onPressPractice, onPressMaster }: CategorySectionProps) => (
+    <>
+      <CustomDivider />
+      <View style={styles.categoryContainer}>
+        <CategoryGrid
+          categories={data ?? []}
+          onPressPractice={onPressPractice}
+          onPressMaster={onPressMaster}
+          title={title}
+        />
+      </View>
+    </>
+  )
+);
+CategorySection.displayName = "CategorySection";
 
 export default function FlashcardScreen() {
   const theme = useTheme();
@@ -258,114 +426,7 @@ export default function FlashcardScreen() {
   );
 
   // Memoize each section type component to prevent unnecessary re-renders
-  const HeaderSection = React.memo(() => (
-    <View>
-      <CustomText variant="titleLarge" bold style={styles.title}>
-        Flashcards
-      </CustomText>
-    </View>
-  ));
-  HeaderSection.displayName = "HeaderSection";
-
-  const CategorySubtitleSection = React.memo(() => (
-    <CustomText variant="bodyLarge" style={styles.subtitle}>
-      Choose a category to practice
-    </CustomText>
-  ));
-  CategorySubtitleSection.displayName = "CategorySubtitleSection";
-
-  const StatsSubtitleSection = React.memo(() => (
-    <CustomText variant="bodyLarge" style={styles.subtitle}>
-      Your Learning Progress
-    </CustomText>
-  ));
-  StatsSubtitleSection.displayName = "StatsSubtitleSection";
-
-  const LimitInfoSection = React.useCallback(() => {
-    if (isPremium) return null;
-
-    return (
-      <View
-        style={[
-          styles.limitInfoContainer,
-          {
-            backgroundColor: theme.colors.background,
-          },
-        ]}
-      >
-        {isSyncingCount ? (
-          <CustomText variant="bodyMedium">Syncing usage data...</CustomText>
-        ) : syncError ? (
-          <View>
-            <CustomText
-              variant="bodyMedium"
-              style={{ color: theme.colors.error }}
-            >
-              Failed to sync usage data
-            </CustomText>
-            <CustomText variant="bodySmall">
-              Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
-              flashcards viewed (may be outdated)
-            </CustomText>
-          </View>
-        ) : (
-          <CustomText variant="bodyMedium">
-            Daily Usage: {flashcardsViewedToday}/{DAILY_FLASHCARD_LIMIT}{" "}
-            flashcards viewed
-          </CustomText>
-        )}
-        {flashcardsViewedToday >= DAILY_FLASHCARD_LIMIT && (
-          <CustomText
-            variant="bodySmall"
-            style={[styles.limitWarning, { color: theme.colors.error }]}
-          >
-            You've reached your daily limit. Upgrade to premium for unlimited
-            access!
-          </CustomText>
-        )}
-      </View>
-    );
-  }, [
-    isPremium,
-    isSyncingCount,
-    syncError,
-    flashcardsViewedToday,
-    theme.colors,
-  ]);
-
-  const StatsSection = React.memo(() =>
-    userData?.id ? (
-      statsSummary ? (
-        <UserFlashcardStatsCard
-          stats={statsSummary}
-          isLoading={isLoadingStats || isSyncingCount}
-        />
-      ) : isLoadingStats || isSyncingCount ? (
-        <UserFlashcardStatsCard
-          stats={{} as UserFlashcardStatsSummaryResponse}
-          isLoading
-        />
-      ) : null
-    ) : null
-  );
-  StatsSection.displayName = "StatsSection";
-
-  const CategorySection = React.memo(
-    ({ title, data }: { title?: string; data?: FlashcardCategory[] }) => (
-      <>
-        <CustomDivider />
-        <View style={styles.categoryContainer}>
-          <CategoryGrid
-            categories={data ?? []}
-            onPressPractice={handlePressPractice}
-            onPressMaster={handleSelectMaster}
-            title={title}
-          />
-        </View>
-      </>
-    )
-  );
-  CategorySection.displayName = "CategorySection";
+  // These have been moved outside the component.
 
   // Define section item type
   interface SectionItem {
@@ -386,22 +447,46 @@ export default function FlashcardScreen() {
         case "stats-subtitle":
           return <StatsSubtitleSection />;
         case "limit-info":
-          return <LimitInfoSection />;
+          return (
+            <LimitInfoSection
+              isPremium={isPremium}
+              isSyncingCount={isSyncingCount}
+              syncError={syncError}
+              flashcardsViewedToday={flashcardsViewedToday}
+            />
+          );
         case "stats":
-          return <StatsSection />;
+          return (
+            <StatsSection
+              userData={userData}
+              statsSummary={statsSummary}
+              isLoadingStats={isLoadingStats}
+              isSyncingCount={isSyncingCount}
+            />
+          );
         case "category":
-          return <CategorySection title={item.title} data={item.data} />;
+          return (
+            <CategorySection
+              title={item.title}
+              data={item.data}
+              onPressPractice={handlePressPractice}
+              onPressMaster={handleSelectMaster}
+            />
+          );
         default:
           return null;
       }
     },
     [
-      HeaderSection,
-      CategorySubtitleSection,
-      StatsSubtitleSection,
-      LimitInfoSection,
-      StatsSection,
-      CategorySection,
+      isPremium,
+      isSyncingCount,
+      syncError,
+      flashcardsViewedToday,
+      userData,
+      statsSummary,
+      isLoadingStats,
+      handlePressPractice,
+      handleSelectMaster,
     ]
   );
 
@@ -426,29 +511,3 @@ export default function FlashcardScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  title: {
-    marginTop: 16,
-    marginHorizontal: 16,
-  },
-  subtitle: {
-    marginHorizontal: 16,
-    marginBottom: 8,
-  },
-  categoryContainer: {
-    marginBottom: 16,
-  },
-  limitInfoContainer: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    padding: 12,
-    borderRadius: 8,
-  },
-  limitWarning: {
-    marginTop: 4,
-  },
-});
