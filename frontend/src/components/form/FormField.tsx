@@ -4,7 +4,6 @@ import CustomSwitch from "@components/ui/CustomSwitch";
 import CustomTextInput from "@components/ui/CustomTextInput";
 import CustomText from "@components/ui/CustomText";
 import { TextInput } from "react-native";
-import { sanitizeInput, isInputSafe } from "@utils/inputSanitization";
 
 interface FormFieldProps {
   field: FormFieldType;
@@ -25,16 +24,9 @@ export const FormField = forwardRef<TextInput, FormFieldProps>(
     };
 
     const handleTextChange = (text: string) => {
-      // Only sanitize display name and notes fields, not passwords/emails
-      if (field.name === "displayName" || field.name === "notes") {
-        const sanitized = sanitizeInput(text);
-        if (!isInputSafe(text)) {
-          console.warn("Potentially unsafe input detected and sanitized");
-        }
-        onChange(sanitized);
-      } else {
-        onChange(text);
-      }
+      // All validation is handled by Zod schemas
+      // React Native Text components are XSS-safe (no HTML rendering)
+      onChange(text);
     };
 
     switch (category) {
