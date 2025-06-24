@@ -276,13 +276,7 @@ All permissions are requested with clear explanations and can be managed through
 
 ## 10. Children's Privacy
 
-Our App is suitable for ages 4 and up. We comply with COPPA (Children's Online Privacy Protection Act) and similar regulations:
-
-- Parental consent required for users under 13
-- Limited data collection for young users
-- Safe content filtering and age-appropriate AI responses
-- Educational focus with child-safe AI interactions
-- Enhanced privacy protections for minors
+Our App is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe that your child has provided us with personal information without your consent, please contact us at the email address provided below. If we become aware that we have collected personal information from a child under 13 without verification of parental consent, we take steps to remove that information from our servers.
 
 ## 11. Contact Information
 
