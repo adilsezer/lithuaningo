@@ -1,7 +1,7 @@
 ---
-title: Home
+title: Lithuaningo Home
 ---
 
-# Welcome to My Docs Site
+# Welcome to Lithuaningo Docs Site
 
 This is the home page.
