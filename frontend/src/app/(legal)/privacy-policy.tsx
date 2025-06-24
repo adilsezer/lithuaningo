@@ -275,9 +275,7 @@ const PrivacyPolicy = () => {
         <CustomText
           style={[paragraphProps.style, styles.link]}
           onPress={() =>
-            Linking.openURL(
-              "https://adilsezer.github.io/lithuaningo/privacy-policy"
-            )
+            Linking.openURL("https://lithuaningo.com/privacy-policy")
           }
         >
           View Full Policy Online

@@ -287,7 +287,7 @@ Our App is not intended for children under 13 years of age. We do not knowingly 
 For privacy-related inquiries:
 
 - Email: [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com)
-- Website: [Privacy Policy](https://adilsezer.github.io/lithuaningo/privacy-policy)
+- Website: [Privacy Policy](https://lithuaningo.com/privacy-policy)
 - Support: Available through in-app help center
 
 ## 12. Policy Updates

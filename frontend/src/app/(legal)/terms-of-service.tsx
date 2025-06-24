@@ -352,9 +352,7 @@ const TermsOfService = () => {
         <CustomText
           style={[paragraphProps.style, styles.link]}
           onPress={() =>
-            Linking.openURL(
-              "https://adilsezer.github.io/lithuaningo/terms-of-service"
-            )
+            Linking.openURL("https://lithuaningo.com/terms-of-service")
           }
         >
           View Full Terms Online

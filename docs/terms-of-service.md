@@ -126,4 +126,4 @@ For questions about these terms:
 
 ---
 
-_This document is available online at: https://adilsezer.github.io/lithuaningo/terms-of-service_
+_This document is available online at: https://lithuaningo.com/terms-of-service_
