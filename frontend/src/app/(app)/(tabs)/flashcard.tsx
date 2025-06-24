@@ -147,17 +147,10 @@ const StatsSection = React.memo(
     isSyncingCount,
   }: StatsSectionProps) => {
     return userData?.id ? (
-      statsSummary ? (
-        <UserFlashcardStatsCard
-          stats={statsSummary}
-          isLoading={isLoadingStats || isSyncingCount}
-        />
-      ) : isLoadingStats || isSyncingCount ? (
-        <UserFlashcardStatsCard
-          stats={{} as UserFlashcardStatsSummaryResponse}
-          isLoading
-        />
-      ) : null
+      <UserFlashcardStatsCard
+        stats={statsSummary}
+        isLoading={isLoadingStats || isSyncingCount}
+      />
     ) : null;
   }
 );
