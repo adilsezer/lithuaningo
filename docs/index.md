@@ -7,11 +7,11 @@ Learn Lithuanian the easy, fast, and fun way! Lithuaningo is a modern language-l
 
 ## Key Features
 
-- **AI-Powered Chat**: Get instant help and explanations from an AI tutor whenever you're stuck.
-- **Interactive Flashcards**: Study at your own pace with unlimited, smart flashcards to perfect your vocabulary.
-- **Daily Challenges**: Test your knowledge with daily quizzes and track your progress.
-- **Weekly Leaderboards**: Compete with other learners and climb the ranks.
-- **Ad-Free Premium**: Upgrade to focus completely on learning without interruptions.
+- **Dynamic Learning Tools**: Engage with interactive flashcards across numerous categories (from verbs to travel phrases) and multiple challenge types like multiple-choice, fill-in-the-blank, and sentence rearrangement.
+- **AI-Powered Guidance**: Leverage our smart AI chat for instant explanations, grammar corrections, and conversation practice.
+- **Track Your Progress**: Stay motivated with daily challenges, track your streaks, and see how you stack up against others on the weekly leaderboards.
+- **Personalized Experience**: The app adapts to your learning pace with different difficulty levels for flashcards and challenges.
+- **Premium & Ad-Free**: Upgrade to an ad-free experience with unlimited access to all features.
 
 ## Get in Touch
 

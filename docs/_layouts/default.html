@@ -5,166 +5,115 @@
     <title>{{ page.title }} | {{ site.title }}</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <style>
-      /* General settings */
       :root {
-        --bg-color: #fff;
-        --text-color: #333;
-        --link-color: #007acc;
-        --header-color: #222;
-        --border-color: #ddd;
-        --code-bg-color: #f8f8f8;
-        --code-text-color: #333;
+        --bg: #fff;
+        --text-primary: #111;
+        --text-secondary: #666;
+        --link: #007aff;
+        --border: #eaeaea;
+        --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       }
 
       @media (prefers-color-scheme: dark) {
         :root {
-          --bg-color: #1a1a1a;
-          --text-color: #eee;
-          --link-color: #64b5f6;
-          --header-color: #fff;
-          --border-color: #444;
-          --code-bg-color: #2c2c2c;
-          --code-text-color: #eee;
+          --bg: #121212;
+          --text-primary: #fff;
+          --text-secondary: #aaa;
+          --link: #0a84ff;
+          --border: #333;
         }
       }
 
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-          "Segoe UI Symbol";
+        font-family: var(--font-body);
+        background-color: var(--bg);
+        color: var(--text-primary);
         max-width: 800px;
-        margin: 2rem auto;
-        padding: 0 1rem;
-        line-height: 1.7;
-        background: var(--bg-color);
-        color: var(--text-color);
-        transition: background 0.3s ease, color 0.3s ease;
+        margin: 0 auto;
+        padding: 1.5rem 1rem;
+        line-height: 1.6;
       }
 
-      /* Typography */
-      h1,
-      h2,
-      h3,
-      h4,
-      h5,
-      h6 {
-        color: var(--header-color);
-        margin-top: 2em;
-        margin-bottom: 0.8em;
+      header {
+        margin-bottom: 2.5rem;
+      }
+
+      .site-title {
+        font-size: 1.1rem;
         font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
       }
 
-      h1 {
-        font-size: 2.2em;
-      }
-      h2 {
-        font-size: 1.8em;
-      }
-      h3 {
-        font-size: 1.4em;
+      main h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
       }
 
-      p {
-        margin-bottom: 1em;
+      main h2 {
+        font-size: 1.5rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.3rem;
+      }
+
+      main ul {
+          list-style-type: disc;
+          padding-left: 20px;
+      }
+
+      main li {
+          margin-bottom: 0.5rem;
       }
 
       a {
-        color: var(--link-color);
+        color: var(--link);
         text-decoration: none;
-        transition: color 0.3s ease;
       }
+
       a:hover {
         text-decoration: underline;
       }
 
-      /* Header and Footer */
-      header,
-      footer {
-        text-align: center;
-        font-size: 0.9em;
-        color: var(--text-color);
-        opacity: 0.8;
-      }
-
-      header {
-        margin-bottom: 2rem;
-      }
-
-      header h1 {
-        margin-top: 0;
-      }
-
       footer {
         margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        text-align: center;
       }
 
-      /* Code blocks */
-      pre,
-      code {
-        font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
-          Courier, monospace;
-        font-size: 0.9em;
-        color: var(--code-text-color);
-      }
-
-      code {
-        background-color: var(--code-bg-color);
-        padding: 0.2em 0.4em;
-        border-radius: 4px;
-      }
-
-      pre {
-        background-color: var(--code-bg-color);
-        padding: 1rem;
-        border-radius: 8px;
-        overflow-x: auto;
-        border: 1px solid var(--border-color);
-      }
-
-      pre code {
-        background-color: transparent;
-        padding: 0;
-        border: none;
-      }
-
-      /* Other elements */
-      hr {
-        border: none;
-        border-top: 1px solid var(--border-color);
-        margin: 3rem 0;
-      }
-
-      img {
-        max-width: 100%;
-        height: auto;
-        border-radius: 8px;
-      }
-
-      blockquote {
-        margin: 1.5em 0;
-        padding: 0.5em 1.5em;
-        border-left: 4px solid var(--border-color);
-        color: var(--text-color);
-        opacity: 0.9;
-        font-style: italic;
+      @media (max-width: 600px) {
+        body {
+            padding: 1.5rem 1rem;
+        }
+        main h1 {
+            font-size: 1.8rem;
+        }
+        main h2 {
+            font-size: 1.3rem;
+        }
       }
     </style>
   </head>
   <body>
     <header>
-      <h1>{{ site.title }}</h1>
-      <p>{{ site.description }}</p>
+      <a class="site-title" href="{{ "/" | relative_url }}">{{ site.title }}</a>
     </header>
 
-    <hr />
-
     <main>
-      <h1>{{ page.title }}</h1>
+      <h1>
+        {% if page.url == "/" %}
+          {{ site.description }}
+        {% else %}
+          {{ page.title }}
+        {% endif %}
+      </h1>
       {{ content }}
     </main>
 
-    <hr />
-
-    <footer>&copy; {{ site.time | date: '%Y' }} {{ site.title }}.</footer>
+    <footer>&copy; {{ site.time | date: '%Y' }} {{ site.title }}</footer>
   </body>
 </html>
