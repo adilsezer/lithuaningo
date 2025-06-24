@@ -17,12 +17,12 @@ export const ABOUT_LINKS = {
   },
   privacyPolicy: {
     type: "internal" as const,
-    value: "/auth/privacy-policy",
+    value: "/privacy-policy",
     label: "Privacy Policy",
   },
   termsOfService: {
     type: "internal" as const,
-    value: "/auth/terms-of-service",
+    value: "/terms-of-service",
     label: "Terms of Service",
   },
 };

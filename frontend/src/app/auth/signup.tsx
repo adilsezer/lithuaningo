@@ -144,7 +144,7 @@ const SignUpScreen: React.FC = () => {
           <CustomText
             variant="bodySmall"
             style={{ textDecorationLine: "underline", color: "#0066CC" }}
-            onPress={() => router.push("/auth/terms-of-service")}
+            onPress={() => router.push("/terms-of-service")}
           >
             Terms of Service
           </CustomText>{" "}
@@ -152,7 +152,7 @@ const SignUpScreen: React.FC = () => {
           <CustomText
             variant="bodySmall"
             style={{ textDecorationLine: "underline", color: "#0066CC" }}
-            onPress={() => router.push("/auth/privacy-policy")}
+            onPress={() => router.push("/privacy-policy")}
           >
             Privacy Policy
           </CustomText>

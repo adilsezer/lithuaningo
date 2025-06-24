@@ -229,7 +229,6 @@ export default function PremiumFeaturesScreen() {
       color: theme.colors.onSecondaryContainer,
     },
     buttonContainer: {
-      marginBottom: 40,
       marginTop: 8,
     },
     alreadyPremiumMessage: {
@@ -259,6 +258,19 @@ export default function PremiumFeaturesScreen() {
       color: theme.colors.onSurfaceVariant,
       textAlign: "center",
       lineHeight: 24,
+    },
+    legalLinksContainer: {
+      alignItems: "center",
+    },
+    legalText: {
+      fontSize: 12,
+      color: theme.colors.onSurfaceVariant,
+      textAlign: "center",
+      lineHeight: 18,
+    },
+    legalLink: {
+      color: theme.colors.primary,
+      textDecorationLine: "underline",
     },
   });
 
@@ -634,8 +646,29 @@ export default function PremiumFeaturesScreen() {
               title="Restore Purchases"
               mode="text"
               onPress={handleRestorePurchases}
-              style={{ marginTop: 12 }}
             />
+          </View>
+
+          <View style={styles.legalLinksContainer}>
+            <Text style={styles.legalText}>
+              By continuing, you acknowledge that your subscription will
+              auto-renew unless canceled. You can manage your subscription in
+              your App Store settings. For more details, please review our{" "}
+              <Text
+                style={styles.legalLink}
+                onPress={() => router.push("/terms-of-service")}
+              >
+                Terms of Service
+              </Text>{" "}
+              and{" "}
+              <Text
+                style={styles.legalLink}
+                onPress={() => router.push("/privacy-policy")}
+              >
+                Privacy Policy
+              </Text>
+              .
+            </Text>
           </View>
         </>
       ) : (
