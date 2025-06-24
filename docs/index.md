@@ -1,15 +1,20 @@
 ---
-title: Welcome
+title: Welcome to Lithuaningo
 layout: default
 ---
 
-Welcome to the official documentation for Lithuaningo. Here you can find important information regarding our application.
+Learn Lithuanian the easy, fast, and fun way! Lithuaningo is a modern language-learning app designed to help you master Lithuanian vocabulary, grammar, and conversation through interactive challenges and AI-powered assistance.
 
-## Legal Documents
+## Key Features
 
-You can review our terms of service and privacy policy for detailed information on data usage and legal terms.
+- **AI-Powered Chat**: Get instant help and explanations from an AI tutor whenever you're stuck.
+- **Interactive Flashcards**: Study at your own pace with unlimited, smart flashcards to perfect your vocabulary.
+- **Daily Challenges**: Test your knowledge with daily quizzes and track your progress.
+- **Weekly Leaderboards**: Compete with other learners and climb the ranks.
+- **Ad-Free Premium**: Upgrade to focus completely on learning without interruptions.
 
-- [Terms of Service]({{ site.baseurl }}/terms-of-service/)
-- [Privacy Policy]({{ site.baseurl }}/privacy-policy/)
+## Get in Touch
 
-For any questions or support, please contact us at [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com).
+- For support, contact us at [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com).
+- Review our [Terms of Service]({% link terms-of-service.md %}).
+- Read our [Privacy Policy]({% link privacy-policy.md %}).

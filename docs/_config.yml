@@ -1,6 +1,6 @@
 title: Lithuaningo
 description: "Official documentation and policies for the Lithuaningo application."
-baseurl: "/lithuaningo"
+baseurl: ""
 markdown: kramdown
 highlighter: rouge
 permalink: pretty
