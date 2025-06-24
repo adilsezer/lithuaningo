@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { Card, ProgressBar, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import CustomText from "@components/ui/CustomText";
@@ -39,18 +39,40 @@ const UserChallengeStatItem: React.FC<UserChallengeStatItemProps> = ({
 };
 
 interface UserChallengeStatsCardProps {
-  stats: UserChallengeStatsResponse;
+  stats: UserChallengeStatsResponse | null;
+  isLoading?: boolean;
 }
 
 export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
   stats,
+  isLoading = false,
 }) => {
   const theme = useTheme();
 
+  const placeholderStats: UserChallengeStatsResponse = {
+    currentStreak: 0,
+    longestStreak: 0,
+    lastChallengeDate: "",
+    hasCompletedTodayChallenge: false,
+    todayCorrectAnswers: 0,
+    todayIncorrectAnswers: 0,
+    totalChallengesCompleted: 0,
+    totalCorrectAnswers: 0,
+    totalIncorrectAnswers: 0,
+    todayTotalAnswers: 0,
+  };
+
+  const displayData = isLoading ? placeholderStats : stats;
+
+  if (!displayData) {
+    return null;
+  }
+
   const accuracy =
-    stats.totalCorrectAnswers + stats.totalIncorrectAnswers > 0
-      ? (stats.totalCorrectAnswers /
-          (stats.totalCorrectAnswers + stats.totalIncorrectAnswers)) *
+    displayData.totalCorrectAnswers + displayData.totalIncorrectAnswers > 0
+      ? (displayData.totalCorrectAnswers /
+          (displayData.totalCorrectAnswers +
+            displayData.totalIncorrectAnswers)) *
         100
       : 0;
 
@@ -65,67 +87,78 @@ export const UserChallengeStatsCard: React.FC<UserChallengeStatsCardProps> = ({
       ]}
     >
       <Card.Content>
-        <View style={styles.statsContainer}>
-          <UserChallengeStatItem
-            icon="fire"
-            value={stats.currentStreak}
-            label={`Streak${
-              stats.longestStreak > stats.currentStreak
-                ? ` (Best: ${stats.longestStreak})`
-                : ""
-            }`}
-            color={theme.colors.error}
-          />
-          <UserChallengeStatItem
-            icon="check"
-            value={stats.todayCorrectAnswers}
-            label="Today's Correct"
-            color={theme.colors.primary}
-          />
-          <UserChallengeStatItem
-            icon="close"
-            value={stats.todayIncorrectAnswers}
-            label="Today's Incorrect"
-            color={theme.colors.error}
-          />
-        </View>
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator
+              animating={true}
+              size="large"
+              color={theme.colors.primary}
+            />
+          </View>
+        )}
+        <View style={{ opacity: isLoading ? 0.4 : 1 }}>
+          <View style={styles.statsContainer}>
+            <UserChallengeStatItem
+              icon="fire"
+              value={displayData.currentStreak}
+              label={`Streak${
+                displayData.longestStreak > displayData.currentStreak
+                  ? ` (Best: ${displayData.longestStreak})`
+                  : ""
+              }`}
+              color={theme.colors.error}
+            />
+            <UserChallengeStatItem
+              icon="check"
+              value={displayData.todayCorrectAnswers}
+              label="Today's Correct"
+              color={theme.colors.primary}
+            />
+            <UserChallengeStatItem
+              icon="close"
+              value={displayData.todayIncorrectAnswers}
+              label="Today's Incorrect"
+              color={theme.colors.error}
+            />
+          </View>
 
-        <View style={styles.weeklyProgress}>
-          <View style={styles.weeklyGoalHeader}>
-            <CustomText variant="bodyMedium">Overall Accuracy</CustomText>
+          <View style={styles.weeklyProgress}>
+            <View style={styles.weeklyGoalHeader}>
+              <CustomText variant="bodyMedium">Overall Accuracy</CustomText>
+              <CustomText
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                {accuracy.toFixed(1)}%
+              </CustomText>
+            </View>
+            <ProgressBar
+              progress={accuracy / 100}
+              color={theme.colors.primary}
+              style={styles.progressBar}
+            />
+          </View>
+
+          <View style={styles.totalStats}>
             <CustomText
               variant="bodySmall"
               style={{ color: theme.colors.onSurfaceVariant }}
             >
-              {accuracy.toFixed(1)}%
+              Total Challenges: {displayData.totalChallengesCompleted}
+            </CustomText>
+            <CustomText
+              variant="bodySmall"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              Total Correct: {displayData.totalCorrectAnswers}
+            </CustomText>
+            <CustomText
+              variant="bodySmall"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              Total Incorrect: {displayData.totalIncorrectAnswers}
             </CustomText>
           </View>
-          <ProgressBar
-            progress={accuracy / 100}
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-        </View>
-
-        <View style={styles.totalStats}>
-          <CustomText
-            variant="bodySmall"
-            style={{ color: theme.colors.onSurfaceVariant }}
-          >
-            Total Challenges: {stats.totalChallengesCompleted}
-          </CustomText>
-          <CustomText
-            variant="bodySmall"
-            style={{ color: theme.colors.onSurfaceVariant }}
-          >
-            Total Correct: {stats.totalCorrectAnswers}
-          </CustomText>
-          <CustomText
-            variant="bodySmall"
-            style={{ color: theme.colors.onSurfaceVariant }}
-          >
-            Total Incorrect: {stats.totalIncorrectAnswers}
-          </CustomText>
         </View>
       </Card.Content>
     </Card>
@@ -137,6 +170,15 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     marginTop: 16,
+    marginHorizontal: 16,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    zIndex: 1,
+    borderRadius: 11,
   },
   statsContainer: {
     flexDirection: "row",

@@ -1,5 +1,5 @@
 import React from "react";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
 import { Card, ProgressBar, useTheme } from "react-native-paper";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import CustomText from "@components/ui/CustomText";
@@ -39,7 +39,7 @@ const UserFlashcardStatItem: React.FC<UserFlashcardStatItemProps> = ({
 };
 
 interface UserFlashcardStatsCardProps {
-  stats: UserFlashcardStatsSummaryResponse;
+  stats: UserFlashcardStatsSummaryResponse | null;
   isLoading?: boolean;
 }
 
@@ -49,22 +49,21 @@ export const UserFlashcardStatsCard: React.FC<UserFlashcardStatsCardProps> = ({
 }) => {
   const theme = useTheme();
 
-  if (isLoading) {
-    return (
-      <Card
-        style={[
-          styles.container,
-          {
-            borderColor: theme.colors.primary,
-            backgroundColor: theme.colors.background,
-          },
-        ]}
-      >
-        <Card.Content>
-          <CustomText>Loading stats...</CustomText>
-        </Card.Content>
-      </Card>
-    );
+  const placeholderStats: UserFlashcardStatsSummaryResponse = {
+    userId: "",
+    totalFlashcards: 0,
+    totalViews: 0,
+    totalCorrectAnswers: 0,
+    totalIncorrectAnswers: 0,
+    averageMasteryLevel: 0,
+    flashcardsViewedToday: 0,
+    successRate: 0,
+  };
+
+  const displayData = isLoading ? placeholderStats : stats;
+
+  if (!displayData) {
+    return null;
   }
 
   return (
@@ -78,59 +77,73 @@ export const UserFlashcardStatsCard: React.FC<UserFlashcardStatsCardProps> = ({
       ]}
     >
       <Card.Content>
-        <View style={styles.statsContainer}>
-          <UserFlashcardStatItem
-            icon="cards"
-            value={stats.totalCorrectAnswers + stats.totalIncorrectAnswers}
-            label="Total Cards"
-            color={theme.colors.tertiary}
-          />
-          <UserFlashcardStatItem
-            icon="check"
-            value={stats.totalCorrectAnswers}
-            label="Correct"
-            color={theme.colors.primary}
-          />
-          <UserFlashcardStatItem
-            icon="close"
-            value={stats.totalIncorrectAnswers}
-            label="Incorrect"
-            color={theme.colors.error}
-          />
-        </View>
-
-        <View style={styles.progressSection}>
-          <View style={styles.progressHeader}>
-            <CustomText variant="bodyMedium">Success Rate</CustomText>
-            <CustomText
-              variant="bodySmall"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              {stats.successRate.toFixed(1)}%
-            </CustomText>
+        {isLoading && (
+          <View style={styles.loadingOverlay}>
+            <ActivityIndicator
+              animating={true}
+              size="large"
+              color={theme.colors.primary}
+            />
           </View>
-          <ProgressBar
-            progress={stats.successRate / 100}
-            color={theme.colors.primary}
-            style={styles.progressBar}
-          />
-        </View>
-
-        <View style={styles.progressSection}>
-          <View style={styles.progressHeader}>
-            <CustomText variant="bodyMedium">Mastery Level</CustomText>
-            <CustomText
-              variant="bodySmall"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              {stats.averageMasteryLevel.toFixed(1)}/5.0
-            </CustomText>
+        )}
+        <View style={{ opacity: isLoading ? 0.4 : 1 }}>
+          <View style={styles.statsContainer}>
+            <UserFlashcardStatItem
+              icon="cards"
+              value={
+                displayData.totalCorrectAnswers +
+                displayData.totalIncorrectAnswers
+              }
+              label="Total Cards"
+              color={theme.colors.tertiary}
+            />
+            <UserFlashcardStatItem
+              icon="check"
+              value={displayData.totalCorrectAnswers}
+              label="Correct"
+              color={theme.colors.primary}
+            />
+            <UserFlashcardStatItem
+              icon="close"
+              value={displayData.totalIncorrectAnswers}
+              label="Incorrect"
+              color={theme.colors.error}
+            />
           </View>
-          <ProgressBar
-            progress={stats.averageMasteryLevel / 5}
-            color={theme.colors.secondary}
-            style={styles.progressBar}
-          />
+
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <CustomText variant="bodyMedium">Success Rate</CustomText>
+              <CustomText
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                {displayData.successRate.toFixed(1)}%
+              </CustomText>
+            </View>
+            <ProgressBar
+              progress={displayData.successRate / 100}
+              color={theme.colors.primary}
+              style={styles.progressBar}
+            />
+          </View>
+
+          <View style={styles.progressSection}>
+            <View style={styles.progressHeader}>
+              <CustomText variant="bodyMedium">Mastery Level</CustomText>
+              <CustomText
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
+                {displayData.averageMasteryLevel.toFixed(1)}/5.0
+              </CustomText>
+            </View>
+            <ProgressBar
+              progress={displayData.averageMasteryLevel / 5}
+              color={theme.colors.secondary}
+              style={styles.progressBar}
+            />
+          </View>
         </View>
       </Card.Content>
     </Card>
@@ -143,6 +156,14 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     marginHorizontal: 16,
     marginVertical: 8,
+  },
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    zIndex: 1,
+    borderRadius: 11,
   },
   statsContainer: {
     flexDirection: "row",

@@ -213,7 +213,7 @@ export default function ChallengeScreen() {
       )}
 
       {/* Stats */}
-      {stats && !error && <UserChallengeStatsCard stats={stats} />}
+      {!error && <UserChallengeStatsCard stats={stats} isLoading={isLoading} />}
 
       {/* Leaderboard */}
       <CustomDivider />
