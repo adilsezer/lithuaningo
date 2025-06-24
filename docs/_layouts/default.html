@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>{{ page.title }} | {{ site.title }}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      :root {
+        --bg: #fff;
+        --text-primary: #111;
+        --text-secondary: #666;
+        --link: #007aff;
+        --border: #eaeaea;
+        --font-body: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #121212;
+          --text-primary: #fff;
+          --text-secondary: #aaa;
+          --link: #0a84ff;
+          --border: #333;
+        }
+      }
+
+      body {
+        font-family: var(--font-body);
+        background-color: var(--bg);
+        color: var(--text-primary);
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1.5rem 1rem;
+        line-height: 1.6;
+      }
+
+      header {
+        margin-bottom: 2.5rem;
+      }
+
+      .site-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        text-decoration: none;
+      }
+
+      main h1 {
+        font-size: 2rem;
+        margin-bottom: 1rem;
+      }
+
+      main h2 {
+        font-size: 1.5rem;
+        margin-top: 2.5rem;
+        margin-bottom: 1rem;
+        border-bottom: 1px solid var(--border);
+        padding-bottom: 0.3rem;
+      }
+
+      main ul {
+          list-style-type: disc;
+          padding-left: 20px;
+      }
+
+      main li {
+          margin-bottom: 0.5rem;
+      }
+
+      a {
+        color: var(--link);
+        text-decoration: none;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+
+      footer {
+        margin-top: 3rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid var(--border);
+        font-size: 0.9rem;
+        color: var(--text-secondary);
+        text-align: center;
+      }
+
+      @media (max-width: 600px) {
+        body {
+            padding: 1.5rem 1rem;
+        }
+        main h1 {
+            font-size: 1.8rem;
+        }
+        main h2 {
+            font-size: 1.3rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <a class="site-title" href="{{ "/" | relative_url }}">{{ site.title }}</a>
+    </header>
+
+    <main>
+      <h1>
+        {% if page.url == "/" %}
+          {{ site.description }}
+        {% else %}
+          {{ page.title }}
+        {% endif %}
+      </h1>
+      {{ content }}
+    </main>
+
+    <footer>&copy; {{ site.time | date: '%Y' }} {{ site.title }}</footer>
+  </body>
+</html>

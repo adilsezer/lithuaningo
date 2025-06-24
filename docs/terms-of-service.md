@@ -1,4 +1,8 @@
-# Terms of Service
+---
+layout: default
+title: Terms of Service
+permalink: /terms-of-service/
+---
 
 **Last updated: January 15, 2025**
 
@@ -122,4 +126,4 @@ For questions about these terms:
 
 ---
 
-_This document is available online at: https://adilsezer.github.io/lithuaningo/terms-of-service_
+_This document is available online at: https://lithuaningo.com/terms-of-service_

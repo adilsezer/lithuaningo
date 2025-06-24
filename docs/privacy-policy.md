@@ -1,4 +1,8 @@
-# Privacy Policy
+---
+layout: default
+title: Privacy Policy
+permalink: /privacy-policy/
+---
 
 Last updated: January 15, 2025
 Thank you for choosing Lithuaningo ("us", "we", or "our"). This Privacy Policy explains how we collect, use, and disclose information about you when you use our mobile application ("App").
@@ -283,7 +287,7 @@ Our App is not intended for children under 13 years of age. We do not knowingly 
 For privacy-related inquiries:
 
 - Email: [lithuaningo@gmail.com](mailto:lithuaningo@gmail.com)
-- Website: [Privacy Policy](https://adilsezer.github.io/lithuaningo/privacy-policy)
+- Website: [Privacy Policy](https://lithuaningo.com/privacy-policy)
 - Support: Available through in-app help center
 
 ## 12. Policy Updates
