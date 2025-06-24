@@ -4,8 +4,6 @@ title: Terms of Service
 permalink: /terms-of-service/
 ---
 
-# Terms of Service
-
 **Last updated: January 15, 2025**
 
 ## 1. Age Requirements and Eligibility
