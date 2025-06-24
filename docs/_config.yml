@@ -1,22 +1,5 @@
-title: Lithuaningo Docs Site
-markdown: GFM
-theme: jekyll-theme-cayman
-
-# Since docs/ is the source folder, no need to specify 'source'
-# The build command will run inside docs/, so default source is current folder.
-
-# Optional: configure permalinks (nice URLs)
+title: Lithuaningo
+baseurl: ""
+markdown: kramdown
+highlighter: rouge
 permalink: pretty
-
-# Optional: exclude files/folders if needed
-exclude:
-  - README.md
-  - LICENSE
-
-# Optional: add defaults for layouts to avoid repeating front matter
-defaults:
-  - scope:
-      path: ""
-      type: "pages"
-    values:
-      layout: default
