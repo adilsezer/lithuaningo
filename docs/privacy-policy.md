@@ -4,7 +4,7 @@ title: Privacy Policy
 permalink: /privacy-policy/
 ---
 
-Last updated: January 15, 2025
+Last updated: June 15, 2025
 Thank you for choosing Lithuaningo ("us", "we", or "our"). This Privacy Policy explains how we collect, use, and disclose information about you when you use our mobile application ("App").
 
 By using the App, you agree to the collection and use of information in accordance with this Privacy Policy.
@@ -300,7 +300,7 @@ We regularly review and update this policy to reflect:
 - Regulatory requirements
 - Third-party service updates
 
-Last major update: January 15, 2025
+Last major update: June 15, 2025
 
 ## 13. Legal Basis for Processing (GDPR Compliance)
 

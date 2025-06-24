@@ -20,9 +20,7 @@ const TermsOfService = () => {
 
   return (
     <ScrollView>
-      <CustomText {...paragraphProps}>
-        Last updated: January 15, 2025
-      </CustomText>
+      <CustomText {...paragraphProps}>Last updated: June 15, 2025</CustomText>
 
       <CustomText variant="titleMedium" bold>
         1. Age Requirements and Eligibility

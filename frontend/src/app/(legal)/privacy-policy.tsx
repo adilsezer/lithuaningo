@@ -20,9 +20,7 @@ const PrivacyPolicy = () => {
 
   return (
     <ScrollView>
-      <CustomText {...paragraphProps}>
-        Last updated: January 15, 2025
-      </CustomText>
+      <CustomText {...paragraphProps}>Last updated: June 15, 2025</CustomText>
 
       <CustomText {...paragraphProps}>
         Thank you for choosing Lithuaningo ("us", "we", or "our"). This Privacy
