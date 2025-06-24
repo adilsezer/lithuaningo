@@ -64,6 +64,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     supabaseUrl: getRequiredEnv("EXPO_PUBLIC_SUPABASE_URL"),
     supabaseAnonKey: getRequiredEnv("EXPO_PUBLIC_SUPABASE_ANON_KEY"),
     privacyPolicyUrl: "https://adilsezer.github.io/lithuaningo/privacy-policy",
+    termsOfServiceUrl:
+      "https://adilsezer.github.io/lithuaningo/terms-of-service",
     keywords:
       "Lithuanian language, Language learning, Language app, Language courses, Learning Lithuanian, Lithuanian lessons, Vocabulary practice, Language challenges, Interactive learning",
   };

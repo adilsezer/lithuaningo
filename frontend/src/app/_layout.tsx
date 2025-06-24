@@ -36,8 +36,10 @@ function useProtectedRoutes() {
     }
 
     const inAuthGroup = segments[0] === "auth";
+    const inLegalGroup = segments[0] === "(legal)";
 
-    if (!isAuthenticated && !inAuthGroup) {
+    // If the user is not authenticated, and not in the auth or legal group, redirect them to the auth group.
+    if (!isAuthenticated && !inAuthGroup && !inLegalGroup) {
       router.replace("/auth");
     } else if (isAuthenticated && inAuthGroup) {
       router.replace("/(app)");
@@ -46,6 +48,23 @@ function useProtectedRoutes() {
 }
 
 const ROOT_SCREENS = [{ name: "index" }, { name: "auth" }, { name: "(app)" }];
+
+const LEGAL_SCREENS = [
+  {
+    name: "(legal)/terms-of-service" as const,
+    options: {
+      title: "Terms of Service",
+      headerShown: true,
+    },
+  },
+  {
+    name: "(legal)/privacy-policy" as const,
+    options: {
+      title: "Privacy Policy",
+      headerShown: true,
+    },
+  },
+];
 
 /**
  * Root layout component that sets up the app's providers and core UI structure.
@@ -98,6 +117,13 @@ export default function RootLayout() {
             >
               {ROOT_SCREENS.map((screen) => (
                 <Stack.Screen key={screen.name} name={screen.name} />
+              ))}
+              {LEGAL_SCREENS.map((screen) => (
+                <Stack.Screen
+                  key={screen.name}
+                  name={screen.name}
+                  options={screen.options}
+                />
               ))}
             </Stack>
 
