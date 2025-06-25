@@ -43,6 +43,7 @@ public class AIService : IAIService
     private readonly ChatClient _chatClient;
     private readonly ImageClient _imageClient;
     private readonly AudioClient _audioClient;
+    private readonly Random _random;
 
     #endregion
 
@@ -56,18 +57,21 @@ public class AIService : IAIService
     /// <param name="storageService">The storage service</param>
     /// <param name="storageSettingsOptions">The storage settings</param>
     /// <param name="openAIClient">The OpenAI client</param>
+    /// <param name="random">The random instance</param>
     public AIService(
         IOptions<AISettings> aiSettingsOptions,
         ILogger<AIService> logger,
         IStorageService storageService,
         IOptions<StorageSettings> storageSettingsOptions,
-        OpenAIClient openAIClient)
+        OpenAIClient openAIClient,
+        Random random)
     {
         _logger = logger;
         _aiSettings = aiSettingsOptions.Value;
         _storageSettings = storageSettingsOptions.Value;
         _storageService = storageService;
         _openAIClient = openAIClient;
+        _random = random;
 
         _chatClient = _openAIClient.GetChatClient(_aiSettings.OpenAITextModelName);
         _imageClient = _openAIClient.GetImageClient(_aiSettings.OpenAIImageModelName);
@@ -584,12 +588,17 @@ All Options: {string.Join(", ", request.Options)}";
                     throw;
                 }
 
-                // Use a static delay for rate limiting
-                const int rateLimitDelaySeconds = 60;
-                _logger.LogInformation("Rate limit hit. Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}",
-                    rateLimitDelaySeconds, attempt + 1);
+                // Use a random delay to prevent thundering herd problem
+                // With 50 concurrent tasks and 5 images/min limit (12s per image), 
+                // we need to spread retries across ~10+ minutes
+                var baseDelaySeconds = 180; // Base delay of 3 minutes
+                var jitterSeconds = _random.Next(0, 421); // Random jitter between 0-7 minutes
+                var totalDelaySeconds = baseDelaySeconds + jitterSeconds; // Total: 3-10 minutes
 
-                await Task.Delay(TimeSpan.FromSeconds(rateLimitDelaySeconds));
+                _logger.LogInformation("Rate limit hit. Waiting {DelaySeconds} seconds (base: {BaseDelay}s + jitter: {JitterDelay}s) before retry attempt {NextAttempt}",
+                    totalDelaySeconds, baseDelaySeconds, jitterSeconds, attempt + 1);
+
+                await Task.Delay(TimeSpan.FromSeconds(totalDelaySeconds));
             }
             catch (Exception ex)
             {
