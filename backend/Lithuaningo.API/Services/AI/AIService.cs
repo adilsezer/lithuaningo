@@ -240,7 +240,7 @@ public class AIService : IAIService
 
         try
         {
-            string textToSpeak = $"{flashcardText}... {exampleSentence}";
+            string textToSpeak = $"Word: {flashcardText}... Example sentence: {exampleSentence}";
 
             GeneratedSpeechVoice voice = _aiSettings.DefaultVoice.ToLowerInvariant() switch
             {
