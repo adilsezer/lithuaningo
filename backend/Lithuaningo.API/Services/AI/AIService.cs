@@ -142,11 +142,11 @@ public class AIService : IAIService
     }
 
     /// <summary>
-    /// Generates an image using ai based on the provided prompt, uploads it to storage, and returns the URL.
+    /// Generates an image using OpenAI's DALL-E service and uploads it to cloud storage
     /// </summary>
-    /// <param name="flashcardFrontText">The Lithuanian front text of the flashcard (primary subject for the image).</param>
-    /// <param name="exampleSentenceTranslation">The English translation of the example sentence (not used in current implementation).</param>
-    /// <param name="flashcardId">The ID of the flashcard</param>
+    /// <param name="flashcardFrontText">The front text of the flashcard to generate an image for</param>
+    /// <param name="exampleSentenceTranslation">The translation of the example sentence</param>
+    /// <param name="flashcardId">The ID of the flashcard for file naming</param>
     /// <returns>The public URL of the uploaded image.</returns>
     /// <exception cref="ArgumentNullException">Thrown when flashcardFrontText is null or empty. flashcardId cannot be null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when image generation or upload fails.</exception>
@@ -164,55 +164,63 @@ public class AIService : IAIService
             throw new ArgumentNullException(nameof(flashcardId), "flashcardId cannot be null or empty");
         }
 
-        try
+        return await RetryWithBackoffAsync(async attempt =>
         {
-            string combinedPrompt = string.Format(
-                AIPrompts.IMAGE_GENERATION_PROMPT,
-                flashcardFrontText
-            );
-
-            var imageOptions = new ImageGenerationOptions
+            try
             {
-                Quality = ParseImageQuality(_aiSettings.OpenAIImageQuality),
-                Size = ParseImageSize(_aiSettings.OpenAIImageSize),
-            };
+                string combinedPrompt = string.Format(
+                    AIPrompts.IMAGE_GENERATION_PROMPT,
+                    flashcardFrontText
+                );
 
-            _logger.LogInformation("Requesting image generation from OpenAI with prompt: {Prompt}", combinedPrompt);
+                var imageOptions = new ImageGenerationOptions
+                {
+                    Quality = ParseImageQuality(_aiSettings.OpenAIImageQuality),
+                    Size = ParseImageSize(_aiSettings.OpenAIImageSize),
+                };
 
-            var imageResult = await _imageClient.GenerateImageAsync(combinedPrompt, imageOptions);
-            GeneratedImage image = imageResult.Value;
+                _logger.LogInformation("Requesting image generation from OpenAI with prompt: {Prompt} (Attempt {Attempt})", combinedPrompt, attempt);
 
-            if (image.ImageBytes == null || image.ImageBytes.ToMemory().IsEmpty)
-            {
-                _logger.LogError("OpenAI response did not contain image bytes.");
-                throw new InvalidOperationException("OpenAI response did not contain image bytes.");
+                var imageResult = await _imageClient.GenerateImageAsync(combinedPrompt, imageOptions);
+                GeneratedImage image = imageResult.Value;
+
+                if (image.ImageBytes == null || image.ImageBytes.ToMemory().IsEmpty)
+                {
+                    _logger.LogError("OpenAI response did not contain image bytes.");
+                    throw new InvalidOperationException("OpenAI response did not contain image bytes.");
+                }
+
+                _logger.LogInformation("Uploading generated image binary data to storage");
+
+                var uploadedUrl = await _storageService.UploadBinaryDataAsync(
+                    image.ImageBytes.ToArray(),
+                    "image/png",
+                    _storageSettings.Paths.Flashcards,
+                    _storageSettings.Paths.Images,
+                    ".png",
+                    flashcardId
+                );
+
+                if (string.IsNullOrEmpty(uploadedUrl))
+                {
+                    _logger.LogError("Storage service returned an empty URL after uploading image binary data.");
+                    throw new InvalidOperationException("Storage service returned an empty URL after uploading image binary data.");
+                }
+
+                _logger.LogInformation("Successfully generated and uploaded image. URL: {UploadedUrl}", uploadedUrl);
+                return uploadedUrl;
             }
-
-            _logger.LogInformation("Uploading generated image binary data to storage");
-
-            var uploadedUrl = await _storageService.UploadBinaryDataAsync(
-                image.ImageBytes.ToArray(),
-                "image/png",
-                _storageSettings.Paths.Flashcards,
-                _storageSettings.Paths.Images,
-                ".png",
-                flashcardId
-            );
-
-            if (string.IsNullOrEmpty(uploadedUrl))
+            catch (System.ClientModel.ClientResultException ex) when (ex.Status == 429)
             {
-                _logger.LogError("Storage service returned an empty URL after uploading image binary data.");
-                throw new InvalidOperationException("Storage service returned an empty URL after uploading image binary data.");
+                // Let RetryWithBackoffAsync handle the 429 error
+                throw;
             }
-
-            _logger.LogInformation("Successfully generated and uploaded image. URL: {UploadedUrl}", uploadedUrl);
-            return uploadedUrl;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating image with OpenAI.");
-            throw new InvalidOperationException($"Error generating image with OpenAI: {ex.Message}", ex);
-        }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating image with OpenAI on attempt {Attempt}.", attempt);
+                throw new InvalidOperationException($"Error generating image with OpenAI: {ex.Message}", ex);
+            }
+        }, maxAttempts: 5); // Increase max attempts for rate limiting
     }
 
     /// <summary>
@@ -238,46 +246,57 @@ public class AIService : IAIService
             throw new ArgumentNullException(nameof(flashcardId), "flashcardId cannot be null or empty");
         }
 
-        try
+        return await RetryWithBackoffAsync(async attempt =>
         {
-            string textToSpeak = $"{char.ToUpper(flashcardText[0])}{flashcardText[1..]}. [pause] {exampleSentence}.";
-
-            GeneratedSpeechVoice voice = _aiSettings.DefaultVoice.ToLowerInvariant() switch
+            try
             {
-                "alloy" => GeneratedSpeechVoice.Alloy,
-                "echo" => GeneratedSpeechVoice.Echo,
-                "fable" => GeneratedSpeechVoice.Fable,
-                "onyx" => GeneratedSpeechVoice.Onyx,
-                "nova" => GeneratedSpeechVoice.Nova,
-                "shimmer" => GeneratedSpeechVoice.Shimmer,
-                _ => GeneratedSpeechVoice.Alloy,
-            };
+                string textToSpeak = $"{char.ToUpper(flashcardText[0])}{flashcardText[1..]}. [pause] {exampleSentence}.";
 
-            var speechResult = await _audioClient.GenerateSpeechAsync(textToSpeak, voice);
-            BinaryData speechData = speechResult.Value;
+                GeneratedSpeechVoice voice = _aiSettings.DefaultVoice.ToLowerInvariant() switch
+                {
+                    "alloy" => GeneratedSpeechVoice.Alloy,
+                    "echo" => GeneratedSpeechVoice.Echo,
+                    "fable" => GeneratedSpeechVoice.Fable,
+                    "onyx" => GeneratedSpeechVoice.Onyx,
+                    "nova" => GeneratedSpeechVoice.Nova,
+                    "shimmer" => GeneratedSpeechVoice.Shimmer,
+                    _ => GeneratedSpeechVoice.Alloy,
+                };
 
-            if (speechData == null || speechData.ToMemory().IsEmpty)
-            {
-                _logger.LogError("Failed to generate audio: empty response from OpenAI");
-                throw new InvalidOperationException("Failed to generate audio: empty response from OpenAI");
+                _logger.LogInformation("Generating audio with OpenAI TTS (Attempt {Attempt})", attempt);
+
+                var speechResult = await _audioClient.GenerateSpeechAsync(textToSpeak, voice);
+                BinaryData speechData = speechResult.Value;
+
+                if (speechData == null || speechData.ToMemory().IsEmpty)
+                {
+                    _logger.LogError("Failed to generate audio: empty response from OpenAI");
+                    throw new InvalidOperationException("Failed to generate audio: empty response from OpenAI");
+                }
+
+                var uploadedUrl = await _storageService.UploadBinaryDataAsync(
+                    speechData.ToArray(),
+                    "audio/mpeg",
+                    _storageSettings.Paths.Flashcards,
+                    _storageSettings.Paths.Audio,
+                    ".mp3",
+                    flashcardId
+                );
+
+                _logger.LogInformation("Successfully generated and uploaded audio. URL: {UploadedUrl}", uploadedUrl);
+                return uploadedUrl;
             }
-
-            var uploadedUrl = await _storageService.UploadBinaryDataAsync(
-                speechData.ToArray(),
-                "audio/mpeg",
-                _storageSettings.Paths.Flashcards,
-                _storageSettings.Paths.Audio,
-                ".mp3",
-                flashcardId
-            );
-
-            return uploadedUrl;
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error generating audio");
-            throw new InvalidOperationException($"Error generating audio: {ex.Message}", ex);
-        }
+            catch (System.ClientModel.ClientResultException ex) when (ex.Status == 429)
+            {
+                // Let RetryWithBackoffAsync handle the 429 error
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error generating audio on attempt {Attempt}", attempt);
+                throw new InvalidOperationException($"Error generating audio: {ex.Message}", ex);
+            }
+        }, maxAttempts: 5); // Increase max attempts for rate limiting
     }
 
     /// <summary>
@@ -554,6 +573,24 @@ All Options: {string.Join(", ", request.Options)}";
             {
                 return await operation(attempt);
             }
+            catch (System.ClientModel.ClientResultException ex) when (ex.Status == 429)
+            {
+                _logger.LogWarning("Rate limit hit on attempt {Attempt} of {MaxAttempts}. Status: {Status}",
+                    attempt, maxAttempts, ex.Status);
+
+                if (attempt >= maxAttempts)
+                {
+                    _logger.LogError("Rate limit exceeded after {MaxAttempts} attempts", maxAttempts);
+                    throw;
+                }
+
+                // Use a static delay for rate limiting
+                const int rateLimitDelaySeconds = 60;
+                _logger.LogInformation("Rate limit hit. Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}",
+                    rateLimitDelaySeconds, attempt + 1);
+
+                await Task.Delay(TimeSpan.FromSeconds(rateLimitDelaySeconds));
+            }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Operation failed on attempt {Attempt} of {MaxAttempts}", attempt, maxAttempts);
@@ -561,7 +598,13 @@ All Options: {string.Join(", ", request.Options)}";
                 {
                     throw;
                 }
-                await Task.Delay(1000 * attempt); // Simple exponential backoff
+
+                // For other errors, use shorter exponential backoff
+                var delay = 1000 * attempt; // 1s, 2s, 3s, etc.
+                _logger.LogInformation("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}",
+                    delay / 1000, attempt + 1);
+
+                await Task.Delay(delay);
             }
         }
         throw new InvalidOperationException($"Operation failed after {maxAttempts} attempts");
