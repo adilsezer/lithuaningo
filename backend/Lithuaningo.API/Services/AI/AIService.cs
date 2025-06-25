@@ -146,10 +146,11 @@ public class AIService : IAIService
     /// </summary>
     /// <param name="flashcardFrontText">The Lithuanian front text of the flashcard (primary subject for the image).</param>
     /// <param name="exampleSentenceTranslation">The English translation of the example sentence for contextual understanding.</param>
+    /// <param name="flashcardId">The ID of the flashcard</param>
     /// <returns>The public URL of the uploaded image.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when flashcardFrontText is null or empty. exampleSentenceTranslation can be empty.</exception>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardFrontText is null or empty. exampleSentenceTranslation can be empty. flashcardId cannot be null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when image generation or upload fails.</exception>
-    public async Task<string> GenerateImageAsync(string flashcardFrontText, string exampleSentenceTranslation)
+    public async Task<string> GenerateImageAsync(string flashcardFrontText, string exampleSentenceTranslation, string flashcardId)
     {
         if (string.IsNullOrEmpty(flashcardFrontText))
         {
@@ -159,6 +160,12 @@ public class AIService : IAIService
         if (string.IsNullOrEmpty(exampleSentenceTranslation))
         {
             _logger.LogWarning("Example sentence translation is null or empty for image generation for flashcard: {FlashcardFrontText}. Proceeding with front text only.", flashcardFrontText);
+        }
+
+        if (string.IsNullOrEmpty(flashcardId))
+        {
+            _logger.LogError("flashcardId cannot be null or empty");
+            throw new ArgumentNullException(nameof(flashcardId), "flashcardId cannot be null or empty");
         }
 
         try
@@ -193,7 +200,8 @@ public class AIService : IAIService
                 "image/png",
                 _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Images,
-                ".png"
+                ".png",
+                flashcardId
             );
 
             if (string.IsNullOrEmpty(uploadedUrl))
@@ -216,16 +224,23 @@ public class AIService : IAIService
     /// Generates audio using OpenAI's text-to-speech service
     /// </summary>
     /// <param name="flashcardText">The Lithuanian text to convert to speech</param>
-    /// <param name="exampleSentence">Optional example sentence to include after the text</param>
+    /// <param name="exampleSentence">Example sentence to include after the text</param>
+    /// <param name="flashcardId">The ID of the flashcard for file naming</param>
     /// <returns>URL to the generated audio file stored in cloud storage</returns>
-    /// <exception cref="ArgumentNullException">Thrown when flashcardText is null or empty</exception>
+    /// <exception cref="ArgumentNullException">Thrown when flashcardText, exampleSentence, or flashcardId is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
-    public async Task<string> GenerateAudioAsync(string flashcardText, string exampleSentence)
+    public async Task<string> GenerateAudioAsync(string flashcardText, string exampleSentence, string flashcardId)
     {
         if (string.IsNullOrEmpty(flashcardText) || string.IsNullOrEmpty(exampleSentence))
         {
             _logger.LogError("Flashcard text or example sentence cannot be null or empty");
             throw new ArgumentNullException(nameof(flashcardText), "Flashcard text or example sentence cannot be null or empty");
+        }
+
+        if (string.IsNullOrEmpty(flashcardId))
+        {
+            _logger.LogError("flashcardId cannot be null or empty");
+            throw new ArgumentNullException(nameof(flashcardId), "flashcardId cannot be null or empty");
         }
 
         try
@@ -257,7 +272,8 @@ public class AIService : IAIService
                 "audio/mpeg",
                 _storageSettings.Paths.Flashcards,
                 _storageSettings.Paths.Audio,
-                ".mp3"
+                ".mp3",
+                flashcardId
             );
 
             return uploadedUrl;

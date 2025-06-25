@@ -52,20 +52,22 @@ public interface IAIService
     /// </summary>
     /// <param name="flashcardFrontText">The Lithuanian front text of the flashcard (primary subject for the image).</param>
     /// <param name="exampleSentenceTranslation">The English translation of the example sentence for contextual understanding.</param>
+    /// <param name="flashcardId">Flashcard ID to use for file naming</param>
     /// <returns>The public URL of the uploaded image.</returns>
     /// <exception cref="ArgumentNullException">Thrown when flashcardFrontText or exampleSentenceTranslation is null or empty.</exception>
     /// <exception cref="InvalidOperationException">Thrown when image generation or upload fails.</exception>
-    Task<string> GenerateImageAsync(string flashcardFrontText, string exampleSentenceTranslation);
+    Task<string> GenerateImageAsync(string flashcardFrontText, string exampleSentenceTranslation, string flashcardId);
 
     /// <summary>
     /// Generates audio using the configured AI text-to-speech service (e.g., OpenAI) based on the provided text.
     /// </summary>
     /// <param name="flashcardFrontText">The Lithuanian front text to convert to speech</param>
     /// <param name="exampleSentence">Optional example sentence to include after the front text</param>
+    /// <param name="flashcardId">Flashcard ID to use for file naming</param>
     /// <returns>URL to the generated audio file stored in cloud storage</returns>
     /// <exception cref="ArgumentNullException">Thrown when flashcardFrontText is null or empty</exception>
     /// <exception cref="InvalidOperationException">Thrown when audio generation fails</exception>
-    Task<string> GenerateAudioAsync(string flashcardFrontText, string exampleSentence);
+    Task<string> GenerateAudioAsync(string flashcardFrontText, string exampleSentence, string flashcardId);
 
     /// <summary>
     /// Generates challenge questions for a single flashcard.

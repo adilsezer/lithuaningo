@@ -263,7 +263,7 @@ namespace Lithuaningo.API.Services.Flashcards
                 }
 
                 // AIService now handles the upload and returns the URL directly.
-                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackText, flashcard.ExampleSentenceTranslation);
+                var imageUrl = await _aiService.GenerateImageAsync(flashcard.BackText, flashcard.ExampleSentenceTranslation, flashcard.Id.ToString());
 
                 if (string.IsNullOrEmpty(imageUrl))
                 {
@@ -306,7 +306,8 @@ namespace Lithuaningo.API.Services.Flashcards
                 // Generate the audio
                 var audioUrl = await _aiService.GenerateAudioAsync(
                     flashcard.FrontText,
-                    flashcard.ExampleSentence);
+                    flashcard.ExampleSentence,
+                    flashcard.Id.ToString());
 
                 // Update and save the flashcard
                 flashcard.AudioUrl = audioUrl;
