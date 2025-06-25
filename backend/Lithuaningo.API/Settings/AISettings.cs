@@ -54,8 +54,26 @@ public class AISettings
     public string DefaultVoice { get; set; } = "alloy";
 
     /// <summary>
-    /// Default maximum number of tokens to generate in a response.
+    /// Maximum tokens for chat responses
     /// </summary>
-    [Range(1, 8192, ErrorMessage = "Token count must be between 1 and 8192.")]
-    public int MaxTokens { get; set; } = 8192;
+    [Range(1, 128000, ErrorMessage = "Chat token count must be between 1 and 128000.")]
+    public int ChatMaxTokens { get; set; } = 2048;
+
+    /// <summary>
+    /// Maximum tokens for flashcard generation
+    /// </summary>
+    [Range(1, 128000, ErrorMessage = "Flashcard token count must be between 1 and 128000.")]
+    public int FlashcardGenerationMaxTokens { get; set; } = 8192;
+
+    /// <summary>
+    /// Maximum tokens for challenge generation
+    /// </summary>
+    [Range(1, 128000, ErrorMessage = "Challenge token count must be between 1 and 128000.")]
+    public int ChallengeGenerationMaxTokens { get; set; } = 8192;
+
+    /// <summary>
+    /// Maximum tokens for question explanations
+    /// </summary>
+    [Range(1, 128000, ErrorMessage = "Explanation token count must be between 1 and 128000.")]
+    public int ExplanationMaxTokens { get; set; } = 1000;
 }
