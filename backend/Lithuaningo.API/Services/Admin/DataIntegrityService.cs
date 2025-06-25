@@ -97,7 +97,7 @@ namespace Lithuaningo.API.Services.Admin
                         if (fixIssues)
                         {
                             _logger.LogWarning("Flashcard {FlashcardId} has missing core data, will be deleted", flashcard.Id);
-                            await DeleteFlashcardAsync(flashcard.Id);
+                            await _flashcardService.DeleteFlashcardAsync(flashcard.Id);
                             report.Flashcards.DeletedDueToMissingCoreData++;
                         }
                         continue; // Skip other checks for this flashcard if core data is missing
@@ -204,17 +204,6 @@ namespace Lithuaningo.API.Services.Admin
         {
             var challenges = await _challengeService.GetChallengeQuestionsForFlashcardAsync(flashcardId);
             return challenges.Count();
-        }
-
-        /// <summary>
-        /// Deletes a flashcard from the database (cascade deletes challenge questions).
-        /// </summary>
-        private async Task DeleteFlashcardAsync(Guid flashcardId)
-        {
-            await _supabaseService.Client
-                .From<Flashcard>()
-                .Filter("id", Operator.Equals, flashcardId.ToString())
-                .Delete();
         }
 
         #endregion

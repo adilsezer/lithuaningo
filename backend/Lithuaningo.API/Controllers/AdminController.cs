@@ -331,6 +331,45 @@ namespace Lithuaningo.API.Controllers
             }
         }
 
+        /// <summary>
+        /// Deletes a flashcard and its associated files from storage.
+        /// </summary>
+        /// <param name="flashcardId">The ID of the flashcard to delete.</param>
+        /// <returns>Success message if the flashcard was deleted.</returns>
+        /// <response code="200">Flashcard was successfully deleted.</response>
+        /// <response code="401">User is not authenticated.</response>
+        /// <response code="403">User is not authorized (not an admin).</response>
+        /// <response code="404">Flashcard not found.</response>
+        /// <response code="500">Internal server error.</response>
+        [HttpDelete("flashcards/{flashcardId}")]
+        [SwaggerOperation(
+            Summary = "Delete a flashcard (Admin)",
+            Description = "Permanently deletes a flashcard and its associated image and audio files from storage.",
+            OperationId = "DeleteFlashcard",
+            Tags = new[] { "Admin", "Flashcards" }
+        )]
+        [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> DeleteFlashcard(Guid flashcardId)
+        {
+            try
+            {
+                var deleted = await _flashcardService.DeleteFlashcardAsync(flashcardId);
+                if (!deleted)
+                {
+                    return NotFound(new { message = "Flashcard not found" });
+                }
 
+                return Ok(new { message = "Flashcard and associated files deleted successfully" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting flashcard {FlashcardId}", flashcardId);
+                return StatusCode(500, "Failed to delete flashcard");
+            }
+        }
     }
 }

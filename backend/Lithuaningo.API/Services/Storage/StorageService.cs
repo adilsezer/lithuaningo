@@ -91,6 +91,20 @@ public class StorageService : IStorageService, IDisposable
         }
     }
 
+    /// <summary>
+    /// Constructs a file URL using the same pattern as uploads
+    /// </summary>
+    /// <param name="folder">The folder the file is stored in</param>
+    /// <param name="subfolder">The subfolder the file is stored in</param>
+    /// <param name="fileExtension">The file extension (with dot, e.g. ".png")</param>
+    /// <param name="fileId">File ID used for naming</param>
+    /// <returns>The constructed file URL</returns>
+    public string ConstructFileUrl(string folder, string subfolder, string fileExtension, string fileId)
+    {
+        var fileName = $"{folder}/{subfolder}/{fileId}{fileExtension}";
+        return $"{_publicBucketUrl}/{fileName}";
+    }
+
     public async Task DeleteFileAsync(string fileUrl)
     {
         if (_disposed)

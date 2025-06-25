@@ -15,7 +15,17 @@ public interface IStorageService
     Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string fileExtension, string fileId);
 
     /// <summary>
-    /// Deletes a file from storage
+    /// Constructs a file URL using the same pattern as uploads
+    /// </summary>
+    /// <param name="folder">The folder the file is stored in</param>
+    /// <param name="subfolder">The subfolder the file is stored in</param>
+    /// <param name="fileExtension">The file extension (with dot, e.g. ".png")</param>
+    /// <param name="fileId">File ID used for naming</param>
+    /// <returns>The constructed file URL</returns>
+    string ConstructFileUrl(string folder, string subfolder, string fileExtension, string fileId);
+
+    /// <summary>
+    /// Deletes a file from storage using its URL
     /// </summary>
     /// <param name="fileUrl">The URL of the file to delete</param>
     Task DeleteFileAsync(string fileUrl);

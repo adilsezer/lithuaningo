@@ -5,7 +5,11 @@ using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.Cache;
 using Lithuaningo.API.Services.Challenges;
 using Lithuaningo.API.Services.Stats;
+using Lithuaningo.API.Services.Storage;
 using Lithuaningo.API.Services.Supabase;
+using Lithuaningo.API.Settings;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static Supabase.Postgrest.Constants;
 
 namespace Lithuaningo.API.Services.Flashcards
@@ -26,9 +30,11 @@ namespace Lithuaningo.API.Services.Flashcards
         private readonly ICacheService _cache;
         private readonly ICacheSettingsService _cacheSettingsService;
         private readonly CacheInvalidator _cacheInvalidator;
+        private readonly IChallengeService _challengeService;
+        private readonly IStorageService _storageService;
+        private readonly StorageSettings _storageSettings;
         private const string CacheKeyPrefix = "flashcard:";
         private const double ReviewFlashcardsRatio = 0.3; // 30% review cards, 70% new cards
-        private readonly IChallengeService _challengeService;
 
         #endregion
 
@@ -44,7 +50,9 @@ namespace Lithuaningo.API.Services.Flashcards
             ICacheSettingsService cacheSettingsService,
             CacheInvalidator cacheInvalidator,
             Random random,
-            IChallengeService challengeService)
+            IChallengeService challengeService,
+            IStorageService storageService,
+            IOptions<StorageSettings> storageSettings)
         {
             _aiService = aiService ?? throw new ArgumentNullException(nameof(aiService));
             _supabaseService = supabaseService ?? throw new ArgumentNullException(nameof(supabaseService));
@@ -56,6 +64,8 @@ namespace Lithuaningo.API.Services.Flashcards
             _cacheInvalidator = cacheInvalidator ?? throw new ArgumentNullException(nameof(cacheInvalidator));
             _random = random ?? throw new ArgumentNullException(nameof(random));
             _challengeService = challengeService ?? throw new ArgumentNullException(nameof(challengeService));
+            _storageService = storageService ?? throw new ArgumentNullException(nameof(storageService));
+            _storageSettings = storageSettings?.Value ?? throw new ArgumentNullException(nameof(storageSettings));
         }
 
         #endregion
@@ -369,6 +379,47 @@ namespace Lithuaningo.API.Services.Flashcards
             }
         }
 
+        /// <summary>
+        /// Deletes a flashcard and its associated files from storage
+        /// </summary>
+        /// <param name="flashcardId">ID of the flashcard to delete</param>
+        /// <returns>True if the flashcard was deleted successfully</returns>
+        public async Task<bool> DeleteFlashcardAsync(Guid flashcardId)
+        {
+            try
+            {
+                _logger.LogInformation("Starting deletion of flashcard {FlashcardId}", flashcardId);
+
+                // Get the flashcard first to check if it exists
+                var flashcard = await GetFlashcardByIdAsync(flashcardId);
+                if (flashcard == null)
+                {
+                    _logger.LogWarning("Flashcard {FlashcardId} not found for deletion", flashcardId);
+                    return false;
+                }
+
+                // Delete associated files from storage
+                await DeleteFlashcardFilesFromStorageAsync(flashcardId);
+
+                // Delete the flashcard from database (this will cascade delete challenge questions)
+                await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Filter("id", Operator.Equals, flashcardId.ToString())
+                    .Delete();
+
+                // Invalidate caches
+                await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
+
+                _logger.LogInformation("Successfully deleted flashcard {FlashcardId} and associated files", flashcardId);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting flashcard {FlashcardId}", flashcardId);
+                throw;
+            }
+        }
+
         #endregion
 
         #region Private Helper Methods - Data Retrieval
@@ -674,6 +725,56 @@ namespace Lithuaningo.API.Services.Flashcards
 
             // Directly invalidate all flashcard list caches
             await _cacheInvalidator.InvalidateAllFlashcardListsAsync();
+        }
+
+        /// <summary>
+        /// Deletes flashcard files from storage based on flashcard ID
+        /// </summary>
+        /// <param name="flashcardId">The flashcard ID to construct file URLs</param>
+        private async Task DeleteFlashcardFilesFromStorageAsync(Guid flashcardId)
+        {
+            try
+            {
+                // Use the same pattern as uploads to construct file URLs
+                var imageUrl = _storageService.ConstructFileUrl(
+                    _storageSettings.Paths.Flashcards,
+                    _storageSettings.Paths.Images,
+                    ".png",
+                    flashcardId.ToString());
+
+                var audioUrl = _storageService.ConstructFileUrl(
+                    _storageSettings.Paths.Flashcards,
+                    _storageSettings.Paths.Audio,
+                    ".mp3",
+                    flashcardId.ToString());
+
+                // Delete image file
+                try
+                {
+                    await _storageService.DeleteFileAsync(imageUrl);
+                    _logger.LogInformation("Deleted image file for flashcard {FlashcardId}", flashcardId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete image file for flashcard {FlashcardId} (may not exist)", flashcardId);
+                }
+
+                // Delete audio file
+                try
+                {
+                    await _storageService.DeleteFileAsync(audioUrl);
+                    _logger.LogInformation("Deleted audio file for flashcard {FlashcardId}", flashcardId);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to delete audio file for flashcard {FlashcardId} (may not exist)", flashcardId);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error deleting files from storage for flashcard {FlashcardId}", flashcardId);
+                // Don't throw here - we still want to delete the flashcard from database even if file cleanup fails
+            }
         }
 
         private async Task SaveFlashcardsToSupabaseAsync(List<Flashcard> flashcards, string? userId = null)
