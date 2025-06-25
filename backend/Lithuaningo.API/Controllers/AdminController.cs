@@ -1,8 +1,11 @@
 using AutoMapper;
 using Lithuaningo.API.Authorization;
+using Lithuaningo.API.DTOs.Admin;
 using Lithuaningo.API.DTOs.Flashcard;
 using Lithuaningo.API.Models;
+using Lithuaningo.API.Services.Admin;
 using Lithuaningo.API.Services.Cache;
+using Lithuaningo.API.Services.Challenges;
 using Lithuaningo.API.Services.Flashcards;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
@@ -19,17 +22,21 @@ namespace Lithuaningo.API.Controllers
     {
         private readonly ICacheService _cacheService;
         private readonly IFlashcardService _flashcardService;
+        private readonly IDataIntegrityService _dataIntegrityService;
         private readonly IMapper _mapper;
         private readonly ILogger<AdminController> _logger;
 
         public AdminController(
             ICacheService cacheService,
             IFlashcardService flashcardService,
+            IChallengeService challengeService,
+            IDataIntegrityService dataIntegrityService,
             IMapper mapper,
             ILogger<AdminController> logger)
         {
             _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
             _flashcardService = flashcardService ?? throw new ArgumentNullException(nameof(flashcardService));
+            _dataIntegrityService = dataIntegrityService ?? throw new ArgumentNullException(nameof(dataIntegrityService));
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
@@ -286,5 +293,44 @@ namespace Lithuaningo.API.Controllers
                 return StatusCode(500, "Failed to regenerate flashcard audio.");
             }
         }
+
+        /// <summary>
+        /// Validates and fixes data integrity issues in flashcards and challenge questions tables.
+        /// </summary>
+        /// <param name="fixIssues">If true, automatically fixes found issues. If false, only reports issues.</param>
+        /// <returns>A report of issues found and actions taken.</returns>
+        /// <response code="200">Returns the validation and fix report.</response>
+        /// <response code="401">User is not authenticated.</response>
+        /// <response code="403">User is not authorized (not an admin).</response>
+        /// <response code="500">Internal server error.</response>
+        [HttpPost("validate-and-fix-data")]
+        [SwaggerOperation(
+            Summary = "Validate and fix data integrity issues",
+            Description = "Validates flashcards and challenge questions for missing values or incorrect relationships, and optionally fixes them.",
+            OperationId = "ValidateAndFixData",
+            Tags = new[] { "Admin", "Data Integrity" }
+        )]
+        [ProducesResponseType(typeof(DataIntegrityReport), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> ValidateAndFixData([FromQuery] bool fixIssues = false)
+        {
+            try
+            {
+                _logger.LogInformation("Admin requested data validation and fix. Fix issues: {FixIssues}", fixIssues);
+
+                var report = await _dataIntegrityService.ValidateAndFixDataAsync(fixIssues);
+
+                return Ok(report);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during data validation and fix operation");
+                return StatusCode(500, "Failed to validate and fix data");
+            }
+        }
+
+
     }
 }

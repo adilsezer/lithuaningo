@@ -270,6 +270,34 @@ namespace Lithuaningo.API.Services.Challenges
             }
         }
 
+        public async Task<IEnumerable<ChallengeQuestionResponse>> GetChallengeQuestionsForFlashcardAsync(Guid flashcardId)
+        {
+            if (flashcardId == Guid.Empty)
+            {
+                return new List<ChallengeQuestionResponse>();
+            }
+
+            try
+            {
+                var challenges = await _supabaseClient
+                    .From<ChallengeQuestion>()
+                    .Filter(cq => cq.FlashcardId!, Operator.Equals, flashcardId.ToString())
+                    .Get();
+
+                if (challenges.Models == null || !challenges.Models.Any())
+                {
+                    return new List<ChallengeQuestionResponse>();
+                }
+
+                return _mapper.Map<List<ChallengeQuestionResponse>>(challenges.Models);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting challenge questions for flashcard {FlashcardId}", flashcardId);
+                throw;
+            }
+        }
+
         /// <summary>
         /// Randomizes the order of options for each challenge question to prevent predictable answer patterns.
         /// Only randomizes options for question types that have multiple options (e.g., MultipleChoice, FillInTheBlank, RearrangeTheSentence).

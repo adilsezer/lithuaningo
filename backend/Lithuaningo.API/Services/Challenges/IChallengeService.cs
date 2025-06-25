@@ -39,5 +39,12 @@ namespace Lithuaningo.API.Services.Challenges
         /// <param name="flashcardId">The ID of the flashcard whose challenges are to be cleared.</param>
         /// <returns>A task representing the asynchronous operation.</returns>
         Task ClearChallengesByFlashcardIdAsync(Guid flashcardId);
+
+        /// <summary>
+        /// Gets all challenge questions for a specific flashcard.
+        /// </summary>
+        /// <param name="flashcardId">The ID of the flashcard to get challenges for.</param>
+        /// <returns>A list of challenge questions for the flashcard.</returns>
+        Task<IEnumerable<ChallengeQuestionResponse>> GetChallengeQuestionsForFlashcardAsync(Guid flashcardId);
     }
 }
