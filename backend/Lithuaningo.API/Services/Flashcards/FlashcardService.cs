@@ -721,6 +721,7 @@ namespace Lithuaningo.API.Services.Flashcards
         {
             await _supabaseService.Client
                 .From<Flashcard>()
+                .Filter("id", Operator.Equals, flashcard.Id.ToString())
                 .Update(flashcard);
 
             // Directly invalidate all flashcard list caches
