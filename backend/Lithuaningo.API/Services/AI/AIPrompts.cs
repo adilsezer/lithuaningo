@@ -152,9 +152,13 @@ Multiple Choice (type=0): (Test frontText to backText, or vice-versa, or a conce
   *   Question (Vocabulary LT > EN): ""What does this Lithuanian word mean?\n\n'{flashcard.frontText}'?"" (Options: flashcard.backText and 3 plausible but incorrect English translations)
   *   Question (Vocabulary EN > LT): ""Which Lithuanian word means:\n\n'{flashcard.backText}'?"" (Options: flashcard.frontText and 3 plausible but incorrect Lithuanian words/phrases of similar type/difficulty)
 
-True/False (type=1): (Test correctness of translation or a statement about the flashcard)
-  *   Question: ""Does '{flashcard.frontText}' mean '{a plausible English translation (can be correct or incorrect)}' in English?""
-  *   Question: ""Is this statement about '{flashcard.frontText}' true?\n\n'{Statement about the flashcard item, could be related to its category or a simple fact related to it}'""
+True/False (type=1): (CRITICAL: Use frontText length rule for balance. Calculate the number of characters in `flashcard.frontText`. If that count % 2 == 0, generate a TRUE question; otherwise generate a FALSE question.)
+  *   PATH 1: To create a 'True' question:
+      *   Instruction: Create a question where the English translation is correct. The `correctAnswer` MUST be ""True"".
+      *   Template: ""Does '{flashcard.frontText}' mean '{flashcard.backText}' in English?""
+  *   PATH 2: To create a 'False' question:
+      *   Instruction: Create a question where the English translation is plausibly INCORRECT. You must invent a new, wrong translation. The `correctAnswer` MUST be ""False"".
+      *   Template: ""Does '{flashcard.frontText}' mean '{a new, incorrect but plausible English translation}' in English?""
 
 Fill in the Blank (type=2): (Use the flashcard's example sentence)
   *   Question: ""Complete the sentence:\n\n'{flashcard.exampleSentence with frontText or a key word blanked out with ____}'?"" (Options: The correct word from the blank and 3 plausible but incorrect Lithuanian words that could fit grammatically but change meaning or are contextually wrong. CRITICAL: Ensure only ONE option makes logical sense in the context - avoid creating ambiguous scenarios where multiple options could reasonably fit.)
