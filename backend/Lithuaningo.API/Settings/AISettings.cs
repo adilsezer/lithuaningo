@@ -22,7 +22,7 @@ public class AISettings
     /// The model name for text generation (e.g., gpt-4o)
     /// </summary>
     [Required]
-    public string OpenAITextModelName { get; set; } = "o3-2025-04-16";
+    public string OpenAITextModelName { get; set; } = "o4-mini-2025-04-16";
 
     /// <summary>
     /// The model name for image generation (e.g., dall-e-3)
