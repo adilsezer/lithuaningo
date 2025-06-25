@@ -125,7 +125,7 @@ public class AIService : IAIService
         {
             var chatCompletionOptions = new ChatCompletionOptions
             {
-                MaxOutputTokenCount = _aiSettings.MaxTokens,
+                MaxOutputTokenCount = _aiSettings.ChatMaxTokens,
             };
 
             ChatCompletion completion = await _chatClient.CompleteChatAsync(conversationHistory, chatCompletionOptions);
@@ -299,7 +299,8 @@ public class AIService : IAIService
 
             var aiResponseText = await ExecuteOpenAIGenerationRequestAsync(
                 AIPrompts.FLASHCARD_SYSTEM_INSTRUCTIONS,
-                userPrompt
+                userPrompt,
+                _aiSettings.FlashcardGenerationMaxTokens
             );
 
             if (string.IsNullOrWhiteSpace(aiResponseText))
@@ -371,7 +372,8 @@ public class AIService : IAIService
 
             var extractedJson = await ExecuteOpenAIGenerationRequestAsync(
                 AIPrompts.FLASHCARD_CHALLENGE_GENERATION_SYSTEM_INSTRUCTIONS,
-                userPrompt
+                userPrompt,
+                _aiSettings.ChallengeGenerationMaxTokens
             );
 
             try
@@ -444,7 +446,7 @@ All Options: {string.Join(", ", request.Options)}";
 
             var chatCompletionOptions = new ChatCompletionOptions
             {
-                MaxOutputTokenCount = 1000,
+                MaxOutputTokenCount = _aiSettings.ExplanationMaxTokens,
             };
 
             ChatCompletion completion = await _chatClient.CompleteChatAsync(messages, chatCompletionOptions);
@@ -471,7 +473,7 @@ All Options: {string.Join(", ", request.Options)}";
 
     #region Private Methods
 
-    private async Task<string> ExecuteOpenAIGenerationRequestAsync(string systemPrompt, string userPrompt)
+    private async Task<string> ExecuteOpenAIGenerationRequestAsync(string systemPrompt, string userPrompt, int maxTokens)
     {
         var messages = new List<ChatMessage>
         {
@@ -481,7 +483,7 @@ All Options: {string.Join(", ", request.Options)}";
 
         var chatCompletionOptions = new ChatCompletionOptions
         {
-            MaxOutputTokenCount = _aiSettings.MaxTokens,
+            MaxOutputTokenCount = maxTokens,
         };
 
         try
