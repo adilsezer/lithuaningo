@@ -5,6 +5,7 @@ using FluentValidation.AspNetCore;
 using Lithuaningo.API.Controllers;
 using Lithuaningo.API.Mappings;
 using Lithuaningo.API.Middleware;
+using Lithuaningo.API.Services.Admin;
 using Lithuaningo.API.Services.AI;
 using Lithuaningo.API.Services.AppInfo;
 using Lithuaningo.API.Services.Auth;
@@ -401,6 +402,8 @@ To authorize in Swagger UI:
     // Challenge Related Services
     services.AddScoped<IChallengeService, ChallengeService>();
     services.AddScoped<IRevenueCatWebhookService, RevenueCatWebhookService>();
+    // Admin Services
+    services.AddScoped<IDataIntegrityService, DataIntegrityService>();
 
     // AI Services (formerly OpenAI Services)
     services.AddOptions<AISettings>() // Changed from OpenAISettings

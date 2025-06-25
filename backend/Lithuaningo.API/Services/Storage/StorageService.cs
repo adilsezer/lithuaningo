@@ -30,9 +30,10 @@ public class StorageService : IStorageService, IDisposable
     /// <param name="contentType">The content type (MIME type) of the file</param>
     /// <param name="folder">The folder to store the file in</param>
     /// <param name="subfolder">The subfolder to store the file in</param>
-    /// <param name="fileExtension">Optional file extension override (with dot, e.g. ".png")</param>
+    /// <param name="fileExtension">File extension (with dot, e.g. ".png")</param>
+    /// <param name="fileId">File ID to use for naming (e.g., flashcard ID)</param>
     /// <returns>The URL of the uploaded file</returns>
-    public async Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string? fileExtension = null)
+    public async Task<string> UploadBinaryDataAsync(byte[] data, string contentType, string folder, string subfolder, string fileExtension, string fileId)
     {
         if (_disposed)
         {
@@ -44,23 +45,22 @@ public class StorageService : IStorageService, IDisposable
             throw new ArgumentException("Data cannot be null or empty", nameof(data));
         }
 
+        if (string.IsNullOrEmpty(fileId))
+        {
+            throw new ArgumentException("File ID cannot be null or empty", nameof(fileId));
+        }
+
+        if (string.IsNullOrEmpty(fileExtension))
+        {
+            throw new ArgumentException("File extension cannot be null or empty", nameof(fileExtension));
+        }
+
         try
         {
-            // Simple extension mapping for image/png and audio/mp3
-            string extension = contentType.ToLowerInvariant() switch
-            {
-                "audio/mp3" => ".mp3",
-                "audio/mpeg" => ".mp3",
-                _ => ".png" // Default to png for images and anything else
-            };
+            var fileName = $"{folder}/{subfolder}/{fileId}{fileExtension}";
 
-            // Override with explicit extension if provided
-            if (!string.IsNullOrEmpty(fileExtension))
-            {
-                extension = fileExtension;
-            }
-
-            var fileName = $"{folder}/{subfolder}/{Guid.NewGuid()}{extension}";
+            _logger.LogInformation("Uploading file to storage: {FileName} (using file ID: {FileId})",
+                fileName, fileId);
 
             using var memoryStream = new MemoryStream(data);
 
@@ -74,7 +74,10 @@ public class StorageService : IStorageService, IDisposable
             };
 
             await _s3Client.PutObjectAsync(putRequest);
-            return $"{_publicBucketUrl}/{fileName}";
+            var uploadedUrl = $"{_publicBucketUrl}/{fileName}";
+
+            _logger.LogInformation("Successfully uploaded file to storage. URL: {UploadedUrl}", uploadedUrl);
+            return uploadedUrl;
         }
         catch (AmazonS3Exception ex)
         {
@@ -86,6 +89,20 @@ public class StorageService : IStorageService, IDisposable
             };
             throw new Exception(message, ex);
         }
+    }
+
+    /// <summary>
+    /// Constructs a file URL using the same pattern as uploads
+    /// </summary>
+    /// <param name="folder">The folder the file is stored in</param>
+    /// <param name="subfolder">The subfolder the file is stored in</param>
+    /// <param name="fileExtension">The file extension (with dot, e.g. ".png")</param>
+    /// <param name="fileId">File ID used for naming</param>
+    /// <returns>The constructed file URL</returns>
+    public string ConstructFileUrl(string folder, string subfolder, string fileExtension, string fileId)
+    {
+        var fileName = $"{folder}/{subfolder}/{fileId}{fileExtension}";
+        return $"{_publicBucketUrl}/{fileName}";
     }
 
     public async Task DeleteFileAsync(string fileUrl)
@@ -118,6 +135,7 @@ public class StorageService : IStorageService, IDisposable
             };
 
             await _s3Client.DeleteObjectAsync(deleteRequest);
+            _logger.LogInformation("Successfully deleted file from storage: {Key}", key);
         }
         catch (AmazonS3Exception ex)
         {
@@ -125,10 +143,20 @@ public class StorageService : IStorageService, IDisposable
             {
                 "NoSuchBucket" => $"Bucket {_settings.BucketName} does not exist",
                 "AccessDenied" => "Access denied to R2 bucket - check credentials",
-                "NoSuchKey" => "File does not exist in the bucket",
+                "NoSuchKey" => "File does not exist in the bucket (already deleted or never existed)",
                 _ => $"Error deleting from R2: {ex.Message}"
             };
-            throw new Exception(message, ex);
+
+            // Log as warning for NoSuchKey since it's not necessarily an error condition
+            if (ex.ErrorCode == "NoSuchKey")
+            {
+                _logger.LogWarning("Attempted to delete non-existent file: {Key}", ExtractKeyFromUrl(fileUrl));
+            }
+            else
+            {
+                _logger.LogError(ex, message);
+                throw new Exception(message, ex);
+            }
         }
     }
 

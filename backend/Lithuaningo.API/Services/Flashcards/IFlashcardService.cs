@@ -60,6 +60,13 @@ namespace Lithuaningo.API.Services.Flashcards
         /// </remarks>
         Task<string> GenerateFlashcardAudioAsync(Guid flashcardId);
 
+        /// <summary>
+        /// Deletes a flashcard and its associated files from storage
+        /// </summary>
+        /// <param name="flashcardId">ID of the flashcard to delete</param>
+        /// <returns>True if the flashcard was deleted successfully</returns>
+        Task<bool> DeleteFlashcardAsync(Guid flashcardId);
+
         Task<Flashcard> UpdateFlashcardAdminAsync(Guid flashcardId, UpdateFlashcardAdminRequest request);
     }
 }
