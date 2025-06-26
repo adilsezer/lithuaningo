@@ -31,7 +31,7 @@ const ForgotPasswordScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <CustomText>
         Enter your email and we will send you a code to reset your password.
       </CustomText>

@@ -308,6 +308,7 @@ export default function CategoryFlashcardsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      showsVerticalScrollIndicator={false}
     >
       {/* Header Section */}
       <View style={styles.header}>

@@ -46,7 +46,7 @@ const EmailVerificationScreen: React.FC = () => {
 
   if (!email) {
     return (
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <CustomText variant="titleMedium" bold>
             Error
@@ -78,7 +78,7 @@ const EmailVerificationScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         <CustomText variant="titleMedium" bold>
           Verify Your Email

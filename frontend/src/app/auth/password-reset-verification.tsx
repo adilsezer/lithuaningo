@@ -59,7 +59,7 @@ const PasswordResetVerificationScreen: React.FC = () => {
 
   if (!email) {
     return (
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <View style={styles.container}>
           <CustomText variant="titleMedium" bold>
             Error
@@ -91,7 +91,7 @@ const PasswordResetVerificationScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         <CustomText variant="bodyLarge" style={styles.description}>
           Enter the verification code sent to {email} and set your new password.

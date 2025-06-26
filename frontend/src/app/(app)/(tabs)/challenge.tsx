@@ -101,7 +101,11 @@ export default function ChallengeScreen() {
       10; // Expecting 10 questions from the AI
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      showsVerticalScrollIndicator={false}
+    >
       {/* Header */}
       <Image
         source={require("../../../../assets/images/challenge_screen.png")}

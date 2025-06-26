@@ -365,6 +365,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
     <ScrollView
       ref={scrollViewRef}
       contentContainerStyle={styles.scrollContent}
+      showsVerticalScrollIndicator={false}
     >
       <Surface style={styles.challengeSurface} elevation={0}>
         {/* Progress indicator */}

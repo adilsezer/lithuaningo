@@ -20,7 +20,7 @@ const AboutScreen = () => {
     appInfo?.currentVersion && currentVersion !== appInfo.currentVersion;
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <CustomText style={styles.justifiedText}>
         Lithuaningo is your gateway to mastering Lithuanian! Dive into learning
         with ease and fun. Our app provides a comprehensive learning experience

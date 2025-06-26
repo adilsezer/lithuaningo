@@ -89,7 +89,7 @@ export default function AdminFlashcardReviewScreen() {
     value: string | undefined,
     field: keyof typeof currentFlashcardData,
     multiline: boolean = false,
-    keyboardType: "default" | "numeric" = "default",
+    keyboardType: "default" | "numeric" = "default"
   ) => (
     <CustomTextInput
       label={label}
@@ -110,12 +110,13 @@ export default function AdminFlashcardReviewScreen() {
         { backgroundColor: theme.colors.background },
       ]}
       keyboardShouldPersistTaps="handled"
+      showsVerticalScrollIndicator={false}
     >
       <Card mode="contained" style={styles.card}>
         <Card.Title
           title={`Review Flashcard (ID: ${currentFlashcard.id.substring(
             0,
-            8,
+            8
           )})`}
           titleStyle={{ textAlign: "center" }}
         />
@@ -131,30 +132,30 @@ export default function AdminFlashcardReviewScreen() {
             "Front Text (Question)",
             currentFlashcardData.frontText,
             "frontText",
-            true,
+            true
           )}
           {renderTextInput(
             "Back Text (Answer)",
             currentFlashcardData.backText,
             "backText",
-            true,
+            true
           )}
           {renderTextInput(
             "Example Sentence",
             currentFlashcardData.exampleSentence,
             "exampleSentence",
-            true,
+            true
           )}
           {renderTextInput(
             "Example Sentence Translation",
             currentFlashcardData.exampleSentenceTranslation,
             "exampleSentenceTranslation",
-            true,
+            true
           )}
           {renderTextInput(
             "Image URL",
             currentFlashcardData.imageUrl,
-            "imageUrl",
+            "imageUrl"
           )}
           {currentFlashcardData?.imageUrl ? (
             <Image
@@ -173,7 +174,7 @@ export default function AdminFlashcardReviewScreen() {
           {renderTextInput(
             "Audio URL",
             currentFlashcardData.audioUrl,
-            "audioUrl",
+            "audioUrl"
           )}
           {currentFlashcardData?.audioUrl ? (
             <AudioPlayer audioUrl={currentFlashcardData.audioUrl} />
@@ -212,7 +213,10 @@ export default function AdminFlashcardReviewScreen() {
             >
               <Dialog.Title>Select Categories</Dialog.Title>
               <Dialog.Content>
-                <ScrollView style={{ maxHeight: 300 }}>
+                <ScrollView
+                  style={{ maxHeight: 300 }}
+                  showsVerticalScrollIndicator={false}
+                >
                   {getEnumKeys(FlashcardCategory)
                     .filter((key) => key !== "AllCategories")
                     .map((key) => {
