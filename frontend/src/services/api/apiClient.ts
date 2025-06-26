@@ -84,7 +84,7 @@ class ApiClient {
         "X-Platform": Platform.OS,
         "X-App-Version": APP_VERSION,
         "X-Mobile-App": "lithuaningo-mobile", // Mobile app identifier for CORS
-        "User-Agent": "LithuaningoMobile/2.7.0", // Identify mobile app requests
+        "User-Agent": "LithuaningoMobile/3.0.1", // Identify mobile app requests
       },
     });
 

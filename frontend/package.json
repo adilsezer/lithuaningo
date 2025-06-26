@@ -1,6 +1,6 @@
 {
   "name": "lithuaningo",
-  "version": "2.7.0",
+  "version": "3.0.1",
   "main": "expo-router/entry",
   "scripts": {
     "start": "expo start",
