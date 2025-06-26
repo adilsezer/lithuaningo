@@ -14,7 +14,6 @@ import Leaderboard from "@components/ui/Leaderboard";
 import { UserChallengeStatsCard } from "@components/ui/UserChallengeStatsCard";
 import CountdownTimer from "@components/ui/CountdownTimer";
 import { useUserData } from "@stores/useUserStore";
-import ErrorMessage from "@components/ui/ErrorMessage";
 import {
   LeaderboardEntryResponse,
   UserChallengeStatsResponse,
@@ -118,88 +117,96 @@ export default function ChallengeScreen() {
       </View>
 
       {/* Challenge Card */}
-      {error ? (
-        <ErrorMessage
-          message={`Unable to load challenge data: ${error}`}
-          onRetry={loadData}
-          buttonText="Try Again"
-        />
-      ) : isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={theme.colors.primary} />
-          <CustomText style={styles.loadingText}>
-            Loading challenge data...
-          </CustomText>
-        </View>
-      ) : hasStartedChallenge ? (
-        <Card
-          style={[
-            styles.card,
-            {
-              backgroundColor: theme.colors.background,
-              borderColor: theme.colors.primary,
-            },
-          ]}
-        >
-          <Card.Content style={styles.cardContent}>
-            <IconButton
-              icon="check-circle"
-              size={32}
-              iconColor={theme.colors.primary}
-              style={styles.iconButton}
-            />
-            <CustomText variant="titleMedium" style={styles.cardTitle}>
-              {hasCompletedAllQuestions
-                ? "Today's Challenge Completed!"
-                : "Today's Challenge Started"}
-            </CustomText>
-            <CustomText style={styles.cardText}>
-              {hasCompletedAllQuestions
-                ? "You've completed all available questions. Come back tomorrow for a new challenge!"
-                : totalAnswers > 0
-                ? `You've answered ${totalAnswers} questions so far.`
-                : "You've started today's challenge."}
-            </CustomText>
-            {!hasCompletedAllQuestions && (
-              <CustomButton
-                title="Continue Challenge"
-                onPress={continueChallenge}
-                style={styles.button}
+      <Card
+        style={[
+          styles.card,
+          {
+            backgroundColor: theme.colors.background,
+            borderColor: theme.colors.primary,
+          },
+        ]}
+      >
+        <Card.Content style={styles.cardContent}>
+          {isLoading && (
+            <View style={styles.loadingOverlay}>
+              <ActivityIndicator
+                animating={true}
+                size="large"
+                color={theme.colors.primary}
               />
+            </View>
+          )}
+          <View style={{ opacity: isLoading ? 0.4 : 1 }}>
+            {error ? (
+              <>
+                <IconButton
+                  icon="alert-circle"
+                  size={32}
+                  iconColor={theme.colors.error}
+                  style={styles.iconButton}
+                />
+                <CustomText variant="titleMedium" style={styles.cardTitle}>
+                  Unable to Load Challenge
+                </CustomText>
+                <CustomText style={styles.cardText}>{error}</CustomText>
+                <CustomButton
+                  title="Try Again"
+                  onPress={loadData}
+                  style={styles.button}
+                />
+              </>
+            ) : hasStartedChallenge ? (
+              <>
+                <IconButton
+                  icon="check-circle"
+                  size={32}
+                  iconColor={theme.colors.primary}
+                  style={styles.iconButton}
+                />
+                <CustomText variant="titleMedium" style={styles.cardTitle}>
+                  {hasCompletedAllQuestions
+                    ? "Today's Challenge Completed!"
+                    : "Today's Challenge Started"}
+                </CustomText>
+                <CustomText style={styles.cardText}>
+                  {hasCompletedAllQuestions
+                    ? "You've completed all available questions. Come back tomorrow for a new challenge!"
+                    : totalAnswers > 0
+                    ? `You've answered ${totalAnswers} questions so far.`
+                    : "You've started today's challenge."}
+                </CustomText>
+                {!hasCompletedAllQuestions && (
+                  <CustomButton
+                    title="Continue Challenge"
+                    onPress={continueChallenge}
+                    style={styles.button}
+                  />
+                )}
+              </>
+            ) : (
+              <>
+                <IconButton
+                  icon="star"
+                  size={32}
+                  iconColor={theme.colors.primary}
+                  style={styles.iconButton}
+                />
+                <CustomText variant="titleMedium" style={styles.cardTitle}>
+                  Daily Challenge Available
+                </CustomText>
+                <CustomText style={styles.cardText}>
+                  Start today's challenge to test your knowledge!
+                </CustomText>
+                <CustomButton
+                  title="Start Challenge"
+                  onPress={startChallenge}
+                  style={styles.button}
+                />
+              </>
             )}
-          </Card.Content>
-        </Card>
-      ) : (
-        <Card
-          style={[
-            styles.card,
-            {
-              backgroundColor: theme.colors.background,
-              borderColor: theme.colors.primary,
-            },
-          ]}
-        >
-          <Card.Content style={styles.cardContent}>
-            <IconButton
-              icon="star"
-              size={32}
-              iconColor={theme.colors.primary}
-              style={styles.iconButton}
-            />
-            <CustomText variant="titleMedium" style={styles.cardTitle}>
-              Daily Challenge Available
-            </CustomText>
-            <CustomText style={styles.cardText}>
-              Start today's challenge to test your knowledge!
-            </CustomText>
-            <CustomButton
-              title="Start Challenge"
-              onPress={startChallenge}
-              style={styles.button}
-            />
-          </Card.Content>
-        </Card>
-      )}
+          </View>
+        </Card.Content>
+      </Card>
 
       {/* Show countdown timer when challenge is completed */}
       {hasCompletedAllQuestions && (
@@ -236,16 +243,18 @@ const styles = StyleSheet.create({
     height: 200,
     marginVertical: 16,
   },
-  loadingContainer: {
+  loadingOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    justifyContent: "center",
     alignItems: "center",
-    padding: 20,
-  },
-  loadingText: {
-    marginTop: 10,
+    backgroundColor: "rgba(0, 0, 0, 0.1)",
+    zIndex: 1,
+    borderRadius: 11,
   },
   card: {
     borderWidth: 1,
     marginTop: 16,
+    marginHorizontal: 16,
   },
   cardContent: {
     alignItems: "center",
