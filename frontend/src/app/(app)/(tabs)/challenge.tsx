@@ -226,6 +226,7 @@ export default function ChallengeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    marginBottom: 16,
   },
   content: {},
   headerContainer: {},

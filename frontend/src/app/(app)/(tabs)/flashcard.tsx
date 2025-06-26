@@ -526,7 +526,7 @@ export default function FlashcardScreen() {
         data={sections}
         renderItem={renderItem}
         keyExtractor={keyExtractor}
-        showsVerticalScrollIndicator
+        showsVerticalScrollIndicator={false}
         // Performance optimizations
         removeClippedSubviews={true}
         maxToRenderPerBatch={3}
