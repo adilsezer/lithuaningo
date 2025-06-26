@@ -11,6 +11,7 @@ import { useLeaderboard } from "@src/hooks/useLeaderboard";
 import { useChallengeStats } from "@hooks/useChallengeStats";
 import ErrorMessage from "@components/ui/ErrorMessage";
 import ReviewRequestCard from "@components/ui/ReviewRequestCard";
+import AppFooter from "@components/ui/AppFooter";
 
 export default function HomeScreen() {
   const userData = useUserData();
@@ -99,6 +100,8 @@ export default function HomeScreen() {
       <Leaderboard entries={entries} />
 
       <ReviewRequestCard style={styles.reviewCard} />
+
+      <AppFooter />
     </ScrollView>
   );
 }
