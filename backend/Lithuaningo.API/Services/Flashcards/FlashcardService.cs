@@ -650,67 +650,123 @@ namespace Lithuaningo.API.Services.Flashcards
 
             if (generatedFlashcards.Any())
             {
-                // Save the newly generated flashcards to the database.
-                // This is the single point where these AI-generated cards are saved.
-                await SaveFlashcardsToSupabaseAsync(generatedFlashcards, request.UserId);
+                // Simple duplicate check: filter out any flashcards with front text that already exists
+                var uniqueFlashcards = await FilterOutDuplicatesAsync(generatedFlashcards);
 
-                // Asynchronously generate and save challenges for each new flashcard
-                _ = Task.Run(async () =>
+                if (uniqueFlashcards.Count < generatedFlashcards.Count)
                 {
-                    foreach (var flashcard in generatedFlashcards)
-                    {
-                        try
-                        {
-                            await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcard);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error generating or saving challenges for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
-                            // Optionally, implement a retry mechanism or dead-letter queue for failed challenge generations
-                        }
-                    }
-                });
+                    _logger.LogInformation("Filtered out {FilteredCount} duplicate flashcards. {UniqueCount} unique flashcards remaining.",
+                        generatedFlashcards.Count - uniqueFlashcards.Count, uniqueFlashcards.Count);
+                }
 
-                // Asynchronously generate images and audio for each new flashcard (if requested)
-                if (request.GenerateImages || request.GenerateAudio)
+                if (uniqueFlashcards.Any())
                 {
+                    // Save the newly generated flashcards to the database.
+                    // This is the single point where these AI-generated cards are saved.
+                    await SaveFlashcardsToSupabaseAsync(uniqueFlashcards, request.UserId);
+
+                    // Asynchronously generate and save challenges for each new flashcard
                     _ = Task.Run(async () =>
                     {
-                        foreach (var flashcard in generatedFlashcards)
+                        foreach (var flashcard in uniqueFlashcards)
                         {
-                            if (request.GenerateImages)
+                            try
                             {
-                                try
-                                {
-                                    // Generate image for the flashcard
-                                    await GenerateFlashcardImageAsync(flashcard.Id);
-                                    _logger.LogInformation("Successfully generated image for flashcard ID {FlashcardId}", flashcard.Id);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Error generating image for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
-                                }
+                                await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcard);
                             }
-
-                            if (request.GenerateAudio)
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    // Generate audio for the flashcard
-                                    await GenerateFlashcardAudioAsync(flashcard.Id);
-                                    _logger.LogInformation("Successfully generated audio for flashcard ID {FlashcardId}", flashcard.Id);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Error generating audio for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
-                                }
+                                _logger.LogError(ex, "Error generating or saving challenges for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                // Optionally, implement a retry mechanism or dead-letter queue for failed challenge generations
                             }
                         }
                     });
+
+                    // Asynchronously generate images and audio for each new flashcard (if requested)
+                    if (request.GenerateImages || request.GenerateAudio)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            foreach (var flashcard in uniqueFlashcards)
+                            {
+                                if (request.GenerateImages)
+                                {
+                                    try
+                                    {
+                                        // Generate image for the flashcard
+                                        await GenerateFlashcardImageAsync(flashcard.Id);
+                                        _logger.LogInformation("Successfully generated image for flashcard ID {FlashcardId}", flashcard.Id);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Error generating image for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                    }
+                                }
+
+                                if (request.GenerateAudio)
+                                {
+                                    try
+                                    {
+                                        // Generate audio for the flashcard
+                                        await GenerateFlashcardAudioAsync(flashcard.Id);
+                                        _logger.LogInformation("Successfully generated audio for flashcard ID {FlashcardId}", flashcard.Id);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Error generating audio for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    return uniqueFlashcards;
+                }
+                else
+                {
+                    _logger.LogWarning("All generated flashcards were duplicates. No new flashcards saved.");
+                    return new List<Flashcard>();
                 }
             }
 
             return generatedFlashcards;
+        }
+
+        /// <summary>
+        /// Simple duplicate check: filters out flashcards with front text that already exists in the database
+        /// </summary>
+        private async Task<List<Flashcard>> FilterOutDuplicatesAsync(List<Flashcard> flashcards)
+        {
+            var uniqueFlashcards = new List<Flashcard>();
+
+            foreach (var flashcard in flashcards)
+            {
+                if (string.IsNullOrWhiteSpace(flashcard.FrontText))
+                {
+                    _logger.LogWarning("Skipping flashcard with empty front text");
+                    continue;
+                }
+
+                // Simple database check: does this front text already exist?
+                var existingCount = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Select("id")
+                    .Filter("front_text", Operator.Equals, flashcard.FrontText.Trim())
+                    .Count(CountType.Exact);
+
+                _logger.LogInformation("Existing count for flashcard is {ExistingCount}", existingCount);
+
+                if (existingCount == 0)
+                {
+                    uniqueFlashcards.Add(flashcard);
+                }
+                else
+                {
+                    _logger.LogDebug("Skipping duplicate flashcard with front text: {FrontText}", flashcard.FrontText);
+                }
+            }
+
+            return uniqueFlashcards;
         }
 
         #endregion
