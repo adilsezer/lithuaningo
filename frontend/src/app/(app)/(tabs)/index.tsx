@@ -64,17 +64,18 @@ export default function HomeScreen() {
       )}
 
       <CustomText variant="bodyMedium">
-        Practice flashcards with our AI assistant.
+        Master Lithuanian vocabulary with personalized AI flashcards that adapt
+        to your learning pace.
       </CustomText>
       <CustomButton
-        title="Browse Flashcards"
+        title="Study Flashcards"
         onPress={() => router.push("(app)/(tabs)/flashcard")}
       />
       <CustomText variant="bodyMedium">
-        Join the Daily Challenge and compete on the leaderboard!
+        Test your skills in today's challenge and climb the leaderboard! 🏆
       </CustomText>
       <CustomButton
-        title="Start Daily Challenge"
+        title="Take Today's Challenge"
         onPress={() => router.push("(app)/(tabs)/challenge")}
       />
       <Leaderboard entries={entries} />
