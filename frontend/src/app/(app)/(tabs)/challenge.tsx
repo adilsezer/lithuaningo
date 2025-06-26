@@ -9,21 +9,16 @@ import {
 import { router, useFocusEffect } from "expo-router";
 import CustomText from "@components/ui/CustomText";
 import CustomButton from "@components/ui/CustomButton";
-import CustomDivider from "@components/ui/CustomDivider";
-import Leaderboard from "@components/ui/Leaderboard";
+
 import { UserChallengeStatsCard } from "@components/ui/UserChallengeStatsCard";
 import CountdownTimer from "@components/ui/CountdownTimer";
 import { useUserData } from "@stores/useUserStore";
-import {
-  LeaderboardEntryResponse,
-  UserChallengeStatsResponse,
-} from "@src/types";
+import { UserChallengeStatsResponse } from "@src/types";
 import { UserChallengeStatsService } from "@services/data/userChallengeStatsService";
-import LeaderboardService from "@services/data/leaderboardService";
 import { useNextDailyChallengeTimer } from "@hooks/useNextDailyChallengeTimer";
 
 /**
- * Challenge Tab Screen - Using direct service calls
+ * Challenge Tab Screen - Using shared hooks for consistency
  */
 export default function ChallengeScreen() {
   const userData = useUserData();
@@ -34,12 +29,11 @@ export default function ChallengeScreen() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [stats, setStats] = useState<UserChallengeStatsResponse | null>(null);
-  const [entries, setEntries] = useState<LeaderboardEntryResponse[]>([]);
 
   // Countdown timer for next daily challenge
   const { formattedTime, isNextDay } = useNextDailyChallengeTimer();
 
-  // Load data function - only loads stats and leaderboard, not questions
+  // Load data function - only loads stats, not questions
   const loadData = useCallback(async () => {
     if (!userId) {
       return;
@@ -49,15 +43,13 @@ export default function ChallengeScreen() {
       setIsLoading(true);
       setError(null);
 
-      // Load only user stats and leaderboard data
-      const [userStats, leaderboardEntries] = await Promise.all([
-        UserChallengeStatsService.getUserChallengeStats(userId),
-        LeaderboardService.getCurrentWeekLeaderboard(),
-      ]);
+      // Load user stats
+      const userStats = await UserChallengeStatsService.getUserChallengeStats(
+        userId
+      );
 
       // Update state with the data
       setStats(userStats);
-      setEntries(leaderboardEntries);
     } catch {
       // console.error("Failed to load challenge data:", err);
       setError("Failed to load challenge data. Please try again.");
@@ -225,13 +217,6 @@ export default function ChallengeScreen() {
 
       {/* Stats */}
       {!error && <UserChallengeStatsCard stats={stats} isLoading={isLoading} />}
-
-      {/* Leaderboard */}
-      <CustomDivider />
-      <CustomText variant="titleMedium" style={styles.sectionTitle}>
-        Weekly Leaderboard
-      </CustomText>
-      <Leaderboard entries={entries} />
     </ScrollView>
   );
 }
@@ -280,9 +265,5 @@ const styles = StyleSheet.create({
   },
   button: {
     marginTop: 8,
-  },
-  sectionTitle: {
-    marginVertical: 8,
-    textAlign: "center",
   },
 });
