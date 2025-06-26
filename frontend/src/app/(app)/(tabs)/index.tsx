@@ -10,6 +10,7 @@ import Leaderboard from "@components/ui/Leaderboard";
 import { useLeaderboard } from "@src/hooks/useLeaderboard";
 import { useChallengeStats } from "@hooks/useChallengeStats";
 import ErrorMessage from "@components/ui/ErrorMessage";
+import ReviewRequestCard from "@components/ui/ReviewRequestCard";
 
 export default function HomeScreen() {
   const userData = useUserData();
@@ -96,6 +97,8 @@ export default function HomeScreen() {
         Check out who's doing great this week!
       </CustomText>
       <Leaderboard entries={entries} />
+
+      <ReviewRequestCard style={styles.reviewCard} />
     </ScrollView>
   );
 }
@@ -115,5 +118,9 @@ const styles = StyleSheet.create({
   leaderboardSubtitle: {
     marginBottom: 12,
     opacity: 0.8,
+  },
+  reviewCard: {
+    marginTop: 8,
+    marginBottom: 16,
   },
 });
