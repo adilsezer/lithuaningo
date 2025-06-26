@@ -33,82 +33,82 @@ namespace Lithuaningo.API.DTOs.Flashcard
         /// </summary>
         AllCategories = -1,
 
-        // ===== Grammatical Categories =====
+        // ===== Grammatical Categories (starting from 1000 to avoid overlap) =====
         /// <summary>
         /// Words that describe actions (e.g., eiti, kalbėti, valgyti)
         /// </summary>
-        Verb = 0,
+        Verb = 1000,
 
         /// <summary>
         /// Words that name people, places, things (e.g., namas, šalis, žmogus)
         /// </summary>
-        Noun = 1,
+        Noun = 1001,
 
         /// <summary>
         /// Words that describe nouns (e.g., gražus, didelis, mažas)
         /// </summary>
-        Adjective = 2,
+        Adjective = 1002,
 
         /// <summary>
         /// Words that modify verbs, adjectives or other adverbs (e.g., greitai, labai)
         /// </summary>
-        Adverb = 3,
+        Adverb = 1003,
 
         /// <summary>
         /// Words that replace nouns (e.g., aš, tu, jis, ji)
         /// </summary>
-        Pronoun = 4,
+        Pronoun = 1004,
 
         /// <summary>
         /// Prepositions and conjunctions
         /// </summary>
-        Connector = 5,
+        Connector = 1005,
 
-        // ===== Thematic Categories =====
+        // ===== Thematic Categories (starting from 2000) =====
         /// <summary>
         /// Common expressions used in greeting (e.g., labas, sveiki)
         /// </summary>
-        Greeting = 100,
+        Greeting = 2000,
 
         /// <summary>
         /// Common useful phrases (e.g., atsiprašau, prašom, ačiū)
         /// </summary>
-        Phrase = 101,
+        Phrase = 2001,
 
         /// <summary>
         /// Numbers and counting words
         /// </summary>
-        Number = 102,
+        Number = 2002,
 
         /// <summary>
         /// Words related to time (e.g., vakar, šiandien, rytoj)
         /// </summary>
-        TimeWord = 103,
+        TimeWord = 2003,
 
         /// <summary>
         /// Words related to food and dining
         /// </summary>
-        Food = 104,
+        Food = 2004,
 
         /// <summary>
         /// Words related to travel
         /// </summary>
-        Travel = 105,
+        Travel = 2005,
 
         /// <summary>
         /// Family-related terms
         /// </summary>
-        Family = 106,
+        Family = 2006,
 
         /// <summary>
         /// Work and profession related terms
         /// </summary>
-        Work = 107,
+        Work = 2007,
 
         /// <summary>
         /// Weather and nature related terms
         /// </summary>
-        Nature = 108,
+        Nature = 2008,
     }
 
     /// <summary>

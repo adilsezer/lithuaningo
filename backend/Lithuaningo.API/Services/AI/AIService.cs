@@ -254,7 +254,9 @@ public class AIService : IAIService
         {
             try
             {
-                string textToSpeak = $"{char.ToUpper(flashcardText[0])}{flashcardText[1..]}. [pause] {exampleSentence}.";
+                // Properly capitalize the flashcard text and add structured pauses for TTS
+                string capitalizedFlashcardText = char.ToUpper(flashcardText[0]) + flashcardText.Substring(1);
+                string textToSpeak = $"{capitalizedFlashcardText}. <break time=\"1s\" /> {exampleSentence}.";
 
                 GeneratedSpeechVoice voice = _aiSettings.DefaultVoice.ToLowerInvariant() switch
                 {

@@ -6,23 +6,36 @@ export enum DifficultyLevel {
 
 export enum FlashcardCategory {
   AllCategories = -1,
-  // Grammatical Categories
-  Verb = 0,
-  Noun = 1,
-  Adjective = 2,
-  Adverb = 3,
-  Pronoun = 4,
-  Connector = 5,
-  // Thematic Categories
-  Greeting = 100,
-  Phrase = 101,
-  Number = 102,
-  TimeWord = 103,
-  Food = 104,
-  Travel = 105,
-  Family = 106,
-  Work = 107,
-  Nature = 108,
+  // Grammatical Categories (starting from 1000 to avoid overlap)
+  Verb = 1000,
+  Noun = 1001,
+  Adjective = 1002,
+  Adverb = 1003,
+  Pronoun = 1004,
+  Connector = 1005,
+  // Thematic Categories (starting from 2000)
+  Greeting = 2000,
+  Phrase = 2001,
+  Number = 2002,
+  TimeWord = 2003,
+  Food = 2004,
+  Travel = 2005,
+  Family = 2006,
+  Work = 2007,
+  Nature = 2008,
+}
+
+// Add category type enum for navigation
+export enum CategoryType {
+  DIFFICULTY = "difficulty",
+  FLASHCARD_CATEGORY = "flashcard_category",
+}
+
+// Helper interface for navigation
+export interface CategoryNavigationItem {
+  id: string;
+  type: CategoryType;
+  value: number;
 }
 
 export interface FlashcardRequest {

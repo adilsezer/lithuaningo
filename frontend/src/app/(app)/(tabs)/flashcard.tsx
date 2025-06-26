@@ -9,6 +9,7 @@ import CustomDivider from "@components/ui/CustomDivider";
 import {
   FlashcardCategory as FlashcardCategoryEnum,
   DifficultyLevel,
+  CategoryType,
 } from "@src/types/Flashcard";
 import { UserFlashcardStatsSummaryResponse } from "@src/types/UserFlashcardStats";
 import { UserFlashcardStatsCard } from "@components/ui/UserFlashcardStatsCard";
@@ -159,18 +160,33 @@ StatsSection.displayName = "StatsSection";
 interface CategorySectionProps {
   title?: string;
   data?: FlashcardCategory[];
-  onPressPractice: (category: FlashcardCategory) => void;
-  onPressMaster: (category: FlashcardCategory) => void;
+  categoryType?: CategoryType;
+  onPressPractice: (
+    category: FlashcardCategory,
+    categoryType: CategoryType
+  ) => void;
+  onPressMaster: (
+    category: FlashcardCategory,
+    categoryType: CategoryType
+  ) => void;
 }
 const CategorySection = React.memo(
-  ({ title, data, onPressPractice, onPressMaster }: CategorySectionProps) => (
+  ({
+    title,
+    data,
+    categoryType = CategoryType.FLASHCARD_CATEGORY,
+    onPressPractice,
+    onPressMaster,
+  }: CategorySectionProps) => (
     <>
       <CustomDivider />
       <View style={styles.categoryContainer}>
         <CategoryGrid
           categories={data ?? []}
-          onPressPractice={onPressPractice}
-          onPressMaster={onPressMaster}
+          onPressPractice={(category) =>
+            onPressPractice(category, categoryType)
+          }
+          onPressMaster={(category) => onPressMaster(category, categoryType)}
           title={title}
         />
       </View>
@@ -370,49 +386,63 @@ export default function FlashcardScreen() {
         type: "category",
         title: "All Flashcards",
         data: allCategories,
+        categoryType: CategoryType.FLASHCARD_CATEGORY,
       },
       {
         id: "difficulty",
         type: "category",
         title: "By Difficulty",
         data: difficultyCategories,
+        categoryType: CategoryType.DIFFICULTY,
       },
       {
         id: "grammatical",
         type: "category",
         title: "Grammatical Categories",
         data: grammaticalCategories,
+        categoryType: CategoryType.FLASHCARD_CATEGORY,
       },
       {
         id: "thematic",
         type: "category",
         title: "Thematic Categories",
         data: thematicCategories,
+        categoryType: CategoryType.FLASHCARD_CATEGORY,
       },
     ];
   }, [theme.colors, getColor]);
 
-  // Renamed from handleSelectCategory
+  // Updated navigation handlers to pass category type
   const handlePressPractice = React.useCallback(
-    (category: FlashcardCategory) => {
+    (
+      category: FlashcardCategory,
+      categoryType: CategoryType = CategoryType.FLASHCARD_CATEGORY
+    ) => {
       // Navigate to category flashcards screen
       router.push({
         pathname: "/(app)/flashcard/[id]",
         params: {
           id: category.id,
           name: category.name,
+          categoryType: categoryType,
         },
       });
     },
     []
   );
 
-  // Renamed from handleSelectReview to handleSelectMaster
   const handleSelectMaster = React.useCallback(
-    (category: FlashcardCategory) => {
+    (
+      category: FlashcardCategory,
+      categoryType: CategoryType = CategoryType.FLASHCARD_CATEGORY
+    ) => {
       router.push({
-        pathname: "/(app)/flashcard-challenge/[id]", // Navigate to the new screen
-        params: { id: category.id, name: category.name }, // Pass category id and name
+        pathname: "/(app)/flashcard-challenge/[id]",
+        params: {
+          id: category.id,
+          name: category.name,
+          categoryType: categoryType,
+        },
       });
     },
     []
@@ -427,6 +457,7 @@ export default function FlashcardScreen() {
     type: string;
     title?: string;
     data?: FlashcardCategory[];
+    categoryType?: CategoryType;
   }
 
   // Optimized renderItem function with memoization
@@ -462,6 +493,7 @@ export default function FlashcardScreen() {
             <CategorySection
               title={item.title}
               data={item.data}
+              categoryType={item.categoryType}
               onPressPractice={handlePressPractice}
               onPressMaster={handleSelectMaster}
             />
