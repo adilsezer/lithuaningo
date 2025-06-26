@@ -429,7 +429,6 @@ namespace Lithuaningo.API.Services.Flashcards
             string userId,
             int reviewCount)
         {
-
             // Get flashcard IDs that need review based on mastery level
             var flashcardsToReview = await _userFlashcardStatService.GetFlashcardsDueForReviewAsync(
                 userId, allFlashcards.Select(f => f.Id), reviewCount);
@@ -479,7 +478,7 @@ namespace Lithuaningo.API.Services.Flashcards
                     Difficulty = request.Difficulty
                 };
 
-                // GenerateUniqueFlashcardsAsync returns models and queues initial challenge generation for these new AI cards
+                // GenerateUniqueFlashcardsAsync returns models and queues challenge generation for these new AI cards
                 // We need to provide some context of existing front texts to avoid duplicates from AI.
                 var contextFrontTexts = allFlashcards.Select(f => f.FrontText)
                                        .Concat(flashcardModelsForSession.Select(f => f.FrontText))
@@ -493,70 +492,7 @@ namespace Lithuaningo.API.Services.Flashcards
             // Ensure we don't exceed the originally requested count due to rounding or minimums
             var finalModelsForSession = flashcardModelsForSession.Take(request.Count).ToList();
 
-            // STEP 4: Ensure all flashcards in the session have the correct number of challenge questions.
-            // If not, existing challenges for that flashcard are cleared and new ones are regenerated.
-            if (finalModelsForSession.Any())
-            {
-                const int RequiredChallengeQuestionCount = 4; // Define the required count
-                var sessionFlashcardIds = finalModelsForSession.Select(f => f.Id).Distinct().ToList();
-
-                // Fetch all challenge questions for the flashcards in the session to count them
-                var allChallengesForSessionQuery = await _supabaseService.Client
-                    .From<ChallengeQuestion>()
-                    .Select("id, flashcard_id") // Select id for potential deletion and flashcard_id for grouping
-                    .Filter("flashcard_id", Operator.In, sessionFlashcardIds.Select(id => id.ToString()).ToList())
-                    .Get();
-
-                var challengeCountsByFlashcardId = allChallengesForSessionQuery.Models
-                    .Where(cq => cq.FlashcardId.HasValue) // Ensure FlashcardId is not null before grouping
-                    .GroupBy(cq => cq.FlashcardId!.Value)
-                    .ToDictionary(g => g.Key, g => g.Count());
-
-                var flashcardsToRegenerateChallenges = new List<Flashcard>();
-
-                foreach (var flashcard in finalModelsForSession)
-                {
-                    challengeCountsByFlashcardId.TryGetValue(flashcard.Id, out int currentChallengeCount);
-                    // If currentChallengeCount is 0 (flashcard.Id not in dictionary) or not equal to required, regenerate.
-                    if (currentChallengeCount != RequiredChallengeQuestionCount)
-                    {
-                        _logger.LogInformation(
-                            "Flashcard ID {FlashcardId} has {CurrentCount} challenges, but requires {RequiredCount}. Queuing for regeneration.",
-                            flashcard.Id, currentChallengeCount, RequiredChallengeQuestionCount);
-                        flashcardsToRegenerateChallenges.Add(flashcard);
-                    }
-                }
-
-                if (flashcardsToRegenerateChallenges.Any())
-                {
-                    _logger.LogInformation("Found {Count} flashcards in session needing challenge regeneration.", flashcardsToRegenerateChallenges.Count);
-                    foreach (var flashcardForRegeneration in flashcardsToRegenerateChallenges)
-                    {
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                _logger.LogInformation(
-                                    "Asynchronously clearing and regenerating challenges for flashcard ID {FlashcardId}.",
-                                    flashcardForRegeneration.Id);
-
-                                // Assumes IChallengeService has ClearChallengesByFlashcardIdAsync
-                                // This method needs to be implemented in ChallengeService to delete existing challenges.
-                                await _challengeService.ClearChallengesByFlashcardIdAsync(flashcardForRegeneration.Id);
-                                await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcardForRegeneration);
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex,
-                                    "Error during asynchronous challenge clearing/regeneration for flashcard ID {FlashcardId}.",
-                                    flashcardForRegeneration.Id);
-                            }
-                        });
-                    }
-                }
-            }
-
-            // STEP 5: Shuffle the final list of models and map to DTOs for the response
+            // STEP 4: Shuffle the final list of models and map to DTOs for the response
             var shuffledFlashcards = finalModelsForSession.OrderBy(f => _random.Next()).ToList();
             _logger.LogInformation("Returning {Count} flashcards for user learning session.", shuffledFlashcards.Count);
             return _mapper.Map<IEnumerable<FlashcardResponse>>(shuffledFlashcards);
