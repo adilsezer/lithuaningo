@@ -80,9 +80,15 @@ const createFlashcardRequest = (
     userId,
     primaryCategory: FlashcardCategory.AllCategories,
     difficulty: DifficultyLevel.Basic,
-    generateImages: true,
-    generateAudio: true,
+    generateImages: !__DEV__,
+    generateAudio: !__DEV__,
   };
+
+  if (__DEV__) {
+    console.log(
+      "[FlashcardStore] 🚀 Development mode: Skipping image and audio generation for faster performance"
+    );
+  }
 
   if (categoryType === CategoryType.DIFFICULTY) {
     // Handle difficulty level selection
