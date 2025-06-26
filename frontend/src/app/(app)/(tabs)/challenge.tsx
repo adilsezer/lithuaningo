@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { ScrollView, Image, StyleSheet, View } from "react-native";
+import { ScrollView, StyleSheet, View } from "react-native";
 import {
   ActivityIndicator,
   Card,
@@ -99,11 +99,13 @@ export default function ChallengeScreen() {
       showsVerticalScrollIndicator={false}
     >
       {/* Header */}
-      <Image
-        source={require("../../../../assets/images/challenge_screen.png")}
-        style={styles.image}
-        resizeMode="contain"
-      />
+      <Card style={styles.imageCard}>
+        <Card.Cover
+          source={require("../../../../assets/images/challenge_screen.png")}
+          style={styles.image}
+          resizeMode="contain"
+        />
+      </Card>
 
       <View style={styles.headerContainer}>
         <CustomText variant="titleLarge">Daily Challenge</CustomText>
@@ -227,10 +229,15 @@ const styles = StyleSheet.create({
   },
   content: {},
   headerContainer: {},
-  image: {
-    width: "100%",
-    height: 200,
+  imageCard: {
+    marginHorizontal: 16,
     marginVertical: 16,
+    elevation: 4,
+    borderRadius: 12,
+  },
+  image: {
+    height: 250,
+    backgroundColor: "white",
   },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,

@@ -49,6 +49,10 @@ export default function HomeScreen() {
         Hi, {userData?.fullName || "there"} 👋
       </CustomText>
 
+      <CustomText variant="bodySmall" style={styles.subtitle}>
+        Master Lithuanian with AI-powered personalized learning
+      </CustomText>
+
       {statsError ? (
         <ErrorMessage
           message={`Unable to load challenge stats: ${statsError}`}
@@ -63,21 +67,34 @@ export default function HomeScreen() {
         />
       )}
 
+      <CustomText variant="titleMedium" bold style={styles.sectionHeader}>
+        📚 Flashcards
+      </CustomText>
       <CustomText variant="bodyMedium">
-        Master Lithuanian vocabulary with personalized AI flashcards that adapt
-        to your learning pace.
+        Practice with smart flashcards that get better as you improve.
       </CustomText>
       <CustomButton
-        title="Study Flashcards"
+        title="Start Studying"
         onPress={() => router.push("(app)/(tabs)/flashcard")}
       />
+
+      <CustomText variant="titleMedium" bold style={styles.sectionHeader}>
+        🎯 Daily Challenge
+      </CustomText>
       <CustomText variant="bodyMedium">
-        Test your skills in today's challenge and climb the leaderboard! 🏆
+        Answer fun questions and compete with others! 🏆
       </CustomText>
       <CustomButton
-        title="Take Today's Challenge"
+        title="Play Today's Challenge"
         onPress={() => router.push("(app)/(tabs)/challenge")}
       />
+
+      <CustomText variant="titleMedium" bold style={styles.sectionHeader}>
+        🏆 This Week's Top Players
+      </CustomText>
+      <CustomText variant="bodyMedium" style={styles.leaderboardSubtitle}>
+        Check out who's doing great this week!
+      </CustomText>
       <Leaderboard entries={entries} />
     </ScrollView>
   );
@@ -86,5 +103,17 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  subtitle: {
+    marginBottom: 16,
+    opacity: 0.7,
+  },
+  sectionHeader: {
+    marginTop: 20,
+    marginBottom: 8,
+  },
+  leaderboardSubtitle: {
+    marginBottom: 12,
+    opacity: 0.8,
   },
 });
