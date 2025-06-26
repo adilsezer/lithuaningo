@@ -83,6 +83,7 @@ export const CountdownTimer: React.FC<CountdownTimerProps> = ({
 const styles = StyleSheet.create({
   card: {
     marginTop: 16,
+    marginHorizontal: 16,
     borderWidth: 1,
   },
   cardContent: {

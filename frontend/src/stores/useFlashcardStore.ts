@@ -6,6 +6,7 @@ import {
   FlashcardRequest,
   FlashcardCategory,
   DifficultyLevel,
+  CategoryType,
 } from "@src/types/Flashcard";
 import {
   UserFlashcardStatResponse,
@@ -45,6 +46,7 @@ interface FlashcardStore {
   // Actions
   fetchFlashcards: (params: {
     categoryId: string;
+    categoryType?: CategoryType;
     userId?: string;
     isPremium: boolean;
   }) => Promise<void>;
@@ -69,6 +71,7 @@ interface FlashcardStore {
 
 const createFlashcardRequest = (
   categoryId: string,
+  categoryType: CategoryType = CategoryType.FLASHCARD_CATEGORY,
   userId?: string
 ): FlashcardRequest => {
   const numericId = parseInt(categoryId, 10);
@@ -76,18 +79,31 @@ const createFlashcardRequest = (
     count: 10,
     userId,
     primaryCategory: FlashcardCategory.AllCategories,
-    difficulty: DifficultyLevel.Basic, // Will be overridden for specific cases
-    generateImages: true,
-    generateAudio: true,
+    difficulty: DifficultyLevel.Basic,
+    generateImages: !__DEV__,
+    generateAudio: !__DEV__,
   };
 
-  if (numericId >= 0 && numericId <= 2) {
-    // For difficulty categories, use the specific difficulty
-    request.difficulty = numericId as DifficultyLevel;
+  if (__DEV__) {
+    console.log(
+      "[FlashcardStore] 🚀 Development mode: Skipping image and audio generation for faster performance"
+    );
+  }
+
+  if (categoryType === CategoryType.DIFFICULTY) {
+    // Handle difficulty level selection
+    if (Object.values(DifficultyLevel).includes(numericId as DifficultyLevel)) {
+      request.difficulty = numericId as DifficultyLevel;
+      request.primaryCategory = FlashcardCategory.AllCategories; // Get from all categories with specific difficulty
+    }
   } else {
-    // For regular categories, use the specific category but keep Basic as default
-    // This maintains existing behavior for regular flashcard learning
-    request.primaryCategory = numericId as FlashcardCategory;
+    // Handle flashcard category selection
+    if (
+      Object.values(FlashcardCategory).includes(numericId as FlashcardCategory)
+    ) {
+      request.primaryCategory = numericId as FlashcardCategory;
+      // Keep default difficulty (Basic) when selecting by category
+    }
   }
 
   return request;
@@ -112,7 +128,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
   submissionMessage: null,
 
   // Actions
-  fetchFlashcards: async ({ categoryId, userId, isPremium }) => {
+  fetchFlashcards: async ({ categoryId, categoryType, userId, isPremium }) => {
     if (userId) {
       await get().syncFlashcardCount(userId);
     }
@@ -138,7 +154,7 @@ export const useFlashcardStore = create<FlashcardStore>((set, get) => ({
     });
 
     try {
-      const request = createFlashcardRequest(categoryId, userId);
+      const request = createFlashcardRequest(categoryId, categoryType, userId);
       const flashcards = await flashcardService.getFlashcards(request);
 
       set({

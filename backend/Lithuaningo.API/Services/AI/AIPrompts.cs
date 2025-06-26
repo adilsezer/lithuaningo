@@ -53,24 +53,24 @@ DIFFICULTY SPECIFICATIONS (Apply these rigorously based on user request):
 - Advanced (2): Rarer vocabulary (beyond 3000 frequency), technical terms, literary language, complex grammatical structures (participles, subjunctive mood, complex conjunctions), nuanced idiomatic expressions, and abstract concepts.
 
 CATEGORIES (Use these numeric codes):
-# Grammar Categories
-0 = Verb (Veiksmažodis: eiti, kalbėti)
-1 = Noun (Daiktavardis: namas, šalis)
-2 = Adjective (Būdvardis: gražus, didelis)
-3 = Adverb (Prieveiksmis: greitai, labai)
-4 = Pronoun (Įvardis: aš, tu, jis, ji)
-5 = Connector (Jungiamieji žodžiai: prielinksniai, jungtukai)
+# Grammar Categories (starting from 1000)
+1000 = Verb (Veiksmažodis: eiti, kalbėti)
+1001 = Noun (Daiktavardis: namas, šalis)
+1002 = Adjective (Būdvardis: gražus, didelis)
+1003 = Adverb (Prieveiksmis: greitai, labai)
+1004 = Pronoun (Įvardis: aš, tu, jis, ji)
+1005 = Connector (Jungiamieji žodžiai: prielinksniai, jungtukai)
 
-# Thematic Categories
-100 = Greeting (Pasveikinimas: labas, sveiki)
-101 = Phrase (Frazė: atsiprašau, prašom, ačiū)
-102 = Number (Skaičius: skaičiavimo frazės)
-103 = TimeWord (Laiko žodis: vakar, šiandien, rytoj)
-104 = Food (Maistas: maisto ir valgymo terminai)
-105 = Travel (Kelionės: su kelionėmis susiję terminai)
-106 = Family (Šeima: su šeima susiję terminai)
-107 = Work (Darbas: su profesija susiję terminai)
-108 = Nature (Gamta: orų, gamtos terminai)
+# Thematic Categories (starting from 2000)
+2000 = Greeting (Pasveikinimas: labas, sveiki)
+2001 = Phrase (Frazė: atsiprašau, prašom, ačiū)
+2002 = Number (Skaičius: skaičiavimo frazės)
+2003 = TimeWord (Laiko žodis: vakar, šiandien, rytoj)
+2004 = Food (Maistas: maisto ir valgymo terminai)
+2005 = Travel (Kelionės: su kelionėmis susiję terminai)
+2006 = Family (Šeima: su šeima susiję terminai)
+2007 = Work (Darbas: su profesija susiję terminai)
+2008 = Nature (Gamta: orų, gamtos terminai)
 
 CAPITALIZATION:
 - Lithuanian frontText and backText: Use lowercase unless the word is a proper noun (e.g., Vilnius, Lietuva) or part of an acronym that is always capitalized.
@@ -86,7 +86,7 @@ EXAMPLE OUTPUT:
     ""exampleSentenceTranslation"": ""I really like fresh Lithuanian bread."",
     ""notes"": ""'Duona' is a staple in Lithuanian cuisine. Black rye bread (ruginė duona) is particularly traditional."",
     ""difficulty"": 0,
-    ""categories"": [104, 1]
+    ""categories"": [2004, 1001]
   },
   {
     ""frontText"": ""bendradarbis"",
@@ -95,7 +95,7 @@ EXAMPLE OUTPUT:
     ""exampleSentenceTranslation"": ""My colleague is very helpful and always assists."",
     ""notes"": ""Refers to a person you work with. Gendered forms exist: 'bendradarbė' (female colleague)."",
     ""difficulty"": 1,
-    ""categories"": [107, 1]
+    ""categories"": [2007, 1001]
   },
   {
     ""frontText"": ""įžvalgumas"",
@@ -104,7 +104,7 @@ EXAMPLE OUTPUT:
     ""exampleSentenceTranslation"": ""Her perceptiveness in solving problems always amazes the team."",
     ""notes"": ""An abstract noun referring to the quality of having or showing sensitive insight. Often used in contexts discussing intellect or problem-solving skills."",
     ""difficulty"": 2,
-    ""categories"": [1] // Assuming 'Noun' if no thematic category fits well for an abstract quality like this.
+    ""categories"": [1001] // Assuming 'Noun' if no thematic category fits well for an abstract quality like this.
   }
 ]";
 

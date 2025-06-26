@@ -38,7 +38,7 @@ const ChangePasswordScreen: React.FC = () => {
 
   if (userData?.authProvider !== "email") {
     return (
-      <ScrollView>
+      <ScrollView showsVerticalScrollIndicator={false}>
         <CustomText>
           Password change is only available for email/password accounts. You are
           signed in with {userData?.authProvider}.
@@ -48,7 +48,7 @@ const ChangePasswordScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <Form
         fields={changePasswordFields}
         onSubmit={async (data) => {

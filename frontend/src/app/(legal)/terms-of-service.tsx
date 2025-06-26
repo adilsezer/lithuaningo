@@ -19,7 +19,7 @@ const TermsOfService = () => {
   };
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <CustomText {...paragraphProps}>Last updated: June 15, 2025</CustomText>
 
       <CustomText variant="titleMedium" bold>

@@ -9,6 +9,7 @@ import {
   FlashcardMessage,
 } from "@stores/useFlashcardStore";
 import { useUserData, useIsPremium } from "@stores/useUserStore";
+import { CategoryType } from "@src/types/Flashcard";
 import CustomText from "@components/ui/CustomText";
 import Flashcard from "@components/ui/Flashcard";
 import FlashcardStats from "@components/ui/FlashcardStats";
@@ -17,9 +18,19 @@ import ErrorMessage from "@components/ui/ErrorMessage";
 
 export default function CategoryFlashcardsScreen() {
   const theme = useTheme();
-  const { id, name } = useLocalSearchParams<{ id: string; name: string }>();
+  const { id, name, categoryType } = useLocalSearchParams<{
+    id: string;
+    name: string;
+    categoryType: string;
+  }>();
   const userData = useUserData();
   const isPremium = useIsPremium();
+
+  // Parse categoryType from string to enum
+  const parsedCategoryType =
+    categoryType === CategoryType.DIFFICULTY
+      ? CategoryType.DIFFICULTY
+      : CategoryType.FLASHCARD_CATEGORY;
 
   // Get everything we need from the store
   const {
@@ -83,6 +94,7 @@ export default function CategoryFlashcardsScreen() {
             categoryId: id,
             userId: userData.id,
             isPremium,
+            categoryType: parsedCategoryType,
           });
         }
       });
@@ -100,6 +112,7 @@ export default function CategoryFlashcardsScreen() {
     fetchFlashcards,
     resetSession,
     isDailyLimitReached,
+    parsedCategoryType,
   ]);
 
   // Create a daily flashcard progress component
@@ -151,9 +164,17 @@ export default function CategoryFlashcardsScreen() {
         categoryId: id,
         userId: userData.id,
         isPremium,
+        categoryType: parsedCategoryType,
       });
     }
-  }, [id, userData?.id, isPremium, fetchFlashcards, resetSession]);
+  }, [
+    id,
+    userData?.id,
+    isPremium,
+    fetchFlashcards,
+    resetSession,
+    parsedCategoryType,
+  ]);
 
   // Function to get message background color based on message type
   const getMessageBackgroundColor = useCallback(
@@ -287,6 +308,7 @@ export default function CategoryFlashcardsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
+      showsVerticalScrollIndicator={false}
     >
       {/* Header Section */}
       <View style={styles.header}>

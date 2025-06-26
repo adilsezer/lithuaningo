@@ -9,7 +9,7 @@ import { useRouter } from "expo-router";
 import { useUserData } from "@stores/useUserStore";
 const getEditProfileFields = (
   authProvider: string,
-  displayName: string,
+  displayName: string
 ): FormField[] => {
   const fields: FormField[] = [
     {
@@ -48,7 +48,7 @@ const EditProfileScreen: React.FC = () => {
   }
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <Form
         fields={getEditProfileFields(userData.authProvider, userData.fullName)}
         onSubmit={async (data) => {

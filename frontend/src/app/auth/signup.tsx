@@ -104,7 +104,7 @@ const SignUpScreen: React.FC = () => {
   };
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <Form
         fields={signupFields}
         onSubmit={handleEmailSignup}

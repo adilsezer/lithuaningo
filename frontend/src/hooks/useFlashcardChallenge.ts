@@ -3,12 +3,13 @@ import { ChallengeQuestionResponse } from "@src/types";
 import { UserFlashcardStatsService } from "@services/data/userFlashcardStatsService";
 import ChallengeService from "@services/data/challengeService"; // Assuming this service can fetch category-specific questions
 import { useAlertDialog } from "@hooks/useAlertDialog";
+import { DifficultyLevel } from "@src/types/Flashcard";
 
 interface UseFlashcardChallengeProps {
   categoryId: string | undefined;
   userId: string | undefined;
   categoryName?: string; // For potential use in titles or context
-  difficulty?: number; // 0=Basic, 1=Intermediate, 2=Advanced
+  difficulty?: number; // DifficultyLevel: Basic=0, Intermediate=1, Advanced=2
 }
 
 export const useFlashcardChallenge = ({
@@ -29,9 +30,9 @@ export const useFlashcardChallenge = ({
     }
 
     // Auto-detect difficulty from categoryId for difficulty categories
-    if (categoryId === "0" || categoryId === "1" || categoryId === "2") {
-      const detectedDifficulty = parseInt(categoryId, 10);
-      return detectedDifficulty;
+    const numericId = parseInt(categoryId || "", 10);
+    if (Object.values(DifficultyLevel).includes(numericId as DifficultyLevel)) {
+      return numericId;
     }
 
     // No default difficulty - let backend use all difficulties
@@ -41,7 +42,8 @@ export const useFlashcardChallenge = ({
   // When difficulty categories are selected, we should not filter by categoryId in the backend
   // Instead, we should pass undefined/null for categoryId to get challenges from all categories
   const effectiveCategoryId = useMemo(() => {
-    if (categoryId === "0" || categoryId === "1" || categoryId === "2") {
+    const numericId = parseInt(categoryId || "", 10);
+    if (Object.values(DifficultyLevel).includes(numericId as DifficultyLevel)) {
       // For difficulty categories, use AllCategories (-1) to get challenges from all categories
       return "-1";
     }

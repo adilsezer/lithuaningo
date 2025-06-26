@@ -27,14 +27,16 @@ const DeleteAccountScreen: React.FC = () => {
   const { deleteAccount } = useAuth();
   const userData = useUserData();
 
-  if (!userData) {return null;}
+  if (!userData) {
+    return null;
+  }
 
   const handleSubmit = async (values: { password?: string }) => {
     await deleteAccount(values.password, userData.authProvider);
   };
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <View style={styles.container}>
         <CustomText variant="bodyLarge" style={styles.warning}>
           This action cannot be undone. All your data will be permanently

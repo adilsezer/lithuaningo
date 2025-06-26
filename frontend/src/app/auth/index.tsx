@@ -9,7 +9,10 @@ const WelcomeScreen = () => {
   const { isDarkMode, toggleTheme, navigateToAuth } = useWelcome();
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContainer}>
+    <ScrollView
+      contentContainerStyle={styles.scrollContainer}
+      showsVerticalScrollIndicator={false}
+    >
       <View style={styles.container}>
         <CustomSwitch
           onValueChange={toggleTheme}

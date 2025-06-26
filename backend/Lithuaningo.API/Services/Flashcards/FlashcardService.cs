@@ -429,7 +429,6 @@ namespace Lithuaningo.API.Services.Flashcards
             string userId,
             int reviewCount)
         {
-
             // Get flashcard IDs that need review based on mastery level
             var flashcardsToReview = await _userFlashcardStatService.GetFlashcardsDueForReviewAsync(
                 userId, allFlashcards.Select(f => f.Id), reviewCount);
@@ -479,7 +478,7 @@ namespace Lithuaningo.API.Services.Flashcards
                     Difficulty = request.Difficulty
                 };
 
-                // GenerateUniqueFlashcardsAsync returns models and queues initial challenge generation for these new AI cards
+                // GenerateUniqueFlashcardsAsync returns models and queues challenge generation for these new AI cards
                 // We need to provide some context of existing front texts to avoid duplicates from AI.
                 var contextFrontTexts = allFlashcards.Select(f => f.FrontText)
                                        .Concat(flashcardModelsForSession.Select(f => f.FrontText))
@@ -493,70 +492,7 @@ namespace Lithuaningo.API.Services.Flashcards
             // Ensure we don't exceed the originally requested count due to rounding or minimums
             var finalModelsForSession = flashcardModelsForSession.Take(request.Count).ToList();
 
-            // STEP 4: Ensure all flashcards in the session have the correct number of challenge questions.
-            // If not, existing challenges for that flashcard are cleared and new ones are regenerated.
-            if (finalModelsForSession.Any())
-            {
-                const int RequiredChallengeQuestionCount = 4; // Define the required count
-                var sessionFlashcardIds = finalModelsForSession.Select(f => f.Id).Distinct().ToList();
-
-                // Fetch all challenge questions for the flashcards in the session to count them
-                var allChallengesForSessionQuery = await _supabaseService.Client
-                    .From<ChallengeQuestion>()
-                    .Select("id, flashcard_id") // Select id for potential deletion and flashcard_id for grouping
-                    .Filter("flashcard_id", Operator.In, sessionFlashcardIds.Select(id => id.ToString()).ToList())
-                    .Get();
-
-                var challengeCountsByFlashcardId = allChallengesForSessionQuery.Models
-                    .Where(cq => cq.FlashcardId.HasValue) // Ensure FlashcardId is not null before grouping
-                    .GroupBy(cq => cq.FlashcardId!.Value)
-                    .ToDictionary(g => g.Key, g => g.Count());
-
-                var flashcardsToRegenerateChallenges = new List<Flashcard>();
-
-                foreach (var flashcard in finalModelsForSession)
-                {
-                    challengeCountsByFlashcardId.TryGetValue(flashcard.Id, out int currentChallengeCount);
-                    // If currentChallengeCount is 0 (flashcard.Id not in dictionary) or not equal to required, regenerate.
-                    if (currentChallengeCount != RequiredChallengeQuestionCount)
-                    {
-                        _logger.LogInformation(
-                            "Flashcard ID {FlashcardId} has {CurrentCount} challenges, but requires {RequiredCount}. Queuing for regeneration.",
-                            flashcard.Id, currentChallengeCount, RequiredChallengeQuestionCount);
-                        flashcardsToRegenerateChallenges.Add(flashcard);
-                    }
-                }
-
-                if (flashcardsToRegenerateChallenges.Any())
-                {
-                    _logger.LogInformation("Found {Count} flashcards in session needing challenge regeneration.", flashcardsToRegenerateChallenges.Count);
-                    foreach (var flashcardForRegeneration in flashcardsToRegenerateChallenges)
-                    {
-                        _ = Task.Run(async () =>
-                        {
-                            try
-                            {
-                                _logger.LogInformation(
-                                    "Asynchronously clearing and regenerating challenges for flashcard ID {FlashcardId}.",
-                                    flashcardForRegeneration.Id);
-
-                                // Assumes IChallengeService has ClearChallengesByFlashcardIdAsync
-                                // This method needs to be implemented in ChallengeService to delete existing challenges.
-                                await _challengeService.ClearChallengesByFlashcardIdAsync(flashcardForRegeneration.Id);
-                                await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcardForRegeneration);
-                            }
-                            catch (Exception ex)
-                            {
-                                _logger.LogError(ex,
-                                    "Error during asynchronous challenge clearing/regeneration for flashcard ID {FlashcardId}.",
-                                    flashcardForRegeneration.Id);
-                            }
-                        });
-                    }
-                }
-            }
-
-            // STEP 5: Shuffle the final list of models and map to DTOs for the response
+            // STEP 4: Shuffle the final list of models and map to DTOs for the response
             var shuffledFlashcards = finalModelsForSession.OrderBy(f => _random.Next()).ToList();
             _logger.LogInformation("Returning {Count} flashcards for user learning session.", shuffledFlashcards.Count);
             return _mapper.Map<IEnumerable<FlashcardResponse>>(shuffledFlashcards);
@@ -650,67 +586,123 @@ namespace Lithuaningo.API.Services.Flashcards
 
             if (generatedFlashcards.Any())
             {
-                // Save the newly generated flashcards to the database.
-                // This is the single point where these AI-generated cards are saved.
-                await SaveFlashcardsToSupabaseAsync(generatedFlashcards, request.UserId);
+                // Simple duplicate check: filter out any flashcards with front text that already exists
+                var uniqueFlashcards = await FilterOutDuplicatesAsync(generatedFlashcards);
 
-                // Asynchronously generate and save challenges for each new flashcard
-                _ = Task.Run(async () =>
+                if (uniqueFlashcards.Count < generatedFlashcards.Count)
                 {
-                    foreach (var flashcard in generatedFlashcards)
-                    {
-                        try
-                        {
-                            await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcard);
-                        }
-                        catch (Exception ex)
-                        {
-                            _logger.LogError(ex, "Error generating or saving challenges for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
-                            // Optionally, implement a retry mechanism or dead-letter queue for failed challenge generations
-                        }
-                    }
-                });
+                    _logger.LogInformation("Filtered out {FilteredCount} duplicate flashcards. {UniqueCount} unique flashcards remaining.",
+                        generatedFlashcards.Count - uniqueFlashcards.Count, uniqueFlashcards.Count);
+                }
 
-                // Asynchronously generate images and audio for each new flashcard (if requested)
-                if (request.GenerateImages || request.GenerateAudio)
+                if (uniqueFlashcards.Any())
                 {
+                    // Save the newly generated flashcards to the database.
+                    // This is the single point where these AI-generated cards are saved.
+                    await SaveFlashcardsToSupabaseAsync(uniqueFlashcards, request.UserId);
+
+                    // Asynchronously generate and save challenges for each new flashcard
                     _ = Task.Run(async () =>
                     {
-                        foreach (var flashcard in generatedFlashcards)
+                        foreach (var flashcard in uniqueFlashcards)
                         {
-                            if (request.GenerateImages)
+                            try
                             {
-                                try
-                                {
-                                    // Generate image for the flashcard
-                                    await GenerateFlashcardImageAsync(flashcard.Id);
-                                    _logger.LogInformation("Successfully generated image for flashcard ID {FlashcardId}", flashcard.Id);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Error generating image for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
-                                }
+                                await _challengeService.GenerateAndSaveChallengesForFlashcardAsync(flashcard);
                             }
-
-                            if (request.GenerateAudio)
+                            catch (Exception ex)
                             {
-                                try
-                                {
-                                    // Generate audio for the flashcard
-                                    await GenerateFlashcardAudioAsync(flashcard.Id);
-                                    _logger.LogInformation("Successfully generated audio for flashcard ID {FlashcardId}", flashcard.Id);
-                                }
-                                catch (Exception ex)
-                                {
-                                    _logger.LogError(ex, "Error generating audio for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
-                                }
+                                _logger.LogError(ex, "Error generating or saving challenges for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                // Optionally, implement a retry mechanism or dead-letter queue for failed challenge generations
                             }
                         }
                     });
+
+                    // Asynchronously generate images and audio for each new flashcard (if requested)
+                    if (request.GenerateImages || request.GenerateAudio)
+                    {
+                        _ = Task.Run(async () =>
+                        {
+                            foreach (var flashcard in uniqueFlashcards)
+                            {
+                                if (request.GenerateImages)
+                                {
+                                    try
+                                    {
+                                        // Generate image for the flashcard
+                                        await GenerateFlashcardImageAsync(flashcard.Id);
+                                        _logger.LogInformation("Successfully generated image for flashcard ID {FlashcardId}", flashcard.Id);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Error generating image for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                    }
+                                }
+
+                                if (request.GenerateAudio)
+                                {
+                                    try
+                                    {
+                                        // Generate audio for the flashcard
+                                        await GenerateFlashcardAudioAsync(flashcard.Id);
+                                        _logger.LogInformation("Successfully generated audio for flashcard ID {FlashcardId}", flashcard.Id);
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        _logger.LogError(ex, "Error generating audio for flashcard ID {FlashcardId} asynchronously.", flashcard.Id);
+                                    }
+                                }
+                            }
+                        });
+                    }
+
+                    return uniqueFlashcards;
+                }
+                else
+                {
+                    _logger.LogWarning("All generated flashcards were duplicates. No new flashcards saved.");
+                    return new List<Flashcard>();
                 }
             }
 
             return generatedFlashcards;
+        }
+
+        /// <summary>
+        /// Simple duplicate check: filters out flashcards with front text that already exists in the database
+        /// </summary>
+        private async Task<List<Flashcard>> FilterOutDuplicatesAsync(List<Flashcard> flashcards)
+        {
+            var uniqueFlashcards = new List<Flashcard>();
+
+            foreach (var flashcard in flashcards)
+            {
+                if (string.IsNullOrWhiteSpace(flashcard.FrontText))
+                {
+                    _logger.LogWarning("Skipping flashcard with empty front text");
+                    continue;
+                }
+
+                // Simple database check: does this front text already exist?
+                var existingCount = await _supabaseService.Client
+                    .From<Flashcard>()
+                    .Select("id")
+                    .Filter("front_text", Operator.Equals, flashcard.FrontText.Trim())
+                    .Count(CountType.Exact);
+
+                _logger.LogInformation("Existing count for flashcard is {ExistingCount}", existingCount);
+
+                if (existingCount == 0)
+                {
+                    uniqueFlashcards.Add(flashcard);
+                }
+                else
+                {
+                    _logger.LogDebug("Skipping duplicate flashcard with front text: {FrontText}", flashcard.FrontText);
+                }
+            }
+
+            return uniqueFlashcards;
         }
 
         #endregion

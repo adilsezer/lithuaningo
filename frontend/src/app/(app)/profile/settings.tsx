@@ -27,7 +27,7 @@ export default function SettingsScreen() {
   }, [loadPushNotificationPreference]);
 
   return (
-    <ScrollView style={styles.container}>
+    <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       <Card style={[styles.card, { backgroundColor: theme.colors.background }]}>
         <List.Section>
           <List.Subheader>Appearance</List.Subheader>

@@ -39,7 +39,7 @@ const LoginScreen: React.FC = () => {
   );
 
   return (
-    <ScrollView>
+    <ScrollView showsVerticalScrollIndicator={false}>
       <Form
         fields={loginFields}
         onSubmit={async (data) => {
