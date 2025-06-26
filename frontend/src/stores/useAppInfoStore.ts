@@ -58,15 +58,24 @@ const useAppInfoStore = create<AppInfoState & AppInfoActions>((set, get) => ({
         (compareVersions(latestAppInfo.currentVersion, currentVersion) > 0 &&
           latestAppInfo.forceUpdate);
 
+      // Skip maintenance mode in development
+      const isMaintenanceMode = __DEV__ ? false : latestAppInfo.isMaintenance;
+
+      if (__DEV__ && latestAppInfo.isMaintenance) {
+        console.log(
+          "[useAppInfoStore] ⚠️ Maintenance mode detected but skipped in development"
+        );
+      }
+
       set({
         appInfo: latestAppInfo,
-        isUnderMaintenance: latestAppInfo.isMaintenance,
+        isUnderMaintenance: isMaintenanceMode,
         needsUpdate,
         hasFailedCheck: false,
         lastError: null,
       });
 
-      if (needsUpdate || latestAppInfo.isMaintenance) {
+      if (needsUpdate || isMaintenanceMode) {
         router.replace("/notification");
       }
     } catch (err) {
