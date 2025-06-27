@@ -41,24 +41,51 @@ const PrivacyPolicy = () => {
         We collect the following types of information:
       </CustomText>
 
+      <CustomText variant="titleSmall" bold>
+        Personal Information
+      </CustomText>
+      <CustomText {...paragraphProps}>• Name and email address</CustomText>
       <CustomText {...paragraphProps}>
-        • Personal Information: Name, email address, profile picture,
-        authentication data, subscription status
+        • Profile picture and preferences
+      </CustomText>
+      <CustomText {...paragraphProps}>
+        • Authentication data (Email, Google, or Apple Sign-In)
+      </CustomText>
+      <CustomText {...paragraphProps}>
+        • In-app purchase history and subscription status
+      </CustomText>
+      <CustomText {...paragraphProps}>
+        • Selected subscription plan (e.g., monthly, yearly)
+      </CustomText>
+      <CustomText {...paragraphProps}>
+        • Premium subscription entitlements
+      </CustomText>
+      <CustomText {...paragraphProps}>
+        • Payment transaction data (processed by third-party payment providers)
       </CustomText>
 
+      <CustomText variant="titleSmall" bold>
+        Usage Data
+      </CustomText>
       <CustomText {...paragraphProps}>
-        • Usage Data: App access patterns, learning progress, quiz performance,
-        chat conversations with AI, device information
+        • App access patterns, learning progress, quiz performance, chat
+        conversations with AI, device information
       </CustomText>
 
+      <CustomText variant="titleSmall" bold>
+        AI-Generated Content
+      </CustomText>
       <CustomText {...paragraphProps}>
-        • AI-Generated Content: Chat conversations, personalized explanations,
-        generated flashcards, computer-generated images, text-to-speech audio
+        • Chat conversations, personalized explanations, generated flashcards,
+        computer-generated images, text-to-speech audio
       </CustomText>
 
+      <CustomText variant="titleSmall" bold>
+        Technical Data
+      </CustomText>
       <CustomText {...paragraphProps}>
-        • Technical Data: App performance metrics, crash reports, network
-        connectivity, device specifications
+        • App performance metrics, crash reports, network connectivity, device
+        specifications
       </CustomText>
 
       <CustomText variant="titleMedium" bold>
@@ -136,6 +163,12 @@ const PrivacyPolicy = () => {
 
       <CustomText {...paragraphProps}>
         • Industry-standard security measures and encryption protocols
+      </CustomText>
+      <CustomText {...paragraphProps}>
+        We use commercially acceptable means to protect your Personal
+        Information, but we cannot guarantee its absolute security. No method of
+        transmission over the Internet or method of electronic storage is 100%
+        secure.
       </CustomText>
 
       <CustomText variant="titleMedium" bold>
@@ -288,6 +321,18 @@ const PrivacyPolicy = () => {
         We may update this policy to reflect new features, AI capabilities, and
         regulatory changes. Continued use after updates constitutes acceptance
         of the revised policy.
+      </CustomText>
+
+      <CustomText variant="titleMedium" bold>
+        12. International Data Transfer
+      </CustomText>
+      <CustomText {...paragraphProps}>
+        Your information, including personal data, may be transferred to — and
+        maintained on — computers located outside of your state, province,
+        country, or other governmental jurisdiction where the data protection
+        laws may differ from those from your jurisdiction. We will take all
+        steps reasonably necessary to ensure that your data is treated securely
+        and in accordance with this Privacy Policy.
       </CustomText>
     </ScrollView>
   );

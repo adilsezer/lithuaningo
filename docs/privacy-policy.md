@@ -19,6 +19,7 @@ We collect the following types of information:
 - Profile picture and preferences
 - Authentication data (Email, Google, or Apple Sign-In)
 - In-app purchase history and subscription status
+- Selected subscription plan (e.g., monthly, yearly)
 - Premium subscription entitlements
 - Payment transaction data (processed by third-party payment providers)
 
@@ -163,6 +164,7 @@ We utilize the following services:
 - Usage pattern analysis
 - Error reporting and crash analytics
 - Learning progress tracking
+- **Error and Performance Monitoring Services:** We use services like Sentry to monitor and diagnose errors and performance issues in the App. This involves collecting technical data, such as crash reports and device information, to help us improve stability and performance.
 
 ## 5. Data Management
 
@@ -188,6 +190,8 @@ We utilize the following services:
 - AI conversation history maintained for session context
 - Subscription data retained as required by payment processors
 - Generated content (images, audio) stored for app functionality
+
+We use commercially acceptable means to protect your Personal Information, but we cannot guarantee its absolute security. No method of transmission over the Internet or method of electronic storage is 100% secure.
 
 ## 6. Device Permissions and Data Access
 
@@ -278,11 +282,17 @@ All permissions are requested with clear explanations and can be managed through
 - Learning effectiveness data enhances content generation
 - User feedback improves AI recommendation accuracy
 
-## 10. Children's Privacy
+## 10. International Data Transfer
+
+Your information, including personal data, may be transferred to — and maintained on — computers located outside of your state, province, country, or other governmental jurisdiction where the data protection laws may differ from those from your jurisdiction.
+
+We will take all steps reasonably necessary to ensure that your data is treated securely and in accordance with this Privacy Policy and that adequate data protection mechanisms, such as Standard Contractual Clauses, are in place for transfers of data outside the EEA.
+
+## 11. Children's Privacy
 
 Our App is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe that your child has provided us with personal information without your consent, please contact us at the email address provided below. If we become aware that we have collected personal information from a child under 13 without verification of parental consent, we take steps to remove that information from our servers.
 
-## 11. Contact Information
+## 12. Contact Information
 
 For privacy-related inquiries:
 
@@ -290,7 +300,7 @@ For privacy-related inquiries:
 - Website: [Privacy Policy](https://lithuaningo.com/privacy-policy)
 - Support: Available through in-app help center
 
-## 12. Policy Updates
+## 13. Policy Updates
 
 We regularly review and update this policy to reflect:
 
@@ -302,7 +312,7 @@ We regularly review and update this policy to reflect:
 
 Last major update: June 15, 2025
 
-## 13. Legal Basis for Processing (GDPR Compliance)
+## 14. Legal Basis for Processing (GDPR Compliance)
 
 We process your personal data under the following legal bases:
 

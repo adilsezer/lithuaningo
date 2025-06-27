@@ -49,15 +49,27 @@ You agree not to create or share content that:
 • Provides incorrect translations or misleading educational content
 • Attempts to exploit AI services for non-educational purposes
 
-## 6. Premium Subscriptions
+## 6. Premium Subscriptions, Payments, and Renewals
 
-Premium features are available through subscription:
+### a. Subscription Plans
 
-• Payments processed through App Store (iOS) or Google Play (Android)
-• Features include unlimited AI interactions and advanced learning tools
-• Subscriptions auto-renew unless cancelled before renewal date
-• Cancellation and refund policies follow platform store guidelines
-• Premium features subject to fair use policies and reasonable limits
+We offer various subscription plans that provide access to enhanced features and content ("Premium Services"). The features, limits, and subscription types (e.g., monthly, yearly, multi-year) are described within the App at the time of purchase. All payments are processed through the respective mobile platform's app store (Apple App Store or Google Play Store), and are subject to their terms and conditions.
+
+### b. Billing and Automatic Renewal
+
+Subscriptions are billed in advance on a recurring and periodic basis ("Billing Cycle"). Your subscription will automatically renew at the end of each Billing Cycle under the same conditions unless you cancel it or we cancel it. You must cancel your subscription through your App Store or Google Play Store account settings at least 24 hours before the renewal date to avoid being charged for the next Billing Cycle.
+
+### c. Subscription Fees and Price Changes
+
+We reserve the right to modify the subscription fees for the Premium Services at any time. Any fee change will become effective at the end of the then-current Billing Cycle. We will provide you with reasonable prior notice of any change in subscription fees to give you an opportunity to terminate your subscription before such change becomes effective. Your continued use of the Premium Services after the subscription fee change comes into effect constitutes your agreement to pay the modified subscription fee amount.
+
+### d. Refunds
+
+Except when required by law or by the policies of the Apple App Store or Google Play Store, paid subscription fees are non-refundable. We do not provide refunds or credits for any partial subscription periods or unused content.
+
+### e. Subscription Content
+
+Our Premium Services may include access to a regularly updated library of flashcards and a periodic allotment of new, AI-generated flashcards. The exact number of new flashcards and the scope of other premium features are subject to change and are described within the App. We do not guarantee that any specific content will be available for any minimum period.
 
 ## 7. Public Content and Sharing
 
@@ -100,25 +112,33 @@ Your data may be processed by third-party services:
 • Not liable for damages arising from service use
 • Our liability limited to amounts paid for services, where applicable
 
-## 12. Indemnification
+## 12. Our Intellectual Property
 
-You agree to indemnify Lithuaningo from claims arising from:
+The Service and its original content (excluding content provided by users), features, and functionality are and will remain the exclusive property of Lithuaningo and its licensors. The Service is protected by copyright, trademark, and other laws of both Lithuania and foreign countries. Our trademarks and trade dress may not be used in connection with any product or service without the prior written consent of Lithuaningo. You are granted a limited, non-exclusive, non-transferable, revocable license to access and use the Service for your personal, non-commercial use.
 
-• Your use of the service and content submissions
-• Your violation of these terms or rights of others
-• Misuse of AI services or circumventing usage policies
+## 13. Indemnification
 
-## 13. Changes to Terms
+You agree to indemnify, defend, and hold harmless Lithuaningo and its affiliates, officers, directors, employees, and agents from and against any and all claims, liabilities, damages, losses, costs, expenses, or fees (including reasonable attorneys' fees) that such parties may incur as a result of or arising from your (or anyone using your account's) violation of these Terms.
 
-• We may modify these terms at any time with notice
-• Continued use after changes constitutes acceptance
-• Major changes communicated through the app or email
+## 14. Termination
 
-## 14. Governing Law
+We may terminate or suspend your account and bar access to the Service immediately, without prior notice or liability, under our sole discretion, for any reason whatsoever and without limitation, including but not to a breach of the Terms.
 
-These Terms are governed by the laws of Lithuania. Disputes subject to exclusive jurisdiction of Lithuanian courts.
+If you wish to terminate your account, you may simply discontinue using the Service and can request the deletion of your account through the app's profile settings. All provisions of the Terms which by their nature should survive termination shall survive termination, including, without limitation, ownership provisions, warranty disclaimers, indemnity, and limitations of liability.
 
-## 15. Contact Us
+## 15. Changes to Terms and Services
+
+We may modify these Terms at any time. We will provide notice of such changes, for example, by sending an email, providing a notice through the App, or updating the "Last updated" date at the top of these Terms. By continuing to use the App, you confirm your acceptance of the revised Terms. We encourage you to review the Terms from time to time to ensure you understand the terms and conditions that apply to your use of the Services.
+
+Furthermore, we reserve the right to modify, suspend, or discontinue, temporarily or permanently, the Services (or any features or parts thereof) with or without notice. You agree that we will not be liable for any modification, suspension, or discontinuance of the Services or any part thereof.
+
+## 16. Governing Law and Dispute Resolution
+
+These Terms are governed by the laws of Lithuania.
+
+Any dispute arising out of or in connection with these Terms, including any question regarding its existence, validity, or termination, shall be referred to and finally resolved by binding arbitration under the laws of Lithuania. You agree that any dispute resolution proceedings will be conducted only on an individual basis and not in a class, consolidated, or representative action. By entering into these Terms, you and Lithuaningo are each waiving the right to a trial by jury or to participate in a class action.
+
+## 17. Contact Us
 
 For questions about these terms:
 
