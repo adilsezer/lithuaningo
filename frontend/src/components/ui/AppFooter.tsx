@@ -37,7 +37,7 @@ export const AppFooter: React.FC<AppFooterProps> = ({ style }) => {
 const styles = StyleSheet.create({
   container: {
     alignItems: "center",
-    paddingVertical: 24,
+    paddingVertical: 20,
     paddingHorizontal: 16,
     gap: 4,
   },
