@@ -1,5 +1,5 @@
 import React, { useRef, useEffect, useState } from "react";
-import { View, ScrollView, StyleSheet } from "react-native";
+import { View, ScrollView, StyleSheet, TouchableOpacity } from "react-native";
 import {
   useTheme,
   Button,
@@ -108,39 +108,32 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
     const isSelected = option === selectedAnswer;
     const isRevealed = isCorrectAnswer !== null;
 
-    let mode:
-      | "text"
-      | "contained"
-      | "outlined"
-      | "elevated"
-      | "contained-tonal" = "outlined";
-    let color = theme.colors.primary;
+    let backgroundColor = "transparent";
+    let borderColor = theme.colors.primary;
     let textColor = theme.colors.onBackground;
 
     // For incorrect selection
     if (isRevealed && isSelected && !isCorrect) {
-      mode = "contained";
-      color = theme.colors.error;
+      backgroundColor = theme.colors.error;
+      borderColor = theme.colors.error;
       textColor = theme.colors.onError;
     }
 
     // For correct answer reveal
     if (isRevealed && isCorrect) {
-      mode = "contained";
-      color = theme.colors.primary;
+      backgroundColor = theme.colors.primary;
+      borderColor = theme.colors.primary;
       textColor = theme.colors.onPrimary;
     }
 
     return {
-      mode,
-      buttonStyle: [
-        styles.optionButton,
-        {
-          borderColor: color,
-          backgroundColor: mode === "contained" ? color : undefined,
-        },
-      ],
-      labelStyle: [styles.optionButtonLabel, { color: textColor }],
+      buttonStyle: {
+        borderColor,
+        backgroundColor,
+      },
+      labelStyle: {
+        color: textColor,
+      },
     };
   };
 
@@ -455,23 +448,23 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
 
             <View style={styles.optionsContainer}>
               {currentQuestion.options.map((option) => {
-                const { mode, buttonStyle, labelStyle } =
+                const { buttonStyle, labelStyle } =
                   getOptionButtonProps(option);
                 return (
-                  <Button
+                  <TouchableOpacity
                     key={option}
-                    mode={mode}
-                    style={buttonStyle}
-                    labelStyle={labelStyle}
-                    contentStyle={styles.optionButtonContent}
+                    style={[styles.customOptionButton, buttonStyle]}
                     disabled={isCorrectAnswer !== null}
                     onPress={() => {
                       setSelectedAnswer(option);
                       onAnswer(option);
                     }}
+                    activeOpacity={0.7}
                   >
-                    {option}
-                  </Button>
+                    <Text style={[styles.customOptionButtonText, labelStyle]}>
+                      {option}
+                    </Text>
+                  </TouchableOpacity>
                 );
               })}
             </View>
@@ -730,19 +723,22 @@ const styles = StyleSheet.create({
   optionsContainer: {
     gap: 10,
   },
-  optionButton: {
-    marginBottom: 10,
-    borderRadius: 10,
-    elevation: 1,
-  },
-  optionButtonLabel: {
-    fontSize: 16,
-    paddingVertical: 4,
-    fontWeight: "500",
-  },
-  optionButtonContent: {
-    height: 52,
+  customOptionButton: {
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    minHeight: 52,
     justifyContent: "center",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    marginBottom: 10,
+  },
+  customOptionButtonText: {
+    fontSize: 16,
+    fontWeight: "500",
+    textAlign: "center",
+    lineHeight: 22,
+    flexWrap: "wrap",
   },
   exampleSentence: {
     fontStyle: "italic",
