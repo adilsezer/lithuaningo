@@ -221,6 +221,7 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<SecurityHeadersMiddleware>();
+app.UseMiddleware<VersionValidationMiddleware>();
 app.UseMiddleware<RateLimitingMiddleware>();
 app.UseMiddleware<RequestSizeMiddleware>();
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();

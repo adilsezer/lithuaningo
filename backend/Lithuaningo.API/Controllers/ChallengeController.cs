@@ -118,7 +118,6 @@ namespace Lithuaningo.API.Controllers
         }
 
         [HttpGet("next-challenge-time")]
-        [Microsoft.AspNetCore.Authorization.AllowAnonymous]
         [ProducesResponseType(typeof(NextChallengeTimeResponse), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [SwaggerOperation(
