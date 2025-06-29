@@ -101,7 +101,7 @@ public class VersionValidationMiddleware
             return versionHeader.FirstOrDefault();
         }
 
-        // Secondary: Parse from User-Agent header (format: LithuaningoMobile/3.0.1)
+        // Secondary: Parse from User-Agent header (format: LithuaningoMobile/3.0.2)
         if (headers.TryGetValue("User-Agent", out var userAgent))
         {
             var userAgentStr = userAgent.FirstOrDefault();
