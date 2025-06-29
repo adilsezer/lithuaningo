@@ -38,12 +38,3 @@ export interface AIResponse {
    */
   serviceType: string;
 }
-
-export interface QuestionExplanationRequest {
-  question: string;
-  correctAnswer: string;
-  userAnswer: string;
-  options: string[];
-  exampleSentence?: string;
-  questionType: string;
-}

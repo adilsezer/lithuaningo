@@ -12,5 +12,6 @@ namespace Lithuaningo.API.DTOs.Challenge
         public string? ExampleSentence { get; set; }
         public ChallengeQuestionType Type { get; set; }
         public Guid? FlashcardId { get; set; }
+        public string? Explanation { get; set; }
     }
 }

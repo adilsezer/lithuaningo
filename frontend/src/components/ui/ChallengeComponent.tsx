@@ -15,8 +15,6 @@ import { router } from "expo-router";
 import { ErrorMessage } from "@components/ui/ErrorMessage";
 import CustomDivider from "@components/ui/CustomDivider";
 import { ChallengeQuestionResponse, ChallengeQuestionType } from "@src/types";
-import { useIsPremium } from "@stores/useUserStore";
-import { useChallengeExplanation } from "@hooks/useChallengeExplanation";
 import CustomText from "./CustomText";
 
 // Define props interface for the reusable component
@@ -57,50 +55,22 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
   const theme = useTheme();
   const scrollViewRef = useRef<ScrollView>(null);
   const [selectedAnswer, setSelectedAnswer] = useState<string | null>(null);
-  const isPremium = useIsPremium();
-  const {
-    explanation,
-    isLoading: isLoadingExplanation,
-    error: explanationError,
-    fetchExplanation,
-    clearExplanation,
-  } = useChallengeExplanation();
 
   // Reset states when the question changes
   useEffect(() => {
     if (isCorrectAnswer === null) {
       setSelectedAnswer(null);
-      clearExplanation();
     }
-  }, [currentIndex, isCorrectAnswer, clearExplanation]);
+  }, [currentIndex, isCorrectAnswer]);
 
-  // Scroll to bottom when feedback or explanation appears
+  // Scroll to bottom when feedback appears
   useEffect(() => {
-    if ((isCorrectAnswer !== null || explanation) && scrollViewRef.current) {
+    if (isCorrectAnswer !== null && scrollViewRef.current) {
       setTimeout(() => {
         scrollViewRef.current?.scrollToEnd({ animated: true });
       }, 150);
     }
-  }, [isCorrectAnswer, explanation]);
-
-  // Handler for Learn More button
-  const handleLearnMore = () => {
-    if (!currentQuestion || !selectedAnswer) return;
-
-    if (!isPremium) {
-      router.push("/(app)/premium");
-      return;
-    }
-
-    fetchExplanation({
-      question: currentQuestion.question,
-      correctAnswer: currentQuestion.correctAnswer,
-      userAnswer: selectedAnswer,
-      options: currentQuestion.options,
-      exampleSentence: currentQuestion.exampleSentence,
-      questionType: ChallengeQuestionType[currentQuestion.type],
-    });
-  };
+  }, [isCorrectAnswer]);
 
   // Simple helper for button styling
   const getOptionButtonProps = (option: string) => {
@@ -536,22 +506,6 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                 </Card.Content>
 
                 <Card.Actions style={styles.feedbackActions}>
-                  {/* AI Explanation Button */}
-                  <Button
-                    mode="text"
-                    onPress={handleLearnMore}
-                    icon={isPremium ? "lightbulb-on-outline" : "lock-outline"}
-                    loading={isLoadingExplanation}
-                    disabled={isLoadingExplanation}
-                    labelStyle={{
-                      color: isCorrectAnswer
-                        ? theme.colors.onPrimary
-                        : theme.colors.onError,
-                    }}
-                  >
-                    {isPremium ? "Explain Answer" : "Explain Answer (Premium)"}
-                  </Button>
-
                   {/* Next/Complete Button */}
                   <Button
                     mode="contained"
@@ -579,8 +533,8 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                   </Button>
                 </Card.Actions>
 
-                {/* AI Explanation */}
-                {explanation && (
+                {/* AI Explanation - Automatically shown when answer is submitted */}
+                {currentQuestion?.explanation && (
                   <Card
                     style={[
                       styles.explanationCard,
@@ -619,32 +573,7 @@ const ChallengeComponent: React.FC<ChallengeComponentProps> = ({
                           marginTop: 8,
                         }}
                       >
-                        {explanation}
-                      </Text>
-                    </Card.Content>
-                  </Card>
-                )}
-
-                {/* Explanation Error */}
-                {explanationError && (
-                  <Card
-                    style={[
-                      styles.explanationCard,
-                      {
-                        backgroundColor: theme.colors.errorContainer,
-                        marginTop: 12,
-                      },
-                    ]}
-                  >
-                    <Card.Content>
-                      <Text
-                        variant="bodyMedium"
-                        style={{
-                          color: theme.colors.onErrorContainer,
-                          textAlign: "center",
-                        }}
-                      >
-                        {explanationError}
+                        {currentQuestion.explanation}
                       </Text>
                     </Card.Content>
                   </Card>

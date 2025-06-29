@@ -37,5 +37,9 @@ namespace Lithuaningo.API.Models
         [Column("flashcard_id")]
         [JsonProperty("flashcard_id")]
         public Guid? FlashcardId { get; set; }
+
+        [Column("explanation")]
+        [JsonProperty("explanation")]
+        public string? Explanation { get; set; }
     }
 }

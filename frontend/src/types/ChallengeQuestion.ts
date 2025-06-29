@@ -15,6 +15,7 @@ export interface ChallengeQuestionResponse {
   exampleSentence?: string;
   type: ChallengeQuestionType;
   flashcardId?: string;
+  explanation?: string;
 }
 
 export interface GetReviewChallengeQuestionsRequest {

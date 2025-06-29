@@ -70,10 +70,4 @@ public class AISettings
     /// </summary>
     [Range(1, 128000, ErrorMessage = "Challenge token count must be between 1 and 128000.")]
     public int ChallengeGenerationMaxTokens { get; set; } = 8192;
-
-    /// <summary>
-    /// Maximum tokens for question explanations
-    /// </summary>
-    [Range(1, 128000, ErrorMessage = "Explanation token count must be between 1 and 128000.")]
-    public int ExplanationMaxTokens { get; set; } = 1000;
 }

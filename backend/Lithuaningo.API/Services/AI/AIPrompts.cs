@@ -132,6 +132,7 @@ Return a JSON array containing EXACTLY 4 challenge objects. Each object must hav
 - correctAnswer: (string) The correct answer, which must exactly match one of the options. Ensure its Lithuanian is natural and correct.
 - exampleSentence: (string) The Lithuanian example sentence from the provided flashcard. This sentence MUST be grammatically perfect.
 - type: (integer) The challenge type: 0 for MultipleChoice, 1 for TrueFalse, 2 for FillInTheBlank, 3 for RearrangeTheSentence.
+- explanation: (string) A brief, neutral, and educational explanation (2-3 sentences maximum) in English. This explanation should clarify why the correct answer is right, providing context on vocabulary, grammar, or linguistic concepts. It MUST NOT assume the user's answer (e.g., do not start with 'Correct!' or 'False.').
 
 CORE RULES:
 1.  FLASHCARD FOCUS: Strictly base all challenges (question, options, correctAnswer) on the vocabulary, phrases, and grammatical structures found in the *single provided flashcard data*.
@@ -175,21 +176,24 @@ EXAMPLE OUTPUT (Illustrative, for a flashcard like: frontText=""knyga"", backTex
     ""options"": [""book"", ""pen"", ""table"", ""house""],
     ""correctAnswer"": ""book"",
     ""exampleSentence"": ""Aš skaitau įdomią knygą."",
-    ""type"": 0
+    ""type"": 0,
+    ""explanation"": ""'Knyga' translates to 'book' in English. It's a common feminine noun in Lithuanian and is essential vocabulary for talking about reading and education.""
   },
   {
     ""question"": ""Does 'knyga' mean 'letter' in English?"",
     ""options"": [""True"", ""False""],
     ""correctAnswer"": ""False"",
     ""exampleSentence"": ""Aš skaitau įdomią knygą."",
-    ""type"": 1
+    ""type"": 1,
+    ""explanation"": ""The word 'knyga' means 'book'. The Lithuanian word for 'letter' can be 'laiškas' (for mail) or 'raidė' (a character of the alphabet).""
   },
   {
     ""question"": ""Complete the sentence:\n\nAš skaitau įdomią ____."",
     ""options"": [""knygą"", ""filmą"", ""dainą"", ""laišką""],
     ""correctAnswer"": ""knygą"",
     ""exampleSentence"": ""Aš skaitau įdomią knygą."",
-    ""type"": 2
+    ""type"": 2,
+    ""explanation"": ""'Knygą' is the correct form here. This is the accusative case of 'knyga' (book), used because it is the direct object of the verb 'skaityti' (to read). The sentence means 'I am reading an interesting book.'""
   },
   {
     ""question"": ""Arrange these words into a correct sentence:\n\n'įdomią aš knygą skaitau'"",
@@ -201,35 +205,12 @@ EXAMPLE OUTPUT (Illustrative, for a flashcard like: frontText=""knyga"", backTex
     ],
     ""correctAnswer"": ""Aš skaitau įdomią knygą."",
     ""exampleSentence"": ""Aš skaitau įdomią knygą."",
-    ""type"": 3
+    ""type"": 3,
+    ""explanation"": ""Lithuanian sentence structure typically follows Subject-Verb-Object. In this case, 'Aš' (I) is the subject, 'skaitau' (read) is the verb, and 'įdomią knygą' (an interesting book) is the object, with the adjective preceding the noun.""
   }
 ]
 """;
 
-    /// <summary>
-    /// System instructions for generating an explanation for a challenge question.
-    /// </summary>
-    public const string QUESTION_EXPLANATION_SYSTEM_INSTRUCTIONS = @"You are a Lithuanian language tutor. Your task is to provide brief, educational explanations about challenge questions and their answers.
 
-**CRITICAL RULES:**
-1.  **ALWAYS provide a response.** Your response must be in English. Never return an empty or blank explanation. If you cannot provide a detailed explanation, you must at least state the correct answer and its definition.
-2.  **Explanations must be in ENGLISH.**
-3.  **Keep explanations concise** (2-3 sentences maximum).
-4.  **Return ONLY plain text.** Do not use any formatting like Markdown, bold, or italics.
-5.  Focus on explaining why the correct answer is right and, if the user was wrong, why their answer was incorrect.
-
-**EXAMPLE OF A GOOD RESPONSE:**
-USER PROMPT:
-Question: What does this Lithuanian word mean? 'sriuba'?
-Correct Answer: soup
-User's Answer: soup (correct)
-Question Type: MultipleChoice
-All Options: soup, stew, salad, dessert
-Example Sentence: Žiemą labai skanu valgyti karštą sriubą.
-
-Provide a brief educational explanation about this question and answer.
-
-YOUR RESPONSE (Plain Text):
-Correct! 'Sriuba' translates to 'soup' in English. It refers to a liquid food, which is different from 'troškinys' (stew) that is generally thicker and has larger chunks of ingredients.";
   }
 }
