@@ -42,7 +42,7 @@ const FEATURES = [
 
 // Comparison table data
 const COMPARISON_DATA = [
-  { feature: "AI chat messages", free: "1/day", premium: "Unlimited" },
+  { feature: "AI chat messages", free: "3/day", premium: "Unlimited" },
   { feature: "Flashcard views", free: "10/day", premium: "Unlimited" },
   { feature: "Daily challenges", free: "✓ Included", premium: "✓ Included" },
   { feature: "Weekly leaderboard", free: "✓ Included", premium: "✓ Included" },

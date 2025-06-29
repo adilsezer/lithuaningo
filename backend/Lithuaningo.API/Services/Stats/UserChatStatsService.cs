@@ -23,7 +23,7 @@ namespace Lithuaningo.API.Services.Stats
         private readonly CacheInvalidator _cacheInvalidator;
 
         // Maximum messages per day for free users
-        public const int MaxFreeMessagesPerDay = 1;
+        public const int MaxFreeMessagesPerDay = 3;
 
         // ISO 8601 date format (yyyy-MM-dd) for consistent date comparison
         private const string DateOnlyFormat = "yyyy-MM-dd";

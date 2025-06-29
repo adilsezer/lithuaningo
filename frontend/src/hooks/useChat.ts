@@ -25,7 +25,7 @@ export interface Message {
 const SESSION_ID_KEY = "lithuaningo:chat:session_id";
 
 // Maximum messages for free users per day
-export const MAX_FREE_MESSAGES_PER_DAY = 1;
+export const MAX_FREE_MESSAGES_PER_DAY = 3;
 
 // Example suggestions for new users
 export const CHAT_EXAMPLES = [
